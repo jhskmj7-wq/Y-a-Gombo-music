@@ -5,8 +5,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { db } from "../firebase";
-import { collection, onSnapshot, addDoc, doc, setDoc } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, setDoc, getDoc } from "firebase/firestore";
 import { UserProfile } from "../types";
+import { recordWalletTransaction } from "../lib/financial";
 
 interface AfrigomboBuildersProps {
   currentUser?: UserProfile | null;
@@ -74,8 +75,21 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
   const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
   const [processing, setProcessing] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [isInsufficientBalanceModalOpen, setIsInsufficientBalanceModalOpen] = useState<boolean>(false);
+  const [insufficientBalanceDetails, setInsufficientBalanceDetails] = useState<{ current: number; required: number; missing: number } | null>(null);
 
   const section2Ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedOption || showSuccess || isInsufficientBalanceModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [selectedOption, showSuccess, isInsufficientBalanceModalOpen]);
 
   // Firestore Realtime Stats from `supportContributions`
   useEffect(() => {
@@ -122,27 +136,62 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
     const finalAmount = selectedOption?.isCustom ? parseInt(customAmountStr) : amount;
     if (!finalAmount || finalAmount <= 0 || processing || !selectedOption) return;
 
+    if (!currentUser?.uid && !currentUser?.id) {
+      alert("Veuillez vous connecter pour faire une contribution.");
+      return;
+    }
+
     setProcessing(true);
     try {
-      const now = new Date().toISOString();
       const userUid = currentUser?.uid || currentUser?.id || "anonyme";
       const userName = currentUser?.name || currentUser?.displayName || currentUser?.artisticName || "Bâtisseur";
 
-      const contributionData = {
-        uid: userUid,
-        displayName: isAnonymous ? "Bâtisseur Anonyme" : userName,
-        montant: Number(finalAmount),
-        typeContribution: `${selectedOption.emoji} ${selectedOption.title}`,
-        statut: "COMPLETED",
-        createdAt: now
-      };
+      // Fetch live wallet balance
+      const userRef = doc(db, "users", userUid);
+      const userSnap = await getDoc(userRef);
+      let balance = 0;
+      if (userSnap.exists()) {
+        const uData = userSnap.data();
+        balance = uData?.wallet?.soldeDisponible ?? 0;
+      } else {
+        balance = currentUser?.wallet?.soldeDisponible ?? 0;
+      }
 
-      // 1. Save to `supportContributions` collection
-      await addDoc(collection(db, "supportContributions"), contributionData);
+      if (balance >= finalAmount) {
+        // Sufficient balance
+        const newSolde = balance - finalAmount;
+        await setDoc(userRef, {
+          wallet: {
+            soldeDisponible: newSolde
+          }
+        }, { merge: true });
 
-      // 2. Update user profile builder data if authenticated
-      if (userUid !== "anonyme") {
-        const userRef = doc(db, "users", userUid);
+        // Record transaction
+        await recordWalletTransaction({
+          userId: userUid,
+          userName: userName,
+          type: "debit_publication",
+          amount: finalAmount,
+          status: "success",
+          description: `Contribution Bâtisseurs : ${selectedOption.title}`
+        });
+
+        window.dispatchEvent(new CustomEvent("wallet_balance_updated"));
+
+        const now = new Date().toISOString();
+        const contributionData = {
+          uid: userUid,
+          displayName: isAnonymous ? "Bâtisseur Anonyme" : userName,
+          montant: Number(finalAmount),
+          typeContribution: `${selectedOption.emoji} ${selectedOption.title}`,
+          statut: "COMPLETED",
+          createdAt: now
+        };
+
+        // Save to `supportContributions` collection
+        await addDoc(collection(db, "supportContributions"), contributionData);
+
+        // Update user profile builder data
         const prevTotal = currentUser?.builderData?.totalAmount || 0;
         const newTotal = prevTotal + Number(finalAmount);
 
@@ -155,12 +204,21 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
           },
           badges: Array.from(new Set([...(currentUser?.badges || []), "🏗️ Bâtisseur AFRIGOMBO"]))
         }, { merge: true });
+
+        try { audioSynth?.playValidationSuccess(); } catch (e) {}
+
+        setShowSuccess(true);
+        setSelectedOption(null);
+      } else {
+        // Insufficient balance
+        setInsufficientBalanceDetails({
+          current: balance,
+          required: finalAmount,
+          missing: finalAmount - balance
+        });
+        setIsInsufficientBalanceModalOpen(true);
+        setSelectedOption(null);
       }
-
-      try { audioSynth?.playValidationSuccess(); } catch (e) {}
-
-      setShowSuccess(true);
-      setSelectedOption(null);
     } catch (e) {
       console.error(e);
       alert("Une erreur est survenue lors de l'enregistrement de votre contribution.");
@@ -319,11 +377,15 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
       {/* CONTRIBUTION PAYMENT MODAL */}
       <AnimatePresence>
         {selectedOption && (
-          <div className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div 
+            className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={() => setSelectedOption(null)}
+          >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
               className="bg-afri-bg-sec border-2 border-[#D4AF37]/50 max-w-md w-full rounded-3xl p-6 space-y-5 shadow-2xl text-left relative overflow-hidden"
             >
               <div className="flex items-center justify-between border-b border-afri-border pb-3">
@@ -336,13 +398,22 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
                 </div>
                 <button
                   onClick={() => setSelectedOption(null)}
-                  className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text flex items-center justify-center text-xs font-bold cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
                 >
                   ✕
                 </button>
               </div>
 
               <div className="space-y-4">
+                <div className="p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl space-y-1 mb-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-afri-text-sec">Solde Wallet :</span>
+                    <span className="font-mono font-bold text-white">
+                      {((currentUser?.wallet?.soldeDisponible ?? 0)).toLocaleString('fr-FR')} FCFA
+                    </span>
+                  </div>
+                </div>
+                
                 <div className="space-y-2">
                   <label className="text-[10px] font-mono font-bold text-afri-text-sec uppercase tracking-wider block">
                     Montant de votre contribution (FCFA)
@@ -404,13 +475,23 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
       {/* SUCCESS CONFIRMATION MODAL */}
       <AnimatePresence>
         {showSuccess && (
-          <div className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div 
+            className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={() => setShowSuccess(false)}
+          >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-afri-bg-sec border-2 border-emerald-500/50 max-w-sm w-full rounded-3xl p-6 text-center space-y-4 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              className="bg-afri-bg-sec border-2 border-emerald-500/50 max-w-sm w-full rounded-3xl p-6 text-center space-y-4 shadow-2xl relative"
             >
+              <button
+                onClick={() => setShowSuccess(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
+              >
+                ✕
+              </button>
               <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto text-2xl">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
@@ -424,6 +505,86 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
               >
                 Fermer
               </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* INSUFFICIENT FUNDS MODAL */}
+      <AnimatePresence>
+        {isInsufficientBalanceModalOpen && insufficientBalanceDetails && (
+          <div 
+            className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={() => setIsInsufficientBalanceModalOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-afri-bg-sec border-2 border-red-500/30 max-w-sm w-full rounded-3xl p-6 space-y-5 shadow-2xl relative"
+            >
+              <button
+                onClick={() => setIsInsufficientBalanceModalOpen(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
+              >
+                ✕
+              </button>
+              
+              <div className="text-center space-y-2">
+                <div className="w-14 h-14 bg-red-500/10 border border-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <h3 className="text-sm font-black text-white uppercase tracking-wider">Solde Insuffisant</h3>
+                <p className="text-xs text-afri-text-sec">
+                  Votre solde Wallet est insuffisant pour finaliser cette contribution.
+                </p>
+              </div>
+
+              <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-afri-text-sec">Montant requis</span>
+                  <span className="font-mono font-bold text-white">{insufficientBalanceDetails.required.toLocaleString()} FCFA</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-afri-text-sec">Solde actuel</span>
+                  <span className="font-mono font-bold text-red-400">{insufficientBalanceDetails.current.toLocaleString()} FCFA</span>
+                </div>
+                <div className="pt-2 mt-2 border-t border-red-500/20 flex justify-between">
+                  <span className="text-afri-text-sec font-bold">Montant manquant</span>
+                  <span className="font-mono font-bold text-[#D4AF37]">{insufficientBalanceDetails.missing.toLocaleString()} FCFA</span>
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem("afrigombo_suggested_deposit_amount", String(insufficientBalanceDetails.missing));
+                    localStorage.setItem(
+                      "afrigombo_pending_purchase",
+                      JSON.stringify({
+                        type: "builder_contribution",
+                        amount: insufficientBalanceDetails.required,
+                        title: `Contribution Bâtisseurs`
+                      })
+                    );
+                    setIsInsufficientBalanceModalOpen(false);
+                    window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
+                  }}
+                  className="w-full py-3.5 bg-gradient-to-r from-afri-gold to-amber-500 text-black font-black uppercase tracking-wider rounded-xl hover:brightness-110 transition-all text-xs flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                >
+                  <Coins className="w-4 h-4" />
+                  Recharger mon Wallet
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsInsufficientBalanceModalOpen(false)}
+                  className="w-full py-3 bg-afri-bg border border-afri-border text-white font-black uppercase tracking-wider rounded-xl hover:bg-afri-border transition-all text-xs cursor-pointer"
+                >
+                  Annuler
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

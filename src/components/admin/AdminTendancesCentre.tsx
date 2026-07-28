@@ -281,7 +281,7 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
           <div className="min-w-0">
             <span className="text-[9px] font-mono uppercase text-afri-text-sec block">Plus partagée</span>
             <p className="text-xs font-bold text-afri-text truncate">{topShared?.title || "Aucune"}</p>
-            <span className="text-[9px] font-mono text-purple-400 font-bold">{topShared?.sharesCount || 0} partages</span>
+            <span className="text-[9px] font-mono text-purple-400 font-bold">{topShared?.sharesCount || 0} transmissions</span>
           </div>
         </div>
 
@@ -410,7 +410,7 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
                     <span>👀 {item.viewsCount} vues</span>
                     <span>👍 {item.likesCount} j'honore</span>
                     <span>💬 {item.discussionsCount} coms</span>
-                    <span>📤 {item.sharesCount} partages</span>
+                    <span>📤 {item.sharesCount} transmissions</span>
                     <span>⭐ {item.favoritesCount} favs</span>
                     {item.candidaturesCount > 0 && <span>🤝 {item.candidaturesCount} postulants</span>}
                   </div>

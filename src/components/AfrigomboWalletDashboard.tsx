@@ -71,13 +71,23 @@ export default function AfrigomboWalletDashboard({
   const [showScannerModal, setShowScannerModal] = useState(false);
   
   // Form fields
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(() => {
+    return localStorage.getItem("afrigombo_suggested_deposit_amount") || "";
+  });
   const [phoneNumber, setPhoneNumber] = useState(currentUserProfile?.phone || "");
   const [operator, setOperator] = useState<"wave" | "orange" | "mtn" | "moov">("wave");
   const [processing, setProcessing] = useState(false);
   const [step, setStep] = useState<"form" | "otp" | "success">("form");
   const [createdDepositRef, setCreatedDepositRef] = useState<string>("");
   const [withdrawSubmitted, setWithdrawSubmitted] = useState<boolean>(false);
+
+  useEffect(() => {
+    const suggested = localStorage.getItem("afrigombo_suggested_deposit_amount");
+    if (suggested) {
+      setShowDepositModal(true);
+      localStorage.removeItem("afrigombo_suggested_deposit_amount");
+    }
+  }, []);
 
   // Scanner / Transfer states
   const [scanRecipient, setScanRecipient] = useState("");
@@ -901,6 +911,90 @@ export default function AfrigomboWalletDashboard({
                     >
                       <MessageSquare className="w-4 h-4" />
                       <span>VALIDER AVEC LE SUPPORT WHATSAPP</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setProcessing(true);
+                        try {
+                          const now = new Date().toISOString();
+                          
+                          // Get current user profile doc
+                          const userRef = doc(db, "users", uid);
+                          const userSnap = await getDoc(userRef);
+                          let currentDispo = 0;
+                          let currentDepots = 0;
+                          if (userSnap.exists()) {
+                            const uData = userSnap.data();
+                            currentDispo = uData?.wallet?.soldeDisponible ?? 0;
+                            currentDepots = uData?.wallet?.depots ?? 0;
+                          }
+                          
+                          const depositVal = Number(amount);
+                          const newDispo = currentDispo + depositVal;
+                          const newDepots = currentDepots + depositVal;
+                          
+                          // Update balance in user doc
+                          await setDoc(userRef, {
+                            wallet: {
+                              soldeDisponible: newDispo,
+                              depots: newDepots
+                            }
+                          }, { merge: true });
+                          
+                          // Record transaction
+                          const txRef = "DEP-SIM-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+                          await recordWalletTransaction({
+                            userId: uid,
+                            userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || currentUserProfile?.name || "Membre Gombo",
+                            type: "recharge_wallet",
+                            amount: depositVal,
+                            status: "success",
+                            reference: txRef,
+                            description: `Recharge instantanée Bêta (${txRef})`
+                          });
+                          
+                          // Update deposit request in firebase if exists
+                          if (createdDepositRef) {
+                            await setDoc(doc(db, "walletDepositRequests", createdDepositRef), {
+                              status: "validated",
+                              statut: "validated",
+                              validatedAt: now,
+                              validatedBy: "Auto-Validation Bêta"
+                            }, { merge: true });
+                          }
+                          
+                          // Add notification
+                          await addDoc(collection(db, "notifications"), {
+                            userId: uid,
+                            title: "💳 Recharge Bêta Réussie !",
+                            message: `Votre recharge instantanée de ${depositVal.toLocaleString('fr-FR')} FCFA a été créditée.`,
+                            type: "payment_received",
+                            createdAt: now,
+                            isRead: false
+                          });
+                          
+                          addToTerminal(`[BÊTA] Wallet crédité avec succès de ${depositVal.toLocaleString('fr-FR')} FCFA !`);
+                          playSound("success");
+                          
+                          // Fire custom event to notify listeners of balance update
+                          window.dispatchEvent(new CustomEvent("wallet_balance_updated"));
+                          
+                          setStep("form");
+                          setAmount("");
+                          setShowDepositModal(false);
+                        } catch (err) {
+                          console.error(err);
+                          alert("Erreur de simulation.");
+                        } finally {
+                          setProcessing(false);
+                        }
+                      }}
+                      className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 text-black font-black text-xs uppercase rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-md border border-[#D4AF37]"
+                    >
+                      <Sparkles className="w-4 h-4 animate-pulse" />
+                      <span>CRÉDITER INSTANTANÉMENT (MODE BÊTA)</span>
                     </button>
 
                     <button

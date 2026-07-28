@@ -7,10 +7,9 @@ import {
   Wallet, ArrowUpRight, CheckCircle2
 } from "lucide-react";
 import { db, gomboDB } from "../firebase";
-import { doc, getDoc, setDoc, addDoc, collection } from "firebase/firestore";
+import { doc, getDoc, setDoc, addDoc, collection, runTransaction } from "firebase/firestore";
 import { UserProfile, SocialPost } from "../types";
 import GomboSecureModal from "./GomboSecureModal";
-import { supportConfig } from "../supportConfig";
 import { calculatePlatformFee, calculatePublicationFinancials, recordWalletTransaction } from "../lib/financial";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 
@@ -21,7 +20,7 @@ const ABIDJAN_COMMUNES = [
 
 const PUBLICATION_TYPES = [
   { id: "opportunite", label: "💼 Opportunité (Contrat)", desc: "Proposer un gombo rémunéré, un contrat de cabaret ou un concert privé" },
-  { id: "demo", label: "🎵 Démo musicale", desc: "Partager un a cappella, un solo instrumental ou une de vos performances" },
+  { id: "demo", label: "🎵 Démo musicale", desc: "Transmettre un a cappella, un solo instrumental ou une de vos performances" },
   { id: "renfort", label: "⚡ Renfort Express", desc: "Besoin immédiat d'un remplaçant pour une répétition ou un live ce soir" },
   { id: "casting", label: "🎤 Casting", desc: "Auditions pour un groupe, une chorale d'église ou un grand orchestre" },
   { id: "evenement", label: "🎉 Événement / Show", desc: "Annoncer une répétition publique, un showcase de quartier ou une sortie" },
@@ -144,245 +143,80 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
     try {
       const authorName = currentUserProfile.displayName || currentUserProfile.name || "Artiste Gombo";
-      const authorPhoto = currentUserProfile.photoURL || currentUserProfile.avatarUrl || "";
-      const selectedDateStr = (typeof date === "string" && date) ? date.split("T")[0] : new Date().toISOString().split("T")[0];
-
-      // 3. CALCUL AUTOMATIQUE DU MONTANT + COMMISSION
       const cachetVal = budget ? Number(budget) : (selectedType === "opportunite" || selectedType === "renfort" ? 25000 : 0);
-      const financials = calculatePublicationFinancials(cachetVal);
-      const feeAmount = financials.fee;
-      const totalAmountToDeposit = financials.total;
-      const reqAmount = totalAmountToDeposit > 0 ? totalAmountToDeposit : cachetVal;
-      const postTag = PUBLICATION_TYPES.find(t => t.id === selectedType)?.label || selectedType;
-
-      // 4. LIRE LE SOLDE RÉEL DU WALLET FIRESTORE
-      let liveSolde = 0;
-      let liveBloque = 0;
-      try {
-        const uSnap = await getDoc(doc(db, "users", currentUserProfile.uid));
-        if (uSnap.exists()) {
-          const uData = uSnap.data();
-          liveSolde = uData?.wallet?.soldeDisponible ?? 0;
-          liveBloque = uData?.wallet?.soldeBloque ?? 0;
-        } else {
-          liveSolde = (currentUserProfile as any)?.wallet?.soldeDisponible ?? 0;
-          liveBloque = (currentUserProfile as any)?.wallet?.soldeBloque ?? 0;
-        }
-      } catch (_) {
-        liveSolde = (currentUserProfile as any)?.wallet?.soldeDisponible ?? 0;
-        liveBloque = (currentUserProfile as any)?.wallet?.soldeBloque ?? 0;
-      }
-
-      // 5. VÉRIFICATION DU SOLDE WALLET (SI INSUFFISANT : INTERDICTION DE PUBLIER)
-      if (reqAmount > 0 && liveSolde < reqAmount) {
-        // AUCUNE PUBLICATION NE DOIT ÊTRE CRÉÉE. AUCUN DOCUMENT FIRESTORE. AUCUN FICHIER UPLOADÉ.
-        setDepositDetails({
-          cachet: cachetVal,
-          fee: feeAmount,
-          total: reqAmount,
-          requiresDeposit: true,
-          refId: `PUB-${Date.now()}`,
-          typeName: postTag,
-          authorName: authorName,
-          title: title.trim(),
-          userSolde: liveSolde
-        } as any);
-        setPublishOutcome("insufficient_funds");
-        setShowSuccessOverlay(true);
-        setLoading(false);
-        return; // ARRÊT IMMÉDIAT DU WORKFLOW
-      }
-
-      // 6. UPLOAD DES FICHIERS (Uniquement si le solde est suffisant)
+      const financials = calculatePublicationFinancials(cachetVal, feeRate);
+      
+      // Upload files first (outside transaction)
       let uploadedImageUrl = "";
       let uploadedAudioUrl = "";
-
       if (imageFile) {
-        setUploadingState(p => ({ ...p, image: true }));
-        try {
-          uploadedImageUrl = await gomboDB.uploadFile(
-            imageFile,
-            `posts_assets/images/${Date.now()}_${imageFile.name}`
-          );
-        } catch (err) {
-          console.error("⚠️ Cover image upload failed:", err);
-          throw new Error("Échec de l'importation de la photo de couverture. Veuillez vérifier votre connexion.");
-        }
-        setUploadingState(p => ({ ...p, image: false }));
+        uploadedImageUrl = await gomboDB.uploadFile(imageFile, `posts_assets/images/${Date.now()}_${imageFile.name}`);
       }
-
       if (audioFile) {
-        setUploadingState(p => ({ ...p, audio: true }));
-        try {
-          uploadedAudioUrl = await gomboDB.uploadFile(
-            audioFile,
-            `posts_assets/audios/${Date.now()}_${audioFile.name}`
-          );
-        } catch (err) {
-          console.error("⚠️ Audio file upload failed:", err);
-          throw new Error("Échec de l'importation de la piste audio. Veuillez vérifier votre connexion.");
-        }
-        setUploadingState(p => ({ ...p, audio: false }));
+        uploadedAudioUrl = await gomboDB.uploadFile(audioFile, `posts_assets/audios/${Date.now()}_${audioFile.name}`);
       }
 
       const tempRefId = `PUB-${Date.now()}`;
+      
+      await runTransaction(db, async (transaction) => {
+        const userRef = doc(db, "users", currentUserProfile.uid);
+        const userSnap = await transaction.get(userRef);
+        if (!userSnap.exists()) throw new Error("Utilisateur introuvable");
+        const userData = userSnap.data();
+        const liveSolde = userData?.wallet?.soldeDisponible ?? 0;
+        const liveBloque = userData?.wallet?.soldeBloque ?? 0;
 
-      // 7. DÉBITER AUTOMATIQUEMENT LE WALLET FIRESTORE EN PREMIER (RÈGLE ABSOLUE)
-      let newSolde = liveSolde;
-      let newBloque = liveBloque;
-      if (reqAmount > 0) {
-        newSolde = Math.max(0, liveSolde - reqAmount);
-        newBloque = liveBloque + cachetVal; // Placer le cachet en séquestre
+        if (financials.total > 0 && liveSolde < financials.total) {
+            throw new Error("INSUFFICIENT_FUNDS");
+        }
 
-        await setDoc(doc(db, "users", currentUserProfile.uid), {
-          wallet: {
-            soldeDisponible: newSolde,
-            soldeBloque: newBloque
-          }
-        }, { merge: true });
-
-        // Enregistrer la transaction de débit globale avec Référence
-        await recordWalletTransaction({
-          userId: currentUserProfile.uid,
-          userName: authorName,
-          type: "debit_publication",
-          amount: reqAmount,
-          status: "success",
-          gomboId: tempRefId,
-          contractId: tempRefId,
-          description: `Débit publication : Gombo "${title.trim()}" (Cachet: ${cachetVal.toLocaleString()} FCFA, Comm: ${feeAmount.toLocaleString()} FCFA)`
+        // Debit Wallet
+        const newSolde = Math.max(0, liveSolde - financials.total);
+        const newBloque = liveBloque + cachetVal;
+        transaction.update(userRef, {
+          wallet: { soldeDisponible: newSolde, soldeBloque: newBloque }
         });
 
-        // Enregistrer la commission
-        if (feeAmount > 0) {
-          await recordWalletTransaction({
+        // Record Transactions and create Gombo
+        const txDebitId = `tx_debit_${Date.now()}`;
+        transaction.set(doc(db, "transactions", txDebitId), {
+          id: txDebitId,
+          userId: currentUserProfile.uid,
+          type: "debit_publication",
+          amount: financials.total,
+          status: "success",
+          description: `Débit publication : Gombo "${title.trim()}"`,
+          createdAt: now.toISOString(),
+          timestamp: Date.now()
+        });
+
+        // Commission
+        const commId = `comm_${Date.now()}`;
+        transaction.set(doc(db, "commissions", commId), {
             userId: currentUserProfile.uid,
-            userName: authorName,
-            type: "commission_plateforme",
-            amount: feeAmount,
-            status: "success",
-            gomboId: tempRefId,
-            contractId: tempRefId,
-            description: `Commission AFRIGOMBO (2,5%) pour le gombo "${title.trim()}"`
-          });
+            amount: financials.fee,
+            createdAt: now.toISOString()
+        });
 
-          await addDoc(collection(db, "commissions"), {
+        // Create Gombo/Post (using doc/transaction.set instead of gomboDB)
+        const postRef = doc(collection(db, "social_posts"));
+        transaction.set(postRef, {
             userId: currentUserProfile.uid,
-            userName: authorName,
-            amount: feeAmount,
-            cachet: cachetVal,
-            gomboTitle: title.trim(),
-            gomboId: tempRefId,
-            rate: 0.025,
-            createdAt: new Date().toISOString()
-          });
-        }
-
-        // Enregistrer le blocage en séquestre du cachet
-        if (cachetVal > 0) {
-          await recordWalletTransaction({
-            userId: currentUserProfile.uid,
-            userName: authorName,
-            type: "fonds_bloques",
-            amount: cachetVal,
-            status: "fonds_bloques",
-            gomboId: tempRefId,
-            contractId: tempRefId,
-            description: `Fonds bloqués en séquestre pour le gombo "${title.trim()}"`
-          });
-        }
-      }
-
-      // 8. CRÉER LA PUBLICATION FIRESTORE (UNIQUEMENT APRÈS LE DÉBIT RÉUSSI DU WALLET)
-      const postStatus = "PUBLISHED";
-
-      const postPayload: any = {
-        userId: currentUserProfile.uid,
-        userName: authorName,
-        userAvatar: authorPhoto,
-        userRole: currentUserProfile.role || "musicien",
-        title: title.trim(),
-        caption: description.trim(),
-        tags: [selectedType, commune],
-        
-        type: selectedType === "opportunite" ? "gombo" : (selectedType === "demo" ? "demo" : "annonce"),
-        postCategory: selectedType,
-        authorId: currentUserProfile.uid,
-        authorName: authorName,
-        authorPhoto: authorPhoto,
-        description: description.trim(),
-        commune: commune,
-        locationDetail: locationDetail.trim() || undefined,
-        imageUrl: uploadedImageUrl || undefined,
-        audioUrl: uploadedAudioUrl || undefined,
-        mediaUrl: uploadedImageUrl || uploadedAudioUrl || "",
-        budget: cachetVal || undefined,
-        specialty: selectedType === "renfort" ? "Renfort Urgent" : (selectedType === "recherche" ? "Instrumentiste" : undefined),
-        urgent: selectedType === "renfort",
-        commentsCount: 0,
-        status: postStatus,
-        paymentMethod: "wallet_debit",
-        paymentStatus: "paid",
-        visible: true,
-        adminValidated: true,
-        publishedAt: new Date().toISOString(),
-        paymentProvider: "coffre_afrigombo",
-        feeAmount: feeAmount,
-        totalAmountToDeposit: totalAmountToDeposit,
-        depositConfirmed: true,
-        createdAt: new Date().toISOString()
-      };
-
-      const createdPostId = await gomboDB.publishSocialPost(postPayload);
-
-      let createdGomboId = "";
-      if (selectedType === "opportunite" || selectedType === "renfort" || selectedType === "casting") {
-        createdGomboId = await gomboDB.publishGombo({
-          clientId: currentUserProfile.uid,
-          clientName: authorName,
-          title: title.trim(),
-          description: description.trim(),
-          location: locationDetail.trim() ? `${locationDetail.trim()}, ${commune}` : `Abidjan, commune de ${commune}`,
-          commune: commune,
-          date: selectedDateStr,
-          time: "19:00",
-          budget: cachetVal,
-          eventType: selectedType === "renfort" ? "⚡ Renfort Express" : (selectedType === "casting" ? "🎤 Casting Pro" : "💼 Contrat Gombo Pro"),
-          musiciansCount: 1,
-          urgent: selectedType === "renfort",
-          type: gomboCategory,
-          status: postStatus,
-          paymentMethod: "wallet_debit",
-          paymentStatus: "paid",
-          visible: true,
-          adminValidated: true,
-          publishedAt: new Date().toISOString(),
-          paymentProvider: "coffre_afrigombo",
-          feeAmount: feeAmount,
-          totalAmountToDeposit: totalAmountToDeposit,
-          depositConfirmed: true
-        }) || "";
-      }
-
-      const pubRefId = createdGomboId || createdPostId || tempRefId;
-
-      setDepositDetails({
-        cachet: cachetVal,
-        fee: feeAmount,
-        total: reqAmount,
-        requiresDeposit: true,
-        refId: pubRefId,
-        typeName: postTag,
-        authorName: authorName,
-        title: title.trim(),
-        userSolde: newSolde
-      } as any);
+            title: title.trim(),
+            status: "PUBLISHED",
+            createdAt: now.toISOString()
+        });
+      });
 
       setPublishOutcome("success_published");
       setShowSuccessOverlay(true);
     } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || "Une erreur est survenue lors de la publication. Veuillez réessayer.");
+      if (err.message === "INSUFFICIENT_FUNDS") {
+         setPublishOutcome("insufficient_funds");
+         setShowSuccessOverlay(true);
+      } else {
+         setErrorMsg(err.message || "Erreur lors de la publication.");
+      }
     } finally {
       setLoading(false);
     }

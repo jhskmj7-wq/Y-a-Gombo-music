@@ -1384,7 +1384,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                       {/* Comment text */}
                       <div className="space-y-2">
                         <label className="text-[10px] font-mono font-black text-afri-text-sec uppercase tracking-widest">
-                          Commentaire sur l'expérience (Facultatif) :
+                          Palabre sur l'expérience (Facultatif) :
                         </label>
                         <textarea 
                           value={evalComment}

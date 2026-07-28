@@ -180,7 +180,7 @@ export default function UserCommentsView({
   };
 
   const handleDeleteComment = (commentId: string) => {
-    if (window.confirm("Voulez-vous vraiment supprimer ce commentaire ?")) {
+    if (window.confirm("Voulez-vous vraiment supprimer ce palabre ?")) {
       setComments(prev => prev.filter(c => c.id !== commentId));
     }
   };
@@ -219,7 +219,7 @@ export default function UserCommentsView({
         <div className="flex items-center gap-2 truncate">
           <MessageSquare className="w-5 h-5 text-[#D4AF37] shrink-0" />
           <h1 className="text-xs sm:text-sm font-black uppercase tracking-wider text-afri-text truncate">
-            Commentaires & Interactions
+            Palabres & Interactions
           </h1>
         </div>
 
@@ -238,7 +238,7 @@ export default function UserCommentsView({
               💬 Centre d'Échange Public
             </p>
             <p className="text-xs text-afri-text-sec">
-              Gérez les commentaires reçus sur vos annonces/vibes et répondez en direct à vos fans et collaborateurs.
+              Gérez les palabres reçues sur vos annonces/vibes et répondez en direct à vos fans et collaborateurs.
             </p>
           </div>
 
@@ -280,7 +280,7 @@ export default function UserCommentsView({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher un commentaire ou nom..."
+              placeholder="Rechercher un palabre ou nom..."
               className="w-full pl-9 pr-3 py-1.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-zinc-500 focus:outline-none focus:border-[#D4AF37]"
             />
           </div>
@@ -317,12 +317,12 @@ export default function UserCommentsView({
           <div className="p-10 text-center bg-afri-bg border border-afri-border rounded-3xl space-y-3">
             <MessageCircle className="w-12 h-12 text-[#D4AF37]/40 mx-auto" />
             <h3 className="text-afri-text font-mono text-xs font-bold uppercase tracking-widest">
-              Aucun commentaire trouvé
+              Aucun palabre trouvé
             </h3>
             <p className="text-afri-text-sec text-xs max-w-sm mx-auto">
               {activeTab === "received"
-                ? "Vous n'avez pas encore de commentaire reçu pour cette catégorie."
-                : "Vous n'avez pas encore laissé de commentaires récents."}
+                ? "Vous n'avez pas encore de palabre reçu pour cette catégorie."
+                : "Vous n'avez pas encore laissé de palabres récents."}
             </p>
           </div>
         ) : (

@@ -1277,7 +1277,19 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                 <button
                   type="button"
                   onClick={() => {
-                    supportConfig.openSupport(`Bonjour 👋\n\nJe souhaite recharger mon Wallet AFRIGOMBO pour publier ma demande de Renfort Express : "${renfortInsufficientFundsDetails.title}"\n- Montant Cachet : ${renfortInsufficientFundsDetails.cachet.toLocaleString()} FCFA\n- Commission : ${renfortInsufficientFundsDetails.fee.toLocaleString()} FCFA\n- Total Requis : ${renfortInsufficientFundsDetails.total.toLocaleString()} FCFA\n- Mon Solde Actuel : ${renfortInsufficientFundsDetails.userSolde.toLocaleString()} FCFA`);
+                    const missing = Math.max(0, renfortInsufficientFundsDetails.total - renfortInsufficientFundsDetails.userSolde);
+                    localStorage.setItem("afrigombo_suggested_deposit_amount", String(missing));
+                    localStorage.setItem(
+                      "afrigombo_pending_purchase",
+                      JSON.stringify({
+                        type: "renfort_express",
+                        amount: renfortInsufficientFundsDetails.total,
+                        title: renfortInsufficientFundsDetails.title || "Renfort Express"
+                      })
+                    );
+                    setShowRenfortInsufficientModal(false);
+                    // Standard event to switch menus in parents
+                    window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
                   }}
                   className="w-full py-3.5 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer active:scale-98 flex items-center justify-center gap-2"
                 >

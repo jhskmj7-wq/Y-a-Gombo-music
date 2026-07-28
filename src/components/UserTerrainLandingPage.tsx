@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Search, Sliders, Plus, Megaphone, MessageSquare, ShieldCheck, Bell, 
@@ -20,6 +20,7 @@ import { db } from "../lib/firebase";
 import { gomboDB } from "../firebase";
 import { collection, onSnapshot, addDoc } from "firebase/firestore";
 import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
+import { ReelsPlayer } from "./ReelsPlayer";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -137,6 +138,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const { isDataSaveActive, areAnimationsReduced } = usePerformance();
   const searchStr = globalSearchTerm.toLowerCase();
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  
   // Mount log
   useEffect(() => {
   }, []);
@@ -359,7 +362,14 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const [filterHasAudio, setFilterHasAudio] = useState<boolean>(false);
 
   // SWIPEABLE HORIZONTAL MODULES & TABS STATE (Requirement 2)
-  const [currentSection, setCurrentSection] = useState<"home" | "reels">("home");
+  const [activeSection, setActiveSection] = useState<"home" | "reels">("home");
+  
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+    }
+  }, [activeSection]);
+
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [selectedExploreArtist, setSelectedExploreArtist] = useState<any | null>(null);
@@ -430,12 +440,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
 
-    if (isLeftSwipe && currentSection === "home") {
-      setCurrentSection("reels");
+    if (isLeftSwipe && activeSection === "home") {
+      setActiveSection("reels");
       try { audioSynth?.playValidationSuccess(); } catch(_) {}
     }
-    if (isRightSwipe && currentSection === "reels") {
-      setCurrentSection("home");
+    if (isRightSwipe && activeSection === "reels") {
+      setActiveSection("home");
       try { audioSynth?.playValidationSuccess(); } catch(_) {}
     }
   };
@@ -654,13 +664,16 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
   return (
     <div 
+      ref={containerRef}
       onTouchStart={onTouchStartHandler}
       onTouchMove={onTouchMoveHandler}
       onTouchEnd={onTouchEndHandler}
-      className="space-y-6 text-left animate-fadeIn font-sans"
+      className="h-full overflow-y-auto space-y-6 text-left animate-fadeIn font-sans"
     >
       
-      {/* ==========================================
+            {activeSection === "home" ? (
+        <>
+{/* ==========================================
           1. BARRE DE RECHERCHE UNIVERSELLE
          ========================================== */}
       <div className="relative">
@@ -975,7 +988,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             try { audioSynth?.playTamTam?.(false); } catch(_) {}
           }}
           className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
-            currentSection === "home"
+            activeSection === "home"
               ? "bg-afri-bg-sec text-black shadow-md scale-[1.02]"
               : "text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-sec/40"
           }`}
@@ -990,7 +1003,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             try { audioSynth?.playTamTam?.(false); } catch(_) {}
           }}
           className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 cursor-pointer relative ${
-            currentSection === "reels"
+            false
               ? "bg-afri-bg-sec text-black shadow-md scale-[1.02]"
               : "text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-sec/40"
           }`}
@@ -1001,22 +1014,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       </div>
 
       <div className="text-center text-[8.5px] font-mono tracking-wider font-extrabold text-afri-text-sec uppercase flex items-center justify-center gap-1 sm:hidden select-none -translate-y-2 mt-1">
-        {currentSection === "home" ? (
-          <>
-            <span>Faites glisser vers la droite</span>
-            <span className="text-[#D4AF37] animate-pulse">➔</span>
-            <span>pour les réels</span>
-          </>
-        ) : (
-          <>
-            <span className="text-[#D4AF37] animate-pulse">◀</span>
-            <span>Faites glisser vers la gauche pour revenir</span>
-          </>
-        )}
+        <span>Faites glisser vers la droite</span>
+        <span className="text-[#D4AF37] animate-pulse">➔</span>
+        <span>pour les réels</span>
       </div>
 
-      {currentSection === "home" ? (
-        <>
+
           {/* ==========================================
               2. ACTIONS RAPIDES (STYLE PREMIUM AFRIGOMBO)
              ========================================== */}
@@ -1730,86 +1733,16 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       </div>
       </>
       ) : (
-        <div className="space-y-6 animate-fadeIn pb-12 select-none text-left">
-          {/* Header Banner */}
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-[#D4AF37]/10 via-[#D4AF37]/5 to-transparent border border-[#D4AF37]/25 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-afri-bg-sec/5 rounded-full blur-2xl pointer-events-none" />
-            <h2 className="text-sm font-sans font-black uppercase tracking-wider text-afri-text">
-              📱 L'ÉCHO DU SHOWBIZ & RÉELS
-            </h2>
-            <p className="text-[11px] text-afri-text-sec mt-1 leading-relaxed">
-              Découvrez en continu les performances, démos d'orchestres, extraits audios et actualités chaudes de nos maîtres de la scène d'Afrique de l'Ouest.
-            </p>
-          </div>
-
-          {/* Reels Filter categories */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none select-none">
-            {[
-              { id: "all", label: "✨ Tout", icon: "💎" },
-              { id: "videos", label: "🎥 Vidéos", icon: "🎬" },
-              { id: "audios", label: "🎵 Extraits Audios", icon: "🎧" },
-              { id: "murmures", label: "💬 Murmures", icon: "🎤" },
-              { id: "alliances", label: "🏆 Certifications & Actus", icon: "🤝" }
-            ].map(pill => (
-              <button
-                key={pill.id}
-                onClick={() => {
-                  setReelsFilter(pill.id);
-                  try { audioSynth?.playTamTam?.(false); } catch(_) {}
-                }}
-                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase transition shrink-0 flex items-center gap-1 cursor-pointer border ${
-                  reelsFilter === pill.id
-                    ? "bg-afri-bg-sec text-afri-text border-[#D4AF37] shadow-sm scale-105"
-                    : "bg-afri-bg text-afri-text-muted border-afri-border hover:bg-afri-bg-sec hover:text-afri-text"
-                }`}
-              >
-                <span>{pill.icon}</span>
-                <span>{pill.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Feed Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            {/* Vues Vidéos */}
-            {(reelsFilter === "all" || reelsFilter === "videos") && (
-              <PremiumEmptyState 
-                message="Aucune vidéo disponible." 
-                submessage="Publiez vos reels pour être vu par le réseau." 
-                icon={Video}
-              />
-            )}
-
-            {/* 2. MUSIC EXTRAITS AUDIOS (Requirement 2 & Background Play integration) */}
-            {(reelsFilter === "all" || reelsFilter === "audios") && (
-              <PremiumEmptyState 
-                message="Aucun extrait audio." 
-                submessage="Partagez vos maquettes et créations audio." 
-                icon={Music}
-              />
-            )}
-
-            {/* 3. MURMURES / STATUS DE COMPAGGNIE */}
-            {(reelsFilter === "all" || reelsFilter === "murmures") && (
-              <PremiumEmptyState 
-                message="Aucun murmure pour le moment." 
-                submessage="Partagez vos actualités et statuts." 
-                icon={MessageSquare}
-              />
-            )}
-
-            {/* 4. ALLIANCES ET CERTIFICATIONS D'ACCORDEMENT */}
-            {(reelsFilter === "all" || reelsFilter === "alliances") && (
-              <PremiumEmptyState 
-                message="Aucune alliance récente." 
-                submessage="Découvrez et collaborez avec d'autres artistes." 
-                icon={ShieldCheck}
-              />
-            )}
-
-          </div>
-        </div>
+        <ReelsPlayer 
+          posts={posts} 
+          currentSection={activeSection}
+          setCurrentSection={setActiveSection}
+          onClose={() => {
+            setActiveSection("home");
+            try { audioSynth?.playValidationSuccess(); } catch(_) {}
+          }}
+          onOpenCreate={() => setActiveQuickActionModal("post_content")}
+        />
       )}
 
       {/* ==========================================

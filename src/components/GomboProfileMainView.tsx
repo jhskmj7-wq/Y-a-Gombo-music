@@ -549,7 +549,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </p>
           </div>
 
-          {/* Buttons: Copier, Partager, Afficher QR Code, Voir mon certificat */}
+          {/* Buttons: Copier, Transmettre, Afficher QR Code, Voir mon certificat */}
           <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
             <button 
               onClick={handleCopyId}
@@ -567,7 +567,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               }`}
             >
               <Share2 className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-              <span>Partager</span>
+              <span>Transmettre</span>
             </button>
             <button 
               onClick={() => {
@@ -670,7 +670,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               border: "hover:border-afri-gold/25"
             },
             { 
-              label: "Partager mon profil", 
+              label: "Transmettre mon profil", 
               desc: "Diffuser votre ID", 
               icon: Share2, 
               action: handleShareProfile, 

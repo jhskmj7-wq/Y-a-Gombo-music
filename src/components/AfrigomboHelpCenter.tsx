@@ -597,7 +597,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Votre commentaire</label>
+                  <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Votre palabre</label>
                   <textarea 
                     rows={3} 
                     required

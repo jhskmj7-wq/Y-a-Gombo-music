@@ -791,7 +791,7 @@ export default function GroupeVIPAnnuaire({
                   className="p-2 bg-gray-50 hover:bg-gray-100 dark:bg-afri-bg-sec/85 dark:hover:bg-afri-bg-sec border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 font-bold text-xs"
                 >
                   <Share2 className="w-4.5 h-4.5" />
-                  <span>{copiedFeedback ? "Lien Copié !" : "Partager"}</span>
+                  <span>{copiedFeedback ? "Lien Copié !" : "Transmettre"}</span>
                 </button>
               </div>
             </div>

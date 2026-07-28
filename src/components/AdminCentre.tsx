@@ -2697,7 +2697,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               setPerspective("user");
                               setActiveMenu("user_mes_gombos");
                             }, false)}
-                            {renderMenuItem("menu_comms", "Commentaires", "💬", () => {
+                            {renderMenuItem("menu_comms", "Palabres", "💬", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_comments");
@@ -3074,14 +3074,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       switch(activeMenu) {
                         case "user_wallet": return "Wallet & Finances";
                         case "user_messages": return "Messagerie";
-                        case "user_edit_profile": return "Mon Profil";
+                        case "user_edit_profile": return "Mon Héritage";
                         case "user_gombo_plus": return "Premium Elite";
                         case "user_subscription_management": return "Mon Abonnement";
                         case "user_heritage": return "Mon Héritage";
                         case "user_vibes": return "Afrigombo Vibes";
                         case "user_reels": return "Les Vibes";
                         case "user_notifications": return "Notifications";
-                        case "user_comments": return "Commentaires";
+                        case "user_comments": return "Palabres";
                         case "user_downloads": return "Téléchargements";
                         case "user_history": return "Historique";
                         case "user_publish": return "Publier";
@@ -4394,7 +4394,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                         {/* Shares Count */}
                                         <div className="flex items-center gap-1.5 text-afri-text-sec">
                                           <Share2 className="w-3.5 h-3.5" />
-                                          <span>{p.shares || 8} partages</span>
+                                          <span>{p.shares || 8} transmissions</span>
                                         </div>
                                       </div>
                                       
@@ -4412,7 +4412,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                           }}
                                           className="text-[9.5px] px-2.5 py-1.5 rounded-lg font-bold border border-afri-gold/30 hover:border-afri-gold/80 hover:bg-afri-gold/5 text-afri-gold transition-all cursor-pointer flex items-center gap-1"
                                         >
-                                          <span>Partager</span>
+                                          <span>Transmettre</span>
                                         </button>
                                       </div>
                                     </div>
@@ -5005,9 +5005,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           <div className="flex flex-col gap-3">
                             <button
                               onClick={() => {
+                                const missing = Math.max(0, insufficientFundsData.total - insufficientFundsData.userSolde);
+                                localStorage.setItem("afrigombo_suggested_deposit_amount", String(missing));
+                                localStorage.setItem(
+                                  "afrigombo_pending_purchase",
+                                  JSON.stringify({
+                                    type: "gombo_publish",
+                                    amount: insufficientFundsData.total,
+                                    title: insufficientFundsData.title || "Publication de Gombo"
+                                  })
+                                );
                                 setShowInsufficientFundsModal(false);
-                                window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
-                                window.open("https://wa.me/2250700000000?text=Bonjour%20Support%20AFRIGOMBO%2C%20je%20souhaite%20recharger%20mon%20Wallet%20pour%20publier%20mon%20Gombo.", "_blank");
+                                setActiveMenu("user_wallet");
                               }}
                               className="w-full py-3.5 bg-gradient-to-r from-afri-gold to-amber-500 text-black font-black uppercase tracking-wider rounded-xl hover:brightness-110 transition-all text-xs flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                             >
@@ -6310,7 +6319,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     }}
                                     className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border text-afri-text text-[10px] font-bold uppercase rounded-xl hover:border-[#D4AF37] transition cursor-pointer"
                                   >
-                                    🔗 Partager
+                                    🔗 Transmettre
                                   </button>
 
                                   <button 
@@ -6744,7 +6753,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 return (
                   <Suspense fallback={
                     <div className="p-12 text-center text-[#D4AF37] font-mono animate-pulse">
-                      Chargement de l'Espace Commentaires...
+                      Chargement de l'Espace Palabres...
                     </div>
                   }>
                     <UserCommentsView
@@ -8082,7 +8091,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             </div>
 
             <p className={`text-xs leading-relaxed ${darkMode ? "text-afri-text/60" : "text-afri-text-sec"}`}>
-              Le Gombo est terminé ! Pour finaliser et libérer les garanties de la caisse, laissez une note de confiance et un commentaire d'excellence sur le musicien.
+              Le Gombo est terminé ! Pour finaliser et libérer les garanties de la caisse, laissez une note de confiance et un palabre d'excellence sur le musicien.
             </p>
 
             <div className="space-y-4 pt-1">
@@ -8197,7 +8206,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                     <div className="space-y-1">
                       <span className="text-[9px] uppercase font-mono text-afri-text-sec block font-bold">
-                        Commentaire de l'Artiste :
+                        Palabre de l'Artiste :
                       </span>
                       <input
                         type="text"
@@ -9774,7 +9783,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           <p className="text-afri-text-sec italic font-sans">Un litige d'Escrow a été ouvert et est actuellement en cours d'analyse par l'Arbitrage final d'AFRIGOMBO.</p>
                           <div className="text-afri-text-sec">
                             <strong>Motif :</strong> {contractDisputeDetails[selectedGomboDetails.id]?.reason || "Non spécifié"}<br/>
-                            <strong>Preuves :</strong> {contractDisputeDetails[selectedGomboDetails.id]?.comment || "Aucun commentaire supplémentaire"}
+                            <strong>Preuves :</strong> {contractDisputeDetails[selectedGomboDetails.id]?.comment || "Aucun palabre supplémentaire"}
                           </div>
                         </div>
                       ) : (
@@ -9782,7 +9791,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           onClick={() => {
                             const reason = prompt("Indiquez la raison officielle de l'annulation (obligatoire) :");
                             if (!reason) return;
-                            const comment = prompt("Commentaires ou preuves (textes, liens, audios) :");
+                            const comment = prompt("Palabres ou preuves (textes, liens, audios) :");
                             setContractDisputeOpened(prev => ({
                               ...prev,
                               [selectedGomboDetails.id]: true
@@ -9880,7 +9889,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <span>🚨 Signaler</span>
                   </button>
 
-                  {/* 5. ↗️ Partager */}
+                  {/* 5. ↗️ Transmettre */}
                   <button
                     onClick={() => {
                       requireAuthThen(() => {
@@ -9892,10 +9901,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       });
                     }}
                     className="flex items-center gap-1.5 hover:text-afri-gold transition text-[11px] font-bold cursor-pointer"
-                    title="Partager ce Gombo"
+                    title="Transmettre ce Gombo"
                   >
                     <Share2 className="w-4 h-4" />
-                    <span>↗️ Partager</span>
+                    <span>↗️ Transmettre</span>
                   </button>
                 </div>
 

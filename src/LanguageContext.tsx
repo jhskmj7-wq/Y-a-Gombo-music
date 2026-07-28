@@ -13,7 +13,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation & General
     settings_title: "Réglages Système",
     settings_subtitle: "Personnalisez votre expérience Y’A GOMBO MUSIC",
-    mon_profil: "Mon profil",
+    mon_profil: "Mon Héritage",
     mon_afri_id: "Mon GOMBO ID",
     notifications: "Notifications",
     securite: "Sécurité",
@@ -195,7 +195,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation & General
     settings_title: "Mes réglages",
     settings_subtitle: "Faut caler ton système Y’A GOMBO MUSIC",
-    mon_profil: "Mon Profile",
+    mon_profil: "Mon Héritage",
     mon_afri_id: "Mon Identité",
     notifications: "Mes News",
     securite: "Protège-toi",

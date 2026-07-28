@@ -849,7 +849,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                       <button
                         onClick={() => handleShare(item)}
                         className="p-2 rounded-xl bg-afri-bg border border-afri-border text-afri-text-sec hover:text-[#D4AF37] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-                        title="Partager (+10 pts)"
+                        title="Transmettre (+10 pts)"
                       >
                         <Share2 className="w-3.5 h-3.5" />
                         <span className="text-[10px] font-mono">{item.sharesCount}</span>
@@ -934,7 +934,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                     <span className="text-afri-text font-bold">+{item.favoritesCount * 5} pts</span>
                   </div>
                   <div className="flex justify-between p-2 bg-afri-bg rounded-xl">
-                    <span className="text-afri-text-sec">💬 Commentaires ({item.discussionsCount})</span>
+                    <span className="text-afri-text-sec">💬 Palabres ({item.discussionsCount})</span>
                     <span className="text-afri-text font-bold">+{item.discussionsCount * 8} pts</span>
                   </div>
                   <div className="flex justify-between p-2 bg-afri-bg rounded-xl">

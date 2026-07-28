@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles, Check, ChevronLeft, CreditCard, Award, Shield, Music, BarChart3, Radio, X, Zap, Calculator, KeyRound, MessageCircle } from "lucide-react";
+import { Sparkles, Check, Coins, ChevronLeft, CreditCard, Award, Shield, Music, BarChart3, Radio, X, Zap, Calculator, KeyRound, MessageCircle } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
 import { supportConfig } from "../supportConfig";
 import { createPendingSubscriptionRequest, validateAndActivatePremiumCode } from "../lib/premiumSubscriptionEngine";
 import { AndroidCenteredDialog } from "./common/GlobalPortalModal";
+import { db } from "../firebase";
+import { doc, getDoc, setDoc, addDoc, collection } from "firebase/firestore";
+import { recordWalletTransaction } from "../lib/financial";
 
 interface AfrigomboPlusProps {
   onBack: () => void;
@@ -16,9 +19,11 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
   const { t } = useLanguage();
   const [selectedPlan, setSelectedPlan] = useState<"free" | "pro" | "elite">("elite");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [paymentOption, setPaymentOption] = useState<string>("wave");
+  const [paymentOption, setPaymentOption] = useState<string>("wallet");
   const [phonePayment, setPhonePayment] = useState("");
-  const [paymentStep, setPaymentStep] = useState<"idle" | "processing" | "pending_validation">("idle");
+  const [paymentStep, setPaymentStep] = useState<"idle" | "processing" | "pending_validation" | "success">("idle");
+  const [walletError, setWalletError] = useState<string | null>(null);
+  const [insufficientDetails, setInsufficientDetails] = useState<{ current: number; required: number; missing: number } | null>(null);
   const [simAmount, setSimAmount] = useState<number>(100000);
   const [subscribedPlan, setSubscribedPlan] = useState<string | null>(() => {
     if (currentUserProfile?.isPremium) {
@@ -130,62 +135,125 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         "📈 Visibilité boostée à 150%",
         "🎖️ Profil recommandé d'office",
         "📊 Statistiques Avancées",
-        "💬 Priorité de relation",
+        "💬 Priorité de relation"
       ],
       commission: "1,5%"
     }
   ];
 
-  const handleSubscribeClick = (planId: "free" | "pro" | "elite") => {
+  const handleSubscribeClick = async (planId: "free" | "pro" | "elite") => {
     if (planId === "free") {
       localStorage.setItem("gombo_subscription", "GOMBO FREE");
       setSubscribedPlan("GOMBO FREE");
       return;
     }
-    setSelectedPlan(planId);
-    setPaymentOption("wave");
-    setPaymentStep("idle");
-    setActiveModal("payment");
-  };
 
-  const processPayment = async () => {
-    if (!phonePayment) {
-      alert("Veuillez saisir votre numéro mobile money.");
+    if (!currentUserProfile?.uid) {
+      alert("Veuillez vous connecter pour vous abonner.");
       return;
     }
+
+    setSelectedPlan(planId);
+    setPaymentOption("wallet");
     setPaymentStep("processing");
+    setWalletError(null);
+    setInsufficientDetails(null);
+    setActiveModal("payment");
+
     try {
       if (window.dispatchEvent) {
         window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'tambour' } }));
       }
     } catch (_) {}
 
-    setTimeout(async () => {
-      try {
-        const matchedPlan = plans.find(p => p.id === selectedPlan);
-        const subName = matchedPlan ? matchedPlan.name : "GOMBO ELITE";
-        const amount = matchedPlan ? (billingCycle === "monthly" ? matchedPlan.monthlyPrice : matchedPlan.yearlyPrice) : 1000;
-        
-        // Mode Bêta: create request with status pending_validation
-        await createPendingSubscriptionRequest({
-          userId: currentUserProfile?.uid || "guest_beta",
-          userName: currentUserProfile?.artistName || currentUserProfile?.firstName || "Membre Bêta",
-          userPhone: phonePayment,
-          plan: selectedPlan,
-          billingCycle: billingCycle,
-          amount: amount
+    try {
+      const matchedPlan = plans.find(p => p.id === planId);
+      const subName = matchedPlan ? matchedPlan.name : "GOMBO ELITE";
+      const amount = matchedPlan ? (billingCycle === "monthly" ? matchedPlan.monthlyPrice : matchedPlan.yearlyPrice) : 1000;
+      
+      const userRef = doc(db, "users", currentUserProfile.uid);
+      const userSnap = await getDoc(userRef);
+      let balance = 0;
+      if (userSnap.exists()) {
+        const uData = userSnap.data();
+        balance = uData?.wallet?.soldeDisponible ?? 0;
+      } else {
+        balance = currentUserProfile?.wallet?.soldeDisponible ?? 0;
+      }
+
+      if (balance >= amount) {
+        // Suffisant ! Débiter immédiatement
+        const newSolde = balance - amount;
+        const expirationDate = billingCycle === "monthly" 
+          ? new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString()
+          : new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString();
+
+        await setDoc(userRef, {
+          isPremium: true,
+          subscriptionPlan: subName,
+          premiumExpiresAt: expirationDate,
+          wallet: {
+            soldeDisponible: newSolde
+          }
+        }, { merge: true });
+
+        // Enregistrer la transaction
+        await recordWalletTransaction({
+          userId: currentUserProfile.uid,
+          userName: currentUserProfile.artistName || currentUserProfile.firstName || "Membre Gombo",
+          type: "debit_publication",
+          amount: amount,
+          status: "success",
+          description: `Souscription Abonnement ${subName} (${billingCycle === "monthly" ? "Mensuel" : "Annuel"})`
         });
 
-        // Set step to pending_validation (never auto-activated during beta)
-        setPaymentStep("pending_validation");
+        // Ajouter une notification
+        await addDoc(collection(db, "notifications"), {
+          userId: currentUserProfile.uid,
+          title: "👑 Abonnement Activé !",
+          message: `Félicitations, vous êtes désormais membre ${subName}. Profitez de vos avantages exclusifs !`,
+          type: "payment_received",
+          createdAt: new Date().toISOString(),
+          isRead: false
+        });
 
-      } catch (err) {
-        console.error("Error creating subscription request:", err);
+        // Fire custom event for balance updates
+        window.dispatchEvent(new CustomEvent("wallet_balance_updated"));
+
+        localStorage.setItem("gombo_subscription", subName);
+        setSubscribedPlan(subName);
+
+        if (onRefreshProfile) {
+          onRefreshProfile();
+        }
+
+        if (window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } }));
+        }
+
+        setPaymentStep("success");
+      } else {
+        // Insuffisant !
+        setInsufficientDetails({
+          current: balance,
+          required: amount,
+          missing: amount - balance
+        });
+        setWalletError("Solde insuffisant.");
         setPaymentStep("idle");
-        alert("Une erreur s'est produite lors de la demande. Veuillez réessayer.");
       }
-    }, 1200);
+    } catch (err) {
+      console.error("Error processing subscription payment:", err);
+      setPaymentStep("idle");
+      alert("Une erreur s'est produite lors de la vérification. Veuillez réessayer.");
+    }
   };
+
+  const processPayment = async () => {
+    // legacy function kept for fallback if needed, but not used as main anymore
+    alert("Veuillez utiliser la recharge de Wallet.");
+  };
+
 
   // Submit activation code handler
   const handleValidateActivationCode = async (e: React.FormEvent) => {
@@ -700,64 +768,71 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">
-                  Mode de Paiement
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: "wave", label: "Wave Money", badge: "0% frais" },
-                    { id: "orange", label: "Orange Money", badge: "Réseau CI" },
-                    { id: "mtn", label: "MTN MoMo", badge: "Réseau CI" },
-                    { id: "moov", label: "Moov Flooz", badge: "Réseau CI" }
-                  ].map((method) => (
-                    <button
-                      key={method.id}
-                      type="button"
-                      onClick={() => setPaymentOption(method.id)}
-                      className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
-                        paymentOption === method.id
-                          ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text"
-                          : "bg-afri-bg border-afri-border text-afri-text-sec hover:border-[#D4AF37]/40"
-                      }`}
-                    >
-                      <span className="text-[11px] font-black block">{method.label}</span>
-                      <span className="text-[8px] opacity-70 uppercase">{method.badge}</span>
-                    </button>
-                  ))}
+              <div className="space-y-3">
+                <div className="p-3.5 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-xl space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-afri-text-sec font-medium">Votre solde :</span>
+                    <span className="font-mono font-bold text-white">
+                      {((currentUserProfile?.wallet?.soldeDisponible ?? 0)).toLocaleString('fr-FR')} FCFA
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-afri-text-sec font-medium">Prix de l'abonnement :</span>
+                    <span className="font-mono font-bold text-white">
+                      {plans.find(p => p.id === selectedPlan)?.[billingCycle === "monthly" ? "monthlyPrice" : "yearlyPrice"]?.toLocaleString('fr-FR')} FCFA
+                    </span>
+                  </div>
+
+                  {walletError && insufficientDetails && (
+                    <div className="mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded-lg text-[11px] text-red-400 space-y-1">
+                      <div className="font-bold uppercase tracking-wide">⚠️ Solde Wallet insuffisant</div>
+                      <div className="flex justify-between text-[10px]"><span>Solde actuel :</span> <span className="font-mono font-bold">{insufficientDetails.current.toLocaleString()} FCFA</span></div>
+                      <div className="flex justify-between text-[10px]"><span>Requis :</span> <span className="font-mono font-bold text-white">{insufficientDetails.required.toLocaleString()} FCFA</span></div>
+                      <div className="flex justify-between text-[10px] pt-1 mt-1 border-t border-red-500/20"><span>Manquant :</span> <span className="font-mono font-bold">{insufficientDetails.missing.toLocaleString()} FCFA</span></div>
+                    </div>
+                  )}
                 </div>
-              </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">
-                  Numéro Mobile Money
-                </label>
-                <input
-                  type="tel"
-                  value={phonePayment}
-                  onChange={(e) => setPhonePayment(e.target.value.replace(/[^\d+]/g, ""))}
-                  placeholder="Ex: 0700000000"
-                  className="w-full bg-afri-bg p-3 text-xs rounded-xl border border-afri-border text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono tracking-wider font-bold"
-                />
-              </div>
+                <div className="space-y-2 pt-2">
+                  {walletError && insufficientDetails ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        localStorage.setItem("afrigombo_suggested_deposit_amount", String(insufficientDetails.missing));
+                        localStorage.setItem(
+                          "afrigombo_pending_purchase",
+                          JSON.stringify({
+                            type: "subscription_payment",
+                            amount: insufficientDetails.required,
+                            title: `Abonnement ${currentSelectedPlanObj.name}`
+                          })
+                        );
+                        setActiveModal(null);
+                        window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
+                      }}
+                      className="w-full bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
+                    >
+                      <Coins className="w-4 h-4" />
+                      Recharger mon Wallet
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={processPayment}
+                      className="w-full bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg"
+                    >
+                      Confirmer le paiement ({currentSelectedPlanObj.priceLabel})
+                    </button>
+                  )}
 
-              <div className="space-y-2 pt-2">
-                <button
-                  type="button"
-                  onClick={processPayment}
-                  disabled={!phonePayment}
-                  className="w-full bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
-                >
-                  Envoyer la demande ({currentSelectedPlanObj.priceLabel})
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveModal(null)}
-                  className="w-full py-2 text-center text-xs font-bold text-afri-text-sec hover:text-white cursor-pointer"
-                >
-                  Annuler
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal(null)}
+                    className="w-full py-2 text-center text-xs font-bold text-afri-text-sec hover:text-white cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -817,6 +892,38 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                   className="text-afri-text-sec hover:text-white font-medium text-[11px]"
                 >
                   Fermer
+                </button>
+              </div>
+            </div>
+          )}
+
+          {paymentStep === "success" && (
+            <div className="py-6 text-center space-y-4">
+              <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-2xl font-black shadow-lg">
+                ✨
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-base font-black text-emerald-400 uppercase tracking-tight">
+                  👑 Félicitations !
+                </h4>
+                <p className="text-xs text-afri-text font-bold">
+                  Votre abonnement {currentSelectedPlanObj.name} est activé avec succès !
+                </p>
+                <p className="text-[11px] text-afri-text-sec leading-relaxed max-w-xs mx-auto">
+                  Le montant de <span className="font-mono text-[#D4AF37] font-bold">{currentSelectedPlanObj.priceLabel}</span> a été déduit de votre Wallet. Vous avez désormais accès à tous vos avantages premium !
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-afri-border/40">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveModal(null);
+                  }}
+                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-xs py-3 tracking-widest rounded-xl transition-all shadow-lg"
+                >
+                  Super, Merci !
                 </button>
               </div>
             </div>

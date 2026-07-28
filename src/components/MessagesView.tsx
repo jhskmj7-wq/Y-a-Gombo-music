@@ -1069,7 +1069,7 @@ export default function MessagesView({
                     <div className="flex gap-2">
                       <label 
                         className={`py-1 px-2.5 bg-afri-bg-sec hover:bg-afri-bg-sec border border-afri-border rounded-lg text-[9px] font-mono font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-1 cursor-pointer transition-all ${isSending ? 'opacity-50 pointer-events-none' : ''}`}
-                        title="Partager une image"
+                        title="Transmettre une image"
                       >
                         <ImageIcon className="w-3.5 h-3.5" />
                         <span>📷 Image</span>

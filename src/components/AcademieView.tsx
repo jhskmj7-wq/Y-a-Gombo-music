@@ -7,6 +7,9 @@ import {
 import { UserProfile } from "../types";
 import { supportConfig } from "../supportConfig";
 import { AfriModal } from "./common/AfriModal";
+import { db, gomboDB } from "../firebase";
+import { recordWalletTransaction } from "../lib/financial";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export interface AcademyCourse {
   id: string;
@@ -189,6 +192,9 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isEnrollSuccessModalOpen, setIsEnrollSuccessModalOpen] = useState<boolean>(false);
   const [enrolledCourseTitle, setEnrolledCourseTitle] = useState<string>("");
+  const [isInsufficientBalanceModalOpen, setIsInsufficientBalanceModalOpen] = useState<boolean>(false);
+  const [insufficientBalanceDetails, setInsufficientBalanceDetails] = useState<{ current: number; required: number; missing: number } | null>(null);
+  const [pendingResumeCourse, setPendingResumeCourse] = useState<AcademyCourse | null>(null);
 
   // Create Course Form State
   const [newTitle, setNewTitle] = useState("");
@@ -240,18 +246,100 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
   const platformCommission = Math.round(priceVal * 0.05);
   const instructorEarnings = Math.max(0, priceVal - platformCommission);
 
-  const handleEnrollInCourse = (course: AcademyCourse) => {
-    if (!enrolledCourseIds.includes(course.id)) {
-      setEnrolledCourseIds([...enrolledCourseIds, course.id]);
-    }
-    setEnrolledCourseTitle(course.title);
-    setSelectedCourse(null);
-    setIsEnrollSuccessModalOpen(true);
+  const handleEnrollInCourse = async (course: AcademyCourse) => {
+    if (course.price > 0) {
+      if (!currentUserProfile?.uid) {
+        alert("Veuillez vous connecter pour vous inscrire à ce cours.");
+        return;
+      }
 
-    if (window.dispatchEvent) {
-      window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'validation' } }));
+      try {
+        const userRef = doc(db, "users", currentUserProfile.uid);
+        const userSnap = await getDoc(userRef);
+        let balance = 0;
+        if (userSnap.exists()) {
+          const uData = userSnap.data();
+          balance = uData?.wallet?.soldeDisponible ?? 0;
+        } else {
+          balance = currentUserProfile?.wallet?.soldeDisponible ?? 0;
+        }
+
+        if (balance >= course.price) {
+          const newSolde = balance - course.price;
+          await setDoc(userRef, {
+            wallet: {
+              soldeDisponible: newSolde
+            }
+          }, { merge: true });
+
+          await recordWalletTransaction({
+            userId: currentUserProfile.uid,
+            userName: currentUserProfile.displayName || "Membre Gombo",
+            type: "debit_publication",
+            amount: course.price,
+            status: "success",
+            description: `Achat Cours Académie : "${course.title}"`
+          });
+
+          // Fire custom event to notify parents of balance updates
+          window.dispatchEvent(new CustomEvent("wallet_balance_updated"));
+
+          if (!enrolledCourseIds.includes(course.id)) {
+            setEnrolledCourseIds([...enrolledCourseIds, course.id]);
+          }
+          setEnrolledCourseTitle(course.title);
+          setSelectedCourse(null);
+          setIsEnrollSuccessModalOpen(true);
+
+          if (window.dispatchEvent) {
+            window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'validation' } }));
+          }
+        } else {
+          setInsufficientBalanceDetails({
+            current: balance,
+            required: course.price,
+            missing: course.price - balance
+          });
+          setEnrolledCourseTitle(course.title);
+          setIsInsufficientBalanceModalOpen(true);
+          setSelectedCourse(null);
+        }
+      } catch (err) {
+        console.error("Error purchasing course", err);
+        alert("Une erreur s'est produite lors de l'achat. Veuillez réessayer.");
+      }
+    } else {
+      // Gratuit
+      if (!enrolledCourseIds.includes(course.id)) {
+        setEnrolledCourseIds([...enrolledCourseIds, course.id]);
+      }
+      setEnrolledCourseTitle(course.title);
+      setSelectedCourse(null);
+      setIsEnrollSuccessModalOpen(true);
+
+      if (window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'validation' } }));
+      }
     }
   };
+
+  useEffect(() => {
+    const pendingRaw = localStorage.getItem("afrigombo_pending_purchase");
+    if (pendingRaw) {
+      try {
+        const pending = JSON.parse(pendingRaw);
+        if (pending.type === "academie" && pending.course) {
+          const course = pending.course;
+          const userSolde = currentUserProfile?.wallet?.soldeDisponible ?? 0;
+          if (userSolde >= course.price) {
+            setPendingResumeCourse(course);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [currentUserProfile]);
 
   const handleCreateCourse = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1061,6 +1149,115 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
           </p>
         </div>
       </AfriModal>
+
+      {/* INSUFFICIENT BALANCE MODAL */}
+      {isInsufficientBalanceModalOpen && insufficientBalanceDetails && (
+        <AfriModal
+          isOpen={true}
+          onClose={() => setIsInsufficientBalanceModalOpen(false)}
+          title="Solde insuffisant"
+        >
+          <div className="space-y-4 text-center">
+            <div className="w-12 h-12 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-full flex items-center justify-center mx-auto text-xl">
+              ⚠️
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="font-black text-afri-text uppercase text-sm">Solde Wallet Insuffisant</h3>
+              <p className="text-xs text-afri-text-sec leading-relaxed">
+                Votre solde actuel ne couvre pas l'achat de ce cours. Veuillez recharger votre portefeuille.
+              </p>
+            </div>
+            <div className="p-4 bg-afri-bg rounded-xl border border-afri-border text-left space-y-2 text-xs font-mono">
+              <div className="flex justify-between">
+                <span className="text-afri-text-sec">Solde actuel :</span>
+                <span className="text-rose-500 font-bold">{insufficientBalanceDetails.current.toLocaleString()} FCFA</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-afri-text-sec">Montant requis :</span>
+                <span className="text-afri-text font-bold">{insufficientBalanceDetails.required.toLocaleString()} FCFA</span>
+              </div>
+              <div className="flex justify-between border-t border-afri-border pt-2 font-bold">
+                <span className="text-[#D4AF37]">Montant manquant :</span>
+                <span className="text-[#D4AF37]">{insufficientBalanceDetails.missing.toLocaleString()} FCFA</span>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setIsInsufficientBalanceModalOpen(false)}
+                className="flex-1 py-2.5 bg-afri-bg border border-afri-border hover:bg-afri-bg-sec text-afri-text-sec text-xs font-bold uppercase rounded-xl transition-all cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  setIsInsufficientBalanceModalOpen(false);
+                  localStorage.setItem("afrigombo_suggested_deposit_amount", String(insufficientBalanceDetails.missing));
+                  localStorage.setItem(
+                    "afrigombo_pending_purchase",
+                    JSON.stringify({ type: "academie", course: { price: insufficientBalanceDetails.required, title: enrolledCourseTitle || "Cours Académie", id: `course-${Date.now()}` } })
+                  );
+                  if (onNavigateView) {
+                    onNavigateView("user_wallet");
+                  }
+                }}
+                className="flex-1 py-2.5 bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black text-xs font-black uppercase rounded-xl transition-all cursor-pointer shadow-md"
+              >
+                Recharger mon Wallet
+              </button>
+            </div>
+          </div>
+        </AfriModal>
+      )}
+
+      {/* PENDING RESUME MODAL */}
+      {pendingResumeCourse && (
+        <AfriModal
+          isOpen={true}
+          onClose={() => {
+            localStorage.removeItem("afrigombo_pending_purchase");
+            setPendingResumeCourse(null);
+          }}
+          title="Finaliser l'inscription"
+        >
+          <div className="space-y-4 text-center">
+            <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-xl">
+              ✓
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-black text-afri-text uppercase text-sm">Solde suffisant !</h3>
+              <p className="text-xs text-afri-text-sec">
+                Votre solde Wallet est désormais suffisant ({currentUserProfile?.wallet?.soldeDisponible?.toLocaleString()} FCFA). Souhaitez-vous finaliser l'inscription à la formation suivante ?
+              </p>
+            </div>
+            <div className="p-3 bg-afri-bg rounded-xl border border-afri-border text-left text-xs">
+              <div className="font-bold text-afri-text">{pendingResumeCourse.title}</div>
+              <div className="text-[#D4AF37] font-mono font-bold mt-1">{pendingResumeCourse.price.toLocaleString()} FCFA</div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => {
+                  localStorage.removeItem("afrigombo_pending_purchase");
+                  setPendingResumeCourse(null);
+                }}
+                className="flex-1 py-2 bg-afri-bg-sec border border-afri-border hover:bg-afri-bg-ter text-afri-text text-xs font-bold uppercase rounded-xl transition-all cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  const courseToBuy = pendingResumeCourse;
+                  localStorage.removeItem("afrigombo_pending_purchase");
+                  setPendingResumeCourse(null);
+                  handleEnrollInCourse(courseToBuy);
+                }}
+                className="flex-1 py-2 bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black text-xs font-black uppercase rounded-xl transition-all cursor-pointer shadow-md"
+              >
+                Confirmer l'inscription
+              </button>
+            </div>
+          </div>
+        </AfriModal>
+      )}
 
     </div>
   );

@@ -177,7 +177,7 @@ export default function SocialPostCard({
       return;
     }
 
-    const comment = window.prompt("Commentaire ou précision supplémentaire (facultatif) :", "") || "Aucune précision";
+    const comment = window.prompt("Palabre ou précision supplémentaire (facultatif) :", "") || "Aucune précision";
 
     let updatedReportedBy = post.reportedBy ? [...post.reportedBy] : [];
     const newReportsCount = (post.reportsCount || 0) + 1;
@@ -412,7 +412,7 @@ export default function SocialPostCard({
         const authorName = currentUserProfile ? `${currentUserProfile.firstName} ${currentUserProfile.lastName}` : "Un artiste";
         await gomboDB.sendNotification({
           userId: post.userId,
-          title: "💬 Nouveau Commentaire !",
+          title: "💬 Nouveau Palabre !",
           message: `${authorName} a commenté votre post : "${newComment.text.substring(0, 35)}${newComment.text.length > 35 ? "..." : ""}"`,
           type: "general"
         });
@@ -753,7 +753,7 @@ export default function SocialPostCard({
       {/* 4. Footer interactions buttons (Likes, Comments, Shares, Saves, Reports, Répondre) */}
       <div className="px-3 sm:px-5 py-4 bg-gray-50/50 dark:bg-afri-bg-sec border-t border-gray-100 dark:border-[#2B2B2B]">
         <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:flex md:flex-wrap items-center gap-3 w-full">
-          {/* Honour button - 🪘 Honneur reçu */}
+          {/* Honour button - 🪘 J'honore */}
           <button
             id="btn-honore"
             onClick={handleHonourToggle}
@@ -764,10 +764,10 @@ export default function SocialPostCard({
             }`}
           >
             <span className="text-[14px]">{hasHonoured ? "🪘" : "🪘"}</span>
-            <span>Honneur reçu ({honours})</span>
+            <span>J'honore ({honours})</span>
           </button>
  
-          {/* Comment button - 🗣️ Palabrer */}
+          {/* Comment button - 🗣️ Palabres */}
           <button
             id="btn-palabre"
             onClick={() => setShowComments(!showComments)}
@@ -778,7 +778,7 @@ export default function SocialPostCard({
             }`}
           >
             <MessageSquare className="w-4 h-4" />
-            <span>🗣️ Palabrer ({commentsList.length})</span>
+            <span>🗣️ Palabres ({commentsList.length})</span>
           </button>
 
           {/* Save button - 📌 Je garde */}
@@ -795,14 +795,14 @@ export default function SocialPostCard({
             <span>📌 Je garde</span>
           </button>
  
-          {/* Share button - 📢 Fais tourner */}
+          {/* Share button - 📢 Transmettre */}
           <button
             id="btn-fais-tourner"
             onClick={handleShare}
             className="flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-afri-text-sec dark:text-afri-text-sec hover:text-[#D4AF37] focus:outline-none active:scale-95 text-[11px] font-black uppercase cursor-pointer"
           >
             <Share2 className="w-4 h-4" />
-            <span>📢 Fais tourner</span>
+            <span>📢 Transmettre</span>
           </button>
 
           {/* Report button - 🚨 Alerter */}
@@ -862,7 +862,7 @@ export default function SocialPostCard({
             <div className="space-y-3 max-h-48 overflow-y-auto mb-4 pr-1 scrollbar-thin scrollbar-thumb-[#D4AF37]">
               {commentsList.length === 0 ? (
                 <p className="text-[11px] text-afri-text-sec text-center py-2 italic font-semibold">
-                  Aucun commentaire. Soyez le premier à donner votre avis de pro ! 🗣️
+                  Aucun palabre. Soyez le premier à donner votre avis de pro ! 🗣️
                 </p>
               ) : (
                 commentsList.map((com) => (

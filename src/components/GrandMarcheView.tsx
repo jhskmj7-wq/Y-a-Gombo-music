@@ -8,6 +8,9 @@ import {
 import { UserProfile } from "../types";
 import { supportConfig } from "../supportConfig";
 import { AfriModal } from "./common/AfriModal";
+import { db, gomboDB } from "../firebase";
+import { recordWalletTransaction } from "../lib/financial";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 interface MarketItem {
   id: string;
@@ -198,6 +201,9 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
   const [isPublishModalOpen, setIsPublishModalOpen] = useState<boolean>(false);
   const [isBuySuccessModalOpen, setIsBuySuccessModalOpen] = useState<boolean>(false);
   const [boughtItemTitle, setBoughtItemTitle] = useState<string>("");
+  const [isInsufficientBalanceModalOpen, setIsInsufficientBalanceModalOpen] = useState<boolean>(false);
+  const [insufficientBalanceDetails, setInsufficientBalanceDetails] = useState<{ current: number; required: number; missing: number } | null>(null);
+  const [pendingResumeItem, setPendingResumeItem] = useState<MarketItem | null>(null);
 
   // Publish Form State
   const [newTitle, setNewTitle] = useState("");
@@ -289,14 +295,86 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
     if (selectedItem?.id === id) setSelectedItem(null);
   };
 
-  const handleBuyItem = (item: MarketItem) => {
-    setBoughtItemTitle(item.title);
-    setSelectedItem(null);
-    setIsBuySuccessModalOpen(true);
-    if (window.dispatchEvent) {
-      window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'payment' } }));
+  const handleBuyItem = async (item: MarketItem) => {
+    if (!currentUserProfile?.uid) {
+      alert("Veuillez vous connecter pour acheter cet article.");
+      return;
+    }
+
+    try {
+      // Fetch latest wallet balance directly from Firestore
+      const userRef = doc(db, "users", currentUserProfile.uid);
+      const userSnap = await getDoc(userRef);
+      let balance = 0;
+      if (userSnap.exists()) {
+        const uData = userSnap.data();
+        balance = uData?.wallet?.soldeDisponible ?? 0;
+      } else {
+        balance = currentUserProfile?.wallet?.soldeDisponible ?? 0;
+      }
+
+      if (balance >= item.price) {
+        // Solde suffisant: déduire immédiatement
+        const newSolde = balance - item.price;
+        await setDoc(userRef, {
+          wallet: {
+            soldeDisponible: newSolde
+          }
+        }, { merge: true });
+
+        // Enregistrer la transaction
+        await recordWalletTransaction({
+          userId: currentUserProfile.uid,
+          userName: currentUserProfile.displayName || "Membre Gombo",
+          type: "debit_publication",
+          amount: item.price,
+          status: "success",
+          description: `Achat article Marché : "${item.title}"`
+        });
+
+        // Fire custom event to notify parents of balance updates
+        window.dispatchEvent(new CustomEvent("wallet_balance_updated"));
+
+        setBoughtItemTitle(item.title);
+        setSelectedItem(null);
+        setIsBuySuccessModalOpen(true);
+        if (window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'payment' } }));
+        }
+      } else {
+        // Solde insuffisant: bloquer et ouvrir modale
+        setInsufficientBalanceDetails({
+          current: balance,
+          required: item.price,
+          missing: item.price - balance
+        });
+        setBoughtItemTitle(item.title);
+        setIsInsufficientBalanceModalOpen(true);
+        setSelectedItem(null);
+      }
+    } catch (err) {
+      console.error("Error executing buy item", err);
+      alert("Erreur lors de la validation de la transaction. Veuillez réessayer.");
     }
   };
+
+  useEffect(() => {
+    const pendingRaw = localStorage.getItem("afrigombo_pending_purchase");
+    if (pendingRaw) {
+      try {
+        const pending = JSON.parse(pendingRaw);
+        if (pending.type === "grand_marche" && pending.item) {
+          const item = pending.item;
+          const userSolde = currentUserProfile?.wallet?.soldeDisponible ?? 0;
+          if (userSolde >= item.price) {
+            setPendingResumeItem(item);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [currentUserProfile]);
 
   return (
     <div className="w-full flex flex-col space-y-6 text-left animate-fadeIn text-afri-text pb-32">
@@ -1057,6 +1135,115 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
           </p>
         </div>
       </AfriModal>
+
+      {/* INSUFFICIENT BALANCE MODAL */}
+      {isInsufficientBalanceModalOpen && insufficientBalanceDetails && (
+        <AfriModal
+          isOpen={true}
+          onClose={() => setIsInsufficientBalanceModalOpen(false)}
+          title="Solde insuffisant"
+        >
+          <div className="space-y-4 text-center">
+            <div className="w-12 h-12 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-full flex items-center justify-center mx-auto text-xl">
+              ⚠️
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="font-black text-afri-text uppercase text-sm">Solde Wallet Insuffisant</h3>
+              <p className="text-xs text-afri-text-sec leading-relaxed">
+                Votre solde actuel ne couvre pas le coût de cet article. Veuillez recharger votre portefeuille.
+              </p>
+            </div>
+            <div className="p-4 bg-afri-bg rounded-xl border border-afri-border text-left space-y-2 text-xs font-mono">
+              <div className="flex justify-between">
+                <span className="text-afri-text-sec">Solde actuel :</span>
+                <span className="text-rose-500 font-bold">{insufficientBalanceDetails.current.toLocaleString()} FCFA</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-afri-text-sec">Montant requis :</span>
+                <span className="text-afri-text font-bold">{insufficientBalanceDetails.required.toLocaleString()} FCFA</span>
+              </div>
+              <div className="flex justify-between border-t border-afri-border pt-2 font-bold">
+                <span className="text-[#D4AF37]">Montant manquant :</span>
+                <span className="text-[#D4AF37]">{insufficientBalanceDetails.missing.toLocaleString()} FCFA</span>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setIsInsufficientBalanceModalOpen(false)}
+                className="flex-1 py-2.5 bg-afri-bg border border-afri-border hover:bg-afri-bg-sec text-afri-text-sec text-xs font-bold uppercase rounded-xl transition-all cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  setIsInsufficientBalanceModalOpen(false);
+                  localStorage.setItem("afrigombo_suggested_deposit_amount", String(insufficientBalanceDetails.missing));
+                  localStorage.setItem(
+                    "afrigombo_pending_purchase",
+                    JSON.stringify({ type: "grand_marche", item: { price: insufficientBalanceDetails.required, title: boughtItemTitle || "Article du Marché" } })
+                  );
+                  if (onNavigateView) {
+                    onNavigateView("user_wallet");
+                  }
+                }}
+                className="flex-1 py-2.5 bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black text-xs font-black uppercase rounded-xl transition-all cursor-pointer shadow-md"
+              >
+                Recharger mon Wallet
+              </button>
+            </div>
+          </div>
+        </AfriModal>
+      )}
+
+      {/* PENDING RESUME MODAL */}
+      {pendingResumeItem && (
+        <AfriModal
+          isOpen={true}
+          onClose={() => {
+            localStorage.removeItem("afrigombo_pending_purchase");
+            setPendingResumeItem(null);
+          }}
+          title="Finaliser l'achat en suspens"
+        >
+          <div className="space-y-4 text-center">
+            <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-xl">
+              ✓
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-black text-afri-text uppercase text-sm">Solde suffisant !</h3>
+              <p className="text-xs text-afri-text-sec">
+                Votre solde Wallet est désormais suffisant ({currentUserProfile?.wallet?.soldeDisponible?.toLocaleString()} FCFA). Souhaitez-vous finaliser l'achat de l'article suivant ?
+              </p>
+            </div>
+            <div className="p-3 bg-afri-bg rounded-xl border border-afri-border text-left text-xs">
+              <div className="font-bold text-afri-text">{pendingResumeItem.title}</div>
+              <div className="text-[#D4AF37] font-mono font-bold mt-1">{pendingResumeItem.price.toLocaleString()} FCFA</div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => {
+                  localStorage.removeItem("afrigombo_pending_purchase");
+                  setPendingResumeItem(null);
+                }}
+                className="flex-1 py-2 bg-afri-bg-sec border border-afri-border hover:bg-afri-bg-ter text-afri-text text-xs font-bold uppercase rounded-xl transition-all cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  const itemToBuy = pendingResumeItem;
+                  localStorage.removeItem("afrigombo_pending_purchase");
+                  setPendingResumeItem(null);
+                  handleBuyItem(itemToBuy);
+                }}
+                className="flex-1 py-2 bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black text-xs font-black uppercase rounded-xl transition-all cursor-pointer shadow-md"
+              >
+                Confirmer l'achat
+              </button>
+            </div>
+          </div>
+        </AfriModal>
+      )}
 
     </div>
   );

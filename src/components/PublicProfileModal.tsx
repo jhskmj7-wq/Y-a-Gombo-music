@@ -391,7 +391,7 @@ export function PublicProfileModal({
                       className="py-2 px-3 bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border text-afri-text rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Share2 className="w-3.5 h-3.5 text-afri-gold" />
-                      <span>{shareSuccess ? "Copié !" : "Partager"}</span>
+                      <span>{shareSuccess ? "Copié !" : "Transmettre"}</span>
                     </button>
 
                     <button
