@@ -83,6 +83,7 @@ export async function recordWalletTransaction(payload: {
   gomboId?: string;
   contractId?: string;
   userConcerned?: string;
+  reference?: string;
 }): Promise<string> {
   const now = new Date();
   const dateStr = now.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });

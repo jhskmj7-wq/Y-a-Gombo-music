@@ -35,6 +35,7 @@ interface WalletDepositRequest {
 
 interface BetaTransactionsAdminPanelProps {
   currentUser?: any;
+  onOpenSupportChat?: (targetUser: any) => void;
 }
 
 export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProps> = ({

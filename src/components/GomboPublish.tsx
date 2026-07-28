@@ -49,6 +49,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     return today.toISOString().split("T")[0];
   });
   const [budget, setBudget] = useState("");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // Live financial calculation for publication
+  const isUserPremium = !!(currentUserProfile?.isPremium || currentUserProfile?.isVip || currentUserProfile?.isPro || currentUserProfile?.badges?.includes("💎 Adhérent Premium") || currentUserProfile?.gomboId?.certifie);
+  const feeRate = isUserPremium ? 0.015 : 0.025;
+  const cachetVal = budget ? Number(budget) : 0;
+  const financials = calculatePublicationFinancials(cachetVal, feeRate);
   
   // Photo & Audio optional attachments
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -128,11 +135,17 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     }
 
     setErrorMsg("");
+    setShowConfirmModal(true);
+  };
+
+  const executePublish = async () => {
+    setShowConfirmModal(false);
     setLoading(true);
 
     try {
       const authorName = currentUserProfile.displayName || currentUserProfile.name || "Artiste Gombo";
       const authorPhoto = currentUserProfile.photoURL || currentUserProfile.avatarUrl || "";
+      const selectedDateStr = (typeof date === "string" && date) ? date.split("T")[0] : new Date().toISOString().split("T")[0];
 
       // 3. CALCUL AUTOMATIQUE DU MONTANT + COMMISSION
       const cachetVal = budget ? Number(budget) : (selectedType === "opportunite" || selectedType === "renfort" ? 25000 : 0);
@@ -714,6 +727,35 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 className="w-full pl-12 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-bold text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder-gray-600"
               />
             </div>
+
+            {/* 📄 RÉCAPITULATIF FINANCIER EN TEMPS RÉEL */}
+            {cachetVal > 0 && (
+              <div className="mt-3 p-4 bg-afri-bg-sec/90 border border-[#D4AF37]/30 rounded-2xl space-y-2.5">
+                <div className="flex items-center justify-between text-xs font-black text-[#D4AF37] uppercase tracking-wider">
+                  <span className="flex items-center gap-1.5">📄 Récapitulatif</span>
+                  <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/20">
+                    {isUserPremium ? "Tarif Premium (1,5%)" : "Tarif Standard (2,5%)"}
+                  </span>
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between text-afri-text-sec">
+                    <span>Montant du contrat :</span>
+                    <span className="font-mono font-bold text-afri-text">{financials.cachet.toLocaleString()} FCFA</span>
+                  </div>
+                  <div className="flex justify-between text-afri-text-sec">
+                    <span>Commission AFRIGOMBO ({isUserPremium ? "1,5%" : "2,5%"}):</span>
+                    <span className="font-mono font-bold text-[#D4AF37]">{financials.fee.toLocaleString()} FCFA</span>
+                  </div>
+                  <div className="pt-2 border-t border-white/10 flex justify-between items-center">
+                    <span className="font-bold text-afri-text uppercase">Total à payer :</span>
+                    <span className="font-mono font-black text-emerald-400 text-sm">{financials.total.toLocaleString()} FCFA</span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-afri-text-sec/80 leading-relaxed pt-1 border-t border-white/5">
+                  ℹ️ Les frais de publication sont prélevés uniquement au moment de la publication du Gombo. Le montant du contrat reste entièrement réservé au musicien jusqu'à la fin de la prestation.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* 7. PHOTO OU AUDIO OPTIONNELS */}
@@ -814,6 +856,63 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           </div>
         </form>
       </motion.div>
+
+      {/* MODAL DE CONFIRMATION AVANT PUBLICATION */}
+      <AnimatePresence>
+        {showConfirmModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="bg-afri-bg border border-[#D4AF37]/50 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl"
+            >
+              <h3 className="text-base font-black text-[#D4AF37] uppercase text-center tracking-wide">
+                Confirmer la publication ?
+              </h3>
+              <div className="space-y-2.5 bg-white/[0.03] p-4 rounded-2xl border border-white/10 text-xs">
+                <div className="flex justify-between text-afri-text-sec">
+                  <span>Montant du contrat :</span>
+                  <span className="font-mono font-bold text-afri-text">{financials.cachet.toLocaleString()} FCFA</span>
+                </div>
+                <div className="flex justify-between text-afri-text-sec">
+                  <span>Commission ({isUserPremium ? "1,5%" : "2,5%"}) :</span>
+                  <span className="font-mono font-bold text-[#D4AF37]">{financials.fee.toLocaleString()} FCFA</span>
+                </div>
+                <div className="pt-2 border-t border-white/10 flex justify-between items-center">
+                  <span className="font-bold text-afri-text uppercase">Total débité du Wallet :</span>
+                  <span className="font-mono font-black text-emerald-400 text-base">{financials.total.toLocaleString()} FCFA</span>
+                </div>
+              </div>
+              <p className="text-[10px] text-afri-text-sec text-center leading-relaxed">
+                Le système vérifiera votre solde et prélèvera ces frais uniquement après votre confirmation.
+              </p>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(false)}
+                  className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-afri-text font-black text-xs uppercase rounded-xl transition-all border border-white/10 cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={executePublish}
+                  className="flex-1 py-3 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> : "Confirmer"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <GomboSecureModal 
         isOpen={showSecureModal} 
