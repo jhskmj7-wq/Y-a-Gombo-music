@@ -1157,14 +1157,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       if (docSnap.exists()) {
         const data = docSnap.data();
         if (Array.isArray(data.founders)) {
-          setDynamicFounders(data.founders.map((e: string) => e.trim().toLowerCase()));
+          setDynamicFounders(data.founders.map((e: any) => String(e || "").trim().toLowerCase()).filter(Boolean));
         }
         if (Array.isArray(data.superAdmins)) {
-          setDynamicSuperAdmins(data.superAdmins.map((e: string) => e.trim().toLowerCase()));
+          setDynamicSuperAdmins(data.superAdmins.map((e: any) => String(e || "").trim().toLowerCase()).filter(Boolean));
         }
       } else {
         // Bootstrap config if current user is the root founder
-        if (adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com") {
+        if (String(adminEmail || "").trim().toLowerCase() === "johnsylvesterh@gmail.com") {
           setDoc(docRef, {
             founders: ["johnsylvesterh@gmail.com"],
             superAdmins: ["sylvestrehounkpevi777@gmail.com", "jhs.kmj7@gmail.com"]
@@ -1585,7 +1585,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
     setTimeout(() => {
       // Populate automatic flagged items
-      const flaggedP = posts.filter(p => p.isFlagged || p.content.toLowerCase().includes("contrefait") || p.content.toLowerCase().includes("cachette"));
+      const flaggedP = posts.filter(p => p.isFlagged || String(p.content || "").toLowerCase().includes("contrefait") || String(p.content || "").toLowerCase().includes("cachette"));
       const suspectU = users.filter(u => u.status === "suspect" || u.flagsCount > 1);
 
       setAutoFlaggedPosts(flaggedP);
@@ -3263,15 +3263,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 
                 // Filter posts
                 const filteredFeedPosts = posts.filter(p => 
-                  p.content.toLowerCase().includes(searchStr) ||
-                  p.authorArtisticName.toLowerCase().includes(searchStr)
+                  String(p.content || "").toLowerCase().includes(searchStr) ||
+                  String(p.authorArtisticName || "").toLowerCase().includes(searchStr)
                 );
 
                 // Filter gombos
                 const GombosToRender = gombos.filter(g => 
-                  g.title.toLowerCase().includes(searchStr) ||
-                  g.description.toLowerCase().includes(searchStr) ||
-                  g.location.toLowerCase().includes(searchStr)
+                  String(g.title || "").toLowerCase().includes(searchStr) ||
+                  String(g.description || "").toLowerCase().includes(searchStr) ||
+                  String(g.location || "").toLowerCase().includes(searchStr)
                 );
 
                 // Toast status when applying
@@ -3656,9 +3656,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                       const text = verifyGomboIdInput.toLowerCase().trim();
                                       if (!text) return;
                                       const found = users.find(u => 
-                                        (u.id || "").toLowerCase().includes(text) || 
-                                        (u.artisticName || "").toLowerCase().includes(text) ||
-                                        (u.name || "").toLowerCase().includes(text)
+                                        String(u.id || "").toLowerCase().includes(text) || 
+                                        String(u.artisticName || "").toLowerCase().includes(text) ||
+                                        String(u.name || "").toLowerCase().includes(text)
                                       );
                                       setVerifyGomboIdResult(found || "not_found");
                                       addToTerminal(`[SCANNER] Gombo ID scanner de sécurité interrogé pour: ${verifyGomboIdInput}`);
@@ -4574,9 +4574,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "user_vibes" && (() => {
                 const searchStr = globalSearchTerm.toLowerCase();
                 const filteredArtists = users.filter(u => 
-                  (u.artisticName || "").toLowerCase().includes(searchStr) ||
-                  (u.commune || "").toLowerCase().includes(searchStr) ||
-                  (u.specialties && u.specialties.some(s => (s || "").toLowerCase().includes(searchStr)))
+                  String(u.artisticName || "").toLowerCase().includes(searchStr) ||
+                  String(u.commune || "").toLowerCase().includes(searchStr) ||
+                  (Array.isArray(u.specialties) && u.specialties.some(s => String(s || "").toLowerCase().includes(searchStr)))
                 );
 
                 return (

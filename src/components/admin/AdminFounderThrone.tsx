@@ -81,33 +81,15 @@ export default function AdminFounderThrone({
 }: AdminFounderThroneProps) {
   const isDark = theme !== "light";
   const { currentUser, profile } = useAuth();
+  // ==========================================
+  // CONSOLIDATED REACT HOOKS (STATES & EFFECTS)
+  // ==========================================
   const [audioState, setAudioState] = useState<AudioState>(globalAudioManager.getState());
-
-  useEffect(() => {
-    return globalAudioManager.subscribe((state) => {
-      setAudioState(state);
-    });
-  }, []);
-
-  const formatAudioTime = (seconds: number) => {
-    if (!seconds || isNaN(seconds)) return "00:00";
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  // Navigation: null shows the main grid, string shows specific section view
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
-  
-  // Feedback States
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-
-  // Header Folded state
   const [isHeaderFolded, setIsHeaderFolded] = useState<boolean>(false);
   const [isCriticalZoneFolded, setIsCriticalZoneFolded] = useState<boolean>(false);
-
-  // Quick Action Modal States
   const [quickPremiumModalOpen, setQuickPremiumModalOpen] = useState<boolean>(false);
   const [quickNoticeModalOpen, setQuickNoticeModalOpen] = useState<boolean>(false);
   const [quickNotifModalOpen, setQuickNotifModalOpen] = useState<boolean>(false);
@@ -116,8 +98,101 @@ export default function AdminFounderThrone({
   const [quickNotifBody, setQuickNotifBody] = useState<string>("");
   const [simVol, setSimVol] = useState<number>(100);
   const [simAvgAmount, setSimAvgAmount] = useState<number>(50000);
+  const [registrationsEnabled, setRegistrationsEnabled] = useState<boolean>(true);
+  const [autoPilotEnabled, setAutoPilotEnabled] = useState<boolean>(false);
+  const [imperialLogs, setImperialLogs] = useState<any[]>([]);
+  const [liveUsers, setLiveUsers] = useState<any[]>(users);
+  const [livePosts, setLivePosts] = useState<any[]>(posts || []);
+  const [liveGombos, setLiveGombos] = useState<any[]>(gombos || []);
+  const [notificationsList, setNotificationsList] = useState<any[]>([]);
+  const [featuredContentList, setFeaturedContentList] = useState<any[]>([]);
+  const [trendFilter, setTrendFilter] = useState<string>("ALL");
+  const [formSubTab, setFormSubTab] = useState<"support" | "disputes" | "kyc" | "bugs">("support");
+  const [ticketsSupport, setTicketsSupport] = useState<any[]>([]);
+  const [disputesList, setDisputesList] = useState<any[]>([]);
+  const [kycRequests, setKycRequests] = useState<any[]>([]);
+  const [userCommuneFilter, setUserCommuneFilter] = useState<string>("ALL");
+  const [userLevelFilter, setUserLevelFilter] = useState<string>("ALL");
+  const [userVerifiedFilter, setUserVerifiedFilter] = useState<string>("ALL");
+  const [userDateFilter, setUserDateFilter] = useState<string>("ALL");
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [viewingUser, setViewingUser] = useState<any | null>(null);
+  const [bugReports, setBugReports] = useState<any[]>([]);
+  const [notifFilter, setNotifFilter] = useState<string>("ALL");
+  const [globalUserSearch, setGlobalUserSearch] = useState("");
+  const [globalPostSearch, setGlobalPostSearch] = useState("");
+  const [universeStates, setUniverseStates] = useState<Record<string, string>>({
+    gomboId: "DÉPLOYÉ & ACTIF",
+    afriTrust: "DÉPLOYÉ & ACTIF",
+    afriLivraison: "EN ATTENTE",
+    gomboMusik: "DÉPLOYÉ & ACTIF"
+  });
+  const [betaChecklist, setBetaChecklist] = useState<Record<string, boolean>>({
+    "Connexion Google": false,
+    "Déconnexion": false,
+    "Création publication": false,
+    "Modification profil": false,
+    "Upload image": false,
+    "Notifications": false,
+    "Navigation": false,
+    "Centre de Commandement": false,
+    "Trône": false,
+    "Responsive Android": false,
+    "Firebase": false,
+  });
+  const [economySettings, setEconomySettings] = useState<any>(null);
+  const [allContracts, setAllContracts] = useState<any[]>([]);
+  const [allPayments, setAllPayments] = useState<any[]>([]);
+  const [govData, setGovData] = useState<GovernanceData>({
+    vision: "Bâtir le premier empire de mise en relation artistique d'Afrique de l'Ouest.",
+    journal: "Aujourd'hui, lancement de la phase impériale d'AFRIGOMBO ELITE.",
+    decisions: "1. Certification systématique Gombo ID.\n2. Lancement des abonnements Elite.",
+    announcements: "Bienvenue sur le fil de l'écosystème souverain !",
+    growth: "Atteindre 10,000 membres actifs certifiés d'ici décembre 2026.",
+    notes: "Vérifier la performance du serveur d'Abidjan."
+  });
+  const [isSavingGov, setIsSavingGov] = useState(false);
+  const [musicTracks, setMusicTracks] = useState<ThroneMusicTrack[]>([]);
+  const [musicSpots, setMusicSpots] = useState<MusicSpots>({
+    accueil: "",
+    navigation: "",
+    throne: "",
+    evenements: "",
+    notifications: "",
+    celebration: ""
+  });
+  const [newTrackTitle, setNewTrackTitle] = useState("");
+  const [newTrackArtist, setNewTrackArtist] = useState("");
+  const [newTrackUrl, setNewTrackUrl] = useState("");
+  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [volume, setVolume] = useState(0.8);
+  const [trackProgress, setTrackProgress] = useState(0);
+  const [noticeTitle, setNoticeTitle] = useState("");
+  const [noticeBody, setNoticeBody] = useState("");
+  const [noticeCategory, setNoticeCategory] = useState("MESSAGE SPECIAL");
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanStep, setScanStep] = useState(0);
+  const [scanLogs, setScanLogs] = useState<string[]>([]);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [newFounderInput, setNewFounderInput] = useState("");
+  const [newAdminInput, setNewAdminInput] = useState("");
+  const [logs, setLogs] = useState<string[]>([
+    "[SYSTEM] Temple de commandement initialisé.",
+    "[PROTECTION] Pare-feu cyber-africain calibré et fonctionnel.",
+    "[MONITORING] Synchro Firestore établie en temps réel.",
+    "[DEVICES] Clé d'identité physique vérifiée d'Abidjan."
+  ]);
+  const [terminalInput, setTerminalInput] = useState("");
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
-  // Auto-fold header on scroll
+  // Grouped Effect Hooks
+  useEffect(() => {
+    return globalAudioManager.subscribe((state) => {
+      setAudioState(state);
+    });
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
@@ -128,16 +203,240 @@ export default function AdminFounderThrone({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // REALTIME FIRESTORE SNAPSHOTS FOR THE FOUNDER COMMAND CENTER
-  const [registrationsEnabled, setRegistrationsEnabled] = useState<boolean>(true);
-  const [autoPilotEnabled, setAutoPilotEnabled] = useState<boolean>(false);
-  const [imperialLogs, setImperialLogs] = useState<any[]>([]);
-  const [liveUsers, setLiveUsers] = useState<any[]>(users);
-  const [livePosts, setLivePosts] = useState<any[]>(posts || []);
-  const [liveGombos, setLiveGombos] = useState<any[]>(gombos || []);
-  const [notificationsList, setNotificationsList] = useState<any[]>([]);
-  const [featuredContentList, setFeaturedContentList] = useState<any[]>([]);
-  const [trendFilter, setTrendFilter] = useState<string>("ALL");
+  useEffect(() => {
+    if (!db) return;
+
+    const unsubReg = onSnapshot(doc(db, "system_settings", "registrations"), (snap) => {
+      if (snap.exists()) {
+        setRegistrationsEnabled(snap.data()?.enabled ?? true);
+      }
+    });
+
+    const unsubAutoPilot = onSnapshot(doc(db, "system_settings", "autopilot"), (snap) => {
+      if (snap.exists()) {
+        setAutoPilotEnabled(snap.data()?.enabled ?? false);
+      }
+    });
+
+    const unsubLogs = onSnapshot(collection(db, "imperial_logs"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      setImperialLogs(list);
+    });
+
+    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, uid: d.id, ...d.data() }));
+      if (list.length > 0) setLiveUsers(list);
+    });
+
+    const unsubSocialPosts = onSnapshot(collection(db, "social_posts"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      setLivePosts(list);
+    });
+
+    const unsubGombos = onSnapshot(collection(db, "gombos"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      setLiveGombos(list);
+    });
+
+    const unsubSupport = onSnapshot(collection(db, "tickets_support"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setTicketsSupport(list);
+    });
+
+    const unsubDisputes = onSnapshot(collection(db, "disputes"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setDisputesList(list);
+    });
+
+    const unsubKYC = onSnapshot(collection(db, "kyc_requests"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setKycRequests(list);
+    });
+
+    const unsubBugs = onSnapshot(collection(db, "bug_reports"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setBugReports(list);
+    });
+
+    const unsubNotifications = onSnapshot(collection(db, "notifications"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setNotificationsList(list);
+    });
+
+    const unsubFeatured = onSnapshot(collection(db, "featuredContent"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => (b.score || b.views || 0) - (a.score || a.views || 0));
+      setFeaturedContentList(list);
+    });
+
+    return () => {
+      unsubReg();
+      unsubAutoPilot();
+      unsubLogs();
+      unsubUsers();
+      unsubSocialPosts();
+      unsubGombos();
+      unsubSupport();
+      unsubDisputes();
+      unsubKYC();
+      unsubBugs();
+      unsubNotifications();
+      unsubFeatured();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(doc(db, "system_settings", "satellites"), (snap) => {
+      if (snap.exists()) {
+        setUniverseStates(snap.data() as Record<string, string>);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(doc(db, "system_settings", "beta_checklist"), (snap) => {
+      if (snap.exists()) {
+        setBetaChecklist(snap.data() as Record<string, boolean>);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(collection(db, "contracts"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => {
+        list.push({ id: d.id, ...d.data() });
+      });
+      setAllContracts(list);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(collection(db, "payments"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => {
+        list.push({ id: d.id, ...d.data() });
+      });
+      setAllPayments(list);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (selectedSection === "economy") {
+      import("../../firebase").then(({ gomboDB }) => {
+        gomboDB.getEconomySettings().then(settings => {
+          setEconomySettings(settings);
+        });
+      });
+    }
+  }, [selectedSection]);
+
+  useEffect(() => {
+    if (!db) return;
+    const docRef = doc(db, "throne", "governance");
+    const unsub = onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        setGovData(snap.data() as GovernanceData);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!db) return;
+    const unsubTracks = onSnapshot(collection(db, "throne_music"), (snap) => {
+      const list: ThroneMusicTrack[] = [];
+      snap.forEach((d) => {
+        list.push({ id: d.id, ...d.data() } as ThroneMusicTrack);
+      });
+      list.sort((a, b) => (a.order || 0) - (b.order || 0));
+      setMusicTracks(list);
+    });
+
+    const unsubSpots = onSnapshot(doc(db, "throne", "music_spots"), (snap) => {
+      if (snap.exists()) {
+        setMusicSpots(snap.data() as MusicSpots);
+      }
+    });
+
+    return () => {
+      unsubTracks();
+      unsubSpots();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (currentAudio) {
+      currentAudio.volume = volume;
+    }
+  }, [volume, currentAudio]);
+
+  useEffect(() => {
+    if (!currentAudio) return;
+    const updateProgress = () => {
+      if (currentAudio.duration) {
+        setTrackProgress((currentAudio.currentTime / currentAudio.duration) * 100);
+      }
+    };
+    currentAudio.addEventListener("timeupdate", updateProgress);
+    return () => {
+      currentAudio.removeEventListener("timeupdate", updateProgress);
+    };
+  }, [currentAudio]);
+
+  useEffect(() => {
+    const logsTemplates = [
+      "Vibration sonore harmonisée avec l'écosystème.",
+      "Base de données : ping 12ms optimal.",
+      "Analyse de suspicion passive : aucun usurpateur détecté.",
+      "Synchronisation Gombo ID : tous les registres à jour.",
+      "Trésorerie de l'Empire : Gombocaisse en expansion."
+    ];
+
+    const interval = setInterval(() => {
+      const randomMsg = logsTemplates[Math.floor(Math.random() * logsTemplates.length)];
+      const now = new Date().toLocaleTimeString("fr-FR");
+      setLogs((prev) => [`[${now}] [PASSIVE] ${randomMsg}`, ...prev.slice(0, 40)]);
+    }, 18000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatAudioTime = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return "00:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const handleToggleFeature = async (item: any) => {
     if (!db) return;
@@ -218,128 +517,6 @@ export default function AdminFounderThrone({
   };
 
   // Form Submissions Collections (Support, Litiges, KYC, Bugs)
-  const [formSubTab, setFormSubTab] = useState<"support" | "disputes" | "kyc" | "bugs">("support");
-  const [ticketsSupport, setTicketsSupport] = useState<any[]>([]);
-  const [disputesList, setDisputesList] = useState<any[]>([]);
-  const [kycRequests, setKycRequests] = useState<any[]>([]);
-
-  // States for user management, filters and view/edit
-  const [userCommuneFilter, setUserCommuneFilter] = useState<string>("ALL");
-  const [userLevelFilter, setUserLevelFilter] = useState<string>("ALL");
-  const [userVerifiedFilter, setUserVerifiedFilter] = useState<string>("ALL");
-  const [userDateFilter, setUserDateFilter] = useState<string>("ALL");
-  const [editingUser, setEditingUser] = useState<any | null>(null);
-  const [viewingUser, setViewingUser] = useState<any | null>(null);
-  const [bugReports, setBugReports] = useState<any[]>([]);
-  const [notifFilter, setNotifFilter] = useState<string>("ALL");
-
-  useEffect(() => {
-    if (!db) return;
-
-    // Registrations status
-    const unsubReg = onSnapshot(doc(db, "system_settings", "registrations"), (snap) => {
-      if (snap.exists()) {
-        setRegistrationsEnabled(snap.data()?.enabled ?? true);
-      }
-    });
-
-    const unsubAutoPilot = onSnapshot(doc(db, "system_settings", "autopilot"), (snap) => {
-      if (snap.exists()) {
-        setAutoPilotEnabled(snap.data()?.enabled ?? false);
-      }
-    });
-
-    // Imperial logs
-    const unsubLogs = onSnapshot(collection(db, "imperial_logs"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-      setImperialLogs(list);
-    });
-
-    // Realtime Users
-    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, uid: d.id, ...d.data() }));
-      if (list.length > 0) setLiveUsers(list);
-    });
-
-    // Realtime Posts & Gombos
-    const unsubSocialPosts = onSnapshot(collection(db, "social_posts"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      setLivePosts(list);
-    });
-
-    const unsubGombos = onSnapshot(collection(db, "gombos"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      setLiveGombos(list);
-    });
-
-    // 1. Realtime Tickets Support
-    const unsubSupport = onSnapshot(collection(db, "tickets_support"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      setTicketsSupport(list);
-    });
-
-    // 2. Realtime Disputes
-    const unsubDisputes = onSnapshot(collection(db, "disputes"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      setDisputesList(list);
-    });
-
-    // 3. Realtime KYC Requests
-    const unsubKYC = onSnapshot(collection(db, "kyc_requests"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      setKycRequests(list);
-    });
-
-    // 4. Realtime Bug Reports
-    const unsubBugs = onSnapshot(collection(db, "bug_reports"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      setBugReports(list);
-    });
-
-    // 5. Realtime Notifications
-    const unsubNotifications = onSnapshot(collection(db, "notifications"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      setNotificationsList(list);
-    });
-
-    // 6. Realtime Featured Content / Trending
-    const unsubFeatured = onSnapshot(collection(db, "featuredContent"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => (b.score || b.views || 0) - (a.score || a.views || 0));
-      setFeaturedContentList(list);
-    });
-
-    return () => {
-      unsubReg();
-      unsubAutoPilot();
-      unsubLogs();
-      unsubUsers();
-      unsubSocialPosts();
-      unsubGombos();
-      unsubSupport();
-      unsubDisputes();
-      unsubKYC();
-      unsubBugs();
-      unsubNotifications();
-      unsubFeatured();
-    };
-  }, []);
 
   const displayUsers = liveUsers.length > 0 ? liveUsers : (users || []);
   const displayPosts = livePosts.length > 0 ? livePosts : (posts || []);
@@ -594,16 +771,15 @@ export default function AdminFounderThrone({
   };
 
   // COMMANDES GLOBALES ACTIVE USER SEARCH & ACTIONS
-  const [globalUserSearch, setGlobalUserSearch] = useState("");
 
   const filteredGlobalUsers = displayUsers.filter((u: any) => {
     if (!globalUserSearch.trim()) return true;
     const q = globalUserSearch.toLowerCase();
     return (
-      (u.displayName && u.displayName.toLowerCase().includes(q)) ||
-      (u.email && u.email.toLowerCase().includes(q)) ||
-      (u.artisticName && u.artisticName.toLowerCase().includes(q)) ||
-      (u.id && u.id.toLowerCase().includes(q))
+      String(u.displayName || "").toLowerCase().includes(q) ||
+      String(u.email || "").toLowerCase().includes(q) ||
+      String(u.artisticName || "").toLowerCase().includes(q) ||
+      String(u.id || "").toLowerCase().includes(q)
     );
   });
 
@@ -719,7 +895,6 @@ export default function AdminFounderThrone({
   };
 
   // COMMANDES GLOBALES PUBLICATION MODERATION
-  const [globalPostSearch, setGlobalPostSearch] = useState("");
 
   const handleApprovePostGlobal = async (p: any) => {
     try {
@@ -767,22 +942,6 @@ export default function AdminFounderThrone({
   const pendingBetaTransactions = transactions.filter((t: any) => t.status === "en_attente_validation");
 
   // Satellite states from Firestore
-  const [universeStates, setUniverseStates] = useState<Record<string, string>>({
-    gomboId: "DÉPLOYÉ & ACTIF",
-    afriTrust: "DÉPLOYÉ & ACTIF",
-    afriLivraison: "EN ATTENTE",
-    gomboMusik: "DÉPLOYÉ & ACTIF"
-  });
-
-  useEffect(() => {
-    if (!db) return;
-    const unsub = onSnapshot(doc(db, "system_settings", "satellites"), (snap) => {
-      if (snap.exists()) {
-        setUniverseStates(snap.data() as Record<string, string>);
-      }
-    });
-    return () => unsub();
-  }, []);
 
   const handleToggleSatellite = async (servId: string) => {
     const newState = universeStates[servId] === "DÉPLOYÉ & ACTIF" ? "EN MAINTENANCE" : "DÉPLOYÉ & ACTIF";
@@ -794,68 +953,7 @@ export default function AdminFounderThrone({
     }
   };
 
-  const [betaChecklist, setBetaChecklist] = useState<Record<string, boolean>>({
-    "Connexion Google": false,
-    "Déconnexion": false,
-    "Création publication": false,
-    "Modification profil": false,
-    "Upload image": false,
-    "Notifications": false,
-    "Navigation": false,
-    "Centre de Commandement": false,
-    "Trône": false,
-    "Responsive Android": false,
-    "Firebase": false,
-  });
-
-  useEffect(() => {
-    if (!db) return;
-    const unsub = onSnapshot(doc(db, "system_settings", "beta_checklist"), (snap) => {
-      if (snap.exists()) {
-        setBetaChecklist(snap.data() as Record<string, boolean>);
-      }
-    });
-    return () => unsub();
-  }, []);
-
-  const [economySettings, setEconomySettings] = useState<any>(null);
-  const [allContracts, setAllContracts] = useState<any[]>([]);
-  const [allPayments, setAllPayments] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (!db) return;
-    const unsub = onSnapshot(collection(db, "contracts"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() });
-      });
-      setAllContracts(list);
-    });
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    if (!db) return;
-    const unsub = onSnapshot(collection(db, "payments"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() });
-      });
-      setAllPayments(list);
-    });
-    return () => unsub();
-  }, []);
-  
-  useEffect(() => {
-    // Load economy settings if needed
-    if (selectedSection === "economy") {
-      import("../../firebase").then(({ gomboDB }) => {
-        gomboDB.getEconomySettings().then(settings => {
-          setEconomySettings(settings);
-        });
-      });
-    }
-  }, [selectedSection]);
+  // Beta Checklist System
 
   const toggleChecklist = async (key: string) => {
     const updated = { ...betaChecklist, [key]: !betaChecklist[key] };
@@ -869,26 +967,6 @@ export default function AdminFounderThrone({
   const progressCount = Object.values(betaChecklist).filter(Boolean).length;
 
   // 1. GOUVERNANCE FIRESTORE SYNC
-  const [govData, setGovData] = useState<GovernanceData>({
-    vision: "Bâtir le premier empire de mise en relation artistique d'Afrique de l'Ouest.",
-    journal: "Aujourd'hui, lancement de la phase impériale d'AFRIGOMBO ELITE.",
-    decisions: "1. Certification systématique Gombo ID.\n2. Lancement des abonnements Elite.",
-    announcements: "Bienvenue sur le fil de l'écosystème souverain !",
-    growth: "Atteindre 10,000 membres actifs certifiés d'ici décembre 2026.",
-    notes: "Vérifier la performance du serveur d'Abidjan."
-  });
-  const [isSavingGov, setIsSavingGov] = useState(false);
-
-  useEffect(() => {
-    if (!db) return;
-    const docRef = doc(db, "throne", "governance");
-    const unsub = onSnapshot(docRef, (snap) => {
-      if (snap.exists()) {
-        setGovData(snap.data() as GovernanceData);
-      }
-    });
-    return () => unsub();
-  }, []);
 
   const handleSaveGovField = async (field: keyof GovernanceData, value: string) => {
     if (!isAuthorizedSuperFounder) {
@@ -909,71 +987,6 @@ export default function AdminFounderThrone({
   };
 
   // 2. MUSIQUE INTERACTIVE & FIRESTORE SYNC
-  const [musicTracks, setMusicTracks] = useState<ThroneMusicTrack[]>([]);
-  const [musicSpots, setMusicSpots] = useState<MusicSpots>({
-    accueil: "",
-    navigation: "",
-    throne: "",
-    evenements: "",
-    notifications: "",
-    celebration: ""
-  });
-
-  const [newTrackTitle, setNewTrackTitle] = useState("");
-  const [newTrackArtist, setNewTrackArtist] = useState("");
-  const [newTrackUrl, setNewTrackUrl] = useState("");
-
-  // Music Player States
-  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
-  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
-  const [volume, setVolume] = useState(0.8);
-  const [trackProgress, setTrackProgress] = useState(0);
-
-  useEffect(() => {
-    if (!db) return;
-    // Listen to tracks list
-    const unsubTracks = onSnapshot(collection(db, "throne_music"), (snap) => {
-      const list: ThroneMusicTrack[] = [];
-      snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() } as ThroneMusicTrack);
-      });
-      list.sort((a, b) => (a.order || 0) - (b.order || 0));
-      setMusicTracks(list);
-    });
-
-    // Listen to assigned spots
-    const unsubSpots = onSnapshot(doc(db, "throne", "music_spots"), (snap) => {
-      if (snap.exists()) {
-        setMusicSpots(snap.data() as MusicSpots);
-      }
-    });
-
-    return () => {
-      unsubTracks();
-      unsubSpots();
-    };
-  }, []);
-
-  // Sync volume to audio tag
-  useEffect(() => {
-    if (currentAudio) {
-      currentAudio.volume = volume;
-    }
-  }, [volume, currentAudio]);
-
-  // Audio tag progress listener
-  useEffect(() => {
-    if (!currentAudio) return;
-    const updateProgress = () => {
-      if (currentAudio.duration) {
-        setTrackProgress((currentAudio.currentTime / currentAudio.duration) * 100);
-      }
-    };
-    currentAudio.addEventListener("timeupdate", updateProgress);
-    return () => {
-      currentAudio.removeEventListener("timeupdate", updateProgress);
-    };
-  }, [currentAudio]);
 
   const handlePlayPauseTrack = async (track: ThroneMusicTrack) => {
     try { audioSynth?.playValidationSuccess(); } catch (_) {}
@@ -1078,9 +1091,6 @@ export default function AdminFounderThrone({
   };
 
   // 3. DIFFUSEUR DE NOTIFICATIONS MÉGAPHONIQUE
-  const [noticeTitle, setNoticeTitle] = useState("");
-  const [noticeBody, setNoticeBody] = useState("");
-  const [noticeCategory, setNoticeCategory] = useState("MESSAGE SPECIAL");
 
   const handleSendNotice = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1184,9 +1194,6 @@ export default function AdminFounderThrone({
   };
 
   // 5. SECURITY & SCAN SYSTEMS
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanStep, setScanStep] = useState(0);
-  const [scanLogs, setScanLogs] = useState<string[]>([]);
 
   const triggerSecurityScan = () => {
     if (isScanning) return;
@@ -1223,7 +1230,6 @@ export default function AdminFounderThrone({
   };
 
   // 6. BACKUP SYSTEMS
-  const [isBackingUp, setIsBackingUp] = useState(false);
   const triggerThroneBackup = async () => {
     if (isBackingUp) return;
     setIsBackingUp(true);
@@ -1250,8 +1256,6 @@ export default function AdminFounderThrone({
   };
 
   // 7. PRIVILEGE & PRIVILEGES MANAGEMENT
-  const [newFounderInput, setNewFounderInput] = useState("");
-  const [newAdminInput, setNewAdminInput] = useState("");
 
   const handleAddFounder = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1314,13 +1318,6 @@ export default function AdminFounderThrone({
   };
 
   // 8. SOVEREIGN TERMINAL LOGGER & SIMULATION COMMAND ENGINE
-  const [logs, setLogs] = useState<string[]>([
-    "[SYSTEM] Temple de commandement initialisé.",
-    "[PROTECTION] Pare-feu cyber-africain calibré et fonctionnel.",
-    "[MONITORING] Synchro Firestore établie en temps réel.",
-    "[DEVICES] Clé d'identité physique vérifiée d'Abidjan."
-  ]);
-  const [terminalInput, setTerminalInput] = useState("");
 
   const handleTerminalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1365,31 +1362,7 @@ export default function AdminFounderThrone({
     }, 450);
   };
 
-  useEffect(() => {
-    const logsTemplates = [
-      "Vibration sonore harmonisée avec l'écosystème.",
-      "Base de données : ping 12ms optimal.",
-      "Analyse de suspicion passive : aucun usurpateur détecté.",
-      "Synchronisation Gombo ID : tous les registres à jour.",
-      "Trésorerie de l'Empire : Gombocaisse en expansion."
-    ];
-
-    const interval = setInterval(() => {
-      const randomMsg = logsTemplates[Math.floor(Math.random() * logsTemplates.length)];
-      const now = new Date().toLocaleTimeString("fr-FR");
-      setLogs((prev) => [`[${now}] [PASSIVE] ${randomMsg}`, ...prev.slice(0, 40)]);
-    }, 18000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   // 10. REAL-TIME CLOCK & IMPERIAL GREETING
-  const [currentDateTime, setCurrentDateTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   const getGreeting = () => {
     const hour = currentDateTime.getHours();
@@ -4076,11 +4049,11 @@ export default function AdminFounderThrone({
               const filteredUsers = displayUsers.filter((u: any) => {
                 const q = globalUserSearch.toLowerCase().trim();
                 if (q) {
-                  const nameMatch = (u.displayName && u.displayName.toLowerCase().includes(q));
-                  const artMatch = (u.artisticName && u.artisticName.toLowerCase().includes(q));
-                  const emailMatch = (u.email && u.email.toLowerCase().includes(q));
-                  const idMatch = (u.id && u.id.toLowerCase().includes(q));
-                  const gomboMatch = (u.gomboId?.numero && u.gomboId.numero.toLowerCase().includes(q));
+                  const nameMatch = String(u.displayName || "").toLowerCase().includes(q);
+                  const artMatch = String(u.artisticName || "").toLowerCase().includes(q);
+                  const emailMatch = String(u.email || "").toLowerCase().includes(q);
+                  const idMatch = String(u.id || "").toLowerCase().includes(q);
+                  const gomboMatch = String(u.gomboId?.numero || "").toLowerCase().includes(q);
                   if (!nameMatch && !artMatch && !emailMatch && !idMatch && !gomboMatch) return false;
                 }
 
@@ -4485,9 +4458,9 @@ export default function AdminFounderThrone({
                 
                 const q = globalUserSearch.toLowerCase().trim();
                 if (q) {
-                  const nameMatch = (u.displayName && u.displayName.toLowerCase().includes(q));
-                  const artMatch = (u.artisticName && u.artisticName.toLowerCase().includes(q));
-                  const emailMatch = (u.email && u.email.toLowerCase().includes(q));
+                  const nameMatch = String(u.displayName || "").toLowerCase().includes(q);
+                  const artMatch = String(u.artisticName || "").toLowerCase().includes(q);
+                  const emailMatch = String(u.email || "").toLowerCase().includes(q);
                   if (!nameMatch && !artMatch && !emailMatch) return false;
                 }
                 return true;
@@ -4570,10 +4543,10 @@ export default function AdminFounderThrone({
               const gomboIdUsers = displayUsers.filter((u: any) => {
                 const q = globalUserSearch.toLowerCase().trim();
                 if (q) {
-                  const nameMatch = (u.displayName && u.displayName.toLowerCase().includes(q));
-                  const artMatch = (u.artisticName && u.artisticName.toLowerCase().includes(q));
-                  const emailMatch = (u.email && u.email.toLowerCase().includes(q));
-                  const gomboMatch = (u.gomboId?.numero && u.gomboId.numero.toLowerCase().includes(q));
+                  const nameMatch = String(u.displayName || "").toLowerCase().includes(q);
+                  const artMatch = String(u.artisticName || "").toLowerCase().includes(q);
+                  const emailMatch = String(u.email || "").toLowerCase().includes(q);
+                  const gomboMatch = String(u.gomboId?.numero || "").toLowerCase().includes(q);
                   if (!nameMatch && !artMatch && !emailMatch && !gomboMatch) return false;
                 }
                 return true;

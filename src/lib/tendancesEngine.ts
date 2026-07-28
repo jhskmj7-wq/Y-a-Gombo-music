@@ -396,10 +396,10 @@ export function filterAndRankTendances(
   if (searchTerm.trim()) {
     const s = searchTerm.toLowerCase();
     filtered = filtered.filter(i => 
-      i.title.toLowerCase().includes(s) || 
-      i.description.toLowerCase().includes(s) || 
-      i.commune.toLowerCase().includes(s) ||
-      (i.authorName || "").toLowerCase().includes(s)
+      String(i.title || "").toLowerCase().includes(s) || 
+      String(i.description || "").toLowerCase().includes(s) || 
+      String(i.commune || "").toLowerCase().includes(s) ||
+      String(i.authorName || "").toLowerCase().includes(s)
     );
   }
 
@@ -407,48 +407,48 @@ export function filterAndRankTendances(
     case "musique":
       filtered = filtered.filter(i => 
         i.category === "musique" || 
-        i.title.toLowerCase().includes("musique") || 
-        i.title.toLowerCase().includes("concert") ||
-        i.title.toLowerCase().includes("orchestre") ||
-        i.title.toLowerCase().includes("studio") ||
-        i.title.toLowerCase().includes("beatmaker")
+        String(i.title || "").toLowerCase().includes("musique") || 
+        String(i.title || "").toLowerCase().includes("concert") ||
+        String(i.title || "").toLowerCase().includes("orchestre") ||
+        String(i.title || "").toLowerCase().includes("studio") ||
+        String(i.title || "").toLowerCase().includes("beatmaker")
       );
       break;
 
     case "castings":
       filtered = filtered.filter(i => 
         i.category === "castings" || 
-        i.title.toLowerCase().includes("casting") || 
-        i.title.toLowerCase().includes("audition") ||
-        i.title.toLowerCase().includes("recrutement") ||
-        i.description.toLowerCase().includes("casting")
+        String(i.title || "").toLowerCase().includes("casting") || 
+        String(i.title || "").toLowerCase().includes("audition") ||
+        String(i.title || "").toLowerCase().includes("recrutement") ||
+        String(i.description || "").toLowerCase().includes("casting")
       );
       break;
 
     case "renfort":
       filtered = filtered.filter(i => 
         i.category === "renfort" || 
-        i.title.toLowerCase().includes("urgent") || 
-        i.title.toLowerCase().includes("renfort") ||
-        i.description.toLowerCase().includes("ce soir") ||
-        i.description.toLowerCase().includes("remplacement")
+        String(i.title || "").toLowerCase().includes("urgent") || 
+        String(i.title || "").toLowerCase().includes("renfort") ||
+        String(i.description || "").toLowerCase().includes("ce soir") ||
+        String(i.description || "").toLowerCase().includes("remplacement")
       );
       break;
 
     case "evenements":
       filtered = filtered.filter(i => 
         i.category === "evenements" || 
-        i.title.toLowerCase().includes("événement") || 
-        i.title.toLowerCase().includes("festival") ||
-        i.title.toLowerCase().includes("spectacle") ||
-        i.title.toLowerCase().includes("soirée")
+        String(i.title || "").toLowerCase().includes("événement") || 
+        String(i.title || "").toLowerCase().includes("festival") ||
+        String(i.title || "").toLowerCase().includes("spectacle") ||
+        String(i.title || "").toLowerCase().includes("soirée")
       );
       break;
 
     case "pres_de_moi":
       if (userCommune) {
         filtered = filtered.filter(i => 
-          i.commune.toLowerCase().trim() === userCommune.toLowerCase().trim()
+          String(i.commune || "").toLowerCase().trim() === String(userCommune || "").toLowerCase().trim()
         );
       }
       break;
