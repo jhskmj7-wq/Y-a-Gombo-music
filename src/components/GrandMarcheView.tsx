@@ -14,8 +14,8 @@ interface MarketItem {
   title: string;
   description: string;
   price: number;
-  category: "instruments" | "studio" | "sonorisation" | "services" | "accessoires";
-  condition: "Neuf" | "Excellent état" | "Bon état";
+  category: "instruments" | "studio" | "sonorisation" | "lumieres" | "location" | "prestations" | "accessoires" | "formation" | "services";
+  condition: "Neuf" | "Excellent état" | "Bon état" | "Occasion";
   sellerName: string;
   sellerId: string;
   sellerAvatar: string;
@@ -26,6 +26,8 @@ interface MarketItem {
   phone?: string;
   createdAt: string;
   isSold?: boolean;
+  viewsCount?: number;
+  favoritesCount?: number;
 }
 
 const INITIAL_MARKET_ITEMS: MarketItem[] = [
@@ -135,11 +137,54 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
     return INITIAL_MARKET_ITEMS;
   });
 
-  const [activeTab, setActiveTab] = useState<"catalog" | "my_listings">("catalog");
+  const [activeTab, setActiveTab] = useState<"catalog" | "my_listings" | "seller_dashboard">("catalog");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [cityFilter, setCityFilter] = useState<string>("all");
+  const [conditionFilter, setConditionFilter] = useState<string>("all");
+  const [onlyCertifiedSellers, setOnlyCertifiedSellers] = useState<boolean>(false);
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("afrigombo_market_favs") || "[]"); } catch { return []; }
+  });
+
   const [selectedItem, setSelectedItem] = useState<MarketItem | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Toggle favorite helper
+  const toggleFavorite = (itemId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    let updated: string[];
+    if (favoriteIds.includes(itemId)) {
+      updated = favoriteIds.filter(id => id !== itemId);
+    } else {
+      updated = [...favoriteIds, itemId];
+    }
+    setFavoriteIds(updated);
+    localStorage.setItem("afrigombo_market_favs", JSON.stringify(updated));
+
+    // Update item favorites count
+    setItems(prev => prev.map(item => {
+      if (item.id === itemId) {
+        const count = item.favoritesCount || 12;
+        return { ...item, favoritesCount: favoriteIds.includes(itemId) ? count - 1 : count + 1 };
+      }
+      return item;
+    }));
+  };
+
+  // Share listing handler
+  const handleShareListing = (item: MarketItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const shareUrl = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: item.title, text: item.description, url: shareUrl }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(`${item.title} - ${item.price.toLocaleString()} FCFA sur AFRIGOMBO: ${shareUrl}`);
+      alert("Lien de l'annonce copié dans le presse-papier !");
+    }
+  };
 
   // Reset scroll on category change or mount
   useEffect(() => {
@@ -190,7 +235,14 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.location.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    const matchesCity = cityFilter === "all" || item.location.toLowerCase().includes(cityFilter.toLowerCase());
+    const matchesCondition = conditionFilter === "all" || item.condition === conditionFilter;
+    const matchesCertified = !onlyCertifiedSellers || item.sellerCertified;
+    const itemPrice = item.price;
+    const matchesMinPrice = !minPrice || itemPrice >= parseFloat(minPrice);
+    const matchesMaxPrice = !maxPrice || itemPrice <= parseFloat(maxPrice);
+
+    return matchesCategory && matchesSearch && matchesCity && matchesCondition && matchesCertified && matchesMinPrice && matchesMaxPrice;
   });
 
   const myItems = items.filter(item => item.sellerId === (currentUserProfile?.uid || "current_user"));
@@ -324,6 +376,18 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
                   {myItems.length}
                 </span>
               </button>
+
+              <button
+                onClick={() => setActiveTab("seller_dashboard")}
+                className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                  activeTab === "seller_dashboard"
+                    ? "bg-[#D4AF37] text-black shadow-md font-black"
+                    : "bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text"
+                }`}
+              >
+                <Store className="w-4 h-4" />
+                <span>Tableau Créateur</span>
+              </button>
             </div>
 
             {/* SEARCH BAR */}
@@ -339,29 +403,96 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
             </div>
           </div>
 
-          {/* CATEGORY CHIPS */}
+          {/* ADVANCED FILTERS BAR */}
           {activeTab === "catalog" && (
-            <div className="flex overflow-x-auto scrollbar-hide gap-1.5 sm:gap-2 pt-1 pb-2 whitespace-nowrap text-xs w-full max-w-full select-none">
-              {[
-                { id: "all", label: "Tous les produits" },
-                { id: "instruments", label: "🎹 Instruments" },
-                { id: "studio", label: "🎙️ Studio & M.A.O" },
-                { id: "sonorisation", label: "🎛️ Sonorisation" },
-                { id: "services", label: "🎧 Services & Mix" },
-                { id: "accessoires", label: "🔌 Accessoires" },
-              ].map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
-                    selectedCategory === cat.id
-                      ? "bg-afri-bg-ter border-[#D4AF37] text-[#D4AF37] shadow-xs"
-                      : "bg-afri-bg border-afri-border text-afri-text-sec hover:text-afri-text"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <div className="flex overflow-x-auto scrollbar-hide gap-1.5 sm:gap-2 pt-1 pb-2 whitespace-nowrap text-xs w-full max-w-full select-none">
+                {[
+                  { id: "all", label: "Tous les produits" },
+                  { id: "instruments", label: "🎹 Instruments" },
+                  { id: "sonorisation", label: "🎛️ Sonorisation" },
+                  { id: "studio", label: "🎙️ Studio & M.A.O" },
+                  { id: "lumieres", label: "💡 Lumières" },
+                  { id: "location", label: "📦 Location" },
+                  { id: "prestations", label: "🎭 Prestations" },
+                  { id: "accessoires", label: "🔌 Accessoires" },
+                  { id: "formation", label: "🎓 Formation" },
+                  { id: "services", label: "🎧 Services & Mix" },
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                      selectedCategory === cat.id
+                        ? "bg-afri-bg-ter border-[#D4AF37] text-[#D4AF37] shadow-xs"
+                        : "bg-afri-bg border-afri-border text-afri-text-sec hover:text-afri-text"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* SECONDARY FILTER CONTROLS */}
+              <div className="p-2.5 bg-afri-bg-sec border border-afri-border/60 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-mono font-bold text-afri-text-sec uppercase">Filtres:</span>
+                  
+                  <select
+                    value={cityFilter}
+                    onChange={(e) => setCityFilter(e.target.value)}
+                    className="bg-afri-bg border border-afri-border rounded-lg px-2 py-1 text-[11px] text-afri-text focus:border-[#D4AF37] outline-none"
+                  >
+                    <option value="all">Toutes les villes</option>
+                    <option value="Abidjan">Abidjan</option>
+                    <option value="Bouaké">Bouaké</option>
+                    <option value="Yamoussoukro">Yamoussoukro</option>
+                    <option value="San Pedro">San Pédro</option>
+                  </select>
+
+                  <select
+                    value={conditionFilter}
+                    onChange={(e) => setConditionFilter(e.target.value)}
+                    className="bg-afri-bg border border-afri-border rounded-lg px-2 py-1 text-[11px] text-afri-text focus:border-[#D4AF37] outline-none"
+                  >
+                    <option value="all">Tous les états</option>
+                    <option value="Neuf">Neuf</option>
+                    <option value="Excellent état">Excellent état</option>
+                    <option value="Bon état">Bon état</option>
+                    <option value="Occasion">Occasion</option>
+                  </select>
+
+                  <button
+                    onClick={() => setOnlyCertifiedSellers(!onlyCertifiedSellers)}
+                    className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase flex items-center gap-1 cursor-pointer transition-all ${
+                      onlyCertifiedSellers
+                        ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                        : "bg-afri-bg border-afri-border text-afri-text-sec"
+                    }`}
+                  >
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>Vendeurs certifiés uniquement</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    placeholder="Min FCFA"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="w-20 bg-afri-bg border border-afri-border rounded-lg px-2 py-1 text-[10px] font-mono text-afri-text outline-none"
+                  />
+                  <span className="text-afri-text-sec text-[10px]">-</span>
+                  <input
+                    type="number"
+                    placeholder="Max FCFA"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    className="w-20 bg-afri-bg border border-afri-border rounded-lg px-2 py-1 text-[10px] font-mono text-afri-text outline-none"
+                  />
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -456,7 +587,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
             ))}
           </div>
         )
-      ) : (
+      ) : activeTab === "my_listings" ? (
         /* MES ANNONCES TAB */
         myItems.length === 0 ? (
           <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-12 text-center space-y-4">
@@ -515,6 +646,56 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
             ))}
           </div>
         )
+      ) : (
+        /* TABLEAU CRÉATEUR / VENDEUR TAB */
+        <div className="space-y-6 text-left">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">Articles Publiés</p>
+              <p className="text-lg font-black text-afri-text font-mono">{myItems.length}</p>
+            </div>
+            <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">Articles Vendus</p>
+              <p className="text-lg font-black text-emerald-400 font-mono">2</p>
+            </div>
+            <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">Revenus Ventes</p>
+              <p className="text-lg font-black text-[#D4AF37] font-mono">230 000 FCFA</p>
+            </div>
+            <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">Taux Satisfaction</p>
+              <p className="text-lg font-black text-emerald-400 font-mono">100%</p>
+            </div>
+          </div>
+
+          <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 space-y-3">
+            <h3 className="text-xs font-black text-afri-text uppercase tracking-wider font-mono">Commandes & Ventes Récentes</h3>
+            <div className="space-y-2">
+              {[
+                { id: "CMD-0891", item: "Yamaha MG10XU Table de mixage", buyer: "Sery G.", status: "Terminée", amount: 145000, date: "26 Juillet 2026" },
+                { id: "CMD-0872", item: "Casque Shure SRH840A", buyer: "N'Guessan A.", status: "En attente livraison", amount: 85000, date: "27 Juillet 2026" }
+              ].map((cmd) => (
+                <div key={cmd.id} className="p-3 bg-afri-bg border border-afri-border/60 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-2 text-xs">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[10px] text-[#D4AF37] font-bold">{cmd.id}</span>
+                      <span className="font-bold text-afri-text">{cmd.item}</span>
+                    </div>
+                    <p className="text-[10px] text-afri-text-sec font-mono">Acheteur : {cmd.buyer} • {cmd.date}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                      cmd.status === "Terminée" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                    }`}>
+                      {cmd.status}
+                    </span>
+                    <span className="font-mono font-bold text-afri-text">{cmd.amount.toLocaleString()} FCFA</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
 

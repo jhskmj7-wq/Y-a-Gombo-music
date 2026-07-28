@@ -170,10 +170,11 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
     return ["course-2"]; // Free course enrolled by default
   });
 
-  const [activeTab, setActiveTab] = useState<"catalog" | "my_courses">("catalog");
+  const [activeTab, setActiveTab] = useState<"catalog" | "my_courses" | "instructor_dashboard">("catalog");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCourse, setSelectedCourse] = useState<AcademyCourse | null>(null);
+  const [selectedCertificateCourse, setSelectedCertificateCourse] = useState<AcademyCourse | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Reset scroll on category change or mount
@@ -376,6 +377,18 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                   {myEnrolledCourses.length}
                 </span>
               </button>
+
+              <button
+                onClick={() => setActiveTab("instructor_dashboard")}
+                className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                  activeTab === "instructor_dashboard"
+                    ? "bg-[#D4AF37] text-black shadow-md font-black"
+                    : "bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text"
+                }`}
+              >
+                <GraduationCap className="w-4 h-4" />
+                <span>Tableau Formateur</span>
+              </button>
             </div>
 
             {/* SEARCH BAR */}
@@ -549,7 +562,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
             })}
           </div>
         )
-      ) : (
+      ) : activeTab === "my_courses" ? (
         /* MES COURS TAB */
         myEnrolledCourses.length === 0 ? (
           <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-12 text-center space-y-4">
@@ -581,20 +594,77 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                     <p className="text-xs text-afri-text-sec font-mono">
                       Formateur : {course.instructorName} • {course.duration} ({course.lessonsCount} modules)
                     </p>
+                    <div className="flex items-center gap-2 pt-1">
+                      <div className="w-32 h-1.5 bg-afri-bg rounded-full overflow-hidden border border-afri-border">
+                        <div className="h-full bg-emerald-400 rounded-full" style={{ width: "65%" }} />
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-emerald-400">65% complété</span>
+                    </div>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setSelectedCourse(course)}
-                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-afri-gold text-black font-black text-xs uppercase rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-2 shrink-0"
-                >
-                  <Play className="w-3.5 h-3.5 fill-black" />
-                  <span>Suivre le cours</span>
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => setSelectedCertificateCourse(course)}
+                    className="px-3 py-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500 hover:text-black font-bold text-xs uppercase rounded-xl transition-all cursor-pointer flex items-center gap-1"
+                  >
+                    <Award className="w-3.5 h-3.5" />
+                    <span>Certificat</span>
+                  </button>
+                  <button
+                    onClick={() => setSelectedCourse(course)}
+                    className="px-4 py-2 bg-gradient-to-r from-amber-500 to-afri-gold text-black font-black text-xs uppercase rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-2 shrink-0"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-black" />
+                    <span>Suivre</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )
+      ) : (
+        /* TABLEAU FORMATEUR TAB */
+        <div className="space-y-6 text-left">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">Formations Enseignées</p>
+              <p className="text-lg font-black text-afri-text font-mono">3</p>
+            </div>
+            <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">Étudiants Inscrits</p>
+              <p className="text-lg font-black text-amber-400 font-mono">28</p>
+            </div>
+            <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">Revenus Formations</p>
+              <p className="text-lg font-black text-[#D4AF37] font-mono">255 000 FCFA</p>
+            </div>
+            <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">Note Moyenne</p>
+              <p className="text-lg font-black text-emerald-400 font-mono">4.9 / 5.0</p>
+            </div>
+          </div>
+
+          <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 space-y-3">
+            <h3 className="text-xs font-black text-afri-text uppercase tracking-wider font-mono">Inscriptions & Inscrits Récents</h3>
+            <div className="space-y-2">
+              {[
+                { student: "Kouadio Jean-Luc", course: "Masterclass Mixage Vocal Afrobeats", date: "Aujourd'hui", status: "Certificat en cours" },
+                { student: "Bamba Aminata", course: "Guide Droit d'Auteur BURIDA 2026", date: "Hier", status: "Payé (95% reversé)" }
+              ].map((sub, idx) => (
+                <div key={idx} className="p-3 bg-afri-bg border border-afri-border/60 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-2 text-xs">
+                  <div>
+                    <p className="font-bold text-afri-text">{sub.student}</p>
+                    <p className="text-[10px] text-afri-text-sec font-mono">Formation : {sub.course} • {sub.date}</p>
+                  </div>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    {sub.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
 

@@ -61,6 +61,7 @@ import WhatsNew from "./WhatsNew";
 import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
 import GrandMarcheView from "./GrandMarcheView";
 import AcademieView from "./AcademieView";
+import CreatorActivityDashboard from "./CreatorActivityDashboard";
 import FirebaseDiagnostic from "./FirebaseDiagnostic";
 import { supportConfig } from "../supportConfig";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
@@ -5879,6 +5880,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   <AcademieView
                     currentUserProfile={profile}
                     onNavigateView={(view) => setActiveMenu(view as any)}
+                    onBack={() => goBackMenu()}
+                  />
+                </div>
+              )}
+
+              {(activeMenu === "user_command_center" || activeMenu === "user_mon_activite") && (
+                <div className="afri-container space-y-6 animate-fadeIn text-left py-2 xs:py-4">
+                  <CreatorActivityDashboard
+                    currentUserProfile={profile}
+                    onNavigateView={(view, tab) => {
+                      if (view) setActiveMenu(view as any);
+                    }}
                     onBack={() => goBackMenu()}
                   />
                 </div>
