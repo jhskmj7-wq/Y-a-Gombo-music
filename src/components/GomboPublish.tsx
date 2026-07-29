@@ -15,7 +15,7 @@ import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 
 const ABIDJAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", "Abobo", 
-  "Koumassi", "Adjamé", "Port-Bouët", "Attécoubé", "Grand-Bassam", "Bingerville"
+  "Koumassi", "Adjamé", "Port-Bouët", "Attécoubé", "Grand-Bassam", "Bingerville", "📍 Autre commune"
 ];
 
 const PUBLICATION_TYPES = [
@@ -42,7 +42,34 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [commune, setCommune] = useState("Cocody");
+  const [customCommune, setCustomCommune] = useState("");
+  const [quartier, setQuartier] = useState("");
   const [locationDetail, setLocationDetail] = useState("");
+  const [latitude, setLatitude] = useState<number>(currentUserProfile?.latitude || 5.3600);
+  const [longitude, setLongitude] = useState<number>(currentUserProfile?.longitude || -4.0083);
+  const [searchRadius, setSearchRadius] = useState<number>(10);
+  const [locationPrivacy, setLocationPrivacy] = useState<"exact" | "approximate">("exact");
+  const [gpsLoading, setGpsLoading] = useState(false);
+
+  const handleUseCurrentGps = () => {
+    if (navigator.geolocation) {
+      setGpsLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLatitude(pos.coords.latitude);
+          setLongitude(pos.coords.longitude);
+          setGpsLoading(false);
+        },
+        () => {
+          setGpsLoading(false);
+          alert("Impossible de récupérer votre position GPS. Position par défaut maintenue.");
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    } else {
+      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+    }
+  };
   const [date, setDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -120,8 +147,14 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       return;
     }
 
-    if (!commune || !commune.trim()) {
+    const effectiveCommune = commune === "📍 Autre commune" ? customCommune.trim() : commune;
+    if (!effectiveCommune) {
       setErrorMsg("Veuillez renseigner la commune ou la ville !");
+      return;
+    }
+
+    if (!quartier.trim()) {
+      setErrorMsg("Veuillez renseigner le quartier !");
       return;
     }
 
@@ -134,7 +167,32 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     }
 
     setErrorMsg("");
-    setShowConfirmModal(true);
+
+    try {
+      const userRef = doc(db, "users", currentUserProfile.uid);
+      const userSnap = await getDoc(userRef);
+      const userSolde = userSnap.exists() ? (userSnap.data()?.wallet?.soldeDisponible ?? 0) : (currentUserProfile.wallet?.soldeDisponible ?? 0);
+      
+      const cachetVal = budget ? Number(budget) : 0;
+      const feeRate = isUserPremium ? 0.015 : 0.025;
+      const financials = calculatePublicationFinancials(cachetVal, feeRate);
+
+      setDepositDetails({
+        cachet: cachetVal,
+        fee: financials.fee,
+        total: financials.total,
+        requiresDeposit: financials.total > 0,
+        refId: `PUB-${Date.now()}`,
+        typeName: selectedType,
+        authorName: currentUserProfile.displayName || currentUserProfile.name || "Artiste",
+        title: title.trim(),
+        userSolde: userSolde
+      });
+
+      setShowConfirmModal(true);
+    } catch (err) {
+      setErrorMsg("Erreur lors de la vérification du solde du Wallet.");
+    }
   };
 
   const executePublish = async () => {
@@ -143,8 +201,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
     try {
       const authorName = currentUserProfile.displayName || currentUserProfile.name || "Artiste Gombo";
-      const cachetVal = budget ? Number(budget) : (selectedType === "opportunite" || selectedType === "renfort" ? 25000 : 0);
+      const cachetVal = budget ? Number(budget) : 0;
+      const feeRate = isUserPremium ? 0.015 : 0.025;
       const financials = calculatePublicationFinancials(cachetVal, feeRate);
+      const effectiveCommune = commune === "📍 Autre commune" ? customCommune.trim() : commune;
       
       // Upload files first (outside transaction)
       let uploadedImageUrl = "";
@@ -156,7 +216,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         uploadedAudioUrl = await gomboDB.uploadFile(audioFile, `posts_assets/audios/${Date.now()}_${audioFile.name}`);
       }
 
-      const tempRefId = `PUB-${Date.now()}`;
+      let finalNewSolde = 0;
       
       await runTransaction(db, async (transaction) => {
         const userRef = doc(db, "users", currentUserProfile.uid);
@@ -171,10 +231,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         }
 
         // Debit Wallet
-        const newSolde = Math.max(0, liveSolde - financials.total);
+        finalNewSolde = Math.max(0, liveSolde - financials.total);
         const newBloque = liveBloque + cachetVal;
         transaction.update(userRef, {
-          wallet: { soldeDisponible: newSolde, soldeBloque: newBloque }
+          wallet: { ...(userData.wallet || {}), soldeDisponible: finalNewSolde, soldeBloque: newBloque }
         });
 
         // Record Transactions and create Gombo
@@ -185,7 +245,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           type: "debit_publication",
           amount: financials.total,
           status: "success",
-          description: `Débit publication : Gombo "${title.trim()}"`,
+          description: `Débit publication : Gombo "${title.trim()}" (${financials.fee.toLocaleString()} FCFA commission)`,
           createdAt: new Date().toISOString(),
           timestamp: Date.now()
         });
@@ -198,21 +258,37 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             createdAt: new Date().toISOString()
         });
 
-        // Create Gombo/Post (using doc/transaction.set instead of gomboDB)
+        // Create Gombo/Post
         const postRef = doc(collection(db, "social_posts"));
         transaction.set(postRef, {
+            id: postRef.id,
             userId: currentUserProfile.uid,
+            authorName,
+            authorPhoto: currentUserProfile.photoURL || currentUserProfile.avatar || "",
             title: title.trim(),
+            description: description.trim(),
+            type: selectedType,
+            commune: effectiveCommune,
+            quartier: quartier.trim(),
+            locationDetail: locationDetail.trim(),
+            date: date,
+            budget: cachetVal,
+            fee: financials.fee,
+            totalDebit: financials.total,
             status: "PUBLISHED",
-            latitude: currentUserProfile.latitude || null,
-            longitude: currentUserProfile.longitude || null,
-            commune: commune || currentUserProfile.commune || "",
-            city: currentUserProfile.city || "",
-            country: currentUserProfile.country || "",
+            imageUrl: uploadedImageUrl,
+            audioUrl: uploadedAudioUrl,
+            latitude: latitude,
+            longitude: longitude,
+            searchRadius: searchRadius,
+            locationPrivacy: locationPrivacy,
+            city: currentUserProfile.city || "Abidjan",
+            country: currentUserProfile.country || "Côte d'Ivoire",
             createdAt: new Date().toISOString()
         });
       });
 
+      setDepositDetails(prev => ({ ...prev, userSolde: finalNewSolde }));
       setPublishOutcome("success_published");
       setShowSuccessOverlay(true);
     } catch (err: any) {
@@ -488,7 +564,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             />
           </div>
 
-          {/* 4. COMMUNE EXCLUSIVITÉ & LOCALISATION PRÉCISE */}
+          {/* 4. COMMUNE & QUARTIER */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-black text-afri-text-sec mb-1.5 uppercase tracking-widest">
@@ -512,7 +588,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
             <div>
               <label className="block text-[10px] font-black text-afri-text-sec mb-1.5 uppercase tracking-widest">
-                Localisation précise (ex: Rue 12, Salle)
+                Quartier <span className="text-[#D4AF37]">*</span>
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-afri-text-sec">
@@ -520,11 +596,132 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 </span>
                 <input
                   type="text"
-                  placeholder="Ex : Bar Le Monument, Rue des Jardins"
-                  value={locationDetail}
-                  onChange={(e) => setLocationDetail(e.target.value)}
-                  className="w-full pl-9 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-black text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder-gray-650"
+                  required
+                  placeholder="Ex : Angré, Vridi, Belleville, Koko..."
+                  value={quartier}
+                  onChange={(e) => setQuartier(e.target.value)}
+                  className="w-full pl-9 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-black text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder-gray-600"
                 />
+              </div>
+            </div>
+          </div>
+
+          {commune === "📍 Autre commune" && (
+            <div>
+              <label className="block text-[10px] font-black text-afri-text-sec mb-1.5 uppercase tracking-widest">
+                Commune (saisie libre) <span className="text-[#D4AF37]">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Ex : Bouaké, Yamoussoukro, San-Pédro, Korhogo..."
+                value={customCommune}
+                onChange={(e) => setCustomCommune(e.target.value)}
+                className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-bold text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder-gray-600"
+              />
+            </div>
+          )}
+
+          {/* RADAR & GÉOLOCALISATION INTELLIGENTE DU GOMBO */}
+          <div className="p-4 bg-white/[0.02] border border-[#D4AF37]/30 rounded-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📍</span>
+                <div>
+                  <h4 className="text-xs font-black text-afri-text uppercase tracking-wider">Localisation & Radar du Gombo</h4>
+                  <p className="text-[9px] text-afri-text-sec">Pour recommander instantanément aux musiciens proches</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleUseCurrentGps}
+                disabled={gpsLoading}
+                className="px-3 py-1.5 bg-[#D4AF37]/20 border border-[#D4AF37]/50 rounded-xl text-[10px] font-black text-[#D4AF37] uppercase tracking-wider hover:bg-[#D4AF37] hover:text-black transition cursor-pointer"
+              >
+                {gpsLoading ? "Localisation..." : "🎯 Utiliser ma position GPS"}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <div>
+                <label className="block text-[9px] font-bold text-afri-text-sec uppercase mb-1">Latitude</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={latitude}
+                  onChange={(e) => setLatitude(parseFloat(e.target.value) || 5.36)}
+                  className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs font-mono text-afri-text"
+                />
+              </div>
+              <div>
+                <label className="block text-[9px] font-bold text-afri-text-sec uppercase mb-1">Longitude</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={longitude}
+                  onChange={(e) => setLongitude(parseFloat(e.target.value) || -4.0083)}
+                  className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs font-mono text-afri-text"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <label className="block text-[10px] font-black text-afri-text-sec uppercase tracking-wider">
+                Rayon de recherche & ciblage radar :
+              </label>
+              <div className="grid grid-cols-5 gap-1.5">
+                {[
+                  { r: 2, label: "2 km" },
+                  { r: 5, label: "5 km" },
+                  { r: 10, label: "10 km" },
+                  { r: 20, label: "20 km" },
+                  { r: 100, label: "Toute la ville" }
+                ].map((item) => (
+                  <button
+                    key={item.r}
+                    type="button"
+                    onClick={() => setSearchRadius(item.r)}
+                    className={`py-2 px-1 rounded-xl text-[9px] font-black uppercase font-mono transition cursor-pointer border ${
+                      searchRadius === item.r
+                        ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md"
+                        : "bg-white/[0.04] text-afri-text border-white/10 hover:border-[#D4AF37]/50"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <label className="block text-[10px] font-black text-afri-text-sec uppercase tracking-wider">
+                Confidentialité de l'adresse :
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLocationPrivacy("exact")}
+                  className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                    locationPrivacy === "exact"
+                      ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text"
+                      : "bg-white/[0.02] border-white/10 text-afri-text-sec hover:border-white/30"
+                  }`}
+                >
+                  <div className="text-[10px] font-black uppercase">✓ Position exacte</div>
+                  <div className="text-[8.5px] text-afri-text-sec">Visible dès la validation</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLocationPrivacy("approximate")}
+                  className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                    locationPrivacy === "approximate"
+                      ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text"
+                      : "bg-white/[0.02] border-white/10 text-afri-text-sec hover:border-white/30"
+                  }`}
+                >
+                  <div className="text-[10px] font-black uppercase">🔒 Position approximative</div>
+                  <div className="text-[8.5px] text-afri-text-sec">Quartier uniquement jusqu'à acceptation</div>
+                </button>
               </div>
             </div>
           </div>
@@ -709,33 +906,53 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               initial={{ scale: 0.95, y: 10 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 10 }}
-              className="bg-afri-bg border border-[#D4AF37]/50 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl"
+              className="bg-afri-bg-sec border border-[#D4AF37]/50 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl"
             >
-              <h3 className="text-base font-black text-[#D4AF37] uppercase text-center tracking-wide">
-                Confirmer la publication ?
-              </h3>
-              <div className="space-y-2.5 bg-white/[0.03] p-4 rounded-2xl border border-white/10 text-xs">
-                <div className="flex justify-between text-afri-text-sec">
-                  <span>Montant du contrat :</span>
-                  <span className="font-mono font-bold text-afri-text">{financials.cachet.toLocaleString()} FCFA</span>
+              <div className="w-12 h-12 mx-auto bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl flex items-center justify-center text-[#D4AF37]">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+
+              <div className="text-center space-y-1">
+                <span className="inline-block text-[9px] font-mono font-black text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 px-3 py-0.5 rounded-full border border-[#D4AF37]/30">
+                  🔐 CONFIRMATION DE PUBLICATION
+                </span>
+                <h3 className="text-lg font-black text-afri-text uppercase tracking-wide pt-1">
+                  Récapitulatif Financier
+                </h3>
+              </div>
+
+              <div className="space-y-2.5 bg-afri-bg p-4 rounded-2xl border border-afri-border text-xs">
+                <div className="flex justify-between items-center text-afri-text-sec">
+                  <span>Montant du Gombo :</span>
+                  <span className="font-mono font-bold text-afri-text">{depositDetails.cachet.toLocaleString()} FCFA</span>
                 </div>
-                <div className="flex justify-between text-afri-text-sec">
-                  <span>Commission ({isUserPremium ? "1,5%" : "2,5%"}) :</span>
-                  <span className="font-mono font-bold text-[#D4AF37]">{financials.fee.toLocaleString()} FCFA</span>
+                <div className="flex justify-between items-center text-afri-text-sec">
+                  <span>Statut :</span>
+                  <span className="font-bold text-[#D4AF37]">{isUserPremium ? "Premium" : "Standard"}</span>
                 </div>
-                <div className="pt-2 border-t border-white/10 flex justify-between items-center">
-                  <span className="font-bold text-afri-text uppercase">Total débité du Wallet :</span>
-                  <span className="font-mono font-black text-emerald-400 text-base">{financials.total.toLocaleString()} FCFA</span>
+                <div className="flex justify-between items-center text-afri-text-sec">
+                  <span>Commission appliquée :</span>
+                  <span className="font-mono text-afri-text-sec">{isUserPremium ? "1,5 %" : "2,5 %"}</span>
+                </div>
+                <div className="flex justify-between items-center text-afri-text-sec">
+                  <span>Montant de la commission :</span>
+                  <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.fee.toLocaleString()} FCFA</span>
+                </div>
+                <div className="pt-2.5 border-t border-afri-border flex justify-between items-center">
+                  <span className="font-bold text-afri-text uppercase text-xs">Total qui sera débité du Wallet :</span>
+                  <span className="font-mono font-black text-emerald-400 text-sm">{depositDetails.total.toLocaleString()} FCFA</span>
                 </div>
               </div>
+
               <p className="text-[10px] text-afri-text-sec text-center leading-relaxed">
-                Le système vérifiera votre solde et prélèvera ces frais uniquement après votre confirmation.
+                Vérification automatique : Wallet suffisant, date future et champs obligatoires validés.
               </p>
+
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowConfirmModal(false)}
-                  className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-afri-text font-black text-xs uppercase rounded-xl transition-all border border-white/10 cursor-pointer"
+                  className="flex-1 py-3.5 bg-afri-bg hover:bg-afri-bg/80 text-afri-text font-black text-xs uppercase rounded-xl transition-all border border-afri-border cursor-pointer"
                 >
                   Annuler
                 </button>
@@ -743,9 +960,9 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   type="button"
                   disabled={loading}
                   onClick={executePublish}
-                  className="flex-1 py-3 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
+                  className="flex-1 py-3.5 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> : "Confirmer"}
+                  {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> : "Publier maintenant"}
                 </button>
               </div>
             </motion.div>

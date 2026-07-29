@@ -28,6 +28,7 @@ import { SmartUniverseCarousel } from "./SmartUniverseCarousel";
 import { useGeoEngine } from "../hooks/useGeoEngine";
 import { GeoRadarSection } from "./GeoRadarSection";
 import { NearbyGombosSection, NearbyArtistsSection } from "./NearbyGeoSections";
+import { AfrigoRadarMap } from "./AfrigoRadarMap";
 import { getDistanceLabel, calculateDistance } from "../lib/geoUtils";
 import { ArbreAPalabresBubble } from "./ArbreAPalabresBubble";
 
@@ -237,6 +238,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   }, [isLoadingMore, hasMore]);
 
   const [isFavoritesModalOpen, setIsFavoritesModalOpen] = useState<boolean>(false);
+  const [isPresDeMoiModalOpen, setIsPresDeMoiModalOpen] = useState<boolean>(false);
+  const [presDeMoiRadius, setPresDeMoiRadius] = useState<number>(10);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
   const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState<boolean>(false);
   const [isUrgencesModalOpen, setIsUrgencesModalOpen] = useState<boolean>(false);
@@ -245,7 +248,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const [leaderboardSearch, setLeaderboardSearch] = useState<string>("");
   const [localComingSoonKey, setLocalComingSoonKey] = useState<string | null>(null);
 
-  const isAnyTerrainModalOpen = isPlusMenuOpen || isFavoritesModalOpen || isHistoryModalOpen || isLeaderboardModalOpen || isUrgencesModalOpen || isCandidaturesModalOpen || !!localComingSoonKey;
+  const isAnyTerrainModalOpen = isPlusMenuOpen || isPresDeMoiModalOpen || isFavoritesModalOpen || isHistoryModalOpen || isLeaderboardModalOpen || isUrgencesModalOpen || isCandidaturesModalOpen || !!localComingSoonKey;
 
   useEffect(() => {
     if (isAnyTerrainModalOpen) {
@@ -258,6 +261,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
           setIsPlusMenuOpen(false);
+          setIsPresDeMoiModalOpen(false);
           setIsFavoritesModalOpen(false);
           setIsHistoryModalOpen(false);
           setIsLeaderboardModalOpen(false);
@@ -269,6 +273,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       window.addEventListener("keydown", handleKeyDown);
       const handlePopState = () => {
         setIsPlusMenuOpen(false);
+        setIsPresDeMoiModalOpen(false);
         setIsFavoritesModalOpen(false);
         setIsHistoryModalOpen(false);
         setIsLeaderboardModalOpen(false);
@@ -1172,12 +1177,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                    if (geo.permissionStatus !== "granted") {
                      geo.requestLocation();
                    }
-                   const el = document.getElementById("nearby-gombos-section");
-                   if (el) {
-                     el.scrollIntoView({ behavior: "smooth" });
-                   } else {
-                     setIsFiltersOpen(true);
-                   }
+                   setIsPresDeMoiModalOpen(true);
                    try { audioSynth?.playValidationSuccess?.(); } catch (_) {} 
                  } 
                },
@@ -2451,290 +2451,265 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         )}
       </AnimatePresence>
 
-      {/* 1. REAL FAVORITES MODAL */}
-      <AnimatePresence>
-        {isFavoritesModalOpen && (
-          <div className="fixed inset-0 bg-afri-bg/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-afri-bg-sec border border-afri-border rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-xl relative max-h-[85vh] flex flex-col"
-            >
-              {/* Header */}
-              <div className="flex justify-between items-center border-b border-afri-border pb-3 mb-4 shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xl">❤️</span>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
-                      Mes Favoris
-                    </h3>
-                    <p className="text-[8.5px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Vos opportunités enregistrées</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsFavoritesModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center text-afri-text-muted hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Favorites Content */}
-              <div className="overflow-y-auto flex-1 space-y-3.5 pr-1">
-                {likedGombos.length === 0 ? (
-                  <div className="py-12 px-4 text-center space-y-4">
-                    <div className="w-12 h-12 rounded-full bg-afri-bg-sec/10 border border-[#D4AF37]/30 flex items-center justify-center mx-auto animate-pulse">
-                      <Heart className="w-5 h-5 text-[#D4AF37] fill-[#D4AF37]" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <p className="text-xs font-bold text-afri-text uppercase tracking-wider">Aucun favori enregistré</p>
-                      <p className="text-[10px] text-afri-text-sec max-w-xs mx-auto leading-relaxed">
-                        Enregistrez des opportunités en clicking sur l'icône de trophée/coeur de vos Gombos préférés pour les retrouver ici en un instant.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setIsFavoritesModalOpen(false);
-                        setSelectedCategory("all");
-                        setSelectedLocation("all");
-                        const feedEl = document.getElementById("gombos-feed-anchor");
-                        if (feedEl) {
-                          feedEl.scrollIntoView({ behavior: "smooth" });
-                        }
-                      }}
-                      className="px-4 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-black text-[10px] font-black rounded-lg uppercase tracking-wider transition active:scale-95 mx-auto"
-                    >
-                      Parcourir les Gombos ⚡
-                    </button>
-                  </div>
-                ) : (
-                  gombos.filter(g => g.id && likedGombos.includes(g.id)).length === 0 ? (
-                    <div className="py-12 text-center text-afri-text-sec text-xs font-mono">
-                      Aucune des opportunités aimées n'est disponible actuellement.
-                    </div>
-                  ) : (
-                    gombos
-                      .filter(g => g.id && likedGombos.includes(g.id))
-                      .map((g) => (
-                        <div
-                          key={g.id}
-                          onClick={() => {
-                            handleOpenGomboDetails(g);
-                            setIsFavoritesModalOpen(false);
-                          }}
-                          className="p-3 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/45 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition animate-fadeIn"
-                        >
-                          <div className="min-w-0 flex-1 text-left">
-                            <span className="text-[9.5px] font-mono text-[#D4AF37] uppercase tracking-wider block font-bold leading-none mb-1">
-                              📍 {g.location || "Abidjan"} • {g.category || "Général"}
-                            </span>
-                            <h4 className="text-xs text-afri-text font-bold truncate leading-snug">{g.title}</h4>
-                            <p className="text-[10px] text-afri-text-sec font-mono font-medium mt-1">
-                              {(g.budget || 0).toLocaleString("fr-FR")} FCFA
-                            </p>
-                          </div>
-                          <span className="text-[9px] font-mono text-afri-text-sec shrink-0 uppercase font-bold hover:text-[#D4AF37]">
-                            Ouvrir →
-                          </span>
-                        </div>
-                      ))
-                  )
-                )}
-              </div>
-            </motion.div>
+      {/* ANDROID BOTTOM SHEET: PRÈS DE MOI */}
+      <AndroidBottomSheet
+        isOpen={isPresDeMoiModalOpen}
+        onClose={() => setIsPresDeMoiModalOpen(false)}
+        title={
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">📍</span>
+            <div>
+              <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
+                Radar & Gombos Près de Moi
+              </h3>
+              <p className="text-[9px] font-mono text-[#D4AF37] uppercase tracking-wider mt-1 font-bold">
+                {geo.latitude && geo.longitude ? "Géolocalisation active 🟢" : "Position par défaut (Abidjan) 📍"}
+              </p>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        }
+      >
+        <div className="space-y-4 overflow-y-auto max-h-[80vh] pb-6 pr-1">
+          <AfrigoRadarMap
+            gombos={gombos}
+            userLocation={{ latitude: geo.latitude || 5.3600, longitude: geo.longitude || -4.0083 }}
+            onSelectGombo={(g) => {
+              handleOpenGomboDetails(g);
+              setIsPresDeMoiModalOpen(false);
+            }}
+            onApplyGombo={(g) => {
+              handleOpenGomboDetails(g);
+              setIsPresDeMoiModalOpen(false);
+            }}
+            geoPermissionStatus={geo.permissionStatus}
+            onRequestLocation={geo.requestLocation}
+          />
+        </div>
+      </AndroidBottomSheet>
 
-      {/* 1.5. REAL URGENCES MODAL */}
-      <AnimatePresence>
-        {isUrgencesModalOpen && (
-          <div className="fixed inset-0 bg-afri-bg/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-black border border-[#D4AF37]/40 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-[0_0_30px_rgba(212,175,55,0.2)] relative max-h-[85vh] flex flex-col text-left"
-            >
-              <div className="flex justify-between items-center border-b border-[#D4AF37]/20 pb-3 mb-4 shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xl">🚨</span>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-sans font-black text-white uppercase tracking-widest leading-none">
-                      Opportunités Urgentes & Renforts
-                    </h3>
-                    <p className="text-[8.5px] font-mono text-[#D4AF37] uppercase tracking-wider mt-1 font-bold">
-                      Missions prioritaires, Renforts Express & Castings urgents
+      {/* ANDROID BOTTOM SHEET: FAVORIS */}
+      <AndroidBottomSheet
+        isOpen={isFavoritesModalOpen}
+        onClose={() => setIsFavoritesModalOpen(false)}
+        title={
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">⭐</span>
+            <div>
+              <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
+                Mes Favoris & Artistes Enregistrés
+              </h3>
+              <p className="text-[9px] font-mono text-[#D4AF37] uppercase tracking-wider mt-1 font-bold">
+                Vos coups de cœur de la communauté
+              </p>
+            </div>
+          </div>
+        }
+      >
+        <div className="space-y-3 overflow-y-auto max-h-[70vh] pb-6 pr-1 text-left">
+          {likedGombos.length === 0 ? (
+            <div className="py-12 px-4 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center mx-auto animate-pulse">
+                <Heart className="w-5 h-5 text-[#D4AF37] fill-[#D4AF37]" />
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-xs font-bold text-afri-text uppercase tracking-wider">Aucun favori enregistré</p>
+                <p className="text-[10px] text-afri-text-sec max-w-xs mx-auto leading-relaxed">
+                  Enregistrez des opportunités en cliquant sur l'icône de cœur de vos Gombos préférés.
+                </p>
+              </div>
+            </div>
+          ) : (
+            gombos
+              .filter(g => g.id && likedGombos.includes(g.id))
+              .map(g => (
+                <div
+                  key={g.id}
+                  onClick={() => {
+                    handleOpenGomboDetails(g);
+                    setIsFavoritesModalOpen(false);
+                  }}
+                  className="p-3.5 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition shadow-sm group"
+                >
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <span className="text-[9px] font-mono text-[#D4AF37] uppercase font-bold block">
+                      📍 {g.location || "Abidjan"} • {g.category || "Général"}
+                    </span>
+                    <h4 className="text-xs text-afri-text font-bold truncate group-hover:text-[#D4AF37] transition">
+                      {g.title}
+                    </h4>
+                    <p className="text-[10px] font-mono text-emerald-400 font-bold">
+                      {(g.budget || 0).toLocaleString("fr-FR")} FCFA
                     </p>
                   </div>
+                  <span className="text-[9px] font-mono text-afri-text-sec group-hover:text-[#D4AF37] shrink-0 font-bold uppercase">
+                    Ouvrir →
+                  </span>
                 </div>
-                <button
-                  onClick={() => setIsUrgencesModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-900 border border-[#D4AF37]/30 flex items-center justify-center text-white hover:text-[#D4AF37] transition cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
+              ))
+          )}
+        </div>
+      </AndroidBottomSheet>
 
-              <div className="overflow-y-auto flex-1 space-y-3 pr-1">
-                {(() => {
-                  const urgentGombos = gombos
-                    .filter(g => g.urgent || g.isExpress || (g as any).type === "renfort" || g.category === "casting" || g.isCasting || g.isRenfort)
-                    .sort((a, b) => (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0));
+      {/* ANDROID BOTTOM SHEET: URGENCES */}
+      <AndroidBottomSheet
+        isOpen={isUrgencesModalOpen}
+        onClose={() => setIsUrgencesModalOpen(false)}
+        title={
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🚨</span>
+            <div>
+              <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
+                Opportunités Urgentes & Renforts Express
+              </h3>
+              <p className="text-[9px] font-mono text-red-500 uppercase tracking-wider mt-1 font-bold">
+                Missions prioritaires & Castings immédiats
+              </p>
+            </div>
+          </div>
+        }
+      >
+        <div className="space-y-3 overflow-y-auto max-h-[70vh] pb-6 pr-1 text-left">
+          {(() => {
+            const urgentGombos = gombos
+              .filter(g => g.urgent || g.isExpress || (g as any).type === "renfort" || g.category === "casting" || g.isCasting || g.isRenfort)
+              .sort((a, b) => (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0));
 
-                  if (urgentGombos.length === 0) {
-                    return (
-                      <div className="py-12 px-4 text-center space-y-3">
-                        <div className="w-12 h-12 rounded-full bg-red-950/30 border border-red-500/40 flex items-center justify-center mx-auto text-red-400 text-xl animate-pulse">
-                          🚨
-                        </div>
-                        <p className="text-xs font-bold text-white uppercase tracking-wider">Aucune urgence critique actuellement</p>
-                        <p className="text-[10px] text-zinc-400 max-w-xs mx-auto">
-                          Toutes les opportunités régulières restent accessibles dans le fil d'actualités.
-                        </p>
-                      </div>
-                    );
-                  }
+            if (urgentGombos.length === 0) {
+              return (
+                <div className="py-12 px-4 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto text-red-500 text-xl animate-pulse">
+                    🚨
+                  </div>
+                  <p className="text-xs font-bold text-afri-text uppercase tracking-wider">Aucune urgence critique actuellement</p>
+                  <p className="text-[10px] text-afri-text-sec max-w-xs mx-auto">
+                    Toutes les opportunités régulières restent accessibles dans le fil d'actualités.
+                  </p>
+                </div>
+              );
+            }
 
-                  return urgentGombos.map(g => (
-                    <div
-                      key={g.id}
-                      onClick={() => {
-                        handleOpenGomboDetails(g);
-                        setIsUrgencesModalOpen(false);
-                      }}
-                      className="p-3 bg-zinc-950 border border-red-500/30 hover:border-red-500 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition shadow-md group"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[8px] font-black uppercase tracking-wider animate-pulse">
-                            🚨 URGENT
-                          </span>
-                          {((g as any).type === "renfort" || g.isRenfort) && (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-500 text-black text-[8px] font-black uppercase tracking-wider">
-                              ⚡ RENFORT EXPRESS
-                            </span>
-                          )}
-                          <span className="text-[9.5px] font-mono text-zinc-400 truncate">
-                            📍 {g.location || "Abidjan"}
-                          </span>
-                        </div>
-                        <h4 className="text-xs text-white font-bold truncate leading-snug group-hover:text-[#D4AF37] transition">
-                          {g.title}
-                        </h4>
-                        <p className="text-[10.5px] text-[#D4AF37] font-mono font-black mt-1">
-                          {(g.budget || 0).toLocaleString("fr-FR")} FCFA
-                        </p>
-                      </div>
-                      <span className="text-[9px] font-mono text-zinc-400 group-hover:text-[#D4AF37] shrink-0 font-bold uppercase">
-                        Voir →
+            return urgentGombos.map(g => (
+              <div
+                key={g.id}
+                onClick={() => {
+                  handleOpenGomboDetails(g);
+                  setIsUrgencesModalOpen(false);
+                }}
+                className="p-3.5 bg-afri-bg border border-red-500/35 hover:border-red-500 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition shadow-md group"
+              >
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[8px] font-black uppercase tracking-wider animate-pulse">
+                      🚨 URGENT
+                    </span>
+                    {((g as any).type === "renfort" || g.isRenfort) && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500 text-black text-[8px] font-black uppercase tracking-wider">
+                        ⚡ RENFORT EXPRESS
                       </span>
-                    </div>
-                  ));
-                })()}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* 1.6. REAL CANDIDATURES MODAL */}
-      <AnimatePresence>
-        {isCandidaturesModalOpen && (
-          <div className="fixed inset-0 bg-afri-bg/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-black border border-[#D4AF37]/40 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-[0_0_30px_rgba(212,175,55,0.2)] relative max-h-[85vh] flex flex-col text-left"
-            >
-              <div className="flex justify-between items-center border-b border-[#D4AF37]/20 pb-3 mb-4 shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xl">🎫</span>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-sans font-black text-white uppercase tracking-widest leading-none">
-                      Mes Candidatures & Postulations
-                    </h3>
-                    <p className="text-[8.5px] font-mono text-[#D4AF37] uppercase tracking-wider mt-1 font-bold">
-                      Suivi en temps réel de vos propositions
-                    </p>
+                    )}
+                    <span className="text-[9px] font-mono text-afri-text-sec truncate">
+                      📍 {g.location || "Abidjan"}
+                    </span>
                   </div>
+                  <h4 className="text-xs text-afri-text font-bold truncate leading-snug group-hover:text-red-400 transition">
+                    {g.title}
+                  </h4>
+                  <p className="text-[10.5px] font-mono font-black text-emerald-400">
+                    {(g.budget || 0).toLocaleString("fr-FR")} FCFA
+                  </p>
                 </div>
-                <button
-                  onClick={() => setIsCandidaturesModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-900 border border-[#D4AF37]/30 flex items-center justify-center text-white hover:text-[#D4AF37] transition cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className="text-[9px] font-mono text-red-500 font-bold uppercase">
+                    Postuler →
+                  </span>
+                </div>
               </div>
+            ));
+          })()}
+        </div>
+      </AndroidBottomSheet>
 
-              <div className="overflow-y-auto flex-1 space-y-3 pr-1">
-                {userApplications.length === 0 ? (
-                  <div className="py-12 px-4 text-center space-y-3">
-                    <div className="w-12 h-12 rounded-full bg-zinc-900 border border-[#D4AF37]/30 flex items-center justify-center mx-auto text-xl text-[#D4AF37]">
-                      🎫
-                    </div>
-                    <p className="text-xs font-bold text-white uppercase tracking-wider">Aucune candidature transmise</p>
-                    <p className="text-[10px] text-zinc-400 max-w-xs mx-auto">
-                      Postulez aux opportunités et Gombos disponibles sur le terrain pour suivre vos statuts ici.
-                    </p>
-                  </div>
-                ) : (
-                  userApplications.map(app => {
-                    const matchingGombo = gombos.find(g => g.id === app.gomboId);
-                    let statusBadge = { label: "🟡 En attente", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" };
-                    if (app.status === "acceptee" || app.status === "accepted") {
-                      statusBadge = { label: "🟢 Acceptée", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" };
-                    } else if (app.status === "refusee" || app.status === "rejected") {
-                      statusBadge = { label: "🔴 Refusée", color: "bg-red-500/20 text-red-400 border-red-500/30" };
-                    } else if (app.status === "terminee" || app.status === "completed") {
-                      statusBadge = { label: "📅 Terminée", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" };
-                    }
-
-                    return (
-                      <div
-                        key={app.id || app.gomboId}
-                        onClick={() => {
-                          if (matchingGombo) {
-                            handleOpenGomboDetails(matchingGombo);
-                            setIsCandidaturesModalOpen(false);
-                          }
-                        }}
-                        className="p-3.5 bg-zinc-950 border border-zinc-800 hover:border-[#D4AF37]/50 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition group"
-                      >
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className={`px-2 py-0.5 rounded-full border text-[8.5px] font-mono font-black uppercase tracking-wider ${statusBadge.color}`}>
-                              {statusBadge.label}
-                            </span>
-                            {app.createdAt && (
-                              <span className="text-[9px] font-mono text-zinc-500">
-                                {new Date(app.createdAt).toLocaleDateString("fr-FR")}
-                              </span>
-                            )}
-                          </div>
-                          <h4 className="text-xs text-white font-bold truncate group-hover:text-[#D4AF37] transition">
-                            {app.gomboTitle || matchingGombo?.title || "Candidature Gombo"}
-                          </h4>
-                          {app.message && (
-                            <p className="text-[10px] text-zinc-400 line-clamp-1 italic">
-                              "{app.message}"
-                            </p>
-                          )}
-                        </div>
-                        <span className="text-[9px] font-mono text-zinc-400 group-hover:text-[#D4AF37] shrink-0 font-bold uppercase">
-                          Détails →
-                        </span>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </motion.div>
+      {/* ANDROID BOTTOM SHEET: CANDIDATURES */}
+      <AndroidBottomSheet
+        isOpen={isCandidaturesModalOpen}
+        onClose={() => setIsCandidaturesModalOpen(false)}
+        title={
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🎫</span>
+            <div>
+              <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
+                Mes Candidatures & Postulations
+              </h3>
+              <p className="text-[9px] font-mono text-emerald-400 uppercase tracking-wider mt-1 font-bold">
+                Suivi en temps réel de vos statuts
+              </p>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        }
+      >
+        <div className="space-y-3 overflow-y-auto max-h-[70vh] pb-6 pr-1 text-left">
+          {userApplications.length === 0 ? (
+            <div className="py-12 px-4 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-xl text-emerald-400">
+                🎫
+              </div>
+              <p className="text-xs font-bold text-afri-text uppercase tracking-wider">Aucune candidature transmise</p>
+              <p className="text-[10px] text-afri-text-sec max-w-xs mx-auto">
+                Postulez aux opportunités et Gombos disponibles sur le terrain pour suivre vos statuts ici.
+              </p>
+            </div>
+          ) : (
+            userApplications.map(app => {
+              const matchingGombo = gombos.find(g => g.id === app.gomboId);
+              let statusBadge = { label: "🟡 En attente", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" };
+              if (app.status === "acceptee" || app.status === "accepted") {
+                statusBadge = { label: "🟢 Acceptée", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" };
+              } else if (app.status === "refusee" || app.status === "rejected") {
+                statusBadge = { label: "🔴 Refusée", color: "bg-red-500/20 text-red-400 border-red-500/30" };
+              } else if (app.status === "terminee" || app.status === "completed") {
+                statusBadge = { label: "📅 Terminée", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" };
+              }
+
+              return (
+                <div
+                  key={app.id || app.gomboId}
+                  onClick={() => {
+                    if (matchingGombo) {
+                      handleOpenGomboDetails(matchingGombo);
+                      setIsCandidaturesModalOpen(false);
+                    }
+                  }}
+                  className="p-3.5 bg-afri-bg border border-afri-border hover:border-emerald-500/50 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition group"
+                >
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded-full border text-[8.5px] font-mono font-black uppercase tracking-wider ${statusBadge.color}`}>
+                        {statusBadge.label}
+                      </span>
+                      {app.createdAt && (
+                        <span className="text-[9px] font-mono text-afri-text-sec">
+                          {new Date(app.createdAt).toLocaleDateString("fr-FR")}
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="text-xs text-afri-text font-bold truncate group-hover:text-emerald-400 transition">
+                      {app.gomboTitle || matchingGombo?.title || "Candidature Gombo"}
+                    </h4>
+                    {app.message && (
+                      <p className="text-[10px] text-afri-text-sec line-clamp-1 italic">
+                        "{app.message}"
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-[9px] font-mono text-afri-text-sec group-hover:text-emerald-400 shrink-0 font-bold uppercase">
+                    Détails →
+                  </span>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </AndroidBottomSheet>
 
       {/* 2. REAL HISTORY MODAL */}
       <AnimatePresence>
