@@ -13,12 +13,27 @@ export default function PWAHandler() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-      console.log('SW Registered:', r);
+      console.log('AFRIGOMBO SW Registered:', r);
+      // Periodically check for updates every hour
+      if (r) {
+        setInterval(() => {
+          console.log('Checking for SW updates...');
+          r.update();
+        }, 60 * 60 * 1000);
+      }
     },
     onRegisterError(error) {
-      console.error('SW Registration error:', error);
+      console.error('AFRIGOMBO SW Registration error:', error);
     },
   });
+
+  // Force update if needed - if the app is white, we might want to just reload
+  useEffect(() => {
+    if (needRefresh) {
+      console.warn("🔔 Update available! Showing banner.");
+      // Optional: auto-update if white screen detected via some state
+    }
+  }, [needRefresh]);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {

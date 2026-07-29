@@ -137,6 +137,12 @@ function App() {
   useEffect(() => {
     if (!showSplash) return;
     
+    // Safety timeout: Hide splash after 12 seconds regardless of state
+    const safetyTimeout = setTimeout(() => {
+      console.warn("⚠️ [AFRIGOMBO] Splash safety timeout triggered. Forcing entry.");
+      setShowSplash(false);
+    }, 12000);
+    
     let startTimestamp = Date.now();
     const duration = 2500; // 2.5 seconds total
 
@@ -153,6 +159,7 @@ function App() {
 
       if (calculatedProgress >= 100 && !authLoading) {
         clearInterval(interval);
+        clearTimeout(safetyTimeout);
         // Play success kora sound
         try {
           audioSynth.playKoraNote(523.25, 0, 0.12, 0.6);
@@ -163,7 +170,10 @@ function App() {
       }
     }, 30);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(safetyTimeout);
+    };
   }, [authLoading, showSplash]);
 
   if (showCinematicIntro) {

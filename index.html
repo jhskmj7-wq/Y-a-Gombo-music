@@ -22,11 +22,35 @@
 
       // Safety Boot Check: Detect if app fails to mount
       window.addEventListener('load', () => {
+        console.log("BOOT: Window Loaded");
+        
+        // Debug Service Worker state
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistration().then(reg => {
+            if (reg) {
+              console.log("SW STATE:", reg.active ? "ACTIVE" : "PENDING/WAITING", reg.scope);
+            } else {
+              console.log("SW STATE: NOT REGISTERED");
+            }
+          });
+        }
+
         setTimeout(() => {
           const root = document.getElementById('root');
           if (root && root.innerHTML === '') {
-            console.error('CRITICAL: App failed to mount after 5 seconds. Attempting recovery...');
+            console.error('CRITICAL: App failed to mount after 10 seconds.');
+            
+            // Log global state to help diagnostics
+            console.log("DIAGNOSTICS:", {
+              ua: navigator.userAgent,
+              href: window.location.href,
+              localStorage: Object.keys(localStorage),
+              sessionStorage: Object.keys(sessionStorage),
+              sw: !!navigator.serviceWorker
+            });
+
             const errorDiv = document.createElement('div');
+            errorDiv.id = "startup-recovery-ui";
             errorDiv.style.position = 'fixed';
             errorDiv.style.inset = '0';
             errorDiv.style.backgroundColor = '#050505';
@@ -35,21 +59,35 @@
             errorDiv.style.flexDirection = 'column';
             errorDiv.style.alignItems = 'center';
             errorDiv.style.justifyContent = 'center';
-            errorDiv.style.padding = '20px';
+            errorDiv.style.padding = '24px';
             errorDiv.style.textAlign = 'center';
-            errorDiv.style.zIndex = '99999';
+            errorDiv.style.zIndex = '999999';
             errorDiv.style.fontFamily = 'monospace';
             
             errorDiv.innerHTML = `
-              <div style="font-size: 40px; margin-bottom: 20px;">🪘</div>
-              <div style="font-weight: bold; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px;">AFRIGOMBO ELITE</div>
-              <div style="font-size: 12px; opacity: 0.7; margin-bottom: 20px;">Une erreur de synchronisation a été détectée.</div>
-              <button onclick="window.location.reload(true)" style="background: #D4AF37; color: black; border: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; cursor: pointer;">ACTUALISER LE TEMPLE</button>
+              <div style="font-size: 48px; margin-bottom: 24px;">🪘</div>
+              <div style="font-weight: 900; font-size: 20px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 4px;">SYNC ERROR</div>
+              <div style="font-size: 13px; opacity: 0.8; margin-bottom: 32px; max-width: 280px; line-height: 1.6;">
+                The Temple failed to open. This usually happens when an old version of the app is stuck in your browser's memory.
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 300px;">
+                <button onclick="window.location.reload(true)" style="background: #D4AF37; color: black; border: none; padding: 16px; border-radius: 16px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">FORCE REFRESH</button>
+                <button onclick="if('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(regs => { regs.forEach(r => r.unregister()); localStorage.clear(); sessionStorage.clear(); window.location.reload(true); }); }" style="background: transparent; color: #D4AF37; border: 1px solid rgba(212,175,55,0.3); padding: 12px; border-radius: 16px; font-weight: 600; cursor: pointer; font-size: 11px;">PURGE CACHE & RESET SW</button>
+              </div>
+              <div style="margin-top: 30px; font-size: 10px; opacity: 0.4;">
+                ${new Date().toISOString()}
+              </div>
             `;
             document.body.appendChild(errorDiv);
           }
-        }, 6000);
+        }, 10000);
       });
+
+      // Global error listener for immediate feedback
+      window.onerror = function(msg, url, lineNo, columnNo, error) {
+        console.error('GLOBAL ERROR:', msg, url, lineNo, columnNo, error);
+        return false;
+      };
     </script>
   </head>
   <body class="bg-afri-bg text-afri-text min-h-screen">
