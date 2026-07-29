@@ -704,7 +704,7 @@ export default function AfrigomboWalletDashboard({
               </button>
 
               {step === "form" && (
-                <form onSubmit={handleDepositSubmit} className="space-y-5">
+                <form onSubmit={(e) => { e.preventDefault(); handleDepositRequest(); }} className="space-y-5">
                   <div className="text-center space-y-1.5">
                     <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mx-auto">
                       <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
@@ -971,7 +971,7 @@ export default function AfrigomboWalletDashboard({
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleWithdrawSubmit} className="space-y-5">
+                <form onSubmit={(e) => { e.preventDefault(); handleWithdrawRequest(e); }} className="space-y-5">
                   <div className="text-center space-y-1.5">
                     <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mx-auto">
                       <ArrowDownLeft className="w-6 h-6 stroke-[2.5]" />
