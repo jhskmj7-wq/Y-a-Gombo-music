@@ -14,7 +14,7 @@ export default function HeritagePage({ onNavigateView, darkMode, setDarkMode, in
   const { profile, refreshProfile, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-afri-bg text-afri-text">
+    <div className="w-full bg-afri-bg text-afri-text">
       {profile ? (
         <GomboProfile
           currentUserProfile={profile}

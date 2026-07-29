@@ -391,7 +391,7 @@ export default function NotificationCenter({
   const hasAnyNotif = filteredNotifications.length > 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-6 min-h-screen text-afri-text pb-24">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-6 text-afri-text pb-12">
       {/* MOBILE ANDROID BACK BUTTON & NAVIGATION BAR */}
       <div className="flex items-center justify-between gap-3 bg-afri-bg/90 border border-afri-border/80 p-2.5 sm:p-3 rounded-2xl backdrop-blur-md shadow-lg sticky top-2 z-20">
         <button

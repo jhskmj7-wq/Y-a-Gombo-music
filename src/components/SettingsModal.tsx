@@ -287,7 +287,7 @@ export default function SettingsModal({
   };
 
   return (
-    <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-afri-bg text-afri-text font-sans pt-4 px-4 sm:px-6 pb-32 relative select-none">
+    <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-afri-bg text-afri-text font-sans pt-4 px-4 sm:px-6 pb-16 relative select-none">
       
       {/* OVERLAY FOR SECONDARY ASSISTANCE VIEWS */}
       {activeSupportPage !== "none" && (

@@ -3177,7 +3177,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
           {/* 1. LE TERRAIN - CENTRAL HUB FEED */}
           <div 
-            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container afri-section pb-28 scrollbar-none animate-fadeIn text-left [-webkit-overflow-scrolling:touch] touch-pan-y" : "hidden"}
+            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container afri-section scrollbar-none animate-fadeIn text-left [-webkit-overflow-scrolling:touch] touch-pan-y" : "hidden"}
             style={{ overscrollBehaviorY: "contain" }}
           >
             <UserTerrainLandingPage
@@ -3237,8 +3237,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
                 className={`h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden scrollbar-none [-webkit-overflow-scrolling:touch] ${
                   activeMenu === "super_admin" || activeMenu === "user_builders"
-                    ? "px-4 xs:px-5 sm:px-8 max-w-5xl mx-auto w-full pt-0 pb-32 sm:pb-36 space-y-6"
-                    : "afri-container afri-section pb-24"
+                    ? "px-4 xs:px-5 sm:px-8 max-w-5xl mx-auto w-full pt-0 pb-16 sm:pb-20 space-y-6"
+                    : "afri-container afri-section"
                 }`}
                 style={{ overscrollBehaviorY: "contain" }}
               >

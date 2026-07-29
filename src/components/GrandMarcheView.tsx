@@ -377,7 +377,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
   }, [currentUserProfile]);
 
   return (
-    <div className="w-full flex flex-col space-y-6 text-left animate-fadeIn text-afri-text pb-32">
+    <div className="w-full flex flex-col space-y-6 text-left animate-fadeIn text-afri-text pb-12">
       {/* HEADER & FILTERS */}
       <div className="w-full space-y-5">
         {/* HEADER SECTION */}

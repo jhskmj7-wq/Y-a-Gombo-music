@@ -135,7 +135,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="afri-scroll-safe afri-container pb-28 sm:pb-36"
+      className="afri-container"
     >
       <div className="afri-section">
         

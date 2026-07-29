@@ -88,7 +88,7 @@ export const CreatorActivityDashboard: React.FC<CreatorActivityDashboardProps> =
   };
 
   return (
-    <div className="w-full flex flex-col space-y-6 text-left animate-fadeIn text-afri-text pb-32">
+    <div className="w-full flex flex-col space-y-6 text-left animate-fadeIn text-afri-text pb-12">
       {/* HEADER & CREATOR IDENTIFICATION */}
       <div className="w-full bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg-sec border border-[#D4AF37]/50 rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
