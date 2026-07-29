@@ -95,7 +95,7 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
         )}
       </div>
 
-      <div className="flex overflow-x-auto pb-4 gap-3 no-scrollbar scroll-smooth snap-x">
+      <div className="flex overflow-x-auto pb-4 gap-3 no-scrollbar scroll-smooth snap-x touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch]">
         {data.map((item, idx) => (
           <motion.div
             key={item.id || `${type}-${idx}`}

@@ -77,6 +77,9 @@ export type TendancesCategoryTab =
   | "castings"    // 🎤 Castings
   | "renfort"     // 🤝 Renfort Express
   | "evenements"  // 📅 Événements
+  | "marche"      // 🛒 Grand Marché
+  | "academie"    // 🎓 Académie
+  | "artistes"    // 🎤 Artistes
   | "pres_de_moi"; // 📍 Près de moi
 
 /**
@@ -442,6 +445,40 @@ export function filterAndRankTendances(
         String(i.title || "").toLowerCase().includes("festival") ||
         String(i.title || "").toLowerCase().includes("spectacle") ||
         String(i.title || "").toLowerCase().includes("soirée")
+      );
+      break;
+
+    case "marche":
+      filtered = filtered.filter(i => 
+        (i.category as string) === "marche" || 
+        String(i.title || "").toLowerCase().includes("marché") || 
+        String(i.title || "").toLowerCase().includes("matériel") ||
+        String(i.title || "").toLowerCase().includes("instrument") ||
+        String(i.title || "").toLowerCase().includes("sono") ||
+        String(i.title || "").toLowerCase().includes("vente") ||
+        String(i.title || "").toLowerCase().includes("location")
+      );
+      break;
+
+    case "academie":
+      filtered = filtered.filter(i => 
+        (i.category as string) === "academie" || 
+        String(i.title || "").toLowerCase().includes("académie") || 
+        String(i.title || "").toLowerCase().includes("formation") ||
+        String(i.title || "").toLowerCase().includes("masterclass") ||
+        String(i.title || "").toLowerCase().includes("cours") ||
+        String(i.title || "").toLowerCase().includes("atelier")
+      );
+      break;
+
+    case "artistes":
+      filtered = filtered.filter(i => 
+        (i.category as string) === "artiste" || 
+        i.type === "post" ||
+        String(i.title || "").toLowerCase().includes("artiste") ||
+        String(i.title || "").toLowerCase().includes("virtuose") ||
+        String(i.title || "").toLowerCase().includes("chanteur") ||
+        String(i.title || "").toLowerCase().includes("musicien")
       );
       break;
 

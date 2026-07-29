@@ -18,8 +18,8 @@ export const GeoRadarSection: React.FC<GeoRadarSectionProps> = ({
   onAction
 }) => {
   const allItems = [
-    ...nearbyGombos.map(g => ({ ...g, radarType: "gombo", icon: <Zap className="w-3 h-3 text-amber-500" /> })),
-    ...nearbyArtists.map(a => ({ ...a, radarType: "artist", icon: <Music className="w-3 h-3 text-afri-bg-sec" /> })),
+    ...nearbyGombos.map(g => ({ ...g, radarType: "gombo" })),
+    ...nearbyArtists.map(a => ({ ...a, radarType: "artist" })),
   ].sort((a: any, b: any) => a.distance - b.distance);
 
   if (allItems.length === 0) return null;
@@ -52,7 +52,11 @@ export const GeoRadarSection: React.FC<GeoRadarSectionProps> = ({
             >
               <div className="flex items-center justify-between">
                 <div className="p-1.5 rounded-lg bg-afri-bg-sec/20 border border-afri-border group-hover:border-afri-bg-sec/30 transition-colors">
-                  {item.icon}
+                  {item.radarType === "gombo" ? (
+                    <Zap className="w-3 h-3 text-amber-500" />
+                  ) : (
+                    <Music className="w-3 h-3 text-afri-bg-sec" />
+                  )}
                 </div>
                 <div className="flex flex-col items-end">
                   <span className="text-[9px] font-black text-afri-text leading-none uppercase">

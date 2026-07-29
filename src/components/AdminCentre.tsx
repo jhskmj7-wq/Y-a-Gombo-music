@@ -48,6 +48,8 @@ import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
 import FounderThrone from "./FounderThrone";
 import { PendingPaymentModal } from "./PendingPaymentModal";
 import MessagesView from "./MessagesView";
+import { ArbreAPalabresBubble } from "./ArbreAPalabresBubble";
+import { ReelsPlayer } from "./ReelsPlayer";
 import NotificationCenter from "./NotificationCenter";
 import ComingSoon from "./ComingSoon";
 import { UserTerrainLandingPage } from "./UserTerrainLandingPage";
@@ -1199,6 +1201,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       hasSeenThroneCinematic.current = true;
     }
   }, [activeMenu]);
+
+  // Reset scroll to top on every menu switch
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const scrollables = document.querySelectorAll('.overflow-y-auto, .overflow-auto, [class*="overflow-y-auto"]');
+    scrollables.forEach(el => {
+      (el as HTMLElement).scrollTop = 0;
+    });
+  }, [activeMenu, perspective]);
 
   // Custom Reviews & Gombo completeness state
   const [reviews, setReviews] = useState<GomboReview[]>([]);
@@ -2819,7 +2830,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                ZONE B : WORKSPACE CENTRAL (MIDDLE)
          ========================================================================= */}
       <main 
-        className="flex-1 min-w-0 w-full max-w-full bg-afri-bg flex flex-col overflow-hidden"
+        className="flex-1 min-w-0 min-h-0 w-full max-w-full bg-afri-bg flex flex-col overflow-hidden"
       >
         
         {/* FLOATING ADMIN ANNOUNCEMENT TOAST BANNER */}
@@ -3158,7 +3169,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         )}
 
         {/* WORKSPACE VIEWS */}
-        <div className="flex-1 overflow-hidden relative">
+        <div className="flex-1 min-h-0 relative">
           
           {/* ===================================================
               PERSISTENT CORE VIEWS (SCROLL PRESERVATION ENGINE)
@@ -3166,7 +3177,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
           {/* 1. LE TERRAIN - CENTRAL HUB FEED */}
           <div 
-            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container afri-section pb-24 scrollbar-none animate-fadeIn text-left [-webkit-overflow-scrolling:touch]" : "hidden"}
+            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container afri-section pb-28 scrollbar-none animate-fadeIn text-left [-webkit-overflow-scrolling:touch] touch-pan-y" : "hidden"}
             style={{ overscrollBehaviorY: "contain" }}
           >
             <UserTerrainLandingPage
@@ -3241,12 +3252,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     ---------------------------------------------------- */}
 
 
-              {/* 1B. VIDÉOS RÉELLES - VERIFICATION & SHOWCASE */}
+              {/* 1B. VIDÉOS RÉELLES - REELS PLAYER UNMOUNTABLE */}
               {activeMenu === "user_reels" && (
-                <UserReelsView 
+                <ReelsPlayer 
+                  posts={posts}
                   users={users}
-                  setReelsVideoId={setReelsVideoId}
-                  setReelsVideoUrl={setReelsVideoUrl}
+                  currentUser={currentUser}
+                  onClose={() => setActiveMenu("user_terrain")}
+                  onOpenCreate={() => setIsPlusMenuOpen(true)}
                 />
               )}
               {false && (() => {
@@ -8424,7 +8437,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
          ========================================================================= */}
       {perspective === "user" && [
         "user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_heritage",
-        "user_notifications", "user_settings", "user_wallet", "user_contracts", "user_messages",
+        "user_notifications", "user_settings", "user_wallet", "user_contracts",
         "user_about", "user_support", "user_whats_new", "user_abonnement", "user_gombo_dashboard"
       ].includes(activeMenu) && (
         <>
@@ -9575,23 +9588,44 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       {selectedGomboDetails && (() => {
         const hasApplied = appliedGombos.includes(selectedGomboDetails.id);
         return (
-          <div className="fixed inset-0 bg-afri-bg/90 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn text-left">
+          <div 
+            onClick={() => setSelectedGomboDetails(null)}
+            className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end justify-center z-[100] animate-fadeIn text-left"
+          >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="w-full max-w-lg bg-afri-bg-sec border border-afri-gold/35 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+              initial={{ y: "100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              transition={{ type: "spring", stiffness: 350, damping: 32 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.25}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 100 || info.velocity.y > 250) {
+                  setSelectedGomboDetails(null);
+                }
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-xl bg-afri-bg-sec border-t-2 border-[#D4AF37]/50 rounded-t-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[92vh] text-left relative"
             >
+              {/* Top Drag Handle Indicator */}
+              <div className="w-full py-2.5 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing bg-afri-bg border-b border-afri-border/60 shrink-0 select-none">
+                <div className="w-12 h-1.5 bg-[#D4AF37]/60 rounded-full mb-1" />
+                <span className="text-[8px] font-mono font-bold text-afri-text-sec uppercase tracking-widest">Glisser vers le bas pour fermer</span>
+              </div>
+
               {/* Header Image backdrop */}
               <div className="h-44 w-full relative bg-afri-bg shrink-0">
                 <img
                   src={
-                    selectedGomboDetails.id.includes("1") || selectedGomboDetails.id.includes("a")
+                    selectedGomboDetails.imageUrl ||
+                    (selectedGomboDetails.id.includes("1") || selectedGomboDetails.id.includes("a")
                       ? "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80&w=500"
                       : selectedGomboDetails.id.includes("2") || selectedGomboDetails.id.includes("b")
                       ? "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=500"
                       : selectedGomboDetails.id.includes("3") || selectedGomboDetails.id.includes("c")
                       ? "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=500"
-                      : "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=500"
+                      : "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=500")
                   }
                   alt={selectedGomboDetails.title}
                   className="w-full h-full object-cover opacity-80"
@@ -9601,16 +9635,21 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 {/* Close Button */}
                 <button
                   onClick={() => setSelectedGomboDetails(null)}
-                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-afri-bg/85 border border-afri-gold/30 flex items-center justify-center text-afri-text hover:text-red-400 text-lg transition-all cursor-pointer select-none active:scale-90"
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-afri-bg/85 border border-afri-gold/40 flex items-center justify-center text-afri-text hover:text-red-400 text-lg transition-all cursor-pointer select-none active:scale-90 shadow-md"
                   title="Fermer"
                 >
                   &times;
                 </button>
 
-                <div className="absolute bottom-4 left-6">
-                  <span className="text-[10px] font-mono font-black uppercase text-afri-gold bg-afri-bg/90 px-3 py-1 rounded-xl border border-afri-gold/30">
+                <div className="absolute bottom-3 left-4 flex gap-2 items-center flex-wrap">
+                  <span className="text-[10px] font-mono font-black uppercase text-afri-gold bg-afri-bg/90 px-3 py-1 rounded-xl border border-afri-gold/40 shadow-sm">
                     {selectedGomboDetails.type || "Live Direct Showcase"}
                   </span>
+                  {selectedGomboDetails.urgent && (
+                    <span className="text-[10px] font-mono font-black uppercase text-white bg-red-600 px-2.5 py-1 rounded-xl shadow-sm animate-pulse">
+                      ⚡ URGENT
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -10155,6 +10194,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           alert("🎉 Publication activée avec succès !");
         }}
       />
+
+      {/* 9. Global Arbre à Palabres Floating Bubble */}
+      {!(activeMenu === "user_reels" || activeMenu === "user_camera" || activeMenu === "user_login" || activeMenu === "user_messages" || Boolean(reelsVideoUrl) || Boolean(reelsVideoId)) && (
+        <ArbreAPalabresBubble
+          unreadCount={totalUnreadMessages}
+          onOpen={() => requireAuthThen(() => setActiveMenu("user_messages"))}
+        />
+      )}
 
     </div>
   );

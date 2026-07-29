@@ -4,7 +4,8 @@ import {
   Search, Sliders, Plus, Megaphone, MessageSquare, ShieldCheck, Bell, 
   RefreshCw, Heart, X, Award, Users, Music, QrCode, LifeBuoy,
   PenTool, UserCheck, MessageCircle, History, Headphones, HelpCircle, Video,
-  Sparkles, BarChart3, FileSignature, Zap, Play, Pause, Square, MapPin
+  Sparkles, BarChart3, FileSignature, Zap, Play, Pause, Square, MapPin,
+  ShoppingBag, GraduationCap, ChevronRight
 } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
 import { useAudio } from "../context/AudioContext";
@@ -28,6 +29,7 @@ import { useGeoEngine } from "../hooks/useGeoEngine";
 import { GeoRadarSection } from "./GeoRadarSection";
 import { NearbyGombosSection, NearbyArtistsSection } from "./NearbyGeoSections";
 import { getDistanceLabel, calculateDistance } from "../lib/geoUtils";
+import { ArbreAPalabresBubble } from "./ArbreAPalabresBubble";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -207,82 +209,25 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const [todayEventsCount, setTodayEventsCount] = useState<number>(0);
   const [isPlusMenuOpen, setIsPlusMenuOpen] = useState<boolean>(false);
 
-  // --- DYNAMIC INFINITE FEED STATE ---
-  const [feedBlocks, setFeedBlocks] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
+  // --- CLEAN INFINITE FEED STATE (STRICT ORDER - ZERO DUPLICATES) ---
+  const [infiniteFeedPage, setInfiniteFeedPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const observerTarget = useRef<HTMLDivElement>(null);
-
-  // Block generation logic
-  const generateBlocksFromData = (data: { gombos: any[], users: any[], posts: any[] }) => {
-    const { gombos, users, posts } = data;
-    const blockConfigs: { type: BlockType, title: string, getData: () => any[] }[] = [
-      { 
-        type: "URGENT_OPPORTUNITIES", 
-        title: "🔥 Opportunités urgentes", 
-        getData: () => gombos.filter(g => g.urgent || g.isExpress).slice(0, 6)
-      },
-      { 
-        type: "NEW_GOMBOS", 
-        title: "🎼 Nouveaux Gombos", 
-        getData: () => gombos.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 6)
-      },
-      { 
-        type: "CERTIFIED_ARTISTS", 
-        title: "⭐ Artistes certifiés", 
-        getData: () => users.filter(u => u.isCertified || u.isVerified).slice(0, 6)
-      },
-      { 
-        type: "POPULAR_REELS", 
-        title: "🎥 Réels populaires", 
-        getData: () => [
-          { id: "r1", title: "Solo Saxophone", artist: "Thierry Sax", thumbnail: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400", views: "1.2K", url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4" },
-          { id: "r2", title: "Batterie d'or", artist: "Sékou", thumbnail: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=400", views: "890", url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4" }
-        ]
-      },
-      { 
-        type: "AFRIGOMBO_UNIVERSE", 
-        title: "🌍 Univers AFRIGOMBO", 
-        getData: () => [
-          { id: "u1", type: "product", title: "Micro Studio Pro", image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=400", description: "Qualité exceptionnelle pour vos sessions.", tag: "Grand Marché" },
-          { id: "u2", type: "course", title: "Maîtrise du Piano", image: "https://images.unsplash.com/photo-1520529612722-68ec39750058?w=400", description: "Apprenez avec les maîtres.", tag: "Académie" },
-          { id: "u3", type: "event", title: "Festival du Trône", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400", description: "Le plus grand rassemblement musical.", tag: "Événements" }
-        ]
-      },
-      { 
-        type: "TRENDS", 
-        title: "🔥 Tendances du moment", 
-        getData: () => gombos.filter(g => g.isBoosted).slice(0, 6)
-      },
-      { 
-        type: "NEAR_YOU", 
-        title: "📍 Près de chez vous", 
-        getData: () => gombos.filter(g => g.location?.includes("Abidjan") || g.commune?.includes("Abidjan")).slice(0, 6)
-      },
-      { 
-        type: "NEW_TALENTS", 
-        title: "🚀 Nouveaux talents", 
-        getData: () => users.slice(0, 6)
-      }
-    ];
-
-    const validBlocks = blockConfigs.filter(b => b.getData().length > 0);
-    return [...validBlocks].sort(() => Math.random() - 0.5);
-  };
-
-  useEffect(() => {
-    if (gombos.length > 0 || users.length > 0) {
-      const initialBlocks = generateBlocksFromData({ gombos, users, posts });
-      setFeedBlocks(initialBlocks);
-    }
-  }, [gombos, users, posts]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !isLoadingMore && hasMore) {
-          loadMoreBlocks();
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setInfiniteFeedPage(prev => {
+              const nextPage = prev + 1;
+              if (nextPage >= 6) setHasMore(false);
+              return nextPage;
+            });
+            setIsLoadingMore(false);
+          }, 800);
         }
       },
       { threshold: 0.1 }
@@ -291,24 +236,16 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     return () => observer.disconnect();
   }, [isLoadingMore, hasMore]);
 
-  const loadMoreBlocks = () => {
-    setIsLoadingMore(true);
-    setTimeout(() => {
-      const moreBlocks = generateBlocksFromData({ gombos, users, posts });
-      setFeedBlocks(prev => [...prev, ...moreBlocks]);
-      setPage(prev => prev + 1);
-      setIsLoadingMore(false);
-      if (page >= 15) setHasMore(false);
-    }, 1200);
-  };
-
   const [isFavoritesModalOpen, setIsFavoritesModalOpen] = useState<boolean>(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
   const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState<boolean>(false);
+  const [isUrgencesModalOpen, setIsUrgencesModalOpen] = useState<boolean>(false);
+  const [isCandidaturesModalOpen, setIsCandidaturesModalOpen] = useState<boolean>(false);
+  const [userApplications, setUserApplications] = useState<any[]>([]);
   const [leaderboardSearch, setLeaderboardSearch] = useState<string>("");
   const [localComingSoonKey, setLocalComingSoonKey] = useState<string | null>(null);
 
-  const isAnyTerrainModalOpen = isPlusMenuOpen || isFavoritesModalOpen || isHistoryModalOpen || isLeaderboardModalOpen || !!localComingSoonKey;
+  const isAnyTerrainModalOpen = isPlusMenuOpen || isFavoritesModalOpen || isHistoryModalOpen || isLeaderboardModalOpen || isUrgencesModalOpen || isCandidaturesModalOpen || !!localComingSoonKey;
 
   useEffect(() => {
     if (isAnyTerrainModalOpen) {
@@ -324,6 +261,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           setIsFavoritesModalOpen(false);
           setIsHistoryModalOpen(false);
           setIsLeaderboardModalOpen(false);
+          setIsUrgencesModalOpen(false);
+          setIsCandidaturesModalOpen(false);
           setLocalComingSoonKey(null);
         }
       };
@@ -333,6 +272,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         setIsFavoritesModalOpen(false);
         setIsHistoryModalOpen(false);
         setIsLeaderboardModalOpen(false);
+        setIsUrgencesModalOpen(false);
+        setIsCandidaturesModalOpen(false);
         setLocalComingSoonKey(null);
       };
       window.addEventListener("popstate", handlePopState);
@@ -427,11 +368,22 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       console.warn("Events query error:", e);
     }
 
+    // 5. User applications candidatures sync
+    let unsubscribeApplications = () => {};
+    try {
+      unsubscribeApplications = gomboDB.listenUserApplications(currentUser.uid, (apps) => {
+        setUserApplications(apps);
+      });
+    } catch (e) {
+      console.warn("Applications listener error:", e);
+    }
+
     return () => {
       unsubscribeMessages();
       unsubscribeNotifications();
       unsubscribeContracts();
       unsubscribeEvents();
+      unsubscribeApplications();
     };
   }, [currentUser?.uid]);
 
@@ -472,18 +424,6 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const [filterHasAudio, setFilterHasAudio] = useState<boolean>(false);
   const [filterMaxDistance, setFilterMaxDistance] = useState<number>(100);
   const [filterAvailableOnly, setFilterAvailableOnly] = useState<boolean>(false);
-
-  // SWIPEABLE HORIZONTAL MODULES & TABS STATE (Requirement 2)
-  const [activeSection, setActiveSection] = useState<"home" | "reels">("home");
-  
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTop = 0;
-    }
-  }, [activeSection]);
-
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [selectedExploreArtist, setSelectedExploreArtist] = useState<any | null>(null);
   const [reelsFilter, setReelsFilter] = useState("all");
   const handleTogglePreview = (track: any) => {
@@ -532,33 +472,6 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     } else if (distance < -50) {
       setCurrentSlide((prev) => (prev - 1 + 4) % 4);
       try { audioSynth?.playTamTam?.(false); } catch (_) {}
-    }
-  };
-
-  const minSwipeDistance = 75;
-
-  const onTouchStartHandler = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMoveHandler = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const onTouchEndHandler = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe && activeSection === "home") {
-      setActiveSection("reels");
-      try { audioSynth?.playValidationSuccess(); } catch(_) {}
-    }
-    if (isRightSwipe && activeSection === "reels") {
-      setActiveSection("home");
-      try { audioSynth?.playValidationSuccess(); } catch(_) {}
     }
   };
 
@@ -816,6 +729,73 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     isPremium: g.isBoosted || false
   }));
 
+  // Section 4: Renfort Express
+  const renfortGombos = React.useMemo(() => {
+    const filtered = GombosToRender.filter((g: any) => 
+      g.type === "renfort" || g.isExpress || g.isRenfort || g.category === "Renfort groupe" || g.category === "urgent"
+    );
+    if (filtered.length >= 3) return filtered;
+    return GombosToRender.slice(0, 6);
+  }, [GombosToRender]);
+
+  // Section 5: Gombos récents
+  const recentGombos = React.useMemo(() => {
+    return [...GombosToRender].sort((a: any, b: any) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0)).slice(0, 8);
+  }, [GombosToRender]);
+
+  // Section 6: Opportunités urgentes
+  const urgentGombos = React.useMemo(() => {
+    const filtered = GombosToRender.filter((g: any) => g.urgent || g.isExpress || g.category === "casting" || g.isCasting);
+    if (filtered.length >= 3) return filtered;
+    return GombosToRender.filter(g => g.budget && g.budget >= 200000).slice(0, 6);
+  }, [GombosToRender]);
+
+  // Section 7: Sélection du Souverain
+  const sovereignGombos = React.useMemo(() => {
+    const filtered = GombosToRender.filter((g: any) => g.isBoosted || g.isPremium || g.isSpotlight);
+    if (filtered.length >= 3) return filtered;
+    return GombosToRender.slice(0, 8);
+  }, [GombosToRender]);
+
+  // Section 8: Réels d'artistes
+  const reelsData = React.useMemo(() => [
+    { id: "reel_1", title: "Solo Saxophone Live", artist: "Thierry Sax", views: "2.4K", category: "Saxophone", thumbnail: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&auto=format&fit=crop&q=80", url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4" },
+    { id: "reel_2", title: "Batterie Zaouli & Solo", artist: "Sékou Drummer", views: "1.8K", category: "Batterie", thumbnail: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=400&auto=format&fit=crop&q=80", url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4" },
+    { id: "reel_3", title: "Bassline Groovy Abidjan", artist: "Paco Bass", views: "3.1K", category: "Basse", thumbnail: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&auto=format&fit=crop&q=80", url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4" },
+    { id: "reel_4", title: "Vocal Improvisation Afro", artist: "Awa Voix d'Or", views: "4.2K", category: "Chant", thumbnail: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&auto=format&fit=crop&q=80", url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4" }
+  ], []);
+
+  // Section 9: Nouveaux talents
+  const talentsData = React.useMemo(() => {
+    return users.filter(u => u.role === "musicien" || u.role === "artiste").slice(0, 8);
+  }, [users]);
+
+  // Section 10: Univers AFRIGOMBO
+  const universeItems = React.useMemo(() => [
+    { id: "u1", type: "product" as const, title: "Micro Studio Pro Neumann", image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=400&auto=format&fit=crop&q=80", description: "Qualité exceptionnelle pour vos sessions studio à Abidjan.", tag: "Grand Marché" },
+    { id: "u2", type: "course" as const, title: "Maîtrise du Piano Afro-Jazz", image: "https://images.unsplash.com/photo-1520529612722-68ec39750058?w=400&auto=format&fit=crop&q=80", description: "Apprenez avec les virtuoses du Trône.", tag: "Académie" },
+    { id: "u3", type: "event" as const, title: "Grand Concert du Trône 2026", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&auto=format&fit=crop&q=80", description: "Le plus grand rassemblement des orchestres d'Afrique.", tag: "Événements" }
+  ], []);
+
+  // NIVEAU 1 — INTELLIGENCE DES GOMBOS (Tri dynamique des 3 sections fixes)
+  const level1Order = React.useMemo(() => {
+    const nearbyCount = geo.getNearbyItems(GombosToRender, 25).length;
+    const renfortCount = renfortGombos.length;
+    const urgentCount = urgentGombos.length;
+
+    const nearbyScore = (geo.latitude && geo.longitude ? 30 : 10) + nearbyCount * 2;
+    const renfortScore = 20 + renfortCount * 4;
+    const urgentScore = 15 + urgentCount * 3;
+
+    const sections = [
+      { id: "nearby", score: nearbyScore },
+      { id: "renfort", score: renfortScore },
+      { id: "urgent_recent", score: urgentScore }
+    ];
+
+    return sections.sort((a, b) => b.score - a.score).map(s => s.id);
+  }, [geo.latitude, geo.longitude, GombosToRender, renfortGombos, urgentGombos]);
+
   const isLiked = (id: string) => likedGombos.includes(id);
   const toggleLike = (id: string) => {
     setLikedGombos(prev =>
@@ -827,56 +807,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   return (
     <div 
       ref={containerRef}
-      onTouchStart={onTouchStartHandler}
-      onTouchMove={onTouchMoveHandler}
-      onTouchEnd={onTouchEndHandler}
-      className="h-full overflow-y-auto space-y-6 text-left animate-fadeIn font-sans"
+      className="w-full space-y-6 text-left animate-fadeIn font-sans"
     >
-      {/* ==========================================
-          SEGMENTED NAVIGATION & DRAG GUIDE
-         ========================================== */}
-      <div className="flex justify-center items-center gap-1.5 p-1 bg-afri-bg-sec/85 border border-afri-border rounded-2xl w-fit mx-auto shadow-[0_4px_20px_rgba(0,0,0,0.5)] select-none sticky top-2 z-[60]">
-        <button
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchMove={(e) => e.stopPropagation()}
-          onClick={() => {
-            setActiveSection("home");
-            try { audioSynth?.playTamTam?.(false); } catch(_) {}
-          }}
-          className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
-            activeSection === "home"
-              ? "bg-afri-bg-sec text-black shadow-md scale-[1.02]"
-              : "text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-sec/40"
-          }`}
-        >
-          <span>🌟 Tendances & Gombos</span>
-        </button>
-        <button
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchMove={(e) => e.stopPropagation()}
-          onClick={() => {
-            setActiveSection("reels");
-            try { audioSynth?.playTamTam?.(false); } catch(_) {}
-          }}
-          className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 cursor-pointer relative ${
-            activeSection === "reels"
-              ? "bg-afri-bg-sec text-black shadow-md scale-[1.02]"
-              : "text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-sec/40"
-          }`}
-        >
-          <span>🔥 Fil Réels</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-        </button>
-      </div>
-
-      <div className="text-center text-[8.5px] font-mono tracking-wider font-extrabold text-afri-text-sec uppercase flex items-center justify-center gap-1 sm:hidden select-none -translate-y-2 mt-1">
-        <span>Faites glisser vers la droite</span>
-        <span className="text-[#D4AF37] animate-pulse">➔</span>
-        <span>pour les réels</span>
-      </div>
-
-      {activeSection === "home" ? (
-        <>
       {/* ==========================================
           1. BARRE DE RECHERCHE UNIVERSELLE & MENU AUDIO
          ========================================== */}
@@ -1138,11 +1070,42 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
       {/* Dynamic Inline Search Results Dropdown Overlay */}
       {globalSearchTerm.trim().length > 0 && (
-        <div className="absolute top-14 left-0 right-0 bg-afri-bg-sec border border-afri-border rounded-2xl p-4 z-50 max-h-72 overflow-y-auto space-y-2.5 shadow-2xl">
+        <div className="absolute top-14 left-0 right-0 bg-afri-bg-sec border border-afri-border rounded-2xl p-4 z-50 max-h-80 overflow-y-auto space-y-2.5 shadow-2xl">
           <div className="flex justify-between items-center text-[9px] font-mono text-afri-text-sec font-bold">
-            <span>SANS FILTRE (TEMPS RÉEL)</span>
+            <span>RECHERCHE MULTI-CRITÈRES (TEMPS RÉEL)</span>
             <button onClick={() => setGlobalSearchTerm("")} className="text-[#D4AF37] font-black uppercase">Fermer</button>
           </div>
+
+          {/* Automatic GOMBO ID Detection */}
+          {(/^(GOMBO|GB|AG|GID|ID)-/i.test(globalSearchTerm.trim()) || globalSearchTerm.trim().toUpperCase().startsWith("GOMBO-")) && (
+            <div className="p-3 bg-[#D4AF37]/10 border border-[#D4AF37] rounded-xl flex items-center justify-between gap-2 shadow-lg animate-fadeIn">
+              <div className="text-left">
+                <span className="text-[9.5px] font-mono font-black text-[#D4AF37] uppercase tracking-wider block">🆔 GOMBO ID DÉTECTÉ</span>
+                <span className="text-xs text-afri-text font-bold truncate">{globalSearchTerm.toUpperCase()}</span>
+              </div>
+              <button
+                onClick={() => {
+                  const matchedUser = users.find(u => 
+                    u.gomboIdNumber === globalSearchTerm || 
+                    u.gomboId?.id === globalSearchTerm || 
+                    (u.artisticName && u.artisticName.toLowerCase().includes(globalSearchTerm.toLowerCase()))
+                  );
+                  const matchedGombo = gombos.find(g => g.id === globalSearchTerm || g.gomboId === globalSearchTerm);
+                  
+                  if (matchedGombo) {
+                    handleOpenGomboDetails(matchedGombo);
+                  } else {
+                    requireAuthThen(() => setActiveMenu("user_gombo_id"));
+                  }
+                  setGlobalSearchTerm("");
+                }}
+                className="px-3 py-1.5 bg-[#D4AF37] text-black font-black text-[10px] rounded-lg uppercase tracking-wider hover:bg-amber-400 transition cursor-pointer shrink-0 shadow-md"
+              >
+                Ouvrir Profil ID →
+              </button>
+            </div>
+          )}
+
           {GombosToRender.slice(0, 5).map((g, i) => (
             <div
               key={g.id || i}
@@ -1163,7 +1126,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       )}
 
       {/* ==========================================
-          2. ACTIONS RAPIDES (STYLE PREMIUM AFRIGOMBO)
+          2. ACTIONS RAPIDES (NOUVELLE VERSION BÊTA FINALE - 4 ACTIONS CLÉS)
          ========================================== */}
       <div className={`afri-card transition-all duration-300 shadow-[0_4px_25px_rgba(212,175,55,0.08)] ${isQuickActionsOpen ? "p-3 sm:p-5 space-y-3 sm:space-y-4" : "py-2 px-3 sm:px-4"}`}>
         <button
@@ -1201,20 +1164,56 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             className="grid grid-cols-4 gap-1.5 xs:gap-2 sm:gap-4 w-full select-none"
           >
              {[
-               { id: "publier", label: "Publier", emoji: "🎤", action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-               { id: "contrats", label: "Contrats", emoji: "🤝", badge: activeContractsCount > 0 ? activeContractsCount : undefined, badgeColor: "bg-emerald-500 text-afri-text", action: () => requireAuthThen(() => { setActiveMenu("user_contracts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-               { id: "calendrier", label: "Calendrier", emoji: "📅", badge: todayEventsCount > 0 ? todayEventsCount : undefined, badgeColor: "bg-afri-bg-sec text-black", action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-               { id: "messages", label: "Messages", emoji: "💬", badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined, badgeColor: "bg-red-600 text-afri-text animate-pulse", action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-               { id: "renfort", label: "Renfort", emoji: "⚡", action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-               { id: "gombo_id", label: "GOMBO ID", emoji: "🎼", action: () => requireAuthThen(() => { setActiveMenu("user_gombo_id"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-               { id: "favoris", label: "Favoris", emoji: "⭐", action: () => requireAuthThen(() => { setActiveMenu("user_favorites"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-               { id: "plus", label: "Plus", emoji: "➕", badge: unreadNotificationsCount > 0 ? unreadNotificationsCount : undefined, badgeColor: "bg-amber-500 text-black", action: () => setIsPlusMenuOpen(true) },
-               ...(profile?.role === "musicien" ? [{ 
-                 id: "disponibilite", 
-                 label: profile.availability?.status === "available" ? "Dispo ✅" : "Indisponible", 
-                 emoji: "🟢", 
-                 action: () => requireAuthThen(() => setActiveQuickActionModal("set_availability")) 
-               }] : [])
+               { 
+                 id: "pres_de_moi", 
+                 label: "Près de moi", 
+                 emoji: "📍", 
+                 action: () => { 
+                   if (geo.permissionStatus !== "granted") {
+                     geo.requestLocation();
+                   }
+                   const el = document.getElementById("nearby-gombos-section");
+                   if (el) {
+                     el.scrollIntoView({ behavior: "smooth" });
+                   } else {
+                     setIsFiltersOpen(true);
+                   }
+                   try { audioSynth?.playValidationSuccess?.(); } catch (_) {} 
+                 } 
+               },
+               { 
+                 id: "urgences", 
+                 label: "Urgences", 
+                 emoji: "🚨", 
+                 badge: gombos.filter(g => g.urgent || g.isExpress || (g as any).type === "renfort" || g.category === "casting" || g.isRenfort).length || undefined,
+                 badgeColor: "bg-red-600 text-white animate-pulse",
+                 action: () => { 
+                   setIsUrgencesModalOpen(true); 
+                   try { audioSynth?.playValidationSuccess?.(); } catch (_) {} 
+                 } 
+               },
+               { 
+                 id: "mes_favoris", 
+                 label: "Mes Favoris", 
+                 emoji: "⭐", 
+                 badge: likedGombos.length > 0 ? likedGombos.length : undefined,
+                 badgeColor: "bg-[#D4AF37] text-black",
+                 action: () => { 
+                   setIsFavoritesModalOpen(true); 
+                   try { audioSynth?.playValidationSuccess?.(); } catch (_) {} 
+                 } 
+               },
+               { 
+                 id: "mes_candidatures", 
+                 label: "Candidatures", 
+                 emoji: "🎫", 
+                 badge: userApplications.length > 0 ? userApplications.length : undefined,
+                 badgeColor: "bg-emerald-500 text-white",
+                 action: () => requireAuthThen(() => { 
+                   setIsCandidaturesModalOpen(true); 
+                   try { audioSynth?.playValidationSuccess?.(); } catch (_) {} 
+                 }) 
+               }
              ].map(action => (
                <motion.button
                  key={action.id}
@@ -1227,9 +1226,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                  onClick={action.action}
                  className="bg-afri-bg-sec border border-[#D4AF37]/25 rounded-2xl p-2 flex flex-col items-center justify-center gap-1 shadow-md hover:bg-afri-bg-sec/5 transition-all cursor-pointer relative group"
                >
-                 {action.badge !== undefined && (
-                   <span className={`absolute -top-1.5 -right-1.5 ${action.badgeColor} text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border border-afri-border shadow-md z-10`}>
-                     {action.badge}
+                 {(action as any).badge !== undefined && (
+                   <span className={`absolute -top-1.5 -right-1.5 ${(action as any).badgeColor} text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border border-afri-border shadow-md z-10`}>
+                     {(action as any).badge}
                    </span>
                  )}
                  <div className="w-10 h-10 rounded-full bg-afri-bg-sec/8 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition shrink-0">
@@ -1244,24 +1243,98 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         </div>
       </div>
 
-      {/* ==========================================
-          DYNAMIC INFINITE FEED (Requirement 1-7, 9-12)
+       {/* ==========================================
+          SECTION 3 — 🔥 TENDANCES AFRIGOMBO (PREMIUM)
+          Vitrine officielle de la plateforme. Apparaît AVANT les Gombos.
          ========================================== */}
-      <div className="space-y-8 pb-10">
-        {/* AFRIGOMBO GEO ENGINE: NEARBY SECTIONS */}
+      <div id="tendances-afrigombo-section" className="space-y-4">
+        <TendancesSection 
+          gombos={gombos}
+          posts={posts}
+          users={users}
+          currentUserProfile={profile}
+          onSelectGomboDetails={handleOpenGomboDetails}
+          audioSynth={audioSynth}
+          requireAuthThen={requireAuthThen}
+        />
+      </div>
+
+      {/* ==========================================
+          SECTIONS 4, 5, 6 — ZONE OPPORTUNITÉS (NIVEAU 1 FIXE)
+          Gombos à proximité, Renfort Express, Nouveaux Gombos
+         ========================================== */}
+      <div className="space-y-6 bg-afri-bg-sec/40 border border-[#D4AF37]/35 p-4 sm:p-5 rounded-3xl backdrop-blur-sm relative shadow-xl">
+        <div className="flex items-center justify-between pb-2 border-b border-[#D4AF37]/20">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#D4AF37] animate-ping" />
+            <h2 className="text-[11px] font-mono font-black uppercase tracking-widest text-[#D4AF37]">
+              🎯 ZONE OPPORTUNITÉS (FIXE & DÉDIÉE)
+            </h2>
+          </div>
+          <span className="text-[8px] font-mono font-bold text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-0.5 rounded-full border border-[#D4AF37]/30 uppercase">
+            GOMBOS PRIORITAIRES
+          </span>
+        </div>
+
+        {/* Dynamic Smart Sorting of Level 1 Sections */}
+        {level1Order.map((sectionId) => {
+          if (sectionId === "nearby") {
+            return (
+              <div key="nearby" id="nearby-gombos-section" className="space-y-3">
+                <NearbyGombosSection 
+                  gombos={geo.getNearbyItems(gombos, 25)}
+                  userProfile={profile}
+                  onSelect={handleOpenGomboDetails}
+                />
+              </div>
+            );
+          }
+          if (sectionId === "renfort") {
+            return (
+              <SmartBlock 
+                key="renfort"
+                type="RENFORT_EXPRESS"
+                title="⚡ Renfort Express & Remplacements"
+                data={renfortGombos}
+                onAction={handleOpenGomboDetails}
+              />
+            );
+          }
+          if (sectionId === "urgent_recent") {
+            return (
+              <div key="urgent_recent" className="space-y-6">
+                <SmartBlock 
+                  type="URGENT_OPPORTUNITIES"
+                  title="🔥 Opportunités urgentes"
+                  data={urgentGombos}
+                  onAction={handleOpenGomboDetails}
+                />
+                <SmartBlock 
+                  type="NEW_GOMBOS"
+                  title="🆕 Gombos récents"
+                  data={recentGombos}
+                  onAction={handleOpenGomboDetails}
+                />
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+
+      {/* ==========================================
+          NIVEAU 2 — UNIVERS AFRIGOMBO
+          Découverte intelligente et libre de tout l'écosystème.
+         ========================================== */}
+      <div className="space-y-8 pb-10 pt-2">
+        {/* AFRIGOMBO GEO ENGINE: RADAR & ARTISTES */}
         <GeoRadarSection 
           nearbyGombos={geo.getNearbyItems(gombos, 10)}
           nearbyArtists={geo.getNearbyItems(users.filter(u => u.role === "musicien"), 15)}
           onAction={(item) => {
             if (item.radarType === "gombo") handleOpenGomboDetails(item);
-            else setActiveMenu("user_profile_view"); // Hypothetical, normally we'd pass artist ID
+            else setActiveMenu("user_profile_view");
           }}
-        />
-
-        <NearbyGombosSection 
-          gombos={geo.getNearbyItems(gombos, 25)}
-          userProfile={profile}
-          onSelect={handleOpenGomboDetails}
         />
 
         <NearbyArtistsSection 
@@ -1269,14 +1342,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           userProfile={profile}
           onContact={(artist) => {
             requireAuthThen(() => {
-              // Open conversation
               addToTerminal(`[MESSAGERIE] Connexion établie avec ${artist.artisticName}...`);
               setActiveMenu("user_messages");
             });
           }}
         />
 
-        {/* Artist Search Results (Requirement 7) */}
+        {/* Artist Search Results */}
         {globalSearchTerm && UsersToRender.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-[11px] font-black tracking-[0.2em] text-afri-text uppercase flex items-center gap-2 px-1">
@@ -1304,38 +1376,208 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           </div>
         )}
 
-        {feedBlocks.map((block, idx) => {
-          if (block.type === "AFRIGOMBO_UNIVERSE") {
-            return (
-              <SmartUniverseCarousel 
-                key={`${block.type}-${idx}`}
-                items={block.getData()}
-                onAction={(item) => {
-                  if (item.type === "product") setActiveMenu("grand_marche");
-                  else if (item.type === "course") setActiveMenu("academie");
-                }}
-              />
-            );
-          }
-          return (
-            <SmartBlock 
-              key={`${block.type}-${idx}`}
-              type={block.type}
-              title={block.title}
-              data={block.getData()}
-              onAction={(item) => {
-                if (item.id.includes("reel")) {
-                  setReelsVideoUrl(item.url);
-                } else {
-                  handleOpenGomboDetails(item);
-                }
-              }}
-            />
-          );
-        })}
+        {/* 7. SÉLECTION DU SOUVERAIN */}
+        <SmartBlock 
+          type="TRENDS"
+          title="👑 Sélection du Souverain"
+          data={sovereignGombos}
+          onAction={handleOpenGomboDetails}
+        />
+
+        {/* 8. RÉELS D'ARTISTES (Redirige vers l'écran dédié Fil Réel) */}
+        <SmartBlock 
+          type="POPULAR_REELS"
+          title="📹 Réels d'artistes — Fil Réel"
+          data={reelsData}
+          onAction={(item) => {
+            requireAuthThen(() => setActiveMenu("user_reels"));
+          }}
+        />
+
+        {/* 9. NOUVEAUX TALENTS */}
+        <SmartBlock 
+          type="NEW_TALENTS"
+          title="🚀 Nouveaux talents"
+          data={talentsData}
+          onAction={(artist) => {
+            requireAuthThen(() => setActiveMenu("user_profile_view"));
+          }}
+        />
+
+        {/* 10. UNIVERS AFRIGOMBO */}
+        <SmartUniverseCarousel 
+          items={universeItems}
+          onAction={(item) => {
+            if (item.type === "product") requireAuthThen(() => setActiveMenu("user_grand_marche"));
+            else if (item.type === "course") requireAuthThen(() => setActiveMenu("user_academie"));
+          }}
+        />
+
+        {/* 11. GRAND MARCHÉ */}
+        <div className="space-y-3 py-2 text-left bg-afri-bg-sec/30 p-4 rounded-3xl border border-afri-border">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
+                🛒 Grand Marché Matériel & Studio
+              </h3>
+            </div>
+            <button 
+              onClick={() => requireAuthThen(() => setActiveMenu("user_grand_marche"))}
+              className="text-[10px] text-[#D4AF37] font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
+            >
+              Voir tout <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {[
+              {
+                id: "gm1",
+                title: "Pack Micro Studio Pro & Pied",
+                price: "185 000 FCFA",
+                commune: "Cocody",
+                image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=400&auto=format&fit=crop&q=80",
+                tag: "Matériel Pro"
+              },
+              {
+                id: "gm2",
+                title: "Guitare Électrique Yamaha RGX",
+                price: "240 000 FCFA",
+                commune: "Marcory",
+                image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&auto=format&fit=crop&q=80",
+                tag: "Instrument"
+              },
+              {
+                id: "gm3",
+                title: "Console de Mixage 16 Voies",
+                price: "450 000 FCFA",
+                commune: "Yopougon",
+                image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&auto=format&fit=crop&q=80",
+                tag: "Sonorisation"
+              }
+            ].map((prod) => (
+              <div 
+                key={prod.id}
+                onClick={() => requireAuthThen(() => setActiveMenu("user_grand_marche"))}
+                className="bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden p-2.5 flex flex-col justify-between hover:border-[#D4AF37]/50 transition cursor-pointer group shadow-sm"
+              >
+                <div className="relative aspect-video rounded-xl overflow-hidden mb-2 bg-afri-bg">
+                  <img src={prod.image} alt={prod.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <span className="absolute top-1.5 left-1.5 bg-black/80 text-[#D4AF37] font-mono text-[8px] font-black px-2 py-0.5 rounded-full border border-[#D4AF37]/30 uppercase">
+                    {prod.tag}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-[10px] font-black text-afri-text uppercase truncate leading-tight">{prod.title}</h4>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-mono font-black text-[#D4AF37]">{prod.price}</span>
+                    <span className="text-[8px] font-mono text-afri-text-sec uppercase">📍 {prod.commune}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={() => requireAuthThen(() => setActiveMenu("user_grand_marche"))}
+            className="w-full py-2.5 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 font-mono font-black text-[10px] uppercase tracking-wider rounded-2xl transition cursor-pointer text-center block active:scale-98"
+          >
+            Accéder au Grand Marché Musique →
+          </button>
+        </div>
+
+        {/* 12. AFRIGOMBO ACADEMY */}
+        <div className="space-y-3 py-2 text-left bg-afri-bg-sec/30 p-4 rounded-3xl border border-afri-border">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-sky-400" />
+              <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
+                🎓 AFRIGOMBO Academy & Masterclasses
+              </h3>
+            </div>
+            <button 
+              onClick={() => requireAuthThen(() => setActiveMenu("user_academie"))}
+              className="text-[10px] text-[#D4AF37] font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
+            >
+              Voir tout <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              {
+                id: "ac1",
+                title: "Masterclass Piano Afro-Jazz & Harmonies",
+                mentor: "Maître Kassi",
+                level: "Intermédiaire / Avancé",
+                image: "https://images.unsplash.com/photo-1520529612722-68ec39750058?w=400&auto=format&fit=crop&q=80",
+                badge: "Certifiant"
+              },
+              {
+                id: "ac2",
+                title: "Production & Mixage Afrobeat sur FL Studio",
+                mentor: "Beatmaker Yoboué",
+                level: "Tous Niveaux",
+                image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&auto=format&fit=crop&q=80",
+                badge: "Populaire"
+              }
+            ].map((course) => (
+              <div 
+                key={course.id}
+                onClick={() => requireAuthThen(() => setActiveMenu("user_academie"))}
+                className="bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden p-3 flex gap-3 items-center hover:border-sky-400/50 transition cursor-pointer group shadow-sm"
+              >
+                <img src={course.image} alt={course.title} className="w-20 h-20 rounded-xl object-cover shrink-0 border border-afri-border group-hover:scale-105 transition-transform" />
+                <div className="flex-1 min-w-0 space-y-1">
+                  <span className="text-[8px] font-mono font-black uppercase text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20 inline-block">
+                    {course.badge}
+                  </span>
+                  <h4 className="text-[11px] font-black text-afri-text uppercase leading-tight line-clamp-2">{course.title}</h4>
+                  <p className="text-[9px] text-afri-text-sec font-mono">👨‍🏫 {course.mentor} • {course.level}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={() => requireAuthThen(() => setActiveMenu("user_academie"))}
+            className="w-full py-2.5 bg-sky-500/10 border border-sky-500/30 hover:bg-sky-500/20 text-sky-400 font-mono font-black text-[10px] uppercase tracking-wider rounded-2xl transition cursor-pointer text-center block active:scale-98"
+          >
+            Découvrir l'Académie & Se Former →
+          </button>
+        </div>
+
+        {/* INFINITE EXTENSION STREAM (NO DUPLICATE HEADERS) */}
+        {infiniteFeedPage > 1 && (
+          <div className="space-y-4 pt-4 border-t border-afri-border/60 text-left">
+            <h3 className="text-[11px] font-black tracking-widest text-[#D4AF37] uppercase flex items-center gap-2 px-1">
+              📜 Plus d'opportunités du Trône ({GombosToRender.slice(10, 10 + infiniteFeedPage * 4).length})
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {GombosToRender.slice(10, 10 + infiniteFeedPage * 4).map((g) => (
+                <div 
+                  key={`inf_${g.id}`}
+                  onClick={() => handleOpenGomboDetails(g)}
+                  className="bg-afri-bg-sec border border-afri-border rounded-2xl p-3 space-y-2 hover:border-[#D4AF37]/40 transition cursor-pointer"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <h4 className="text-xs font-black text-afri-text uppercase truncate">{g.title}</h4>
+                    <span className="text-[10px] font-mono font-black text-[#D4AF37]">{(g.budget || 0).toLocaleString()} F</span>
+                  </div>
+                  <p className="text-[10px] text-afri-text-sec line-clamp-2">{g.description}</p>
+                  <div className="flex items-center justify-between text-[9px] font-mono text-afri-text-sec pt-1">
+                    <span>📍 {g.location || "Abidjan"}</span>
+                    <span className="text-[#D4AF37] font-bold">Ouvrir le Gombo →</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Bottom Loading Anchor */}
-        <div ref={observerTarget} className="h-20 flex items-center justify-center">
+        <div ref={observerTarget} className="h-16 flex items-center justify-center">
           {isLoadingMore && (
             <div className="flex items-center gap-2">
               <RefreshCw className="w-4 h-4 text-[#D4AF37] animate-spin" />
@@ -1343,23 +1585,42 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             </div>
           )}
           {!hasMore && (
-            <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest">Fin de la vibration souveraine</span>
+            <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest">Toutes les opportunités sont affichées</span>
           )}
         </div>
+
+        {/* 13. FOOTER */}
+        <footer className="mt-12 pt-8 pb-12 border-t border-afri-border/80 text-left space-y-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div className="space-y-1">
+              <div className="flex items-center justify-center sm:justify-start gap-2">
+                <span className="text-xl">👑</span>
+                <span className="font-display font-black text-sm tracking-widest text-[#D4AF37] uppercase">AFRIGOMBO</span>
+              </div>
+              <p className="text-[10px] font-mono text-afri-text-sec">Le Trône de la Musique Africaine & de la Souveraineté Artistique</p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] font-mono font-bold text-afri-text-sec uppercase">
+              <button onClick={() => setActiveMenu("user_terrain")} className="hover:text-[#D4AF37] transition">Accueil</button>
+              <span>•</span>
+              <button onClick={() => requireAuthThen(() => setActiveMenu("user_mes_gombos"))} className="hover:text-[#D4AF37] transition">Mes Gombos</button>
+              <span>•</span>
+              <button onClick={() => requireAuthThen(() => setActiveMenu("user_grand_marche"))} className="hover:text-[#D4AF37] transition">Grand Marché</button>
+              <span>•</span>
+              <button onClick={() => requireAuthThen(() => setActiveMenu("user_academie"))} className="hover:text-[#D4AF37] transition">Académie</button>
+              <span>•</span>
+              <button onClick={() => setActiveMenu("user_help_center")} className="hover:text-[#D4AF37] transition">Aide</button>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-afri-border/40 pt-4 text-[9px] font-mono text-afri-text-sec">
+            <span>© 2026 AFRIGOMBO — Tous droits réservés sur la Terre Éburnéenne.</span>
+            <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-bold uppercase">
+              ● Réseau Souverain Opérationnel
+            </span>
+          </div>
+        </footer>
       </div>
-    </>
-    ) : (
-        <ReelsPlayer 
-          posts={posts} 
-          currentSection={activeSection}
-          setCurrentSection={setActiveSection}
-          onClose={() => {
-            setActiveSection("home");
-            try { audioSynth?.playValidationSuccess(); } catch(_) {}
-          }}
-          onOpenCreate={() => setActiveQuickActionModal("post_content")}
-        />
-      )}
 
       {/* ==========================================
           GEO PERMISSION DIALOG
@@ -2279,6 +2540,195 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                         </div>
                       ))
                   )
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 1.5. REAL URGENCES MODAL */}
+      <AnimatePresence>
+        {isUrgencesModalOpen && (
+          <div className="fixed inset-0 bg-afri-bg/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-black border border-[#D4AF37]/40 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-[0_0_30px_rgba(212,175,55,0.2)] relative max-h-[85vh] flex flex-col text-left"
+            >
+              <div className="flex justify-between items-center border-b border-[#D4AF37]/20 pb-3 mb-4 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">🚨</span>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-sans font-black text-white uppercase tracking-widest leading-none">
+                      Opportunités Urgentes & Renforts
+                    </h3>
+                    <p className="text-[8.5px] font-mono text-[#D4AF37] uppercase tracking-wider mt-1 font-bold">
+                      Missions prioritaires, Renforts Express & Castings urgents
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsUrgencesModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-zinc-900 border border-[#D4AF37]/30 flex items-center justify-center text-white hover:text-[#D4AF37] transition cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto flex-1 space-y-3 pr-1">
+                {(() => {
+                  const urgentGombos = gombos
+                    .filter(g => g.urgent || g.isExpress || (g as any).type === "renfort" || g.category === "casting" || g.isCasting || g.isRenfort)
+                    .sort((a, b) => (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0));
+
+                  if (urgentGombos.length === 0) {
+                    return (
+                      <div className="py-12 px-4 text-center space-y-3">
+                        <div className="w-12 h-12 rounded-full bg-red-950/30 border border-red-500/40 flex items-center justify-center mx-auto text-red-400 text-xl animate-pulse">
+                          🚨
+                        </div>
+                        <p className="text-xs font-bold text-white uppercase tracking-wider">Aucune urgence critique actuellement</p>
+                        <p className="text-[10px] text-zinc-400 max-w-xs mx-auto">
+                          Toutes les opportunités régulières restent accessibles dans le fil d'actualités.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return urgentGombos.map(g => (
+                    <div
+                      key={g.id}
+                      onClick={() => {
+                        handleOpenGomboDetails(g);
+                        setIsUrgencesModalOpen(false);
+                      }}
+                      className="p-3 bg-zinc-950 border border-red-500/30 hover:border-red-500 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition shadow-md group"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[8px] font-black uppercase tracking-wider animate-pulse">
+                            🚨 URGENT
+                          </span>
+                          {((g as any).type === "renfort" || g.isRenfort) && (
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500 text-black text-[8px] font-black uppercase tracking-wider">
+                              ⚡ RENFORT EXPRESS
+                            </span>
+                          )}
+                          <span className="text-[9.5px] font-mono text-zinc-400 truncate">
+                            📍 {g.location || "Abidjan"}
+                          </span>
+                        </div>
+                        <h4 className="text-xs text-white font-bold truncate leading-snug group-hover:text-[#D4AF37] transition">
+                          {g.title}
+                        </h4>
+                        <p className="text-[10.5px] text-[#D4AF37] font-mono font-black mt-1">
+                          {(g.budget || 0).toLocaleString("fr-FR")} FCFA
+                        </p>
+                      </div>
+                      <span className="text-[9px] font-mono text-zinc-400 group-hover:text-[#D4AF37] shrink-0 font-bold uppercase">
+                        Voir →
+                      </span>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 1.6. REAL CANDIDATURES MODAL */}
+      <AnimatePresence>
+        {isCandidaturesModalOpen && (
+          <div className="fixed inset-0 bg-afri-bg/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-black border border-[#D4AF37]/40 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-[0_0_30px_rgba(212,175,55,0.2)] relative max-h-[85vh] flex flex-col text-left"
+            >
+              <div className="flex justify-between items-center border-b border-[#D4AF37]/20 pb-3 mb-4 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">🎫</span>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-sans font-black text-white uppercase tracking-widest leading-none">
+                      Mes Candidatures & Postulations
+                    </h3>
+                    <p className="text-[8.5px] font-mono text-[#D4AF37] uppercase tracking-wider mt-1 font-bold">
+                      Suivi en temps réel de vos propositions
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsCandidaturesModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-zinc-900 border border-[#D4AF37]/30 flex items-center justify-center text-white hover:text-[#D4AF37] transition cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto flex-1 space-y-3 pr-1">
+                {userApplications.length === 0 ? (
+                  <div className="py-12 px-4 text-center space-y-3">
+                    <div className="w-12 h-12 rounded-full bg-zinc-900 border border-[#D4AF37]/30 flex items-center justify-center mx-auto text-xl text-[#D4AF37]">
+                      🎫
+                    </div>
+                    <p className="text-xs font-bold text-white uppercase tracking-wider">Aucune candidature transmise</p>
+                    <p className="text-[10px] text-zinc-400 max-w-xs mx-auto">
+                      Postulez aux opportunités et Gombos disponibles sur le terrain pour suivre vos statuts ici.
+                    </p>
+                  </div>
+                ) : (
+                  userApplications.map(app => {
+                    const matchingGombo = gombos.find(g => g.id === app.gomboId);
+                    let statusBadge = { label: "🟡 En attente", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" };
+                    if (app.status === "acceptee" || app.status === "accepted") {
+                      statusBadge = { label: "🟢 Acceptée", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" };
+                    } else if (app.status === "refusee" || app.status === "rejected") {
+                      statusBadge = { label: "🔴 Refusée", color: "bg-red-500/20 text-red-400 border-red-500/30" };
+                    } else if (app.status === "terminee" || app.status === "completed") {
+                      statusBadge = { label: "📅 Terminée", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" };
+                    }
+
+                    return (
+                      <div
+                        key={app.id || app.gomboId}
+                        onClick={() => {
+                          if (matchingGombo) {
+                            handleOpenGomboDetails(matchingGombo);
+                            setIsCandidaturesModalOpen(false);
+                          }
+                        }}
+                        className="p-3.5 bg-zinc-950 border border-zinc-800 hover:border-[#D4AF37]/50 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition group"
+                      >
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded-full border text-[8.5px] font-mono font-black uppercase tracking-wider ${statusBadge.color}`}>
+                              {statusBadge.label}
+                            </span>
+                            {app.createdAt && (
+                              <span className="text-[9px] font-mono text-zinc-500">
+                                {new Date(app.createdAt).toLocaleDateString("fr-FR")}
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="text-xs text-white font-bold truncate group-hover:text-[#D4AF37] transition">
+                            {app.gomboTitle || matchingGombo?.title || "Candidature Gombo"}
+                          </h4>
+                          {app.message && (
+                            <p className="text-[10px] text-zinc-400 line-clamp-1 italic">
+                              "{app.message}"
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-[9px] font-mono text-zinc-400 group-hover:text-[#D4AF37] shrink-0 font-bold uppercase">
+                          Détails →
+                        </span>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </motion.div>
