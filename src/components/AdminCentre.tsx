@@ -6821,33 +6821,28 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 </div>
               )}
 
-              {activeMenu === "user_messages" && (() => {
-                const currentActiveUserForChat = currentUser ? { uid: currentUser.uid } : { uid: activeArtistId };
-                const currentProfileForChat = profile || (users.find(u => u.id === activeArtistId) || users[0]);
-                const safeProfileForChat = currentProfileForChat ? JSON.parse(JSON.stringify(currentProfileForChat, getCircularReplacer())) : null;
-                return (
-                  <div className="afri-container space-y-6 animate-fadeIn text-left">
-                    <MessagesView
-                      currentUser={currentActiveUserForChat}
-                      currentProfile={safeProfileForChat}
-                      openConvoWithUserId={openConvoWithUserId}
-                      setOpenConvoWithUserId={setOpenConvoWithUserId}
-                      openConvoWithGomboId={openConvoWithGomboId}
-                      setOpenConvoWithGomboId={setOpenConvoWithGomboId}
-                      onNavigateToPublish={() => {
-                        setActiveMenu("user_publish");
-                      }}
-                      onNavigateToSearch={() => {
-                        setActiveMenu("user_terrain");
-                      }}
-                      onBack={() => {
-                        setActiveMenu("user_terrain");
-                        try { audioSynth.playValidationSuccess(); } catch (err) {}
-                      }}
-                    />
-                  </div>
-                );
-              })()}
+              {activeMenu === "user_messages" && (
+                <div className="afri-container space-y-6 animate-fadeIn text-left">
+                  <MessagesView
+                    currentUser={currentUser || { uid: activeArtistId }}
+                    currentProfile={profile || (users.find(u => u.id === activeArtistId) || users[0])}
+                    openConvoWithUserId={openConvoWithUserId}
+                    setOpenConvoWithUserId={setOpenConvoWithUserId}
+                    openConvoWithGomboId={openConvoWithGomboId}
+                    setOpenConvoWithGomboId={setOpenConvoWithGomboId}
+                    onNavigateToPublish={() => {
+                      setActiveMenu("user_publish");
+                    }}
+                    onNavigateToSearch={() => {
+                      setActiveMenu("user_terrain");
+                    }}
+                    onBack={() => {
+                      setActiveMenu("user_terrain");
+                      try { audioSynth.playValidationSuccess(); } catch (err) {}
+                    }}
+                  />
+                </div>
+              )}
 
               <div>
                 {activeMenu === "user_subscription_management" && (

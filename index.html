@@ -20,65 +20,77 @@
       window.addEventListener('resize', setVh);
       window.addEventListener('orientationchange', setVh);
 
+      // Auto-recovery Version Sync Logic
+      const performSyncAndReload = async () => {
+        console.log("🔄 Performing Sync & Clean...");
+        try {
+          if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) {
+              await r.unregister();
+            }
+          }
+          if (window.caches) {
+            const names = await caches.keys();
+            for (let name of names) {
+              await caches.delete(name);
+            }
+          }
+        } catch (e) {
+          console.error("Error during sync & clean:", e);
+        }
+        
+        // Save recovery attempt count to prevent infinite loops
+        const reloads = parseInt(sessionStorage.getItem('afrigombo_auto_recovery') || '0', 10);
+        if (reloads < 3) {
+          sessionStorage.setItem('afrigombo_auto_recovery', (reloads + 1).toString());
+          window.location.reload(true);
+        } else {
+          console.error("Max recovery attempts reached. Halting.");
+          const errorDiv = document.createElement('div');
+          errorDiv.style.position = 'fixed';
+          errorDiv.style.inset = '0';
+          errorDiv.style.backgroundColor = '#050505';
+          errorDiv.style.color = '#D4AF37';
+          errorDiv.style.display = 'flex';
+          errorDiv.style.alignItems = 'center';
+          errorDiv.style.justifyContent = 'center';
+          errorDiv.style.zIndex = '999999';
+          errorDiv.innerHTML = '<div style="text-align:center;"><div style="font-size:48px;margin-bottom:16px;">🪘</div><div style="font-family:monospace;font-size:12px;opacity:0.6;">ERREUR DE CHARGEMENT. VEUILLEZ RELANCER.</div></div>';
+          document.body.appendChild(errorDiv);
+        }
+      };
+
+      const checkVersion = async () => {
+        try {
+          const res = await fetch(`/version.json?t=${Date.now()}`);
+          const data = await res.json();
+          const currentVersion = localStorage.getItem('afrigombo_app_version');
+          
+          if (currentVersion && currentVersion !== String(data.version)) {
+            console.warn("⚠️ Version mismatch detected. Current:", currentVersion, "New:", data.version);
+            localStorage.setItem('afrigombo_app_version', String(data.version));
+            performSyncAndReload();
+            return;
+          } else if (!currentVersion) {
+            localStorage.setItem('afrigombo_app_version', String(data.version));
+          }
+        } catch (e) {
+          console.warn("Could not check version:", e);
+        }
+      };
+      
+      checkVersion();
+
       // Safety Boot Check: Detect if app fails to mount
       window.addEventListener('load', () => {
         console.log("BOOT: Window Loaded");
         
-        // Debug Service Worker state
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistration().then(reg => {
-            if (reg) {
-              console.log("SW STATE:", reg.active ? "ACTIVE" : "PENDING/WAITING", reg.scope);
-            } else {
-              console.log("SW STATE: NOT REGISTERED");
-            }
-          });
-        }
-
         setTimeout(() => {
           const root = document.getElementById('root');
           if (root && root.innerHTML === '') {
-            console.error('CRITICAL: App failed to mount after 10 seconds.');
-            
-            // Log global state to help diagnostics
-            console.log("DIAGNOSTICS:", {
-              ua: navigator.userAgent,
-              href: window.location.href,
-              localStorage: Object.keys(localStorage),
-              sessionStorage: Object.keys(sessionStorage),
-              sw: !!navigator.serviceWorker
-            });
-
-            const errorDiv = document.createElement('div');
-            errorDiv.id = "startup-recovery-ui";
-            errorDiv.style.position = 'fixed';
-            errorDiv.style.inset = '0';
-            errorDiv.style.backgroundColor = '#050505';
-            errorDiv.style.color = '#D4AF37';
-            errorDiv.style.display = 'flex';
-            errorDiv.style.flexDirection = 'column';
-            errorDiv.style.alignItems = 'center';
-            errorDiv.style.justifyContent = 'center';
-            errorDiv.style.padding = '24px';
-            errorDiv.style.textAlign = 'center';
-            errorDiv.style.zIndex = '999999';
-            errorDiv.style.fontFamily = 'monospace';
-            
-            errorDiv.innerHTML = `
-              <div style="font-size: 48px; margin-bottom: 24px;">🪘</div>
-              <div style="font-weight: 900; font-size: 20px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 4px;">SYNC ERROR</div>
-              <div style="font-size: 13px; opacity: 0.8; margin-bottom: 32px; max-width: 280px; line-height: 1.6;">
-                The Temple failed to open. This usually happens when an old version of the app is stuck in your browser's memory.
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 300px;">
-                <button onclick="window.location.reload(true)" style="background: #D4AF37; color: black; border: none; padding: 16px; border-radius: 16px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">FORCE REFRESH</button>
-                <button onclick="if('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(regs => { regs.forEach(r => r.unregister()); localStorage.clear(); sessionStorage.clear(); window.location.reload(true); }); }" style="background: transparent; color: #D4AF37; border: 1px solid rgba(212,175,55,0.3); padding: 12px; border-radius: 16px; font-weight: 600; cursor: pointer; font-size: 11px;">PURGE CACHE & RESET SW</button>
-              </div>
-              <div style="margin-top: 30px; font-size: 10px; opacity: 0.4;">
-                ${new Date().toISOString()}
-              </div>
-            `;
-            document.body.appendChild(errorDiv);
+            console.error('CRITICAL: App failed to mount after 10 seconds. Auto-recovering...');
+            performSyncAndReload();
           }
         }, 10000);
       });

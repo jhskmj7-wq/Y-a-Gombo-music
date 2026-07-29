@@ -105,7 +105,12 @@ export default function MessagesView({
   const [showCharter, setShowCharter] = useState(false);
   const [charterAccepted, setCharterAccepted] = useState(false);
   const [hasReadCharter, setHasReadCharter] = useState(() => {
-    return localStorage.getItem(`afrigombo_charter_accepted_${currentUser?.uid}`) === "true";
+    try {
+      if (typeof window === "undefined" || !currentUser?.uid) return false;
+      return localStorage.getItem(`afrigombo_charter_accepted_${currentUser.uid}`) === "true";
+    } catch (_) {
+      return false;
+    }
   });
 
   const PREDEFINED_MESSAGES = [
@@ -127,13 +132,132 @@ export default function MessagesView({
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [deletedMsgIds, setDeletedMsgIds] = useState<string[]>(() => {
     try {
-      return JSON.parse(localStorage.getItem(`gombo_deleted_messages_${currentUser?.uid}`) || "[]");
+      if (typeof window === "undefined" || !currentUser?.uid) return [];
+      return JSON.parse(localStorage.getItem(`gombo_deleted_messages_${currentUser.uid}`) || "[]");
     } catch (_) {
       return [];
     }
   });
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  // Phase 1: All Hooks must be defined at the top level
+  useEffect(() => {
+    if (currentProfile?.hasAcceptedChatCGU === true) {
+      setHasReadCharter(true);
+      setShowCharter(false);
+    }
+  }, [currentProfile]);
+
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+
+    // Check if charter needs to be shown
+    if (!hasReadCharter) {
+      setShowCharter(true);
+    }
+
+    setLoadingConvos(true);
+    const unsubscribe = gomboDB.listenConversations(currentUser.uid, (convos) => {
+      setConversations(convos);
+      setLoadingConvos(false);
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [currentUser?.uid, hasReadCharter]);
+
+  useEffect(() => {
+    if (!currentUser?.uid || !openConvoWithUserId) return;
+
+    const autoInitiateChat = async () => {
+      setCreatingConvo(true);
+      try {
+        const existing = conversations.find(c => c.participants.includes(openConvoWithUserId));
+        if (existing) {
+          setActiveConvo(existing);
+          setOpenConvoWithUserId(null);
+          setCreatingConvo(false);
+          return;
+        }
+
+        let targetUserDetails = {
+          name: "Artiste Gombo",
+          avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+          role: "musicien"
+        };
+
+        try {
+          const profile = await gomboDB.getUserProfile(openConvoWithUserId);
+          if (profile) {
+            targetUserDetails = {
+              name: `${profile.firstName} ${profile.lastName}`.trim(),
+              avatarUrl: profile.avatarUrl || targetUserDetails.avatarUrl,
+              role: profile.role || "musicien"
+            };
+          }
+        } catch (e) {
+          console.warn("Could not load target user profile details, using defaults:", e);
+        }
+
+        const myDetails = {
+          name: currentProfile?.firstName ? `${currentProfile.firstName} ${currentProfile.lastName}` : "Moi",
+          avatarUrl: currentProfile?.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+          role: currentProfile?.role || "organisateur"
+        };
+
+        await gomboDB.getOrCreateConversation(
+          currentUser.uid,
+          openConvoWithUserId,
+          myDetails,
+          targetUserDetails,
+          openConvoWithGomboId || undefined
+        );
+
+        setOpenConvoWithUserId(null);
+        if (setOpenConvoWithGomboId) setOpenConvoWithGomboId(null);
+      } catch (err) {
+        console.error("❌ Erreur initiation chat directe:", err);
+      } finally {
+        setCreatingConvo(false);
+      }
+    };
+
+    autoInitiateChat();
+  }, [openConvoWithUserId, conversations, currentUser?.uid, currentProfile, openConvoWithGomboId, setOpenConvoWithGomboId, setOpenConvoWithUserId]);
+
+  useEffect(() => {
+    if (!activeConvo) return;
+    const freshConvo = conversations.find(c => c.id === activeConvo.id);
+    if (freshConvo) {
+      setActiveConvo(freshConvo);
+    }
+  }, [conversations, activeConvo?.id]);
+
+  useEffect(() => {
+    if (!activeConvo?.id || !currentUser?.uid) {
+      setMessages([]);
+      return;
+    }
+
+    const unsubscribe = gomboDB.listenMessages(activeConvo.id, (msgs) => {
+      setMessages(msgs);
+      gomboDB.markConversationAsRead(activeConvo.id, currentUser.uid);
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [activeConvo?.id, currentUser?.uid]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   // If user is not authenticated, render the lock screen immediately
   if (!currentUser || !currentUser.uid) {
@@ -161,18 +285,12 @@ export default function MessagesView({
 
   // Handle accepting charter
   const handleAcceptCharter = () => {
+    if (!currentUser?.uid) return;
     localStorage.setItem(`afrigombo_charter_accepted_${currentUser.uid}`, "true");
     setHasReadCharter(true);
     setShowCharter(false);
     try { gomboDB.updateUserProfile(currentUser.uid, { charterAccepted: true, hasAcceptedChatCGU: true }); } catch(_) {}
   };
-
-  useEffect(() => {
-    if (currentProfile?.hasAcceptedChatCGU === true) {
-      setHasReadCharter(true);
-      setShowCharter(false);
-    }
-  }, [currentProfile]);
 
   if (showCharter) {
     return (
@@ -272,116 +390,19 @@ export default function MessagesView({
   }
 
   // 1. Listen to user's conversations in real-time
-  useEffect(() => {
-    if (!currentUser?.uid) return;
-
-    // Check if charter needs to be shown
-    if (!hasReadCharter) {
-      setShowCharter(true);
-    }
-
-    setLoadingConvos(true);
-    const unsubscribe = gomboDB.listenConversations(currentUser.uid, (convos) => {
-      setConversations(convos);
-      setLoadingConvos(false);
-    });
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [currentUser?.uid]);
+  // (MOVED ABOVE)
 
   // 2. Handle programmatic transition to a specified conversation
-  useEffect(() => {
-    if (!currentUser?.uid || !openConvoWithUserId) return;
-
-    const autoInitiateChat = async () => {
-      setCreatingConvo(true);
-      try {
-        
-        const existing = conversations.find(c => c.participants.includes(openConvoWithUserId));
-        if (existing) {
-          setActiveConvo(existing);
-          setOpenConvoWithUserId(null); // Clear parameter
-          setCreatingConvo(false);
-          return;
-        }
-
-        let targetUserDetails = {
-          name: "Artiste Gombo",
-          avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-          role: "musicien"
-        };
-
-        try {
-          const profile = await gomboDB.getUserProfile(openConvoWithUserId);
-          if (profile) {
-            targetUserDetails = {
-              name: `${profile.firstName} ${profile.lastName}`.trim(),
-              avatarUrl: profile.avatarUrl || targetUserDetails.avatarUrl,
-              role: profile.role || "musicien"
-            };
-          }
-        } catch (e) {
-          console.warn("Could not load target user profile details, using defaults:", e);
-        }
-
-        const myDetails = {
-          name: currentProfile?.firstName ? `${currentProfile.firstName} ${currentProfile.lastName}` : "Moi",
-          avatarUrl: currentProfile?.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
-          role: currentProfile?.role || "organisateur"
-        };
-
-        await gomboDB.getOrCreateConversation(
-          currentUser.uid,
-          openConvoWithUserId,
-          myDetails,
-          targetUserDetails,
-          openConvoWithGomboId || undefined
-        );
-
-        setOpenConvoWithUserId(null);
-        if (setOpenConvoWithGomboId) setOpenConvoWithGomboId(null);
-      } catch (err) {
-        console.error("❌ Erreur initiation chat directe:", err);
-      } finally {
-        setCreatingConvo(false);
-      }
-    };
-
-    autoInitiateChat();
-  }, [openConvoWithUserId, conversations, currentUser?.uid, currentProfile]);
+  // (MOVED ABOVE)
 
   // If activeConvo gets updated in background conversations array, keep sync
-  useEffect(() => {
-    if (!activeConvo) return;
-    const freshConvo = conversations.find(c => c.id === activeConvo.id);
-    if (freshConvo) {
-      setActiveConvo(freshConvo);
-    }
-  }, [conversations]);
+  // (MOVED ABOVE)
 
   // 3. Listen to messages inside selected active conversation
-  useEffect(() => {
-    if (!activeConvo?.id) {
-      setMessages([]);
-      return;
-    }
-
-    const unsubscribe = gomboDB.listenMessages(activeConvo.id, (msgs) => {
-      setMessages(msgs);
-      gomboDB.markConversationAsRead(activeConvo.id, currentUser.uid);
-    });
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [activeConvo?.id, currentUser?.uid]);
+  // (MOVED ABOVE)
 
   // Scroll to bottom helper
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  // (MOVED ABOVE)
 
   // 4. Send plain text messages (with reply embedding if applicable)
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -445,10 +466,6 @@ export default function MessagesView({
       setIsSending(false);
     }
   };
-
-  const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
 
   // 5. Send real voice messages via MediaRecorder
   const handleToggleVoiceRecord = async () => {

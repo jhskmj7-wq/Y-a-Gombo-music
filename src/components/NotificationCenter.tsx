@@ -38,7 +38,14 @@ export default function NotificationCenter({
   const [pushPermission, setPushPermission] = useState<NotificationPermission>(
     typeof window !== "undefined" && "Notification" in window ? (window.Notification.permission || "default") : "default"
   );
-  const [fcmToken, setFcmToken] = useState<string>(() => localStorage.getItem("gombo_sim_fcm_token") || "");
+  const [fcmToken, setFcmToken] = useState<string>(() => {
+    try {
+      if (typeof window === "undefined") return "";
+      return localStorage.getItem("gombo_sim_fcm_token") || "";
+    } catch (_) {
+      return "";
+    }
+  });
   const [isRequestingPush, setIsRequestingPush] = useState(false);
 
   const unreadCount = notifications.filter(n => !(n as any).isRead && !(n as any).read).length;
