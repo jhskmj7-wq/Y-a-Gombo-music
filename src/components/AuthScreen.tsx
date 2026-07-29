@@ -26,7 +26,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
   useEffect(() => {
     const img = new Image();
-    img.src = "/public/logo_afrigombo.png";
+    img.src = "/logo_afrigombo.png";
     img.onload = () => setIsLogoLoaded(true);
     img.onerror = () => setIsLogoFailed(true);
   }, []);
@@ -285,7 +285,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
           <div className="inline-flex items-center justify-center w-24 h-24 bg-afri-bg-sec/5 text-[#D4AF37] rounded-full mb-4 border border-[#D4AF37]/20 shadow-lg overflow-hidden">
             {isLogoLoaded && !isLogoFailed ? (
               <img 
-                src="/public/logo_afrigombo.png" 
+                src="/logo_afrigombo.png" 
                 alt="" 
                 className="w-full h-full object-contain"
                 referrerPolicy="no-referrer"

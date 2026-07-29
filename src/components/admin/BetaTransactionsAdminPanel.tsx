@@ -35,10 +35,12 @@ interface WalletRequest {
 
 interface BetaTransactionsAdminPanelProps {
   currentUser?: any;
+  onOpenSupportChat?: (targetUser: any) => void;
 }
 
 export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProps> = ({
-  currentUser
+  currentUser,
+  onOpenSupportChat
 }) => {
   const [requests, setRequests] = useState<WalletRequest[]>([]);
   const [loading, setLoading] = useState(true);

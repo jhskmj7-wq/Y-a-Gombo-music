@@ -8305,7 +8305,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           <div className="max-w-md w-full bg-afri-bg border border-purple-500/30 rounded-2xl xs:rounded-3xl p-6 xs:p-8 text-center space-y-4 xs:space-y-6 shadow-[0_0_50px_rgba(168,85,247,0.15)]">
             <div className="w-20 h-20 bg-gradient-to-tr from-purple-600 via-pink-600 to-[#FF6600] rounded-full flex items-center justify-center mx-auto shadow-[0_0_25px_rgba(236,72,153,0.5)] overflow-hidden">
               <img 
-                src="/public/logo_afrigombo.png" 
+                src="/logo_afrigombo.png" 
                 alt="" 
                 className="w-14 h-14 object-contain animate-pulse"
                 onError={(e) => {

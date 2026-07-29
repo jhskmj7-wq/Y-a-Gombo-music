@@ -20,16 +20,36 @@
       window.addEventListener('resize', setVh);
       window.addEventListener('orientationchange', setVh);
 
-      // Register PWA Service Worker cleanly
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then((reg) => {
-            console.log('AFRIGOMBO SW Registered:', reg.scope);
-          }).catch((err) => {
-            console.warn('SW Registration Error:', err);
-          });
-        });
-      }
+      // Safety Boot Check: Detect if app fails to mount
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const root = document.getElementById('root');
+          if (root && root.innerHTML === '') {
+            console.error('CRITICAL: App failed to mount after 5 seconds. Attempting recovery...');
+            const errorDiv = document.createElement('div');
+            errorDiv.style.position = 'fixed';
+            errorDiv.style.inset = '0';
+            errorDiv.style.backgroundColor = '#050505';
+            errorDiv.style.color = '#D4AF37';
+            errorDiv.style.display = 'flex';
+            errorDiv.style.flexDirection = 'column';
+            errorDiv.style.alignItems = 'center';
+            errorDiv.style.justifyContent = 'center';
+            errorDiv.style.padding = '20px';
+            errorDiv.style.textAlign = 'center';
+            errorDiv.style.zIndex = '99999';
+            errorDiv.style.fontFamily = 'monospace';
+            
+            errorDiv.innerHTML = `
+              <div style="font-size: 40px; margin-bottom: 20px;">🪘</div>
+              <div style="font-weight: bold; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px;">AFRIGOMBO ELITE</div>
+              <div style="font-size: 12px; opacity: 0.7; margin-bottom: 20px;">Une erreur de synchronisation a été détectée.</div>
+              <button onclick="window.location.reload(true)" style="background: #D4AF37; color: black; border: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; cursor: pointer;">ACTUALISER LE TEMPLE</button>
+            `;
+            document.body.appendChild(errorDiv);
+          }
+        }, 6000);
+      });
     </script>
   </head>
   <body class="bg-afri-bg text-afri-text min-h-screen">

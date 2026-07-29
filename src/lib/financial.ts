@@ -76,7 +76,7 @@ export async function updatePlatformFeeRate(newRate: number): Promise<void> {
 export async function recordWalletTransaction(payload: {
   userId: string;
   userName?: string;
-  type: "depot" | "debit_publication" | "commission_plateforme" | "fonds_bloques" | "deblocage_cachet" | "remboursement" | "recharge_wallet" | "prime_bonus" | "abonnement_premium";
+  type: "depot" | "retrait" | "debit_publication" | "commission_plateforme" | "fonds_bloques" | "deblocage_cachet" | "remboursement" | "recharge_wallet" | "prime_bonus" | "abonnement_premium";
   amount: number;
   status: "success" | "pending" | "fonds_bloques" | "fonds_liberes" | "rembourse";
   description: string;

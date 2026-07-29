@@ -11,7 +11,7 @@ export default function PremiumLoader({ message = "Connexion sécurisée..." }: 
 
   useEffect(() => {
     const img = new Image();
-    img.src = "/public/logo_afrigombo.png";
+    img.src = "/logo_afrigombo.png";
     img.onload = () => setIsLogoLoaded(true);
     img.onerror = () => setIsLogoFailed(true);
   }, []);
@@ -45,7 +45,7 @@ export default function PremiumLoader({ message = "Connexion sécurisée..." }: 
         {/* LOGO AFRIGOMBO (Official Image) */}
         {isLogoLoaded && !isLogoFailed ? (
           <img 
-            src="/public/logo_afrigombo.png" 
+            src="/logo_afrigombo.png" 
             alt="" 
             className="w-24 h-24 relative z-10 object-contain drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]"
             referrerPolicy="no-referrer"

@@ -49,7 +49,7 @@ const MainAppLayout = React.memo(function MainAppLayout() {
   return (
      <Suspense fallback={
        <div className="flex h-[100dvh] items-center justify-center bg-afri-bg">
-          <div className="w-16 h-16 rounded-full border-t-2 border-afri-gold animate-spin"></div>
+          <div className="w-16 h-16 rounded-full border-t-2 border-afri-gold animate-spin shadow-[0_0_20px_rgba(212,175,55,0.2)]"></div>
        </div>
     }>
       <div className="fixed top-0 left-0 w-full z-[9999]"><GlobalNotificationBanner /></div>
@@ -110,7 +110,7 @@ function App() {
   });
   const isInitialized = useRef(false);
   const [progress, setProgress] = useState(0);
-  const [logoUrl, setLogoUrl] = useState<string>(() => safeGetItem("custom_app_logo") || "/public/logo_afrigombo.png");
+  const [logoUrl, setLogoUrl] = useState<string>(() => safeGetItem("custom_app_logo") || "/logo_afrigombo.png");
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
   const [isLogoFailed, setIsLogoFailed] = useState(false);
 
@@ -128,7 +128,7 @@ function App() {
 
   useEffect(() => {
     const handleLogoUpdate = () => {
-      setLogoUrl(safeGetItem("custom_app_logo") || "/public/logo_afrigombo.png");
+      setLogoUrl(safeGetItem("custom_app_logo") || "/logo_afrigombo.png");
     };
     window.addEventListener("custom-logo-updated", handleLogoUpdate);
     return () => window.removeEventListener("custom-logo-updated", handleLogoUpdate);

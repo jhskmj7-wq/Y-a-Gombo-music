@@ -175,7 +175,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center overflow-hidden shrink-0">
                   <img 
-                    src={localStorage.getItem("custom_app_logo") || "/public/logo_afrigombo.png"} 
+                    src={localStorage.getItem("custom_app_logo") || "/logo_afrigombo.png"} 
                     alt="Logo" 
                     className="w-12 h-12 object-contain"
                   />
@@ -296,7 +296,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-xl bg-afri-bg border border-afri-border flex items-center justify-center overflow-hidden shrink-0">
                   <img 
-                    src={localStorage.getItem("custom_app_pwa_icon") || "/public/logo_afrigombo.png"} 
+                    src={localStorage.getItem("custom_app_pwa_icon") || "/logo_afrigombo.png"} 
                     alt="PWA Icon" 
                     className="w-10 h-10 object-contain"
                   />
@@ -350,7 +350,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-xl bg-afri-bg border border-afri-border flex items-center justify-center overflow-hidden shrink-0">
                   <img 
-                    src={localStorage.getItem("custom_app_splash_screen") || "/public/media/splash_background.jpg" || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=200"} 
+                    src={localStorage.getItem("custom_app_splash_screen") || "/media/splash_background.jpg" || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=200"} 
                     alt="Splash Screen" 
                     className="w-14 h-14 object-cover"
                     onError={(e) => {

@@ -10,6 +10,26 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       return component;
     } catch (error) {
       console.error("❌ [LazyError] Failed to load module:", error);
+      
+      // If it's a chunk loading error, it might be due to a new version being deployed
+      // and the browser still trying to load old hashes.
+      const isChunkError = (error as any)?.name === "ChunkLoadError" || 
+                          (error as any)?.message?.includes("Loading chunk") ||
+                          (error as any)?.message?.includes("Failed to fetch dynamically imported module");
+
+      if (isChunkError && window.sessionStorage.getItem("page_has_been_refreshed") !== "true") {
+        window.sessionStorage.setItem("page_has_been_refreshed", "true");
+        // Clear caches before reloading to be safe
+        if ('caches' in window) {
+           try {
+             const cacheNames = await caches.keys();
+             await Promise.all(cacheNames.map(name => caches.delete(name)));
+           } catch (e) {}
+        }
+        window.location.reload();
+        return { default: (() => null) as unknown as T };
+      }
+
       window.sessionStorage.setItem("page_has_been_refreshed", "true");
       // Return a safe fallback component instead of white screen / crash
       return {

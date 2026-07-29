@@ -214,7 +214,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           artwork: track.artwork ? [
             { src: track.artwork, sizes: "512x512", type: "image/png" }
           ] : [
-            { src: "/public/logo_afrigombo.png", sizes: "512x512", type: "image/png" }
+            { src: "/logo_afrigombo.png", sizes: "512x512", type: "image/png" }
           ]
         });
       }

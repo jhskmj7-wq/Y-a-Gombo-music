@@ -17,7 +17,7 @@ export default function AfrigomboCinematicIntro({ onComplete }: AfrigomboCinemat
   useEffect(() => {
     // Preload logo asset
     const img = new Image();
-    img.src = "/public/logo_afrigombo.png";
+    img.src = "/logo_afrigombo.png";
     img.onload = () => setIsLogoLoaded(true);
     img.onerror = () => setIsLogoFailed(true);
   }, []);
@@ -171,7 +171,7 @@ export default function AfrigomboCinematicIntro({ onComplete }: AfrigomboCinemat
 
               {isLogoLoaded && !isLogoFailed ? (
                 <img 
-                  src="/public/logo_afrigombo.png" 
+                  src="/logo_afrigombo.png" 
                   alt="" 
                   className="w-32 h-32 object-contain relative z-10"
                   referrerPolicy="no-referrer"
