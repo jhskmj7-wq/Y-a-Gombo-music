@@ -95,13 +95,25 @@ export default function AdminSecurity({
               <h4 className="text-xs font-mono uppercase font-black text-afri-text">Statistiques Globales</h4>
               <button 
                 onClick={() => {
-                  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
-                    activities, alerts, suspensions, exportDate: new Date().toISOString()
-                  }));
-                  const dlAnchorElem = document.createElement('a');
-                  dlAnchorElem.setAttribute("href", dataStr);
-                  dlAnchorElem.setAttribute("download", `afrigombo_backup_${new Date().getTime()}.json`);
-                  dlAnchorElem.click();
+                  try {
+                    const seen = new WeakSet();
+                    const jsonString = JSON.stringify({
+                      activities, alerts, suspensions, exportDate: new Date().toISOString()
+                    }, (key, value) => {
+                      if (typeof value === "object" && value !== null) {
+                        if (seen.has(value)) return;
+                        seen.add(value);
+                      }
+                      return value;
+                    });
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonString);
+                    const dlAnchorElem = document.createElement('a');
+                    dlAnchorElem.setAttribute("href", dataStr);
+                    dlAnchorElem.setAttribute("download", `afrigombo_backup_${new Date().getTime()}.json`);
+                    dlAnchorElem.click();
+                  } catch (e) {
+                    alert("Erreur lors de la génération de la sauvegarde.");
+                  }
                 }}
                 className="px-3 py-1.5 bg-afri-bg-sec/10 text-[#D4AF37] border border-[#D4AF37]/30 rounded text-[10px] font-mono hover:bg-afri-bg-sec/20 transition-all"
               >

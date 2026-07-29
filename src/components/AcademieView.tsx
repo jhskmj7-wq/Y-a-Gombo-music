@@ -209,7 +209,11 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
 
   // Save courses & enrollments to localStorage
   useEffect(() => {
-    localStorage.setItem("afrigombo_academy_courses", JSON.stringify(courses));
+    try {
+      localStorage.setItem("afrigombo_academy_courses", JSON.stringify(courses));
+    } catch (e) {
+      console.warn("Could not save afrigombo_academy_courses:", e);
+    }
   }, [courses]);
 
   // Ensure fallback courses if empty or invalid
@@ -220,7 +224,11 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("afrigombo_enrolled_courses", JSON.stringify(enrolledCourseIds));
+    try {
+      localStorage.setItem("afrigombo_enrolled_courses", JSON.stringify(enrolledCourseIds));
+    } catch (e) {
+      console.warn("Could not save afrigombo_enrolled_courses:", e);
+    }
   }, [enrolledCourseIds]);
 
   // Compute Instructor Eligibility

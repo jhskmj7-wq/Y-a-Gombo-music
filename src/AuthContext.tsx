@@ -168,9 +168,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             uProfile.isPro = true;
           }
 
+          const safeStringify = (obj: any): string => {
+            try {
+              const seen = new WeakSet();
+              return JSON.stringify(obj, (key, value) => {
+                if (typeof value === "object" && value !== null) {
+                  if (seen.has(value)) return;
+                  seen.add(value);
+                }
+                return value;
+              });
+            } catch (e) {
+              return "{}";
+            }
+          };
+
           setProfile(uProfile);
           try {
-            localStorage.setItem("afrigombo_user_session", JSON.stringify(uProfile));
+            localStorage.setItem("afrigombo_user_session", safeStringify(uProfile));
           } catch (e) {}
 
           // Now listen in real-time to keep wallet and other attributes synced
@@ -196,7 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
               setProfile(realtimeProfile);
               try {
-                localStorage.setItem("afrigombo_user_session", JSON.stringify(realtimeProfile));
+                localStorage.setItem("afrigombo_user_session", safeStringify(realtimeProfile));
               } catch (e) {}
             }
           });

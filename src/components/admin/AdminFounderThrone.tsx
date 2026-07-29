@@ -4802,7 +4802,22 @@ export default function AdminFounderThrone({
                                       return (
                                         <div key={key} className="space-y-0.5">
                                           <span className="text-[8px] font-mono uppercase opacity-55 block">{key}</span>
-                                          <span className="text-[9px] font-mono font-bold block truncate">{JSON.stringify(val)}</span>
+                                          <span className="text-[9px] font-mono font-bold block truncate">
+                                            {(() => {
+                                              try {
+                                                const seen = new WeakSet();
+                                                return JSON.stringify(val, (k, v) => {
+                                                  if (typeof v === "object" && v !== null) {
+                                                    if (seen.has(v)) return "[Circular]";
+                                                    seen.add(v);
+                                                  }
+                                                  return v;
+                                                });
+                                              } catch (e) {
+                                                return "[Complex Object]";
+                                              }
+                                            })()}
+                                          </span>
                                         </div>
                                       );
                                     }

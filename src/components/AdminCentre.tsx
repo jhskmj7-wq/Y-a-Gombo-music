@@ -5927,7 +5927,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     exportDate: new Date().toISOString(),
                     systemVersion: "2.0.0-Elite"
                   };
-                  const jsonString = JSON.stringify(backupData, null, 2);
+                  let jsonString = "{}";
+                  try {
+                    const seen = new WeakSet();
+                    jsonString = JSON.stringify(backupData, (key, value) => {
+                      if (typeof value === "object" && value !== null) {
+                        if (seen.has(value)) return;
+                        seen.add(value);
+                      }
+                      return value;
+                    }, 2);
+                  } catch (e) {
+                    console.error("Backup serialization error:", e);
+                  }
                   const blob = new Blob([jsonString], { type: "application/json" });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");

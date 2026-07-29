@@ -165,7 +165,11 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
       updated = [...favoriteIds, itemId];
     }
     setFavoriteIds(updated);
-    localStorage.setItem("afrigombo_market_favs", JSON.stringify(updated));
+    try {
+      localStorage.setItem("afrigombo_market_favs", JSON.stringify(updated));
+    } catch (e) {
+      console.warn("Could not save afrigombo_market_favs:", e);
+    }
 
     // Update item favorites count
     setItems(prev => prev.map(item => {
@@ -217,7 +221,11 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
 
   // Save items to localStorage
   useEffect(() => {
-    localStorage.setItem("afrigombo_market_items", JSON.stringify(items));
+    try {
+      localStorage.setItem("afrigombo_market_items", JSON.stringify(items));
+    } catch (e) {
+      console.warn("Could not save afrigombo_market_items:", e);
+    }
   }, [items]);
 
   // Ensure fallback items if empty or invalid

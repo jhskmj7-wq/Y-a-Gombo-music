@@ -70,7 +70,21 @@ export default function AuthDiagnosticModal({ isOpen, onClose }: AuthDiagnosticM
       userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "Inconnu"
     };
 
-    navigator.clipboard.writeText(JSON.stringify(report, null, 2));
+    let reportStr = "{}";
+    try {
+      const seen = new WeakSet();
+      reportStr = JSON.stringify(report, (key, value) => {
+        if (typeof value === "object" && value !== null) {
+          if (seen.has(value)) return;
+          seen.add(value);
+        }
+        return value;
+      }, 2);
+    } catch (e) {
+      reportStr = "[Erreur de sérialisation du diagnostic]";
+    }
+
+    navigator.clipboard.writeText(reportStr);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

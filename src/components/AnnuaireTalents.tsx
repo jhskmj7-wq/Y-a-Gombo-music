@@ -156,7 +156,11 @@ export default function AnnuaireTalents({
 
   // Sync favorites of talents to localStorage & Firestore
   useEffect(() => {
-    localStorage.setItem("favorite_talents_list", JSON.stringify(favorites));
+    try {
+      localStorage.setItem("favorite_talents_list", JSON.stringify(favorites));
+    } catch (e) {
+      console.warn("Could not save favorite_talents_list to localStorage:", e);
+    }
     if (currentUserProfile?.uid) {
       gomboDB.updateUserProfile(currentUserProfile.uid, {
         favoritesList: favorites
@@ -173,7 +177,11 @@ export default function AnnuaireTalents({
 
   // Handle local persistence of simulated page views
   useEffect(() => {
-    localStorage.setItem("talent_page_views", JSON.stringify(viewsCount));
+    try {
+      localStorage.setItem("talent_page_views", JSON.stringify(viewsCount));
+    } catch (e) {
+      console.warn("Could not save talent_page_views to localStorage:", e);
+    }
   }, [viewsCount]);
 
   // Toggle favorite status
