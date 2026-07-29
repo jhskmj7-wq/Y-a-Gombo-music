@@ -4,21 +4,19 @@ import {
   ShieldCheck, 
   CheckCircle2, 
   XCircle, 
-  Clock, 
   RefreshCw, 
   Search, 
   Wallet, 
-  User,
   Coins,
-  ArrowUpRight,
-  FileText
+  ArrowDownLeft,
+  ArrowUpRight
 } from "lucide-react";
 import { db } from "../../lib/firebase";
-import { collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { recordWalletTransaction } from "../../lib/financial";
 import { audioSynth } from "../../lib/audio";
 
-interface WalletDepositRequest {
+interface WalletRequest {
   id: string;
   uid: string;
   userName: string;
@@ -26,22 +24,23 @@ interface WalletDepositRequest {
   gomboId?: string;
   afriId?: string;
   montant: number;
-  createdAt: string;
-  reference: string;
+  createdAt: any;
+  reference?: string;
   operator?: string;
   phoneNumber?: string;
+  numero?: string; // For withdrawals
   status: string;
+  type: "deposit" | "withdrawal";
 }
 
 interface BetaTransactionsAdminPanelProps {
   currentUser?: any;
-  onOpenSupportChat?: (targetUser: any) => void;
 }
 
 export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProps> = ({
   currentUser
 }) => {
-  const [requests, setRequests] = useState<WalletDepositRequest[]>([]);
+  const [requests, setRequests] = useState<WalletRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("all");
@@ -53,112 +52,109 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
     setTimeout(() => setToastMsg(null), 3500);
   };
 
-  // Real-time Firestore Listener on `walletDepositRequests`
+  // Real-time Firestore Listener
   useEffect(() => {
     setLoading(true);
-    const q = query(collection(db, "walletDepositRequests"), orderBy("createdAt", "desc"));
     
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const list: WalletDepositRequest[] = [];
+    // Listen to deposits
+    const qDeposit = query(collection(db, "walletDepositRequests"), orderBy("createdAt", "desc"));
+    const unsubDeposit = onSnapshot(qDeposit, (snapshot) => {
+      const list: WalletRequest[] = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
         list.push({
           id: docSnap.id,
           uid: data.uid || data.userId || "",
           userName: data.userName || "Membre Gombo",
-          userPhoto: data.userPhoto || "",
-          gomboId: data.gomboId || "GB-0000",
-          afriId: data.afriId || "AF-0000",
           montant: Number(data.montant || data.amount || 0),
-          createdAt: data.createdAt || new Date().toISOString(),
-          reference: data.reference || "DEP-000",
-          operator: data.operator || "wave",
-          phoneNumber: data.phoneNumber || "",
-          status: data.status || data.statut || "pending"
+          createdAt: data.createdAt || data.createdAtIso,
+          reference: data.reference,
+          operator: data.operator,
+          phoneNumber: data.phoneNumber,
+          status: data.status || data.statut || "pending",
+          type: "deposit"
         });
       });
-      setRequests(list);
-      setLoading(false);
-    }, (err) => {
-      console.warn("Wallet deposit requests real-time sync error:", err);
+      setRequests(prev => [...prev.filter(r => r.type === "withdrawal"), ...list]);
+    });
+
+    // Listen to withdrawals
+    const qWithdrawal = query(collection(db, "walletWithdrawalRequests"), orderBy("createdAt", "desc"));
+    const unsubWithdrawal = onSnapshot(qWithdrawal, (snapshot) => {
+      const list: WalletRequest[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          uid: data.userId || "",
+          userName: data.userName || "Membre Gombo",
+          montant: Number(data.amount || data.montant || 0),
+          createdAt: data.createdAt || data.createdAtIso,
+          operator: data.operator,
+          numero: data.numero || data.phone,
+          status: data.status || "PENDING",
+          type: "withdrawal"
+        });
+      });
+      setRequests(prev => [...prev.filter(r => r.type === "deposit"), ...list]);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubDeposit();
+      unsubWithdrawal();
+    };
   }, []);
 
-  const handleValidateDeposit = async (req: WalletDepositRequest) => {
+  const handleValidate = async (req: WalletRequest) => {
     setActionLoadingId(req.id);
     try {
-      const adminName = currentUser?.displayName || currentUser?.name || "Super Fondateur";
-      const nowIso = new Date().toISOString();
-      const dateStr = new Date().toLocaleDateString('fr-FR');
-      const timeStr = new Date().toLocaleTimeString('fr-FR');
-
-      // 1. Credit user's wallet soldeDisponible and depots
       const userRef = doc(db, "users", req.uid);
       const userSnap = await getDoc(userRef);
-      let currentDispo = 0;
-      let currentDepots = 0;
-      if (userSnap.exists()) {
-        const uData = userSnap.data();
-        currentDispo = uData.wallet?.soldeDisponible ?? 0;
-        currentDepots = uData.wallet?.depots ?? 0;
+      if (!userSnap.exists()) throw new Error("Utilisateur introuvable");
+      
+      const uData = userSnap.data();
+      const currentDispo = uData.wallet?.soldeDisponible ?? 0;
+
+      if (req.type === "deposit") {
+        await setDoc(userRef, {
+          wallet: {
+            soldeDisponible: currentDispo + req.montant,
+            depots: (uData.wallet?.depots ?? 0) + req.montant
+          }
+        }, { merge: true });
+        
+        await updateDoc(doc(db, "walletDepositRequests", req.id), { status: "validated", statut: "validated" });
+        await recordWalletTransaction({
+          userId: req.uid,
+          userName: req.userName,
+          type: "recharge_wallet",
+          amount: req.montant,
+          status: "success",
+          description: `Recharge validée (Réf: ${req.reference})`
+        });
+      } else {
+        if (currentDispo < req.montant) throw new Error("Solde insuffisant");
+        await setDoc(userRef, {
+          wallet: {
+            soldeDisponible: currentDispo - req.montant,
+            retraits: (uData.wallet?.retraits ?? 0) + req.montant
+          }
+        }, { merge: true });
+        
+        await updateDoc(doc(db, "walletWithdrawalRequests", req.id), { status: "PAID" });
+        await recordWalletTransaction({
+          userId: req.uid,
+          userName: req.userName,
+          type: "retrait",
+          amount: req.montant,
+          status: "success",
+          description: `Retrait validé (vers ${req.numero})`
+        });
       }
-      const newDispo = currentDispo + req.montant;
-      const newDepots = currentDepots + req.montant;
-
-      await setDoc(userRef, {
-        wallet: {
-          soldeDisponible: newDispo,
-          depots: newDepots
-        }
-      }, { merge: true });
-
-      // 2. Record wallet transaction
-      await recordWalletTransaction({
-        userId: req.uid,
-        userName: req.userName,
-        type: "recharge_wallet",
-        amount: req.montant,
-        status: "success",
-        reference: req.reference,
-        description: `Recharge Wallet validée (${req.reference})`
-      });
-
-      // 3. Update deposit request status
-      await updateDoc(doc(db, "walletDepositRequests", req.id), {
-        status: "validated",
-        statut: "validated",
-        validatedAt: nowIso,
-        validatedBy: adminName
-      });
-
-      // 4. Send notification to user
-      await addDoc(collection(db, "notifications"), {
-        userId: req.uid,
-        title: "💳 Recharge Wallet Validée !",
-        message: `Votre recharge de ${req.montant.toLocaleString('fr-FR')} FCFA a été validée et créditée sur votre Wallet.`,
-        type: "payment_received",
-        createdAt: nowIso,
-        isRead: false
-      });
-
-      // 5. Record in Admin Audit Log
-      await addDoc(collection(db, "adminAuditLogs"), {
-        admin: adminName,
-        user: req.userName,
-        userId: req.uid,
-        amount: req.montant,
-        date: dateStr,
-        time: timeStr,
-        reference: req.reference,
-        action: "VALIDATE_WALLET_DEPOSIT",
-        createdAt: nowIso
-      });
-
+      
+      showToast("✅ Opération validée et synchronisée !");
       try { audioSynth.playValidationSuccess(); } catch (_) {}
-      showToast(`✅ Recharge de ${req.montant.toLocaleString('fr-FR')} FCFA validée et créditée !`);
     } catch (err: any) {
       showToast(`❌ Erreur: ${err.message}`);
     } finally {
@@ -166,32 +162,22 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
     }
   };
 
-  const handleRefuseDeposit = async (req: WalletDepositRequest) => {
+  const handleRefuse = async (req: WalletRequest) => {
     setActionLoadingId(req.id);
     try {
-      const nowIso = new Date().toISOString();
-      await updateDoc(doc(db, "walletDepositRequests", req.id), {
-        status: "refused",
-        statut: "refused",
-        refusedAt: nowIso
-      });
-
-      await addDoc(collection(db, "notifications"), {
-        userId: req.uid,
-        title: "❌ Recharge Wallet Refusée",
-        message: `Votre demande de recharge de ${req.montant.toLocaleString('fr-FR')} FCFA n'a pas pu être validée. Veuillez contacter le support si besoin.`,
-        type: "payment_refused",
-        createdAt: nowIso,
-        isRead: false
-      });
-
-      showToast("❌ Recharge refusée.");
+      if (req.type === "deposit") {
+        await updateDoc(doc(db, "walletDepositRequests", req.id), { status: "refused", statut: "refused" });
+      } else {
+        await updateDoc(doc(db, "walletWithdrawalRequests", req.id), { status: "REFUSED" });
+      }
+      showToast("❌ Opération refusée.");
     } catch (err: any) {
       showToast(`❌ Erreur: ${err.message}`);
     } finally {
       setActionLoadingId(null);
     }
   };
+
 
   const filteredRequests = requests.filter((r) => {
     const term = (searchTerm || "").toLowerCase();
@@ -286,17 +272,15 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
       </div>
 
       {/* Requests List */}
-      <div className="space-y-4">
-        {loading ? (
+             {loading ? (
           <div className="p-12 text-center bg-afri-bg-sec border border-afri-border rounded-3xl space-y-2">
             <RefreshCw className="w-6 h-6 text-[#D4AF37] animate-spin mx-auto" />
-            <p className="text-xs text-afri-text-sec font-mono">Chargement des recharges en temps réel...</p>
+            <p className="text-xs text-afri-text-sec font-mono">Chargement des transactions en temps réel...</p>
           </div>
         ) : filteredRequests.length === 0 ? (
           <div className="p-10 text-center bg-afri-bg-sec border border-afri-border rounded-3xl space-y-2">
             <Wallet className="w-8 h-8 text-afri-text-sec/40 mx-auto" />
-            <p className="text-sm font-bold text-afri-text">Aucune demande de recharge trouvée.</p>
-            <p className="text-xs text-afri-text-sec">Les nouvelles requêtes Mobile Money apparaîtront ici instantanément.</p>
+            <p className="text-sm font-bold text-afri-text">Aucune demande trouvée.</p>
           </div>
         ) : (
           filteredRequests.map((req) => {
@@ -304,6 +288,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             const dateObj = new Date(req.createdAt);
             const dateStr = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('fr-FR') : "Aujourd'hui";
             const timeStr = !isNaN(dateObj.getTime()) ? dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : "--:--";
+            const isDeposit = req.type === "deposit";
 
             return (
               <motion.div
@@ -312,30 +297,21 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                 className="bg-afri-bg-sec border border-afri-border rounded-3xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-[#D4AF37]/50 transition-all shadow-md"
               >
                 <div className="flex items-center gap-4">
-                  {req.userPhoto ? (
-                    <img src={req.userPhoto} alt={req.userName} className="w-12 h-12 rounded-2xl object-cover border border-[#D4AF37]/30 shadow" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] font-bold">
-                      {req.userName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow ${isDeposit ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-400"}`}>
+                    {isDeposit ? <ArrowUpRight className="w-6 h-6" /> : <ArrowDownLeft className="w-6 h-6" />}
+                  </div>
 
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h4 className="text-sm font-black text-afri-text uppercase font-sans">{req.userName}</h4>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-afri-bg border border-afri-border text-[#D4AF37] font-bold">
-                        {req.gomboId}
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-afri-bg border border-afri-border text-sky-400 font-bold">
-                        {req.afriId}
+                      <span className={`text-[9px] font-mono px-2 py-0.5 rounded border font-bold ${isDeposit ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-400"}`}>
+                        {isDeposit ? "DÉPÔT" : "RETRAIT"}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-3 text-xs font-mono text-afri-text-sec flex-wrap">
-                      <span>Réf: <strong className="text-afri-text">{req.reference}</strong></span>
-                      <span>•</span>
-                      <span>Opérateur: <strong className="uppercase text-afri-text">{req.operator}</strong> ({req.phoneNumber})</span>
-                      <span>•</span>
+                      {req.reference && <span>Réf: <strong className="text-afri-text">{req.reference}</strong></span>}
+                      {req.numero && <span>Numéro: <strong className="text-afri-text">{req.numero}</strong></span>}
                       <span>{dateStr} à {timeStr}</span>
                     </div>
                   </div>
@@ -343,23 +319,23 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
 
                 <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
                   <div className="text-right">
-                    <span className="text-lg font-mono font-black text-[#D4AF37] block">
-                      +{req.montant.toLocaleString('fr-FR')} FCFA
+                    <span className={`text-lg font-mono font-black block ${isDeposit ? "text-emerald-400" : "text-amber-500"}`}>
+                      {isDeposit ? "+" : "-"}{req.montant.toLocaleString('fr-FR')} FCFA
                     </span>
                     <span className={`inline-block text-[9px] font-mono py-0.5 px-2 rounded border uppercase font-bold ${
-                      req.status === "validated" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
-                      req.status === "refused" ? "bg-rose-500/10 text-rose-400 border-rose-500/30" :
+                      req.status === "validated" || req.status === "PAID" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
+                      req.status === "refused" || req.status === "REFUSED" ? "bg-rose-500/10 text-rose-400 border-rose-500/30" :
                       "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse"
                     }`}>
-                      {req.status === "validated" ? "Validé" : req.status === "refused" ? "Refusé" : "En attente"}
+                      {req.status === "validated" || req.status === "PAID" ? "Validé" : req.status === "refused" || req.status === "REFUSED" ? "Refusé" : "En attente"}
                     </span>
                   </div>
 
-                  {req.status === "pending" && (
+                  {(req.status === "pending" || req.status === "PENDING") && (
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleValidateDeposit(req)}
-                        disabled={isLoading}
+                        onClick={() => handleValidate(req)}
+                        disabled={actionLoadingId === req.id}
                         className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow flex items-center gap-1.5 active:scale-98 disabled:opacity-50"
                       >
                         <CheckCircle2 className="w-4 h-4" />
@@ -367,8 +343,8 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                       </button>
 
                       <button
-                        onClick={() => handleRefuseDeposit(req)}
-                        disabled={isLoading}
+                        onClick={() => handleRefuse(req)}
+                        disabled={actionLoadingId === req.id}
                         className="px-3 py-2.5 bg-rose-600/20 hover:bg-rose-600/40 border border-rose-500/40 text-rose-300 text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center gap-1.5 active:scale-98 disabled:opacity-50"
                       >
                         <XCircle className="w-4 h-4" />
@@ -382,7 +358,6 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
           })
         )}
       </div>
-    </div>
   );
 };
 

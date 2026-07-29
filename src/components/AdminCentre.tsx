@@ -35,6 +35,7 @@ const AfrigomboBuilders = lazyWithRetry(() => import("./AfrigomboBuilders"));
 const AfrigomboBuildersAdminDashboard = lazyWithRetry(() => import("./AfrigomboBuildersAdminDashboard"));
 const ThroneCinematicIntro = lazyWithRetry(() => import("./admin/ThroneCinematicIntro"));
 const BetaTransactionsAdminPanel = lazyWithRetry(() => import("./admin/BetaTransactionsAdminPanel"));
+const GeoLocationCenter = lazyWithRetry(() => import("./admin/GeoLocationCenter"));
 const UserCommentsView = lazyWithRetry(() => import("./UserCommentsView"));
 
 import { useAuth } from "../AuthContext";
@@ -1627,6 +1628,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     }, 2500);
   };
 
+  // Helper to sanitize data
+  const getCircularReplacer = () => {
+    const seen = new WeakSet();
+    return (key: string, value: any) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) return;
+        seen.add(value);
+      }
+      return value;
+    };
+  };
+
   const saveToFirestore = async (collectionName: string, docId: string, data: any) => {
     try {
       setAutoSaveActive(true);
@@ -1635,16 +1648,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       // Deep clone and clean up data to avoid cyclic object or custom class errors
       let safeData = data;
       try {
-        const getCircularReplacer = () => {
-          const seen = new WeakSet();
-          return (key: string, value: any) => {
-            if (typeof value === "object" && value !== null) {
-              if (seen.has(value)) return;
-              seen.add(value);
-            }
-            return value;
-          };
-        };
         safeData = JSON.parse(JSON.stringify(data, getCircularReplacer()));
       } catch (err) {
         console.error("Error sanitizing data for Firestore:", err);
@@ -6821,11 +6824,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "user_messages" && (() => {
                 const currentActiveUserForChat = currentUser ? { uid: currentUser.uid } : { uid: activeArtistId };
                 const currentProfileForChat = profile || (users.find(u => u.id === activeArtistId) || users[0]);
+                const safeProfileForChat = currentProfileForChat ? JSON.parse(JSON.stringify(currentProfileForChat, getCircularReplacer())) : null;
                 return (
                   <div className="afri-container space-y-6 animate-fadeIn text-left">
                     <MessagesView
                       currentUser={currentActiveUserForChat}
-                      currentProfile={currentProfileForChat}
+                      currentProfile={safeProfileForChat}
                       openConvoWithUserId={openConvoWithUserId}
                       setOpenConvoWithUserId={setOpenConvoWithUserId}
                       openConvoWithGomboId={openConvoWithGomboId}
@@ -7090,10 +7094,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       ) : superAdminTab === "batisseurs" ? (
                         <AfrigomboBuildersAdminDashboard />
                       ) : superAdminTab === "geolocalisation" ? (
-                        <div className="p-6 text-center text-afri-text">
-                          <h3 className="text-xl font-bold mb-4">Surveillance Géolocalisée</h3>
-                          <p className="text-afri-text-sec">Module de surveillance de la géolocalisation en temps réel (Bientôt disponible).</p>
-                        </div>
+                        <GeoLocationCenter />
                       ) : (
                         <MultimediaCenter
                           adminEmail={userEmail || ""}

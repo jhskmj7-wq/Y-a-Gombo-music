@@ -220,85 +220,31 @@ export default function AfrigomboWalletDashboard({
     reconcileWallet().catch(err => console.error("Reconciler error", err));
   }, [contracts, transactions, loading, uid]);
 
-  // MOBILE MONEY DEPOSIT HANDLER
-  const handleDepositSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // MOBILE MONEY DEPOSIT HANDLER (UPDATED FOR BÊTA)
+  const handleDepositRequest = async () => {
     const depositAmount = Number(amount);
-    if (!depositAmount || depositAmount < 15000 || processing) {
-      alert("Le montant minimum de recharge est de 15 000 FCFA.");
+    if (!depositAmount || depositAmount < 15000) {
+      alert("Le montant minimum est de 15 000 FCFA.");
       return;
     }
-    
     setProcessing(true);
-    playSound("click");
-
     try {
-      const now = new Date().toISOString();
       const depId = "dep_" + Date.now();
-      const userName = currentUserProfile?.artisticName || currentUserProfile?.displayName || currentUserProfile?.name || "Membre Gombo";
-      const userPhoto = currentUserProfile?.photoURL || currentUserProfile?.avatarUrl || "";
-      const gomboId = currentUserProfile?.gomboId || "GB-" + Math.floor(1000 + Math.random() * 9000);
-      const afriId = currentUserProfile?.afriId || "AF-" + Math.floor(1000 + Math.random() * 9000);
+      const userName = currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre";
       const reference = "DEP-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-
-      // 1. Create document in walletDepositRequests
+      
       await setDoc(doc(db, "walletDepositRequests", depId), {
         id: depId,
         uid: uid,
         userName: userName,
-        userPhoto: userPhoto,
-        gomboId: gomboId,
-        afriId: afriId,
         montant: depositAmount,
-        amount: depositAmount,
         status: "pending",
-        statut: "pending",
-        createdAt: now,
-        createdAtIso: now,
-        whatsappContacted: false,
+        createdAt: new Date().toISOString(),
         reference: reference,
         operator: operator,
         phoneNumber: phoneNumber
       });
-
-      // 2. Record transaction in unified Firestore `transactions` collection
-      await recordWalletTransaction({
-        userId: uid,
-        userName: userName,
-        type: "recharge_wallet",
-        amount: depositAmount,
-        status: "pending",
-        reference: reference,
-        description: `Recharge Wallet via ${operator.toUpperCase()} (${phoneNumber})`
-      });
-
-      // 3. Create notification for admin / founder
-      await addDoc(collection(db, "notifications"), {
-        userId: "founder_admin",
-        title: "🔔 Nouvelle recharge Wallet",
-        message: `Demande de rechargement de ${depositAmount.toLocaleString('fr-FR')} FCFA par ${userName}`,
-        type: "wallet_deposit_request",
-        createdAt: now,
-        isRead: false
-      });
-
-      // 4. Transmit real-time alert log to Founder Dashboard (imperial_logs)
-      await addDoc(collection(db, "imperial_logs"), {
-        type: "WALLET_DEPOSIT_REQUEST",
-        title: "💳 REQUÊTE DE RECHARGEMENT WALLET",
-        message: `Le membre ${userName} sollicite un rechargement de ${depositAmount.toLocaleString('fr-FR')} FCFA via ${operator.toUpperCase()} (${phoneNumber}).`,
-        userId: uid,
-        userName: userName,
-        amount: depositAmount,
-        operator: operator,
-        phone: phoneNumber,
-        timestamp: Date.now(),
-        severity: "NORMAL"
-      });
-
       setCreatedDepositRef(reference);
-      addToTerminal(`[WALLET] 📥 Rechargement de ${depositAmount.toLocaleString('fr-FR')} FCFA enregistré (Réf: ${reference}). Redirection Support...`);
-      playSound("success");
       setStep("success");
     } catch (err) {
       console.error("Deposit error", err);
@@ -307,58 +253,26 @@ export default function AfrigomboWalletDashboard({
     }
   };
 
-  // MOBILE MONEY WITHDRAWAL HANDLER
-  const handleWithdrawSubmit = async (e: React.FormEvent) => {
+  // MOBILE MONEY WITHDRAWAL HANDLER (UPDATED FOR BÊTA)
+  const handleWithdrawRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     const withdrawAmount = Number(amount);
-    if (!withdrawAmount || withdrawAmount <= 0 || withdrawAmount > wallet.soldeDisponible || processing) return;
+    if (!withdrawAmount || withdrawAmount <= 0 || withdrawAmount > wallet.soldeDisponible) return;
 
     setProcessing(true);
-    playSound("click");
-
     try {
       const withId = "with_" + Date.now();
-
-      // Save withdrawal request in Firestore `wallet_withdrawals`
-      await setDoc(doc(db, "wallet_withdrawals", withId), {
+      await setDoc(doc(db, "walletWithdrawalRequests", withId), {
         id: withId,
         userId: uid,
-        userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
+        userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre",
         operator: operator,
-        phone: phoneNumber,
+        numero: phoneNumber,
         amount: withdrawAmount,
         status: "PENDING",
         createdAt: serverTimestamp(),
         createdAtIso: new Date().toISOString()
       });
-
-      // Record in unified transactions collection
-      await recordWalletTransaction({
-        userId: uid,
-        userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
-        type: "remboursement",
-        amount: withdrawAmount,
-        status: "pending",
-        description: `Demande de retrait vers ${operator.toUpperCase()} (${phoneNumber})`,
-        userConcerned: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo"
-      });
-
-      // Generate URGENT alert in Founder Throne (imperial_logs)
-      await addDoc(collection(db, "imperial_logs"), {
-        type: "URGENT_WITHDRAWAL_REQUEST",
-        title: "🚨 DEMANDE DE RETRAIT URGENTE",
-        message: `Le membre ${currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo"} a soumis une demande de retrait de ${withdrawAmount.toLocaleString('fr-FR')} FCFA vers ${operator.toUpperCase()} (${phoneNumber}).`,
-        userId: uid,
-        userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
-        amount: withdrawAmount,
-        operator: operator,
-        phone: phoneNumber,
-        timestamp: Date.now(),
-        severity: "URGENT"
-      });
-
-      addToTerminal(`[WALLET] 📤 Demande de retrait de ${withdrawAmount.toLocaleString('fr-FR')} FCFA transmise à la gouvernance.`);
-      playSound("success");
       setWithdrawSubmitted(true);
     } catch (err) {
       console.error("Withdrawal error", err);
