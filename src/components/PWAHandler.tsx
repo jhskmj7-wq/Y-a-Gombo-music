@@ -2,8 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { Download, RefreshCw, X, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { useAuth } from "../AuthContext";
+import { supportConfig } from "../supportConfig";
 
 export default function PWAHandler() {
+  const { profile } = useAuth();
+  const isDev = supportConfig.isDeveloper(profile);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(false);
 
@@ -27,13 +31,23 @@ export default function PWAHandler() {
     },
   });
 
-  // Force update if needed - if the app is white, we might want to just reload
+  // Smart Update Logic
   useEffect(() => {
     if (needRefresh) {
-      console.warn("🔔 Update available! Showing banner.");
-      // Optional: auto-update if white screen detected via some state
+      if (isDev) {
+        console.warn("🚀 [AFRIGOMBO] Developer detected. Auto-updating PWA to latest version...");
+        // For developers, we purge cache and update immediately
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => caches.delete(name));
+          });
+        }
+        updateServiceWorker(true);
+      } else {
+        console.log("🔔 [AFRIGOMBO] Update available for Beta User.");
+      }
     }
-  }, [needRefresh]);
+  }, [needRefresh, isDev, updateServiceWorker]);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {

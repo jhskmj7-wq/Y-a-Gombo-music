@@ -25,12 +25,14 @@ window.addEventListener(
   }
 );
 
+import { supportConfig } from "./supportConfig";
+
 // 8. Console traces representing boot sequence
-console.log("🚀 [AFRIGOMBO] MAIN START");
+console.log("🚀 [AFRIGOMBO] MAIN START", supportConfig.APP_VERSION);
 
 // EMERGENCY CACHE BUSTING: If the app crashed repeatedly or if we detect a version mismatch
 (async () => {
-  const CURRENT_APP_VERSION = "2026.07.29.v1"; // Update this when deploying critical PWA fixes
+  const CURRENT_APP_VERSION = supportConfig.APP_VERSION; 
   const lastKnownVersion = localStorage.getItem("afrigombo_app_version");
   
   if (lastKnownVersion !== CURRENT_APP_VERSION) {
@@ -62,13 +64,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
       <AuthProvider>
         <BrowserRouter>
-          {console.log("🛣️ [AFRIGOMBO] ROUTER OK")}
           <LanguageProvider>
             <AppSettingsProvider>
               <ThemeProvider>
                 <ModalProvider>
                   <AudioProvider>
-                    {console.log("💎 [AFRIGOMBO] APP LOADED")}
                     <App />
                   </AudioProvider>
                 </ModalProvider>

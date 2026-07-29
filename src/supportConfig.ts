@@ -5,6 +5,17 @@ export const supportConfig = {
   rawLink: "https://wa.me/2250503222712",
   defaultMessage: "Bonjour 👋\n\nJe contacte le Support AFRIGOMBO concernant : ",
   
+  // App Versioning
+  APP_VERSION: "Bêta 0.9.5",
+  BUILD_DATE: "2026-07-29",
+  
+  /**
+   * Detects if the current user profile has developer/admin privileges
+   */
+  isDeveloper: (profile: any) => {
+    return profile?.isFounder === true || profile?.role === "admin";
+  },
+
   /**
    * Generates a pre-filled WhatsApp link based on the reason/context
    */

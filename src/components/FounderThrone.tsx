@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  Home, Users, Wallet, BarChart2, Target, ShieldAlert, Megaphone, Settings, FileText, Wrench, PenTool, Crown, Bell, Globe, Check, TrendingUp, ShieldCheck, UserCheck, CheckCircle, UserPlus, UserMinus, UserX, Lock, AlertTriangle, Mail, Database, RefreshCcw, Shield, Sparkles, Eye, EyeOff, Radio, ArrowUpRight, ArrowDownRight, MoreHorizontal, Flame, Server, FolderOpen, Play
+  Home, Users, Wallet, BarChart2, Target, ShieldAlert, Megaphone, Settings, FileText, Wrench, PenTool, Crown, Bell, Globe, Check, TrendingUp, ShieldCheck, UserCheck, CheckCircle, UserPlus, UserMinus, UserX, Lock, AlertTriangle, Mail, Database, RefreshCcw, Shield, Sparkles, Eye, EyeOff, Radio, ArrowUpRight, ArrowDownRight, MoreHorizontal, Flame, Server, FolderOpen, Play, RefreshCw, ChevronRight
 } from "lucide-react";
 import { User, Gombo, Transaction, Alerte, GomboReview } from "../types";
 import { motion } from "motion/react";
@@ -8,6 +8,8 @@ import { audioSynth } from "../lib/audio";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid
 } from "recharts";
+
+import { supportConfig } from "../supportConfig";
 
 interface FounderThroneProps {
   adminEmail: string;
@@ -41,6 +43,32 @@ export default function FounderThrone({
   const [currentDate, setCurrentDate] = useState("");
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [activeMenu, setActiveMenu] = useState("dashboard");
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // PWA Version Controls
+  const handlePurgeCache = async () => {
+    if ('caches' in window) {
+      try {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        addToTerminal("✅ [SYSTEM] Cache PWA purgé avec succès.");
+        alert("Cache PWA purgé.");
+      } catch (e) {
+        addToTerminal("❌ [SYSTEM] Échec de la purge du cache.");
+      }
+    }
+  };
+
+  const handleForceUpdate = () => {
+    addToTerminal("🔄 [SYSTEM] Force Update initié...");
+    localStorage.removeItem("afrigombo_app_version");
+    window.location.reload();
+  };
+
+  const handleReloadPWA = () => {
+    addToTerminal("⚡ [SYSTEM] Rechargement de la PWA...");
+    window.location.reload();
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -621,6 +649,71 @@ export default function FounderThrone({
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* GESTION DE LA VERSION (PWA) */}
+              <div className="bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/40 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                 <div className="flex items-center justify-between mb-4 border-b border-[#D4AF37]/20 pb-3">
+                   <div className="flex items-center gap-2">
+                     <Wrench className="w-5 h-5 text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]" />
+                     <h3 className="text-[11px] sm:text-xs font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans">
+                       GESTION DE LA VERSION
+                     </h3>
+                   </div>
+                   <div className="flex flex-col items-end">
+                     <span className="text-[9px] text-[#D4AF37] font-black uppercase tracking-widest">{supportConfig.APP_VERSION}</span>
+                     <span className="text-[7px] text-afri-text-sec font-mono uppercase tracking-tight">Build: {supportConfig.BUILD_DATE}</span>
+                   </div>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-3 mb-4">
+                   <div className="bg-afri-bg border border-afri-border p-3 rounded-xl">
+                     <span className="text-[8px] text-afri-text-sec uppercase font-bold font-mono tracking-wider block mb-1">Version Actuelle</span>
+                     <span className="text-xs font-black text-afri-text">{supportConfig.APP_VERSION}</span>
+                   </div>
+                   <div className="bg-afri-bg border border-afri-border p-3 rounded-xl">
+                     <span className="text-[8px] text-afri-text-sec uppercase font-bold font-mono tracking-wider block mb-1">Dernière Version</span>
+                     <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-emerald-400">Stable</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                     </div>
+                   </div>
+                 </div>
+
+                 <div className="space-y-2">
+                   <button 
+                     onClick={handlePurgeCache}
+                     className="w-full flex items-center justify-between p-3 bg-afri-bg-sec/5 border border-afri-border rounded-xl hover:bg-afri-bg-sec hover:text-black transition-all group"
+                   >
+                     <div className="flex items-center gap-3">
+                       <Database className="w-4 h-4 text-[#D4AF37] group-hover:text-black" />
+                       <span className="text-[10px] font-mono font-black uppercase tracking-widest">Vider le cache PWA</span>
+                     </div>
+                     <ChevronRight className="w-4 h-4 opacity-30" />
+                   </button>
+
+                   <button 
+                     onClick={handleForceUpdate}
+                     className="w-full flex items-center justify-between p-3 bg-afri-bg-sec/5 border border-afri-border rounded-xl hover:bg-emerald-500 hover:text-white transition-all group"
+                   >
+                     <div className="flex items-center gap-3">
+                       <RefreshCw className="w-4 h-4 text-emerald-500 group-hover:text-white" />
+                       <span className="text-[10px] font-mono font-black uppercase tracking-widest">Forcer la mise à jour</span>
+                     </div>
+                     <ChevronRight className="w-4 h-4 opacity-30" />
+                   </button>
+
+                   <button 
+                     onClick={handleReloadPWA}
+                     className="w-full flex items-center justify-between p-3 bg-afri-bg-sec/5 border border-afri-border rounded-xl hover:bg-afri-bg-ter transition-all group"
+                   >
+                     <div className="flex items-center gap-3">
+                       <RefreshCcw className="w-4 h-4 text-[#D4AF37]" />
+                       <span className="text-[10px] font-mono font-black uppercase tracking-widest">Recharger la PWA</span>
+                     </div>
+                     <ChevronRight className="w-4 h-4 opacity-30" />
+                   </button>
+                 </div>
               </div>
 
               {/* AFRICA PLATFORM TIMELINE / MAP */}

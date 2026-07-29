@@ -10234,6 +10234,17 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         />
       )}
 
+      {/* DISCRETE DEVELOPER VERSION OVERLAY */}
+      {supportConfig.isDeveloper(profile) && (
+        <div className="fixed bottom-2 right-2 z-[200] opacity-20 hover:opacity-100 transition-opacity pointer-events-none">
+          <div className="bg-black/80 backdrop-blur-md border border-afri-border rounded-lg p-2 text-[8px] font-mono text-afri-text-sec uppercase leading-tight text-right">
+            <div>AFRIGOMBO v{supportConfig.APP_VERSION}</div>
+            <div>BUILD: {supportConfig.BUILD_DATE}</div>
+            <div className="text-[#D4AF37] font-black">MODE DÉVELOPPEUR ACTIF</div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
