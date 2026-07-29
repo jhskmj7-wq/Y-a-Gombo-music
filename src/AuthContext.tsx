@@ -5,6 +5,7 @@ import { auth } from "./lib/firebase";
 import { serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { UserProfile } from "./types";
+import { checkAndProcessPremiumAutoRenewal } from "./lib/premiumSubscriptionEngine";
 
 interface AuthContextType {
   currentUser: any | null;       
@@ -185,6 +186,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 realtimeProfile.isVip = true;
                 realtimeProfile.isPro = true;
               }
+              
+              // Process automatic renewal / expiration checks
+              if (realtimeProfile.isPremium && realtimeProfile.premiumExpiresAt) {
+                checkAndProcessPremiumAutoRenewal(realtimeProfile).catch(err => {
+                  console.error("Error checking auto renewal:", err);
+                });
+              }
+
               setProfile(realtimeProfile);
               try {
                 localStorage.setItem("afrigombo_user_session", JSON.stringify(realtimeProfile));

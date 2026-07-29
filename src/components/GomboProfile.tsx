@@ -178,10 +178,14 @@ export default function GomboProfile({
       await gomboDB.updateUserProfile(currentUserProfile.uid, minimalProfile);
       
       if (typeof window !== 'undefined') {
-        localStorage.setItem("gombo_active_profile", JSON.stringify({
-          ...currentUserProfile,
-          ...minimalProfile
-        }));
+        try {
+          localStorage.setItem("gombo_active_profile", JSON.stringify({
+            ...currentUserProfile,
+            ...minimalProfile
+          }));
+        } catch (e) {
+          console.warn("Could not serialize gombo_active_profile due to cyclic object value:", e);
+        }
       }
 
       await onRefreshProfile();
@@ -324,6 +328,12 @@ export default function GomboProfile({
   const [accountRole, setAccountRole] = useState(currentUserProfile?.role || "musicien");
   const [freeSpecialty, setFreeSpecialty] = useState("");
   const [freeGenre, setFreeGenre] = useState("");
+  const [instruments, setInstruments] = useState<string[]>(currentUserProfile?.instruments || []);
+  const [languages, setLanguages] = useState<string[]>(currentUserProfile?.languages || []);
+  const [musicGenreCustom, setMusicGenreCustom] = useState(currentUserProfile?.musicGenreCustom || "");
+  const [instrumentCustom, setInstrumentCustom] = useState(currentUserProfile?.instrumentCustom || "");
+  const [specialtyCustom, setSpecialtyCustom] = useState(currentUserProfile?.specialtyCustom || "");
+  const [languageCustom, setLanguageCustom] = useState(currentUserProfile?.languageCustom || "");
 
   // Media portfolio states
   const [mediaGallery, setMediaGallery] = useState<any[]>(currentUserProfile?.mediaGallery || []);
@@ -879,6 +889,14 @@ export default function GomboProfile({
       isProfileComplete: true,
       updatedAt: new Date().toISOString(),
 
+      // Enriched fields
+      instruments: instruments.map(i => i.trim().normalize("NFC")),
+      languages: languages.map(l => l.trim().normalize("NFC")),
+      musicGenreCustom: musicGenreCustom.trim().normalize("NFC"),
+      instrumentCustom: instrumentCustom.trim().normalize("NFC"),
+      specialtyCustom: specialtyCustom.trim().normalize("NFC"),
+      languageCustom: languageCustom.trim().normalize("NFC"),
+
       // French fields & Custom constraints requested by task
       prenom: firstName.trim().normalize("NFC"),
       nom: lastName.trim().normalize("NFC"),
@@ -886,7 +904,9 @@ export default function GomboProfile({
       preferences: {
         musicGenres: musicGenres.map(g => g.trim().normalize("NFC")),
         specialties: specialties.map(s => s.trim().normalize("NFC")),
-        availabilities: availabilities.map(a => a.trim().normalize("NFC"))
+        availabilities: availabilities.map(a => a.trim().normalize("NFC")),
+        instruments: instruments.map(i => i.trim().normalize("NFC")),
+        languages: languages.map(l => l.trim().normalize("NFC"))
       }
     };
 
@@ -1151,6 +1171,18 @@ export default function GomboProfile({
         setExperience={setExperience}
         availabilities={availabilities}
         setAvailabilities={setAvailabilities}
+        instruments={instruments}
+        setInstruments={setInstruments}
+        languages={languages}
+        setLanguages={setLanguages}
+        musicGenreCustom={musicGenreCustom}
+        setMusicGenreCustom={setMusicGenreCustom}
+        instrumentCustom={instrumentCustom}
+        setInstrumentCustom={setInstrumentCustom}
+        specialtyCustom={specialtyCustom}
+        setSpecialtyCustom={setSpecialtyCustom}
+        languageCustom={languageCustom}
+        setLanguageCustom={setLanguageCustom}
         waveNumber={waveNumber}
         setWaveNumber={setWaveNumber}
         orangeMoneyNumber={orangeMoneyNumber}

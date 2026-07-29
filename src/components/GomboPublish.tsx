@@ -269,6 +269,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             description: description.trim(),
             type: selectedType,
             commune: effectiveCommune,
+            communeCustom: commune === "📍 Autre commune" ? customCommune.trim() : "",
             quartier: quartier.trim(),
             locationDetail: locationDetail.trim(),
             date: date,
@@ -375,6 +376,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                         type="button"
                         onClick={() => {
                           setShowSuccessOverlay(false);
+                          window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
                           onCancel(); // return to navigation or allow user to access wallet
                         }}
                         className="w-full py-3.5 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer active:scale-98 flex items-center justify-center gap-2"
@@ -927,7 +929,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   <span className="font-mono font-bold text-afri-text">{depositDetails.cachet.toLocaleString()} FCFA</span>
                 </div>
                 <div className="flex justify-between items-center text-afri-text-sec">
-                  <span>Statut :</span>
+                  <span>Statut de l'utilisateur :</span>
                   <span className="font-bold text-[#D4AF37]">{isUserPremium ? "Premium" : "Standard"}</span>
                 </div>
                 <div className="flex justify-between items-center text-afri-text-sec">
@@ -938,8 +940,18 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   <span>Montant de la commission :</span>
                   <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.fee.toLocaleString()} FCFA</span>
                 </div>
+                <div className="flex justify-between items-center text-afri-text-sec pt-1 border-t border-dashed border-afri-border/50">
+                  <span>Solde actuel du Wallet :</span>
+                  <span className="font-mono font-bold text-emerald-400">{(depositDetails.userSolde ?? 0).toLocaleString()} FCFA</span>
+                </div>
+                <div className="flex justify-between items-center text-afri-text-sec">
+                  <span>Solde restant après opération :</span>
+                  <span className={`font-mono font-bold ${((depositDetails.userSolde ?? 0) - depositDetails.total) >= 0 ? "text-emerald-400" : "text-rose-500"}`}>
+                    {Math.max(0, (depositDetails.userSolde ?? 0) - depositDetails.total).toLocaleString()} FCFA
+                  </span>
+                </div>
                 <div className="pt-2.5 border-t border-afri-border flex justify-between items-center">
-                  <span className="font-bold text-afri-text uppercase text-xs">Total qui sera débité du Wallet :</span>
+                  <span className="font-bold text-afri-text uppercase text-xs">Total à débiter du Wallet :</span>
                   <span className="font-mono font-black text-emerald-400 text-sm">{depositDetails.total.toLocaleString()} FCFA</span>
                 </div>
               </div>

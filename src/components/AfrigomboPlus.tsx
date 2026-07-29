@@ -174,8 +174,9 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       const userRef = doc(db, "users", currentUserProfile.uid);
       const userSnap = await getDoc(userRef);
       let balance = 0;
+      let uData: any = null;
       if (userSnap.exists()) {
-        const uData = userSnap.data();
+        uData = userSnap.data();
         balance = uData?.wallet?.soldeDisponible ?? 0;
       } else {
         balance = currentUserProfile?.wallet?.soldeDisponible ?? 0;
@@ -188,11 +189,26 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
           ? new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString()
           : new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString();
 
+        const isElite = planId === "elite";
+        const planBadge = isElite ? "💎 Adhérent Elite" : "👑 Adhérent Pro";
+        
+        const currentBadges = uData?.badges || [];
+        const updatedBadges = Array.from(
+          new Set([...currentBadges, "💎 Adhérent Premium", planBadge])
+        );
+
         await setDoc(userRef, {
           isPremium: true,
+          premiumStatus: "active",
+          premiumPlan: planId,
           subscriptionPlan: subName,
+          premiumActivatedAt: new Date().toISOString(),
           premiumExpiresAt: expirationDate,
+          isPremiumAutoRenew: true,
+          commissionRate: 1.5,
+          badges: updatedBadges,
           wallet: {
+            ...(uData?.wallet || {}),
             soldeDisponible: newSolde
           }
         }, { merge: true });
@@ -201,7 +217,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         await recordWalletTransaction({
           userId: currentUserProfile.uid,
           userName: currentUserProfile.artistName || currentUserProfile.firstName || "Membre Gombo",
-          type: "debit_publication",
+          type: "abonnement_premium",
           amount: amount,
           status: "success",
           description: `Souscription Abonnement ${subName} (${billingCycle === "monthly" ? "Mensuel" : "Annuel"})`

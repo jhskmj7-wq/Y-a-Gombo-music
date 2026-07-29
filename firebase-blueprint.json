@@ -22,7 +22,16 @@
         "waveNumber": { "type": "string", "description": "Wave Mobile Money wallet number" },
         "paymentMethods": { "type": "array", "description": "List of active payment methods" },
         "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp" },
-        "isVerified": { "type": "boolean", "description": "Admin verification status" }
+        "isVerified": { "type": "boolean", "description": "Admin verification status" },
+        "isPremiumAutoRenew": { "type": "boolean", "description": "Whether user's premium subscription is set to automatically renew" },
+        "instruments": { "type": "array", "description": "List of instruments played by the user" },
+        "languages": { "type": "array", "description": "List of languages spoken by the user" },
+        "musicGenreCustom": { "type": "string", "description": "Custom music style" },
+        "instrumentCustom": { "type": "string", "description": "Custom instrument" },
+        "specialtyCustom": { "type": "string", "description": "Custom specialty" },
+        "languageCustom": { "type": "string", "description": "Custom language" },
+        "experience": { "type": "string", "description": "Level of experience" },
+        "availabilities": { "type": "array", "description": "List of availability periods" }
       },
       "required": ["uid", "email", "role", "createdAt"]
     },
@@ -40,6 +49,8 @@
         "eventType": { "type": "string", "description": "Prestation type alias for backward compatibility" },
         "location": { "type": "string", "description": "Physical venue" },
         "commune": { "type": "string", "description": "Location / Commune in Abidjan" },
+        "communeCustom": { "type": "string", "description": "Custom typed commune if 'Autre commune' is selected" },
+        "quartier": { "type": "string", "description": "Custom typed neighborhood/quartier" },
         "date": { "type": "string", "format": "date", "description": "Date of the event" },
         "time": { "type": "string", "description": "Time of the event" },
         "budget": { "type": "integer", "description": "Salary/budget in FCFA (CFA francs)" },

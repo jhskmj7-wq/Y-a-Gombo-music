@@ -254,3 +254,134 @@ export async function validateAndActivatePremiumCode(
     return { success: false, message: "Code invalide." };
   }
 }
+
+/**
+ * Checks if user's premium subscription has expired.
+ * If yes:
+ *   - If isPremiumAutoRenew !== false:
+ *       - Checks if wallet has enough funds.
+ *       - If yes: Renew subscription for 30 days, debit wallet, record transaction and notification.
+ *       - If no: Deactivates premium, notifies user of failure due to insufficient funds.
+ *   - If isPremiumAutoRenew === false:
+ *       - Deactivates premium, notifies user of expiration.
+ */
+export async function checkAndProcessPremiumAutoRenewal(
+  profile: any
+): Promise<{ processed: boolean; status: "renewed" | "expired" | "not_expired" | "no_profile" }> {
+  if (!db || !profile || !profile.uid) {
+    return { processed: false, status: "no_profile" };
+  }
+
+  // Only check if they are currently marked as premium
+  if (!profile.isPremium) {
+    return { processed: false, status: "not_expired" };
+  }
+
+  // If no expiry date is set, do not expire immediately
+  if (!profile.premiumExpiresAt) {
+    return { processed: false, status: "not_expired" };
+  }
+
+  const now = new Date();
+  const expiry = new Date(profile.premiumExpiresAt);
+
+  // If not expired yet, do nothing
+  if (now <= expiry) {
+    return { processed: false, status: "not_expired" };
+  }
+
+  // It has expired! Let's process renewal or expiration
+  const userRef = doc(db, "users", profile.uid);
+  const plan = profile.premiumPlan || "pro";
+  const isElite = plan.toLowerCase().includes("elite");
+  const planName = isElite ? "GOMBO ELITE" : "GOMBO PRO";
+  const amount = isElite ? 1000 : 500; // standard prices in Gombo
+
+  const isAutoRenewEnabled = profile.isPremiumAutoRenew !== false;
+
+  try {
+    // Get fresh user snap to avoid stale wallet balance
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+      return { processed: false, status: "no_profile" };
+    }
+    const freshData = userSnap.data();
+    const liveSolde = freshData?.wallet?.soldeDisponible ?? 0;
+
+    if (isAutoRenewEnabled && liveSolde >= amount) {
+      // 1. RENEW!
+      const nextExpiry = new Date();
+      nextExpiry.setDate(nextExpiry.getDate() + 30);
+      const nextExpiryIso = nextExpiry.toISOString();
+
+      const newSolde = liveSolde - amount;
+
+      await updateDoc(userRef, {
+        isPremium: true,
+        premiumStatus: "active",
+        premiumExpiresAt: nextExpiryIso,
+        wallet: {
+          ...(freshData.wallet || {}),
+          soldeDisponible: newSolde
+        }
+      });
+
+      // Record transaction
+      const { recordWalletTransaction } = await import("./financial");
+      await recordWalletTransaction({
+        userId: profile.uid,
+        userName: profile.displayName || profile.artistName || "Membre Gombo",
+        type: "abonnement_premium",
+        amount: amount,
+        status: "success",
+        description: `Renouvellement automatique Premium (${planName})`
+      });
+
+      // Send notification
+      await addDoc(collection(db, "notifications"), {
+        userId: profile.uid,
+        title: "🔄 Renouvellement Premium Réussi !",
+        message: `Votre abonnement ${planName} a été renouvelé automatiquement pour 30 jours. ${amount.toLocaleString()} FCFA ont été débités de votre Wallet.`,
+        type: "payment_received",
+        createdAt: new Date().toISOString(),
+        isRead: false
+      });
+
+      return { processed: true, status: "renewed" };
+    } else {
+      // 2. EXPIRE!
+      // Filter out premium badges from badges array
+      const currentBadges: string[] = freshData.badges || [];
+      const updatedBadges = currentBadges.filter(
+        b => b !== "💎 Adhérent Premium" && b !== "💎 Adhérent Elite" && b !== "👑 Adhérent Pro"
+      );
+
+      await updateDoc(userRef, {
+        isPremium: false,
+        premiumStatus: "expired",
+        subscriptionPlan: "GOMBO FREE",
+        premiumPlan: "free",
+        badges: updatedBadges
+      });
+
+      // Send notification of expiry
+      const notificationMessage = isAutoRenewEnabled
+        ? `Votre abonnement ${planName} a expiré car votre solde de Wallet (${liveSolde.toLocaleString()} FCFA) était insuffisant pour le renouvellement de ${amount.toLocaleString()} FCFA.`
+        : `Votre abonnement ${planName} a expiré. Pour continuer à profiter des avantages Premium, réabonnez-vous dès maintenant.`;
+
+      await addDoc(collection(db, "notifications"), {
+        userId: profile.uid,
+        title: "⚠️ Abonnement Premium Expiré",
+        message: notificationMessage,
+        type: "warning",
+        createdAt: new Date().toISOString(),
+        isRead: false
+      });
+
+      return { processed: true, status: "expired" };
+    }
+  } catch (err) {
+    console.error("Error processing auto renewal:", err);
+    return { processed: false, status: "no_profile" };
+  }
+}

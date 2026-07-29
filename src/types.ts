@@ -132,6 +132,16 @@ export interface User {
   collaborationsCount?: number;
   satisfiedOrganizersCount?: number;
   musiciansRecruitedCount?: number;
+  instruments?: string[];
+  languages?: string[];
+  musicGenreCustom?: string;
+  instrumentCustom?: string;
+  specialtyCustom?: string;
+  languageCustom?: string;
+  experience?: string;
+  experienceYears?: string;
+  availabilities?: string[];
+  isAvailableNow?: boolean;
   monthlyEvolution?: { month: string; value: number }[];
   wallet?: {
     soldeDisponible: number;

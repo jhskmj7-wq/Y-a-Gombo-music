@@ -38,6 +38,18 @@ interface GomboProfileEditViewProps {
   setExperience: (val: string) => void;
   availabilities: string[];
   setAvailabilities: (val: string[]) => void;
+  instruments: string[];
+  setInstruments: (val: string[]) => void;
+  languages: string[];
+  setLanguages: (val: string[]) => void;
+  musicGenreCustom: string;
+  setMusicGenreCustom: (val: string) => void;
+  instrumentCustom: string;
+  setInstrumentCustom: (val: string) => void;
+  specialtyCustom: string;
+  setSpecialtyCustom: (val: string) => void;
+  languageCustom: string;
+  setLanguageCustom: (val: string) => void;
   waveNumber: string;
   setWaveNumber: (val: string) => void;
   orangeMoneyNumber: string;
@@ -75,18 +87,45 @@ const COMMUNES = [
   "Treichville", "Koumassi", "Marcory", "Port-Bouët"
 ];
 
-const EXPERIENCES = ["Débutant", "Intermédiaire", "Confirmé", "Professionnel"];
+const EXPERIENCES = ["Débutant", "Intermédiaire", "Confirmé", "Professionnel", "Expert"];
 
 const SPECIALTIES_LIST = [
   "Chant", "Piano", "Batterie", "Guitare", "Basse", "DJ", 
-  "Choriste", "Saxophone", "Trompette", "Violon", 
-  "Arrangeur", "Producteur"
+  "Choriste", "Saxophone", "Trompette", "Violon", "Arrangeur", "Producteur",
+  "Chanteur", "Chanteuse", "Pianiste", "Guitariste", "Bassiste", "Batteur",
+  "Percussionniste", "Beatmaker", "Compositeur", "Auteur", "Ingénieur son",
+  "Mixage", "Mastering", "Chef de chœur", "Chef d'orchestre", "Coach vocal",
+  "Danseur", "Animateur", "Présentateur", "Humoriste", "Technicien lumière",
+  "Technicien vidéo", "Autre spécialité"
 ];
 
 const GENRES_LIST = [
   "Coupé-Décalé", "Zouglou", "Gbagba", "Jazz", "Reggae", 
   "Afrobeat", "R&B / Soul", "Hip-Hop", "Rap Ivoire", 
-  "Musique Chrétienne", "Variété", "Zouk", "Rumba Congolaise"
+  "Musique Chrétienne", "Variété", "Zouk", "Rumba Congolaise",
+  "Gospel", "Chant chorale", "Louange", "Adoration", "Afro Gospel",
+  "Mapouka", "Ziglibithy", "Dancehall", "Rap", "Drill", "RnB", "Soul",
+  "Blues", "Funk", "Rock", "Pop", "Salsa", "Kompa", "Makossa", "Highlife",
+  "Amapiano", "House", "Électro", "Traditionnel", "Musique mandingue",
+  "Musique baoulé", "Musique bété", "Musique sénoufo", "Musique religieuse",
+  "Musique classique", "Musique de film", "DJ", "Autre style"
+];
+
+const INSTRUMENTS_LIST = [
+  "Piano", "Clavier", "Guitare acoustique", "Guitare électrique", "Guitare basse",
+  "Batterie", "Percussions", "Djembé", "Balafon", "Kora", "Violon", "Alto",
+  "Violoncelle", "Saxophone", "Trompette", "Trombone", "Flûte", "Clarinette",
+  "Harmonica", "Accordéon", "DJ Controller", "MAO", "Beatmaker", "Autre instrument"
+];
+
+const AVAILABILITIES_LIST = [
+  "Disponible aujourd'hui", "Disponible ce week-end", "Disponible en semaine",
+  "Disponible sur réservation", "Disponible immédiatement"
+];
+
+const LANGUAGES_LIST = [
+  "Français", "Anglais", "Baoulé", "Dioula", "Bété", "Agni", "Attié",
+  "Yacouba", "Sénoufo", "Autre langue"
 ];
 
 export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
@@ -106,6 +145,12 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
   musicGenres, setMusicGenres,
   experience, setExperience,
   availabilities, setAvailabilities,
+  instruments, setInstruments,
+  languages, setLanguages,
+  musicGenreCustom, setMusicGenreCustom,
+  instrumentCustom, setInstrumentCustom,
+  specialtyCustom, setSpecialtyCustom,
+  languageCustom, setLanguageCustom,
   waveNumber, setWaveNumber,
   orangeMoneyNumber, setOrangeMoneyNumber,
   editLoading, editError, editSuccess,
@@ -124,8 +169,6 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 }) => {
   const [communeSearch, setCommuneSearch] = useState("");
   const [showCommuneDropdown, setShowCommuneDropdown] = useState(false);
-  const [freeSpecialty, setFreeSpecialty] = useState("");
-  const [freeGenre, setFreeGenre] = useState("");
 
   const filteredCommunes = COMMUNES.filter(c => 
     c.toLowerCase().includes(communeSearch.toLowerCase())
@@ -309,9 +352,10 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 
           {/* 4. MUSIQUE & TALENTS */}
           <div className="afri-card p-6 space-y-6">
-            <p className="afri-text-tiny">Identité Musicale</p>
+            <p className="afri-text-tiny">Identité Musicale & Profil Showbiz</p>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Spécialités */}
               <div className="space-y-2">
                 <label className="afri-text-tiny text-afri-text-sec">Spécialités</label>
                 <div className="flex flex-wrap gap-2">
@@ -324,8 +368,46 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     );
                   })}
                 </div>
+                {specialties.includes("Autre spécialité") && (
+                  <div className="mt-2 space-y-1">
+                    <label className="text-[10px] font-extrabold text-[#D4AF37] uppercase">Précisez votre spécialité</label>
+                    <input 
+                      value={specialtyCustom} 
+                      onChange={e => setSpecialtyCustom(e.target.value)} 
+                      className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" 
+                      placeholder="Saisissez votre spécialité custom..." 
+                    />
+                  </div>
+                )}
               </div>
 
+              {/* Instruments */}
+              <div className="space-y-2">
+                <label className="afri-text-tiny text-afri-text-sec">Instruments</label>
+                <div className="flex flex-wrap gap-2">
+                  {INSTRUMENTS_LIST.map(inst => {
+                    const active = instruments.includes(inst);
+                    return (
+                      <button key={inst} type="button" onClick={() => active ? setInstruments(instruments.filter(i => i !== inst)) : setInstruments([...instruments, inst])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                        {inst}
+                      </button>
+                    );
+                  })}
+                </div>
+                {instruments.includes("Autre instrument") && (
+                  <div className="mt-2 space-y-1">
+                    <label className="text-[10px] font-extrabold text-[#D4AF37] uppercase">Précisez votre instrument</label>
+                    <input 
+                      value={instrumentCustom} 
+                      onChange={e => setInstrumentCustom(e.target.value)} 
+                      className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" 
+                      placeholder="Saisissez votre instrument custom..." 
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Styles Musicaux */}
               <div className="space-y-2">
                 <label className="afri-text-tiny text-afri-text-sec">Styles Musicaux</label>
                 <div className="flex flex-wrap gap-2">
@@ -338,6 +420,73 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     );
                   })}
                 </div>
+                {musicGenres.includes("Autre style") && (
+                  <div className="mt-2 space-y-1">
+                    <label className="text-[10px] font-extrabold text-[#D4AF37] uppercase">Précisez votre style musical</label>
+                    <input 
+                      value={musicGenreCustom} 
+                      onChange={e => setMusicGenreCustom(e.target.value)} 
+                      className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" 
+                      placeholder="Saisissez votre style custom..." 
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Niveau d'Expérience */}
+              <div className="space-y-2">
+                <label className="afri-text-tiny text-afri-text-sec">Niveau d'Expérience</label>
+                <div className="flex flex-wrap gap-2">
+                  {EXPERIENCES.map(exp => {
+                    const active = experience === exp;
+                    return (
+                      <button key={exp} type="button" onClick={() => setExperience(exp)} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-[#D4AF37] border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                        {exp}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Disponibilités */}
+              <div className="space-y-2">
+                <label className="afri-text-tiny text-afri-text-sec">Disponibilité</label>
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABILITIES_LIST.map(avail => {
+                    const active = availabilities.includes(avail);
+                    return (
+                      <button key={avail} type="button" onClick={() => active ? setAvailabilities(availabilities.filter(a => a !== avail)) : setAvailabilities([...availabilities, avail])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                        {avail}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Langues */}
+              <div className="space-y-2">
+                <label className="afri-text-tiny text-afri-text-sec">Langues parlées</label>
+                <div className="flex flex-wrap gap-2">
+                  {LANGUAGES_LIST.map(lang => {
+                    const active = languages.includes(lang);
+                    return (
+                      <button key={lang} type="button" onClick={() => active ? setLanguages(languages.filter(l => l !== lang)) : setLanguages([...languages, lang])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                        {lang}
+                      </button>
+                    );
+                  })}
+                </div>
+                {languages.includes("Autre langue") && (
+                  <div className="mt-2 space-y-1">
+                    <label className="text-[10px] font-extrabold text-[#D4AF37] uppercase">Précisez votre langue</label>
+                    <input 
+                      value={languageCustom} 
+                      onChange={e => setLanguageCustom(e.target.value)} 
+                      className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" 
+                      placeholder="Saisissez votre langue custom..." 
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>

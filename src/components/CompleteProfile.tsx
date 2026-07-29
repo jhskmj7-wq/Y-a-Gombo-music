@@ -297,7 +297,11 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
           skippedProfile: true,
           updatedAt: new Date().toISOString()
         };
-        localStorage.setItem("gombo_active_profile", JSON.stringify(updatedProfile));
+        try {
+          localStorage.setItem("gombo_active_profile", JSON.stringify(updatedProfile));
+        } catch (e) {
+          console.warn("Could not serialize gombo_active_profile in CompleteProfile due to cyclic object value:", e);
+        }
       }
 
       await gomboDB.updateUserProfile(currentUserProfile.uid, {

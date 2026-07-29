@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { supportConfig } from '../supportConfig';
 import { validateAndActivatePremiumCode } from '../lib/premiumSubscriptionEngine';
+import { db } from '../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 interface Props {
   isPremium: boolean;
@@ -27,6 +29,27 @@ export const MonAbonnementView: React.FC<Props> = ({
   const [activationError, setActivationError] = useState("");
   const [activationSuccess, setActivationSuccess] = useState("");
   const [isActivating, setIsActivating] = useState(false);
+  const [isUpdatingAutoRenew, setIsUpdatingAutoRenew] = useState(false);
+
+  const isAutoRenew = currentUserProfile?.isPremiumAutoRenew !== false;
+
+  const handleToggleAutoRenew = async () => {
+    if (!currentUserProfile?.uid || isUpdatingAutoRenew) return;
+    setIsUpdatingAutoRenew(true);
+    try {
+      const userRef = doc(db, "users", currentUserProfile.uid);
+      await updateDoc(userRef, {
+        isPremiumAutoRenew: !isAutoRenew
+      });
+      if (onRefreshProfile) {
+        onRefreshProfile();
+      }
+    } catch (error) {
+      console.error("Error toggling auto renew:", error);
+    } finally {
+      setIsUpdatingAutoRenew(false);
+    }
+  };
 
   // Derive current plan name
   const currentPlan = currentUserProfile?.subscriptionPlan || 
@@ -136,12 +159,35 @@ export const MonAbonnementView: React.FC<Props> = ({
             <p className="font-bold text-afri-text font-mono text-sm">{expiryDate}</p>
           </div>
 
-          <div className="p-3 bg-afri-bg rounded-xl border border-afri-border/80 space-y-1">
-            <div className="flex items-center gap-1.5 text-afri-text-sec font-mono text-[10px] uppercase font-bold">
-              <RefreshCcw className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span>Renouvellement</span>
+          <div className="p-3 bg-afri-bg rounded-xl border border-afri-border/80 space-y-1.5 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-afri-text-sec font-mono text-[10px] uppercase font-bold">
+                  <RefreshCcw className="w-3.5 h-3.5 text-[#D4AF37]" />
+                  <span>Renouvellement</span>
+                </div>
+                {!isFree && (
+                  <button
+                    type="button"
+                    disabled={isUpdatingAutoRenew}
+                    onClick={handleToggleAutoRenew}
+                    className="text-[9px] font-mono font-black uppercase text-[#D4AF37] hover:underline cursor-pointer"
+                  >
+                    {isUpdatingAutoRenew ? "..." : isAutoRenew ? "Passer en Manuel" : "Passer en Auto"}
+                  </button>
+                )}
+              </div>
+              <p className="font-bold text-afri-text font-mono text-sm">
+                {isFree ? "Désactivé" : isAutoRenew ? "Automatique" : "Manuel"}
+              </p>
             </div>
-            <p className="font-bold text-afri-text font-mono text-sm">Automatique (Inclus Bêta)</p>
+            {!isFree && (
+              <p className="text-[9px] text-afri-text-sec leading-none pt-0.5">
+                {isAutoRenew 
+                  ? "Débité automatiquement de votre Wallet si solde suffisant." 
+                  : "Le service s'arrêtera à expiration sauf paiement manuel."}
+              </p>
+            )}
           </div>
         </div>
 

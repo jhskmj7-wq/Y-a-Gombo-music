@@ -278,7 +278,21 @@ export default function AnnuaireTalents({
       const genreMatch = (t.musicGenre || "").toLowerCase().includes(q);
       const multGenresMatch = t.musicGenres?.some(el => el.toLowerCase().includes(q)) ?? false;
       
-      if (!nameMatch && !artistMatch && !communeMatch && !specMatch && !multSpecsMatch && !genreMatch && !multGenresMatch) {
+      const multInstrumentsMatch = t.instruments?.some(el => el.toLowerCase().includes(q)) ?? false;
+      const multLanguagesMatch = t.languages?.some(el => el.toLowerCase().includes(q)) ?? false;
+      const expMatch = (t.experience || "").toLowerCase().includes(q);
+      const availMatch = t.availabilities?.some(el => el.toLowerCase().includes(q)) ?? false;
+      const customGenreMatch = (t.musicGenreCustom || "").toLowerCase().includes(q);
+      const customInstrumentMatch = (t.instrumentCustom || "").toLowerCase().includes(q);
+      const customSpecMatch = (t.specialtyCustom || "").toLowerCase().includes(q);
+      const customLangMatch = (t.languageCustom || "").toLowerCase().includes(q);
+      
+      if (
+        !nameMatch && !artistMatch && !communeMatch && !specMatch && !multSpecsMatch && 
+        !genreMatch && !multGenresMatch && !multInstrumentsMatch && !multLanguagesMatch && 
+        !expMatch && !availMatch && !customGenreMatch && !customInstrumentMatch && 
+        !customSpecMatch && !customLangMatch
+      ) {
         return false;
       }
     }
@@ -451,15 +465,16 @@ export default function AnnuaireTalents({
 
             {/* Specialties & Musical styles info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Spécialités */}
               <div className="space-y-2 p-4 bg-gray-50 dark:bg-afri-bg-sec rounded-2xl border border-gray-100 dark:border-gray-800/60">
                 <h4 className="text-[11px] font-extrabold text-afri-text-sec uppercase tracking-widest flex items-center gap-1">
-                  🎻 Instruments & Spécialités
+                  🎻 Spécialités & Rôles
                 </h4>
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {selectedTalent.specialties && selectedTalent.specialties.length > 0 ? (
                     selectedTalent.specialties.map(spec => (
                       <span key={spec} className="px-2.5 py-1 bg-white dark:bg-gray-900 text-xs text-gray-800 dark:text-gray-300 rounded-lg font-bold shadow-xs">
-                        {spec}
+                        {spec === "Autre spécialité" && selectedTalent.specialtyCustom ? selectedTalent.specialtyCustom : spec}
                       </span>
                     ))
                   ) : (
@@ -470,15 +485,34 @@ export default function AnnuaireTalents({
                 </div>
               </div>
 
+              {/* Instruments */}
               <div className="space-y-2 p-4 bg-gray-50 dark:bg-afri-bg-sec rounded-2xl border border-gray-100 dark:border-gray-800/60">
                 <h4 className="text-[11px] font-extrabold text-afri-text-sec uppercase tracking-widest flex items-center gap-1">
-                  🎼 Styles Musicaux Admirés
+                  🎹 Instruments maîtrisés
+                </h4>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {selectedTalent.instruments && selectedTalent.instruments.length > 0 ? (
+                    selectedTalent.instruments.map(inst => (
+                      <span key={inst} className="px-2.5 py-1 bg-white dark:bg-gray-900 text-xs text-gray-800 dark:text-gray-300 rounded-lg font-bold shadow-xs">
+                        {inst === "Autre instrument" && selectedTalent.instrumentCustom ? selectedTalent.instrumentCustom : inst}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-gray-500 font-bold dark:text-gray-400 italic">Non précisé</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Styles Musicaux */}
+              <div className="space-y-2 p-4 bg-gray-50 dark:bg-afri-bg-sec rounded-2xl border border-gray-100 dark:border-gray-800/60">
+                <h4 className="text-[11px] font-extrabold text-afri-text-sec uppercase tracking-widest flex items-center gap-1">
+                  🎼 Styles Musicaux
                 </h4>
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {selectedTalent.musicGenres && selectedTalent.musicGenres.length > 0 ? (
                     selectedTalent.musicGenres.map(g => (
                       <span key={g} className="px-2.5 py-1 bg-white dark:bg-gray-900 text-xs text-gray-800 dark:text-gray-300 rounded-lg font-bold shadow-xs">
-                        {g}
+                        {g === "Autre style" && selectedTalent.musicGenreCustom ? selectedTalent.musicGenreCustom : g}
                       </span>
                     ))
                   ) : (
@@ -488,7 +522,44 @@ export default function AnnuaireTalents({
                   )}
                 </div>
               </div>
+
+              {/* Niveau & Langues */}
+              <div className="space-y-2 p-4 bg-gray-50 dark:bg-afri-bg-sec rounded-2xl border border-gray-100 dark:border-gray-800/60">
+                <h4 className="text-[11px] font-extrabold text-afri-text-sec uppercase tracking-widest flex items-center gap-1">
+                  🎓 Niveau & Langues
+                </h4>
+                <div className="space-y-1.5 pt-1">
+                  <div className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                    Niveau : <span className="text-[#D4AF37] font-black">{selectedTalent.experience || "Intermédiaire"}</span>
+                  </div>
+                  {selectedTalent.languages && selectedTalent.languages.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {selectedTalent.languages.map(lang => (
+                        <span key={lang} className="px-1.5 py-0.5 bg-white dark:bg-gray-900 text-[10px] text-gray-700 dark:text-gray-300 rounded-md font-bold shadow-xs">
+                          {lang === "Autre langue" && selectedTalent.languageCustom ? selectedTalent.languageCustom : lang}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+
+            {/* Disponibilités */}
+            {selectedTalent.availabilities && selectedTalent.availabilities.length > 0 && (
+              <div className="space-y-2 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
+                <h4 className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+                  📅 Disponibilités de l'Artiste
+                </h4>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {selectedTalent.availabilities.map(avail => (
+                    <span key={avail} className="px-2.5 py-1 bg-emerald-500/10 text-xs text-emerald-600 dark:text-emerald-400 rounded-lg font-bold shadow-xs border border-emerald-500/20">
+                      {avail}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Stats list */}
             <div className="grid grid-cols-4 gap-2.5 pt-3 border-t border-gray-55 dark:border-gray-850">

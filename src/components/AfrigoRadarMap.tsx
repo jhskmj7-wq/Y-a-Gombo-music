@@ -94,8 +94,10 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
   useEffect(() => {
     if (!mapContainerRef.current || geoPermissionStatus !== "granted") return;
 
+    let map: maplibregl.Map | null = null;
+
     if (!mapRef.current) {
-      mapRef.current = new maplibregl.Map({
+      map = new maplibregl.Map({
         container: mapContainerRef.current,
         style: {
           version: 8,
@@ -123,10 +125,42 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
         zoom: 13
       });
 
-      mapRef.current.addControl(new maplibregl.NavigationControl(), "top-right");
+      map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+      map.on("load", () => {
+        if (map) map.resize();
+      });
+
+      mapRef.current = map;
+    } else {
+      map = mapRef.current;
+      map.setCenter([userLocation.longitude || -4.0083, userLocation.latitude || 5.3600]);
+      map.resize();
+    }
+
+    // Force map.resize() on multiple timeouts to perfectly capture sliding animation completion
+    const t1 = setTimeout(() => { if (mapRef.current) mapRef.current.resize(); }, 100);
+    const t2 = setTimeout(() => { if (mapRef.current) mapRef.current.resize(); }, 300);
+    const t3 = setTimeout(() => { if (mapRef.current) mapRef.current.resize(); }, 600);
+    const t4 = setTimeout(() => { if (mapRef.current) mapRef.current.resize(); }, 1000);
+
+    // Watch container size changes using ResizeObserver
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapRef.current) {
+        mapRef.current.resize();
+      }
+    });
+
+    if (mapContainerRef.current) {
+      resizeObserver.observe(mapContainerRef.current);
     }
 
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+      resizeObserver.disconnect();
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -320,9 +354,9 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
       </div>
 
       {/* Map Container */}
-      <div className="relative w-full h-[450px] sm:h-[550px] rounded-3xl overflow-hidden border border-afri-border shadow-2xl">
+      <div className="relative w-full h-[450px] sm:h-[550px] rounded-3xl overflow-hidden border border-afri-border shadow-2xl bg-[#0d0d0d]">
         <div ref={mapContainerRef} className="w-full h-full" />
-        
+
         {/* Legend Overlay */}
         <div className="absolute bottom-4 left-4 bg-black/85 backdrop-blur-md border border-afri-border p-3 rounded-2xl space-y-1.5 text-[9px] font-mono text-afri-text z-10">
           <div className="font-bold text-[#D4AF37] uppercase mb-1">Légende Radar :</div>
