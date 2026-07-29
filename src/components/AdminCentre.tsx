@@ -1259,7 +1259,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [sonsEnabled, setSonsEnabled] = useState<boolean>(() => localStorage.getItem("afrigombo_sounds") !== "false");
   const [showDashboardIntro, setShowDashboardIntro] = useState<boolean>(true);
   const [dashboardStep, setDashboardStep] = useState<number>(1);
-  const [superAdminTab, setSuperAdminTab] = useState<"throne" | "beta_transactions" | "media" | "economie" | "batisseurs">("throne");
+  const [superAdminTab, setSuperAdminTab] = useState<"throne" | "beta_transactions" | "media" | "economie" | "batisseurs" | "geolocalisation">("throne");
   const pendingBetaCount = transactions.filter((t: any) => t.status === "en_attente_validation").length;
 
   // --- STATE FOR ACTIONS RAPIDES AND RECHERCHE UNIVERSELLE ---
@@ -6996,6 +6996,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       </button>
                       <button
                         onClick={() => {
+                          setSuperAdminTab("geolocalisation");
+                          try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        }}
+                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0 whitespace-nowrap ${
+                          superAdminTab === "geolocalisation"
+                            ? "bg-emerald-500/15 border-emerald-500 text-emerald-400 font-black"
+                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
+                        }`}
+                      >
+                        📍 Géolocalisation
+                      </button>
+                      <button
+                        onClick={() => {
                           setSuperAdminTab("media");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
@@ -7076,6 +7089,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         />
                       ) : superAdminTab === "batisseurs" ? (
                         <AfrigomboBuildersAdminDashboard />
+                      ) : superAdminTab === "geolocalisation" ? (
+                        <div className="p-6 text-center text-afri-text">
+                          <h3 className="text-xl font-bold mb-4">Surveillance Géolocalisée</h3>
+                          <p className="text-afri-text-sec">Module de surveillance de la géolocalisation en temps réel (Bientôt disponible).</p>
+                        </div>
                       ) : (
                         <MultimediaCenter
                           adminEmail={userEmail || ""}
