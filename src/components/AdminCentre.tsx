@@ -1,3 +1,4 @@
+import { ErrorBoundary } from "./ErrorBoundary";
 import React, { useState, useEffect, useRef, useLayoutEffect, lazy, Suspense } from "react";
 import {
   collection,
@@ -2486,7 +2487,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                         alt={currentArtist.artisticName} 
                                         className="w-full h-full object-cover"
                                         referrerPolicy="no-referrer"
-                                      />
+                                      /></ErrorBoundary>
                                     ) : (
                                       <Music className="w-5 h-5 text-afri-gold" />
                                     )}
@@ -2980,7 +2981,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           src={logoUrl} 
                           alt="AFRIGOMBO LOGO" 
                           className="w-10 h-10 sm:w-16 sm:h-16 object-contain rounded-2xl shrink-0"
-                        />
+                        /></ErrorBoundary>
                       ) : (
                         <AfriGomboLogo className="w-10 h-10 sm:w-16 sm:h-16 shrink-0" />
                       )}
@@ -3657,7 +3658,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     value={verifyGomboIdInput}
                                     onChange={(e) => setVerifyGomboIdInput(e.target.value)}
                                     className="flex-1 bg-afri-bg-sec border border-afri-border focus:border-afri-gold text-xs text-afri-text p-2.5 rounded-xl font-mono focus:outline-none"
-                                  />
+                                  /></ErrorBoundary>
                                   <button
                                     onClick={() => {
                                       const text = (verifyGomboIdInput || "").toLowerCase().trim();
@@ -3754,14 +3755,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     value={customReportUser}
                                     onChange={(e) => setCustomReportUser(e.target.value)}
                                     className="w-full bg-afri-bg border border-afri-border text-xs text-afri-text p-2 rounded-lg font-mono focus:outline-none"
-                                  />
+                                  /></ErrorBoundary>
                                   <input
                                     type="text"
                                     placeholder="Raison (ex: faux cachet, absence d'orchestre)..."
                                     value={customReportReason}
                                     onChange={(e) => setCustomReportReason(e.target.value)}
                                     className="w-full bg-afri-bg border border-afri-border text-xs text-afri-text p-2 rounded-lg font-mono focus:outline-none"
-                                  />
+                                  /></ErrorBoundary>
                                   <button
                                     onClick={async () => {
                                       if (!customReportUser || !customReportReason) return;
@@ -3859,7 +3860,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     value={newNoticeTitle}
                                     onChange={(e) => setNewNoticeTitle(e.target.value)}
                                     className="w-full bg-afri-bg border border-afri-border text-xs text-afri-text p-2.5 rounded-xl font-mono focus:outline-none focus:border-afri-gold"
-                                  />
+                                  /></ErrorBoundary>
                                 </div>
 
                                 <div className="space-y-1">
@@ -3870,7 +3871,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     onChange={(e) => setNewNoticeBody(e.target.value)}
                                     rows={3}
                                     className="w-full bg-afri-bg border border-afri-border text-xs text-afri-text p-2.5 rounded-xl font-mono focus:outline-none focus:border-afri-gold"
-                                  />
+                                  /></ErrorBoundary>
                                 </div>
 
                                 <button
@@ -3970,7 +3971,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               setTransactions={setTransactions}
                               setActiveQuickActionModal={setActiveQuickActionModal}
                               addToTerminal={addToTerminal}
-                            />
+                            /></ErrorBoundary>
                           )}
                         </div>
                       </div>
@@ -3986,7 +3987,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=360" 
                               alt="Artiste en Prestation" 
                               className="w-full h-full object-cover object-center opacity-80"
-                            />
+                            /></ErrorBoundary>
                             <div className="absolute inset-0 bg-gradient-to-r from-afri-bg-action via-afri-bg/70 to-transparent" />
                             <div className="absolute inset-0 bg-gradient-to-t from-afri-bg-action via-transparent to-transparent" />
                           </div>
@@ -4027,7 +4028,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               src="https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&q=80&w=360" 
                               alt="Scène Live" 
                               className="w-full h-full object-cover object-center opacity-80"
-                            />
+                            /></ErrorBoundary>
                             <div className="absolute inset-0 bg-gradient-to-r from-afri-bg-action via-afri-bg/70 to-transparent" />
                             <div className="absolute inset-0 bg-gradient-to-t from-afri-bg-action via-transparent to-transparent" />
                           </div>
@@ -4048,7 +4049,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           </div>
                         </div>
                       ]}
-                    />
+                    /></ErrorBoundary>
 
                     {/* RACCOURCIS PREMIUM */}
                     <div className="grid grid-cols-4 gap-2 sm:gap-3 select-none">
@@ -4200,7 +4201,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                         }
                                         alt={g.title}
                                         className="w-full h-full object-cover opacity-90 hover:scale-105 transition-all duration-500"
-                                      />
+                                      /></ErrorBoundary>
                                       <div className="absolute inset-0 bg-gradient-to-t from-afri-bg/85 to-transparent" />
                                       <span className="absolute bottom-2 left-2 text-[8px] font-mono font-black uppercase text-afri-gold bg-afri-bg-sec/95 px-2 py-0.5 rounded border border-afri-gold/20">
                                         {g.type || "Live Showcase"}
@@ -4341,7 +4342,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                           alt="Illustration"
                                           referrerPolicy="no-referrer"
                                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                        />
+                                        /></ErrorBoundary>
                                         <span className="absolute bottom-2 right-2 text-[8px] bg-afri-bg/80 backdrop-blur-md text-afri-gold font-bold border border-afri-gold/20 px-2 py-0.5 rounded-md font-mono tracking-wider uppercase">
                                           ÉCHO PREMIUM
                                         </span>
@@ -4472,7 +4473,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                             }
                                           }}
                                           className="flex-1 bg-afri-bg-sec border border-afri-border rounded-xl p-2 px-3 text-[10.5px] text-afri-text focus:outline-none focus:border-afri-gold placeholder:text-zinc-650"
-                                        />
+                                        /></ErrorBoundary>
                                       </div>
                                     </div>
                                   </div>
@@ -4572,7 +4573,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         else if (view === "gombo_id") setActiveMenu("user_gombo_id");
                         else if (view === "mes_groupes") setActiveMenu("user_mes_groupes");
                       }}
-                    />
+                    /></ErrorBoundary>
                   </div>
                 );
               })()}
@@ -4607,7 +4608,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             message="Aucun virtuose trouvé." 
                             submessage="Modifiez votre recherche ou découvrez d'autres artistes." 
                             icon={Search}
-                          />
+                          /></ErrorBoundary>
                         </div>
                       ) : (
                         filteredArtists.map(artist => (
@@ -5076,7 +5077,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           <div 
                             className="bg-gradient-to-r from-afri-gold to-amber-500 h-full transition-all duration-500 ease-out"
                             style={{ width: `${currentProgress}%` }}
-                          />
+                          /></ErrorBoundary>
                         </div>
                       </div>
                     )}
@@ -5191,7 +5192,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 onChange={(e) => setPubValidationCode(e.target.value.toUpperCase())}
                                 placeholder="Ex: AG-849201"
                                 className="w-full bg-afri-bg border border-afri-border focus:border-afri-gold rounded-lg px-3 py-2 text-xs font-mono tracking-wider font-bold text-afri-text uppercase outline-none"
-                              />
+                              /></ErrorBoundary>
 
                               {pubCodeErrorMsg && (
                                 <div className="text-[10px] text-red-400 font-bold bg-red-950/30 p-2 rounded border border-red-900/50">
@@ -5298,7 +5299,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                           reader.readAsDataURL(file);
                                         }
                                       }}
-                                    />
+                                    /></ErrorBoundary>
                                   </label>
                                 )}
                               </div>
@@ -5310,7 +5311,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 onChange={(e) => setNewGomboDesc(e.target.value)}
                                 placeholder="Ajoutez un contexte, des hashtags, ou mentionnez vos collaborateurs..."
                                 className="w-full h-24 bg-afri-bg border border-afri-border focus:border-afri-gold rounded-xl p-3 text-xs text-afri-text placeholder-zinc-650 focus:outline-none transition-all resize-none font-sans"
-                              />
+                              /></ErrorBoundary>
                             </div>
                           </>
                         ) : (
@@ -5327,7 +5328,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 }}
                                 placeholder="ex. Recherche bassiste soliste pour maquis chic ce soir..."
                                 className="w-full bg-afri-bg border border-afri-border focus:border-afri-gold rounded-xl px-3 py-2.5 text-xs text-afri-text focus:outline-none placeholder-zinc-650 font-sans"
-                              />
+                              /></ErrorBoundary>
                             </div>
 
                             <div className="space-y-2 text-left">
@@ -5340,7 +5341,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 }}
                                 placeholder="Décrivez votre déroulé artistique, matériel requis, style musical d'honneur exigé..."
                                 className="w-full h-24 bg-afri-bg border border-afri-border focus:border-afri-gold rounded-xl p-3 text-xs text-afri-text placeholder-zinc-650 focus:outline-none transition-all resize-none font-sans"
-                              />
+                              /></ErrorBoundary>
                             </div>
 
                             {/* Tags Selection */}
@@ -5396,7 +5397,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     saveDraft({ date: e.target.value });
                                   }}
                                   className="w-full bg-afri-bg border border-afri-border focus:border-afri-gold rounded-xl px-3 py-2.5 text-xs text-afri-text focus:outline-none"
-                                />
+                                /></ErrorBoundary>
                               </div>
                             </div>
 
@@ -5417,7 +5418,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 className={`w-full bg-afri-bg border rounded-xl px-3 py-2.5 text-xs text-afri-text font-mono focus:outline-none transition-all ${
                                   newGomboPrice < 15000 ? "border-red-500/50 text-red-400 focus:border-red-500" : "border-afri-border focus:border-afri-gold"
                                 }`}
-                              />
+                              /></ErrorBoundary>
                               {newGomboPrice < 15000 && (
                                 <p className="text-[9px] font-mono text-red-500">
                                   ⚠️ Le budget d'honneur minimum requis pour garantir la décence et le respect des artistes est de 15 000 FCFA.
@@ -5464,7 +5465,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                           reader.readAsDataURL(file);
                                         }
                                       }}
-                                    />
+                                    /></ErrorBoundary>
                                   </label>
                                 )}
                               </div>
@@ -5498,7 +5499,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                         reader.readAsDataURL(file);
                                       }
                                     }}
-                                  />
+                                  /></ErrorBoundary>
                                 </label>
                               </div>
                               {publishAudio && (
@@ -5534,7 +5535,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                       value={newGomboNombreRecherche} 
                                       onChange={(e) => setNewGomboNombreRecherche(Math.max(1, parseInt(e.target.value) || 1))}
                                       className="w-full bg-afri-bg border border-afri-border rounded-lg p-2 text-xs text-afri-text font-mono"
-                                    />
+                                    /></ErrorBoundary>
                                   </div>
                                   <div>
                                     <label className="text-[8.5px] font-mono text-afri-text-sec uppercase block mb-1">Indemnité transport additionnelle (FCFA) :</label>
@@ -5543,7 +5544,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                       value={newGomboTransportFee} 
                                       onChange={(e) => setNewGomboTransportFee(Math.max(0, parseInt(e.target.value) || 0))}
                                       className="w-full bg-afri-bg border border-afri-border rounded-lg p-2 text-xs text-afri-text font-mono"
-                                    />
+                                    /></ErrorBoundary>
                                   </div>
                                 </div>
                               </div>
@@ -6015,7 +6016,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             id="backup-file-input"
                             className="hidden"
                             onChange={handleImportBackup}
-                          />
+                          /></ErrorBoundary>
                           <label
                             htmlFor="backup-file-input"
                             className="px-4 py-2 border border-afri-border text-afri-text text-xs font-bold uppercase rounded-xl cursor-pointer hover:bg-afri-bg-sec/40"
@@ -6043,7 +6044,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     currentUserProfile={profile || (currentUser as any)} 
                     addToTerminal={addToTerminal}
                     onBack={() => goBackMenu()}
-                  />
+                  /></ErrorBoundary>
                 </div>
               )}
 
@@ -6053,7 +6054,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   <EventsView 
                     onBack={() => goBackMenu()} 
                     addToTerminal={addToTerminal}
-                  />
+                  /></ErrorBoundary>
                 </div>
               )}
 
@@ -6063,7 +6064,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     currentUserProfile={profile}
                     onNavigateView={(view) => setActiveMenu(view as any)}
                     onBack={() => goBackMenu()}
-                  />
+                  /></ErrorBoundary>
                 </div>
               )}
 
@@ -6073,7 +6074,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     currentUserProfile={profile}
                     onNavigateView={(view) => setActiveMenu(view as any)}
                     onBack={() => goBackMenu()}
-                  />
+                  /></ErrorBoundary>
                 </div>
               )}
 
@@ -6085,7 +6086,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       if (view) setActiveMenu(view as any);
                     }}
                     onBack={() => goBackMenu()}
-                  />
+                  /></ErrorBoundary>
                 </div>
               )}
 
@@ -6096,7 +6097,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     currentUser={currentUser}
                     profile={profile}
                     audioSynth={audioSynth}
-                  />
+                  /></ErrorBoundary>
                 </div>
               )}
 
@@ -6107,7 +6108,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     currentUser={profile || (currentUser as any)}
                     onBack={() => goBackMenu()}
                     audioSynth={audioSynth}
-                  />
+                  /></ErrorBoundary>
                 </div>
               )}
 
@@ -6128,7 +6129,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     darkMode={darkMode}
                     setDarkMode={setDarkMode}
                     onViewPublicPortfolio={(userId) => setPublicProfileTargetUserId(userId)}
-                  />
+                  /></ErrorBoundary>
                 </div>
               )}
 
@@ -6164,7 +6165,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     onCreateTransaction={handleCreateTransaction}
                     addToTerminal={(msg: string) => addToTerminal(msg)}
                     onBack={() => goBackMenu()}
-                  />
+                  /></ErrorBoundary>
                 );
               })()}
 
@@ -6271,7 +6272,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           message="Aucune publication trouvée." 
                           submessage="Créez une annonce ou découvrez les opportunités sur Le Terrain." 
                           icon={Briefcase}
-                        />
+                        /></ErrorBoundary>
                       ) : (
                         filteredGombos.map((gombo) => (
                           <div key={gombo.id} className="p-4 sm:p-5 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/30 rounded-2xl space-y-3 shadow-md">
@@ -6451,7 +6452,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   rows={2}
                                   placeholder="Avis sur la collaboration..."
                                   className="w-full bg-afri-bg border border-afri-border rounded-xl p-2 text-xs text-afri-text placeholder:text-afri-text-sec focus:outline-none focus:border-[#D4AF37]"
-                                />
+                                /></ErrorBoundary>
                                 <button
                                   onClick={() => {
                                     addToTerminal(`[ÉVALUATION] Évaluation transmise pour Gombo ${gombo.id}`);
@@ -6529,7 +6530,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               alert(`🎼 Alliance ${v} enregistrée avec succès !`);
                             }
                           }}
-                        />
+                        /></ErrorBoundary>
                         <span className="text-[9px] text-afri-text-sec font-mono block">Appuyez sur Entrée pour enregistrer l'orchestre régional.</span>
                       </div>
                     </div>
@@ -6611,7 +6612,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               message="Aucun renfort actuel." 
                               submessage="Créez une alerte pour chercher des renforts." 
                               icon={ShieldCheck}
-                            />
+                            /></ErrorBoundary>
                           ) : (
                             renforts.map(r => (
                               <div key={r.id} className="p-3 bg-red-500/5 border border-red-500/20 rounded-lg">
@@ -6693,7 +6694,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     isOpen={true} 
                     onClose={() => goBackMenu()}
                     onNavigateToFounder={() => setActiveMenu("super_admin")}
-                  />
+                  /></ErrorBoundary>
                 );
               })()}
 
@@ -6771,7 +6772,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         }
                         try { audioSynth.playValidationSuccess(); } catch (err) {}
                       }}
-                    />
+                    /></ErrorBoundary>
                   </div>
                 );
               })()}
@@ -6791,7 +6792,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         setPerspective("user");
                         setActiveMenu(menu);
                       }}
-                    />
+                    /></ErrorBoundary>
                   </Suspense>
                 );
               })()}
@@ -6801,7 +6802,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   <AboutAfrigombo 
                     onBack={() => goBackMenu()} 
                     onSupport={() => setActiveMenu("user_support")}
-                  />
+                  /></ErrorBoundary>
                 </div>
               )}
 
@@ -6809,7 +6810,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 <div className="animate-fadeIn">
                   <SupportAfrigombo 
                     onBack={() => goBackMenu()} 
-                  />
+                  /></ErrorBoundary>
                 </div>
               )}
 
@@ -6817,13 +6818,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 <div className="animate-fadeIn">
                   <WhatsNew 
                     onBack={() => goBackMenu()} 
-                  />
+                  /></ErrorBoundary>
                 </div>
               )}
 
               {activeMenu === "user_messages" && (
                 <div className="afri-container space-y-6 animate-fadeIn text-left">
-                  <MessagesView
+                  <ErrorBoundary><MessagesView
                     currentUser={currentUser || { uid: activeArtistId }}
                     currentProfile={profile || (users.find(u => u.id === activeArtistId) || users[0])}
                     openConvoWithUserId={openConvoWithUserId}
@@ -6840,7 +6841,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       setActiveMenu("user_terrain");
                       try { audioSynth.playValidationSuccess(); } catch (err) {}
                     }}
-                  />
+                  /></ErrorBoundary>
                 </div>
               )}
 
@@ -6853,7 +6854,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       onBack={() => goBackMenu()}
                       currentUserProfile={profile}
                       onRefreshProfile={refreshProfile}
-                    />
+                    /></ErrorBoundary>
                   </div>
                 )}
                 {activeMenu === "user_gombo_plus" && (
@@ -6862,7 +6863,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       onBack={() => goBackMenu()} 
                       currentUserProfile={profile}
                       onRefreshProfile={refreshProfile}
-                    />
+                    /></ErrorBoundary>
                   </div>
                 )}
               </div>
@@ -6876,7 +6877,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           setActiveMenu("user_heritage"); // Always return to heritage after edit
                         }}
                         initialPanelView="edit"
-                      />
+                      /></ErrorBoundary>
                     ) : (
                       <div className="p-12 text-center space-y-4">
                         <p className="text-afri-text-sec font-mono">Profil non chargé...</p>
@@ -6918,7 +6919,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     setUsers={setUsers}
                     setPosts={setPosts}
                     setGombos={setGombos}
-                  />
+                  /></ErrorBoundary>
                 </Suspense>
               )}
 
@@ -7071,21 +7072,21 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             setActiveMenu("user_terrain");
                             try { audioSynth.playValidationSuccess(); } catch (_) {}
                           }}
-                        />
+                        /></ErrorBoundary>
                       ) : superAdminTab === "beta_transactions" ? (
                         <BetaTransactionsAdminPanel
                           currentUser={profile}
                           onOpenSupportChat={(targetUser) => {
                             setActiveMenu("messages");
                           }}
-                        />
+                        /></ErrorBoundary>
                       ) : superAdminTab === "economie" ? (
                         <AfrigomboEconomieDashboard 
                           onBack={() => {
                             setSuperAdminTab("throne");
                             try { audioSynth.playValidationSuccess(); } catch (_) {}
                           }}
-                        />
+                        /></ErrorBoundary>
                       ) : superAdminTab === "batisseurs" ? (
                         <AfrigomboBuildersAdminDashboard />
                       ) : superAdminTab === "geolocalisation" ? (
@@ -7094,7 +7095,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <MultimediaCenter
                           adminEmail={userEmail || ""}
                           isAuthorizedSuperFounder={isAuthorizedSuperFounder}
-                        />
+                        /></ErrorBoundary>
                       )}
                     </Suspense>
                   </div>
@@ -7270,7 +7271,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           value={newGombo.title}
                           onChange={(e) => setNewGombo(prev => ({ ...prev, title: e.target.value }))}
                           className="w-full bg-afri-bg border border-afri-gold/20 rounded p-2 text-xs focus:outline-none focus:border-afri-gold text-afri-text"
-                        />
+                        /></ErrorBoundary>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
@@ -7282,7 +7283,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             value={newGombo.budget}
                             onChange={(e) => setNewGombo(prev => ({ ...prev, budget: e.target.value }))}
                             className="w-full bg-afri-bg border border-afri-gold/20 rounded p-2 text-xs focus:outline-none focus:border-afri-gold text-afri-text font-mono"
-                          />
+                          /></ErrorBoundary>
                         </div>
                         <div className="space-y-1">
                           <label className="text-[9px] uppercase text-afri-text/60 font-mono">Commission (%)</label>
@@ -7322,7 +7323,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           onChange={(e) => setNewGombo(prev => ({ ...prev, description: e.target.value }))}
                           rows={2}
                           className="w-full bg-afri-bg border border-afri-gold/20 rounded p-2 text-xs focus:outline-none focus:border-afri-gold text-afri-text leading-normal"
-                        />
+                        /></ErrorBoundary>
                       </div>
 
                       <button
@@ -7597,7 +7598,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               }}
                               placeholder="Palabrer : négocier budget, horaires, transport..."
                               className="flex-1 bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text placeholder-white/30 focus:outline-none focus:border-afri-gold transition-all"
-                            />
+                            /></ErrorBoundary>
                             
                             <motion.button
                               whileTap={{ scale: 0.9 }}
@@ -7707,7 +7708,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     startEditingProfile={startEditingProfile}
                     infoMessages={infoMessages}
                     setInfoMessages={setInfoMessages}
-                  />
+                  /></ErrorBoundary>
                 </Suspense>
               )}
 
@@ -7777,7 +7778,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     onDeletePost={handleDeletePostFromReports}
                     onUnflagPost={handleUnflagPostFromReports}
                     audioSynth={audioSynth}
-                  />
+                  /></ErrorBoundary>
                 </Suspense>
               )}
 
@@ -7799,7 +7800,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     transactions={transactions}
                     systemCommissionRate={systemCommissionRate}
                     audioSynth={audioSynth}
-                  />
+                  /></ErrorBoundary>
                 </Suspense>
               )}
 
@@ -7812,7 +7813,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     systemCommissionRate={systemCommissionRate}
                     onUpdateCommissionRate={handleUpdateCommissionRate}
                     audioSynth={audioSynth}
-                  />
+                  /></ErrorBoundary>
                 </Suspense>
               )}
 
@@ -7826,7 +7827,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     scannerStatus={scannerStatus}
                     onTriggerSystemScan={triggerGlobalSystemScan}
                     audioSynth={audioSynth}
-                  />
+                  /></ErrorBoundary>
                 </Suspense>
               )}
 
@@ -8174,7 +8175,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             ? "text-amber-400 fill-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]" 
                             : "text-zinc-550"
                         }`}
-                      />
+                      /></ErrorBoundary>
                     </button>
                   ))}
                 </div>
@@ -8209,7 +8210,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       checked={enableReciprocal}
                       onChange={(e) => setEnableReciprocal(e.target.checked)}
                       className="w-4 h-4 accent-purple-600 cursor-pointer"
-                    />
+                    /></ErrorBoundary>
                     <label htmlFor="enableReciprocal" className="text-xs font-semibold cursor-pointer select-none">
                       Activer l'évaluation de retour (Artiste ➜ Client)
                     </label>
@@ -8237,7 +8238,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   ? "text-purple-400 fill-purple-400" 
                                   : "text-afri-text-sec"
                               }`}
-                            />
+                            /></ErrorBoundary>
                           </button>
                         ))}
                       </div>
@@ -8255,7 +8256,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         className={`w-full text-[11px] rounded p-1.5 focus:outline-none focus:border-purple-500 ${
                           darkMode ? "bg-afri-bg-sec border-afri-border text-afri-text" : "bg-white border-zinc-300 text-zinc-800"
                         }`}
-                      />
+                      /></ErrorBoundary>
                     </div>
                   </div>
                 )}
@@ -9466,19 +9467,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <path
                       fill="currentColor"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
+                    /></ErrorBoundary>
                     <path
                       fill="currentColor"
                       d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
+                    /></ErrorBoundary>
                     <path
                       fill="currentColor"
                       d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
+                    /></ErrorBoundary>
                     <path
                       fill="currentColor"
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
+                    /></ErrorBoundary>
                   </svg>
                   <span>Continuer avec Google</span>
                 </div>
@@ -10047,7 +10048,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         }
                       }}
                       className="flex-1 bg-afri-bg border border-afri-border focus:border-afri-gold/50 focus:bg-afri-bg rounded-2xl px-4 py-3 text-xs text-afri-text placeholder-zinc-700 focus:outline-none"
-                    />
+                    /></ErrorBoundary>
                     <button
                       onClick={() => {
                         const inputEl = document.getElementById("combo-comment-input-real") as HTMLInputElement;
