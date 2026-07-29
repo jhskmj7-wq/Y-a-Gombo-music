@@ -7,7 +7,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { AppSettingsProvider } from "./context/AppSettingsContext";
 import { ModalProvider } from "./components/common/AfriModal";
 import { AudioProvider } from "./context/AudioContext";
-import ErrorBoundary from "./components/ErrorBoundary";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import App from "./App";
 import "./index.css";
 

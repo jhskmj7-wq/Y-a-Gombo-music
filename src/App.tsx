@@ -13,7 +13,7 @@ import { AuthGuard } from "./components/AuthGuard";
 import { ProfileGuard } from "./components/ProfileGuard";
 import CompleteProfile from "./components/CompleteProfile";
 import AuthPage from "./components/AuthPage";
-import ErrorBoundary from "./components/ErrorBoundary";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import AfrigomboCinematicIntro from "./components/AfrigomboCinematicIntro";
 import PremiumLoader from "./components/PremiumLoader";
 import PWAHandler from "./components/PWAHandler";
