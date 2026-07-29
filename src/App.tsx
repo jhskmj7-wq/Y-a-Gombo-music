@@ -47,8 +47,8 @@ const AdminCentre = lazyWithRetry(() => import("./components/AdminCentre"));
 const MainAppLayout = React.memo(function MainAppLayout() {
   const { theme, toggleTheme } = useTheme();
   return (
-    <Suspense fallback={
-       <div className="flex h-screen items-center justify-center bg-afri-bg">
+     <Suspense fallback={
+       <div className="flex h-[100dvh] items-center justify-center bg-afri-bg">
           <div className="w-16 h-16 rounded-full border-t-2 border-afri-gold animate-spin"></div>
        </div>
     }>

@@ -118,7 +118,7 @@ export const AfriModal: React.FC<AfriModalProps> = ({
       {isOpen && (
         <div 
           className={`fixed inset-0 z-[99999] flex ${isBottomSheet ? 'flex-col justify-end' : 'items-center justify-center p-4'} pointer-events-auto select-none`}
-          style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh" }}
+          style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh" }}
         >
           {/* Backdrop Overlay */}
           <motion.div

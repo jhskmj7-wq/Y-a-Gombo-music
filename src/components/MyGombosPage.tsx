@@ -6,7 +6,7 @@ export default function MyGombosPage() {
   const { profile, refreshProfile } = useAuth();
 
   return (
-    <div className="min-h-screen bg-afri-bg-sec text-afri-text">
+    <div className="min-h-[100dvh] bg-afri-bg-sec text-afri-text">
       {profile ? (
         <Dashboards
           currentUserProfile={profile}

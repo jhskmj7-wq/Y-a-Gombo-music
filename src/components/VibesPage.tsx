@@ -8,7 +8,7 @@ export default function VibesPage() {
   const [selectedTalentUid, setSelectedTalentUid] = useState<string | null>(null);
 
   return (
-    <div className="relative min-h-screen bg-afri-bg text-afri-text">
+    <div className="relative min-h-[100dvh] bg-afri-bg text-afri-text">
       {/* Decorative background waves */}
       <div className="absolute inset-x-0 bottom-0 h-40 overflow-hidden pointer-events-none opacity-20 z-0">
         <AfrigomboVibeWaves />

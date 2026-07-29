@@ -285,7 +285,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black text-white font-sans overflow-hidden flex flex-col h-screen w-screen">
+    <div className="fixed inset-0 z-[100] bg-black text-white font-sans overflow-hidden flex flex-col h-[100dvh] w-screen">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[120] bg-[#D4AF37] text-black font-mono font-black text-xs px-4 py-2 rounded-full shadow-2xl animate-bounce border border-black/20">
@@ -346,7 +346,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
           return (
             <div 
               key={reel.id} 
-              className="relative w-full h-screen snap-start bg-black flex justify-center items-center overflow-hidden shrink-0"
+              className="relative w-full h-[100dvh] snap-start bg-black flex justify-center items-center overflow-hidden shrink-0"
             >
               {/* VIDEO PLAYER LAYER (Render video tag only for active or next item for max performance) */}
               {isActive || isNext ? (

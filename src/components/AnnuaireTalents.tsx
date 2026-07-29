@@ -329,7 +329,7 @@ export default function AnnuaireTalents({
   const selectedTalent = talents.find(t => t.uid === selectedTalentUid);
 
   return (
-    <div id="annuaire-talents-container" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans transition-colors min-h-screen">
+    <div id="annuaire-talents-container" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans transition-colors min-h-[100dvh]">
       
       {/* CASE 1: DISPLAY SPECIFIC PUBLIC PROFILE FOR /talent/{uid} */}
       {selectedTalent ? (
