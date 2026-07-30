@@ -4,8 +4,8 @@ import {
   MessageSquare, Send, ArrowLeft, Image as ImageIcon, Mic, 
   CheckCheck, Volume2, ShieldAlert, BadgeCheck, AlertCircle, Loader2,
   Search, Trash2, Copy, CornerUpLeft, X, Lock, Sparkles, Check,
-  CreditCard, ShieldCheck, Trophy, Target, PhoneCall, Video, MapPin,
-  Route, FileText, Bell, Radio, Ban, FileUp, MoreVertical, Play, Pause, Navigation
+  CreditCard, ShieldCheck as ShieldCheckIcon, Trophy, Target, PhoneCall, Video, MapPin,
+  Route, FileText, Bell, Radio, Ban, FileUp, MoreVertical, Play, Pause, Navigation, Plus, PhoneForwarded, PhoneIncoming, PhoneOutgoing
 } from "lucide-react";
 import { gomboDB, db } from "../firebase";
 import { collection, query, where, onSnapshot, doc, getDocs, addDoc } from "firebase/firestore";
@@ -40,8 +40,8 @@ export default function MessagesView({
   onNavigateToSearch,
   onBack
 }: MessagesViewProps) {
-  // 1. Navigation Tabs
-  const [activeTab, setActiveTab] = useState<"conversations" | "contrats" | "appels" | "notifications">("conversations");
+  // 1. Navigation Tabs (WhatsApp style: Discussions, Contrats, Appels)
+  const [activeTab, setActiveTab] = useState<"conversations" | "contrats" | "appels">("conversations");
 
   // 2. Core Messaging State
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -51,7 +51,6 @@ export default function MessagesView({
   const [convoSearchQuery, setConvoSearchQuery] = useState("");
   const [loadingConvos, setLoadingConvos] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [securityError, setSecurityError] = useState<string | null>(null);
 
   // 3. User Presence & Typing
@@ -68,6 +67,8 @@ export default function MessagesView({
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const callServiceRef = useRef<WebRTCCallService | null>(null);
   const [callLogs, setCallLogs] = useState<any[]>([]);
+  const [showNewCallModal, setShowNewCallModal] = useState(false);
+  const [directCallTargetPhone, setDirectCallTargetPhone] = useState("");
 
   // 6. Modals & Widgets
   const [showItineraryModal, setShowItineraryModal] = useState(false);
@@ -82,14 +83,8 @@ export default function MessagesView({
   const audioChunksRef = useRef<Blob[]>([]);
   const touchStartXRef = useRef<number>(0);
 
-  // 8. Message Copy / Reply / Delete
-  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
-  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [deletedMsgIds, setDeletedMsgIds] = useState<string[]>([]);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const docInputRef = useRef<HTMLInputElement>(null);
 
   // Set user presence online on mount
   useEffect(() => {
@@ -154,12 +149,10 @@ export default function MessagesView({
     const partnerUid = activeConvo.participants.find(p => p !== currentUser.uid);
     if (!partnerUid) return;
 
-    // Presence
     const unsubPresence = listenUserPresence(partnerUid, (pres) => {
       setPartnerPresence(pres);
     });
 
-    // Typing
     const unsubTyping = listenPartnerTyping(activeConvo.id, partnerUid, (state) => {
       setPartnerTyping(state);
     });
@@ -183,7 +176,6 @@ export default function MessagesView({
     return () => unsubCallLogs();
   }, [currentUser?.uid]);
 
-  // Handle typing input updates
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInputText(val);
@@ -194,13 +186,11 @@ export default function MessagesView({
     }
   };
 
-  // Send Text Message with Anti-Bypass Sanitization
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!inputText.trim() || !activeConvo || isSending) return;
 
     const rawText = inputText.trim();
-    // 1. Sanitize text for phone numbers & external wa.me/t.me links
     const sanitizeResult = sanitizeMessageContent(rawText);
 
     if (sanitizeResult.hasViolation) {
@@ -214,16 +204,7 @@ export default function MessagesView({
       });
     }
 
-    let finalPayloadText = sanitizeResult.text;
-
-    if (replyingTo) {
-      const replySender = replyingTo.senderId === currentUser.uid ? "Moi" : "Partenaire";
-      const cleanedReplyText = replyingTo.text.replace(/↳ En réponse à[\s\S]*?\n\n/, "");
-      finalPayloadText = `↳ En réponse à ${replySender}: "${cleanedReplyText.slice(0, 60)}${cleanedReplyText.length > 60 ? "..." : ""}"\n\n${sanitizeResult.text}`;
-    }
-
     setInputText("");
-    setReplyingTo(null);
     setSecurityError(null);
     setIsSending(true);
 
@@ -237,7 +218,7 @@ export default function MessagesView({
         activeConvo.id,
         currentUser.uid,
         senderName,
-        finalPayloadText,
+        sanitizeResult.text,
         "text"
       );
     } catch (err: any) {
@@ -250,7 +231,7 @@ export default function MessagesView({
     }
   };
 
-  // Voice Recording (WhatsApp style)
+  // Voice Recording
   const startVoiceRecording = async (e: React.TouchEvent | React.MouseEvent) => {
     if (!activeConvo || isVoiceRecording) return;
     try {
@@ -336,7 +317,6 @@ export default function MessagesView({
     }, 300);
   };
 
-  // Location Sharing
   const handleShareLocation = () => {
     if (!activeConvo || !currentUser?.uid) return;
     if ("geolocation" in navigator) {
@@ -357,7 +337,6 @@ export default function MessagesView({
     }
   };
 
-  // Image Upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && activeConvo && currentUser?.uid) {
       const file = e.target.files[0];
@@ -378,7 +357,6 @@ export default function MessagesView({
     }
   };
 
-  // WebRTC Call Handlers
   const handleStartCall = async (type: "audio" | "video") => {
     if (!activeConvo || !currentUser?.uid) return;
     const partnerUid = activeConvo.participants.find(p => p !== currentUser.uid);
@@ -445,9 +423,9 @@ export default function MessagesView({
 
   return (
     <div className="w-full h-full flex flex-col bg-zinc-950 text-white select-none overflow-hidden relative pb-[74px]">
-      {/* Top Header */}
-      <div className="p-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-3">
+      {/* Streamlined Header with quick search */}
+      <div className="p-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-2">
           <button
             onClick={onBack}
             className="p-2 hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-white transition cursor-pointer"
@@ -455,17 +433,27 @@ export default function MessagesView({
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h2 className="text-base font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5" />
-              Messagerie Souveraine 1.0
+            <h2 className="text-sm font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-2">
+              <ShieldCheckIcon className="w-4 h-4" />
+              Discussions & Échanges
             </h2>
-            <span className="text-[10px] text-zinc-400 font-mono">Communications AFRIGOMBO sécurisées</span>
           </div>
+        </div>
+
+        <div className="relative w-48 sm:w-64">
+          <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" />
+          <input
+            type="text"
+            placeholder="Recherche rapide..."
+            value={convoSearchQuery}
+            onChange={(e) => setConvoSearchQuery(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#D4AF37]"
+          />
         </div>
       </div>
 
-      {/* MAIN TAB PANELS */}
-      <div className="flex-1 overflow-hidden relative flex">
+      {/* MAIN TAB PANELS (Full 100% width & height under header) */}
+      <div className="flex-1 overflow-hidden relative flex w-full h-full">
         {/* TAB 1: CONVERSATIONS */}
         {activeTab === "conversations" && (
           <div className="w-full h-full flex flex-col md:flex-row overflow-hidden">
@@ -475,21 +463,6 @@ export default function MessagesView({
                 activeConvo ? "hidden md:flex" : "flex h-full"
               }`}
             >
-              {/* Search */}
-              <div className="p-3 border-b border-zinc-800 bg-zinc-900/50">
-                <div className="relative">
-                  <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    placeholder="Rechercher une conversation..."
-                    value={convoSearchQuery}
-                    onChange={(e) => setConvoSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#D4AF37]"
-                  />
-                </div>
-              </div>
-
-              {/* List */}
               <div className="flex-1 overflow-y-auto divide-y divide-zinc-900">
                 {loadingConvos ? (
                   <div className="p-8 text-center space-y-2">
@@ -499,9 +472,9 @@ export default function MessagesView({
                 ) : conversations.length === 0 ? (
                   <div className="p-8 text-center space-y-3">
                     <MessageSquare className="w-8 h-8 text-zinc-600 mx-auto" />
-                    <p className="text-xs font-bold text-white">Aucune conversation</p>
+                    <p className="text-xs font-bold text-white">Aucune discussion active</p>
                     <p className="text-[11px] text-zinc-500 leading-relaxed">
-                      Une conversation s'ouvre uniquement après une candidature, une invitation, un contrat ou une demande de renfort.
+                      Démarrez un échange suite à une candidature, une invitation ou un Gombo.
                     </p>
                   </div>
                 ) : (
@@ -545,7 +518,7 @@ export default function MessagesView({
             </div>
 
             {/* Chat Conversation Area */}
-            <div className={`flex-1 flex-col h-full bg-zinc-900/40 ${activeConvo ? "flex" : "hidden md:flex"}`}>
+            <div className={`flex-1 flex-col h-full bg-zinc-900/40 w-full ${activeConvo ? "flex" : "hidden md:flex"}`}>
               {activeConvo ? (
                 <>
                   {/* Chat Active Header */}
@@ -588,28 +561,30 @@ export default function MessagesView({
                       </div>
                     </div>
 
-                    {/* Chat Header Actions */}
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Chat Header Actions: Audio Call & Video Call on top right */}
+                    <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => handleStartCall("audio")}
-                        className="p-2 rounded-xl bg-zinc-800 hover:bg-emerald-500/20 text-emerald-400 hover:border-emerald-500/40 border border-zinc-700 transition cursor-pointer"
-                        title="Appel Audio WebRTC"
+                        className="p-2.5 rounded-xl bg-zinc-800 hover:bg-emerald-500/20 text-emerald-400 hover:border-emerald-500/40 border border-zinc-700 transition cursor-pointer flex items-center gap-1.5"
+                        title="Appel Audio"
                       >
                         <PhoneCall className="w-4 h-4" />
+                        <span className="hidden sm:inline text-[10px] font-bold uppercase">Appel</span>
                       </button>
 
                       <button
                         onClick={() => handleStartCall("video")}
-                        className="p-2 rounded-xl bg-zinc-800 hover:bg-amber-500/20 text-amber-400 hover:border-amber-500/40 border border-zinc-700 transition cursor-pointer"
-                        title="Appel Vidéo WebRTC"
+                        className="p-2.5 rounded-xl bg-zinc-800 hover:bg-amber-500/20 text-amber-400 hover:border-amber-500/40 border border-zinc-700 transition cursor-pointer flex items-center gap-1.5"
+                        title="Appel Vidéo"
                       >
                         <Video className="w-4 h-4" />
+                        <span className="hidden sm:inline text-[10px] font-bold uppercase">Vidéo</span>
                       </button>
 
                       <button
                         onClick={handleShareLocation}
-                        className="p-2 rounded-xl bg-zinc-800 hover:bg-sky-500/20 text-sky-400 hover:border-sky-500/40 border border-zinc-700 transition cursor-pointer"
-                        title="Partager ma position GPS"
+                        className="p-2 rounded-xl bg-zinc-800 hover:bg-sky-500/20 text-sky-400 border border-zinc-700 transition cursor-pointer"
+                        title="Position GPS"
                       >
                         <MapPin className="w-4 h-4" />
                       </button>
@@ -617,7 +592,7 @@ export default function MessagesView({
                       <button
                         onClick={() => setShowItineraryModal(true)}
                         className="p-2 rounded-xl bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 transition cursor-pointer"
-                        title="Se rendre au Gombo (Itinéraire)"
+                        title="Itinéraire Gombo"
                       >
                         <Navigation className="w-4 h-4" />
                       </button>
@@ -625,7 +600,7 @@ export default function MessagesView({
                       <button
                         onClick={() => setShowModerationModal(true)}
                         className="p-2 rounded-xl bg-zinc-800 hover:bg-rose-500/20 text-rose-400 border border-zinc-700 transition cursor-pointer"
-                        title="Modération & Signalement"
+                        title="Modération"
                       >
                         <ShieldAlert className="w-4 h-4" />
                       </button>
@@ -678,7 +653,6 @@ export default function MessagesView({
 
                   {/* Bottom Chat Input Bar */}
                   <div className="p-3 bg-zinc-900 border-t border-zinc-800 relative">
-                    {/* Voice Recording Active Bar */}
                     {isVoiceRecording ? (
                       <div
                         onTouchMove={handleVoiceTouchMove}
@@ -756,10 +730,10 @@ export default function MessagesView({
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                      Sélectionnez une conversation
+                      Sélectionnez une discussion
                     </h3>
                     <p className="text-xs text-zinc-400 max-w-sm mt-1">
-                      Ou consultez vos Onglets Contrats, Appels ou Notifications ci-dessus.
+                      Consultez vos discussions, contrats ou historique d'appels ci-dessous.
                     </p>
                   </div>
                 </div>
@@ -770,72 +744,74 @@ export default function MessagesView({
 
         {/* TAB 2: CONTRATS */}
         {activeTab === "contrats" && (
-          <div className="p-6 overflow-y-auto w-full space-y-4">
+          <div className="p-6 overflow-y-auto w-full h-full space-y-4">
             <div className="p-4 bg-zinc-900 border border-[#D4AF37]/30 rounded-2xl">
               <h3 className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">
-                📜 Conversations Liées Aux Contrats Active
+                📜 Contrats & Accords Écosystème
               </h3>
               <p className="text-xs text-zinc-400 mt-1">
-                Tous les échanges liés à des Gombos signés ou sous contrat séquestre.
+                Historique des prestations, gombos signés et séquestres sécurisés.
               </p>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center text-xs text-zinc-400">
-              Aucun contrat en litige ou en attente d'intervention. Vos conversations sous contrat sont synchronisées.
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center text-xs text-zinc-400">
+              Aucun litige ou contrat en attente. Tous les accords sont validés par le Trône.
             </div>
           </div>
         )}
 
         {/* TAB 3: APPELS */}
         {activeTab === "appels" && (
-          <div className="p-6 overflow-y-auto w-full space-y-4">
+          <div className="p-6 overflow-y-auto w-full h-full space-y-4 relative">
             <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                  📞 Historique des Appels WebRTC
+                  📞 Historique des Appels Audio / Vidéo
                 </h3>
                 <p className="text-xs text-zinc-400 mt-1">
-                  Appels audio et vidéo chiffrés et souverains passer sur AFRIGOMBO.
+                  Appels passés et reçus via le réseau souverain sécurisé AFRIGOMBO.
                 </p>
               </div>
             </div>
 
             <div className="space-y-2">
               {callLogs.length === 0 ? (
-                <div className="p-8 bg-zinc-900 border border-zinc-800 rounded-2xl text-center text-xs text-zinc-500">
-                  Aucun appel récemment enregistré.
+                <div className="p-12 bg-zinc-900 border border-zinc-800 rounded-2xl text-center space-y-3">
+                  <PhoneCall className="w-8 h-8 text-zinc-600 mx-auto" />
+                  <p className="text-xs text-zinc-400 font-mono">Aucun appel enregistré pour le moment.</p>
                 </div>
               ) : (
                 callLogs.map((log) => (
                   <div key={log.id} className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-between text-xs">
                     <div className="flex items-center gap-3">
-                      <span className="p-2 rounded-xl bg-zinc-800 text-emerald-400">
+                      <span className="p-2.5 rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700">
                         {log.type === "video" ? <Video className="w-4 h-4" /> : <PhoneCall className="w-4 h-4" />}
                       </span>
                       <div>
-                        <strong className="text-white block">{log.receiverName}</strong>
-                        <span className="text-[10px] text-zinc-500 font-mono">{log.createdAt}</span>
+                        <strong className="text-white block">{log.receiverName || "Membre Gombo"}</strong>
+                        <span className="text-[10px] text-zinc-500 font-mono">
+                          {log.createdAt ? new Date(log.createdAt).toLocaleString() : "Récent"}
+                        </span>
                       </div>
                     </div>
-                    <span className="px-2 py-1 bg-zinc-800 rounded text-[10px] text-zinc-300 uppercase">
-                      {log.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 bg-zinc-800 rounded-xl text-[10px] text-zinc-300 uppercase font-mono">
+                        {log.status || "Terminé"}
+                      </span>
+                    </div>
                   </div>
                 ))
               )}
             </div>
-          </div>
-        )}
 
-        {/* TAB 4: NOTIFICATIONS */}
-        {activeTab === "notifications" && (
-          <div className="p-6 overflow-y-auto w-full space-y-4">
-            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                🔔 Alertes & Notifications Messagerie
-              </h3>
-              <p className="text-xs text-zinc-400 mt-1">
-                Invitations, rappels de Gombo et mises à jour de contrats.
-              </p>
+            {/* Floating Action Button (FAB) for Nouvel Appel Direct */}
+            <div className="absolute bottom-8 right-8">
+              <button
+                onClick={() => setShowNewCallModal(true)}
+                className="w-14 h-14 bg-[#D4AF37] hover:bg-amber-400 text-black rounded-full shadow-2xl flex items-center justify-center transition hover:scale-110 cursor-pointer border-2 border-black"
+                title="Nouvel Appel Direct"
+              >
+                <Plus className="w-7 h-7 stroke-[2.5]" />
+              </button>
             </div>
           </div>
         )}
@@ -875,13 +851,61 @@ export default function MessagesView({
         />
       )}
 
-      {/* Android Bottom Navigation Bar */}
+      {/* New Direct Call Modal */}
+      {showNewCallModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-zinc-900 border border-[#D4AF37]/40 rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <PhoneCall className="w-4 h-4 text-[#D4AF37]" />
+                Nouvel Appel Direct
+              </h3>
+              <button onClick={() => setShowNewCallModal(false)} className="text-zinc-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Entrez l'UID ou le pseudo du membre/artiste à appeler directement en audio ou vidéo.
+            </p>
+            <input
+              type="text"
+              placeholder="UID ou Téléphone du contact..."
+              value={directCallTargetPhone}
+              onChange={(e) => setDirectCallTargetPhone(e.target.value)}
+              className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+            />
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => {
+                  if (!directCallTargetPhone.trim()) return;
+                  alert(`Lancement de l'appel audio vers ${directCallTargetPhone}...`);
+                  setShowNewCallModal(false);
+                }}
+                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl text-xs uppercase cursor-pointer"
+              >
+                Audio 📞
+              </button>
+              <button
+                onClick={() => {
+                  if (!directCallTargetPhone.trim()) return;
+                  alert(`Lancement de l'appel vidéo vers ${directCallTargetPhone}...`);
+                  setShowNewCallModal(false);
+                }}
+                className="flex-1 py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-bold rounded-xl text-xs uppercase cursor-pointer"
+              >
+                Vidéo 📹
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp-Style Bottom Navigation Bar (3 Essential Tabs) */}
       <div className="absolute bottom-0 left-0 w-full h-[74px] bg-zinc-950 border-t border-[#D4AF37]/30 flex items-center justify-around px-2 z-30 shadow-2xl">
         {[
-          { id: "conversations", label: "Conversations", icon: MessageSquare, badge: conversations.length },
+          { id: "conversations", label: "Discussions", icon: MessageSquare, badge: conversations.length },
           { id: "contrats", label: "Contrats", icon: FileText },
-          { id: "appels", label: "Appels", icon: PhoneCall, badge: callLogs.length },
-          { id: "notifications", label: "Notifications", icon: Bell }
+          { id: "appels", label: "Appels", icon: PhoneCall, badge: callLogs.length }
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
