@@ -459,7 +459,7 @@ export default function AfrigomboWalletDashboard({
   });
 
   return (
-    <div className="space-y-5 max-w-4xl mx-auto afri-container afri-section text-left animate-fadeIn">
+    <div className="w-full max-w-none px-4 py-3 space-y-5 text-left animate-fadeIn">
       
       {/* COMPACT TOP HEADER */}
       <div className="flex items-center justify-between border-b border-afri-border/80 pb-3">
@@ -797,7 +797,7 @@ export default function AfrigomboWalletDashboard({
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-3xl p-5 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
+              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-3xl p-5 sm:p-6 w-full max-w-none max-h-[90vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
             >
               {/* Drag Handle */}
               <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
@@ -993,7 +993,7 @@ export default function AfrigomboWalletDashboard({
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-3xl p-5 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
+              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-3xl p-5 sm:p-6 w-full max-w-none max-h-[90vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
             >
               {/* Drag Handle */}
               <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
@@ -1013,7 +1013,7 @@ export default function AfrigomboWalletDashboard({
 
                   <div className="space-y-1.5">
                     <span className="inline-block text-[10px] font-mono font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
-                      DEMANDE TRANSMISE
+                      VOTRE DEMANDE DE RETRAIT A ÉTÉ ENVOYÉE
                     </span>
                     <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-sans">
                       RETRAIT EN COURS DE TRAITEMENT
@@ -1026,12 +1026,31 @@ export default function AfrigomboWalletDashboard({
                     </p>
                   </div>
 
-                  <button
-                    onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
-                    className="w-full py-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-[10px] tracking-widest rounded-xl transition-colors cursor-pointer"
-                  >
-                    Fermer le guichet
-                  </button>
+                  <div className="space-y-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowWithdrawModal(false);
+                        if (onNavigateToMessages) {
+                          onNavigateToMessages("admin");
+                        } else {
+                          supportConfig.openSupport(`Bonjour 👋\n\nMa demande de retrait de ${Number(amount).toLocaleString('fr-FR')} FCFA vers ${operator.toUpperCase()} (${phoneNumber}) a été envoyée. Je souhaite transmettre les informations complémentaires.`);
+                        }
+                      }}
+                      className="w-full py-3.5 bg-[#D4AF37] hover:bg-[#b8982e] text-black font-black text-xs uppercase font-mono tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-md"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Contacter le Service Client</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
+                      className="w-full py-2.5 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-[10px] tracking-widest rounded-xl transition-colors cursor-pointer"
+                    >
+                      Fermer le guichet
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={(e) => { e.preventDefault(); handleWithdrawRequest(e); }} className="space-y-5">
@@ -1146,7 +1165,7 @@ export default function AfrigomboWalletDashboard({
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-3xl p-5 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
+              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-3xl p-5 sm:p-6 w-full max-w-none max-h-[90vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
             >
               {/* Drag Handle */}
               <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
