@@ -32,7 +32,7 @@ if (typeof window !== "undefined") {
 let firestoreInstance;
 try {
   firestoreInstance = initializeFirestore(app, {
-    experimentalAutoDetectLongPolling: true,
+    experimentalForceLongPolling: true,
     localCache: persistentLocalCache({
       tabManager: persistentMultipleTabManager()
     })
@@ -40,7 +40,7 @@ try {
 } catch (e) {
   try {
     firestoreInstance = initializeFirestore(app, {
-      experimentalAutoDetectLongPolling: true,
+      experimentalForceLongPolling: true,
       localCache: memoryLocalCache()
     });
   } catch (err2) {
