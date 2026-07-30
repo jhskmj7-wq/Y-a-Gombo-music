@@ -777,11 +777,15 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                     <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs font-mono">
                       <div>
                         <span className="text-zinc-600 block text-[9px] uppercase">GOMBO ID</span>
-                        <span className="text-zinc-300 font-bold">{selectedReqUser?.gomboId || selectedRequest.gomboId || "Non renseigné"}</span>
+                        <span className="text-zinc-300 font-bold">
+                          {typeof selectedReqUser?.gomboId === 'object' ? selectedReqUser.gomboId.id : (selectedReqUser?.gomboId || typeof selectedRequest.gomboId === 'object' ? (selectedRequest.gomboId as any).id : selectedRequest.gomboId || "Non renseigné")}
+                        </span>
                       </div>
                       <div>
                         <span className="text-zinc-600 block text-[9px] uppercase">AFRI ID</span>
-                        <span className="text-zinc-300 font-bold">{selectedReqUser?.afriId || selectedRequest.afriId || "Non renseigné"}</span>
+                        <span className="text-zinc-300 font-bold">
+                          {typeof selectedReqUser?.afriId === 'object' ? (selectedReqUser.afriId as any).id : (selectedReqUser?.afriId || typeof selectedRequest.afriId === 'object' ? (selectedRequest.afriId as any).id : selectedRequest.afriId || "Non renseigné")}
+                        </span>
                       </div>
                       <div>
                         <span className="text-zinc-600 block text-[9px] uppercase">Type de Flux</span>

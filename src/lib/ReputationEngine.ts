@@ -14,7 +14,8 @@ export interface ReputationDetails {
   activeAlertsCount: number;
   seniorityDays: number;
   trustScore: number;
-  badge: "Fiable" | "Très fiable" | "Excellence" | "Artiste Premium" | "Référence AFRIGOMBO" | "Standard";
+  badge: "Fiable" | "Très fiable" | "Excellence" | "Artiste Premium" | "Référence AFRIGOMBO" | "Standard" | "Vérifié" | "Premium" | "Elite" | "En tendance" | "Artiste recommandé" | "Gombo ID";
+  level: "Débutant" | "Confirmé" | "Professionnel" | "Elite" | "Légende AFRIGOMBO";
 }
 
 export class ReputationEngine {
@@ -107,20 +108,29 @@ export class ReputationEngine {
     // Clamp score strictly between 0 and 100
     const trustScore = Math.max(0, Math.min(100, Math.round(score)));
 
-    // 9. AUTOMATIC BADGES (Section 4)
-    let badge: "Fiable" | "Très fiable" | "Excellence" | "Artiste Premium" | "Référence AFRIGOMBO" | "Standard" = "Standard";
+    // 9. AUTOMATIC BADGES
+    let badge: "Fiable" | "Très fiable" | "Excellence" | "Artiste Premium" | "Référence AFRIGOMBO" | "Standard" | "Vérifié" | "Premium" | "Elite" | "En tendance" | "Artiste recommandé" | "Gombo ID" = "Standard";
     
     if (trustScore >= 98 && completedGombos >= 10 && averageRating >= 4.8) {
       badge = "Référence AFRIGOMBO";
+    } else if (kycVerified) {
+      badge = "Vérifié";
     } else if (trustScore >= 95 && completedGombos >= 5) {
       badge = "Artiste Premium";
     } else if (trustScore >= 90) {
-      badge = "Excellence";
+      badge = "Elite";
     } else if (trustScore >= 80) {
       badge = "Très fiable";
     } else if (trustScore >= 70) {
       badge = "Fiable";
     }
+
+    // 10. LEVELS
+    let level: "Débutant" | "Confirmé" | "Professionnel" | "Elite" | "Légende AFRIGOMBO" = "Débutant";
+    if (completedGombos >= 500) level = "Légende AFRIGOMBO";
+    else if (completedGombos >= 100) level = "Elite";
+    else if (completedGombos >= 50) level = "Professionnel";
+    else if (completedGombos >= 10) level = "Confirmé";
 
     return {
       completedGombos,
@@ -136,7 +146,8 @@ export class ReputationEngine {
       activeAlertsCount: activeAlerts.length,
       seniorityDays,
       trustScore,
-      badge
+      badge,
+      level
     };
   }
 
