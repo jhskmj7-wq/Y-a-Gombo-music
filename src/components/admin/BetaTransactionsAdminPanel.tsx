@@ -133,8 +133,9 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
         
         await updateDoc(doc(db, "walletDepositRequests", req.id), { status: "validated", statut: "validated", validatedAt: nowIso });
         
-        // Also update transactions doc if present
+        // Also update walletRequests and transactions doc if present
         try {
+          await setDoc(doc(db, "walletRequests", req.id), { status: "validated", statut: "validated", validatedAt: nowIso }, { merge: true });
           await setDoc(doc(db, "transactions", req.id), { status: "valide", statut: "valide", validatedAt: nowIso }, { merge: true });
         } catch (_) {}
 
@@ -168,6 +169,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
         await updateDoc(doc(db, "walletWithdrawalRequests", req.id), { status: "PAID", statut: "PAID", validatedAt: nowIso });
         
         try {
+          await setDoc(doc(db, "walletRequests", req.id), { status: "PAID", statut: "PAID", validatedAt: nowIso }, { merge: true });
           await setDoc(doc(db, "transactions", req.id), { status: "valide", statut: "valide", validatedAt: nowIso }, { merge: true });
         } catch (_) {}
 
@@ -222,11 +224,13 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
       if (req.type === "deposit") {
         await updateDoc(doc(db, "walletDepositRequests", req.id), { status: "refused", statut: "refused", refusalReason: refusalReason.trim(), refusedAt: nowIso });
         try {
+          await setDoc(doc(db, "walletRequests", req.id), { status: "refused", statut: "refused", refusalReason: refusalReason.trim(), refusedAt: nowIso }, { merge: true });
           await setDoc(doc(db, "transactions", req.id), { status: "refuse", statut: "refuse", refusalReason: refusalReason.trim() }, { merge: true });
         } catch (_) {}
       } else {
         await updateDoc(doc(db, "walletWithdrawalRequests", req.id), { status: "REFUSED", statut: "REFUSED", refusalReason: refusalReason.trim(), refusedAt: nowIso });
         try {
+          await setDoc(doc(db, "walletRequests", req.id), { status: "REFUSED", statut: "REFUSED", refusalReason: refusalReason.trim(), refusedAt: nowIso }, { merge: true });
           await setDoc(doc(db, "transactions", req.id), { status: "refuse", statut: "refuse", refusalReason: refusalReason.trim() }, { merge: true });
         } catch (_) {}
       }

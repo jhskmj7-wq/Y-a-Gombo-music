@@ -256,8 +256,8 @@ export default function AfrigomboWalletDashboard({
 
       const txRef = await addDoc(collection(db, "transactions"), txData);
 
-      // 2. Create in `walletDepositRequests` collection
-      await setDoc(doc(db, "walletDepositRequests", txRef.id), {
+      // 2. Create in `walletDepositRequests` and `walletRequests` collection
+      const requestPayload = {
         id: txRef.id,
         uid: uid,
         userId: uid,
@@ -265,14 +265,18 @@ export default function AfrigomboWalletDashboard({
         userPhoto: userPhoto,
         montant: depositAmount,
         amount: depositAmount,
-        status: "en_attente",
+        type: "deposit",
+        status: "waiting_support",
         statut: "en_attente",
         createdAt: nowIso,
         createdAtIso: nowIso,
         reference: reference,
         operator: operator,
         phoneNumber: phoneNumber
-      });
+      };
+
+      await setDoc(doc(db, "walletDepositRequests", txRef.id), requestPayload);
+      await setDoc(doc(db, "walletRequests", txRef.id), requestPayload);
 
       setCreatedDepositRef(reference);
       setStep("success");
@@ -326,8 +330,8 @@ export default function AfrigomboWalletDashboard({
 
       const txRef = await addDoc(collection(db, "transactions"), txData);
 
-      // 2. Create in `walletWithdrawalRequests` collection
-      await setDoc(doc(db, "walletWithdrawalRequests", txRef.id), {
+      // 2. Create in `walletWithdrawalRequests` and `walletRequests` collection
+      const withdrawPayload = {
         id: txRef.id,
         userId: uid,
         uid: uid,
@@ -338,12 +342,16 @@ export default function AfrigomboWalletDashboard({
         phoneNumber: phoneNumber,
         amount: withdrawAmount,
         montant: withdrawAmount,
+        type: "withdraw",
         reference: reference,
-        status: "en_attente",
+        status: "pending_review",
         statut: "en_attente",
         createdAt: serverTimestamp(),
         createdAtIso: nowIso
-      });
+      };
+
+      await setDoc(doc(db, "walletWithdrawalRequests", txRef.id), withdrawPayload);
+      await setDoc(doc(db, "walletRequests", txRef.id), withdrawPayload);
 
       setCreatedDepositRef(reference);
       setWithdrawSubmitted(true);
@@ -760,19 +768,27 @@ export default function AfrigomboWalletDashboard({
 
       </div>
 
-      {/* MODAL 1: RECHARGER / DÉPÔT MOBILE MONEY */}
+      {/* MODAL 1: RECHARGER / DÉPÔT MOBILE MONEY (ANDROID BOTTOM SHEET) */}
       <AnimatePresence>
         {showDepositModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end justify-center z-50 p-0 sm:p-4">
+            <div 
+              className="absolute inset-0"
+              onClick={() => { setShowDepositModal(false); playSound("click"); }}
+            />
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="bg-afri-bg-sec border border-[#D4AF37]/30 rounded-3xl p-6 w-full max-w-md my-auto space-y-6 relative text-left shadow-2xl"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-3xl p-5 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
             >
+              {/* Drag Handle */}
+              <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
+
               <button 
                 onClick={() => { setShowDepositModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-afri-text-muted hover:text-afri-text p-1 rounded-full bg-afri-bg/50"
+                className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-full bg-zinc-900 border border-zinc-800"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -841,14 +857,14 @@ export default function AfrigomboWalletDashboard({
                     <div className="space-y-1">
                       <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest flex justify-between">
                         <span>Montant du rechargement (FCFA)</span>
-                        <span className="text-[#D4AF37]">Min: 15 000 FCFA</span>
+                        <span className="text-[#D4AF37]">Min: 1 000 FCFA</span>
                       </label>
                       <div className="relative">
                         <Coins className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
                         <input 
                           type="number" 
                           required
-                          min="15000"
+                          min="1000"
                           value={amount} 
                           onChange={(e) => setAmount(e.target.value)}
                           placeholder="Ex: 25000" 
@@ -901,7 +917,7 @@ export default function AfrigomboWalletDashboard({
                     <div className="flex justify-between items-center">
                       <span className="text-zinc-400">Statut du Dépôt :</span>
                       <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[10px]">
-                        🟡 En attente des instructions
+                        🟡 En attente de validation
                       </span>
                     </div>
                   </div>
@@ -948,19 +964,27 @@ export default function AfrigomboWalletDashboard({
         )}
       </AnimatePresence>
 
-      {/* MODAL 2: RETIRER / RETRAIT MOBILE MONEY */}
+      {/* MODAL 2: RETIRER / RETRAIT MOBILE MONEY (ANDROID BOTTOM SHEET) */}
       <AnimatePresence>
         {showWithdrawModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end justify-center z-50 p-0 sm:p-4">
+            <div 
+              className="absolute inset-0"
+              onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
+            />
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 w-full max-w-md my-auto space-y-6 relative text-left shadow-2xl"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-3xl p-5 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
             >
+              {/* Drag Handle */}
+              <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
+
               <button 
                 onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-afri-text-muted hover:text-afri-text p-1 rounded-full bg-afri-bg/50"
+                className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-full bg-zinc-900 border border-zinc-800"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1093,19 +1117,27 @@ export default function AfrigomboWalletDashboard({
         )}
       </AnimatePresence>
 
-      {/* MODAL 3: SCANNER / P2P TRANSFER */}
+      {/* MODAL 3: SCANNER / P2P TRANSFER (ANDROID BOTTOM SHEET) */}
       <AnimatePresence>
         {showScannerModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end justify-center z-50 p-0 sm:p-4">
+            <div 
+              className="absolute inset-0"
+              onClick={() => { setShowScannerModal(false); playSound("click"); }}
+            />
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="bg-afri-bg-sec border border-purple-500/30 rounded-3xl p-6 w-full max-w-md my-auto space-y-5 relative text-left shadow-2xl"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-3xl p-5 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
             >
+              {/* Drag Handle */}
+              <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
+
               <button 
                 onClick={() => { setShowScannerModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-afri-text-muted hover:text-afri-text p-1 rounded-full bg-afri-bg/50"
+                className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-full bg-zinc-900 border border-zinc-800"
               >
                 <X className="w-5 h-5" />
               </button>
