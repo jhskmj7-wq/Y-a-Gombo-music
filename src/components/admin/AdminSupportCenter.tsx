@@ -292,7 +292,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                 <div className="flex justify-between text-xs">
                   <span className="text-zinc-400">Wallet:</span>
                   <span className="text-emerald-400 font-mono font-bold">
-                    {Number(selectedTicket.walletBalance || 0).toLocaleString()} FCFA
+                    {(Number(selectedTicket.walletBalance || 0) ?? 0).toLocaleString()} FCFA
                   </span>
                 </div>
                 <div className="flex justify-between text-xs">

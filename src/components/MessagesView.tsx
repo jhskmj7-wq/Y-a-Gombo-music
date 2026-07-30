@@ -422,32 +422,17 @@ export default function MessagesView({
   const partnerDetails = partnerUid ? activeConvo?.participantDetails?.[partnerUid] : null;
 
   return (
-    <div className="w-full h-full flex flex-col bg-zinc-950 text-white select-none overflow-hidden relative pb-[74px]">
-      {/* Streamlined Header with quick search */}
-      <div className="p-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-white transition cursor-pointer"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h2 className="text-sm font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-2">
-              <ShieldCheckIcon className="w-4 h-4" />
-              Discussions & Échanges
-            </h2>
-          </div>
-        </div>
-
-        <div className="relative w-48 sm:w-64">
-          <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" />
+    <div className="w-full h-full min-h-screen flex flex-col justify-between p-0 m-0 border-none rounded-none bg-black text-white select-none overflow-hidden relative pb-[88px]">
+      {/* Barre de recherche intégrée directement sous le Header principal d'AFRIGOMBO sur toute la largeur de l'écran */}
+      <div className="w-full px-4 py-2 bg-neutral-900 border-b border-neutral-850 shrink-0">
+        <div className="relative w-full">
+          <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-2.5" />
           <input
             type="text"
-            placeholder="Recherche rapide..."
+            placeholder="Rechercher une discussion..."
             value={convoSearchQuery}
             onChange={(e) => setConvoSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#D4AF37]"
+            className="w-full pl-10 pr-4 py-1.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#D4AF37]"
           />
         </div>
       </div>
@@ -901,7 +886,7 @@ export default function MessagesView({
       )}
 
       {/* WhatsApp-Style Bottom Navigation Bar (3 Essential Tabs) */}
-      <div className="absolute bottom-0 left-0 w-full h-[74px] bg-zinc-950 border-t border-[#D4AF37]/30 flex items-center justify-around px-2 z-30 shadow-2xl">
+      <div className="absolute bottom-0 left-0 w-full pb-6 pt-2 bg-neutral-900 border-t border-neutral-800 flex items-center justify-around px-2 z-30 shadow-2xl">
         {[
           { id: "conversations", label: "Discussions", icon: MessageSquare, badge: conversations.length },
           { id: "contrats", label: "Contrats", icon: FileText },

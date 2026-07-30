@@ -846,12 +846,62 @@ export default function AdminFounderThrone({
   const handleTogglePremium = async (u: any) => {
     try {
       const nextPrem = !u.isPremium;
+      const oneYearFromNow = new Date();
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
       await updateDoc(doc(db, "users", u.id || u.uid), {
         isPremium: nextPrem,
-        subscriptionType: nextPrem ? "elite" : "free"
+        is_premium: nextPrem,
+        subscriptionType: nextPrem ? "elite" : "free",
+        premiumExpiresAt: nextPrem ? oneYearFromNow.toISOString() : null,
+        premium_expires_at: nextPrem ? oneYearFromNow.toISOString() : null,
+        subscriptionExpiresAt: nextPrem ? oneYearFromNow.toISOString() : null
       });
       await logImperialAction("Privilège Premium", `Statut Premium Elite ${nextPrem ? "Donné" : "Retiré"} à ${u.displayName || u.artisticName || u.email}`);
-      setSuccessMsg(`Premium Elite ${nextPrem ? "accordé" : "retiré"}.`);
+      setSuccessMsg(`Premium Elite ${nextPrem ? "accordé (Valide 1 an)" : "retiré"} avec succès !`);
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  const handleGrantRenfort = async (u: any) => {
+    try {
+      await updateDoc(doc(db, "users", u.id || u.uid), {
+        hasRenfort: true,
+        has_renfort: true,
+        renfortExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      });
+      await logImperialAction("Renfort Visibilité", `Renfort de visibilité impérial accordé à ${u.displayName || u.artisticName || u.email}`);
+      setSuccessMsg(`Renfort de visibilité accordé à ${u.displayName || u.artisticName || u.email} pour 7 jours !`);
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  const handleValidateContract = async (u: any) => {
+    try {
+      const userContracts = (allContracts || []).filter(c => c.clientId === u.id || c.artistId === u.id || c.creatorId === u.id);
+      if (userContracts.length > 0) {
+        for (const contract of userContracts) {
+          await updateDoc(doc(db, "contracts", contract.id), {
+            status: "validated",
+            validatedAt: new Date().toISOString()
+          });
+        }
+        await logImperialAction("Validation Contrat", `Validation souveraine de ${userContracts.length} contrat(s) pour ${u.displayName || u.artisticName || u.email}`);
+        setSuccessMsg(`Contrats de ${u.displayName || u.artisticName || u.email} validés avec succès !`);
+      } else {
+        await updateDoc(doc(db, "users", u.id || u.uid), {
+          charterSigned: true,
+          charterSignedAt: new Date().toISOString()
+        });
+        await logImperialAction("Validation Charte", `Validation de la charte d'engagement pour ${u.displayName || u.artisticName || u.email}`);
+        setSuccessMsg(`Charte d'engagement validée pour ${u.displayName || u.artisticName || u.email} !`);
+      }
       setTimeout(() => setSuccessMsg(""), 3000);
       try { audioSynth?.playValidationSuccess(); } catch (_) {}
     } catch (err: any) {
@@ -1399,7 +1449,7 @@ export default function AdminFounderThrone({
   const totalRevenues = (transactions || [])
     .reduce((acc: number, item: any) => acc + Number(item.amount || 0), 0);
   const formattedRevenues = totalRevenues > 0 
-    ? `${totalRevenues.toLocaleString("fr-FR")} FCFA`
+    ? `${(totalRevenues ?? 0).toLocaleString("fr-FR")} FCFA`
     : "1 250 000 FCFA (Simulé)";
 
   const certifiedCount = users.filter((u: any) => u.isCertified || u.gomboId?.certifie).length;
@@ -2809,10 +2859,10 @@ export default function AdminFounderThrone({
                         <div key={idx} className="p-3 bg-afri-bg border border-afri-border/40 hover:border-[#D4AF37]/30 rounded-2xl flex justify-between items-center text-xs transition-colors">
                           <div className="text-left">
                             <span className="font-sans font-bold text-afri-text block">{tx.description || "Gombo Prestation"}</span>
-                            <span className="text-[9px] text-afri-text-sec font-mono block mt-0.5">{tx.timestamp ? new Date(tx.timestamp).toLocaleString("fr-FR") : "Date inconnue"}</span>
+                            <span className="text-[9px] text-afri-text-sec font-mono block mt-0.5">{tx.timestamp && !isNaN(new Date(tx.timestamp).getTime()) ? new Date(tx.timestamp).toLocaleString("fr-FR") : "Date inconnue"}</span>
                           </div>
                           <div className="text-right">
-                            <span className="text-emerald-400 font-black block">+{Number(tx.amount || 0).toLocaleString("fr-FR")} FCFA</span>
+                            <span className="text-emerald-400 font-black block">+{(Number(tx.amount || 0) ?? 0).toLocaleString("fr-FR")} FCFA</span>
                             <span className="text-[8px] text-afri-text-sec font-mono block uppercase">Statut: Validé</span>
                           </div>
                         </div>
@@ -3096,7 +3146,7 @@ export default function AdminFounderThrone({
                             </p>
 
                             <div className="flex items-center justify-between text-[10px] font-mono text-afri-text-sec pt-2 border-t border-afri-border/50">
-                              <span>Reçu le: {new Date(ticket.createdAt).toLocaleString("fr-FR")}</span>
+                              <span>Reçu le: {ticket.createdAt && !isNaN(new Date(ticket.createdAt).getTime()) ? new Date(ticket.createdAt).toLocaleString("fr-FR") : "Date inconnue"}</span>
                               {ticket.status !== "RESOLVED" && (
                                 <button
                                   onClick={() => handleResolveTicketSupport(ticket)}
@@ -3157,7 +3207,7 @@ export default function AdminFounderThrone({
                             </p>
 
                             <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-mono text-afri-text-sec pt-2 border-t border-afri-border/50">
-                              <span>Déclaré le: {new Date(dispute.createdAt).toLocaleString("fr-FR")}</span>
+                              <span>Déclaré le: {dispute.createdAt && !isNaN(new Date(dispute.createdAt).getTime()) ? new Date(dispute.createdAt).toLocaleString("fr-FR") : "Date inconnue"}</span>
                               {dispute.status !== "RESOLVED" && (
                                 <button
                                   onClick={() => handleResolveDispute(dispute)}
@@ -3222,7 +3272,7 @@ export default function AdminFounderThrone({
                             </p>
 
                             <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-mono text-afri-text-sec pt-2 border-t border-afri-border/50">
-                              <span>Soumis le: {new Date(kyc.createdAt).toLocaleString("fr-FR")}</span>
+                              <span>Soumis le: {kyc.createdAt && !isNaN(new Date(kyc.createdAt).getTime()) ? new Date(kyc.createdAt).toLocaleString("fr-FR") : "Date inconnue"}</span>
                               {kyc.status !== "APPROVED" && (
                                 <div className="flex items-center gap-2">
                                   <button
@@ -3291,7 +3341,7 @@ export default function AdminFounderThrone({
                             </p>
 
                             <div className="flex items-center justify-between text-[10px] font-mono text-afri-text-sec pt-2 border-t border-afri-border/50">
-                              <span>Signalé le: {new Date(bug.createdAt).toLocaleString("fr-FR")}</span>
+                              <span>Signalé le: {bug.createdAt && !isNaN(new Date(bug.createdAt).getTime()) ? new Date(bug.createdAt).toLocaleString("fr-FR") : "Date inconnue"}</span>
                               {bug.status !== "RESOLVED" && (
                                 <button
                                   onClick={() => handleResolveBugReport(bug)}
@@ -3924,7 +3974,7 @@ export default function AdminFounderThrone({
                             <Coins className="w-4 h-4 text-emerald-400" />
                           </div>
                           <span className="text-xl font-black text-emerald-400 tracking-tight block">
-                            {totalCommissions.toLocaleString()} FCFA
+                            {(totalCommissions ?? 0).toLocaleString()} FCFA
                           </span>
                         </div>
                         <p className="text-[8.5px] text-afri-text-sec mt-2">Frais de service (12% / 10% / 8%) perçus sur les contrats finalisés</p>
@@ -3939,7 +3989,7 @@ export default function AdminFounderThrone({
                             <Crown className="w-4 h-4 text-[#D4AF37]" />
                           </div>
                           <span className="text-xl font-black text-[#D4AF37] tracking-tight block">
-                            {totalPremiumRevenue.toLocaleString()} FCFA
+                            {(totalPremiumRevenue ?? 0).toLocaleString()} FCFA
                           </span>
                         </div>
                         <p className="text-[8.5px] text-afri-text-sec mt-2">Cumul des abonnements Gombo Pro et Elite encaissés</p>
@@ -3984,7 +4034,7 @@ export default function AdminFounderThrone({
                             <Sparkles className="w-4 h-4 text-amber-400" />
                           </div>
                           <span className="text-xl font-black text-amber-400 tracking-tight block">
-                            {totalSavings.toLocaleString()} FCFA
+                            {(totalSavings ?? 0).toLocaleString()} FCFA
                           </span>
                         </div>
                         <p className="text-[8.5px] text-afri-text-sec mt-2">Frais économisés par les adhérents grâce aux taux Premium réduits (4%)</p>
@@ -4066,7 +4116,7 @@ export default function AdminFounderThrone({
                         <div className="space-y-2">
                           <label className="text-[10px] font-mono text-zinc-600 dark:text-afri-text-sec uppercase flex justify-between">
                             <span>Montant Moyen / Transaction</span>
-                            <span className="font-bold text-afri-text">{simAvgAmount.toLocaleString()} FCFA</span>
+                            <span className="font-bold text-afri-text">{(simAvgAmount ?? 0).toLocaleString()} FCFA</span>
                           </label>
                           <input type="range" min="5000" max="1000000" step="5000" value={simAvgAmount} onChange={(e) => setSimAvgAmount(Number(e.target.value))} className="w-full h-1 bg-afri-bg-ter rounded-lg appearance-none cursor-pointer accent-blue-500" />
                         </div>
@@ -4075,7 +4125,7 @@ export default function AdminFounderThrone({
                         <div className="text-center space-y-1">
                           <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest font-black block mb-2">Revenu Mensuel Estimé (Empire)</span>
                           <span className="text-3xl font-black text-afri-text block">
-                            {Math.round(simVol * simAvgAmount * (economySettings?.commissionRateStandard || 0.12)).toLocaleString()} FCFA
+                            {Math.round((simVol ?? 0) * (simAvgAmount ?? 0) * (economySettings?.commissionRateStandard || 0.12)).toLocaleString()} FCFA
                           </span>
                           <span className="text-[9px] text-afri-text-sec block mt-2">Basé sur une commission standard de {((economySettings?.commissionRateStandard || 0.12) * 100).toFixed(1)}%</span>
                         </div>
@@ -4334,6 +4384,24 @@ export default function AdminFounderThrone({
                                 </button>
                               )}
                               <button
+                                onClick={() => handleTogglePremium(u)}
+                                className={`px-2.5 py-1.5 rounded-lg text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer border ${u.isPremium ? 'bg-amber-500/10 border-amber-500/20 text-[#D4AF37] hover:bg-amber-500/20' : 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20'}`}
+                              >
+                                {u.isPremium ? "Révoquer Premium" : "Attribuer Premium"}
+                              </button>
+                              <button
+                                onClick={() => handleGrantRenfort(u)}
+                                className="px-2.5 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 rounded-lg text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer"
+                              >
+                                Accorder Renfort
+                              </button>
+                              <button
+                                onClick={() => handleValidateContract(u)}
+                                className="px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer"
+                              >
+                                Valider Contrat
+                              </button>
+                              <button
                                 onClick={() => handleDeleteUser(u)}
                                 className="px-2.5 py-1.5 bg-zinc-950/20 border border-red-500/30 text-red-500 hover:bg-red-500/10 rounded-lg text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer"
                               >
@@ -4384,7 +4452,7 @@ export default function AdminFounderThrone({
                               {viewingUser.isPremium && <span className="text-[8px] bg-amber-500/15 text-[#D4AF37] px-1.5 py-0.5 rounded">ELITE</span>}
                             </h4>
                             <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec font-mono">{viewingUser.displayName || "Aucun nom complet"} • {viewingUser.email}</p>
-                            <p className="text-[9px] text-zinc-500 dark:text-afri-text-sec font-mono">Dernier accès: {viewingUser.lastActive ? new Date(viewingUser.lastActive).toLocaleString() : "Non enregistré"}</p>
+                            <p className="text-[9px] text-zinc-500 dark:text-afri-text-sec font-mono">Dernier accès: {viewingUser.lastActive && !isNaN(new Date(viewingUser.lastActive).getTime()) ? new Date(viewingUser.lastActive).toLocaleString() : "Non enregistré"}</p>
                           </div>
                         </div>
 
@@ -4419,6 +4487,40 @@ export default function AdminFounderThrone({
                               {viewingUser.bio || "Aucune biographie fournie."}
                             </p>
                           </div>
+                        </div>
+
+                        {/* Actions souveraines directes */}
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleTogglePremium(viewingUser);
+                              setViewingUser(null);
+                            }}
+                            className={`py-2 rounded-xl text-[9px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer border ${viewingUser.isPremium ? 'bg-amber-500/15 border-amber-500/30 text-[#D4AF37]' : 'bg-purple-500/15 border-purple-500/30 text-purple-400'}`}
+                          >
+                            {viewingUser.isPremium ? "Révoquer Premium" : "Donner Premium"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleGrantRenfort(viewingUser);
+                              setViewingUser(null);
+                            }}
+                            className="py-2 bg-blue-500/15 border border-blue-500/30 text-blue-400 hover:bg-blue-500/25 rounded-xl text-[9px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer"
+                          >
+                            Renfort Express
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleValidateContract(viewingUser);
+                              setViewingUser(null);
+                            }}
+                            className="py-2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 rounded-xl text-[9px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer"
+                          >
+                            Valider Contrats
+                          </button>
                         </div>
 
                         {/* Footer Close Button */}
@@ -4823,7 +4925,7 @@ export default function AdminFounderThrone({
                                     {n.message}
                                   </p>
                                   <p className="text-[9px] text-zinc-400 font-mono">
-                                    Reçu le : {new Date(n.createdAt || 0).toLocaleString('fr-FR')}
+                                    Reçu le : {n.createdAt && !isNaN(new Date(n.createdAt).getTime()) ? new Date(n.createdAt).toLocaleString('fr-FR') : "Date inconnue"}
                                   </p>
                                 </div>
                               </div>
@@ -5339,6 +5441,125 @@ export default function AdminFounderThrone({
         title="Notification Directe (Push/Pop-up)"
       />
 
+      <QuickPremiumModal
+        isOpen={quickPremiumModalOpen}
+        onClose={() => setQuickPremiumModalOpen(false)}
+        displayUsers={displayUsers}
+        handleTogglePremium={handleTogglePremium}
+      />
+
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------------------------------------
+// QUICK PREMIUM ALLOCATION MODAL
+// ------------------------------------------------------------------------------------------------
+
+function QuickPremiumModal({ 
+  isOpen, 
+  onClose, 
+  displayUsers, 
+  handleTogglePremium 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  displayUsers: any[]; 
+  handleTogglePremium: (u: any) => void; 
+}) {
+  const [search, setSearch] = React.useState("");
+  if (!isOpen) return null;
+
+  const matchedUsers = displayUsers.filter((u: any) => {
+    const q = search.toLowerCase().trim();
+    return (
+      String(u.displayName || "").toLowerCase().includes(q) ||
+      String(u.artisticName || "").toLowerCase().includes(q) ||
+      String(u.email || "").toLowerCase().includes(q)
+    );
+  }).slice(0, 10);
+
+  return (
+    <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-md z-[150] flex items-center justify-center p-4">
+      <div className="bg-zinc-900 border border-[#D4AF37]/35 max-w-lg w-full rounded-3xl p-6 space-y-4 shadow-2xl relative text-zinc-100 flex flex-col max-h-[90vh]">
+        <div className="flex items-start justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <Crown className="w-5 h-5 text-[#D4AF37]" />
+            <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider">Attribuer Premium Elite</h3>
+          </div>
+          <button 
+            type="button"
+            onClick={onClose} 
+            className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 hover:border-[#D4AF37] flex items-center justify-center text-zinc-400 hover:text-white transition-all cursor-pointer text-sm font-bold"
+          >
+            ✕
+          </button>
+        </div>
+
+        <p className="text-[10px] font-mono text-zinc-400 shrink-0 leading-relaxed">
+          Recherchez un membre par son nom complet, son nom d'artiste ou son adresse e-mail pour lui attribuer ou lui révoquer les privilèges de l'abonnement souverain **Premium Elite**.
+        </p>
+
+        <div className="relative shrink-0">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+          <input
+            type="text"
+            placeholder="Rechercher un citoyen d'Afrique de l'Ouest..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-zinc-850 border border-zinc-750 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
+          />
+        </div>
+
+        <div className="space-y-2 overflow-y-auto flex-1 min-h-[220px] pr-1">
+          {matchedUsers.length === 0 ? (
+            <div className="text-center py-12 text-xs font-mono text-zinc-500">
+              Aucun membre trouvé pour "{search}"
+            </div>
+          ) : (
+            matchedUsers.map((u: any) => (
+              <div 
+                key={u.id || u.uid}
+                className="p-3 bg-zinc-800/40 border border-zinc-750 rounded-2xl flex items-center justify-between gap-3 text-xs"
+              >
+                <div className="min-w-0 text-left">
+                  <span className="font-sans font-bold text-white block truncate">
+                    {u.artisticName || u.displayName || "Sans nom artistique"}
+                  </span>
+                  <span className="text-[9px] text-zinc-400 font-mono block truncate">
+                    {u.email}
+                  </span>
+                  {u.isPremium && (
+                    <span className="inline-block mt-1 text-[8px] font-mono bg-amber-500/15 text-[#D4AF37] px-1.5 py-0.5 rounded font-black uppercase">
+                      💎 MEMBRE ELITE
+                    </span>
+                  )}
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleTogglePremium(u);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all cursor-pointer shrink-0 ${u.isPremium ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20' : 'bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/20'}`}
+                >
+                  {u.isPremium ? "Révoquer" : "Donner"}
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="pt-2 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 bg-zinc-800 border border-zinc-700 hover:border-[#D4AF37] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+          >
+            Fermer
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

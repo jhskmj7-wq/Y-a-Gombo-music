@@ -91,6 +91,17 @@ export default function AfrigomboWalletDashboard({
     }
   }, []);
 
+  useEffect(() => {
+    if (showDepositModal || showWithdrawModal || showScannerModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showDepositModal, showWithdrawModal, showScannerModal]);
+
   // Scanner / Transfer states
   const [scanRecipient, setScanRecipient] = useState("");
   const [scanAmount, setScanAmount] = useState("");
@@ -784,20 +795,20 @@ export default function AfrigomboWalletDashboard({
 
       </div>
 
-      {/* MODAL 1: RECHARGER / DÉPÔT MOBILE MONEY (ANDROID BOTTOM SHEET) */}
+      {/* MODAL 1: RECHARGER / DÉPÔT MOBILE MONEY (MOBILE MODAL) */}
       <AnimatePresence>
         {showDepositModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end justify-center z-50 p-0 sm:p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
             <div 
               className="absolute inset-0"
               onClick={() => { setShowDepositModal(false); playSound("click"); }}
             />
             <motion.div 
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-3xl p-5 sm:p-6 w-full max-w-none max-h-[90vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="bg-[#0A0A0A] border border-[#D4AF37]/40 rounded-3xl p-5 sm:p-6 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
             >
               {/* Drag Handle */}
               <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
@@ -980,20 +991,20 @@ export default function AfrigomboWalletDashboard({
         )}
       </AnimatePresence>
 
-      {/* MODAL 2: RETIRER / RETRAIT MOBILE MONEY (ANDROID BOTTOM SHEET) */}
+      {/* MODAL 2: RETIRER / RETRAIT MOBILE MONEY (MOBILE MODAL) */}
       <AnimatePresence>
         {showWithdrawModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end justify-center z-50 p-0 sm:p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
             <div 
               className="absolute inset-0"
               onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
             />
             <motion.div 
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-3xl p-5 sm:p-6 w-full max-w-none max-h-[90vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="bg-[#0A0A0A] border border-[#D4AF37]/40 rounded-3xl p-5 sm:p-6 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
             >
               {/* Drag Handle */}
               <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
