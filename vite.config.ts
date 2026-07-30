@@ -12,7 +12,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.ico', 'logo.png', 'sounds/*.mp3'],
+      includeAssets: ['logo.png', 'sounds/*.mp3'],
       manifest: {
         name: 'AFRIGOMBO',
         short_name: 'AFRIGOMBO',
@@ -40,9 +40,9 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3}'],
-        cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
+        cleanupOutdatedCaches: process.env.NODE_ENV === 'production',
+        skipWaiting: process.env.NODE_ENV === 'production',
+        clientsClaim: process.env.NODE_ENV === 'production',
         navigateFallback: 'index.html',
         runtimeCaching: [
           {

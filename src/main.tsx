@@ -36,17 +36,23 @@ console.log("🚀 [AFRIGOMBO] MAIN START", supportConfig.APP_VERSION);
   const lastKnownVersion = localStorage.getItem("afrigombo_app_version");
   
   if (lastKnownVersion !== CURRENT_APP_VERSION) {
-    console.warn("🔄 [AFRIGOMBO] Version mismatch detected. Purging old caches...");
-    if ('caches' in window) {
-      try {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-        console.log("✅ [AFRIGOMBO] Caches purged.");
-      } catch (e) {
-        console.error("❌ [AFRIGOMBO] Cache purge failed:", e);
-      }
+    if (import.meta.env.PROD) {
+        console.warn("🔄 [AFRIGOMBO] Version mismatch detected in PROD. Purging old caches...");
+        if ('caches' in window) {
+          try {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+            console.log("✅ [AFRIGOMBO] Caches purged.");
+          } catch (e) {
+            console.error("❌ [AFRIGOMBO] Cache purge failed:", e);
+          }
+        }
+        localStorage.setItem("afrigombo_app_version", CURRENT_APP_VERSION);
+        window.location.reload();
+    } else {
+        console.log("🔄 [AFRIGOMBO] Version mismatch detected in DEV. Please reload to update.");
+        localStorage.setItem("afrigombo_app_version", CURRENT_APP_VERSION);
     }
-    localStorage.setItem("afrigombo_app_version", CURRENT_APP_VERSION);
   }
 })();
 

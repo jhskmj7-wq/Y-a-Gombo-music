@@ -5,7 +5,7 @@ import {
   CheckCheck, Volume2, ShieldAlert, BadgeCheck, AlertCircle, Loader2,
   Search, Trash2, Copy, CornerUpLeft, X, Lock, Sparkles, Check,
   CreditCard, ShieldCheck as ShieldCheckIcon, Trophy, Target, PhoneCall, Video, MapPin,
-  Route, FileText, Bell, Radio, Ban, FileUp, MoreVertical, Play, Pause, Navigation, Plus, PhoneForwarded, PhoneIncoming, PhoneOutgoing
+  Route, FileText, Bell, Radio, Ban, FileUp, MoreVertical, Play, Pause, Navigation, Plus, PhoneForwarded, PhoneIncoming, PhoneOutgoing, Users, Settings
 } from "lucide-react";
 import { gomboDB, db } from "../firebase";
 import { collection, query, where, onSnapshot, doc, getDocs, addDoc } from "firebase/firestore";
@@ -921,12 +921,13 @@ export default function MessagesView({
         </div>
       )}
 
-      {/* WhatsApp-Style Bottom Navigation Bar (3 Essential Tabs) */}
+      {/* WhatsApp-Style Bottom Navigation Bar (4 Essential Tabs) */}
       <div className="absolute bottom-0 left-0 w-full pb-6 pt-2 bg-neutral-900 border-t border-neutral-800 flex items-center justify-around px-2 z-30 shadow-2xl">
         {[
           { id: "conversations", label: "💬 DISCUSSIONS", icon: MessageSquare, badge: conversations.length },
-          { id: "contrats", label: "📄 CONTRATS", icon: FileText },
-          { id: "appels", label: "📞 APPELS", icon: PhoneCall, badge: callLogs.length }
+          { id: "appels", label: "📞 APPELS", icon: PhoneCall, badge: callLogs.length },
+          { id: "contacts", label: "👥 CONTACTS", icon: Users },
+          { id: "parametres", label: "⚙️ RÉGLAGES", icon: Settings }
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -945,8 +946,8 @@ export default function MessagesView({
                   </span>
                 ) : null}
               </div>
-              <span className={`text-[10px] font-sans font-bold uppercase mt-1 tracking-tight ${isActive ? "text-[#D4AF37]" : "text-zinc-400"}`}>
-                {tab.label}
+              <span className={`text-[9px] font-sans font-bold uppercase mt-1 tracking-tight ${isActive ? "text-[#D4AF37]" : "text-zinc-400"}`}>
+                {tab.label.split(" ")[1]}
               </span>
               {isActive && (
                 <div className="absolute bottom-1 w-8 h-1 bg-[#D4AF37] rounded-full animate-fadeIn" />

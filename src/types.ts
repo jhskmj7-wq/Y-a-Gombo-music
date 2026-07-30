@@ -832,6 +832,61 @@ export interface SuspensionRecord {
   createdBy: string;
 }
 
+export interface UserInterest {
+  id: string; // userId
+  musicGenres: Record<string, number>; // genre -> score
+  locations: Record<string, number>; // commune -> score
+  activityTypes: Record<string, number>; // type -> score
+  instrumentInterests: string[];
+  lastUpdated: string;
+}
+
+export interface RoadmapItem {
+  id: string;
+  name: string;
+  description: string;
+  progression: number; // 0-100
+  status: "Terminé" | "En développement" | "En test" | "Prévu" | "En vote" | "Financé";
+  dueDate?: string;
+  createdAt: string;
+}
+
+export interface Poll {
+  id: string;
+  question: string;
+  options: { text: string; votes: number }[];
+  status: "Ouvert" | "Clôturé";
+  createdAt: string;
+}
+
+export interface CrowdfundingCampaign {
+  id: string;
+  title: string;
+  goal: number;
+  collected: number;
+  status: "Active" | "Financée" | "Clôturée";
+  createdAt: string;
+}
+
+export interface IdeaDraft {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  priority: "Basse" | "Moyenne" | "Haute";
+  status: "Idée" | "À étudier" | "Validée" | "En développement" | "En test" | "Publiée" | "Reportée" | "Abandonnée";
+  createdAt: string;
+}
+
+export interface Recommendation {
+  id: string;
+  type: "gombo" | "post" | "talent" | "event" | "course";
+  targetId: string;
+  score: number;
+  reason: string; // "Basé sur vos intérêts pour..."
+  createdAt: string;
+}
+
 export interface SecurityAlert {
   id?: string;
   type: "unusual_activity" | "fraud_attempt" | "multi_login" | "suspicious_payment" | "spam_detected" | "content_detected";
@@ -841,4 +896,52 @@ export interface SecurityAlert {
   status: "open" | "investigating" | "resolved";
   createdAt: string;
   resolvedAt?: string;
+}
+
+export type IdeaType = "Nouvelle fonctionnalité" | "Correction" | "Amélioration Design" | "Intelligence Artificielle" | "Monétisation" | "Sécurité" | "Performance" | "Localisation" | "Messagerie" | "Musique";
+export type IdeaStatus = "Brouillon" | "Privée" | "Publique" | "En vote" | "Financement" | "En développement" | "En test" | "Terminée" | "Reportée" | "Abandonnée";
+
+export interface Idea {
+  id: string;
+  title: string;
+  description: string;
+  type: IdeaType;
+  status: IdeaStatus;
+  author: string;
+  image?: string;
+  progress: number;
+  votes: number;
+  crowdfundingId?: string;
+  createdAt: string;
+  privateNotes?: string[];
+  checklist?: { id: string; text: string; checked: boolean }[];
+}
+
+export interface IdeaComment {
+  id: string;
+  ideaId: string;
+  userId: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface IdeaNote {
+  id: string;
+  ideaId: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface IdeaChecklistItem {
+  id: string;
+  ideaId: string;
+  text: string;
+  checked: boolean;
+}
+
+export interface IdeaHistory {
+  id: string;
+  ideaId: string;
+  action: string;
+  createdAt: string;
 }

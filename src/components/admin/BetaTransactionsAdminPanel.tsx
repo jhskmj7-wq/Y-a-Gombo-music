@@ -27,6 +27,7 @@ import { db } from "../../lib/firebase";
 import { collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, where } from "firebase/firestore";
 import { recordWalletTransaction } from "../../lib/financial";
 import { audioSynth } from "../../lib/audio";
+import { logAdminAction } from "../../lib/adminLogger";
 
 interface WalletRequest {
   id: string;
@@ -327,6 +328,8 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             newStatus: "validated",
             comment: comment || "Rechargement validé avec succès."
           });
+
+          await logAdminAction("VALIDATION_DEPOT", { uid: req.uid, userName: req.userName }, { transactionId: req.id, amount: req.montant }, { uid: currentUser?.uid, displayName: currentUser?.displayName, email: currentUser?.email });
 
           // User Notification
           await addDoc(collection(db, "notifications"), {

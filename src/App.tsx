@@ -1,5 +1,3 @@
-// TEST AFRIGOMBO - ÉCRITURE DANS APP.TSX
-import GlobalNotificationBanner from "./components/GlobalNotificationBanner";
 import React, { useState, useEffect, Suspense, lazy, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
@@ -22,8 +20,9 @@ import { gomboDB } from "./firebase";
 import { app } from "./lib/firebase";
 import { AfriGomboLogo } from "./components/AfriGomboLogo";
 import ScrollToTop from "./components/ScrollToTop";
-
 import { lazyWithRetry } from "./lib/lazyWithRetry";
+import { syncManager } from "./lib/SyncManager";
+import GlobalNotificationBanner from "./components/GlobalNotificationBanner";
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
   try {
@@ -86,7 +85,13 @@ function App() {
   const { theme } = useTheme();
   const location = useLocation();
   
-  // Global scroll reset on route change
+  useEffect(() => {
+    console.log("Build Version :", "1.0.0");
+    console.log("Sync State :", syncManager.getState());
+    console.log("Network :", navigator.onLine);
+    console.log("Firebase Ready :", !!app);
+  }, []);
+
   useEffect(() => {
     window.scrollTo(0, 0);
     const scrollableElements = document.querySelectorAll('.overflow-y-auto');
