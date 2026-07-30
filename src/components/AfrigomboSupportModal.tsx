@@ -106,41 +106,41 @@ export const AfrigomboSupportModal: React.FC<AfrigomboSupportModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-[99999] animate-fadeIn">
-      <div className="bg-[#0A0A0A] border border-[#D4AF37]/40 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col h-[80vh] max-h-[700px]">
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-[99999] animate-fadeIn">
+      <div className="bg-afri-bg-sec border border-afri-gold/40 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col h-[80vh] max-h-[700px]">
         {/* Header - Official Support Profile Card */}
-        <div className="p-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between shrink-0">
+        <div className="p-4 bg-afri-bg-sec border-b border-afri-border flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative">
               <img
                 src={SUPPORT_PROFILE.photo}
                 alt={SUPPORT_PROFILE.name}
-                className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]"
+                className="w-10 h-10 rounded-full object-cover border border-afri-gold"
                 referrerPolicy="no-referrer"
               />
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-[#0A0A0A] rounded-full"></span>
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-afri-bg-sec rounded-full"></span>
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h2 className="text-sm font-black text-white uppercase tracking-wider">{SUPPORT_PROFILE.name}</h2>
-                <span className="px-1.5 py-0.5 bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-[8px] font-mono font-bold rounded-md">
+                <h2 className="text-sm font-black text-afri-text uppercase tracking-wider">{SUPPORT_PROFILE.name}</h2>
+                <span className="px-1.5 py-0.5 bg-afri-gold/20 border border-afri-gold/40 text-afri-gold text-[8px] font-mono font-bold rounded-md">
                   {SUPPORT_PROFILE.badge}
                 </span>
               </div>
-              <p className="text-[10px] font-mono text-emerald-400">Support en ligne</p>
+              <p className="text-[10px] font-mono text-emerald-500">Support en ligne</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-xl transition cursor-pointer"
+            className="p-2 bg-afri-bg-ter hover:bg-afri-bg text-afri-text-sec hover:text-afri-text rounded-xl transition cursor-pointer border border-afri-border"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Categories Selector */}
-        <div className="p-3 bg-zinc-950 border-b border-zinc-800 space-y-1.5 shrink-0">
-          <label className="block text-[9px] font-bold text-zinc-500 uppercase font-mono tracking-wider">
+        <div className="p-3 bg-afri-bg-ter border-b border-afri-border space-y-1.5 shrink-0">
+          <label className="block text-[9px] font-bold text-afri-text-muted uppercase font-mono tracking-wider">
             Motif de votre message :
           </label>
           <div className="flex flex-wrap gap-1.5">
@@ -151,8 +151,8 @@ export const AfrigomboSupportModal: React.FC<AfrigomboSupportModalProps> = ({
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition cursor-pointer border ${
                   selectedCategory === cat 
-                    ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md" 
-                    : "bg-zinc-900 text-zinc-400 hover:text-white border-zinc-800"
+                    ? "bg-afri-gold text-[#1C1917] border-afri-gold shadow-md" 
+                    : "bg-afri-bg text-afri-text-sec hover:text-afri-text border-afri-border"
                 }`}
               >
                 {cat}
@@ -162,20 +162,20 @@ export const AfrigomboSupportModal: React.FC<AfrigomboSupportModalProps> = ({
         </div>
 
         {/* Conversation Stream */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-zinc-950 flex flex-col min-h-0">
+        <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-afri-bg-ter flex flex-col min-h-0">
           {loading ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-2">
-              <div className="w-6 h-6 animate-spin border-2 border-[#D4AF37] border-t-transparent rounded-full"></div>
-              <p className="text-[10px] font-mono text-zinc-500">Connexion sécurisée...</p>
+              <div className="w-6 h-6 animate-spin border-2 border-afri-gold border-t-transparent rounded-full"></div>
+              <p className="text-[10px] font-mono text-afri-text-muted">Connexion sécurisée...</p>
             </div>
           ) : messages.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-zinc-900 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
+              <div className="w-16 h-16 rounded-full bg-afri-bg-sec border border-afri-gold/20 flex items-center justify-center text-afri-gold">
                 <MessageSquare className="w-8 h-8" />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider">Lancer la discussion</h3>
-                <p className="text-[10px] text-zinc-500 max-w-xs mt-1.5 leading-relaxed">
+                <h3 className="text-xs font-bold text-afri-text uppercase tracking-wider">Lancer la discussion</h3>
+                <p className="text-[10px] text-afri-text-muted max-w-xs mt-1.5 leading-relaxed">
                   Notre service client répond à vos questions en temps réel. Saisissez votre message ci-dessous.
                 </p>
               </div>
@@ -189,23 +189,23 @@ export const AfrigomboSupportModal: React.FC<AfrigomboSupportModalProps> = ({
                     <div
                       className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap ${
                         isMe 
-                          ? "bg-[#D4AF37] text-black font-semibold rounded-tr-none shadow-md" 
-                          : "bg-zinc-900 text-white border border-zinc-800 rounded-tl-none"
+                          ? "bg-afri-gold text-[#1C1917] font-semibold rounded-tr-none shadow-md" 
+                          : "bg-afri-bg text-afri-text border border-afri-border rounded-tl-none"
                       }`}
                     >
                       {!isMe && (
                         <div className="flex items-center gap-1 mb-1">
-                          <span className="text-[9px] font-mono text-[#D4AF37] font-black uppercase">
+                          <span className="text-[9px] font-mono text-afri-gold font-black uppercase">
                             {msg.senderName}
                           </span>
-                          <span className="text-[7px] bg-[#D4AF37]/20 text-[#D4AF37] px-1 rounded font-mono font-bold uppercase">
+                          <span className="text-[7px] bg-afri-gold/20 text-afri-gold px-1 rounded font-mono font-bold uppercase">
                             ✔
                           </span>
                         </div>
                       )}
                       <p className="font-sans font-medium">{msg.text}</p>
                     </div>
-                    <span className="text-[8px] font-mono text-zinc-600 mt-1 px-1">
+                    <span className="text-[8px] font-mono text-afri-text-muted mt-1 px-1">
                       {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
                     </span>
                   </div>
@@ -217,20 +217,20 @@ export const AfrigomboSupportModal: React.FC<AfrigomboSupportModalProps> = ({
         </div>
 
         {/* Input Controls */}
-        <form onSubmit={handleSend} className="p-3 bg-zinc-900 border-t border-zinc-800 flex items-center gap-2 shrink-0">
+        <form onSubmit={handleSend} className="p-3 bg-afri-bg-sec border-t border-afri-border flex items-center gap-2 shrink-0">
           <input
             type="text"
             required
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             placeholder="Décrivez votre problème ici..."
-            className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:border-[#D4AF37] focus:outline-none placeholder:text-zinc-500"
+            className="flex-1 bg-afri-bg-ter border border-afri-border rounded-xl px-4 py-3 text-xs text-afri-text focus:border-afri-gold focus:outline-none placeholder:text-afri-text-muted"
             disabled={submitting || loading}
           />
           <button
             type="submit"
             disabled={submitting || loading || !messageText.trim()}
-            className="p-3 bg-[#D4AF37] hover:bg-amber-400 text-black rounded-xl transition cursor-pointer flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-md"
+            className="p-3 bg-afri-gold hover:bg-amber-400 text-[#1C1917] rounded-xl transition cursor-pointer flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-md"
           >
             <Send className="w-5 h-5 stroke-[2.5]" />
           </button>

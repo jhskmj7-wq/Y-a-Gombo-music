@@ -5,7 +5,7 @@ import { auth } from "./lib/firebase";
 import { serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { UserProfile } from "./types";
-import { checkAndProcessPremiumAutoRenewal } from "./lib/premiumSubscriptionEngine";
+import { PremiumEngine } from "./lib/premiumEngine";
 
 interface AuthContextType {
   currentUser: any | null;       
@@ -202,10 +202,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 realtimeProfile.isPro = true;
               }
               
-              // Process automatic renewal / expiration checks
-              if (realtimeProfile.isPremium && realtimeProfile.premiumExpiresAt) {
-                checkAndProcessPremiumAutoRenewal(realtimeProfile).catch(err => {
-                  console.error("Error checking auto renewal:", err);
+              // Process automatic renewal / expiration checks and synchronize Premium state
+              if (PremiumEngine.isPremium(realtimeProfile)) {
+                PremiumEngine.syncPremiumStatus(firebaseUser.uid, realtimeProfile).catch(err => {
+                  console.error("Error in PremiumEngine syncPremiumStatus:", err);
                 });
               }
 

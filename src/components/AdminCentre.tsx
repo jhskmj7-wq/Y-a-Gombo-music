@@ -2,6 +2,7 @@ import { useGeoEngine } from "../hooks/useGeoEngine";
 import { AfrigomboSupportModal } from "./AfrigomboSupportModal";
 import { NearbyPageView } from "./NearbyPageView";
 import { ErrorBoundary } from "./ErrorBoundary";
+import GomboBoostManager from "./GomboBoostManager";
 import React, { useState, useEffect, useRef, useLayoutEffect, lazy, Suspense } from "react";
 import {
   collection,
@@ -446,7 +447,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState<boolean>(false);
   const [isChangelogModalOpen, setIsChangelogModalOpen] = useState<boolean>(false);
   const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
-  const [activeBoostItem, setActiveBoostItem] = useState<{id: string, type: 'gombo' | 'candidature'} | null>(null);
+  const [activeBoostItem, setActiveBoostItem] = useState<{id: string, title?: string, type: 'gombo' | 'candidature' | 'profile'} | null>(null);
   const [isDiagnosticOpen, setIsDiagnosticOpen] = useState<boolean>(false);
   const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(false);
 
@@ -457,8 +458,24 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   useEffect(() => {
     const handleOpenDiagnostic = () => setIsDiagnosticOpen(true);
     window.addEventListener('open-firebase-diagnostic', handleOpenDiagnostic);
-    return () => window.removeEventListener('open-firebase-diagnostic', handleOpenDiagnostic);
-  }, []);
+
+    const handleTriggerProfileBoost = () => {
+      const activeUser = profile || currentUser;
+      if (activeUser) {
+        setActiveBoostItem({
+          id: activeUser.uid || activeUser.id || "my_profile",
+          title: activeUser.artistName || activeUser.displayName || "Mon Profil d'Artiste",
+          type: 'profile'
+        });
+      }
+    };
+    window.addEventListener("gombo_trigger_profile_boost", handleTriggerProfileBoost);
+
+    return () => {
+      window.removeEventListener('open-firebase-diagnostic', handleOpenDiagnostic);
+      window.removeEventListener("gombo_trigger_profile_boost", handleTriggerProfileBoost);
+    };
+  }, [profile, currentUser]);
 
   const requireGoogleAuthThen = (action: () => void) => {
     if (!currentUser) {
@@ -6341,7 +6358,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   </button>
 
                                   <button 
-                                    onClick={() => setActiveBoostItem({id: gombo.id!, type: 'gombo'})} 
+                                    onClick={() => setActiveBoostItem({id: gombo.id!, title: gombo.title, type: 'gombo'})} 
                                     className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl shadow-md flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
                                   >
                                     <Sparkles className="w-3.5 h-3.5" /> 🚀 Booster
@@ -6419,7 +6436,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               )}
 
                               {gombo.applicantIds?.includes(currentArtist.id) && gombo.status === "publie" && (
-                                <button onClick={() => setActiveBoostItem({id: gombo.id!, type: 'candidature'})} className="px-3 py-1.5 mt-2 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl shadow-md flex items-center gap-1 active:scale-95 transition-all cursor-pointer">
+                                <button onClick={() => setActiveBoostItem({id: gombo.id!, title: gombo.title, type: 'candidature'})} className="px-3 py-1.5 mt-2 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl shadow-md flex items-center gap-1 active:scale-95 transition-all cursor-pointer">
                                   <Sparkles className="w-3.5 h-3.5" /> ⚡ Booster ma candidature
                                 </button>
                               )}
@@ -10139,47 +10156,17 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         </div>
       )}
 
-      {/* Boost Modal */}
-      {activeBoostItem && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-afri-bg-sec border border-afri-gold/30 rounded-3xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden animate-slideUp">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-afri-gold/10 blur-3xl rounded-full" />
-            <div className="relative z-10 text-center space-y-6">
-              <div className="w-16 h-16 mx-auto bg-afri-gold/10 rounded-full flex items-center justify-center border border-afri-gold/30">
-                <span className="text-3xl">🚀</span>
-              </div>
-              
-              <div>
-                <h3 className="text-xl font-black text-afri-text uppercase tracking-tight mb-2">Booster {activeBoostItem.type === 'gombo' ? 'cette publication' : 'ma candidature'}</h3>
-                <p className="text-xs text-afri-text-sec">Augmentez considérablement votre visibilité et multipliez vos chances.</p>
-              </div>
-
-              <div className="space-y-3 text-left">
-                {[
-                  { duration: "24 h", price: "200 FCFA" },
-                  { duration: "3 jours", price: "500 FCFA" },
-                  { duration: "7 jours", price: "1 000 FCFA" }
-                ].map((boost, idx) => (
-                  <button key={idx} onClick={() => {
-                    alert("Redirection CinetPay en développement...");
-                    setActiveBoostItem(null);
-                  }} className="w-full flex items-center justify-between p-4 rounded-xl border border-afri-border bg-afri-bg hover:border-afri-gold/50 hover:bg-afri-gold/5 transition-all group">
-                    <span className="text-sm font-bold text-afri-text group-hover:text-afri-gold transition-colors">{boost.duration}</span>
-                    <span className="text-xs font-black text-afri-text px-3 py-1 bg-afri-bg-ter rounded-lg border border-afri-border">{boost.price}</span>
-                  </button>
-                ))}
-              </div>
-
-              <button 
-                onClick={() => setActiveBoostItem(null)}
-                className="text-[10px] font-bold text-afri-text-muted hover:text-afri-text uppercase tracking-widest mt-4"
-              >
-                Annuler
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Gombo Boost Manager Modal */}
+      <GomboBoostManager
+        isOpen={Boolean(activeBoostItem)}
+        onClose={() => setActiveBoostItem(null)}
+        activeItem={activeBoostItem}
+        currentUserProfile={profile || currentUser || {}}
+        addToTerminal={(msg) => addToTerminal(msg)}
+        onSuccess={() => {
+          // Boost successfully activated
+        }}
+      />
 
       {/* 6. Firebase Diagnostic Modal */}
       <FirebaseDiagnostic 

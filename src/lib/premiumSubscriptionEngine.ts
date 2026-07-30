@@ -94,9 +94,9 @@ export async function activatePremiumForUser(
       premiumStatus: "active",
       premiumPlan: isElite ? "elite" : "pro",
       subscriptionPlan: normalizedPlan,
-      premiumStartedAt: activatedAtIso,
-      premiumActivatedAt: activatedAtIso,
+      premiumUntil: expiresAtIso,
       premiumExpiresAt: expiresAtIso,
+      subscriptionType: isElite ? "elite" : "pro",
       commissionRate: 0.015,
       badges: updatedBadges,
       updatedAt: activatedAtIso

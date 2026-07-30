@@ -1,6 +1,8 @@
 import { db } from "../firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
+import { PremiumEngine } from "./premiumEngine";
+
 // Global in-memory cache for platform fee rate (default 2.5% during Beta)
 let currentFeeRate = 0.025;
 
@@ -76,26 +78,7 @@ export async function updatePlatformFeeRate(newRate: number): Promise<void> {
  * ELSE => 0.025 (2.5%)
  */
 export function getEffectiveCommissionRate(userData: any): number {
-  if (!userData) return 0.025;
-  
-  const isPrem = !!(
-    userData.premium === true ||
-    userData.isPremium === true ||
-    userData.status === "premium" ||
-    userData.premiumStatus === "active" ||
-    (Array.isArray(userData.badges) && userData.badges.some((b: string) => typeof b === "string" && b.includes("Premium")))
-  );
-
-  if (!isPrem) return 0.025;
-
-  if (userData.premiumExpiresAt) {
-    const expTime = new Date(userData.premiumExpiresAt).getTime();
-    if (!isNaN(expTime) && expTime <= Date.now()) {
-      return 0.025;
-    }
-  }
-
-  return 0.015;
+  return PremiumEngine.getCommissionRate(userData);
 }
 
 /**

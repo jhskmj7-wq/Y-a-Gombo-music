@@ -447,14 +447,14 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
       </AnimatePresence>
 
       {/* Header Panel */}
-      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 p-6 rounded-3xl shadow-xl">
+      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-afri-bg-sec border border-afri-border p-6 rounded-3xl shadow-xl">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center">
-            <BarChart3 className="w-6 h-6 text-[#D4AF37]" />
+          <div className="w-12 h-12 rounded-2xl bg-afri-gold/20 border border-afri-gold/40 flex items-center justify-center">
+            <BarChart3 className="w-6 h-6 text-afri-gold" />
           </div>
           <div>
-            <h2 className="text-lg font-black text-white uppercase tracking-wider font-sans">CENTRE DES SONDAGES</h2>
-            <p className="text-xs font-mono text-zinc-400">Consultez la communauté et pilotez l'évolution en temps réel</p>
+            <h2 className="text-lg font-black text-afri-text uppercase tracking-wider font-sans">CENTRE DES SONDAGES</h2>
+            <p className="text-xs font-mono text-afri-text-sec">Consultez la communauté et pilotez l'évolution en temps réel</p>
           </div>
         </div>
 
@@ -464,7 +464,7 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
             setIsCreating(!isCreating);
             try { audioSynth?.playTamTam?.(false); } catch(_) {}
           }}
-          className="px-4 py-3 bg-[#D4AF37] hover:bg-amber-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center gap-2 shadow-md active:scale-95"
+          className="px-4 py-3 bg-afri-gold hover:bg-amber-400 text-[#1C1917] rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center gap-2 shadow-md active:scale-95"
         >
           {isCreating ? (
             "Annuler"
@@ -479,8 +479,8 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
 
       {isCreating ? (
         /* Create/Edit Form */
-        <form onSubmit={handleSubmit} className="bg-zinc-900 border border-[#D4AF37]/35 rounded-3xl p-6 space-y-6 shadow-2xl">
-          <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider border-b border-zinc-800 pb-3">
+        <form onSubmit={handleSubmit} className="bg-afri-bg-sec border border-afri-gold/35 rounded-3xl p-6 space-y-6 shadow-2xl">
+          <h3 className="text-sm font-sans font-black text-afri-gold uppercase tracking-wider border-b border-afri-border pb-3">
             {editingPollId ? "📝 MODIFIER LE SONDAGE" : "➕ CRÉER UN NOUVEAU SONDAGE SOUVERAIN"}
           </h3>
 
@@ -489,91 +489,91 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
             {/* Left Col: Basics */}
             <div className="space-y-4 text-left">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Titre du sondage</label>
+                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Titre du sondage</label>
                 <input
                   type="text"
                   required
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   placeholder="Ex: Refonte du Gombo ID & Avantages"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full bg-afri-bg-ter border border-afri-border rounded-xl px-4 py-3 text-xs text-afri-text focus:outline-none focus:border-afri-gold"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Description / Contexte</label>
+                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Description / Contexte</label>
                 <textarea
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   placeholder="Expliquez brièvement l'importance de ce sondage à la communauté..."
                   rows={4}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#D4AF37] resize-none"
+                  className="w-full bg-afri-bg-ter border border-afri-border rounded-xl px-4 py-3 text-xs text-afri-text focus:outline-none focus:border-afri-gold resize-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Catégorie</label>
+                  <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Catégorie</label>
                   <select
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value as Poll["category"])}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-afri-bg-ter border border-afri-border rounded-xl px-3 py-2.5 text-xs text-afri-text focus:outline-none focus:border-afri-gold"
                   >
                     {categories.map(c => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c} className="bg-afri-bg text-afri-text">{c}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Date de fin</label>
+                  <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Date de fin</label>
                   <input
                     type="date"
                     value={formEndDate}
                     onChange={(e) => setFormEndDate(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-afri-bg-ter border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-afri-gold"
                   />
                 </div>
               </div>
 
               {/* Target Audience */}
-              <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-800 space-y-3">
-                <span className="text-[10px] font-mono font-black uppercase text-[#D4AF37] tracking-wider block">🎯 Public cible / Destinataires</span>
+              <div className="p-4 bg-afri-bg-ter rounded-2xl border border-afri-border space-y-3">
+                <span className="text-[10px] font-mono font-black uppercase text-afri-gold tracking-wider block">🎯 Public cible / Destinataires</span>
                 
                 <div className="space-y-2">
-                  <label className="text-[9px] font-mono uppercase text-zinc-500 block">Type d'utilisateur</label>
+                  <label className="text-[9px] font-mono uppercase text-afri-text-muted block">Type d'utilisateur</label>
                   <select
                     value={formAudienceType}
                     onChange={(e) => setFormAudienceType(e.target.value as Poll["audienceType"])}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-afri-bg border border-afri-border rounded-lg px-3 py-1.5 text-xs text-afri-text focus:outline-none focus:border-afri-gold"
                   >
-                    <option value="all">Tous les utilisateurs</option>
-                    <option value="premium">Premium Elite uniquement</option>
-                    <option value="musician">Musiciens uniquement</option>
-                    <option value="promoter">Promoteurs uniquement</option>
-                    <option value="admin">Administrateurs uniquement</option>
+                    <option value="all" className="bg-afri-bg text-afri-text">Tous les utilisateurs</option>
+                    <option value="premium" className="bg-afri-bg text-afri-text">Premium Elite uniquement</option>
+                    <option value="musician" className="bg-afri-bg text-afri-text">Musiciens uniquement</option>
+                    <option value="promoter" className="bg-afri-bg text-afri-text">Promoteurs uniquement</option>
+                    <option value="admin" className="bg-afri-bg text-afri-text">Administrateurs uniquement</option>
                   </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <label className="text-[9px] font-mono uppercase text-zinc-500 block">Ville</label>
+                    <label className="text-[9px] font-mono uppercase text-afri-text-muted block">Ville</label>
                     <input
                       type="text"
                       value={formAudienceCity}
                       onChange={(e) => setFormAudienceCity(e.target.value)}
                       placeholder="Ex: Abidjan (ou Toutes)"
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                      className="w-full bg-afri-bg border border-afri-border rounded-lg px-3 py-1.5 text-xs text-afri-text focus:outline-none focus:border-afri-gold"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[9px] font-mono uppercase text-zinc-500 block">Commune</label>
+                    <label className="text-[9px] font-mono uppercase text-afri-text-muted block">Commune</label>
                     <input
                       type="text"
                       value={formAudienceCommune}
                       onChange={(e) => setFormAudienceCommune(e.target.value)}
                       placeholder="Ex: Cocody (ou Toutes)"
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                      className="w-full bg-afri-bg border border-afri-border rounded-lg px-3 py-1.5 text-xs text-afri-text focus:outline-none focus:border-afri-gold"
                     />
                   </div>
                 </div>
@@ -583,7 +583,7 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
             {/* Right Col: Question details & Options */}
             <div className="space-y-4 text-left">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Type de question</label>
+                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Type de question</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {questionTypes.map((t) => (
                     <button
@@ -597,8 +597,8 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                       }}
                       className={`px-3 py-2.5 rounded-xl text-xs font-bold text-left transition cursor-pointer border ${
                         formQuestionType === t.key
-                          ? "bg-[#D4AF37]/15 text-[#D4AF37] border-[#D4AF37]"
-                          : "bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-700"
+                          ? "bg-afri-gold/15 text-afri-gold border-afri-gold"
+                          : "bg-afri-bg-ter text-afri-text-sec border-afri-border hover:border-afri-gold/50"
                       }`}
                     >
                       {t.label}
@@ -608,26 +608,26 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Intitulé de la question</label>
+                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Intitulé de la question</label>
                 <input
                   type="text"
                   required
                   value={formQuestionTitle}
                   onChange={(e) => setFormQuestionTitle(e.target.value)}
                   placeholder="Ex: Êtes-vous favorable au nouveau badge de confiance ?"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full bg-afri-bg-ter border border-afri-border rounded-xl px-4 py-3 text-xs text-afri-text focus:outline-none focus:border-afri-gold"
                 />
               </div>
 
               {/* Dynamic choices configuration */}
               {(formQuestionType === "single" || formQuestionType === "multiple") && (
-                <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-800 space-y-3">
+                <div className="p-4 bg-afri-bg-ter rounded-2xl border border-afri-border space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-black uppercase text-[#D4AF37] tracking-wider block">Options de réponses</span>
+                    <span className="text-[10px] font-mono font-black uppercase text-afri-gold tracking-wider block">Options de réponses</span>
                     <button
                       type="button"
                       onClick={addFormChoice}
-                      className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-[#D4AF37] rounded-lg text-[9px] font-bold uppercase transition"
+                      className="px-2.5 py-1 bg-afri-bg hover:bg-afri-bg-sec text-afri-gold rounded-lg text-[9px] font-bold uppercase transition border border-afri-border"
                     >
                       + Ajouter option
                     </button>
@@ -636,23 +636,23 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                   <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
                     {formChoices.map((choice, index) => (
                       <div key={index} className="flex items-center gap-2 animate-fadeIn">
-                        <span className="text-[10px] font-mono text-zinc-500 font-bold w-4">#{index + 1}</span>
+                        <span className="text-[10px] font-mono text-afri-text-muted font-bold w-4">#{index + 1}</span>
                         <input
                           type="text"
                           required
                           value={choice}
                           onChange={(e) => handleChoiceTextChange(index, e.target.value)}
                           placeholder={`Option ${index + 1}`}
-                          className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                          className="flex-1 bg-afri-bg border border-afri-border rounded-lg px-3 py-1.5 text-xs text-afri-text focus:outline-none focus:border-afri-gold"
                         />
                         {formChoices.length > 2 && (
-                          <button
-                            type="button"
-                            onClick={() => removeFormChoice(index)}
-                            className="p-1.5 hover:bg-red-500/10 text-red-400 rounded transition cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                           <button
+                             type="button"
+                             onClick={() => removeFormChoice(index)}
+                             className="p-1.5 hover:bg-red-500/10 text-red-400 rounded transition cursor-pointer"
+                           >
+                             <Trash2 className="w-4 h-4" />
+                           </button>
                         )}
                       </div>
                     ))}
@@ -660,14 +660,14 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
 
                   {formQuestionType === "multiple" && (
                     <div className="space-y-1">
-                      <label className="text-[9px] font-mono uppercase text-zinc-500">Nombre maximum de choix autorisés</label>
+                      <label className="text-[9px] font-mono uppercase text-afri-text-muted">Nombre maximum de choix autorisés</label>
                       <input
                         type="number"
                         min={1}
                         max={formChoices.length}
                         value={formMaxChoices}
                         onChange={(e) => setFormMaxChoices(Number(e.target.value))}
-                        className="w-16 bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none"
+                        className="w-16 bg-afri-bg border border-afri-border rounded-lg px-2.5 py-1 text-xs text-afri-text focus:outline-none"
                       />
                     </div>
                   )}
@@ -677,21 +677,21 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
           </div>
 
           {/* Form Actions */}
-          <div className="border-t border-zinc-800 pt-4 flex justify-end gap-3">
+          <div className="border-t border-afri-border pt-4 flex justify-end gap-3">
             <button
               type="button"
               onClick={() => {
                 setIsCreating(false);
                 setEditingPollId(null);
               }}
-              className="px-4 py-2 bg-zinc-950 border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
+              className="px-4 py-2 bg-afri-bg border border-afri-border hover:bg-afri-bg-ter text-afri-text-sec hover:text-afri-text rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
             >
               Annuler
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer disabled:opacity-40 flex items-center gap-1 shadow-md active:scale-95"
+              className="px-6 py-2.5 bg-afri-gold hover:bg-amber-400 text-[#1C1917] rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer disabled:opacity-40 flex items-center gap-1 shadow-md active:scale-95"
             >
               {submitting ? "Publication..." : (editingPollId ? "Sauvegarder" : "Publier le sondage 🚀")}
             </button>
@@ -702,16 +702,16 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
           {/* Left Column: Poll List (5 cols) */}
-          <div className="lg:col-span-5 bg-zinc-900 border border-zinc-800 rounded-3xl p-4 space-y-4 h-[650px] overflow-y-auto flex flex-col">
+          <div className="lg:col-span-5 bg-afri-bg-sec border border-afri-border rounded-3xl p-4 space-y-4 h-[650px] overflow-y-auto flex flex-col">
             <div className="px-1 shrink-0">
-              <h3 className="text-xs font-mono font-black text-zinc-400 uppercase tracking-widest">
+              <h3 className="text-xs font-mono font-black text-afri-text-muted uppercase tracking-widest">
                 Sondages créés ({polls.length})
               </h3>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
               {polls.length === 0 ? (
-                <div className="text-center py-24 text-zinc-500 text-xs font-mono">Aucun sondage trouvé.</div>
+                <div className="text-center py-24 text-afri-text-muted text-xs font-mono">Aucun sondage trouvé.</div>
               ) : (
                 polls.map(p => {
                   const isSelected = selectedPoll?.id === p.id;
@@ -727,32 +727,32 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                       }}
                       className={`p-4 rounded-2xl border transition cursor-pointer space-y-3 relative text-left ${
                         isSelected 
-                          ? "bg-zinc-800 border-[#D4AF37] shadow-lg" 
-                          : "bg-zinc-950/60 border-zinc-800/80 hover:border-zinc-700"
+                          ? "bg-afri-gold/10 border-afri-gold shadow-lg" 
+                          : "bg-afri-bg-ter/60 border-afri-border/80 hover:border-afri-gold/50"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
-                          isArchived ? "bg-zinc-800 text-zinc-500" :
+                          isArchived ? "bg-afri-bg text-afri-text-muted" :
                           isClosed ? "bg-red-500/10 text-red-400 border border-red-500/20" :
                           "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                         }`}>
                           {isArchived ? "Archivé" : isClosed ? "Clôturé" : "Actif 🟢"}
                         </span>
                         
-                        <span className="px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 text-[#D4AF37] text-[8px] font-mono font-black uppercase rounded">
+                        <span className="px-1.5 py-0.5 bg-afri-bg border border-afri-border text-afri-gold text-[8px] font-mono font-black uppercase rounded">
                           {p.category}
                         </span>
                       </div>
 
                       <div className="space-y-1">
-                        <h4 className="text-xs font-black text-white uppercase line-clamp-1">{p.title}</h4>
-                        <p className="text-[10px] text-zinc-400 font-mono line-clamp-2">{p.description}</p>
+                        <h4 className="text-xs font-black text-afri-text uppercase line-clamp-1">{p.title}</h4>
+                        <p className="text-[10px] text-afri-text-sec font-mono line-clamp-2">{p.description}</p>
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-zinc-800/60 pt-2 text-[8px] font-mono text-zinc-500">
+                      <div className="flex items-center justify-between border-t border-afri-border/60 pt-2 text-[8px] font-mono text-afri-text-muted">
                         <span>Finit le : {p.endDate}</span>
-                        <span className="text-[#D4AF37] font-bold">Type : {p.questionType.toUpperCase()}</span>
+                        <span className="text-afri-gold font-bold">Type : {p.questionType.toUpperCase()}</span>
                       </div>
                     </div>
                   );
@@ -762,47 +762,47 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
           </div>
 
           {/* Right Column: Live Statistics & Action Panel (7 cols) */}
-          <div className="lg:col-span-7 bg-zinc-900 border border-zinc-800 rounded-3xl p-5 min-h-[650px] shadow-xl flex flex-col justify-between">
+          <div className="lg:col-span-7 bg-afri-bg-sec border border-afri-border rounded-3xl p-5 min-h-[650px] shadow-xl flex flex-col justify-between">
             {selectedPoll ? (
               <div className="space-y-6 text-left flex-1">
                 
                 {/* Selected Poll Meta */}
-                <div className="border-b border-zinc-800 pb-4 space-y-2">
+                <div className="border-b border-afri-border pb-4 space-y-2">
                   <div className="flex flex-wrap gap-2 items-center justify-between">
-                    <span className="px-2.5 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] text-[9px] font-mono font-black uppercase rounded-md border border-[#D4AF37]/20">
+                    <span className="px-2.5 py-0.5 bg-afri-gold/10 text-afri-gold text-[9px] font-mono font-black uppercase rounded-md border border-afri-gold/20">
                       {selectedPoll.category}
                     </span>
-                    <span className="text-[9px] font-mono text-zinc-500">
+                    <span className="text-[9px] font-mono text-afri-text-muted">
                       Publié le {new Date(selectedPoll.createdAt).toLocaleDateString('fr-FR')}
                     </span>
                   </div>
 
-                  <h3 className="text-sm font-black text-white uppercase tracking-wider">{selectedPoll.title}</h3>
-                  <p className="text-xs text-zinc-400 leading-relaxed font-sans">{selectedPoll.description}</p>
+                  <h3 className="text-sm font-black text-afri-text uppercase tracking-wider">{selectedPoll.title}</h3>
+                  <p className="text-xs text-afri-text-sec leading-relaxed font-sans">{selectedPoll.description}</p>
                   
                   {/* Target Audience recap */}
-                  <div className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80 text-[10px] font-mono text-zinc-400 flex items-center justify-between gap-4">
-                    <span>🎯 Public : <strong className="text-white uppercase">{selectedPoll.audienceType}</strong></span>
-                    <span>📍 Localité : <strong className="text-[#D4AF37]">{selectedPoll.audienceCity || "Toutes"} / {selectedPoll.audienceCommune || "Toutes"}</strong></span>
+                  <div className="bg-afri-bg-ter p-2.5 rounded-xl border border-afri-border/80 text-[10px] font-mono text-afri-text-sec flex items-center justify-between gap-4">
+                    <span>🎯 Public : <strong className="text-afri-text uppercase">{selectedPoll.audienceType}</strong></span>
+                    <span>📍 Localité : <strong className="text-afri-gold">{selectedPoll.audienceCity || "Toutes"} / {selectedPoll.audienceCommune || "Toutes"}</strong></span>
                   </div>
                 </div>
 
                 {/* Question Section */}
                 <div className="space-y-4">
-                  <div className="bg-zinc-950 p-4 rounded-2xl border border-[#D4AF37]/20 relative">
-                    <span className="absolute -top-2.5 left-4 px-2 py-0.5 bg-zinc-900 border border-zinc-800 rounded text-[8px] font-mono text-[#D4AF37] font-black uppercase">
+                  <div className="bg-afri-bg-ter p-4 rounded-2xl border border-afri-gold/20 relative">
+                    <span className="absolute -top-2.5 left-4 px-2 py-0.5 bg-afri-bg border border-afri-border rounded text-[8px] font-mono text-afri-gold font-black uppercase">
                       Question du sondage
                     </span>
-                    <h4 className="text-xs font-bold text-white uppercase mt-1">
+                    <h4 className="text-xs font-bold text-afri-text uppercase mt-1">
                       {selectedPoll.questionTitle}
                     </h4>
                   </div>
 
                   {/* Results Visualisation */}
-                  <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-800 space-y-4">
-                    <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2">
-                      <span className="text-[10px] font-mono font-black uppercase text-[#D4AF37] tracking-wider block">📊 Résultats en temps réel</span>
-                      <span className="text-[10px] font-mono text-zinc-400 font-bold">
+                  <div className="p-4 bg-afri-bg-ter rounded-2xl border border-afri-border space-y-4">
+                    <div className="flex items-center justify-between border-b border-afri-border/60 pb-2">
+                      <span className="text-[10px] font-mono font-black uppercase text-afri-gold tracking-wider block">📊 Résultats en temps réel</span>
+                      <span className="text-[10px] font-mono text-afri-text-muted font-bold">
                         {totalVotes} participants
                       </span>
                     </div>
@@ -810,15 +810,15 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                     {/* Conditional Rendering of Results based on Type */}
                     {selectedPoll.questionType === "satisfaction" ? (
                       <div className="space-y-3">
-                        <div className="text-center py-4 bg-zinc-900/60 rounded-xl border border-zinc-800">
-                          <span className="text-3xl font-mono font-black text-[#D4AF37]">{averageRating}</span>
-                          <span className="text-xs text-zinc-500 font-mono block">Moyenne / 5.0 Étoiles</span>
+                        <div className="text-center py-4 bg-afri-bg-sec/60 rounded-xl border border-afri-border">
+                          <span className="text-3xl font-mono font-black text-afri-gold">{averageRating}</span>
+                          <span className="text-xs text-afri-text-muted font-mono block">Moyenne / 5.0 Étoiles</span>
                           
                           <div className="flex items-center justify-center gap-1 mt-2">
                             {[1, 2, 3, 4, 5].map(star => (
                               <Star
                                 key={star}
-                                className={`w-5 h-5 ${star <= Math.round(Number(averageRating)) ? "fill-[#D4AF37] text-[#D4AF37]" : "text-zinc-700"}`}
+                                className={`w-5 h-5 ${star <= Math.round(Number(averageRating)) ? "fill-afri-gold text-afri-gold" : "text-afri-text-muted/40"}`}
                               />
                             ))}
                           </div>
@@ -830,12 +830,12 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                             const pct = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(0) : "0";
                             return (
                               <div key={stars} className="flex items-center gap-2 text-[10px] font-mono">
-                                <span className="w-8 flex items-center gap-0.5 text-[#D4AF37] font-bold">{stars} ★</span>
-                                <div className="flex-1 h-2 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden">
-                                  <div className="h-full bg-[#D4AF37]" style={{ width: `${pct}%` }} />
+                                <span className="w-8 flex items-center gap-0.5 text-afri-gold font-bold">{stars} ★</span>
+                                <div className="flex-1 h-2 bg-afri-bg border border-afri-border rounded-full overflow-hidden">
+                                  <div className="h-full bg-afri-gold" style={{ width: `${pct}%` }} />
                                 </div>
-                                <span className="w-8 text-right font-bold text-white">{pct}%</span>
-                                <span className="text-zinc-500 font-mono w-6 text-right">({count})</span>
+                                <span className="w-8 text-right font-bold text-afri-text">{pct}%</span>
+                                <span className="text-afri-text-muted font-mono w-6 text-right">({count})</span>
                               </div>
                             );
                           })}
@@ -844,15 +844,15 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                     ) : selectedPoll.questionType === "text" ? (
                       <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
                         {responses.filter(r => r.comment && r.comment.trim()).length === 0 ? (
-                          <div className="text-center py-8 text-zinc-600 text-xs font-mono">Aucun commentaire textuel déposé pour l'instant.</div>
+                          <div className="text-center py-8 text-afri-text-muted text-xs font-mono">Aucun commentaire textuel déposé pour l'instant.</div>
                         ) : (
                           responses.filter(r => r.comment && r.comment.trim()).map(r => (
-                            <div key={r.id} className="p-3 bg-zinc-900 rounded-xl border border-zinc-800 space-y-1">
-                              <div className="flex justify-between items-center text-[8px] font-mono text-[#D4AF37] font-black">
+                            <div key={r.id} className="p-3 bg-afri-bg rounded-xl border border-afri-border space-y-1">
+                              <div className="flex justify-between items-center text-[8px] font-mono text-afri-gold font-black">
                                 <span className="uppercase">{r.userName || "Artiste Gombo"}</span>
-                                <span className="text-zinc-600">{new Date(r.createdAt).toLocaleDateString('fr-FR')}</span>
+                                <span className="text-afri-text-muted">{new Date(r.createdAt).toLocaleDateString('fr-FR')}</span>
                               </div>
-                              <p className="text-[11px] text-zinc-300 font-sans">{r.comment}</p>
+                              <p className="text-[11px] text-afri-text-sec font-sans">{r.comment}</p>
                             </div>
                           ))
                         )}
@@ -866,14 +866,14 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                           return (
                             <div key={c.id} className="space-y-1">
                               <div className="flex justify-between text-[10px] font-mono">
-                                <span className="text-white font-bold">{c.text}</span>
+                                <span className="text-afri-text font-bold">{c.text}</span>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[#D4AF37] font-black">{pct}%</span>
-                                  <span className="text-zinc-500 text-[9px]">({count} votes)</span>
+                                  <span className="text-afri-gold font-black">{pct}%</span>
+                                  <span className="text-afri-text-muted text-[9px]">({count} votes)</span>
                                 </div>
                               </div>
-                              <div className="w-full h-2.5 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-500" style={{ width: `${pct}%` }} />
+                              <div className="w-full h-2.5 bg-afri-bg border border-afri-border rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-afri-gold to-amber-500" style={{ width: `${pct}%` }} />
                               </div>
                             </div>
                           );
@@ -887,14 +887,14 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                             return (
                               <div key={ans} className="space-y-1">
                                 <div className="flex justify-between text-[10px] font-mono">
-                                  <span className="text-white font-bold">{ans}</span>
+                                  <span className="text-afri-text font-bold">{ans}</span>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-[#D4AF37] font-black">{pct}%</span>
-                                    <span className="text-zinc-500 text-[9px]">({count} votes)</span>
+                                    <span className="text-afri-gold font-black">{pct}%</span>
+                                    <span className="text-afri-text-muted text-[9px]">({count} votes)</span>
                                   </div>
                                 </div>
-                                <div className="w-full h-2.5 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden">
-                                  <div className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-500" style={{ width: `${pct}%` }} />
+                                <div className="w-full h-2.5 bg-afri-bg border border-afri-border rounded-full overflow-hidden">
+                                  <div className="h-full bg-gradient-to-r from-afri-gold to-amber-500" style={{ width: `${pct}%` }} />
                                 </div>
                               </div>
                             );
@@ -906,8 +906,8 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                 </div>
 
                 {/* Operations Actions Footer */}
-                <div className="border-t border-zinc-800 pt-5 space-y-3 shrink-0">
-                  <span className="text-[9px] font-mono font-black text-zinc-500 uppercase tracking-widest block">ADMINISTRATION ACTIONS</span>
+                <div className="border-t border-afri-border pt-5 space-y-3 shrink-0">
+                  <span className="text-[9px] font-mono font-black text-afri-text-muted uppercase tracking-widest block">ADMINISTRATION ACTIONS</span>
                   
                   <div className="flex flex-wrap gap-2">
                     
@@ -935,7 +935,7 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                     {selectedPoll.status !== "archived" && (
                       <button
                         onClick={() => handleUpdateStatus(selectedPoll.id, "archived")}
-                        className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 rounded-xl text-[10px] font-bold uppercase transition cursor-pointer flex items-center gap-1.5"
+                        className="px-3 py-2 bg-afri-bg border border-afri-border hover:bg-afri-bg-ter text-afri-text-sec rounded-xl text-[10px] font-bold uppercase transition cursor-pointer flex items-center gap-1.5"
                       >
                         <Archive className="w-3.5 h-3.5" />
                         <span>Archiver</span>
@@ -946,7 +946,7 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                     {selectedPoll.status !== "archived" && (
                       <button
                         onClick={() => handleStartEdit(selectedPoll)}
-                        className="px-3 py-2 bg-zinc-950 border border-zinc-800 hover:bg-zinc-900 text-amber-400 rounded-xl text-[10px] font-bold uppercase transition cursor-pointer flex items-center gap-1.5"
+                        className="px-3 py-2 bg-afri-bg border border-afri-border hover:bg-afri-bg-ter text-amber-400 rounded-xl text-[10px] font-bold uppercase transition cursor-pointer flex items-center gap-1.5"
                       >
                         <Edit className="w-3.5 h-3.5" />
                         <span>Modifier</span>
@@ -956,7 +956,7 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                     {/* Duplicate */}
                     <button
                       onClick={() => handleDuplicate(selectedPoll)}
-                      className="px-3 py-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/20 rounded-xl text-[10px] font-bold uppercase transition cursor-pointer flex items-center gap-1.5"
+                      className="px-3 py-2 bg-afri-gold/10 hover:bg-afri-gold/20 text-afri-gold border border-afri-gold/20 rounded-xl text-[10px] font-bold uppercase transition cursor-pointer flex items-center gap-1.5"
                     >
                       <Copy className="w-3.5 h-3.5" />
                       <span>Dupliquer</span>
@@ -976,8 +976,8 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
 
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 text-xs font-mono py-24 space-y-2">
-                <BarChart3 className="w-8 h-8 text-[#D4AF37]/40" />
+              <div className="flex-1 flex flex-col items-center justify-center text-afri-text-muted text-xs font-mono py-24 space-y-2">
+                <BarChart3 className="w-8 h-8 text-afri-gold/40" />
                 <p>Sélectionnez un sondage pour examiner les votes de l'Empire</p>
               </div>
             )}

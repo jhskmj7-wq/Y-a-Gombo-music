@@ -12,6 +12,7 @@ import { UserProfile, SocialPost } from "../types";
 import GomboSecureModal from "./GomboSecureModal";
 import { calculatePlatformFee, calculatePublicationFinancials, recordWalletTransaction, getEffectiveCommissionRate } from "../lib/financial";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
+import { PremiumEngine } from "../lib/premiumEngine";
 
 const ABIDJAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", "Abobo", 
@@ -77,9 +78,9 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const [budget, setBudget] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Live financial calculation for publication
-  const isUserPremium = !!(currentUserProfile?.isPremium || currentUserProfile?.isVip || currentUserProfile?.isPro || currentUserProfile?.badges?.includes("💎 Adhérent Premium") || currentUserProfile?.gomboId?.certifie);
-  const feeRate = isUserPremium ? 0.015 : 0.025;
+  // Live financial calculation for publication using PremiumEngine
+  const isUserPremium = PremiumEngine.isPremium(currentUserProfile);
+  const feeRate = PremiumEngine.getCommissionRate(currentUserProfile);
   const cachetVal = budget ? Number(budget) : 0;
   const financials = calculatePublicationFinancials(cachetVal, feeRate);
   

@@ -261,35 +261,35 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         onClick={() => handleOpenPoll(displayPoll)}
-        className="afri-card border border-[#D4AF37]/50 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 p-4 rounded-3xl flex items-center justify-between gap-4 cursor-pointer hover:border-[#D4AF37] hover:scale-[1.01] transition-all duration-300 shadow-[0_4px_20px_rgba(212,175,55,0.06)] group relative overflow-hidden text-left"
+        className="afri-card border border-afri-border bg-afri-bg-sec p-4 rounded-3xl flex items-center justify-between gap-4 cursor-pointer hover:border-afri-gold hover:scale-[1.01] transition-all duration-300 shadow-[0_4px_20px_rgba(212,175,55,0.06)] group relative overflow-hidden text-left"
       >
-        <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/2 rounded-full blur-xl pointer-events-none group-hover:bg-[#D4AF37]/5 transition-all duration-300" />
+        <div className="absolute top-0 right-0 w-24 h-24 bg-afri-gold/2 rounded-full blur-xl pointer-events-none group-hover:bg-afri-gold/5 transition-all duration-300" />
         
         <div className="flex items-center gap-3.5 flex-1 min-w-0">
-          <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-            <BarChart3 className="w-5 h-5 text-[#D4AF37]" />
+          <div className="w-10 h-10 rounded-2xl bg-afri-gold/10 border border-afri-gold/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <BarChart3 className="w-5 h-5 text-afri-gold" />
           </div>
           <div className="min-w-0 space-y-0.5">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[8px] font-mono font-black uppercase tracking-widest text-[#D4AF37] px-1.5 py-0.5 bg-[#D4AF37]/10 rounded border border-[#D4AF37]/20">
+              <span className="text-[8px] font-mono font-black uppercase tracking-widest text-afri-gold px-1.5 py-0.5 bg-afri-gold/10 rounded border border-afri-gold/20">
                 📊 SONDAGE OFFICIEL
               </span>
               {hasVotedCurrent && (
-                <span className="text-[8px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-1.5 rounded-full border border-emerald-500/20">
+                <span className="text-[8px] font-mono font-bold text-emerald-500 bg-emerald-500/10 px-1.5 rounded-full border border-emerald-500/20">
                   Voté ✓
                 </span>
               )}
             </div>
-            <h4 className="text-xs font-black text-white uppercase truncate font-sans">
+            <h4 className="text-xs font-black text-afri-text uppercase truncate font-sans">
               {displayPoll.title}
             </h4>
-            <p className="text-[10px] text-zinc-400 line-clamp-1">
+            <p className="text-[10px] text-afri-text-sec line-clamp-1">
               {hasVotedCurrent ? "Consulter l'avis de l'Empire en temps réel" : "Le Fondateur sollicite votre avis impérial."}
             </p>
           </div>
         </div>
 
-        <span className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-wider shrink-0 bg-zinc-900 px-3 py-2 rounded-xl border border-zinc-800 hover:bg-[#D4AF37] hover:text-black transition-all">
+        <span className="text-[10px] font-mono font-black text-afri-gold uppercase tracking-wider shrink-0 bg-afri-bg px-3 py-2 rounded-xl border border-afri-border hover:bg-afri-gold hover:text-black transition-all">
           {hasVotedCurrent ? "Résultats →" : "Voter →"}
         </span>
       </motion.div>
@@ -302,12 +302,12 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="w-full max-w-lg bg-zinc-950 border border-[#D4AF37]/40 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col my-8"
+              className="w-full max-w-lg bg-afri-bg-sec border border-afri-gold/40 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col my-8"
             >
               {/* Close Button */}
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="absolute top-4 right-4 p-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-full transition cursor-pointer"
+                className="absolute top-4 right-4 p-2 bg-afri-bg hover:bg-afri-bg-action text-afri-text-sec hover:text-afri-text rounded-full transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -316,14 +316,14 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
               <div className="p-6 space-y-6 text-left">
                 
                 {/* Header */}
-                <div className="space-y-2 pr-8 border-b border-zinc-800 pb-4">
-                  <span className="px-2.5 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-mono font-black uppercase rounded border border-[#D4AF37]/20">
+                <div className="space-y-2 pr-8 border-b border-afri-border pb-4">
+                  <span className="px-2.5 py-0.5 bg-afri-gold/10 text-afri-gold text-[8px] font-mono font-black uppercase rounded border border-afri-gold/20">
                     Sondage Officiel : {selectedPoll.category}
                   </span>
-                  <h3 className="text-sm font-black text-white uppercase font-sans tracking-wide">
+                  <h3 className="text-sm font-black text-afri-text uppercase font-sans tracking-wide">
                     {selectedPoll.title}
                   </h3>
-                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">
+                  <p className="text-xs text-afri-text-sec font-sans leading-relaxed">
                     {selectedPoll.description}
                   </p>
                 </div>
@@ -336,12 +336,12 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                       <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
                       <div className="text-left">
                         <span className="text-[10px] font-mono font-black text-emerald-400 uppercase tracking-widest block">PARTICIPATION ENREGISTRÉE</span>
-                        <p className="text-[11px] text-zinc-300 font-sans mt-0.5">Merci pour votre participation impériale ! Votre voix compte.</p>
+                        <p className="text-[11px] text-afri-text-sec font-sans mt-0.5">Merci pour votre participation impériale ! Votre voix compte.</p>
                       </div>
                     </div>
 
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 border-b border-zinc-900 pb-1.5">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-afri-text-muted border-b border-afri-border pb-1.5">
                         <span className="uppercase">RÉSULTATS DE LA COMMUNAUTÉ</span>
                         <span className="font-bold">{totalVotes} réponses</span>
                       </div>
@@ -349,15 +349,15 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                       {/* Display calculations */}
                       {selectedPoll.questionType === "satisfaction" ? (
                         <div className="space-y-3">
-                          <div className="text-center py-4 bg-zinc-900 rounded-2xl border border-zinc-800">
-                            <span className="text-3xl font-mono font-black text-[#D4AF37]">{averageRating}</span>
-                            <span className="text-[10px] text-zinc-400 font-mono block">Moyenne de satisfaction</span>
+                          <div className="text-center py-4 bg-afri-bg-ter rounded-2xl border border-afri-border">
+                            <span className="text-3xl font-mono font-black text-afri-gold">{averageRating}</span>
+                            <span className="text-[10px] text-afri-text-sec font-mono block">Moyenne de satisfaction</span>
                             
                             <div className="flex items-center justify-center gap-1 mt-1.5">
                               {[1, 2, 3, 4, 5].map(star => (
                                 <Star
                                   key={star}
-                                  className={`w-5 h-5 ${star <= Math.round(Number(averageRating)) ? "fill-[#D4AF37] text-[#D4AF37]" : "text-zinc-800"}`}
+                                  className={`w-5 h-5 ${star <= Math.round(Number(averageRating)) ? "fill-afri-gold text-afri-gold" : "text-afri-text-muted"}`}
                                 />
                               ))}
                             </div>
@@ -368,12 +368,12 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                               const count = ratingsCount[stars] || 0;
                               const pct = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(0) : "0";
                               return (
-                                <div key={stars} className="flex items-center gap-2 text-[10px] font-mono text-zinc-400">
-                                  <span className="w-8 text-[#D4AF37] font-bold">{stars} ★</span>
-                                  <div className="flex-1 h-1.5 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-[#D4AF37]" style={{ width: `${pct}%` }} />
+                                <div key={stars} className="flex items-center gap-2 text-[10px] font-mono text-afri-text-sec">
+                                  <span className="w-8 text-afri-gold font-bold">{stars} ★</span>
+                                  <div className="flex-1 h-1.5 bg-afri-bg border border-afri-border rounded-full overflow-hidden">
+                                    <div className="h-full bg-afri-gold" style={{ width: `${pct}%` }} />
                                   </div>
-                                  <span className="w-8 text-right font-bold text-white">{pct}%</span>
+                                  <span className="w-8 text-right font-bold text-afri-text">{pct}%</span>
                                 </div>
                               );
                             })}
@@ -382,12 +382,12 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                       ) : selectedPoll.questionType === "text" ? (
                         <div className="space-y-2.5 max-h-[180px] overflow-y-auto pr-1">
                           {statsList.filter(r => r.comment && r.comment.trim()).length === 0 ? (
-                            <div className="text-center py-8 text-zinc-600 text-xs font-mono">Aucun commentaire déposé pour l'instant.</div>
+                            <div className="text-center py-8 text-afri-text-muted text-xs font-mono">Aucun commentaire déposé pour l'instant.</div>
                           ) : (
                             statsList.filter(r => r.comment && r.comment.trim()).map((r, idx) => (
-                              <div key={idx} className="p-3 bg-zinc-900/60 rounded-xl border border-zinc-800 space-y-1">
-                                <span className="text-[8px] font-mono text-[#D4AF37] block font-black uppercase">{r.userName || "Artiste Gombo"}</span>
-                                <p className="text-[10px] text-zinc-300 leading-normal">{r.comment}</p>
+                              <div key={idx} className="p-3 bg-afri-bg-ter/60 rounded-xl border border-afri-border space-y-1">
+                                <span className="text-[8px] font-mono text-afri-gold block font-black uppercase">{r.userName || "Artiste Gombo"}</span>
+                                <p className="text-[10px] text-afri-text-sec leading-normal">{r.comment}</p>
                               </div>
                             ))
                           )}
@@ -400,12 +400,12 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                             const pct = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(0) : "0";
                             return (
                               <div key={c.id} className="space-y-1">
-                                <div className="flex justify-between text-[10px] font-mono text-zinc-300">
+                                <div className="flex justify-between text-[10px] font-mono text-afri-text">
                                   <span>{c.text}</span>
-                                  <span className="text-[#D4AF37] font-black">{pct}% <span className="text-[8px] text-zinc-500">({count})</span></span>
+                                  <span className="text-afri-gold font-black">{pct}% <span className="text-[8px] text-afri-text-muted">({count})</span></span>
                                 </div>
-                                <div className="w-full h-2 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden">
-                                  <div className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-500" style={{ width: `${pct}%` }} />
+                                <div className="w-full h-2 bg-afri-bg border border-afri-border rounded-full overflow-hidden">
+                                  <div className="h-full bg-gradient-to-r from-afri-gold to-amber-500" style={{ width: `${pct}%` }} />
                                 </div>
                               </div>
                             );
@@ -417,12 +417,12 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                               const pct = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(0) : "0";
                               return (
                                 <div key={ans} className="space-y-1">
-                                  <div className="flex justify-between text-[10px] font-mono text-zinc-300">
+                                  <div className="flex justify-between text-[10px] font-mono text-afri-text">
                                     <span>{ans}</span>
-                                    <span className="text-[#D4AF37] font-black">{pct}% <span className="text-[8px] text-zinc-500">({count})</span></span>
+                                    <span className="text-afri-gold font-black">{pct}% <span className="text-[8px] text-afri-text-muted">({count})</span></span>
                                   </div>
-                                  <div className="w-full h-2 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-500" style={{ width: `${pct}%` }} />
+                                  <div className="w-full h-2 bg-afri-bg border border-afri-border rounded-full overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-afri-gold to-amber-500" style={{ width: `${pct}%` }} />
                                   </div>
                                 </div>
                               );
@@ -434,7 +434,7 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
 
                     <button
                       onClick={() => setIsModalOpen(false)}
-                      className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
+                      className="w-full py-3 bg-afri-bg-ter hover:bg-afri-bg-action text-afri-text rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
                     >
                       Fermer la fenêtre
                     </button>
@@ -444,9 +444,9 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                   <div className="space-y-5 text-left">
                     
                     {/* Question Header */}
-                    <div className="p-3.5 bg-zinc-900 border border-zinc-800 rounded-2xl">
-                      <span className="text-[9px] font-mono font-black text-[#D4AF37] uppercase tracking-wider block mb-1">LA QUESTION :</span>
-                      <h4 className="text-xs font-bold text-white uppercase font-sans">
+                    <div className="p-3.5 bg-afri-bg-ter border border-afri-border rounded-2xl">
+                      <span className="text-[9px] font-mono font-black text-afri-gold uppercase tracking-wider block mb-1">LA QUESTION :</span>
+                      <h4 className="text-xs font-bold text-afri-text uppercase font-sans">
                         {selectedPoll.questionTitle}
                       </h4>
                     </div>
@@ -464,8 +464,8 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                                 onClick={() => setSelectedAnswers([ans])}
                                 className={`py-4 rounded-2xl border text-sm font-black uppercase tracking-wider transition cursor-pointer flex flex-col items-center justify-center gap-2 ${
                                   isChosen 
-                                    ? "bg-[#D4AF37]/15 text-[#D4AF37] border-[#D4AF37] shadow-lg" 
-                                    : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700"
+                                    ? "bg-afri-gold/15 text-afri-gold border-afri-gold shadow-lg" 
+                                    : "bg-afri-bg-ter text-afri-text-sec border-afri-border hover:border-afri-gold/50"
                                 }`}
                               >
                                 <span className="text-2xl">{ans === "Oui" ? "🤝" : "🙅‍♂️"}</span>
@@ -477,8 +477,8 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                       )}
 
                       {selectedPoll.questionType === "satisfaction" && (
-                        <div className="space-y-2 text-center py-4 bg-zinc-900 rounded-2xl border border-zinc-800">
-                          <span className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-widest block">Notez votre satisfaction :</span>
+                        <div className="space-y-2 text-center py-4 bg-afri-bg-ter rounded-2xl border border-afri-border">
+                          <span className="text-[10px] font-mono font-black text-afri-text-muted uppercase tracking-widest block">Notez votre satisfaction :</span>
                           <div className="flex items-center justify-center gap-3 mt-3">
                             {[1, 2, 3, 4, 5].map(star => {
                               const active = ratingVal >= star;
@@ -490,14 +490,14 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                                   className="transition hover:scale-125 focus:outline-none cursor-pointer"
                                 >
                                   <Star
-                                    className={`w-8 h-8 ${active ? "fill-[#D4AF37] text-[#D4AF37]" : "text-zinc-700 hover:text-amber-500"}`}
+                                    className={`w-8 h-8 ${active ? "fill-afri-gold text-afri-gold" : "text-afri-text-muted hover:text-afri-gold"}`}
                                   />
                                 </button>
                               );
                             })}
                           </div>
                           {ratingVal > 0 && (
-                            <span className="text-[10px] font-mono text-[#D4AF37] font-bold mt-2 block">
+                            <span className="text-[10px] font-mono text-afri-gold font-bold mt-2 block">
                               {ratingVal === 5 ? "Excellent ! ✨" : ratingVal === 4 ? "Très bon" : ratingVal === 3 ? "Moyen" : ratingVal === 2 ? "Insatisfaisant" : "Médiocre"}
                             </span>
                           )}
@@ -506,14 +506,14 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
 
                       {selectedPoll.questionType === "text" && (
                         <div className="space-y-1">
-                          <label className="text-[9px] font-mono font-bold text-zinc-500 block uppercase">Votre message souverain :</label>
+                          <label className="text-[9px] font-mono font-bold text-afri-text-muted block uppercase">Votre message souverain :</label>
                           <textarea
                             rows={4}
                             required
                             value={textComment}
                             onChange={(e) => setTextComment(e.target.value)}
                             placeholder="Saisissez vos idées, remarques ou propositions constructives..."
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#D4AF37] resize-none"
+                            className="w-full bg-afri-bg border border-afri-border rounded-xl px-4 py-3 text-xs text-afri-text focus:outline-none focus:border-afri-gold resize-none"
                           />
                         </div>
                       )}
@@ -529,12 +529,12 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                                 onClick={() => setSelectedAnswers([c.id])}
                                 className={`w-full p-3.5 rounded-xl border text-xs font-bold text-left transition cursor-pointer flex items-center justify-between gap-3 ${
                                   isChosen 
-                                    ? "bg-[#D4AF37]/10 text-white border-[#D4AF37]" 
-                                    : "bg-zinc-900 text-zinc-400 border-zinc-800/80 hover:border-zinc-700"
+                                    ? "bg-afri-gold/10 text-afri-text border-afri-gold" 
+                                    : "bg-afri-bg-ter text-afri-text-sec border-afri-border hover:border-afri-gold/50"
                                 }`}
                               >
                                 <span>{c.text}</span>
-                                <div className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center shrink-0 ${isChosen ? "border-[#D4AF37] bg-[#D4AF37]" : "border-zinc-700"}`}>
+                                <div className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center shrink-0 ${isChosen ? "border-afri-gold bg-afri-gold" : "border-afri-border"}`}>
                                   {isChosen && <Check className="w-3 h-3 text-black stroke-[3]" />}
                                 </div>
                               </button>
@@ -545,9 +545,9 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
 
                       {selectedPoll.questionType === "multiple" && (
                         <div className="space-y-2">
-                          <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 mb-1">
+                          <div className="flex justify-between items-center text-[9px] font-mono text-afri-text-muted mb-1">
                             <span>SÉLECTIONNEZ VOS CHOIX</span>
-                            <span className="font-bold text-[#D4AF37]">
+                            <span className="font-bold text-afri-gold">
                               {selectedAnswers.length} / {selectedPoll.maxChoices} choix max
                             </span>
                           </div>
@@ -561,12 +561,12 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                                 onClick={() => handleToggleMultipleChoice(c.id)}
                                 className={`w-full p-3.5 rounded-xl border text-xs font-bold text-left transition cursor-pointer flex items-center justify-between gap-3 ${
                                   isChosen 
-                                    ? "bg-[#D4AF37]/10 text-white border-[#D4AF37]" 
-                                    : "bg-zinc-900 text-zinc-400 border-zinc-800/80 hover:border-zinc-700"
+                                    ? "bg-afri-gold/10 text-afri-text border-afri-gold" 
+                                    : "bg-afri-bg-ter text-afri-text-sec border-afri-border hover:border-afri-gold/50"
                                 }`}
                               >
                                 <span>{c.text}</span>
-                                <div className={`w-4.5 h-4.5 rounded border flex items-center justify-center shrink-0 ${isChosen ? "border-[#D4AF37] bg-[#D4AF37]" : "border-zinc-700"}`}>
+                                <div className={`w-4.5 h-4.5 rounded border flex items-center justify-center shrink-0 ${isChosen ? "border-afri-gold bg-afri-gold" : "border-afri-border"}`}>
                                   {isChosen && <Check className="w-3 h-3 text-black stroke-[3]" />}
                                 </div>
                               </button>
@@ -589,7 +589,7 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
                         type="button"
                         disabled={submitting}
                         onClick={handleSendResponse}
-                        className="w-full py-3.5 bg-[#D4AF37] hover:bg-amber-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer disabled:opacity-40 flex items-center justify-center gap-2 shadow-lg active:scale-95"
+                        className="w-full py-3.5 bg-afri-gold hover:bg-amber-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer disabled:opacity-40 flex items-center justify-center gap-2 shadow-lg active:scale-95"
                       >
                         <Vote className="w-4 h-4 stroke-[2.5]" />
                         <span>{submitting ? "Enregistrement..." : "Soumettre mon vote impérial 🚀"}</span>

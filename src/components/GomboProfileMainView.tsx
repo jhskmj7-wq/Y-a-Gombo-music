@@ -226,6 +226,21 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </button>
             
             <button 
+              onClick={() => {
+                if (window.dispatchEvent) {
+                  window.dispatchEvent(new CustomEvent("gombo_trigger_profile_boost"));
+                }
+              }}
+              className={`flex-1 py-3 border font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                isLight 
+                  ? "bg-amber-50 border-amber-400/50 text-amber-800 hover:bg-amber-100" 
+                  : "bg-amber-950/20 border-amber-400/40 text-amber-400 hover:bg-amber-950/40"
+              }`}
+            >
+              <span>⭐ Booster mon profil</span>
+            </button>
+
+            <button 
               onClick={() => onNavigateView("user_mes_gombos")}
               className={`flex-1 py-3 border font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 ${
                 isLight 
