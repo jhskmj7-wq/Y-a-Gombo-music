@@ -99,6 +99,7 @@ import {
 import GomboContractsDashboard from "./GomboContractsDashboard";
 import AfrigomboWalletDashboard from "./AfrigomboWalletDashboard";
 import AfrigomboLabs from "./admin/AfrigomboLabs";
+import BetaCheckPanel from "./admin/BetaCheckPanel";
 import EventsView from "./EventsView";
 import { audioSynth } from "../lib/audio";
 import { interactionBus } from "./LivingInteractions";
@@ -6947,6 +6948,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "afrigombo_labs" && (
                 <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement de Afrigombo Labs...</div>}>
                   <AfrigomboLabs />
+                </Suspense>
+              )}
+
+              {activeMenu === "beta_check" && (
+                <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement...</div>}>
+                  <BetaCheckPanel />
                 </Suspense>
               )}
 

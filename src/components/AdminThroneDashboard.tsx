@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, MessageCircle, MapPin, CreditCard, Users, FileText, BadgeCheck, Star, BarChart2, Megaphone, Settings, FlaskConical } from "lucide-react";
+import { LayoutDashboard, MessageCircle, MapPin, CreditCard, Users, FileText, BadgeCheck, Star, BarChart2, Megaphone, Settings, FlaskConical, ShieldCheck } from "lucide-react";
 
 interface AdminThroneDashboardProps {
   brief: any;
@@ -18,6 +18,7 @@ export default function AdminThroneDashboard({ brief, setActiveMenu }: AdminThro
     { label: "Statistiques", id: "reports", icon: BarChart2 },
     { label: "Sondages", id: "sondages", icon: Megaphone },
     { label: "Labs", id: "afrigombo_labs", icon: FlaskConical },
+    { label: "Beta Check", id: "beta_check", icon: ShieldCheck },
     { label: "Système", id: "settings", icon: Settings },
   ];
 
