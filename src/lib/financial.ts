@@ -71,14 +71,43 @@ export async function updatePlatformFeeRate(newRate: number): Promise<void> {
 }
 
 /**
+ * Calculate effective commission rate based on user's Firestore profile.
+ * IF premium == true AND premiumExpiresAt > now => 0.015 (1.5%)
+ * ELSE => 0.025 (2.5%)
+ */
+export function getEffectiveCommissionRate(userData: any): number {
+  if (!userData) return 0.025;
+  
+  const isPrem = !!(
+    userData.premium === true ||
+    userData.isPremium === true ||
+    userData.status === "premium" ||
+    userData.premiumStatus === "active" ||
+    (Array.isArray(userData.badges) && userData.badges.some((b: string) => typeof b === "string" && b.includes("Premium")))
+  );
+
+  if (!isPrem) return 0.025;
+
+  if (userData.premiumExpiresAt) {
+    const expTime = new Date(userData.premiumExpiresAt).getTime();
+    if (!isNaN(expTime) && expTime <= Date.now()) {
+      return 0.025;
+    }
+  }
+
+  return 0.015;
+}
+
+/**
  * Helper to record wallet transactions in Firestore with standardized history schema.
+ * Writes to both 'transactions' and 'walletTransactions' collections.
  */
 export async function recordWalletTransaction(payload: {
   userId: string;
   userName?: string;
-  type: "depot" | "retrait" | "debit_publication" | "commission_plateforme" | "fonds_bloques" | "deblocage_cachet" | "remboursement" | "recharge_wallet" | "prime_bonus" | "abonnement_premium";
+  type: "depot" | "deposit" | "retrait" | "withdraw" | "debit_publication" | "publication" | "commission_plateforme" | "commission" | "fonds_bloques" | "deblocage_cachet" | "remboursement" | "refund" | "recharge_wallet" | "prime_bonus" | "abonnement_premium" | "premium" | string;
   amount: number;
-  status: "success" | "pending" | "fonds_bloques" | "fonds_liberes" | "rembourse";
+  status: "success" | "pending" | "fonds_bloques" | "fonds_liberes" | "rembourse" | "validated" | "PAID" | string;
   description: string;
   gomboId?: string;
   contractId?: string;
@@ -88,11 +117,12 @@ export async function recordWalletTransaction(payload: {
   const now = new Date();
   const dateStr = now.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
   const heureStr = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const txId = `tx_${payload.type}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  const txId = payload.reference || `tx_${payload.type}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
   const txData = {
     id: txId,
     reference: txId,
+    uid: payload.userId,
     userId: payload.userId,
     userName: payload.userName || "Membre Gombo",
     userConcerned: payload.userConcerned || payload.userName || "Membre Gombo",
@@ -112,7 +142,8 @@ export async function recordWalletTransaction(payload: {
   };
 
   try {
-    await setDoc(doc(db, "transactions", txId), txData);
+    await setDoc(doc(db, "transactions", txId), txData, { merge: true });
+    await setDoc(doc(db, "walletTransactions", txId), txData, { merge: true });
   } catch (err) {
     console.error("Failed to record wallet transaction:", err);
   }

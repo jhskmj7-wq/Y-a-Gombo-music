@@ -116,33 +116,48 @@ export default function AfrigomboWalletDashboard({
     const unsubProfile = onSnapshot(doc(db, "users", uid), (snap) => {
       if (snap.exists()) {
         const uData = snap.data();
-        if (uData.wallet) {
-          setWallet({
-            soldeDisponible: uData.wallet.soldeDisponible || 0,
-            soldeBloque: uData.wallet.soldeBloque || 0,
-            revenus: uData.wallet.revenus || 0,
-            depots: uData.wallet.depots || 0,
-            retraits: uData.wallet.retraits || 0,
-            gainsMensuels: uData.wallet.gainsMensuels || 0,
-            revenusMois: uData.wallet.revenusMois || 0,
-            economiesPremium: uData.wallet.economiesPremium || 0,
-            niveauWallet: uData.wallet.niveauWallet || "Standard"
-          });
-        }
+        const solde = uData.walletBalance ?? uData.wallet?.soldeDisponible ?? 0;
+        setWallet({
+          soldeDisponible: solde,
+          soldeBloque: uData.wallet?.soldeBloque || 0,
+          revenus: uData.wallet?.revenus || 0,
+          depots: uData.wallet?.depots || 0,
+          retraits: uData.wallet?.retraits || 0,
+          gainsMensuels: uData.wallet?.gainsMensuels || 0,
+          revenusMois: uData.wallet?.revenusMois || 0,
+          economiesPremium: uData.wallet?.economiesPremium || 0,
+          niveauWallet: uData.wallet?.niveauWallet || "Standard"
+        });
       }
     });
 
-    // 2. Listen to all transactions in Firestore involving this user
-    const unsubTx = onSnapshot(collection(db, "transactions"), (snap) => {
-      const list: any[] = [];
-      snap.forEach((docSnap) => {
-        const data = docSnap.data();
-        if (data.userId === uid || data.artistId === uid || data.clientId === uid || data.userConcernedId === uid) {
-          list.push({ id: docSnap.id, ...data });
-        }
-      });
+    // 2. Listen to all transactions in both 'transactions' and 'walletTransactions' collections in real-time
+    const txMap = new Map<string, any>();
+
+    const syncTxList = () => {
+      const list = Array.from(txMap.values());
       list.sort((a, b) => new Date(b.createdAt || b.date || b.timestamp || 0).getTime() - new Date(a.createdAt || a.date || a.timestamp || 0).getTime());
       setTransactions(list);
+    };
+
+    const unsubTx1 = onSnapshot(collection(db, "transactions"), (snap) => {
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.userId === uid || data.uid === uid || data.artistId === uid || data.clientId === uid || data.userConcernedId === uid) {
+          txMap.set(docSnap.id, { id: docSnap.id, ...data });
+        }
+      });
+      syncTxList();
+    });
+
+    const unsubTx2 = onSnapshot(collection(db, "walletTransactions"), (snap) => {
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.userId === uid || data.uid === uid || data.artistId === uid || data.clientId === uid || data.userConcernedId === uid) {
+          txMap.set(docSnap.id, { id: docSnap.id, ...data });
+        }
+      });
+      syncTxList();
     });
 
     // 3. Listen to all contracts in Firestore involving this user
@@ -161,7 +176,8 @@ export default function AfrigomboWalletDashboard({
 
     return () => {
       unsubProfile();
-      unsubTx();
+      unsubTx1();
+      unsubTx2();
       unsubContracts();
     };
   }, [uid]);
@@ -435,9 +451,9 @@ export default function AfrigomboWalletDashboard({
   // Filter ledger list
   const filteredTxs = transactions.filter(tx => {
     if (activeTab === "all") return true;
-    if (activeTab === "flows") return tx.type === "deposit" || tx.type === "depot" || tx.type === "recharge_wallet" || tx.type === "withdrawal" || tx.type === "retrait";
-    if (activeTab === "contracts") return tx.type === "deposit_escrow" || tx.type === "fonds_bloques" || tx.type === "release" || tx.type === "deblocage_cachet" || tx.type === "refund" || tx.type === "remboursement";
-    if (activeTab === "commissions") return tx.type === "commission_plateforme" || tx.type === "commission" || tx.description?.toLowerCase().includes("commission");
+    if (activeTab === "flows") return tx.type === "deposit" || tx.type === "depot" || tx.type === "recharge_wallet" || tx.type === "withdrawal" || tx.type === "retrait" || tx.type === "withdraw";
+    if (activeTab === "contracts") return tx.type === "deposit_escrow" || tx.type === "fonds_bloques" || tx.type === "release" || tx.type === "deblocage_cachet" || tx.type === "refund" || tx.type === "remboursement" || tx.type === "publication" || tx.type === "debit_publication";
+    if (activeTab === "commissions") return tx.type === "commission_plateforme" || tx.type === "commission" || tx.type === "premium" || tx.type === "abonnement_premium" || tx.description?.toLowerCase().includes("commission");
     if (activeTab === "disputes") return tx.type === "remboursement" || tx.type === "refund" || tx.description?.toLowerCase().includes("litige");
     return true;
   });

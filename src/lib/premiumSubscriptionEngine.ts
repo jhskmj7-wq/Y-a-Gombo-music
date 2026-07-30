@@ -88,13 +88,16 @@ export async function activatePremiumForUser(
     );
 
     await updateDoc(userRef, {
+      premium: true,
       isPremium: true,
+      status: "premium",
       premiumStatus: "active",
       premiumPlan: isElite ? "elite" : "pro",
       subscriptionPlan: normalizedPlan,
+      premiumStartedAt: activatedAtIso,
       premiumActivatedAt: activatedAtIso,
       premiumExpiresAt: expiresAtIso,
-      commissionRate: 1.5,
+      commissionRate: 0.015,
       badges: updatedBadges,
       updatedAt: activatedAtIso
     });

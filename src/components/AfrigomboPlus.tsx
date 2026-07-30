@@ -177,14 +177,15 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       let uData: any = null;
       if (userSnap.exists()) {
         uData = userSnap.data();
-        balance = uData?.wallet?.soldeDisponible ?? 0;
+        balance = uData?.walletBalance ?? uData?.wallet?.soldeDisponible ?? 0;
       } else {
-        balance = currentUserProfile?.wallet?.soldeDisponible ?? 0;
+        balance = currentUserProfile?.walletBalance ?? currentUserProfile?.wallet?.soldeDisponible ?? 0;
       }
 
       if (balance >= amount) {
         // Suffisant ! Débiter immédiatement
         const newSolde = balance - amount;
+        const nowIso = new Date().toISOString();
         const expirationDate = billingCycle === "monthly" 
           ? new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString()
           : new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString();
@@ -198,15 +199,20 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         );
 
         await setDoc(userRef, {
+          premium: true,
           isPremium: true,
+          status: "premium",
           premiumStatus: "active",
           premiumPlan: planId,
+          billingCycle: billingCycle,
           subscriptionPlan: subName,
-          premiumActivatedAt: new Date().toISOString(),
+          premiumStartedAt: nowIso,
+          premiumActivatedAt: nowIso,
           premiumExpiresAt: expirationDate,
           isPremiumAutoRenew: true,
-          commissionRate: 1.5,
+          commissionRate: 0.015,
           badges: updatedBadges,
+          walletBalance: newSolde,
           wallet: {
             ...(uData?.wallet || {}),
             soldeDisponible: newSolde
@@ -217,10 +223,10 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         await recordWalletTransaction({
           userId: currentUserProfile.uid,
           userName: currentUserProfile.artistName || currentUserProfile.firstName || "Membre Gombo",
-          type: "abonnement_premium",
+          type: "premium",
           amount: amount,
           status: "success",
-          description: `Souscription Abonnement ${subName} (${billingCycle === "monthly" ? "Mensuel" : "Annuel"})`
+          description: `Abonnement Premium ${subName} (${billingCycle === "monthly" ? "Mensuel" : "Annuel"})`
         });
 
         // Ajouter une notification

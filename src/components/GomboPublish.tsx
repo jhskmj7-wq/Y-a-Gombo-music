@@ -10,7 +10,7 @@ import { db, gomboDB } from "../firebase";
 import { doc, getDoc, setDoc, addDoc, collection, runTransaction } from "firebase/firestore";
 import { UserProfile, SocialPost } from "../types";
 import GomboSecureModal from "./GomboSecureModal";
-import { calculatePlatformFee, calculatePublicationFinancials, recordWalletTransaction } from "../lib/financial";
+import { calculatePlatformFee, calculatePublicationFinancials, recordWalletTransaction, getEffectiveCommissionRate } from "../lib/financial";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 
 const ABIDJAN_COMMUNES = [
@@ -171,11 +171,12 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     try {
       const userRef = doc(db, "users", currentUserProfile.uid);
       const userSnap = await getDoc(userRef);
-      const userSolde = userSnap.exists() ? (userSnap.data()?.wallet?.soldeDisponible ?? 0) : (currentUserProfile.wallet?.soldeDisponible ?? 0);
+      const freshUserData = userSnap.exists() ? userSnap.data() : currentUserProfile;
+      const userSolde = freshUserData?.walletBalance ?? freshUserData?.wallet?.soldeDisponible ?? 0;
       
       const cachetVal = budget ? Number(budget) : 0;
-      const feeRate = isUserPremium ? 0.015 : 0.025;
-      const financials = calculatePublicationFinancials(cachetVal, feeRate);
+      const effectiveRate = getEffectiveCommissionRate(freshUserData);
+      const financials = calculatePublicationFinancials(cachetVal, effectiveRate);
 
       setDepositDetails({
         cachet: cachetVal,
@@ -202,8 +203,6 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     try {
       const authorName = currentUserProfile.displayName || currentUserProfile.name || "Artiste Gombo";
       const cachetVal = budget ? Number(budget) : 0;
-      const feeRate = isUserPremium ? 0.015 : 0.025;
-      const financials = calculatePublicationFinancials(cachetVal, feeRate);
       const effectiveCommune = commune === "📍 Autre commune" ? customCommune.trim() : commune;
       
       // Upload files first (outside transaction)
@@ -223,39 +222,77 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         const userSnap = await transaction.get(userRef);
         if (!userSnap.exists()) throw new Error("Utilisateur introuvable");
         const userData = userSnap.data();
-        const liveSolde = userData?.wallet?.soldeDisponible ?? 0;
+
+        const liveSolde = userData.walletBalance ?? userData?.wallet?.soldeDisponible ?? 0;
         const liveBloque = userData?.wallet?.soldeBloque ?? 0;
 
-        if (financials.total > 0 && liveSolde < financials.total) {
-            throw new Error("INSUFFICIENT_FUNDS");
+        const dynamicFeeRate = getEffectiveCommissionRate(userData);
+        const freshFinancials = calculatePublicationFinancials(cachetVal, dynamicFeeRate);
+
+        if (freshFinancials.total > 0 && liveSolde < freshFinancials.total) {
+          throw new Error("INSUFFICIENT_FUNDS");
         }
 
         // Debit Wallet
-        finalNewSolde = Math.max(0, liveSolde - financials.total);
+        finalNewSolde = Math.max(0, liveSolde - freshFinancials.total);
         const newBloque = liveBloque + cachetVal;
         transaction.update(userRef, {
+          walletBalance: finalNewSolde,
           wallet: { ...(userData.wallet || {}), soldeDisponible: finalNewSolde, soldeBloque: newBloque }
         });
 
-        // Record Transactions and create Gombo
-        const txDebitId = `tx_debit_${Date.now()}`;
-        transaction.set(doc(db, "transactions", txDebitId), {
-          id: txDebitId,
-          userId: currentUserProfile.uid,
-          type: "debit_publication",
-          amount: financials.total,
-          status: "success",
-          description: `Débit publication : Gombo "${title.trim()}" (${financials.fee.toLocaleString()} FCFA commission)`,
-          createdAt: new Date().toISOString(),
-          timestamp: Date.now()
-        });
+        const nowIso = new Date().toISOString();
 
-        // Commission
+        // Record Publication Transaction
+        const txDebitId = `tx_pub_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        const pubTxData = {
+          id: txDebitId,
+          reference: txDebitId,
+          uid: currentUserProfile.uid,
+          userId: currentUserProfile.uid,
+          userName: authorName,
+          type: "publication",
+          amount: freshFinancials.total,
+          montant: freshFinancials.total,
+          fee: freshFinancials.fee,
+          status: "success",
+          statut: "success",
+          description: `Publication Gombo : "${title.trim()}"`,
+          createdAt: nowIso,
+          timestamp: Date.now()
+        };
+        transaction.set(doc(db, "transactions", txDebitId), pubTxData);
+        transaction.set(doc(db, "walletTransactions", txDebitId), pubTxData);
+
+        // Record Commission Transaction
+        if (freshFinancials.fee > 0) {
+          const commTxId = `tx_comm_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+          const commTxData = {
+            id: commTxId,
+            reference: commTxId,
+            uid: currentUserProfile.uid,
+            userId: currentUserProfile.uid,
+            userName: authorName,
+            type: "commission",
+            amount: freshFinancials.fee,
+            montant: freshFinancials.fee,
+            status: "success",
+            statut: "success",
+            description: `Commission publication Gombo (${(dynamicFeeRate * 100).toFixed(1)}%)`,
+            createdAt: nowIso,
+            timestamp: Date.now()
+          };
+          transaction.set(doc(db, "transactions", commTxId), commTxData);
+          transaction.set(doc(db, "walletTransactions", commTxId), commTxData);
+        }
+
+        // Commission reporting collection
         const commId = `comm_${Date.now()}`;
         transaction.set(doc(db, "commissions", commId), {
-            userId: currentUserProfile.uid,
-            amount: financials.fee,
-            createdAt: new Date().toISOString()
+          userId: currentUserProfile.uid,
+          amount: freshFinancials.fee,
+          rate: dynamicFeeRate,
+          createdAt: nowIso
         });
 
         // Create Gombo/Post

@@ -8,12 +8,14 @@ import {
   Play, Pause, Trash2, Volume2, Plus, ArrowUp, ArrowDown, Send, Mail, Wrench,
   RefreshCw, CheckCircle, XCircle, Search, HelpCircle, Save, BookOpen, Scroll, Target, Award,
   Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square,
-  Clock, MapPin, Cloud, Zap, Sun, ChevronDown, ChevronUp, Flame, ToggleLeft, ToggleRight, UserCheck, Radio, Eye, Bot
+  Clock, MapPin, Cloud, Zap, Sun, ChevronDown, ChevronUp, Flame, ToggleLeft, ToggleRight, UserCheck, Radio, Eye, Bot,
+  MessageSquare
 } from "lucide-react";
 import { BetaTransactionsAdminPanel } from "./BetaTransactionsAdminPanel";
 import { PendingPublicationsAdminPanel } from "./PendingPublicationsAdminPanel";
 import { ImperialMessageModal } from "./ImperialMessageModal";
 import { AdminDecouvertesCentre } from "./AdminDecouvertesCentre";
+import { AdminCommunicationCenter } from "./AdminCommunicationCenter";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
@@ -2299,6 +2301,21 @@ export default function AdminFounderThrone({
                   <p className="text-[10px] font-mono text-afri-text-sec mt-1">Inscriptions & configurations</p>
                   <span className="text-[9px] font-mono text-zinc-300 font-bold block mt-3">Configurer la plateforme →</span>
                 </div>
+
+                {/* Centre Communication */}
+                <div
+                  onClick={() => setSelectedSection("communication")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <MessageSquare className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Centre Communication
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Supervision chats, WebRTC & modération</p>
+                  <span className="text-[9px] font-mono text-amber-400 font-bold block mt-3">Gérer la messagerie →</span>
+                </div>
               </div>
             </div>
 
@@ -3312,6 +3329,13 @@ export default function AdminFounderThrone({
                   />
                 </div>
               </div>
+            )}
+
+            {/* =========================================================
+                 DETAILED VIEW: 💬 Centre Communication Souverain
+                 ========================================================= */}
+            {selectedSection === "communication" && (
+              <AdminCommunicationCenter />
             )}
 
             {/* =========================================================
