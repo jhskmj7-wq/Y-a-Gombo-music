@@ -151,8 +151,6 @@ export default function SettingsModal({
   onLogout,
   onNavigateToFounder
 }: SettingsModalProps) {
-  if (!isOpen) return null;
-
   useEffect(() => {
     if (isOpen) {
       const scrollY = window.scrollY;
@@ -244,6 +242,8 @@ export default function SettingsModal({
   const [issueText, setIssueText] = useState("");
   const [issueSent, setIssueSent] = useState(false);
   const [isTransmittingIssue, setIsTransmittingIssue] = useState(false);
+
+  if (!isOpen) return null;
 
   const handleLanguageChange = (lang: "fr" | "en" | "nouchi") => {
     setLanguagePref(lang);

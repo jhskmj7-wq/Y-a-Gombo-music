@@ -562,15 +562,22 @@ export const gomboDB = {
         collection(db, "conversations"),
         where("participants", "array-contains", userId)
       );
-      return onSnapshot(q, (snapshot) => {
-        const convos = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Conversation));
-        convos.sort((a, b) => {
-          const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
-          const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
-          return timeB - timeA;
-        });
-        callback(convos);
-      });
+      return onSnapshot(
+        q, 
+        (snapshot) => {
+          const convos = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Conversation));
+          convos.sort((a, b) => {
+            const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+            const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+            return timeB - timeA;
+          });
+          callback(convos);
+        },
+        (error) => {
+          console.warn("🔒 Conversations listener restricted:", error);
+          callback([]);
+        }
+      );
     }
     return () => {};
   },
@@ -589,15 +596,22 @@ export const gomboDB = {
         collection(db, "messages"),
         where("conversationId", "==", convoId)
       );
-      return onSnapshot(q, (snapshot) => {
-        const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Message));
-        msgs.sort((a, b) => {
-          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return timeA - timeB;
-        });
-        callback(msgs);
-      });
+      return onSnapshot(
+        q, 
+        (snapshot) => {
+          const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Message));
+          msgs.sort((a, b) => {
+            const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return timeA - timeB;
+          });
+          callback(msgs);
+        },
+        (error) => {
+          console.warn("🔒 Messages listener restricted:", error);
+          callback([]);
+        }
+      );
     }
     return () => {};
   },

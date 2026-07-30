@@ -24,8 +24,6 @@ interface GomboContractViewProps {
 }
 
 export default function GomboContractView({ contractId, currentUser, onBack, onUpdate }: GomboContractViewProps) {
-  if (!currentUser) return null;
-
   const [contract, setContract] = useState<GomboSafeContract | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -62,9 +60,9 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
     if (data) setContract(data);
   };
 
-  const isClient = contract?.clientId === currentUser.uid;
-  const isArtist = contract?.artistId === currentUser.uid;
-  const isAdmin = currentUser.role === "admin" || currentUser.isAdmin;
+  const isClient = contract?.clientId === currentUser?.uid;
+  const isArtist = contract?.artistId === currentUser?.uid;
+  const isAdmin = currentUser?.role === "admin" || currentUser?.isAdmin;
 
   // Check if already reviewed & load partner profile
   useEffect(() => {
@@ -98,6 +96,8 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
       }
     }
   }, [contract, currentUser, isClient]);
+
+  if (!currentUser) return null;
 
   const handleSign = async () => {
     if (!contract || processing) return;

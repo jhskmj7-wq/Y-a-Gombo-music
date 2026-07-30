@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence, indexedDBLocalPersistence } from "firebase/auth";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, memoryLocalCache, getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -29,12 +29,26 @@ if (typeof window !== "undefined") {
     });
 }
 
-export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager()
-  })
-});
+let firestoreInstance;
+try {
+  firestoreInstance = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
+} catch (e) {
+  try {
+    firestoreInstance = initializeFirestore(app, {
+      experimentalAutoDetectLongPolling: true,
+      localCache: memoryLocalCache()
+    });
+  } catch (err2) {
+    firestoreInstance = getFirestore(app);
+  }
+}
+
+export const db = firestoreInstance;
 
 export const storage = getStorage(app);
 

@@ -60,40 +60,52 @@ export default function MessagesView({
     if (!otherUid) return;
 
     // Listen to partner's profile
-    const unsubProfile = onSnapshot(doc(db, "users", otherUid), (snap) => {
-      if (snap.exists()) {
-        setPartnerProfile({ id: snap.id, ...snap.data() } as UserProfile);
+    const unsubProfile = onSnapshot(
+      doc(db, "users", otherUid), 
+      (snap) => {
+        if (snap.exists()) {
+          setPartnerProfile({ id: snap.id, ...snap.data() } as UserProfile);
+        }
+      },
+      (err) => {
+        console.warn("🔒 Partner profile listener restricted:", err);
       }
-    });
+    );
 
     // Listen to contracts involving both
     const qContracts = query(
       collection(db, "contracts"),
       where("participants", "array-contains", otherUid)
     );
-    const unsubContracts = onSnapshot(qContracts, (snap) => {
-      let count = 0;
-      let escrow = 0;
-      let lastPay = null;
+    const unsubContracts = onSnapshot(
+      qContracts, 
+      (snap) => {
+        let count = 0;
+        let escrow = 0;
+        let lastPay = null;
 
-      snap.forEach(doc => {
-        const data = doc.data();
-        if (data.participants?.includes(currentUser.uid)) {
-          count++;
-          if (data.status === "payment_held" || data.status === "arrived") {
-            escrow += (data.amount || 0);
-          }
-          if (data.status === "completed" || data.status === "termine") {
-            if (!lastPay || new Date(data.updatedAt) > new Date(lastPay)) {
-              lastPay = data.updatedAt;
+        snap.forEach(doc => {
+          const data = doc.data();
+          if (data.participants?.includes(currentUser.uid)) {
+            count++;
+            if (data.status === "payment_held" || data.status === "arrived") {
+              escrow += (data.amount || 0);
+            }
+            if (data.status === "completed" || data.status === "termine") {
+              if (!lastPay || new Date(data.updatedAt) > new Date(lastPay)) {
+                lastPay = data.updatedAt;
+              }
             }
           }
-        }
-      });
-      setPartnerContractsCount(count);
-      setPartnerEscrowAmount(escrow);
-      setPartnerLastPaymentDate(lastPay);
-    });
+        });
+        setPartnerContractsCount(count);
+        setPartnerEscrowAmount(escrow);
+        setPartnerLastPaymentDate(lastPay);
+      },
+      (err) => {
+        console.warn("🔒 Contracts listener restricted:", err);
+      }
+    );
 
     return () => {
       unsubProfile();

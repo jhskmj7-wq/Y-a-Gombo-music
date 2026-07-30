@@ -108,6 +108,10 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
     };
   }, []);
 
+  const [selectedReqForRefusal, setSelectedReqForRefusal] = useState<WalletRequest | null>(null);
+  const [refusalReason, setRefusalReason] = useState("");
+  const [showRefusalModal, setShowRefusalModal] = useState(false);
+
   const handleValidate = async (req: WalletRequest) => {
     setActionLoadingId(req.id);
     try {
@@ -117,6 +121,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
       
       const uData = userSnap.data();
       const currentDispo = uData.wallet?.soldeDisponible ?? 0;
+      const nowIso = new Date().toISOString();
 
       if (req.type === "deposit") {
         await setDoc(userRef, {
@@ -126,36 +131,67 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
           }
         }, { merge: true });
         
-        await updateDoc(doc(db, "walletDepositRequests", req.id), { status: "validated", statut: "validated" });
+        await updateDoc(doc(db, "walletDepositRequests", req.id), { status: "validated", statut: "validated", validatedAt: nowIso });
+        
+        // Also update transactions doc if present
+        try {
+          await setDoc(doc(db, "transactions", req.id), { status: "valide", statut: "valide", validatedAt: nowIso }, { merge: true });
+        } catch (_) {}
+
         await recordWalletTransaction({
           userId: req.uid,
           userName: req.userName,
           type: "recharge_wallet",
           amount: req.montant,
           status: "success",
-          description: `Recharge validée (Réf: ${req.reference})`
+          description: `Recharge validée (Réf: ${req.reference || req.id})`
+        });
+
+        // Add user notification
+        await addDoc(collection(db, "notifications"), {
+          userId: req.uid,
+          title: "💳 Dépôt Crédité avec Succès !",
+          message: `Votre rechargement Wallet de ${req.montant.toLocaleString('fr-FR')} FCFA (Réf: ${req.reference || req.id}) a été validé par le Fondateur.`,
+          type: "payment_received",
+          createdAt: nowIso,
+          isRead: false
         });
       } else {
-        if (currentDispo < req.montant) throw new Error("Solde insuffisant");
+        if (currentDispo < req.montant) throw new Error("Solde insuffisant dans le compte du membre");
         await setDoc(userRef, {
           wallet: {
-            soldeDisponible: currentDispo - req.montant,
+            soldeDisponible: Math.max(0, currentDispo - req.montant),
             retraits: (uData.wallet?.retraits ?? 0) + req.montant
           }
         }, { merge: true });
         
-        await updateDoc(doc(db, "walletWithdrawalRequests", req.id), { status: "PAID" });
+        await updateDoc(doc(db, "walletWithdrawalRequests", req.id), { status: "PAID", statut: "PAID", validatedAt: nowIso });
+        
+        try {
+          await setDoc(doc(db, "transactions", req.id), { status: "valide", statut: "valide", validatedAt: nowIso }, { merge: true });
+        } catch (_) {}
+
         await recordWalletTransaction({
           userId: req.uid,
           userName: req.userName,
           type: "retrait",
           amount: req.montant,
           status: "success",
-          description: `Retrait validé (vers ${req.numero})`
+          description: `Retrait validé vers Mobile Money (${req.numero || req.phoneNumber})`
+        });
+
+        // Add user notification
+        await addDoc(collection(db, "notifications"), {
+          userId: req.uid,
+          title: "💸 Retrait Transféré !",
+          message: `Votre demande de retrait de ${req.montant.toLocaleString('fr-FR')} FCFA a été validée et exécutée vers le ${req.numero || req.phoneNumber}.`,
+          type: "payment_received",
+          createdAt: nowIso,
+          isRead: false
         });
       }
       
-      showToast("✅ Opération validée et synchronisée !");
+      showToast("✅ Opération validée et synchronisée avec le membre !");
       try { audioSynth.playValidationSuccess(); } catch (_) {}
     } catch (err: any) {
       showToast(`❌ Erreur: ${err.message}`);
@@ -164,19 +200,54 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
     }
   };
 
-  const handleRefuse = async (req: WalletRequest) => {
+  const openRefusalModal = (req: WalletRequest) => {
+    setSelectedReqForRefusal(req);
+    setRefusalReason("");
+    setShowRefusalModal(true);
+  };
+
+  const confirmRefusal = async () => {
+    if (!selectedReqForRefusal) return;
+    if (!refusalReason.trim()) {
+      alert("Veuillez saisir un motif de refus explicite.");
+      return;
+    }
+
+    const req = selectedReqForRefusal;
     setActionLoadingId(req.id);
+    setShowRefusalModal(false);
+
     try {
+      const nowIso = new Date().toISOString();
       if (req.type === "deposit") {
-        await updateDoc(doc(db, "walletDepositRequests", req.id), { status: "refused", statut: "refused" });
+        await updateDoc(doc(db, "walletDepositRequests", req.id), { status: "refused", statut: "refused", refusalReason: refusalReason.trim(), refusedAt: nowIso });
+        try {
+          await setDoc(doc(db, "transactions", req.id), { status: "refuse", statut: "refuse", refusalReason: refusalReason.trim() }, { merge: true });
+        } catch (_) {}
       } else {
-        await updateDoc(doc(db, "walletWithdrawalRequests", req.id), { status: "REFUSED" });
+        await updateDoc(doc(db, "walletWithdrawalRequests", req.id), { status: "REFUSED", statut: "REFUSED", refusalReason: refusalReason.trim(), refusedAt: nowIso });
+        try {
+          await setDoc(doc(db, "transactions", req.id), { status: "refuse", statut: "refuse", refusalReason: refusalReason.trim() }, { merge: true });
+        } catch (_) {}
       }
-      showToast("❌ Opération refusée.");
+
+      // Add user notification with refusal motif
+      await addDoc(collection(db, "notifications"), {
+        userId: req.uid,
+        title: req.type === "deposit" ? "🔴 Rechargement Refusé" : "🔴 Retrait Refusé",
+        message: `Votre demande de ${req.type === "deposit" ? "dépôt" : "retrait"} de ${req.montant.toLocaleString('fr-FR')} FCFA a été refusée par le Fondateur. Motif : ${refusalReason.trim()}`,
+        type: "payment_refused",
+        createdAt: nowIso,
+        isRead: false
+      });
+
+      showToast("❌ Opération refusée et membre notifié.");
     } catch (err: any) {
       showToast(`❌ Erreur: ${err.message}`);
     } finally {
       setActionLoadingId(null);
+      setSelectedReqForRefusal(null);
+      setRefusalReason("");
     }
   };
 
@@ -345,7 +416,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                       </button>
 
                       <button
-                        onClick={() => handleRefuse(req)}
+                        onClick={() => openRefusalModal(req)}
                         disabled={actionLoadingId === req.id}
                         className="px-3 py-2.5 bg-rose-600/20 hover:bg-rose-600/40 border border-rose-500/40 text-rose-300 text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center gap-1.5 active:scale-98 disabled:opacity-50"
                       >
@@ -359,7 +430,70 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             );
           })
         )}
-      </div>
+
+      {/* MODAL REFUS AVEC MOTIF EXPLICITE */}
+      <AnimatePresence>
+        {showRefusalModal && selectedReqForRefusal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-afri-bg-sec border border-rose-500/40 rounded-3xl p-6 max-w-md w-full space-y-5 text-left shadow-2xl"
+            >
+              <div className="flex justify-between items-center border-b border-afri-border pb-3">
+                <div className="flex items-center gap-2 text-rose-400 font-sans font-black text-sm uppercase">
+                  <XCircle className="w-5 h-5" />
+                  <span>REFUS DE LA TRANSACTION BÊTA</span>
+                </div>
+                <button
+                  onClick={() => setShowRefusalModal(false)}
+                  className="text-zinc-500 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="bg-afri-bg border border-afri-border p-3 rounded-2xl text-xs font-mono space-y-1">
+                <p className="text-zinc-400">Membre : <strong className="text-afri-text">{selectedReqForRefusal.userName}</strong></p>
+                <p className="text-zinc-400">Type : <strong className="text-afri-text">{selectedReqForRefusal.type === "deposit" ? "DÉPÔT" : "RETRAIT"}</strong></p>
+                <p className="text-zinc-400">Montant : <strong className="text-amber-400">{selectedReqForRefusal.montant.toLocaleString('fr-FR')} FCFA</strong></p>
+                {selectedReqForRefusal.reference && <p className="text-zinc-400">Réf : <strong className="text-afri-text">{selectedReqForRefusal.reference}</strong></p>}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono font-bold text-rose-300 uppercase tracking-widest block">
+                  Motif du refus (Explicite) *
+                </label>
+                <textarea
+                  value={refusalReason}
+                  onChange={(e) => setRefusalReason(e.target.value)}
+                  placeholder="Ex : Preuve de paiement absente ou illisible sur l'Arbre à Palabres..."
+                  rows={3}
+                  className="w-full bg-afri-bg border border-rose-500/30 focus:border-rose-500 rounded-xl p-3 text-xs text-afri-text font-mono outline-none"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowRefusalModal(false)}
+                  className="flex-1 py-3 bg-afri-bg border border-afri-border rounded-xl text-xs font-mono text-afri-text-sec uppercase font-bold hover:bg-afri-bg-sec"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={confirmRefusal}
+                  disabled={!refusalReason.trim()}
+                  className="flex-1 py-3 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white rounded-xl text-xs font-mono uppercase font-black shadow-lg"
+                >
+                  Confirmer le Refus
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 

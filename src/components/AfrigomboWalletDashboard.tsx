@@ -36,12 +36,14 @@ interface AfrigomboWalletDashboardProps {
   currentUserProfile: any;
   addToTerminal: (msg: string) => void;
   onBack?: () => void;
+  onNavigateToMessages?: (userId?: string) => void;
 }
 
 export default function AfrigomboWalletDashboard({ 
   currentUserProfile, 
   addToTerminal,
-  onBack 
+  onBack,
+  onNavigateToMessages
 }: AfrigomboWalletDashboardProps) {
   const uid = currentUserProfile?.uid || currentUserProfile?.id;
   const historyRef = useRef<HTMLDivElement>(null);
@@ -223,31 +225,61 @@ export default function AfrigomboWalletDashboard({
   // MOBILE MONEY DEPOSIT HANDLER (UPDATED FOR BÊTA)
   const handleDepositRequest = async () => {
     const depositAmount = Number(amount);
-    if (!depositAmount || depositAmount < 15000) {
-      alert("Le montant minimum est de 15 000 FCFA.");
+    if (!depositAmount || depositAmount < 1000) {
+      alert("Le montant minimum est de 1 000 FCFA.");
       return;
     }
     setProcessing(true);
     try {
-      const depId = "dep_" + Date.now();
-      const userName = currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre";
-      const reference = "DEP-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-      
-      await setDoc(doc(db, "walletDepositRequests", depId), {
-        id: depId,
-        uid: uid,
+      const reference = "REF-DEP-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+      const userName = currentUserProfile?.artisticName || currentUserProfile?.displayName || currentUserProfile?.name || "Membre Gombo";
+      const userPhoto = currentUserProfile?.avatarUrl || currentUserProfile?.photoURL || "";
+      const nowIso = new Date().toISOString();
+
+      // 1. Create transaction doc in `transactions` collection
+      const txData = {
+        userId: uid,
         userName: userName,
+        userPhoto: userPhoto,
+        amount: depositAmount,
         montant: depositAmount,
-        status: "pending",
-        createdAt: new Date().toISOString(),
+        type: "depot",
+        status: "en_attente",
+        statut: "en_attente",
+        reference: reference,
+        description: `Demande de dépôt Bêta de ${depositAmount.toLocaleString('fr-FR')} FCFA (${operator.toUpperCase()})`,
+        operator: operator,
+        phoneNumber: phoneNumber,
+        createdAt: nowIso,
+        timestamp: serverTimestamp()
+      };
+
+      const txRef = await addDoc(collection(db, "transactions"), txData);
+
+      // 2. Create in `walletDepositRequests` collection
+      await setDoc(doc(db, "walletDepositRequests", txRef.id), {
+        id: txRef.id,
+        uid: uid,
+        userId: uid,
+        userName: userName,
+        userPhoto: userPhoto,
+        montant: depositAmount,
+        amount: depositAmount,
+        status: "en_attente",
+        statut: "en_attente",
+        createdAt: nowIso,
+        createdAtIso: nowIso,
         reference: reference,
         operator: operator,
         phoneNumber: phoneNumber
       });
+
       setCreatedDepositRef(reference);
       setStep("success");
+      addToTerminal(`[BÊTA DÉPÔT] Demande ${reference} de ${depositAmount.toLocaleString('fr-FR')} FCFA créée avec succès. En attente de validation.`);
     } catch (err) {
       console.error("Deposit error", err);
+      alert("Erreur lors de la création de la demande de dépôt. Veuillez réessayer.");
     } finally {
       setProcessing(false);
     }
@@ -257,25 +289,68 @@ export default function AfrigomboWalletDashboard({
   const handleWithdrawRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     const withdrawAmount = Number(amount);
-    if (!withdrawAmount || withdrawAmount <= 0 || withdrawAmount > wallet.soldeDisponible) return;
+    if (!withdrawAmount || withdrawAmount <= 0) {
+      alert("Veuillez saisir un montant valide.");
+      return;
+    }
+    if (withdrawAmount > wallet.soldeDisponible) {
+      alert("Solde disponible insuffisant.");
+      return;
+    }
 
     setProcessing(true);
     try {
-      const withId = "with_" + Date.now();
-      await setDoc(doc(db, "walletWithdrawalRequests", withId), {
-        id: withId,
+      const reference = "REF-RET-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+      const userName = currentUserProfile?.artisticName || currentUserProfile?.displayName || currentUserProfile?.name || "Membre Gombo";
+      const userPhoto = currentUserProfile?.avatarUrl || currentUserProfile?.photoURL || "";
+      const nowIso = new Date().toISOString();
+
+      // 1. Create transaction doc in `transactions` collection
+      const txData = {
         userId: uid,
-        userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre",
+        userName: userName,
+        userPhoto: userPhoto,
+        amount: withdrawAmount,
+        montant: withdrawAmount,
+        type: "retrait",
+        status: "en_attente",
+        statut: "en_attente",
+        reference: reference,
+        description: `Demande de retrait de ${withdrawAmount.toLocaleString('fr-FR')} FCFA vers ${operator.toUpperCase()} (${phoneNumber})`,
+        operator: operator,
+        phoneNumber: phoneNumber,
+        numero: phoneNumber,
+        createdAt: nowIso,
+        timestamp: serverTimestamp()
+      };
+
+      const txRef = await addDoc(collection(db, "transactions"), txData);
+
+      // 2. Create in `walletWithdrawalRequests` collection
+      await setDoc(doc(db, "walletWithdrawalRequests", txRef.id), {
+        id: txRef.id,
+        userId: uid,
+        uid: uid,
+        userName: userName,
+        userPhoto: userPhoto,
         operator: operator,
         numero: phoneNumber,
+        phoneNumber: phoneNumber,
         amount: withdrawAmount,
-        status: "PENDING",
+        montant: withdrawAmount,
+        reference: reference,
+        status: "en_attente",
+        statut: "en_attente",
         createdAt: serverTimestamp(),
-        createdAtIso: new Date().toISOString()
+        createdAtIso: nowIso
       });
+
+      setCreatedDepositRef(reference);
       setWithdrawSubmitted(true);
+      addToTerminal(`[BÊTA RETRAIT] Demande ${reference} de ${withdrawAmount.toLocaleString('fr-FR')} FCFA transmise au Centre Fondateur.`);
     } catch (err) {
       console.error("Withdrawal error", err);
+      alert("Erreur lors de la création de la demande de retrait.");
     } finally {
       setProcessing(false);
     }
@@ -665,16 +740,15 @@ export default function AfrigomboWalletDashboard({
                       {isFlowIn ? "+" : "-"}{txAmount.toLocaleString('fr-FR')} FCFA
                     </span>
                     <span className={`inline-block text-[7.5px] font-mono py-0.5 px-1.5 rounded border uppercase font-bold ${
-                      tx.status === "success" || tx.statut === "success" || tx.status === "fonds_liberes" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25" :
+                      tx.status === "validated" || tx.status === "PAID" || tx.status === "success" || tx.statut === "success" || tx.status === "valide" || tx.status === "fonds_liberes" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25" :
+                      tx.status === "refused" || tx.status === "refuse" || tx.status === "REFUSED" ? "bg-rose-500/10 text-rose-400 border-rose-500/25" :
                       tx.status === "fonds_bloques" ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/25" :
-                      tx.status === "pending" || tx.statut === "pending" ? "bg-amber-500/10 text-amber-400 border-amber-500/25 animate-pulse" :
-                      "bg-afri-bg text-afri-text-sec border-afri-border"
+                      "bg-amber-500/10 text-amber-400 border-amber-500/25"
                     }`}>
-                      {tx.status === "fonds_bloques" ? "Séquestre" :
-                       tx.status === "fonds_liberes" ? "Libéré" :
-                       tx.status === "success" || tx.statut === "success" ? "Succès" :
-                       tx.status === "pending" ? "En attente" :
-                       tx.status || "Terminé"}
+                      {tx.status === "validated" || tx.status === "PAID" || tx.status === "success" || tx.statut === "success" || tx.status === "valide" || tx.status === "fonds_liberes" ? "🟢 Validé" :
+                       tx.status === "refused" || tx.status === "refuse" || tx.status === "REFUSED" ? "🔴 Refusé" :
+                       tx.status === "fonds_bloques" ? "Séquestre" :
+                       "🟡 En attente"}
                     </span>
                   </div>
 
@@ -815,107 +889,56 @@ export default function AfrigomboWalletDashboard({
                     </p>
                   </div>
 
+                  <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 space-y-2 text-left text-xs font-mono">
+                    <div className="flex justify-between items-center">
+                      <span className="text-zinc-400">Numéro de Référence :</span>
+                      <strong className="text-[#D4AF37]">{createdDepositRef}</strong>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-zinc-400">Montant du Dépôt :</span>
+                      <strong className="text-emerald-400">+{Number(amount).toLocaleString('fr-FR')} FCFA</strong>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-zinc-400">Statut du Dépôt :</span>
+                      <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[10px]">
+                        🟡 En attente des instructions
+                      </span>
+                    </div>
+                  </div>
+
                   <div className="space-y-2 pt-2">
                     <button
                       type="button"
                       onClick={() => {
-                        supportConfig.openSupport(`Bonjour 👋\n\nMa demande de rechargement Wallet de ${Number(amount).toLocaleString('fr-FR')} FCFA via ${operator.toUpperCase()} (${phoneNumber}) est enregistrée (Réf: ${createdDepositRef || "dep_beta"}).`);
+                        setShowDepositModal(false);
+                        if (onNavigateToMessages) {
+                          onNavigateToMessages("admin");
+                        } else {
+                          supportConfig.openSupport(`Bonjour 👋\n\nMa demande de rechargement Wallet de ${Number(amount).toLocaleString('fr-FR')} FCFA via ${operator.toUpperCase()} (${phoneNumber}) est enregistrée (Réf: ${createdDepositRef}). Je souhaite envoyer ma preuve de paiement.`);
+                        }
                       }}
-                      className="w-full py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-black font-black text-xs uppercase rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-md"
+                      className="w-full py-3.5 bg-[#D4AF37] hover:bg-[#b8982e] text-black font-black text-xs uppercase font-mono tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-md"
                     >
                       <MessageSquare className="w-4 h-4" />
-                      <span>VALIDER AVEC LE SUPPORT WHATSAPP</span>
+                      <span>Contacter le Service Client (Arbre à Palabres)</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={async () => {
-                        setProcessing(true);
-                        try {
-                          const now = new Date().toISOString();
-                          
-                          // Get current user profile doc
-                          const userRef = doc(db, "users", uid);
-                          const userSnap = await getDoc(userRef);
-                          let currentDispo = 0;
-                          let currentDepots = 0;
-                          if (userSnap.exists()) {
-                            const uData = userSnap.data();
-                            currentDispo = uData?.wallet?.soldeDisponible ?? 0;
-                            currentDepots = uData?.wallet?.depots ?? 0;
-                          }
-                          
-                          const depositVal = Number(amount);
-                          const newDispo = currentDispo + depositVal;
-                          const newDepots = currentDepots + depositVal;
-                          
-                          // Update balance in user doc
-                          await setDoc(userRef, {
-                            wallet: {
-                              soldeDisponible: newDispo,
-                              depots: newDepots
-                            }
-                          }, { merge: true });
-                          
-                          // Record transaction
-                          const txRef = "DEP-SIM-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-                          await recordWalletTransaction({
-                            userId: uid,
-                            userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || currentUserProfile?.name || "Membre Gombo",
-                            type: "recharge_wallet",
-                            amount: depositVal,
-                            status: "success",
-                            reference: txRef,
-                            description: `Recharge instantanée Bêta (${txRef})`
-                          });
-                          
-                          // Update deposit request in firebase if exists
-                          if (createdDepositRef) {
-                            await setDoc(doc(db, "walletDepositRequests", createdDepositRef), {
-                              status: "validated",
-                              statut: "validated",
-                              validatedAt: now,
-                              validatedBy: "Auto-Validation Bêta"
-                            }, { merge: true });
-                          }
-                          
-                          // Add notification
-                          await addDoc(collection(db, "notifications"), {
-                            userId: uid,
-                            title: "💳 Recharge Bêta Réussie !",
-                            message: `Votre recharge instantanée de ${depositVal.toLocaleString('fr-FR')} FCFA a été créditée.`,
-                            type: "payment_received",
-                            createdAt: now,
-                            isRead: false
-                          });
-                          
-                          addToTerminal(`[BÊTA] Wallet crédité avec succès de ${depositVal.toLocaleString('fr-FR')} FCFA !`);
-                          playSound("success");
-                          
-                          // Fire custom event to notify listeners of balance update
-                          window.dispatchEvent(new CustomEvent("wallet_balance_updated"));
-                          
-                          setStep("form");
-                          setAmount("");
-                          setShowDepositModal(false);
-                        } catch (err) {
-                          console.error(err);
-                          alert("Erreur de simulation.");
-                        } finally {
-                          setProcessing(false);
-                        }
+                      onClick={() => {
+                        supportConfig.openSupport(`Bonjour 👋\n\nMa demande de rechargement Wallet de ${Number(amount).toLocaleString('fr-FR')} FCFA via ${operator.toUpperCase()} (${phoneNumber}) est enregistrée (Réf: ${createdDepositRef}). Je souhaite transmettre ma preuve.`);
                       }}
-                      className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 text-black font-black text-xs uppercase rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-md border border-[#D4AF37]"
+                      className="w-full py-2.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] font-bold text-xs uppercase font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
                     >
-                      <Sparkles className="w-4 h-4 animate-pulse" />
-                      <span>CRÉDITER INSTANTANÉMENT (MODE BÊTA)</span>
+                      <span>Valider via WhatsApp</span>
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => { setShowDepositModal(false); playSound("click"); }}
-                      className="w-full py-2.5 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text-sec text-[10px] font-mono uppercase rounded-xl transition-colors cursor-pointer"
+                      className="w-full py-2 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text-sec text-[10px] font-mono uppercase rounded-xl transition-colors cursor-pointer"
                     >
-                      Fermer le guichet
+                      Fermer la fenêtre
                     </button>
                   </div>
                 </div>

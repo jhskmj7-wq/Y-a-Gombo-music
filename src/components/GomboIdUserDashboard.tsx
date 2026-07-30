@@ -37,8 +37,6 @@ export default function GomboIdUserDashboard({
   addToTerminal = () => {},
   onBack
 }: GomboIdUserDashboardProps) {
-  if (!currentUser) return null;
-
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<"intro" | "conditions" | "upload" | "checkout" | "submitted">("intro");
   
@@ -82,6 +80,8 @@ export default function GomboIdUserDashboard({
     selfie: useRef<HTMLInputElement>(null),
     musicProof: useRef<HTMLInputElement>(null)
   };
+
+  if (!currentUser) return null;
 
   // Status mapping helper
   const getStatusDisplay = () => {

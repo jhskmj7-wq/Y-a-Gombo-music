@@ -31,6 +31,7 @@ import { NearbyGombosSection, NearbyArtistsSection } from "./NearbyGeoSections";
 import { AfrigoRadarMap } from "./AfrigoRadarMap";
 import { getDistanceLabel, calculateDistance } from "../lib/geoUtils";
 import { ArbreAPalabresBubble } from "./ArbreAPalabresBubble";
+import { AfrigomboFooter } from "./AfrigomboFooter";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -1590,36 +1591,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         </div>
 
         {/* 13. FOOTER */}
-        <footer className="mt-12 pt-8 pb-12 border-t border-afri-border/80 text-left space-y-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-            <div className="space-y-1">
-              <div className="flex items-center justify-center sm:justify-start gap-2">
-                <span className="text-xl">👑</span>
-                <span className="font-display font-black text-sm tracking-widest text-[#D4AF37] uppercase">AFRIGOMBO</span>
-              </div>
-              <p className="text-[10px] font-mono text-afri-text-sec">Le Trône de la Musique Africaine & de la Souveraineté Artistique</p>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] font-mono font-bold text-afri-text-sec uppercase">
-              <button onClick={() => setActiveMenu("user_terrain")} className="hover:text-[#D4AF37] transition">Accueil</button>
-              <span>•</span>
-              <button onClick={() => requireAuthThen(() => setActiveMenu("user_mes_gombos"))} className="hover:text-[#D4AF37] transition">Mes Gombos</button>
-              <span>•</span>
-              <button onClick={() => requireAuthThen(() => setActiveMenu("user_grand_marche"))} className="hover:text-[#D4AF37] transition">Grand Marché</button>
-              <span>•</span>
-              <button onClick={() => requireAuthThen(() => setActiveMenu("user_academie"))} className="hover:text-[#D4AF37] transition">Académie</button>
-              <span>•</span>
-              <button onClick={() => setActiveMenu("user_help_center")} className="hover:text-[#D4AF37] transition">Aide</button>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-afri-border/40 pt-4 text-[9px] font-mono text-afri-text-sec">
-            <span>© 2026 AFRIGOMBO — Tous droits réservés sur la Terre Éburnéenne.</span>
-            <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-bold uppercase">
-              ● Réseau Souverain Opérationnel
-            </span>
-          </div>
-        </footer>
+        <AfrigomboFooter setActiveMenu={setActiveMenu} requireAuthThen={requireAuthThen} />
       </div>
 
       {/* ==========================================
@@ -1659,19 +1631,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         </AndroidCenteredDialog>
       )}
 
-      {/* ==========================================
-          6. SÉCURITÉ ET COPYRIGHT FOOTER
-         ========================================== */}
-      <footer className="mt-12 border-t border-afri-border pt-6 pb-4 space-y-4 text-center">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[9px] font-mono text-afri-text-sec uppercase tracking-widest leading-none">
-          <div className="flex gap-4">
-            <button onClick={() => setActiveMenu("terms")} className="hover:text-afri-text">CGU</button>
-            <span>•</span>
-            <button onClick={() => setActiveMenu("privacy")} className="hover:text-afri-text">Confidentialité</button>
-          </div>
-          <p className="text-afri-text-sec">© 2026. AFRIGOMBO SHOWBIZ • SOUVERAINETÉ ARTISTIQUE</p>
-        </div>
-      </footer>
+
 
       {/* =========================================================================
           INTERACTIVE ACTIONS MODAL OVERLAYS (SOUVERAIN COMMANDE CENTRE)

@@ -38,6 +38,7 @@ const ThroneCinematicIntro = lazyWithRetry(() => import("./admin/ThroneCinematic
 const BetaTransactionsAdminPanel = lazyWithRetry(() => import("./admin/BetaTransactionsAdminPanel"));
 const GeoLocationCenter = lazyWithRetry(() => import("./admin/GeoLocationCenter"));
 const UserCommentsView = lazyWithRetry(() => import("./UserCommentsView"));
+import AfrigomboFooter from "./AfrigomboFooter";
 
 import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
@@ -4489,57 +4490,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     {/* =========================================================================
                                              FOOTER COMPLETE SECTION
                        ========================================================================= */}
-                    <footer className="mt-16 border-t border-afri-border bg-afri-bg-sec rounded-3xl p-6 sm:p-8 space-y-6">
-                      <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-afri-border">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-afri-gold/10 flex items-center justify-center">
-                            <Flame className="text-afri-gold w-5 h-5 animate-bounce" />
-                          </div>
-                          <div>
-                            <span className="text-xs font-sans font-black text-afri-text uppercase tracking-widest block leading-tight">Y'A GOMBO MUSIC</span>
-                            <span className="text-[7.5px] uppercase font-mono tracking-widest text-afri-gold/75 font-black block">Elite Sovereignty Consortium</span>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] font-mono text-afri-text-sec">
-                          <button
-                            onClick={() => {
-                              setActiveMenu("terms");
-                            }}
-                            className="hover:text-afri-gold transition-all cursor-pointer font-bold"
-                          >
-                            CGU
-                          </button>
-                          <span className="text-zinc-800">•</span>
-                          <button
-                            onClick={() => {
-                              setActiveMenu("privacy");
-                            }}
-                            className="hover:text-afri-gold transition-all cursor-pointer font-bold"
-                          >
-                            CONFIDENTIALITÉ
-                          </button>
-                          <span className="text-zinc-800">•</span>
-                          <button
-                            onClick={() => {
-                              setActiveMenu("delete_account");
-                            }}
-                            className="text-red-500/80 hover:text-red-400 hover:underline transition-all cursor-pointer font-bold"
-                          >
-                            SUPPRIMER COMPTE
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[9px] font-mono text-afri-text-sec text-center sm:text-left">
-                        <p>
-                          AFRIGOMBO SHOWBIZ • Conçu avec rigueur et prestige pour les maîtres de scène en Côte d'Ivoire.
-                        </p>
-                        <p>
-                          © 2026. Souveraineté Artistique Garantie.
-                        </p>
-                      </div>
-                    </footer>
+                    <AfrigomboFooter setActiveMenu={setActiveMenu} requireAuthThen={requireAuthThen} />
 
                   </div>
                 );
@@ -6044,6 +5995,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     currentUserProfile={profile || (currentUser as any)} 
                     addToTerminal={addToTerminal}
                     onBack={() => goBackMenu()}
+                    onNavigateToMessages={(targetId) => {
+                      if (setOpenConvoWithUserId) setOpenConvoWithUserId(targetId || "admin");
+                      setActiveMenu("user_messages");
+                    }}
                   />
                 </div>
               )}
