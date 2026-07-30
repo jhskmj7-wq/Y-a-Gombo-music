@@ -279,7 +279,7 @@ export function PublicProfileModal({
                     <div className="relative shrink-0">
                       <div className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 rounded-full border-2 border-afri-gold p-1 bg-afri-bg shadow-lg">
                         <img
-                          src={profile.avatarUrl || profile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"}
+                          src={(profile.useAvatarAsProfile && profile.avatarDataUri) ? profile.avatarDataUri : (profile.avatarUrl || profile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200")}
                           alt={displayName}
                           className="w-full h-full rounded-full object-cover"
                         />

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   ShieldCheck, Star, Briefcase, Wallet, Users, Target, Heart,
   MessageSquare, Edit3, Share2, Crown, Award, Copy, QrCode, Check, X, ShieldAlert,
-  Fingerprint, Flame, ChevronRight, Clock, Shield, Download, Store, GraduationCap, Eye
+  Fingerprint, Flame, ChevronRight, Clock, Shield, Download, Store, GraduationCap, Eye, User, ShoppingBag
 } from "lucide-react";
 import { UserProfile } from "../types";
 import { audioSynth } from "../lib/audio";
@@ -270,7 +270,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 isLight ? "border-[#D4AF37]/35 bg-stone-100" : "border-amber-400/45 bg-zinc-800"
               }`}>
                 <img 
-                  src={currentUserProfile.avatarUrl || currentUserProfile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+                  src={(currentUserProfile.useAvatarAsProfile && currentUserProfile.avatarDataUri) ? currentUserProfile.avatarDataUri : (currentUserProfile.avatarUrl || currentUserProfile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150")} 
                   alt="Artist Avatar" 
                   className="w-full h-full object-cover rounded-full" 
                   referrerPolicy="no-referrer"
@@ -425,6 +425,43 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         <span className="text-center flex-1">GÉRER MON ABONNEMENT</span>
         <ChevronRight className="w-3.5 h-3.5 text-afri-gold stroke-[3.5]" />
       </button>
+
+      {/* 4b. AVATAR AFRIGOMBO SECTION */}
+      <div className={`relative overflow-hidden rounded-[24px] p-5 border shadow-sm ${
+        isLight ? "bg-[#FDFBF7] border-[#D4AF37]/40" : "bg-afri-bg-sec border-afri-border"
+      }`}>
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-12 h-12 rounded-full bg-afri-gold/10 flex items-center justify-center border border-afri-gold/30">
+            <User className="w-6 h-6 text-afri-gold" />
+          </div>
+          <div>
+            <h3 className="text-sm font-black text-afri-text uppercase tracking-widest">Mon Avatar</h3>
+            <p className="text-[10px] text-afri-text-sec font-sans">Identité virtuelle & Accessoires</p>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button 
+            onClick={() => {
+              if (window.dispatchEvent) {
+                window.dispatchEvent(new CustomEvent("gombo_open_avatar_editor"));
+              }
+            }}
+            className="flex-1 py-2.5 bg-afri-bg border border-afri-border hover:border-afri-gold/50 text-afri-text font-black text-[10px] uppercase tracking-widest rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <User className="w-4 h-4" /> Personnaliser
+          </button>
+          <button 
+            onClick={() => {
+              if (window.dispatchEvent) {
+                window.dispatchEvent(new CustomEvent("gombo_open_avatar_store"));
+              }
+            }}
+            className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black font-black text-[10px] uppercase tracking-widest rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <ShoppingBag className="w-4 h-4" /> Boutique
+          </button>
+        </div>
+      </div>
 
       {/* 5. GRANDE CARTE PREMIUM GOMBO ID */}
       {!isKycApproved ? (

@@ -3,6 +3,8 @@ import { AfrigomboSupportModal } from "./AfrigomboSupportModal";
 import { NearbyPageView } from "./NearbyPageView";
 import { ErrorBoundary } from "./ErrorBoundary";
 import GomboBoostManager from "./GomboBoostManager";
+import AvatarEditor from "./avatar/AvatarEditor";
+import AvatarStore from "./avatar/AvatarStore";
 import React, { useState, useEffect, useRef, useLayoutEffect, lazy, Suspense } from "react";
 import {
   collection,
@@ -34,6 +36,7 @@ const AdminRevenue = lazyWithRetry(() => import("./admin/AdminRevenue"));
 const AdminSettings = lazyWithRetry(() => import("./admin/AdminSettings"));
 const AdminSecurity = lazyWithRetry(() => import("./admin/AdminSecurity"));
 const AdminFounderThrone = lazyWithRetry(() => import("./admin/AdminFounderThrone"));
+const AdminAvatarStore = lazyWithRetry(() => import("./admin/AdminAvatarStore"));
 const MultimediaCenter = lazyWithRetry(() => import("./admin/MultimediaCenter"));
 const AfrigomboEconomieDashboard = lazyWithRetry(() => import("./AfrigomboEconomieDashboard"));
 const AfrigomboBuilders = lazyWithRetry(() => import("./AfrigomboBuilders"));
@@ -450,6 +453,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [activeBoostItem, setActiveBoostItem] = useState<{id: string, title?: string, type: 'gombo' | 'candidature' | 'profile'} | null>(null);
   const [isDiagnosticOpen, setIsDiagnosticOpen] = useState<boolean>(false);
   const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(false);
+  
+  // Avatar modals state
+  const [isAvatarEditorOpen, setIsAvatarEditorOpen] = useState<boolean>(false);
+  const [isAvatarStoreOpen, setIsAvatarStoreOpen] = useState<boolean>(false);
 
   // Scroll Position Memory Engine for Independent Scroll Preservation
   const scrollPositionsRef = useRef<Record<string, number>>({});
@@ -471,9 +478,16 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     };
     window.addEventListener("gombo_trigger_profile_boost", handleTriggerProfileBoost);
 
+    const handleOpenAvatarEditor = () => setIsAvatarEditorOpen(true);
+    const handleOpenAvatarStore = () => setIsAvatarStoreOpen(true);
+    window.addEventListener("gombo_open_avatar_editor", handleOpenAvatarEditor);
+    window.addEventListener("gombo_open_avatar_store", handleOpenAvatarStore);
+
     return () => {
       window.removeEventListener('open-firebase-diagnostic', handleOpenDiagnostic);
       window.removeEventListener("gombo_trigger_profile_boost", handleTriggerProfileBoost);
+      window.removeEventListener("gombo_open_avatar_editor", handleOpenAvatarEditor);
+      window.removeEventListener("gombo_open_avatar_store", handleOpenAvatarStore);
     };
   }, [profile, currentUser]);
 
@@ -1297,7 +1311,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [sonsEnabled, setSonsEnabled] = useState<boolean>(() => localStorage.getItem("afrigombo_sounds") !== "false");
   const [showDashboardIntro, setShowDashboardIntro] = useState<boolean>(true);
   const [dashboardStep, setDashboardStep] = useState<number>(1);
-  const [superAdminTab, setSuperAdminTab] = useState<"throne" | "beta_transactions" | "media" | "economie" | "batisseurs" | "geolocalisation">("throne");
+  const [superAdminTab, setSuperAdminTab] = useState<"throne" | "beta_transactions" | "media" | "economie" | "batisseurs" | "geolocalisation" | "avatar_store">("throne");
   const pendingBetaCount = transactions.filter((t: any) => t.status === "en_attente_validation").length;
 
   // --- STATE FOR ACTIONS RAPIDES AND RECHERCHE UNIVERSELLE ---
@@ -7040,6 +7054,20 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         🏛 Bâtisseurs
                       </button>
                       
+                      <button
+                        onClick={() => {
+                          setSuperAdminTab("avatar_store");
+                          try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        }}
+                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0 whitespace-nowrap ${
+                          superAdminTab === "avatar_store"
+                            ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
+                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
+                        }`}
+                      >
+                        🎭 Avatar Store
+                      </button>
+
                       {/* End of course spacing to prevent final element cutoff */}
                       <div className="w-4 shrink-0 pr-4" />
                     </div>
@@ -7059,7 +7087,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     </div>
 
                     <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement de la Console...</div>}>
-                      {superAdminTab === "throne" ? (
+                      {superAdminTab === "avatar_store" ? (
+                        <AdminAvatarStore />
+                      ) : superAdminTab === "throne" ? (
                         <AdminFounderThrone
                           theme={theme}
                           founders={dynamicFounders}
@@ -10167,6 +10197,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           // Boost successfully activated
         }}
       />
+
+      {/* Avatar Modals */}
+      {isAvatarEditorOpen && (
+        <AvatarEditor onClose={() => setIsAvatarEditorOpen(false)} />
+      )}
+      {isAvatarStoreOpen && (
+        <AvatarStore onClose={() => setIsAvatarStoreOpen(false)} inventory={[]} />
+      )}
 
       {/* 6. Firebase Diagnostic Modal */}
       <FirebaseDiagnostic 

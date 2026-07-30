@@ -16,7 +16,8 @@ export type AdminMenu =
   | "monetisation"
   | "contracts"
   | "payments_to_verify"
-  | "super_admin";
+  | "super_admin"
+  | "admin_avatar_store";
 
 export type UserRole = "client" | "musicien" | "admin" | string;
 export type PaymentProvider = "MANUAL_BETA" | "CINETPAY" | "WAVE" | "MTN" | "MOOV";
