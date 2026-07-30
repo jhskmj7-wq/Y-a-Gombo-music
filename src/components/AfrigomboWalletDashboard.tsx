@@ -31,6 +31,7 @@ import { collection, query, where, getDocs, addDoc, onSnapshot, doc, getDoc, set
 import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
 import { supportConfig } from "../supportConfig";
 import { recordWalletTransaction } from "../lib/financial";
+import { SupportService } from "../services/SupportService";
 
 interface AfrigomboWalletDashboardProps {
   currentUserProfile: any;
@@ -305,6 +306,14 @@ export default function AfrigomboWalletDashboard({
       await setDoc(doc(db, "walletDepositRequests", txRef.id), requestPayload);
       await setDoc(doc(db, "walletRequests", txRef.id), requestPayload);
 
+      // Send automated support message for deposit request
+      try {
+        const supportMessageText = `📢 NOUVELLE DEMANDE DE DÉPÔT\n\n• Montant : ${depositAmount.toLocaleString('fr-FR')} FCFA\n• Date : ${new Date().toLocaleDateString('fr-FR')}\n• Référence : ${reference}\n• Statut : En attente\n• Moyen : ${operator.toUpperCase()} (${phoneNumber})`;
+        await SupportService.sendSystemSupportMessage(uid, currentUserProfile, supportMessageText, "Wallet");
+      } catch (supportErr) {
+        console.warn("Could not notify support of deposit:", supportErr);
+      }
+
       setCreatedDepositRef(reference);
       setStep("success");
       addToTerminal(`[BÊTA DÉPÔT] Demande ${reference} de ${depositAmount.toLocaleString('fr-FR')} FCFA créée avec succès. En attente de validation.`);
@@ -379,6 +388,14 @@ export default function AfrigomboWalletDashboard({
 
       await setDoc(doc(db, "walletWithdrawalRequests", txRef.id), withdrawPayload);
       await setDoc(doc(db, "walletRequests", txRef.id), withdrawPayload);
+
+      // Send automated support message for withdrawal request
+      try {
+        const supportMessageText = `💸 NOUVELLE DEMANDE DE RETRAIT\n\n• Montant : ${withdrawAmount.toLocaleString('fr-FR')} FCFA\n• Date : ${new Date().toLocaleDateString('fr-FR')}\n• Référence : ${reference}\n• Statut : En attente\n• Moyen : ${operator.toUpperCase()} (${phoneNumber})`;
+        await SupportService.sendSystemSupportMessage(uid, currentUserProfile, supportMessageText, "Wallet");
+      } catch (supportErr) {
+        console.warn("Could not notify support of withdrawal:", supportErr);
+      }
 
       setCreatedDepositRef(reference);
       setWithdrawSubmitted(true);

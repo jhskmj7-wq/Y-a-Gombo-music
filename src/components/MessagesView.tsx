@@ -418,21 +418,30 @@ export default function MessagesView({
     setRemoteStream(null);
   };
 
-  const partnerUid = activeConvo?.participants.find((p) => p !== currentUser.uid);
+  const partnerUid = activeConvo?.participants.find((p) => p !== currentUser?.uid);
   const partnerDetails = partnerUid ? activeConvo?.participantDetails?.[partnerUid] : null;
 
+  if (!currentUser?.uid) {
+    return (
+      <div className="w-full flex-1 flex flex-col items-center justify-center p-8 bg-black text-white text-center space-y-4 min-h-[400px]">
+        <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+        <p className="text-xs font-mono text-zinc-400">Initialisation de la messagerie sécurisée...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full h-full min-h-screen flex flex-col justify-between p-0 m-0 border-none rounded-none bg-black text-white select-none overflow-hidden relative pb-[88px]">
-      {/* Barre de recherche intégrée directement sous le Header principal d'AFRIGOMBO sur toute la largeur de l'écran */}
-      <div className="w-full px-4 py-2 bg-neutral-900 border-b border-neutral-850 shrink-0">
+    <div className="w-full flex-1 flex flex-col justify-between p-0 m-0 border-none rounded-none bg-black text-white select-none overflow-hidden relative pb-[88px]">
+      {/* HAUT (Barre de recherche) : Une barre de recherche rapide avec icône loupe (w-full px-4 py-3 bg-neutral-900/50) */}
+      <div className="w-full px-4 py-3 bg-neutral-900/50 border-b border-neutral-800 shrink-0">
         <div className="relative w-full">
-          <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-2.5" />
+          <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3" />
           <input
             type="text"
             placeholder="Rechercher une discussion..."
             value={convoSearchQuery}
             onChange={(e) => setConvoSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-1.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#D4AF37]"
+            className="w-full pl-10 pr-4 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#D4AF37]"
           />
         </div>
       </div>
@@ -448,19 +457,33 @@ export default function MessagesView({
                 activeConvo ? "hidden md:flex" : "flex h-full"
               }`}
             >
-              <div className="flex-1 overflow-y-auto divide-y divide-zinc-900">
+              <div className="flex-1 overflow-y-auto divide-y divide-zinc-900 flex flex-col">
                 {loadingConvos ? (
-                  <div className="p-8 text-center space-y-2">
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-2">
                     <Loader2 className="w-6 h-6 animate-spin text-[#D4AF37] mx-auto" />
                     <p className="text-xs text-zinc-500 font-mono">Chargement...</p>
                   </div>
                 ) : conversations.length === 0 ? (
-                  <div className="p-8 text-center space-y-3">
-                    <MessageSquare className="w-8 h-8 text-zinc-600 mx-auto" />
-                    <p className="text-xs font-bold text-white">Aucune discussion active</p>
-                    <p className="text-[11px] text-zinc-500 leading-relaxed">
-                      Démarrez un échange suite à une candidature, une invitation ou un Gombo.
-                    </p>
+                  /* CENTRE (Zone principale) : Si aucune conversation : Afficher une icône de bulle stylisée, un texte central "Aucune discussion active" et un bouton incitatif "Démarrer un échange" */
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-zinc-900 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37]">
+                      <MessageSquare className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                        Aucune discussion active
+                      </h3>
+                      <p className="text-xs text-zinc-400 max-w-xs mt-1.5 leading-relaxed">
+                        Démarrez un échange suite à une candidature, une invitation ou un Gombo.
+                      </p>
+                    </div>
+                    <button
+                      onClick={onNavigateToSearch}
+                      className="px-5 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black text-xs font-bold uppercase rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4 stroke-[2.5]" />
+                      Démarrer un échange
+                    </button>
                   </div>
                 ) : (
                   conversations
@@ -474,26 +497,39 @@ export default function MessagesView({
                       const pName = pUid ? c.participantNames?.[pUid] || "Artiste Gombo" : "Partenaire";
                       const pDetails = pUid ? c.participantDetails?.[pUid] : null;
                       const isSelected = activeConvo?.id === c.id;
+                      const unread = c.unreadCount?.[currentUser?.uid || ""] || 0;
+                      const lastMsgTime = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
 
                       return (
                         <div
                           key={c.id}
                           onClick={() => setActiveConvo(c)}
-                          className={`p-4 hover:bg-zinc-900/60 transition-colors cursor-pointer flex items-center gap-3 border-l-2 ${
+                          className={`p-4 hover:bg-zinc-900/60 transition-colors cursor-pointer flex items-center justify-between gap-3 border-l-2 ${
                             isSelected ? "border-[#D4AF37] bg-zinc-900/80" : "border-transparent"
                           }`}
                         >
-                          <img
-                            src={pDetails?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"}
-                            alt=""
-                            className="w-10 h-10 rounded-full object-cover border border-zinc-800"
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <strong className="text-xs text-white truncate block">{pName}</strong>
-                            <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                              {c.lastMessage || "Démarrez l'échange..."}
-                            </p>
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <img
+                              src={pDetails?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"}
+                              alt=""
+                              className="w-10 h-10 rounded-full object-cover border border-zinc-800 shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <strong className="text-xs text-white truncate block">{pName}</strong>
+                              <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                                {c.lastMessage || "Démarrez l'échange..."}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end gap-1 shrink-0">
+                            <span className="text-[9px] font-mono text-zinc-500">{lastMsgTime}</span>
+                            {unread > 0 && (
+                              <span className="px-1.5 py-0.5 bg-[#D4AF37] text-black font-black text-[9px] rounded-full min-w-[18px] text-center">
+                                {unread}
+                              </span>
+                            )}
                           </div>
                         </div>
                       );
@@ -888,9 +924,9 @@ export default function MessagesView({
       {/* WhatsApp-Style Bottom Navigation Bar (3 Essential Tabs) */}
       <div className="absolute bottom-0 left-0 w-full pb-6 pt-2 bg-neutral-900 border-t border-neutral-800 flex items-center justify-around px-2 z-30 shadow-2xl">
         {[
-          { id: "conversations", label: "Discussions", icon: MessageSquare, badge: conversations.length },
-          { id: "contrats", label: "Contrats", icon: FileText },
-          { id: "appels", label: "Appels", icon: PhoneCall, badge: callLogs.length }
+          { id: "conversations", label: "💬 DISCUSSIONS", icon: MessageSquare, badge: conversations.length },
+          { id: "contrats", label: "📄 CONTRATS", icon: FileText },
+          { id: "appels", label: "📞 APPELS", icon: PhoneCall, badge: callLogs.length }
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (

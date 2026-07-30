@@ -23,6 +23,7 @@ import { collection, onSnapshot, addDoc, doc, updateDoc, increment } from "fireb
 import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
 import { ReelsPlayer } from "./ReelsPlayer";
 import { SmartAudioMenu } from "./SmartAudioMenu";
+import UserPollsWidget from "./UserPollsWidget";
 import { SmartBlock, BlockType } from "./SmartBlock";
 import { SmartUniverseCarousel } from "./SmartUniverseCarousel";
 import { useGeoEngine } from "../hooks/useGeoEngine";
@@ -1243,6 +1244,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           </motion.div>
         </div>
       </div>
+
+      <UserPollsWidget 
+        currentUser={currentUser} 
+        profile={profile} 
+        audioSynth={audioSynth} 
+      />
 
        {/* ==========================================
           SECTION 3 — 🔥 TENDANCES AFRIGOMBO (PREMIUM)

@@ -17,6 +17,7 @@ import { ImperialMessageModal } from "./ImperialMessageModal";
 import { AdminDecouvertesCentre } from "./AdminDecouvertesCentre";
 import { AdminCommunicationCenter } from "./AdminCommunicationCenter";
 import AdminSupportCenter from "./AdminSupportCenter";
+import AdminPollCenter from "./AdminPollCenter";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
@@ -2383,6 +2384,21 @@ export default function AdminFounderThrone({
                   <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Gérer le SAV →</span>
                 </div>
 
+                {/* Centre des Sondages */}
+                <div
+                  onClick={() => setSelectedSection("poll_center")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-2xl text-[#D4AF37] block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <BarChart3 className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Centre des Sondages
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Sondages officiels & consultations communautaires</p>
+                  <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Gérer les sondages →</span>
+                </div>
+
               </div>
             </div>
 
@@ -3410,6 +3426,13 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "support_center" && (
               <AdminSupportCenter audioSynth={audioSynth} />
+            )}
+
+            {/* =========================================================
+                 DETAILED VIEW: 📊 Centre des Sondages
+                 ========================================================= */}
+            {selectedSection === "poll_center" && (
+              <AdminPollCenter audioSynth={audioSynth} />
             )}
 
             {/* =========================================================

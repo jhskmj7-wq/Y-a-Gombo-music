@@ -10211,6 +10211,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         }}
       />
 
+      {/* 8b. Integrated AFRIGOMBO Support Modal */}
+      <AfrigomboSupportModal
+        isOpen={isSupportModalOpen}
+        onClose={() => setIsSupportModalOpen(false)}
+        currentUser={currentUser}
+        profile={profile}
+        initialReason={supportModalReason}
+      />
+
       {/* 9. Global Arbre à Palabres Floating Bubble */}
       {!(
         activeMenu === "user_reels" || 
