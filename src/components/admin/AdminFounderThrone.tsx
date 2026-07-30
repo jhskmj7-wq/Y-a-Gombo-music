@@ -16,6 +16,7 @@ import { PendingPublicationsAdminPanel } from "./PendingPublicationsAdminPanel";
 import { ImperialMessageModal } from "./ImperialMessageModal";
 import { AdminDecouvertesCentre } from "./AdminDecouvertesCentre";
 import { AdminCommunicationCenter } from "./AdminCommunicationCenter";
+import AdminSupportCenter from "./AdminSupportCenter";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
@@ -2316,6 +2317,22 @@ export default function AdminFounderThrone({
                   <p className="text-[10px] font-mono text-afri-text-sec mt-1">Supervision chats, WebRTC & modération</p>
                   <span className="text-[9px] font-mono text-amber-400 font-bold block mt-3">Gérer la messagerie →</span>
                 </div>
+
+                {/* Centre Support */}
+                <div
+                  onClick={() => setSelectedSection("support_center")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-2xl text-[#D4AF37] block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <HelpCircle className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Centre Support
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">SAV, tickets & réclamations communautaires</p>
+                  <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Gérer le SAV →</span>
+                </div>
+
               </div>
             </div>
 
@@ -3336,6 +3353,13 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "communication" && (
               <AdminCommunicationCenter />
+            )}
+
+            {/* =========================================================
+                 DETAILED VIEW: 🛠 Centre Support SAV
+                 ========================================================= */}
+            {selectedSection === "support_center" && (
+              <AdminSupportCenter audioSynth={audioSynth} />
             )}
 
             {/* =========================================================

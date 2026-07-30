@@ -1178,7 +1178,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                    if (geo.permissionStatus !== "granted") {
                      geo.requestLocation();
                    }
-                   setIsPresDeMoiModalOpen(true);
+                   setActiveMenu("nearby");
                    try { audioSynth?.playValidationSuccess?.(); } catch (_) {} 
                  } 
                },

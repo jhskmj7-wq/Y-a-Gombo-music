@@ -1,3 +1,6 @@
+import { useGeoEngine } from "../hooks/useGeoEngine";
+import { AfrigomboSupportModal } from "./AfrigomboSupportModal";
+import { NearbyPageView } from "./NearbyPageView";
 import { ErrorBoundary } from "./ErrorBoundary";
 import React, { useState, useEffect, useRef, useLayoutEffect, lazy, Suspense } from "react";
 import {
@@ -435,6 +438,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     "Trouver un studio..."
   ]);
   const { currentUser, profile, logout, refreshProfile, setProfile, loginWithGoogle } = useAuth();
+  const geo = useGeoEngine(profile);
   const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isBetaFeedbackOpen, setIsBetaFeedbackOpen] = useState<boolean>(false);
@@ -634,6 +638,20 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     return () => {
       window.removeEventListener("open-public-profile" as any, handleOpenPublicProfile as any);
       window.removeEventListener("open_wallet_deposit", handleOpenWalletDeposit);
+    };
+  }, []);
+
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [supportModalReason, setSupportModalReason] = useState("");
+
+  useEffect(() => {
+    const handleOpenInternalSupport = (e: CustomEvent<{ reason?: string }>) => {
+      setSupportModalReason(e.detail?.reason || "");
+      setIsSupportModalOpen(true);
+    };
+    window.addEventListener("open-internal-support" as any, handleOpenInternalSupport as any);
+    return () => {
+      window.removeEventListener("open-internal-support" as any, handleOpenInternalSupport as any);
     };
   }, []);
   
@@ -3179,6 +3197,22 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           {/* ===================================================
               PERSISTENT CORE VIEWS (SCROLL PRESERVATION ENGINE)
               =================================================== */}
+
+          {/* 1.1. NEARBY PAGE VIEW */}
+          <div 
+            className={activeMenu === "nearby" ? "h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container afri-section scrollbar-none animate-fadeIn text-left [-webkit-overflow-scrolling:touch] touch-pan-y" : "hidden"}
+            style={{ overscrollBehaviorY: "contain" }}
+          >
+            <NearbyPageView
+              gombos={gombos}
+              users={users}
+              currentUser={currentUser}
+              onBack={() => setActiveMenu("user_terrain")}
+              onSelectGombo={(g) => setSelectedGomboDetails(g)}
+              onApplyGombo={(g) => setSelectedGomboDetails(g)}
+              geo={geo}
+            />
+          </div>
 
           {/* 1. LE TERRAIN - CENTRAL HUB FEED */}
           <div 
