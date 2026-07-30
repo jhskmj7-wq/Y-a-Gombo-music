@@ -1,4 +1,5 @@
 import React from "react";
+import SyncStatusBadge from "./SyncStatusBadge";
 import { LayoutDashboard, MessageCircle, MapPin, CreditCard, Users, FileText, BadgeCheck, Star, BarChart2, Megaphone, Settings, FlaskConical, ShieldCheck } from "lucide-react";
 
 interface AdminThroneDashboardProps {
@@ -25,6 +26,10 @@ export default function AdminThroneDashboard({ brief, setActiveMenu }: AdminThro
   return (
     <div className="p-4 space-y-6 animate-fadeIn">
       {/* Résumé & Statistiques */}
+      <div className="flex justify-between items-center">
+         <h2 className="text-sm font-black text-white uppercase">Tableau de Bord</h2>
+         <SyncStatusBadge />
+      </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800">
           <p className="text-zinc-400 text-xs uppercase font-bold">Nouveaux Utilisateurs</p>

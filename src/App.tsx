@@ -23,6 +23,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
 import { syncManager } from "./lib/SyncManager";
 import GlobalNotificationBanner from "./components/GlobalNotificationBanner";
+import { bootManager } from "./lib/BootManager";
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
   try {
@@ -86,10 +87,9 @@ function App() {
   const location = useLocation();
   
   useEffect(() => {
-    console.log("Build Version :", "1.0.0");
-    console.log("Sync State :", syncManager.getState());
-    console.log("Network :", navigator.onLine);
-    console.log("Firebase Ready :", !!app);
+    bootManager.addTask("Firebase", async () => { if (!app) throw new Error("Firebase init failed"); });
+    bootManager.addTask("Sync", async () => { syncManager.getState(); });
+    bootManager.run().then(res => console.log("Boot finished", res));
   }, []);
 
   useEffect(() => {

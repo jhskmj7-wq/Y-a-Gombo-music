@@ -3,57 +3,91 @@ import { addDoc, collection } from "firebase/firestore";
 
 type SyncTask = () => Promise<any>;
 
-export enum SyncState { ONLINE = "ONLINE", OFFLINE = "OFFLINE", SYNCING = "SYNCING", WAITING = "WAITING", FAILED = "FAILED" }
+export enum SyncStatus {
+  ONLINE = "ONLINE",
+  SYNCING = "SYNCING",
+  OFFLINE = "OFFLINE",
+  WAITING = "WAITING",
+  FAILED = "FAILED"
+}
 
 class SyncManager {
-  private state: SyncState = SyncState.ONLINE;
+  private static instance: SyncManager;
+  private isSyncRunning = false;
+  private isRecovering = false;
+  private syncState: SyncStatus = SyncStatus.ONLINE;
+  private retryCount = 0;
+  private maxRetries = 4;
   private retryDelays = [5000, 10000, 20000, 30000]; // ms
 
-  async executeWithRetry(task: SyncTask, moduleName: string): Promise<any> {
-    if (!navigator.onLine) {
-        this.state = SyncState.OFFLINE;
-        console.warn(`[SyncManager] Offline - skipping task for ${moduleName}`);
-        return null;
+  constructor() {
+    window.addEventListener("online", () => this.handleOnline());
+  }
+
+  static getInstance(): SyncManager {
+    if (!SyncManager.instance) {
+      SyncManager.instance = new SyncManager();
     }
+    return SyncManager.instance;
+  }
 
-    this.state = SyncState.SYNCING;
-    for (let attempt = 0; attempt < this.retryDelays.length; attempt++) {
-      try {
-        const result = await task();
-        this.state = SyncState.ONLINE;
-        return result;
-      } catch (error) {
-        console.error(`[SyncManager] Attempt ${attempt + 1} failed for ${moduleName}:`, error);
-        await this.logSyncError(moduleName, attempt + 1, error);
-
-        if (attempt === this.retryDelays.length - 1) {
-            this.state = SyncState.FAILED;
-            console.error(`[SyncManager] Max retries reached for ${moduleName}. Going offline.`);
-            return null;
-        }
-
-        this.state = SyncState.WAITING;
-        const delay = this.retryDelays[attempt];
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        this.state = SyncState.SYNCING;
-      }
+  private handleOnline() {
+    if (this.syncState === SyncStatus.OFFLINE || this.syncState === SyncStatus.FAILED) {
+      console.log("[SyncManager] Network restored. Resetting sync.");
+      this.reset();
+      this.syncState = SyncStatus.ONLINE;
     }
   }
 
-  listenWithRetry(subscribe: () => () => void, moduleName: string): () => void {
-    if (!navigator.onLine) {
-        this.state = SyncState.OFFLINE;
-        console.warn(`[SyncManager] Offline - skipping listener for ${moduleName}`);
-        return () => {};
+  reset() {
+    this.retryCount = 0;
+    this.syncState = SyncStatus.ONLINE;
+    this.isRecovering = false;
+    this.isSyncRunning = false;
+  }
+
+  async executeWithRetry(task: SyncTask, moduleName: string): Promise<any> {
+    if (import.meta.env.DEV) {
+        console.log(`[SyncManager] DEV mode: Skipping auto-sync for ${moduleName}`);
+        return null;
     }
-    
+
+    if (this.isSyncRunning || this.isRecovering) return null;
+    if (!navigator.onLine) {
+        this.syncState = SyncStatus.OFFLINE;
+        return null;
+    }
+
+    this.isSyncRunning = true;
+    this.syncState = SyncStatus.SYNCING;
+
     try {
-        return subscribe();
+        const result = await task();
+        this.reset();
+        return result;
     } catch (error) {
-        console.error(`[SyncManager] Listener failed for ${moduleName}:`, error);
-        this.logSyncError(moduleName, 1, error).catch(e => console.error(e));
-        this.state = SyncState.FAILED;
-        return () => {};
+        this.isSyncRunning = false;
+        this.handleError(task, moduleName, error);
+    }
+  }
+
+  private async handleError(task: SyncTask, moduleName: string, error: any) {
+    this.retryCount++;
+    await this.logSyncError(moduleName, this.retryCount, error);
+
+    if (this.retryCount < this.maxRetries) {
+        this.isRecovering = true;
+        this.syncState = SyncStatus.WAITING;
+        const delay = this.retryDelays[this.retryCount - 1];
+        console.warn(`[SyncManager] Retrying ${moduleName} in ${delay}ms (Attempt ${this.retryCount})`);
+        
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        this.isRecovering = false;
+        await this.executeWithRetry(task, moduleName);
+    } else {
+        this.syncState = SyncStatus.FAILED;
+        this.isRecovering = false;
+        console.error(`[SyncManager] Max retries reached for ${moduleName}. Stopping.`);
     }
   }
 
@@ -70,7 +104,7 @@ class SyncManager {
     }
   }
 
-  getState() { return this.state; }
+  getState(): SyncStatus { return this.syncState; }
 }
 
-export const syncManager = new SyncManager();
+export const syncManager = SyncManager.getInstance();
