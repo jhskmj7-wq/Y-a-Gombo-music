@@ -444,10 +444,10 @@ export default function MessagesView({
   const partnerDetails = partnerUid ? activeConvo?.participantDetails?.[partnerUid] : null;
 
   return (
-    <div className="w-full h-full flex flex-col bg-zinc-950 text-white select-none overflow-hidden relative">
-      {/* Top Header & Sovereign Navigation Tabs */}
-      <div className="p-4 bg-zinc-900 border-b border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+    <div className="w-full h-full flex flex-col bg-zinc-950 text-white select-none overflow-hidden relative pb-[74px]">
+      {/* Top Header */}
+      <div className="p-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-3">
           <button
             onClick={onBack}
             className="p-2 hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-white transition cursor-pointer"
@@ -461,34 +461,6 @@ export default function MessagesView({
             </h2>
             <span className="text-[10px] text-zinc-400 font-mono">Communications AFRIGOMBO sécurisées</span>
           </div>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-1.5 bg-zinc-950 p-1 rounded-2xl border border-zinc-800 w-full sm:w-auto overflow-x-auto">
-          {[
-            { id: "conversations", label: "Conversations", icon: MessageSquare, badge: conversations.length },
-            { id: "contrats", label: "Contrats", icon: FileText },
-            { id: "appels", label: "Appels", icon: PhoneCall, badge: callLogs.length },
-            { id: "notifications", label: "Notifications", icon: Bell }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                activeTab === tab.id
-                  ? "bg-[#D4AF37] text-black shadow-md"
-                  : "text-zinc-400 hover:text-white hover:bg-zinc-900"
-              }`}
-            >
-              <tab.icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
-              {tab.badge ? (
-                <span className="ml-1 px-1.5 py-0.2 rounded-full bg-black/20 text-[9px] font-mono font-bold">
-                  {tab.badge}
-                </span>
-              ) : null}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -902,6 +874,42 @@ export default function MessagesView({
           }}
         />
       )}
+
+      {/* Android Bottom Navigation Bar */}
+      <div className="absolute bottom-0 left-0 w-full h-[74px] bg-zinc-950 border-t border-[#D4AF37]/30 flex items-center justify-around px-2 z-30 shadow-2xl">
+        {[
+          { id: "conversations", label: "Conversations", icon: MessageSquare, badge: conversations.length },
+          { id: "contrats", label: "Contrats", icon: FileText },
+          { id: "appels", label: "Appels", icon: PhoneCall, badge: callLogs.length },
+          { id: "notifications", label: "Notifications", icon: Bell }
+        ].map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex-1 flex flex-col items-center justify-center py-2 transition-all duration-200 cursor-pointer relative ${
+                isActive ? "text-[#D4AF37] scale-105" : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <div className="relative">
+                <tab.icon className={`w-5 h-5 ${isActive ? "text-[#D4AF37]" : "text-zinc-400"}`} />
+                {tab.badge ? (
+                  <span className="absolute -top-1.5 -right-2.5 px-1.5 py-0.2 bg-[#D4AF37] text-black font-black text-[8px] rounded-full">
+                    {tab.badge}
+                  </span>
+                ) : null}
+              </div>
+              <span className={`text-[10px] font-sans font-bold uppercase mt-1 tracking-tight ${isActive ? "text-[#D4AF37]" : "text-zinc-400"}`}>
+                {tab.label}
+              </span>
+              {isActive && (
+                <div className="absolute bottom-1 w-8 h-1 bg-[#D4AF37] rounded-full animate-fadeIn" />
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

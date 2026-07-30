@@ -10178,7 +10178,25 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       />
 
       {/* 9. Global Arbre à Palabres Floating Bubble */}
-      {!(activeMenu === "user_reels" || activeMenu === "user_camera" || activeMenu === "user_login" || activeMenu === "user_messages" || Boolean(reelsVideoUrl) || Boolean(reelsVideoId)) && (
+      {!(
+        activeMenu === "user_reels" || 
+        activeMenu === "user_camera" || 
+        activeMenu === "user_login" || 
+        activeMenu === "user_messages" || 
+        activeMenu.startsWith("admin") ||
+        activeMenu.startsWith("founder") ||
+        activeMenu.includes("dashboard") ||
+        activeMenu.includes("wallet") ||
+        activeMenu.includes("settings") ||
+        activeMenu.includes("radar") ||
+        activeMenu.includes("map") ||
+        activeMenu.includes("plus") ||
+        activeMenu.includes("premium") ||
+        activeMenu.includes("control") ||
+        activeMenu === "super_admin" ||
+        Boolean(reelsVideoUrl) || 
+        Boolean(reelsVideoId)
+      ) && (
         <ArbreAPalabresBubble
           unreadCount={totalUnreadMessages}
           onOpen={() => requireAuthThen(() => setActiveMenu("user_messages"))}
