@@ -36,6 +36,7 @@ const AdminRevenue = lazyWithRetry(() => import("./admin/AdminRevenue"));
 const AdminSettings = lazyWithRetry(() => import("./admin/AdminSettings"));
 const AdminSecurity = lazyWithRetry(() => import("./admin/AdminSecurity"));
 const AdminFounderThrone = lazyWithRetry(() => import("./admin/AdminFounderThrone"));
+const AdminSuperFounderHub = lazyWithRetry(() => import("./admin/AdminSuperFounderHub"));
 const AdminAvatarStore = lazyWithRetry(() => import("./admin/AdminAvatarStore"));
 const MultimediaCenter = lazyWithRetry(() => import("./admin/MultimediaCenter"));
 const AfrigomboEconomieDashboard = lazyWithRetry(() => import("./AfrigomboEconomieDashboard"));
@@ -45,6 +46,7 @@ const ThroneCinematicIntro = lazyWithRetry(() => import("./admin/ThroneCinematic
 const BetaTransactionsAdminPanel = lazyWithRetry(() => import("./admin/BetaTransactionsAdminPanel"));
 const GeoLocationCenter = lazyWithRetry(() => import("./admin/GeoLocationCenter"));
 const UserCommentsView = lazyWithRetry(() => import("./UserCommentsView"));
+const GomboMusikEcosystem = lazyWithRetry(() => import("./GomboMusikEcosystem"));
 import AfrigomboFooter from "./AfrigomboFooter";
 
 import { useAuth } from "../AuthContext";
@@ -53,7 +55,6 @@ import AuthScreen from "./AuthScreen";
 import CompleteProfile from "./CompleteProfile";
 import GomboIdUserDashboard from "./GomboIdUserDashboard";
 import HeritagePage from "./HeritagePage";
-import GomboMusikEcosystem from "./GomboMusikEcosystem";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
 import FounderThrone from "./FounderThrone";
 import { PendingPaymentModal } from "./PendingPaymentModal";
@@ -4582,16 +4583,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       </button>
                     </div>
                     
-                    <GomboMusikEcosystem 
-                      currentUserProfile={profile as any} 
-                      onRefreshProfile={() => {}} 
-                      onNavigateView={(view) => {
-                        if (view === "heritage") setActiveMenu("user_heritage");
-                        else if (view === "terrain") setActiveMenu("user_terrain");
-                        else if (view === "gombo_id") setActiveMenu("user_gombo_id");
-                        else if (view === "mes_groupes") setActiveMenu("user_mes_groupes");
-                      }}
-                    />
+                    <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement de l'Écosystème 2.0...</div>}>
+                      <GomboMusikEcosystem 
+                        currentUserProfile={profile as any} 
+                        onRefreshProfile={() => {}} 
+                        onNavigateView={(view) => {
+                          if (view === "heritage") setActiveMenu("user_heritage");
+                          else if (view === "terrain") setActiveMenu("user_terrain");
+                          else if (view === "gombo_id") setActiveMenu("user_gombo_id");
+                          else if (view === "mes_groupes") setActiveMenu("user_mes_groupes");
+                        }}
+                      />
+                    </Suspense>
                   </div>
                 );
               })()}
@@ -6981,174 +6984,23 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <ThroneCinematicIntro onComplete={() => setShowThroneCinematic(false)} />
                   </Suspense>
                 ) : (
-                  <div className="flex flex-col">
-                    {/* Tab Switcher for Super Founder - Directly attached at the top with fluid horizontal scroll */}
-                    <div className="flex gap-1.5 pb-2 border-b border-afri-border sticky top-0 bg-afri-bg/95 backdrop-blur-md z-30 pt-0 overflow-x-auto scrollbar-hide flex-nowrap scroll-smooth select-none">
-                      <button
-                        onClick={() => {
-                          setSuperAdminTab("throne");
-                          try { audioSynth.playValidationSuccess(); } catch (_) {}
-                        }}
-                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0 whitespace-nowrap ${
-                          superAdminTab === "throne"
-                            ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
-                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
-                        }`}
-                      >
-                        👑 Le Trône Royal
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSuperAdminTab("beta_transactions");
-                          try { audioSynth.playValidationSuccess(); } catch (_) {}
-                        }}
-                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
-                          superAdminTab === "beta_transactions"
-                            ? "bg-emerald-500/20 border-emerald-400 text-emerald-400 font-black shadow-lg"
-                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
-                        }`}
-                      >
-                        <span>🛡️ Transactions Bêta</span>
-                        {pendingBetaCount > 0 && (
-                          <span className="bg-emerald-500 text-black text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse">
-                            {pendingBetaCount}
-                          </span>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSuperAdminTab("economie");
-                          try { audioSynth.playValidationSuccess(); } catch (_) {}
-                        }}
-                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0 whitespace-nowrap ${
-                          superAdminTab === "economie"
-                            ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
-                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
-                        }`}
-                      >
-                        📊 Économie
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSuperAdminTab("geolocalisation");
-                          try { audioSynth.playValidationSuccess(); } catch (_) {}
-                        }}
-                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0 whitespace-nowrap ${
-                          superAdminTab === "geolocalisation"
-                            ? "bg-emerald-500/15 border-emerald-500 text-emerald-400 font-black"
-                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
-                        }`}
-                      >
-                        📍 Géolocalisation
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSuperAdminTab("media");
-                          try { audioSynth.playValidationSuccess(); } catch (_) {}
-                        }}
-                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0 whitespace-nowrap ${
-                          superAdminTab === "media"
-                            ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
-                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
-                        }`}
-                      >
-                        🎵 Multimédia
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSuperAdminTab("batisseurs");
-                          try { audioSynth.playValidationSuccess(); } catch (_) {}
-                        }}
-                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0 whitespace-nowrap ${
-                          superAdminTab === "batisseurs"
-                            ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
-                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
-                        }`}
-                      >
-                        🏛 Bâtisseurs
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          setSuperAdminTab("avatar_store");
-                          try { audioSynth.playValidationSuccess(); } catch (_) {}
-                        }}
-                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0 whitespace-nowrap ${
-                          superAdminTab === "avatar_store"
-                            ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
-                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
-                        }`}
-                      >
-                        🎭 Avatar Store
-                      </button>
-
-                      {/* End of course spacing to prevent final element cutoff */}
-                      <div className="w-4 shrink-0 pr-4" />
-                    </div>
-
-                    {/* DIAGNOSTIC BOUTON - Small and discreet */}
-                    <div className="flex justify-end px-2 pt-1 pb-1">
-                      <button
-                        onClick={() => {
-                          setIsDiagnosticOpen(true);
-                          try { audioSynth.playValidationSuccess(); } catch (_) {}
-                        }}
-                        className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-lg text-[8px] font-mono font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all cursor-pointer"
-                      >
-                        <ShieldCheck className="w-2.5 h-2.5" />
-                        Diagnostic
-                      </button>
-                    </div>
-
-                    <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement de la Console...</div>}>
-                      {superAdminTab === "avatar_store" ? (
-                        <AdminAvatarStore />
-                      ) : superAdminTab === "throne" ? (
-                        <AdminFounderThrone
-                          theme={theme}
-                          founders={dynamicFounders}
-                          superAdmins={dynamicSuperAdmins}
-                          adminEmail={userEmail || ""}
-                          isAuthorizedSuperFounder={isAuthorizedSuperFounder}
-                          onUpdateThroneConfig={handleUpdateThroneConfig}
-                          audioSynth={audioSynth}
-                          users={users}
-                          gombos={gombos}
-                          posts={posts}
-                          transactions={transactions}
-                          alerts={alerts}
-                          onExit={() => {
-                            setPerspective("user");
-                            setActiveMenu("user_terrain");
-                            try { audioSynth.playValidationSuccess(); } catch (_) {}
-                          }}
-                        />
-                      ) : superAdminTab === "beta_transactions" ? (
-                        <BetaTransactionsAdminPanel
-                          currentUser={profile}
-                          onOpenSupportChat={(targetUser) => {
-                            setActiveMenu("messages");
-                          }}
-                        />
-                      ) : superAdminTab === "economie" ? (
-                        <AfrigomboEconomieDashboard 
-                          onBack={() => {
-                            setSuperAdminTab("throne");
-                            try { audioSynth.playValidationSuccess(); } catch (_) {}
-                          }}
-                        />
-                      ) : superAdminTab === "batisseurs" ? (
-                        <AfrigomboBuildersAdminDashboard />
-                      ) : superAdminTab === "geolocalisation" ? (
-                        <GeoLocationCenter />
-                      ) : (
-                        <MultimediaCenter
-                          adminEmail={userEmail || ""}
-                          isAuthorizedSuperFounder={isAuthorizedSuperFounder}
-                        />
-                      )}
-                    </Suspense>
-                  </div>
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement du Centre Super Fondateur...</div>}>
+                    <AdminSuperFounderHub
+                      userEmail={userEmail || ""}
+                      currentUser={profile}
+                      users={users}
+                      gombos={gombos}
+                      posts={posts}
+                      transactions={transactions}
+                      alerts={alerts}
+                      audioSynth={audioSynth}
+                      onExit={() => {
+                        setPerspective("user");
+                        setActiveMenu("user_terrain");
+                        try { audioSynth.playValidationSuccess(); } catch (_) {}
+                      }}
+                    />
+                  </Suspense>
                 )
               )}
 

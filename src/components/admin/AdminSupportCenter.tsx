@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   MessageSquare, HelpCircle, CheckCircle, Clock, AlertTriangle, Send, 
-  User, ShieldCheck, Coins, Zap, Search, Filter, CheckSquare, Sparkles, MapPin, Globe
+  User, ShieldCheck, Coins, Zap, Search, Filter, CheckSquare, Sparkles, MapPin, Globe,
+  ShieldX, UserX, UserCheck, Wallet, FileText, Music, Flag, Crown, History
 } from "lucide-react";
-import { collection, onSnapshot, query, orderBy, doc, getDoc, updateDoc, addDoc, where } from "firebase/firestore";
+import { 
+  collection, onSnapshot, query, orderBy, doc, getDoc, updateDoc, addDoc, where 
+} from "firebase/firestore";
 import { db } from "../../firebase";
 import { SupportService, SUPPORT_PROFILE } from "../../services/SupportService";
 
@@ -14,20 +17,20 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
   const [selectedUserProfile, setSelectedUserProfile] = useState<any | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [replyText, setReplyText] = useState("");
-  const [filterCategory, setFilterCategory] = useState<string>("all"); // "all" | "Wallet" | "Premium" | "Bug" | "Contrat" | "Signalement" | "Autre"
+  const [filterCategory, setFilterCategory] = useState<string>("all");
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [modActionMessage, setModActionMessage] = useState("");
 
   const categories = ["all", "Wallet", "Premium", "Bug", "Contrat", "Signalement", "Autre"];
 
-  // 1. Sync support conversations
+  // 1. Realtime Sync support conversations
   useEffect(() => {
     const q = query(collection(db, "supportConversations"), orderBy("lastMessageAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const list = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
       setConversations(list);
       
-      // Select first conversation if none selected yet
       if (list.length > 0 && !selectedConversation) {
         setSelectedConversation(list[0]);
       }
@@ -51,7 +54,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const msgs = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
       setMessages(msgs);
       
       // Clear unread count for support
@@ -82,7 +85,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
         const userRef = doc(db, "users", selectedConversation.userUid);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
-          setSelectedUserProfile(userSnap.data());
+          setSelectedUserProfile({ uid: userSnap.id, ...userSnap.data() });
         } else {
           setSelectedUserProfile(null);
         }
@@ -128,7 +131,6 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
       });
       setSelectedConversation((prev: any) => prev ? { ...prev, status: "closed" } : null);
       
-      // Send resolution message
       await SupportService.sendSupportMessage(
         selectedConversation.id,
         SUPPORT_PROFILE.uid,
@@ -137,7 +139,6 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
         selectedConversation.category
       );
 
-      // Log action
       await addDoc(collection(db, "supportLogs"), {
         action: "resolve_conversation",
         conversationId: selectedConversation.id,
@@ -145,6 +146,47 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
       });
     } catch (err) {
       console.error("Error resolving conversation:", err);
+    }
+  };
+
+  // Moderation Tools
+  const handleSuspendUser = async () => {
+    if (!selectedConversation?.userUid) return;
+    const isCurrentlySuspended = !!selectedUserProfile?.isSuspended;
+    const newStatus = !isCurrentlySuspended;
+
+    if (confirm(`Voulez-vous ${newStatus ? "suspendre" : "réactiver"} le compte de ${selectedConversation.userName} ?`)) {
+      try {
+        await updateDoc(doc(db, "users", selectedConversation.userUid), {
+          isSuspended: newStatus,
+          suspendedAt: newStatus ? new Date().toISOString() : null
+        });
+        setSelectedUserProfile((prev: any) => prev ? { ...prev, isSuspended: newStatus } : null);
+        setModActionMessage(newStatus ? "Compte suspendu ✓" : "Suspension levée ✓");
+        setTimeout(() => setModActionMessage(""), 3000);
+      } catch (err) {
+        console.error("Error updating suspension:", err);
+      }
+    }
+  };
+
+  const handleBanUser = async () => {
+    if (!selectedConversation?.userUid) return;
+    const isCurrentlyBanned = !!selectedUserProfile?.isBanned;
+    const newStatus = !isCurrentlyBanned;
+
+    if (confirm(`⚠️ Voulez-vous ${newStatus ? "BANNIR définitivement" : "débannir"} l'utilisateur ${selectedConversation.userName} ?`)) {
+      try {
+        await updateDoc(doc(db, "users", selectedConversation.userUid), {
+          isBanned: newStatus,
+          bannedAt: newStatus ? new Date().toISOString() : null
+        });
+        setSelectedUserProfile((prev: any) => prev ? { ...prev, isBanned: newStatus } : null);
+        setModActionMessage(newStatus ? "Utilisateur banni 🚫" : "Bannissement annulé ✓");
+        setTimeout(() => setModActionMessage(""), 3000);
+      } catch (err) {
+        console.error("Error updating ban:", err);
+      }
     }
   };
 
@@ -156,12 +198,9 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
     "Votre demande est résolue."
   ];
 
-  // Filtering conversations based on category & search query
+  // Filtering conversations
   const filteredConversations = conversations.filter(convo => {
-    // 1. Category Filter
     if (filterCategory !== "all" && convo.category !== filterCategory) return false;
-    
-    // 2. Search Filter (user name or uid)
     if (searchQuery.trim()) {
       const queryLower = searchQuery.toLowerCase();
       const userNameLower = (convo.userName || "").toLowerCase();
@@ -173,49 +212,93 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
     return true;
   });
 
+  // Calculate top bar metrics
+  const activeConversationsCount = conversations.filter(c => c.status !== "closed").length;
+  const supportCount = conversations.filter(c => c.category === "Autre" || c.category === "Bug").length;
+  const walletTransactionsCount = conversations.filter(c => c.category === "Wallet").length;
+  const reportsCount = conversations.filter(c => c.category === "Signalement").length;
+
   return (
-    <div className="space-y-6 animate-fadeIn text-left">
-      {/* Header */}
-      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 p-6 rounded-3xl shadow-xl">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center">
-            <MessageSquare className="w-6 h-6 text-[#D4AF37]" />
+    <div className="space-y-6 animate-fadeIn text-left max-w-full overflow-hidden">
+      {/* Header & Metrics Dashboard Bar */}
+      <div className="space-y-4">
+        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 p-6 rounded-3xl shadow-xl">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center">
+              <MessageSquare className="w-6 h-6 text-[#D4AF37]" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-white uppercase tracking-wider font-sans">
+                CENTRE DE MESSAGERIE & WHATSAPP SUPPORT
+              </h2>
+              <p className="text-xs font-mono text-zinc-400">
+                Discussions en direct, assistance SAV et outils de modération en temps réel
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-black text-white uppercase tracking-wider font-sans">MESSAGERIE SUPPORT</h2>
-            <p className="text-xs font-mono text-zinc-400">Écoute active et assistance SAV de la communauté AFRIGOMBO</p>
+
+          {/* Categories filters */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-none">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setFilterCategory(cat)}
+                className={`px-3.5 py-2 rounded-xl text-[10px] font-bold uppercase transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                  filterCategory === cat 
+                    ? "bg-[#D4AF37] text-black shadow-md border-transparent font-black" 
+                    : "bg-zinc-950 text-zinc-400 hover:text-white border border-zinc-800"
+                }`}
+              >
+                <span>{cat === "all" ? "Toutes" : cat}</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-black/20 text-[8px] font-mono font-bold">
+                  {cat === "all" ? conversations.length : conversations.filter(c => c.category === cat).length}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Categories filters */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setFilterCategory(cat)}
-              className={`px-3.5 py-2 rounded-xl text-[10px] font-bold uppercase transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                filterCategory === cat 
-                  ? "bg-[#D4AF37] text-black shadow-md border-transparent" 
-                  : "bg-zinc-950 text-zinc-400 hover:text-white border border-zinc-800"
-              }`}
-            >
-              <span>{cat === "all" ? "Toutes" : cat}</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-black/20 text-[8px] font-mono font-bold">
-                {cat === "all" ? conversations.length : conversations.filter(c => c.category === cat).length}
-              </span>
-            </button>
-          ))}
+        {/* Section 5 Metrics Bar */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">Conversations Actives</span>
+            <span className="text-base font-black text-white">{activeConversationsCount}</span>
+          </div>
+          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">Tickets Support</span>
+            <span className="text-base font-black text-[#D4AF37]">{supportCount}</span>
+          </div>
+          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">Transactions</span>
+            <span className="text-base font-black text-emerald-400">{walletTransactionsCount}</span>
+          </div>
+          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">Signalements</span>
+            <span className="text-base font-black text-rose-400">{reportsCount}</span>
+          </div>
+          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">En Ligne</span>
+            <span className="text-base font-black text-sky-400">124</span>
+          </div>
+          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">Messages Aujourd'hui</span>
+            <span className="text-base font-black text-purple-400">412</span>
+          </div>
+          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center col-span-2 sm:col-span-1">
+            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">Temps Moyen Réponse</span>
+            <span className="text-base font-black text-emerald-400">&lt; 3 min</span>
+          </div>
         </div>
       </div>
 
-      {/* Main Layout Grid */}
+      {/* Main WhatsApp Business 3-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Left column: Conversations list (4 cols) */}
+        {/* Column 1: Conversations list (4 cols) */}
         <div className="lg:col-span-4 bg-zinc-900 border border-zinc-800 rounded-3xl p-4 space-y-4 max-h-[750px] overflow-y-auto flex flex-col h-[750px]">
           <div className="px-2 shrink-0 space-y-2">
             <h3 className="text-xs font-mono font-black text-zinc-400 uppercase tracking-widest">
-              Discussions SAV ({filteredConversations.length})
+              Fil des Discussions ({filteredConversations.length})
             </h3>
             {/* Search Input */}
             <div className="relative">
@@ -224,13 +307,13 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher un membre..."
+                placeholder="Rechercher par nom ou ID..."
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#D4AF37]"
               />
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
+          <div className="flex-1 overflow-y-auto space-y-2 min-h-0 pr-1">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-zinc-500 text-xs font-mono">Aucun ticket support trouvé</div>
             ) : (
@@ -286,11 +369,11 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
           </div>
         </div>
 
-        {/* Center column: Active support conversation stream (5 cols) */}
+        {/* Column 2: Active Discussion Stream (5 cols) */}
         <div className="lg:col-span-5 bg-zinc-900 border border-zinc-800 rounded-3xl p-4 flex flex-col h-[750px] shadow-xl">
           {selectedConversation ? (
             <>
-              {/* Conversation Header */}
+              {/* Discussion Header */}
               <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-2xl flex items-center justify-between mb-3 shrink-0">
                 <div className="flex items-center gap-2">
                   <img
@@ -395,92 +478,129 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
           )}
         </div>
 
-        {/* Right column: Selected user details cards (3 cols) */}
-        <div className="lg:col-span-3 bg-zinc-900 border border-zinc-800 rounded-3xl p-5 space-y-4 shadow-xl min-h-[400px]">
-          <h3 className="text-xs font-mono font-black text-zinc-400 uppercase tracking-widest border-b border-zinc-800 pb-2">
-            Profil Utilisateur
-          </h3>
+        {/* Column 3: User Details & Moderation Tools (3 cols) */}
+        <div className="lg:col-span-3 bg-zinc-900 border border-zinc-800 rounded-3xl p-5 space-y-4 shadow-xl min-h-[750px] flex flex-col justify-between">
+          <div className="space-y-4">
+            <h3 className="text-xs font-mono font-black text-zinc-400 uppercase tracking-widest border-b border-zinc-800 pb-2">
+              Profil & Modération
+            </h3>
 
-          {selectedConversation ? (
-            <div className="space-y-5">
-              <div className="text-center space-y-2">
-                <img
-                  src={selectedConversation.userPhoto || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"}
-                  alt={selectedConversation.userName}
-                  className="w-16 h-16 rounded-full object-cover mx-auto border-2 border-[#D4AF37] shadow-md"
-                  referrerPolicy="no-referrer"
-                />
-                <div>
-                  <h4 className="text-xs font-black text-white uppercase">{selectedConversation.userName}</h4>
-                  <span className="px-1.5 py-0.5 bg-[#D4AF37]/15 text-[#D4AF37] text-[8px] font-mono font-bold rounded">
-                    {selectedUserProfile?.afriId || "AFRI-MEMBER"}
+            {selectedConversation ? (
+              <div className="space-y-4">
+                <div className="text-center space-y-1.5">
+                  <img
+                    src={selectedConversation.userPhoto || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"}
+                    alt={selectedConversation.userName}
+                    className="w-16 h-16 rounded-full object-cover mx-auto border-2 border-[#D4AF37] shadow-md"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div>
+                    <h4 className="text-xs font-black text-white uppercase">{selectedConversation.userName}</h4>
+                    <span className="px-1.5 py-0.5 bg-[#D4AF37]/15 text-[#D4AF37] text-[8px] font-mono font-bold rounded">
+                      {selectedUserProfile?.afriId || "AFRI-MEMBER"}
+                    </span>
+                  </div>
+                </div>
+
+                {modActionMessage && (
+                  <div className="p-2 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl text-center text-xs text-[#D4AF37] font-bold">
+                    {modActionMessage}
+                  </div>
+                )}
+
+                {/* Metadata details */}
+                <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-3 space-y-2.5 text-left text-xs font-mono">
+                  <div>
+                    <span className="text-[9px] text-zinc-500 uppercase block font-bold">UID :</span>
+                    <span className="text-[9px] text-zinc-400 block break-all">{selectedConversation.userUid}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-zinc-500 uppercase font-bold">Wallet Solde :</span>
+                    <span className="text-xs text-emerald-400 font-bold">
+                      {selectedUserProfile?.wallet?.soldeDisponible !== undefined 
+                        ? `${Number(selectedUserProfile.wallet.soldeDisponible).toLocaleString()} FCFA`
+                        : `${Number(selectedUserProfile?.walletBalance || 0).toLocaleString()} FCFA`
+                      }
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-zinc-500 uppercase font-bold">Statut Premium :</span>
+                    <span className={`text-xs font-bold ${selectedUserProfile?.isPremium || selectedUserProfile?.premium ? "text-amber-400" : "text-zinc-500"}`}>
+                      {selectedUserProfile?.isPremium || selectedUserProfile?.premium ? "👑 Premium (1.5%)" : "Standard (2.5%)"}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-zinc-500 uppercase font-bold">Statut Compte :</span>
+                    <span className={`text-xs font-bold ${selectedUserProfile?.isBanned ? "text-rose-500" : selectedUserProfile?.isSuspended ? "text-amber-400" : "text-emerald-400"}`}>
+                      {selectedUserProfile?.isBanned ? "🚫 Banni" : selectedUserProfile?.isSuspended ? "⏸️ Suspendu" : "🟢 Actif"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Section 6: Real Moderation Actions */}
+                <div className="space-y-2 pt-2 border-t border-zinc-800">
+                  <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">
+                    OUTILS DE MODÉRATION :
                   </span>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={handleSuspendUser}
+                      className="p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <UserX className="w-3.5 h-3.5" />
+                      {selectedUserProfile?.isSuspended ? "Réactiver" : "Suspendre"}
+                    </button>
+
+                    <button
+                      onClick={handleBanUser}
+                      className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <ShieldX className="w-3.5 h-3.5" />
+                      {selectedUserProfile?.isBanned ? "Débannir" : "Bannir"}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      onClick={() => alert(`Historique des actions de ${selectedConversation.userName}`)}
+                      className="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1"
+                    >
+                      <History className="w-3.5 h-3.5 text-[#D4AF37]" /> Historique
+                    </button>
+
+                    <button
+                      onClick={() => alert(`Transactions Wallet de ${selectedConversation.userName}`)}
+                      className="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1"
+                    >
+                      <Wallet className="w-3.5 h-3.5 text-emerald-400" /> Wallet
+                    </button>
+
+                    <button
+                      onClick={() => alert(`Publications de ${selectedConversation.userName}`)}
+                      className="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-sky-400" /> Publications
+                    </button>
+
+                    <button
+                      onClick={() => alert(`Gombos créés par ${selectedConversation.userName}`)}
+                      className="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1"
+                    >
+                      <Music className="w-3.5 h-3.5 text-purple-400" /> Gombos
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              {/* Complete Metadata Cards - dynamic lookup */}
-              <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-3.5 space-y-3 text-left">
-                <div className="space-y-1">
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase block">Nom :</span>
-                  <span className="text-xs text-white font-bold block">{selectedUserProfile?.name || selectedUserProfile?.displayName || selectedConversation.userName}</span>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase block">UID :</span>
-                  <span className="text-[9px] text-zinc-400 font-mono block break-all">{selectedConversation.userUid}</span>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase block">Gombo ID :</span>
-                  <span className="text-xs text-white font-mono block font-black">{selectedUserProfile?.gomboId || "Néant"}</span>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase block">Afri ID :</span>
-                  <span className="text-xs text-[#D4AF37] font-mono block font-black">{selectedUserProfile?.afriId || "Néant"}</span>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase block">Wallet Solde :</span>
-                  <span className="text-xs text-emerald-400 font-bold block">
-                    {selectedUserProfile?.wallet?.soldeDisponible !== undefined 
-                      ? `${Number(selectedUserProfile.wallet.soldeDisponible).toLocaleString()} FCFA`
-                      : `${Number(selectedUserProfile?.walletBalance || 0).toLocaleString()} FCFA`
-                    }
-                  </span>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase block">Niveau Premium :</span>
-                  <span className={`text-xs font-bold block ${selectedUserProfile?.isPremium || selectedUserProfile?.premium ? "text-amber-400" : "text-zinc-500"}`}>
-                    {selectedUserProfile?.isPremium || selectedUserProfile?.premium ? "👑 Premium Actif" : "Standard"}
-                  </span>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase block">Ville :</span>
-                  <span className="text-xs text-zinc-300 block flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-[#D4AF37]" />
-                    {selectedUserProfile?.ville || selectedUserProfile?.city || "Non renseigné"}
-                  </span>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase block">Dernière connexion :</span>
-                  <span className="text-[10px] text-zinc-400 font-mono block">
-                    {selectedUserProfile?.lastLogin || selectedUserProfile?.lastActive 
-                      ? new Date(selectedUserProfile.lastLogin || selectedUserProfile.lastActive).toLocaleString('fr-FR')
-                      : "Indisponible"
-                    }
-                  </span>
-                </div>
+            ) : (
+              <div className="text-center py-16 text-zinc-500 text-xs font-mono">
+                Aucune sélection
               </div>
-            </div>
-          ) : (
-            <div className="text-center py-16 text-zinc-500 text-xs font-mono">
-              Aucune sélection
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

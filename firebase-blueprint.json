@@ -621,6 +621,144 @@
         "createdAt": { "type": "string" }
       },
       "required": ["id", "contractId", "reason", "status", "createdAt"]
+    },
+    "AvatarItem": {
+      "title": "Avatar Store Item",
+      "description": "Store item for avatars (clothes, accessories, instruments, crowns)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "integer" },
+        "premiumOnly": { "type": "boolean" },
+        "isPremiumOnly": { "type": "boolean" },
+        "previewImage": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "assetUrl": { "type": "string" },
+        "svgContent": { "type": "string" },
+        "rarity": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "category", "price", "isActive"]
+    },
+    "AvatarCategory": {
+      "title": "Avatar Category",
+      "description": "Category for sorting avatar items",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
+    "UserAvatar": {
+      "title": "User Avatar Configuration",
+      "description": "User custom avatar configuration and profile avatar mapping",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "config": { "type": "object" },
+        "useAvatarAsProfile": { "type": "boolean" },
+        "photoURLAvatar": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid"]
+    },
+    "UserInventory": {
+      "title": "User Avatar Inventory",
+      "description": "Inventory of owned and equipped items per user",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "ownedItems": { "type": "array" },
+        "equippedItems": { "type": "array" },
+        "coinsSpent": { "type": "number" },
+        "premiumItems": { "type": "array" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid"]
+    },
+    "AvatarPurchase": {
+      "title": "Avatar Store Purchase Record",
+      "description": "Log of user avatar store item purchases",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "itemId": { "type": "string" },
+        "itemName": { "type": "string" },
+        "price": { "type": "number" },
+        "purchasedAt": { "type": "string" }
+      },
+      "required": ["userId", "itemId", "price", "purchasedAt"]
+    },
+    "AvatarEvent": {
+      "title": "Avatar Event",
+      "description": "Exclusive seasonal event with special avatar rewards",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "bannerUrl": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "exclusiveItems": { "type": "array" },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["id", "title", "startDate", "endDate", "isActive"]
+    },
+    "AvatarGift": {
+      "title": "Avatar Gift Transaction",
+      "description": "Log of avatar items gifted between users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "recipientId": { "type": "string" },
+        "recipientName": { "type": "string" },
+        "itemId": { "type": "string" },
+        "itemName": { "type": "string" },
+        "price": { "type": "number" },
+        "message": { "type": "string" },
+        "giftedAt": { "type": "string" }
+      },
+      "required": ["senderId", "recipientId", "itemId", "giftedAt"]
+    },
+    "AvatarMission": {
+      "title": "Avatar Economy Mission",
+      "description": "Gamified tasks for earning Gombo Coins and XP",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "rewardCoins": { "type": "number" },
+        "rewardXp": { "type": "number" },
+        "actionType": { "type": "string" },
+        "targetCount": { "type": "number" },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["id", "title", "rewardCoins", "isActive"]
+    },
+    "AvatarRewardLog": {
+      "title": "Avatar Reward Log",
+      "description": "Log of coins and XP awarded to user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "reason": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "amount", "createdAt"]
     }
   },
   "firestore": {
@@ -763,6 +901,50 @@
     "/bug_reports/{bugId}": {
       "schema": "BugReport",
       "description": "Bug reports submitted by users"
+    },
+    "/avatarItems/{itemId}": {
+      "schema": "AvatarItem",
+      "description": "Avatar marketplace items catalog"
+    },
+    "/avatarCategories/{categoryId}": {
+      "schema": "AvatarCategory",
+      "description": "Avatar marketplace categories catalog"
+    },
+    "/userAvatars/{userId}": {
+      "schema": "UserAvatar",
+      "description": "User avatar custom configuration"
+    },
+    "/avatars/{userId}": {
+      "schema": "UserAvatar",
+      "description": "User avatar custom configuration alias"
+    },
+    "/userInventory/{userId}": {
+      "schema": "UserInventory",
+      "description": "User owned and equipped avatar items inventory"
+    },
+    "/avatarPurchases/{purchaseId}": {
+      "schema": "AvatarPurchase",
+      "description": "Transaction logs for avatar item purchases"
+    },
+    "/avatarEvents/{eventId}": {
+      "schema": "AvatarEvent",
+      "description": "Seasonal events and limited edition drops"
+    },
+    "/avatarGifts/{giftId}": {
+      "schema": "AvatarGift",
+      "description": "Gift transactions of avatar items sent to friends"
+    },
+    "/avatarMissions/{missionId}": {
+      "schema": "AvatarMission",
+      "description": "Gamified tasks for earning Gombo Coins"
+    },
+    "/avatarRewards/{rewardId}": {
+      "schema": "AvatarRewardLog",
+      "description": "History of Gombo Coins & XP awarded"
+    },
+    "/avatarEconomy/{docId}": {
+      "schema": "AvatarRewardLog",
+      "description": "Global Avatar economy config and metrics"
     }
   }
 }

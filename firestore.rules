@@ -312,6 +312,65 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // AVATAR STORE & INVENTORY COLLECTIONS
+    match /avatarItems/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /avatarCategories/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /userAvatars/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    match /avatars/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    match /userInventory/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    match /avatarPurchases/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /avatarEvents/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /avatarGifts/{id} {
+      allow read: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.recipientId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && incoming().senderId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /avatarMissions/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /avatarRewards/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /avatarEconomy/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ADMISSIONS
     match /admins/{adminId} {
       allow read: if isFounder();

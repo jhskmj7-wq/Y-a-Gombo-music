@@ -18,22 +18,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
                           errorMessage.includes("Unexpected token '<'");
 
       if (isChunkError) {
-        const lastReload = window.sessionStorage.getItem("last_chunk_reload_ts");
-        const now = Date.now();
-        
-        if (!lastReload || now - parseInt(lastReload) > 10000) {
-          window.sessionStorage.setItem("last_chunk_reload_ts", now.toString());
-          console.warn("🔄 [LazyRetry] Chunk error detected. Purging caches and reloading...");
-          
-          if ('caches' in window) {
-             try {
-               const cacheNames = await caches.keys();
-               await Promise.all(cacheNames.map(name => caches.delete(name)));
-             } catch (e) {}
-          }
-          window.location.reload();
-          return { default: (() => null) as unknown as T };
-        }
+        console.warn("⚠️ [LazyRetry] Dynamic module chunk load error. Offering graceful fallback UI.");
       }
 
       // Return a safe fallback component instead of white screen / crash

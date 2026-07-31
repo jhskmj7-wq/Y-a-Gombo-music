@@ -20,60 +20,15 @@
       window.addEventListener('resize', setVh);
       window.addEventListener('orientationchange', setVh);
 
-      // Auto-recovery Version Sync Logic
-      const performSyncAndReload = async () => {
-        console.log("🔄 Performing Sync & Clean...");
-        try {
-          if ('serviceWorker' in navigator) {
-            const regs = await navigator.serviceWorker.getRegistrations();
-            for (const r of regs) {
-              await r.unregister();
-            }
-          }
-          if (window.caches) {
-            const names = await caches.keys();
-            for (let name of names) {
-              await caches.delete(name);
-            }
-          }
-        } catch (e) {
-          console.error("Error during sync & clean:", e);
-        }
-        
-        // Save recovery attempt count to prevent infinite loops
-        const reloads = parseInt(sessionStorage.getItem('afrigombo_auto_recovery') || '0', 10);
-        if (reloads < 3) {
-          sessionStorage.setItem('afrigombo_auto_recovery', (reloads + 1).toString());
-          window.location.reload(true);
-        } else {
-          console.error("Max recovery attempts reached. Halting.");
-          const errorDiv = document.createElement('div');
-          errorDiv.style.position = 'fixed';
-          errorDiv.style.inset = '0';
-          errorDiv.style.backgroundColor = '#050505';
-          errorDiv.style.color = '#D4AF37';
-          errorDiv.style.display = 'flex';
-          errorDiv.style.alignItems = 'center';
-          errorDiv.style.justifyContent = 'center';
-          errorDiv.style.zIndex = '999999';
-          errorDiv.innerHTML = '<div style="text-align:center;"><div style="font-size:48px;margin-bottom:16px;">🪘</div><div style="font-family:monospace;font-size:12px;opacity:0.6;">ERREUR DE CHARGEMENT. VEUILLEZ RELANCER.</div></div>';
-          document.body.appendChild(errorDiv);
-        }
-      };
-
+      // Version tracking without forced reload loops
       const checkVersion = async () => {
         try {
           const res = await fetch(`/version.json?t=${Date.now()}`);
-          const data = await res.json();
-          const currentVersion = localStorage.getItem('afrigombo_app_version');
-          
-          if (currentVersion && currentVersion !== String(data.version)) {
-            console.warn("⚠️ Version mismatch detected. Current:", currentVersion, "New:", data.version);
-            localStorage.setItem('afrigombo_app_version', String(data.version));
-            performSyncAndReload();
-            return;
-          } else if (!currentVersion) {
-            localStorage.setItem('afrigombo_app_version', String(data.version));
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.version) {
+              localStorage.setItem('afrigombo_app_version', String(data.version));
+            }
           }
         } catch (e) {
           console.warn("Could not check version:", e);
@@ -82,20 +37,7 @@
       
       checkVersion();
 
-      // Safety Boot Check: Detect if app fails to mount
-      window.addEventListener('load', () => {
-        console.log("BOOT: Window Loaded");
-        
-        setTimeout(() => {
-          const root = document.getElementById('root');
-          if (root && root.innerHTML === '') {
-            console.error('CRITICAL: App failed to mount after 10 seconds. Auto-recovering...');
-            performSyncAndReload();
-          }
-        }, 10000);
-      });
-
-      // Global error listener for immediate feedback
+      // Global error logging
       window.onerror = function(msg, url, lineNo, columnNo, error) {
         console.error('GLOBAL ERROR:', msg, url, lineNo, columnNo, error);
         return false;

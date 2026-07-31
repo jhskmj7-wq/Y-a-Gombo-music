@@ -5,13 +5,13 @@ import { globalAudioManager, AudioState } from "../../lib/audioManager";
 import AfrigomboGlobalSettings from "./AfrigomboGlobalSettings";
 
 interface AdminSettingsProps {
-  systemCommissionRate: number;
+  systemCommissionRate?: number;
   onUpdateCommissionRate?: (rate: number) => void;
   audioSynth?: any;
 }
 
 export default function AdminSettings({
-  systemCommissionRate,
+  systemCommissionRate = 1.5,
   onUpdateCommissionRate,
   audioSynth
 }: AdminSettingsProps) {

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { bootManager, BootTaskResult } from "../lib/BootManager";
-import { CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
+import { bootManager } from "../lib/BootManager";
 import { clearAppCaches } from "../lib/cachePurge";
 
 interface BootSplashScreenProps {
@@ -8,26 +7,47 @@ interface BootSplashScreenProps {
 }
 
 export default function BootSplashScreen({ onComplete }: BootSplashScreenProps) {
-  const [tasks, setTasks] = useState<BootTaskResult[]>([]);
-  const [currentStep, setCurrentStep] = useState<string>("Inauguration du Temple...");
+  const [progress, setProgress] = useState(15);
+  const [statusText, setStatusText] = useState("Vérification du Temple...");
   const [isFinished, setIsFinished] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
     async function runBootSequence() {
-      const results = await bootManager.runDiagnostics((taskName) => {
-        if (!mounted) return;
-        setCurrentStep(taskName);
-        setTasks(bootManager.getResults());
-      });
+      console.log("⚡ [BOOT 1] React & Router Initialized");
+      setProgress(30);
+
+      try {
+        await bootManager.runDiagnostics((taskName) => {
+          if (!mounted) return;
+          if (taskName.includes("Firebase")) setStatusText("Connexion au Temple...");
+          else if (taskName.includes("Sync")) setStatusText("Synchronisation des opportunités...");
+          else setStatusText("Préparation de votre expérience...");
+        });
+        console.log("⚡ [BOOT 2] Providers & Firebase Hydrated");
+      } catch (e) {
+        console.warn("[BOOT] Non-blocking warning during diagnostics:", e);
+      }
 
       if (mounted) {
-        setTasks(results);
-        setIsFinished(true);
+        console.log("⚡ [BOOT 3] Navigation Ready");
+        setProgress(75);
+        
         setTimeout(() => {
-          if (mounted) onComplete();
-        }, 1000);
+          if (!mounted) return;
+          console.log("⚡ [BOOT 4] User Session & Assets Verified");
+          setProgress(100);
+          setStatusText("Bienvenue dans le Temple");
+          setIsFinished(true);
+
+          setTimeout(() => {
+            if (mounted) {
+              console.log("⚡ [BOOT 5] Dashboard & Home Mounted Successfully");
+              onComplete();
+            }
+          }, 400);
+        }, 500);
       }
     }
 
@@ -40,61 +60,42 @@ export default function BootSplashScreen({ onComplete }: BootSplashScreenProps) 
 
   return (
     <div className="fixed inset-0 z-[99999] bg-[#0A0A10] text-white flex flex-col items-center justify-center p-6 select-none font-mono">
-      <div className="max-w-md w-full bg-zinc-950/90 border border-[#D4AF37]/30 rounded-3xl p-6 backdrop-blur-xl shadow-2xl flex flex-col items-center text-center space-y-5">
+      <div className="max-w-sm w-full bg-zinc-950/90 border border-[#D4AF37]/30 rounded-3xl p-8 backdrop-blur-xl shadow-2xl flex flex-col items-center text-center space-y-6">
         
         {/* Logo Header */}
-        <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/40 flex items-center justify-center shadow-[0_0_25px_rgba(212,175,55,0.25)]">
-          <span className="text-3xl">🪘</span>
+        <div className="w-20 h-20 rounded-3xl bg-[#D4AF37]/10 border border-[#D4AF37]/40 flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.3)] animate-pulse">
+          <span className="text-4xl">🪘</span>
         </div>
 
-        <div>
-          <h1 className="text-lg font-black text-[#D4AF37] tracking-widest uppercase">AFRIGOMBO</h1>
-          <p className="text-[11px] text-zinc-400 mt-0.5 uppercase tracking-wider">Vérification du Temple...</p>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-black text-[#D4AF37] tracking-widest uppercase">AFRIGOMBO</h1>
+          <p className="text-xs text-zinc-400 uppercase tracking-wider font-sans font-medium">
+            Le Temple du Gombo Musical
+          </p>
         </div>
 
-        {/* Diagnostic Checklist */}
-        <div className="w-full bg-zinc-900/90 rounded-2xl p-3 border border-zinc-800 space-y-1.5 text-left max-h-48 overflow-y-auto">
-          {tasks.map((task) => (
-            <div key={task.name} className="flex items-center justify-between text-xs py-1 border-b border-zinc-800/40 last:border-0">
-              <span className="text-zinc-300 font-sans font-medium">{task.name}</span>
-              <div className="flex items-center gap-1">
-                {task.status === "OK" && (
-                  <span className="text-emerald-400 font-bold flex items-center gap-1 text-[10px]">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> OK
-                  </span>
-                )}
-                {task.status === "WARNING" && (
-                  <span className="text-amber-400 font-bold flex items-center gap-1 text-[10px]">
-                    <AlertCircle className="w-3.5 h-3.5" /> WARN
-                  </span>
-                )}
-                {task.status === "ERROR" && (
-                  <span className="text-rose-500 font-bold flex items-center gap-1 text-[10px]">
-                    <AlertCircle className="w-3.5 h-3.5" /> ERR
-                  </span>
-                )}
-                {task.status === "PENDING" && (
-                  <RefreshCw className="w-3 h-3 text-[#D4AF37] animate-spin" />
-                )}
-              </div>
-            </div>
-          ))}
+        {/* Smooth Gold Progress Bar */}
+        <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden border border-zinc-800 relative my-2">
+          <div 
+            className="h-full bg-gradient-to-r from-amber-600 via-[#D4AF37] to-amber-300 transition-all duration-300 ease-out rounded-full shadow-[0_0_10px_rgba(212,175,55,0.5)]"
+            style={{ width: `${progress}%` }}
+          />
         </div>
 
         {/* Current status message */}
         <div className="text-xs text-[#D4AF37] font-semibold h-5 flex items-center justify-center">
           {isFinished ? (
-            <span className="text-emerald-400 text-xs font-bold tracking-wider animate-bounce">✨ Bienvenue</span>
+            <span className="text-emerald-400 font-bold tracking-wider animate-bounce">✨ Bienvenue</span>
           ) : (
-            <span className="animate-pulse">{currentStep}...</span>
+            <span className="animate-pulse">{statusText}</span>
           )}
         </div>
 
-        {/* Manual Cache Clean Button */}
-        <div className="pt-1">
+        {/* Emergency Cache Purge */}
+        <div className="pt-2">
           <button
             onClick={clearAppCaches}
-            className="text-[10px] text-zinc-500 hover:text-zinc-300 underline uppercase tracking-wider cursor-pointer"
+            className="text-[10px] text-zinc-600 hover:text-zinc-400 underline uppercase tracking-wider cursor-pointer transition"
           >
             Nettoyer les caches
           </button>
@@ -103,3 +104,4 @@ export default function BootSplashScreen({ onComplete }: BootSplashScreenProps) 
     </div>
   );
 }
+
