@@ -5,6 +5,11 @@ import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { RoadmapItem, Poll, CrowdfundingCampaign, IdeaDraft } from "../../types";
 
 export default function AfrigomboLabs() {
+  useEffect(() => {
+    console.log("[MODULE: AfrigomboLabs] Mounted");
+    return () => console.log("[MODULE: AfrigomboLabs] Unmounted");
+  }, []);
+
   const [activeTab, setActiveTab] = useState("roadmap");
   const [roadmap, setRoadmap] = useState<RoadmapItem[]>([]);
   const [polls, setPolls] = useState<Poll[]>([]);
@@ -29,14 +34,14 @@ export default function AfrigomboLabs() {
 
   return (
     <div className="p-4 space-y-6 animate-fadeIn">
-      <h1 className="text-xl font-black text-white uppercase">🧪 Afrigombo Labs: L'avenir</h1>
+      <h1 className="text-xl font-black text-afri-text uppercase">🧪 Afrigombo Labs: L'avenir</h1>
       
       <div className="flex gap-2 overflow-x-auto pb-2">
         {tabs.map(tab => (
             <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition ${activeTab === tab.id ? "bg-[#D4AF37] text-black" : "bg-zinc-900 text-zinc-400"}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition ${activeTab === tab.id ? "bg-afri-gold text-afri-bg" : "bg-afri-bg-sec text-afri-text-sec"}`}
             >
                 <tab.icon className="w-4 h-4" />
                 {tab.label}
@@ -44,13 +49,13 @@ export default function AfrigomboLabs() {
         ))}
       </div>
 
-      <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
-        {activeTab === "roadmap" && <div className="text-white">Roadmap Content</div>}
-        {activeTab === "idees" && <div className="text-white">Idées Content</div>}
-        {activeTab === "mur_idees" && <div className="text-white">Mur des Idées (En construction)</div>}
-        {activeTab === "votes" && <div className="text-white">Votes Content</div>}
-        {activeTab === "cagnottes" && <div className="text-white">Cagnottes Content</div>}
-        {activeTab === "historique" && <div className="text-white">Historique Content</div>}
+      <div className="bg-afri-bg-sec p-6 rounded-3xl border border-afri-border">
+        {activeTab === "roadmap" && <div className="text-afri-text">Roadmap Content</div>}
+        {activeTab === "idees" && <div className="text-afri-text">Idées Content</div>}
+        {activeTab === "mur_idees" && <div className="text-afri-text">Mur des Idées (En construction)</div>}
+        {activeTab === "votes" && <div className="text-afri-text">Votes Content</div>}
+        {activeTab === "cagnottes" && <div className="text-afri-text">Cagnottes Content</div>}
+        {activeTab === "historique" && <div className="text-afri-text">Historique Content</div>}
       </div>
     </div>
   );

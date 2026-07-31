@@ -15,6 +15,10 @@ export default function AdminSecurity({
   onTriggerSystemScan,
   audioSynth
 }: AdminSecurityProps) {
+  useEffect(() => {
+    console.log("[MODULE: AdminSecurity] Mounted");
+    return () => console.log("[MODULE: AdminSecurity] Unmounted");
+  }, []);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [suspensions, setSuspensions] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);

@@ -1,44 +1,65 @@
 import { lazy, ComponentType, createElement } from "react";
 
 export function lazyWithRetry<T extends ComponentType<any>>(
-  componentImport: () => Promise<{ default: T }>
+  componentImport: () => Promise<{ default: T }>,
+  moduleName?: string
 ) {
   return lazy(async () => {
     try {
       const component = await componentImport();
       window.sessionStorage.setItem("last_chunk_reload_success", "true");
       return component;
-    } catch (error) {
-      console.error("❌ [LazyError] Failed to load module:", error);
+    } catch (error: any) {
+      console.error(`❌ [LazyError] Failed to load module ${moduleName || "Unknown"}:`, error);
       
-      const errorMessage = (error as any)?.message || "";
-      const isChunkError = (error as any)?.name === "ChunkLoadError" || 
-                          errorMessage.includes("Loading chunk") ||
-                          errorMessage.includes("Failed to fetch dynamically imported module") ||
-                          errorMessage.includes("Unexpected token '<'");
+      const errorMessage = error?.message || String(error);
+      const stack = error?.stack || "No stack trace available";
+      const importFuncString = componentImport.toString();
+      const pathMatch = importFuncString.match(/import\(['"]([^'"]+)['"]\)/);
+      const path = pathMatch ? pathMatch[1] : "Unknown path";
+      const actualModuleName = moduleName || path.split('/').pop() || "Unknown module";
 
-      if (isChunkError) {
-        console.warn("⚠️ [LazyRetry] Dynamic module chunk load error. Offering graceful fallback UI.");
-      }
-
-      // Return a safe fallback component instead of white screen / crash
+      // Return a safe fallback component
       return {
         default: (() => createElement('div', {
-          className: "p-8 text-center text-[#D4AF37] font-mono bg-[#0D0D15] border border-[#D4AF37]/30 rounded-2xl m-4 max-w-lg mx-auto shadow-xl flex flex-col items-center"
+          className: "p-6 text-left text-red-500 font-mono bg-afri-bg-sec border border-red-500/30 rounded-2xl m-4 w-full max-w-4xl shadow-xl flex flex-col items-start overflow-auto"
         }, [
-          createElement('div', { key: 'icon', className: 'text-3xl mb-2' }, '⚠️'),
-          createElement('h3', { key: 'title', className: 'font-bold uppercase tracking-wider text-sm mb-1 text-[#D4AF37]' }, 'Impossible de charger ce module'),
-          createElement('p', { key: 'desc', className: 'text-xs text-zinc-400 mb-6' }, 'Veuillez vérifier votre connexion réseau ou réessayer.'),
-          createElement('div', { key: 'actions', className: 'flex gap-3' }, [
+          createElement('div', { key: 'icon', className: 'text-3xl mb-4 text-center w-full' }, '⚠️'),
+          createElement('h3', { key: 'title', className: 'font-black uppercase tracking-wider text-xl mb-4 text-red-500 text-center w-full' }, 'Impossible de charger ce module'),
+          
+          createElement('div', { key: 'details', className: 'w-full space-y-3 text-xs md:text-sm' }, [
+            createElement('p', { key: 'module' }, [
+              createElement('strong', { key: 'l', className: 'text-red-400' }, 'Module : '),
+              actualModuleName
+            ]),
+            createElement('p', { key: 'path' }, [
+              createElement('strong', { key: 'l', className: 'text-red-400' }, 'Chemin : '),
+              path
+            ]),
+            createElement('p', { key: 'func' }, [
+              createElement('strong', { key: 'l', className: 'text-red-400' }, 'Import concerné : '),
+              createElement('code', { key: 'c', className: 'bg-black/30 px-1 py-0.5 rounded' }, importFuncString)
+            ]),
+            createElement('div', { key: 'error', className: 'mt-4' }, [
+              createElement('strong', { key: 'l', className: 'text-red-400 block mb-1' }, 'Erreur JavaScript : '),
+              createElement('pre', { key: 'c', className: 'bg-black/50 p-3 rounded-lg overflow-x-auto text-red-300' }, errorMessage)
+            ]),
+            createElement('div', { key: 'stack', className: 'mt-4' }, [
+              createElement('strong', { key: 'l', className: 'text-red-400 block mb-1' }, 'Stack trace : '),
+              createElement('pre', { key: 'c', className: 'bg-black/50 p-3 rounded-lg overflow-x-auto text-afri-text-muted text-[10px]' }, stack)
+            ])
+          ]),
+
+          createElement('div', { key: 'actions', className: 'flex justify-center gap-4 mt-8 w-full' }, [
             createElement('button', {
               key: 'retry',
               onClick: () => window.location.reload(),
-              className: 'px-4 py-2 bg-[#D4AF37] text-black text-xs font-bold font-mono uppercase rounded-xl tracking-widest cursor-pointer hover:bg-white transition'
+              className: 'px-6 py-2 bg-red-600 text-white text-xs font-bold font-mono uppercase rounded-xl tracking-widest cursor-pointer hover:bg-red-500 transition'
             }, 'Réessayer'),
             createElement('button', {
               key: 'home',
               onClick: () => { window.location.href = '/'; },
-              className: 'px-4 py-2 bg-zinc-800 text-white border border-zinc-700 text-xs font-bold font-mono uppercase rounded-xl tracking-widest cursor-pointer hover:bg-zinc-700 transition'
+              className: 'px-6 py-2 bg-afri-bg-ter text-afri-text border border-afri-border text-xs font-bold font-mono uppercase rounded-xl tracking-widest cursor-pointer hover:bg-zinc-700 transition'
             }, 'Retour Accueil')
           ])
         ])) as unknown as T
@@ -46,4 +67,3 @@ export function lazyWithRetry<T extends ComponentType<any>>(
     }
   });
 }
-

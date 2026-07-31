@@ -11,7 +11,7 @@ import {
   Clock, MapPin, Cloud, Zap, Sun, ChevronDown, ChevronUp, Flame, ToggleLeft, ToggleRight, UserCheck, Radio, Eye, Bot,
   MessageSquare
 } from "lucide-react";
-import { BetaTransactionsAdminPanel } from "./BetaTransactionsAdminPanel";
+import BetaTransactionsAdminPanel from "./BetaTransactionsAdminPanel";
 import { PendingPublicationsAdminPanel } from "./PendingPublicationsAdminPanel";
 import { ImperialMessageModal } from "./ImperialMessageModal";
 import { AdminDecouvertesCentre } from "./AdminDecouvertesCentre";

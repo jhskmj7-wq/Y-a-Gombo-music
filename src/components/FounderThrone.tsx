@@ -358,7 +358,7 @@ export default function FounderThrone({
                             <XAxis dataKey="name" stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} tickMargin={10} />
                             <YAxis stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${v/1000}K`} tickMargin={10} />
                             <Tooltip 
-                               contentStyle={{ backgroundcolor: "var(--afri-text)", border: "1px solid #D4AF37", borderRadius: "8px", fontSize: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.8)" }} 
+                               contentStyle={{ backgroundColor: "var(--afri-text)", border: "1px solid #D4AF37", borderRadius: "8px", fontSize: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.8)" }} 
                                itemStyle={{ color: "var(--afri-text)", fontWeight: "bold" }}
                                labelStyle={{ color: "#D4AF37", marginBottom: "4px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "bold" }}
                             />

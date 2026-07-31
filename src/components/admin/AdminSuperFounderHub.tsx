@@ -5,6 +5,7 @@ import {
   Sparkles, Bell, Shield, Users, TrendingUp, LogOut, Radio
 } from "lucide-react";
 import { lazyWithRetry } from "../../lib/lazyWithRetry";
+import { ErrorBoundary } from "../ErrorBoundary";
 
 // Lazy load the independent modules
 const AdminFounderThrone = lazyWithRetry(() => import("./AdminFounderThrone"));
@@ -167,94 +168,96 @@ export default function AdminSuperFounderHub({
             <span>Chargement du module souverain {activeModule}...</span>
           </div>
         }>
-          {activeModule === "throne" && (
-            <AdminFounderThrone
-              founders={[userEmail || "admin@afrigombo.ci"]}
-              superAdmins={[userEmail || "admin@afrigombo.ci"]}
-              adminEmail={userEmail || "admin@afrigombo.ci"}
-              isAuthorizedSuperFounder={true}
-              audioSynth={audioSynth}
-              users={users}
-              gombos={gombos}
-              posts={posts}
-              transactions={transactions}
-              alerts={alerts}
-              onExit={onExit}
-            />
-          )}
+          <ErrorBoundary>
+            {activeModule === "throne" && (
+              <AdminFounderThrone
+                founders={[userEmail || "admin@afrigombo.ci"]}
+                superAdmins={[userEmail || "admin@afrigombo.ci"]}
+                adminEmail={userEmail || "admin@afrigombo.ci"}
+                isAuthorizedSuperFounder={true}
+                audioSynth={audioSynth}
+                users={users}
+                gombos={gombos}
+                posts={posts}
+                transactions={transactions}
+                alerts={alerts}
+                onExit={onExit}
+              />
+            )}
 
-          {activeModule === "dashboard" && (
-            <AdminDashboard
-              users={users}
-              gombos={gombos}
-              posts={posts}
-              transactions={transactions}
-              alerts={alerts}
-              currentUser={currentUser}
-              userEmail={userEmail}
-              audioSynth={audioSynth}
-            />
-          )}
+            {activeModule === "dashboard" && (
+              <AdminDashboard
+                users={users}
+                gombos={gombos}
+                posts={posts}
+                transactions={transactions}
+                alerts={alerts}
+                currentUser={currentUser}
+                userEmail={userEmail}
+                audioSynth={audioSynth}
+              />
+            )}
 
-          {activeModule === "messaging" && (
-            <AdminSupportCenter audioSynth={audioSynth} />
-          )}
+            {activeModule === "messaging" && (
+              <AdminSupportCenter audioSynth={audioSynth} />
+            )}
 
-          {activeModule === "contracts" && (
-            <AdminContracts currentUser={currentUser} />
-          )}
+            {activeModule === "contracts" && (
+              <AdminContracts currentUser={currentUser} />
+            )}
 
-          {activeModule === "wallet_management" && (
-            <AdminWalletManagement currentUser={currentUser} />
-          )}
+            {activeModule === "wallet_management" && (
+              <AdminWalletManagement currentUser={currentUser} />
+            )}
 
-          {activeModule === "transactions" && (
-            <BetaTransactionsAdminPanel currentUser={currentUser} />
-          )}
+            {activeModule === "transactions" && (
+              <BetaTransactionsAdminPanel currentUser={currentUser} />
+            )}
 
-          {activeModule === "geolocation" && (
-            <GeoLocationCenter />
-          )}
+            {activeModule === "geolocation" && (
+              <GeoLocationCenter />
+            )}
 
-          {activeModule === "avatar_store" && (
-            <AdminAvatarStore />
-          )}
+            {activeModule === "avatar_store" && (
+              <AdminAvatarStore />
+            )}
 
-          {activeModule === "polls" && (
-            <AdminPollCenter audioSynth={audioSynth} />
-          )}
+            {activeModule === "polls" && (
+              <AdminPollCenter audioSynth={audioSynth} />
+            )}
 
-          {activeModule === "labs" && (
-            <AfrigomboLabs />
-          )}
+            {activeModule === "labs" && (
+              <AfrigomboLabs />
+            )}
 
-          {activeModule === "cagnottes" && (
-            <AdminDecouvertesCentre audioSynth={audioSynth} />
-          )}
+            {activeModule === "cagnottes" && (
+              <AdminDecouvertesCentre audioSynth={audioSynth} />
+            )}
 
-          {activeModule === "notifications" && (
-            <AdminNotifications adminEmail={userEmail} />
-          )}
+            {activeModule === "notifications" && (
+              <AdminNotifications adminEmail={userEmail} />
+            )}
 
-          {activeModule === "security" && (
-            <AdminSecurity adminLogs={[]} scannerStatus="idle" audioSynth={audioSynth} />
-          )}
+            {activeModule === "security" && (
+              <AdminSecurity adminLogs={[]} scannerStatus="idle" audioSynth={audioSynth} />
+            )}
 
-          {activeModule === "users" && (
-            <AdminUsers users={users} />
-          )}
+            {activeModule === "users" && (
+              <AdminUsers users={users} />
+            )}
 
-          {activeModule === "stats" && (
-            <AdminRevenue transactions={transactions} systemCommissionRate={1.5} audioSynth={audioSynth} />
-          )}
+            {activeModule === "stats" && (
+              <AdminRevenue transactions={transactions} systemCommissionRate={1.5} audioSynth={audioSynth} />
+            )}
 
-          {activeModule === "multimedia" && (
-            <MultimediaCenter adminEmail={userEmail} isAuthorizedSuperFounder={true} />
-          )}
+            {activeModule === "multimedia" && (
+              <MultimediaCenter adminEmail={userEmail} isAuthorizedSuperFounder={true} />
+            )}
 
-          {activeModule === "settings" && (
-            <AdminSettings systemCommissionRate={1.5} audioSynth={audioSynth} />
-          )}
+            {activeModule === "settings" && (
+              <AdminSettings systemCommissionRate={1.5} audioSynth={audioSynth} />
+            )}
+          </ErrorBoundary>
         </Suspense>
       </main>
     </div>

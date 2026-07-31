@@ -6,7 +6,7 @@ import {
   MapPin, Globe, CheckSquare, Square, ChevronRight, HelpCircle, Star, MessageSquare
 } from "lucide-react";
 import { collection, onSnapshot, query, orderBy, doc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, where } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 
 interface Poll {
   id: string;
@@ -52,6 +52,10 @@ interface PollResponse {
 }
 
 export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
+  useEffect(() => {
+    console.log("[MODULE: AdminPollCenter] Mounted");
+    return () => console.log("[MODULE: AdminPollCenter] Unmounted");
+  }, []);
   const [polls, setPolls] = useState<Poll[]>([]);
   const [selectedPoll, setSelectedPoll] = useState<Poll | null>(null);
   const [responses, setResponses] = useState<PollResponse[]>([]);
@@ -868,7 +872,7 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                           const optionIcon = optionIcons[idx % optionIcons.length];
                           
                           return (
-                            <div key={c.id} className="space-y-1 bg-zinc-900/30 p-2.5 rounded-xl border border-zinc-800/40 hover:border-zinc-700/60 transition-all duration-[120ms]">
+                            <div key={c.id} className="space-y-1 bg-afri-bg-sec p-2.5 rounded-xl border border-zinc-800/40 hover:border-zinc-700/60 transition-all duration-[120ms]">
                               <div className="flex justify-between items-center text-[10px] font-mono">
                                 <span className="text-afri-text font-bold flex items-center gap-1.5">
                                   <span>{optionIcon}</span>
@@ -907,7 +911,7 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                                   )}
                                 </div>
                               </div>
-                              <div className="w-full h-2.5 bg-zinc-950 border border-zinc-800 rounded-full overflow-hidden">
+                              <div className="w-full h-2.5 bg-afri-bg border border-afri-border rounded-full overflow-hidden">
                                 <div 
                                   className="h-full bg-gradient-to-r from-afri-gold to-amber-500 rounded-full transition-all duration-[140ms] ease-out shadow-[0_0_8px_rgba(212,175,55,0.4)]" 
                                   style={{ width: `${pct}%` }} 
@@ -925,7 +929,7 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                             const optionIcon = ans === "Oui" ? "👍" : "👎";
                             
                             return (
-                              <div key={ans} className="space-y-1 bg-zinc-900/30 p-2.5 rounded-xl border border-zinc-800/40 hover:border-zinc-700/60 transition-all duration-[120ms]">
+                              <div key={ans} className="space-y-1 bg-afri-bg-sec p-2.5 rounded-xl border border-zinc-800/40 hover:border-zinc-700/60 transition-all duration-[120ms]">
                                 <div className="flex justify-between items-center text-[10px] font-mono">
                                   <span className="text-afri-text font-bold flex items-center gap-1.5">
                                     <span>{optionIcon}</span>
@@ -964,7 +968,7 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                                     )}
                                   </div>
                                 </div>
-                                <div className="w-full h-2.5 bg-zinc-950 border border-zinc-800 rounded-full overflow-hidden">
+                                <div className="w-full h-2.5 bg-afri-bg border border-afri-border rounded-full overflow-hidden">
                                   <div 
                                     className="h-full bg-gradient-to-r from-afri-gold to-amber-500 rounded-full transition-all duration-[140ms] ease-out shadow-[0_0_8px_rgba(212,175,55,0.4)]" 
                                     style={{ width: `${pct}%` }} 

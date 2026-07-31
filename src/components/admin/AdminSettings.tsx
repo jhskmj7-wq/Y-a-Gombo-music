@@ -15,6 +15,10 @@ export default function AdminSettings({
   onUpdateCommissionRate,
   audioSynth
 }: AdminSettingsProps) {
+  useEffect(() => {
+    console.log("[MODULE: AdminSettings] Mounted");
+    return () => console.log("[MODULE: AdminSettings] Unmounted");
+  }, []);
   const [commissionRate, setCommissionRate] = useState(systemCommissionRate);
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState(false);
