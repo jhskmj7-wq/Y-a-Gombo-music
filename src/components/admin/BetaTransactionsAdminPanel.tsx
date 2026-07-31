@@ -695,11 +695,11 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
            ========================================================= */}
       <AnimatePresence>
         {selectedRequest && (
-          <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex flex-col justify-end md:items-center md:justify-center p-0 m-0">
+          <div className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[9999] flex items-center justify-center p-4">
             
-            {/* Overlay background for closing on desktop click */}
+            {/* Overlay background for closing on click outside */}
             <div 
-              className="absolute inset-0 z-10 cursor-pointer hidden md:block" 
+              className="absolute inset-0 z-10 cursor-pointer" 
               onClick={() => {
                 setSelectedRequest(null);
                 setPendingAction(null);
@@ -707,11 +707,11 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             />
 
             <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 220 }}
-              className="w-full h-full md:max-w-3xl md:h-[95vh] bg-[#08080a] border-t border-neutral-800 md:border md:border-neutral-800 rounded-t-[32px] md:rounded-[32px] flex flex-col overflow-hidden relative shadow-2xl z-20"
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-[92%] max-w-[480px] max-h-[85vh] h-auto bg-[#08080a] border border-neutral-800 rounded-[24px] flex flex-col overflow-hidden relative shadow-2xl z-20"
             >
               
               {/* Android Pill Handle */}

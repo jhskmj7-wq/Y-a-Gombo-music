@@ -1,5 +1,5 @@
 import { Gombo, Post } from "../types";
-import { db } from "../firebase";
+import { db } from "./firebase";
 import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 
 export interface TrendingDoc {

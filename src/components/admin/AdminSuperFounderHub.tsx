@@ -97,7 +97,7 @@ export default function AdminSuperFounderHub({
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans antialiased flex flex-col w-full overflow-x-hidden">
+    <div className="min-h-[100dvh] h-[100dvh] bg-black text-white font-sans antialiased flex flex-col w-full overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       
       {/* Imperial Top Header Bar */}
       <header className="bg-zinc-950 border-b border-zinc-800/80 px-4 py-3 flex items-center justify-between shrink-0 sticky top-0 z-40">
@@ -160,7 +160,7 @@ export default function AdminSuperFounderHub({
       </nav>
 
       {/* Main Content View Area */}
-      <main className="flex-1 p-3 sm:p-5 lg:p-6 overflow-y-auto overscroll-contain w-full max-w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <main className="flex-1 p-3 sm:p-5 lg:p-6 overflow-y-auto overflow-x-hidden overscroll-contain w-full max-w-full box-border" style={{ WebkitOverflowScrolling: 'touch' }}>
         <Suspense fallback={
           <div className="p-16 text-center text-[#D4AF37] font-mono text-xs animate-pulse flex flex-col items-center justify-center gap-3">
             <Crown className="w-8 h-8 text-[#D4AF37] animate-bounce" />

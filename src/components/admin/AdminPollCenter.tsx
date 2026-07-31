@@ -740,8 +740,9 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                           {isArchived ? "Archivé" : isClosed ? "Clôturé" : "Actif 🟢"}
                         </span>
                         
-                        <span className="px-1.5 py-0.5 bg-afri-bg border border-afri-border text-afri-gold text-[8px] font-mono font-black uppercase rounded">
-                          {p.category}
+                        <span className="px-1.5 py-0.5 bg-afri-bg border border-[#D4AF37]/30 text-afri-gold text-[8px] font-mono font-black uppercase rounded flex items-center gap-1">
+                          <span>{p.category === "Application" ? "📱" : p.category === "Musique" ? "🎵" : p.category === "Événements" ? "🎪" : p.category === "Wallet" ? "💳" : "💡"}</span>
+                          <span>{p.category}</span>
                         </span>
                       </div>
 
@@ -860,20 +861,57 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
                     ) : (
                       /* Choice results (Single, Multi, Yes/No) */
                       <div className="space-y-3.5">
-                        {choices.map(c => {
+                        {choices.map((c, idx) => {
                           const count = choiceVotes[c.id] || 0;
                           const pct = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(0) : "0";
+                          const optionIcons = ["🌟", "⚡", "💎", "🔥", "🔮", "🌈", "🍀"];
+                          const optionIcon = optionIcons[idx % optionIcons.length];
+                          
                           return (
-                            <div key={c.id} className="space-y-1">
-                              <div className="flex justify-between text-[10px] font-mono">
-                                <span className="text-afri-text font-bold">{c.text}</span>
+                            <div key={c.id} className="space-y-1 bg-zinc-900/30 p-2.5 rounded-xl border border-zinc-800/40 hover:border-zinc-700/60 transition-all duration-[120ms]">
+                              <div className="flex justify-between items-center text-[10px] font-mono">
+                                <span className="text-afri-text font-bold flex items-center gap-1.5">
+                                  <span>{optionIcon}</span>
+                                  <span>{c.text}</span>
+                                </span>
                                 <div className="flex items-center gap-2">
                                   <span className="text-afri-gold font-black">{pct}%</span>
                                   <span className="text-afri-text-muted text-[9px]">({count} votes)</span>
+                                  
+                                  {selectedPoll.status === "active" && (
+                                    <button
+                                      onClick={async () => {
+                                        if (!selectedPoll?.id) return;
+                                        try {
+                                          const mockResponseId = `admin_vote_${Date.now()}`;
+                                          await setDoc(doc(db, "pollResponses", mockResponseId), {
+                                            id: mockResponseId,
+                                            pollId: selectedPoll.id,
+                                            userUid: "admin_tester",
+                                            userName: "Souverain (Simulation)",
+                                            answers: [c.id],
+                                            createdAt: new Date().toISOString()
+                                          });
+                                          setSuccessMsg("🗳️ Vote de simulation enregistré en direct !");
+                                          try { audioSynth?.playValidationSuccess?.(); } catch(_) {}
+                                          setTimeout(() => setSuccessMsg(""), 3000);
+                                        } catch (err: any) {
+                                          setErrorMsg(`Erreur vote : ${err.message}`);
+                                        }
+                                      }}
+                                      className="ml-1.5 px-2 py-0.5 bg-afri-gold hover:bg-amber-400 text-black rounded text-[8px] font-bold transition active:scale-90"
+                                      title="Simuler un vote sur cette option"
+                                    >
+                                      Vote Test
+                                    </button>
+                                  )}
                                 </div>
                               </div>
-                              <div className="w-full h-2.5 bg-afri-bg border border-afri-border rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-afri-gold to-amber-500" style={{ width: `${pct}%` }} />
+                              <div className="w-full h-2.5 bg-zinc-950 border border-zinc-800 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-afri-gold to-amber-500 rounded-full transition-all duration-[140ms] ease-out shadow-[0_0_8px_rgba(212,175,55,0.4)]" 
+                                  style={{ width: `${pct}%` }} 
+                                />
                               </div>
                             </div>
                           );
@@ -881,20 +919,56 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
 
                         {selectedPoll.questionType === "yes_no" && choices.length === 0 && (
                           /* Fallback Yes/No calculations if pollChoices didn't sync yet */
-                          ["Oui", "Non"].map(ans => {
+                          ["Oui", "Non"].map((ans, idx) => {
                             const count = choiceVotes[ans] || 0;
                             const pct = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(0) : "0";
+                            const optionIcon = ans === "Oui" ? "👍" : "👎";
+                            
                             return (
-                              <div key={ans} className="space-y-1">
-                                <div className="flex justify-between text-[10px] font-mono">
-                                  <span className="text-afri-text font-bold">{ans}</span>
+                              <div key={ans} className="space-y-1 bg-zinc-900/30 p-2.5 rounded-xl border border-zinc-800/40 hover:border-zinc-700/60 transition-all duration-[120ms]">
+                                <div className="flex justify-between items-center text-[10px] font-mono">
+                                  <span className="text-afri-text font-bold flex items-center gap-1.5">
+                                    <span>{optionIcon}</span>
+                                    <span>{ans}</span>
+                                  </span>
                                   <div className="flex items-center gap-2">
                                     <span className="text-afri-gold font-black">{pct}%</span>
                                     <span className="text-afri-text-muted text-[9px]">({count} votes)</span>
+                                    
+                                    {selectedPoll.status === "active" && (
+                                      <button
+                                        onClick={async () => {
+                                          if (!selectedPoll?.id) return;
+                                          try {
+                                            const mockResponseId = `admin_vote_${Date.now()}`;
+                                            await setDoc(doc(db, "pollResponses", mockResponseId), {
+                                              id: mockResponseId,
+                                              pollId: selectedPoll.id,
+                                              userUid: "admin_tester",
+                                              userName: "Souverain (Simulation)",
+                                              answers: [ans],
+                                              createdAt: new Date().toISOString()
+                                            });
+                                            setSuccessMsg("🗳️ Vote de simulation enregistré en direct !");
+                                            try { audioSynth?.playValidationSuccess?.(); } catch(_) {}
+                                            setTimeout(() => setSuccessMsg(""), 3000);
+                                          } catch (err: any) {
+                                            setErrorMsg(`Erreur vote : ${err.message}`);
+                                          }
+                                        }}
+                                        className="ml-1.5 px-2 py-0.5 bg-afri-gold hover:bg-amber-400 text-black rounded text-[8px] font-bold transition active:scale-90"
+                                        title="Simuler un vote sur cette option"
+                                      >
+                                        Vote Test
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
-                                <div className="w-full h-2.5 bg-afri-bg border border-afri-border rounded-full overflow-hidden">
-                                  <div className="h-full bg-gradient-to-r from-afri-gold to-amber-500" style={{ width: `${pct}%` }} />
+                                <div className="w-full h-2.5 bg-zinc-950 border border-zinc-800 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-gradient-to-r from-afri-gold to-amber-500 rounded-full transition-all duration-[140ms] ease-out shadow-[0_0_8px_rgba(212,175,55,0.4)]" 
+                                    style={{ width: `${pct}%` }} 
+                                  />
                                 </div>
                               </div>
                             );

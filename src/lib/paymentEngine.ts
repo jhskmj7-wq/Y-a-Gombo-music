@@ -1,4 +1,4 @@
-import { db } from "../firebase";
+import { db } from "./firebase";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 
 export interface PaymentOptions {

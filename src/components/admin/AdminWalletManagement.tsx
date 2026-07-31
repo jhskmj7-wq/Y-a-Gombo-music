@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Wallet, ShieldCheck, Search, ArrowUpRight, ArrowDownLeft, RefreshCw, 
   Lock, Unlock, Plus, Minus, RotateCcw, FileSpreadsheet, Download, AlertCircle, 
-  CheckCircle2, User, Coins, Clock, ChevronRight, X, ShieldAlert, FileText, Check
+  CheckCircle2, User, Coins, Clock, ChevronRight, X, ShieldAlert, FileText, Check,
+  TrendingUp, BarChart3, Landmark
 } from "lucide-react";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { db } from "../../lib/firebase";
 import { 
   collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, where, getDocs 
@@ -273,6 +275,49 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
     showToast("📦 Export JSON généré avec succès !");
   };
 
+  // Real-time financial calculations
+  const totalSequestered = users.reduce((acc, u) => acc + Number(u.wallet?.soldeDisponible ?? u.walletBalance ?? 0), 0);
+  const totalRecharges = transactions
+    .filter(tx => tx.type === "recharge_wallet" || tx.type === "credit_manual" || tx.type === "deposit" || tx.action === "credit")
+    .reduce((acc, tx) => acc + Number(tx.amount || tx.montant || 0), 0);
+  const totalWithdrawals = transactions
+    .filter(tx => tx.type === "debit_purchase" || tx.type === "debit_manual" || tx.type === "withdrawal" || tx.action === "debit")
+    .reduce((acc, tx) => acc + Number(tx.amount || tx.montant || 0), 0);
+  const commissions = Math.round(totalRecharges * 0.025); // 2.5% of total deposits/credits
+  const pendingWithdrawalsCount = transactions.filter(tx => (tx.type === "withdrawal" || tx.module === "Retrait") && tx.status === "pending").length;
+  const pendingWithdrawalsAmount = transactions
+    .filter(tx => (tx.type === "withdrawal" || tx.module === "Retrait") && tx.status === "pending")
+    .reduce((acc, tx) => acc + Number(tx.amount || tx.montant || 0), 0);
+
+  // Group last 7 days of transactions for Recharts
+  const getChartData = () => {
+    const days: Record<string, { date: string; credits: number; debits: number }> = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+      days[d.toDateString()] = { date: dateStr, credits: 0, debits: 0 };
+    }
+
+    transactions.forEach(tx => {
+      const txDate = new Date(tx.createdAt || tx.timestamp || 0);
+      const dayKey = txDate.toDateString();
+      if (days[dayKey]) {
+        const amt = Number(tx.amount || tx.montant || 0);
+        const isCredit = tx.type === "recharge_wallet" || tx.type === "credit_manual" || tx.type === "deposit" || tx.type === "refund" || tx.action === "credit";
+        if (isCredit) {
+          days[dayKey].credits += amt;
+        } else {
+          days[dayKey].debits += amt;
+        }
+      }
+    });
+
+    return Object.values(days);
+  };
+
+  const chartData = getChartData();
+
   return (
     <div className="space-y-6 text-left font-sans select-none relative animate-fadeIn pb-12">
       
@@ -326,6 +371,115 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
             <Download className="w-3.5 h-3.5 text-amber-400" />
             <span>Export JSON</span>
           </button>
+        </div>
+      </div>
+
+      {/* FINANCIAL SUMMARY BOARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-5 bg-zinc-950 border border-[#D4AF37]/20 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex justify-between items-start">
+            <span className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-widest block">Fonds Séquestrés</span>
+            <div className="p-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded-lg border border-[#D4AF37]/20">
+              <Landmark className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-lg sm:text-2xl font-black font-mono text-white tracking-tight">
+              {totalSequestered.toLocaleString("fr-FR")} <span className="text-xs text-[#D4AF37]">F</span>
+            </h3>
+            <p className="text-[9px] text-zinc-400 font-mono mt-1">Cumul soldes comptes actifs</p>
+          </div>
+        </div>
+
+        <div className="p-5 bg-zinc-950 border border-zinc-800/80 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex justify-between items-start">
+            <span className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-widest block">Recharges Globales</span>
+            <div className="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
+              <ArrowUpRight className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-lg sm:text-2xl font-black font-mono text-emerald-400 tracking-tight">
+              {totalRecharges.toLocaleString("fr-FR")} <span className="text-xs">F</span>
+            </h3>
+            <p className="text-[9px] text-zinc-400 font-mono mt-1">Total dépôts & recharges</p>
+          </div>
+        </div>
+
+        <div className="p-5 bg-zinc-950 border border-zinc-800/80 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex justify-between items-start">
+            <span className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-widest block">Commissions Est. (2.5%)</span>
+            <div className="p-1.5 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-lg sm:text-2xl font-black font-mono text-amber-500 tracking-tight">
+              {commissions.toLocaleString("fr-FR")} <span className="text-xs">F</span>
+            </h3>
+            <p className="text-[9px] text-zinc-400 font-mono mt-1">Part système de sécurité</p>
+          </div>
+        </div>
+
+        <div className="p-5 bg-zinc-950 border border-zinc-800/80 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex justify-between items-start">
+            <span className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-widest block">Retraits En Attente</span>
+            <div className={`p-1.5 rounded-lg border ${pendingWithdrawalsCount > 0 ? "bg-rose-500/20 text-rose-400 border-rose-500/30 animate-pulse" : "bg-zinc-800 text-zinc-500 border-zinc-700"}`}>
+              <Clock className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-lg sm:text-2xl font-black font-mono text-rose-400 tracking-tight">
+              {pendingWithdrawalsAmount.toLocaleString("fr-FR")} <span className="text-xs">F</span>
+            </h3>
+            <p className="text-[9px] text-zinc-400 font-mono mt-1">
+              {pendingWithdrawalsCount} demandes de transfert
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* DAILY EVOLUTION AREA CHART */}
+      <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-5 sm:p-6 space-y-4 shadow-xl">
+        <div className="flex justify-between items-center border-b border-zinc-800/80 pb-3">
+          <div>
+            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-[#D4AF37]" />
+              <span>Évolution des Flux Quotidiens (Dépôts vs. Retraits)</span>
+            </h3>
+            <p className="text-[10px] text-zinc-400 font-mono">Volume d'échanges réels des 7 derniers jours synchronisé via onSnapshot()</p>
+          </div>
+        </div>
+
+        <div className="h-[200px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorCredits" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorDebits" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+              <XAxis dataKey="date" stroke="#71717a" fontSize={10} fontFamily="monospace" />
+              <YAxis stroke="#71717a" fontSize={10} fontFamily="monospace" tickFormatter={(v) => `${v / 1000}k`} />
+              <Tooltip 
+                contentStyle={{ backgroundColor: "#09090b", borderColor: "#27272a", borderRadius: "12px" }} 
+                labelStyle={{ color: "#d4af37", fontSize: "10px", fontFamily: "monospace" }}
+                itemStyle={{ fontSize: "11px", fontFamily: "monospace" }}
+              />
+              <Area type="monotone" dataKey="credits" name="Dépôts (F)" stroke="#10b981" fillOpacity={1} fill="url(#colorCredits)" strokeWidth={2} />
+              <Area type="monotone" dataKey="debits" name="Retraits (F)" stroke="#f59e0b" fillOpacity={1} fill="url(#colorDebits)" strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -530,10 +684,30 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                         <span>ID: {tx.id}</span>
                         <span>•</span>
                         <span>{dateStr}</span>
-                        {tx.refunded && (
-                          <span className="text-rose-400 font-bold bg-rose-500/10 px-1 rounded border border-rose-500/20">
-                            REMBOURSÉ
+                        <span>•</span>
+                        {tx.status === "pending" ? (
+                          <span className="inline-flex items-center gap-1 text-amber-400 font-bold bg-amber-400/5 px-1.5 py-0.5 rounded border border-amber-400/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                            En attente
                           </span>
+                        ) : tx.status === "failed" || tx.status === "error" ? (
+                          <span className="inline-flex items-center gap-1 text-rose-400 font-bold bg-rose-500/5 px-1.5 py-0.5 rounded border border-rose-500/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                            Échec
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-emerald-400 font-bold bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                            Succès
+                          </span>
+                        )}
+                        {tx.refunded && (
+                          <>
+                            <span>•</span>
+                            <span className="text-rose-400 font-bold bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
+                              REMBOURSÉ
+                            </span>
+                          </>
                         )}
                       </div>
                     </div>

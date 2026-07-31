@@ -1,4 +1,4 @@
-import { db } from "../firebase";
+import { db } from "./firebase";
 import { doc, updateDoc, getDoc, collection, addDoc } from "firebase/firestore";
 
 export interface UserPremiumProfile {

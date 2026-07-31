@@ -31,11 +31,19 @@ if (typeof window !== "undefined") {
 
 let firestoreInstance;
 try {
-  firestoreInstance = initializeFirestore(app, {
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager()
-    })
-  });
+  const isIframe = typeof window !== "undefined" && window.self !== window.top;
+  if (isIframe) {
+    firestoreInstance = initializeFirestore(app, {
+      localCache: memoryLocalCache()
+    });
+    console.log("FIRESTORE: Sandboxed iframe detected, fallback to memoryLocalCache to avoid IndexedDB lockups.");
+  } else {
+    firestoreInstance = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    });
+  }
 } catch (e) {
   try {
     firestoreInstance = initializeFirestore(app, {

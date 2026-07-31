@@ -483,3 +483,22 @@ img {
   border-color: #DDD8CF !important;
 }
 
+/* Android First Scroll & Overflow Normalisation */
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.page-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+

@@ -4,7 +4,7 @@
  * Validates URLs to ensure they are playable audio files.
  */
 
-import { db } from "../firebase";
+import { db } from "./firebase";
 import { collection, onSnapshot, query, limit } from "firebase/firestore";
 
 // Official GitHub Assets Configuration

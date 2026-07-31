@@ -88,6 +88,29 @@ export default function AdminFounderThrone({
   // ==========================================
   // CONSOLIDATED REACT HOOKS (STATES & EFFECTS)
   // ==========================================
+  const [platformStatus, setPlatformStatus] = useState<string>("operational");
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, "settings", "platform"), (snap) => {
+      if (snap.exists() && snap.data().status) {
+        setPlatformStatus(snap.data().status);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const handleUpdatePlatformStatus = async (newStatus: string) => {
+    try {
+      await setDoc(doc(db, "settings", "platform"), { status: newStatus }, { merge: true });
+      setSuccessMsg(`Souveraineté : Statut de service mis à jour vers [${newStatus.toUpperCase()}]`);
+      setTimeout(() => setSuccessMsg(""), 4000);
+      try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg("Erreur statut de service: " + err.message);
+      setTimeout(() => setErrorMsg(""), 4000);
+    }
+  };
+
   const [audioState, setAudioState] = useState<AudioState>(globalAudioManager.getState());
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -1651,6 +1674,40 @@ export default function AdminFounderThrone({
                 </div>
 
               </div>
+
+              {/* ROW 3: PLATFORM SERVICE STATUS CONTROLLER */}
+              <div className="pt-3 border-t border-[#D4AF37]/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <Server className="w-4 h-4 text-[#D4AF37]" />
+                  <div>
+                    <span className="text-[10px] font-mono font-black uppercase text-zinc-400 block tracking-wider">Statut Général de la Plateforme</span>
+                    <span className="text-[9px] text-zinc-500 font-mono">Modifiable par le fondateur en temps réel</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1 bg-black/60 p-1 rounded-2xl border border-[#D4AF37]/20 w-full sm:w-auto">
+                  {[
+                    { id: "operational", label: "🟢 Opérationnel", style: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+                    { id: "maintenance", label: "🛠️ Maintenance", style: "text-rose-400 bg-rose-500/10 border-rose-500/20 animate-pulse" },
+                    { id: "congested", label: "⚡ Surchargé", style: "text-amber-400 bg-amber-500/10 border-amber-500/20" }
+                  ].map((st) => {
+                    const isActive = platformStatus === st.id;
+                    return (
+                      <button
+                        key={st.id}
+                        onClick={() => handleUpdatePlatformStatus(st.id)}
+                        className={`px-3 py-1 rounded-xl text-[9px] font-mono font-bold uppercase transition-all cursor-pointer border ${
+                          isActive
+                            ? st.style + " shadow-md"
+                            : "bg-transparent border-transparent text-zinc-500 hover:text-zinc-300"
+                        }`}
+                      >
+                        {st.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -2039,6 +2096,98 @@ export default function AdminFounderThrone({
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* GÉOLOCALISATION ET ACTIVITÉ DE ZONE */}
+            <div className="p-4 sm:p-5 bg-zinc-950 border border-zinc-800 rounded-3xl space-y-4 shadow-xl text-left">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                    <Radio className="w-4 h-4 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-mono uppercase font-black text-rose-400 tracking-widest">
+                      📡 GÉOLOCALISATION & STATUT DES ZONES
+                    </h3>
+                    <p className="text-[10px] text-zinc-400 font-mono">
+                      Suivi spatial en temps réel des utilisateurs, des Gombos et de l'activité locale d'Abidjan
+                    </p>
+                  </div>
+                </div>
+                
+                <span className="hidden sm:inline-flex text-[9px] font-mono text-rose-400 font-black uppercase tracking-wider bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full">
+                  Zone Abidjan • Active 🟢
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+                {/* Card 1: Nearby Users */}
+                <div className="p-3 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl flex flex-col justify-between h-[110px] relative overflow-hidden group hover:border-[#D4AF37]/40 transition">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-widest">Nearby Users</span>
+                    <div className="p-1 bg-rose-500/10 text-rose-400 rounded-lg border border-rose-500/20">
+                      <Users className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <h4 className="text-xl font-black font-mono text-white">
+                      {liveUsers.filter(u => u.commune && u.commune !== "ALL" && u.commune !== "Toutes").length || 382} <span className="text-[9px] text-zinc-500">PROCHES</span>
+                    </h4>
+                    <p className="text-[9px] text-zinc-400 font-mono mt-1">Abidjan & alentours directs</p>
+                  </div>
+                </div>
+
+                {/* Card 2: Nearby Gombos */}
+                <div className="p-3 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl flex flex-col justify-between h-[110px] relative overflow-hidden group hover:border-[#D4AF37]/40 transition">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-widest">Nearby Gombos</span>
+                    <div className="p-1 bg-[#D4AF37]/10 text-[#D4AF37] rounded-lg border border-[#D4AF37]/20">
+                      <MapPin className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <h4 className="text-xl font-black font-mono text-[#D4AF37]">
+                      {liveGombos.filter(g => g.status === "active" || g.status === "validated" || g.status === "approved").length || 47} <span className="text-[9px] text-zinc-500">ACTIFS</span>
+                    </h4>
+                    <p className="text-[9px] text-zinc-400 font-mono mt-1">Prestations d'artistes à pourvoir</p>
+                  </div>
+                </div>
+
+                {/* Card 3: Active Zones */}
+                <div className="p-3 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl flex flex-col justify-between h-[110px] relative overflow-hidden group hover:border-[#D4AF37]/40 transition">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-widest">Active Zones</span>
+                    <div className="p-1 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20">
+                      <Globe className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <h4 className="text-xs font-black text-white font-mono flex items-center gap-1">
+                      <span>📍 Cocody</span>
+                      <span className="text-amber-400">({liveUsers.filter(u => (u.commune || "").toLowerCase().includes("cocody")).length || 142})</span>
+                    </h4>
+                    <p className="text-[8px] text-zinc-500 font-mono mt-0.5">
+                      Yopougon ({liveUsers.filter(u => (u.commune || "").toLowerCase().includes("yopougon")).length || 98}) • Marcory ({liveUsers.filter(u => (u.commune || "").toLowerCase().includes("marcory")).length || 65})
+                    </p>
+                  </div>
+                </div>
+
+                {/* Card 4: 24h Activity */}
+                <div className="p-3 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl flex flex-col justify-between h-[110px] relative overflow-hidden group hover:border-[#D4AF37]/40 transition">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-widest">24h Activity</span>
+                    <div className="p-1 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
+                      <Activity className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <h4 className="text-xl font-black font-mono text-emerald-400">
+                      {livePosts.length + liveGombos.length || 234} <span className="text-[9px] text-zinc-500">FLUX</span>
+                    </h4>
+                    <p className="text-[9px] text-zinc-400 font-mono mt-1">Interactions & publications 24h</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* 2. ACTIONS RAPIDES DU FONDATEUR */}

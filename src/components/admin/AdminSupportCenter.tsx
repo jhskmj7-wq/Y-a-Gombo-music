@@ -18,6 +18,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
   const [messages, setMessages] = useState<any[]>([]);
   const [replyText, setReplyText] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "open" | "closed">("all");
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [modActionMessage, setModActionMessage] = useState("");
@@ -201,6 +202,8 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
   // Filtering conversations
   const filteredConversations = conversations.filter(convo => {
     if (filterCategory !== "all" && convo.category !== filterCategory) return false;
+    if (filterStatus === "open" && convo.status === "closed") return false;
+    if (filterStatus === "closed" && convo.status !== "closed") return false;
     if (searchQuery.trim()) {
       const queryLower = searchQuery.toLowerCase();
       const userNameLower = (convo.userName || "").toLowerCase();
@@ -307,9 +310,25 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher par nom ou ID..."
+                placeholder="Rechercher par nom..."
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#D4AF37]"
               />
+            </div>
+            {/* Status Tabs Switcher */}
+            <div className="grid grid-cols-3 gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+              {(["all", "open", "closed"] as const).map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setFilterStatus(st)}
+                  className={`py-1 rounded-lg text-[9px] font-mono font-bold uppercase transition-all cursor-pointer ${
+                    filterStatus === st
+                      ? "bg-[#D4AF37] text-black font-black"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  {st === "all" ? "Tous" : st === "open" ? "Ouverts" : "Résolus"}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -321,45 +340,84 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                 const isSelected = selectedConversation?.id === convo.id;
                 const unreadForSupport = convo.unreadCount?.afrigombo_support || 0;
                 
+                // Determine Category Badge Colors
+                let catStyle = "bg-zinc-950 border-zinc-800 text-[#D4AF37]";
+                if (convo.category === "Wallet") catStyle = "bg-purple-500/10 border-purple-500/20 text-purple-400";
+                else if (convo.category === "Bug") catStyle = "bg-rose-500/10 border-rose-500/20 text-rose-400";
+                else if (convo.category === "Contrat") catStyle = "bg-emerald-500/10 border-emerald-500/20 text-emerald-400";
+                else if (convo.category === "Signalement") catStyle = "bg-amber-500/10 border-amber-500/20 text-amber-400";
+
+                // Determine Priority Tag
+                const isUrgent = convo.category === "Bug" || convo.category === "Wallet" || convo.priority === "urgent";
+                const isNormal = convo.category === "Signalement" || convo.priority === "normal";
+                const priorityLabel = isUrgent ? "🚨 Urgent" : isNormal ? "⚡ Normal" : "💬 Bas";
+                const priorityStyle = isUrgent 
+                  ? "bg-rose-500/10 text-rose-400 border-rose-500/20" 
+                  : isNormal 
+                    ? "bg-amber-500/10 text-amber-400 border-amber-500/20" 
+                    : "bg-blue-500/10 text-blue-400 border-blue-500/20";
+
                 return (
                   <div
                     key={convo.id}
                     onClick={() => setSelectedConversation(convo)}
-                    className={`p-3.5 rounded-2xl border transition cursor-pointer space-y-2 relative ${
+                    className={`p-3.5 rounded-2xl border transition cursor-pointer space-y-3 relative ${
                       isSelected 
                         ? "bg-zinc-800 border-[#D4AF37] shadow-lg" 
                         : "bg-zinc-950/60 border-zinc-800/80 hover:border-zinc-700"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <img
                           src={convo.userPhoto || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"}
                           alt={convo.userName}
-                          className="w-9 h-9 rounded-full object-cover border border-[#D4AF37]"
+                          className="w-8.5 h-8.5 rounded-full object-cover border border-[#D4AF37]/50"
                           referrerPolicy="no-referrer"
                         />
-                        <div className="min-w-0 max-w-[150px]">
-                          <h4 className="text-xs font-bold text-white uppercase truncate">{convo.userName}</h4>
-                          <p className="text-[10px] text-zinc-500 truncate font-mono">{convo.lastMessage}</p>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-black text-white uppercase truncate flex items-center gap-1">
+                            <span>{convo.userName}</span>
+                            {convo.status === "closed" ? (
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Résolu" />
+                            ) : (
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 animate-pulse" title="En traitement" />
+                            )}
+                          </h4>
+                          <p className="text-[10px] text-zinc-400 truncate font-mono mt-0.5">{convo.lastMessage}</p>
                         </div>
                       </div>
                       
-                      <div className="flex flex-col items-end justify-between gap-1.5 shrink-0">
-                        <span className="text-[8px] font-mono text-zinc-500">
-                          {convo.lastMessageAt ? new Date(convo.lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                      <span className="text-[8px] font-mono text-zinc-500 shrink-0">
+                        {convo.lastMessageAt ? new Date(convo.lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-1 border-t border-zinc-800/40 pt-2 shrink-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`px-1.5 py-0.5 border rounded text-[8px] font-mono font-bold uppercase ${catStyle}`}>
+                          {convo.category || "Autre"}
                         </span>
-                        
-                        <div className="flex items-center gap-1">
-                          <span className="px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 rounded-md text-[8px] font-mono text-[#D4AF37] uppercase font-black">
-                            {convo.category || "Autre"}
+                        <span className={`px-1.5 py-0.5 border rounded text-[8px] font-mono font-bold uppercase ${priorityStyle}`}>
+                          {priorityLabel}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        {convo.status === "closed" ? (
+                          <span className="px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-mono font-bold uppercase rounded">
+                            Résolu
                           </span>
-                          {unreadForSupport > 0 && (
-                            <span className="w-5 h-5 bg-red-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center animate-pulse">
-                              {unreadForSupport}
-                            </span>
-                          )}
-                        </div>
+                        ) : (
+                          <span className="px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[8px] font-mono font-bold uppercase rounded animate-pulse">
+                            Traitement
+                          </span>
+                        )}
+                        {unreadForSupport > 0 && (
+                          <span className="w-4 h-4 bg-red-500 text-white rounded-full text-[8px] font-bold flex items-center justify-center animate-pulse">
+                            {unreadForSupport}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

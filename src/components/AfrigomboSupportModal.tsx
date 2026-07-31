@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Send, HelpCircle, ShieldCheck, MessageSquare, CheckCircle, Clock, Info } from "lucide-react";
 import { collection, onSnapshot, query, where, orderBy } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { SupportService, SUPPORT_PROFILE } from "../services/SupportService";
 
 interface AfrigomboSupportModalProps {

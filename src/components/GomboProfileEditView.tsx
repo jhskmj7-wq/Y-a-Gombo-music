@@ -178,16 +178,17 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="afri-container"
+      className="afri-container space-y-6 pb-24 overflow-y-auto overscroll-contain w-full max-w-full"
+      style={{ WebkitOverflowScrolling: 'touch' }}
     >
-      <div className="afri-section">
+      <div className="afri-section space-y-6 w-full max-w-full">
         
         {/* HEADER */}
         <div className="flex items-center justify-between gap-4">
-          <button onClick={onCancel} className="afri-btn-ghost p-2">
+          <button onClick={onCancel} className="afri-btn-ghost p-3 min-h-[44px] min-w-[44px] flex items-center justify-center">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h3 className="afri-title-md flex-1 text-center">Édition d'Héritage</h3>
+          <h3 className="afri-title-md flex-1 text-center truncate">Édition d'Héritage</h3>
           <div className="w-9 h-9" /> {/* Spacer */}
         </div>
 
@@ -200,12 +201,12 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               exit={{ opacity: 0, y: -10 }}
               className="flex justify-center"
             >
-              <div className={`px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${
+              <div className={`px-4 py-2 rounded-full border text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-lg ${
                 autoSaveStatus === "saving" ? "bg-amber-500/10 border-amber-500/30 text-amber-500 animate-pulse" :
                 autoSaveStatus === "saved" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" :
                 "bg-red-500/10 border-red-500/30 text-red-500"
               }`}>
-                {autoSaveStatus === "saving" && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />}
+                {autoSaveStatus === "saving" && <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />}
                 {autoSaveStatus === "saving" ? "Sauvegarde automatique..." : 
                  autoSaveStatus === "saved" ? "Profil synchronisé" : "Erreur de synchro"}
               </div>
@@ -215,23 +216,24 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 
         <form onSubmit={onSubmit} className="space-y-6">
           
-          {/* 1. MÉDIAS (AVATAR & COVER) */}
-          <div className="afri-card p-6 space-y-6">
+          {/* 1. MÉDIAS (AVATAR & COVER) ANDROID FIRST */}
+          <div className="afri-card p-4 sm:p-6 space-y-6 overflow-hidden">
             <div className="space-y-4">
-              <p className="afri-text-tiny">Couverture & Identité Visuelle</p>
+              <p className="afri-text-tiny uppercase tracking-widest text-[#D4AF37]">Couverture & Identité Visuelle</p>
               
               {/* Cover Card */}
-              <div className="relative h-32 xs:h-40 rounded-2xl overflow-hidden bg-afri-bg-sec border border-afri-border">
+              <div className="relative h-36 sm:h-44 rounded-2xl overflow-hidden bg-afri-bg-sec border border-afri-border shadow-inner">
                 {coverUrl ? (
-                  <img src={coverUrl} alt="" className="w-full h-full object-cover opacity-60" />
+                  <img src={coverUrl} alt="Bannière" className="w-full h-full object-cover opacity-80" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-zinc-700">
-                    <Camera className="w-8 h-8 opacity-20" />
+                  <div className="w-full h-full flex items-center justify-center text-zinc-700 bg-gradient-to-r from-amber-500/10 via-zinc-900 to-[#D4AF37]/10">
+                    <Camera className="w-8 h-8 opacity-30 text-[#D4AF37]" />
                   </div>
                 )}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <label className="afri-btn-primary w-auto py-2 px-4 text-[10px]">
-                    {coverUploading ? `${coverUploadProgress}%` : "Changer Bannière"}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                  <label className="afri-btn-primary w-auto py-2.5 px-5 text-xs font-bold min-h-[44px] flex items-center gap-2 cursor-pointer shadow-xl">
+                    <Upload className="w-4 h-4" />
+                    <span>{coverUploading ? `${coverUploadProgress}%` : "Changer Bannière"}</span>
                     <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) handleCoverUpload(file);
@@ -240,39 +242,46 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                 </div>
               </div>
 
-              {/* Avatar Jumbo */}
-              <div className="flex flex-col items-center gap-4 -mt-16 relative z-10">
+              {/* Avatar Jumbo Android Optimized */}
+              <div className="flex flex-col items-center gap-4 -mt-16 sm:-mt-18 relative z-10">
                 <div className="relative">
-                  <div className="w-24 h-24 xs:w-28 xs:h-28 rounded-[2rem] overflow-hidden border-4 border-[#080808] bg-afri-bg-sec shadow-2xl">
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-[2.5rem] overflow-hidden border-4 border-[#080808] bg-afri-bg-sec shadow-2xl">
                     {cameraActive ? (
                       <video id="webcam-preview" autoPlay playsInline className="w-full h-full object-cover scale-x-[-1]" />
                     ) : (
-                      <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                      <img src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200"} alt="Avatar" className="w-full h-full object-cover" />
                     )}
                   </div>
                   {uploading && (
-                    <div className="absolute inset-0 bg-afri-bg/60 flex items-center justify-center rounded-[2rem]">
-                      <span className="text-[10px] font-black text-[#D4AF37]">{uploadProgress}%</span>
+                    <div className="absolute inset-0 bg-black/75 flex items-center justify-center rounded-[2.5rem]">
+                      <span className="text-xs font-black text-[#D4AF37]">{uploadProgress}%</span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-2.5 w-full">
                   {cameraActive ? (
                     <>
-                      <button type="button" onClick={capturePhoto} className="afri-btn-primary py-2 px-4 text-[10px]">Prendre</button>
-                      <button type="button" onClick={stopCamera} className="afri-btn-secondary py-2 px-4 text-[10px]">X</button>
+                      <button type="button" onClick={capturePhoto} className="afri-btn-primary py-2.5 px-5 text-xs font-bold min-h-[44px] flex items-center gap-2">
+                        <Camera className="w-4 h-4" /> Prendre
+                      </button>
+                      <button type="button" onClick={stopCamera} className="afri-btn-secondary py-2.5 px-4 text-xs font-bold min-h-[44px] flex items-center justify-center">
+                        <X className="w-4 h-4" />
+                      </button>
                     </>
                   ) : (
                     <>
-                      <label className="afri-btn-secondary w-auto py-2 px-4 text-[10px]">
-                        Album
+                      <label className="afri-btn-secondary py-2.5 px-5 text-xs font-bold min-h-[44px] flex items-center gap-2 cursor-pointer shadow-md">
+                        <Upload className="w-4 h-4" />
+                        <span>Album</span>
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) handleFileUpload(file);
                         }} />
                       </label>
-                      <button type="button" onClick={startCamera} className="afri-btn-primary w-auto py-2 px-4 text-[10px]">Caméra</button>
+                      <button type="button" onClick={startCamera} className="afri-btn-primary py-2.5 px-5 text-xs font-bold min-h-[44px] flex items-center gap-2 shadow-md">
+                        <Camera className="w-4 h-4" /> Caméra
+                      </button>
                     </>
                   )}
                 </div>
