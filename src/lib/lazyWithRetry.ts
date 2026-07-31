@@ -39,16 +39,23 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       // Return a safe fallback component instead of white screen / crash
       return {
         default: (() => createElement('div', {
-          className: "p-8 text-center text-[#D4AF37] font-mono bg-[#0D0D15] border border-[#D4AF37]/30 rounded-2xl m-4 max-w-lg mx-auto shadow-xl"
+          className: "p-8 text-center text-[#D4AF37] font-mono bg-[#0D0D15] border border-[#D4AF37]/30 rounded-2xl m-4 max-w-lg mx-auto shadow-xl flex flex-col items-center"
         }, [
           createElement('div', { key: 'icon', className: 'text-3xl mb-2' }, '⚠️'),
-          createElement('h3', { key: 'title', className: 'font-bold uppercase tracking-wider text-sm mb-1 text-[#D4AF37]' }, 'Module Temporairement Indisponible'),
-          createElement('p', { key: 'desc', className: 'text-xs text-zinc-400 mb-4' }, 'Le module nécessite une synchronisation ou une connexion stable.'),
-          createElement('button', {
-            key: 'btn',
-            onClick: () => window.location.reload(),
-            className: 'px-4 py-2 bg-[#D4AF37] text-black text-xs font-bold font-mono uppercase rounded-xl tracking-widest cursor-pointer hover:bg-white transition'
-          }, 'S\'ouvrir au Temple ⚡')
+          createElement('h3', { key: 'title', className: 'font-bold uppercase tracking-wider text-sm mb-1 text-[#D4AF37]' }, 'Impossible de charger ce module'),
+          createElement('p', { key: 'desc', className: 'text-xs text-zinc-400 mb-6' }, 'Veuillez vérifier votre connexion réseau ou réessayer.'),
+          createElement('div', { key: 'actions', className: 'flex gap-3' }, [
+            createElement('button', {
+              key: 'retry',
+              onClick: () => window.location.reload(),
+              className: 'px-4 py-2 bg-[#D4AF37] text-black text-xs font-bold font-mono uppercase rounded-xl tracking-widest cursor-pointer hover:bg-white transition'
+            }, 'Réessayer'),
+            createElement('button', {
+              key: 'home',
+              onClick: () => { window.location.href = '/'; },
+              className: 'px-4 py-2 bg-zinc-800 text-white border border-zinc-700 text-xs font-bold font-mono uppercase rounded-xl tracking-widest cursor-pointer hover:bg-zinc-700 transition'
+            }, 'Retour Accueil')
+          ])
         ])) as unknown as T
       };
     }

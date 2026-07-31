@@ -24,6 +24,7 @@ import { lazyWithRetry } from "./lib/lazyWithRetry";
 import { syncManager } from "./lib/SyncManager";
 import GlobalNotificationBanner from "./components/GlobalNotificationBanner";
 import { bootManager } from "./lib/BootManager";
+import BootSplashScreen from "./components/BootSplashScreen";
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
   try {
@@ -87,9 +88,7 @@ function App() {
   const location = useLocation();
   
   useEffect(() => {
-    bootManager.addTask("Firebase", async () => { if (!app) throw new Error("Firebase init failed"); });
-    bootManager.addTask("Sync", async () => { syncManager.getState(); });
-    bootManager.run().then(res => console.log("Boot finished", res));
+    bootManager.runDiagnostics().then(res => console.log("Boot diagnostics finished", res));
   }, []);
 
   useEffect(() => {
@@ -225,144 +224,15 @@ function App() {
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
 
-        {/* 1. PREMIUM UNIFIED SPLASH SCREEN */}
+        {/* 1. PREMIUM UNIFIED BOOT SPLASH SCREEN */}
         <AnimatePresence>
           {showSplash && (
             <motion.div
               initial={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.65, ease: "easeInOut" }}
-              className="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center text-center p-4 xs:p-6 select-none overflow-y-auto sm:overflow-hidden"
+              transition={{ duration: 0.5, ease: "easeInOut" }}
             >
-              {/* Ambient Gold Dust / Particles */}
-              <div className="absolute inset-0 pointer-events-none z-0">
-                {Array.from({ length: 18 }).map((_, idx) => (
-                  <div
-                    key={idx}
-                    className="absolute rounded-full bg-gradient-to-tr from-[#D4AF37] to-amber-200/40 opacity-40 animate-pulse"
-                    style={{
-                      width: `${Math.random() * 2.5 + 1}px`,
-                      height: `${Math.random() * 2.5 + 1}px`,
-                      top: `${Math.random() * 100}%`,
-                      left: `${Math.random() * 100}%`,
-                      animationDuration: `${Math.random() * 3 + 2}s`,
-                      animationDelay: `${Math.random() * 2}s`
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* Logo Frame - Simplified */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ 
-                  opacity: 1, 
-                  scale: [0.9, 1, 1.04, 1] 
-                }}
-                transition={{ 
-                  opacity: { duration: 0.6, ease: "easeOut" },
-                  scale: { 
-                    times: [0, 0.4, 0.7, 1],
-                    duration: 1.2, 
-                    ease: "easeInOut",
-                    delay: 0.1 
-                  }
-                }}
-                className="relative w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center mb-6 z-10 shrink-0"
-              >
-                {isLogoLoaded && !isLogoFailed ? (
-                  <img
-                    src={logoUrl}
-                    alt=""
-                    aria-hidden="true"
-                    className="object-contain w-32 h-32 mx-auto relative z-10 drop-shadow-[0_0_15px_rgba(212,175,55,0.2)]"
-                  />
-                ) : (
-                  <AfriGomboLogo className="object-contain w-32 h-32 mx-auto relative z-10" />
-                )}
-              </motion.div>
-
-              {/* Majestic Typography: fades in elegantly after logo (1.2s delay) */}
-              <motion.div 
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.2, duration: 0.8, ease: "easeOut" }}
-                className="space-y-2 z-10 shrink-0"
-              >
-                <h1 className="text-3xl sm:text-5xl font-sans font-black tracking-[0.1em] text-afri-text uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.15)]">
-                  AFRIGOMBO
-                </h1>
-                <p className="text-sm sm:text-base font-mono text-afri-gold tracking-wider font-bold">
-                  Le Temple du Gombo Musical
-                </p>
-                <p className="text-[10px] sm:text-xs font-mono text-afri-text-sec tracking-[0.15em] font-medium uppercase max-w-xs mx-auto opacity-90">
-                  Vos opportunités musicales certifiées.
-                </p>
-              </motion.div>
-
-              {/* Elegant Gold Progress Bar (appears with typography) */}
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.2, duration: 0.6 }}
-                className="w-48 sm:w-56 h-1 bg-afri-bg-sec rounded-full overflow-hidden mx-auto my-6 relative z-10 shrink-0"
-              >
-                <div 
-                  className="h-full bg-gradient-to-r from-amber-600 via-[#D4AF37] to-amber-400 transition-all duration-100 ease-out"
-                  style={{ width: `${progress}%` }}
-                />
-              </motion.div>
-
-              {/* Progress steps logs (appears with typography) */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.85 }}
-                transition={{ delay: 1.4, duration: 0.6 }}
-                className="z-10 shrink-0"
-              >
-                {(() => {
-                  const steps = [
-                    "Initialisation...",
-                    "Vérification Firebase...",
-                    "Chargement des ressources...",
-                    "Synchronisation...",
-                    "Bienvenue."
-                  ];
-                  const currentStepIndex = 
-                    progress < 20 ? 0 :
-                    progress < 45 ? 1 :
-                    progress < 70 ? 2 :
-                    progress < 90 ? 3 : 4;
-
-                  return (
-                    <div className="space-y-1.5 text-left inline-block font-mono text-[10px] sm:text-[11px] max-w-xs mx-auto">
-                      {steps.map((stepText, idx) => {
-                        const isCompleted = currentStepIndex > idx;
-                        const isActive = currentStepIndex === idx;
-                        
-                        let icon = "○";
-                        let textColor = "text-afri-text-sec opacity-40";
-                        
-                        if (isCompleted) {
-                          icon = "✓";
-                          textColor = "text-[#D4AF37] font-bold";
-                        } else if (isActive) {
-                          icon = "●";
-                          textColor = "text-afri-text font-bold animate-pulse";
-                        }
-                        
-                        return (
-                          <div key={idx} className={`flex items-center gap-2 transition-all duration-300 ${textColor}`}>
-                            <span className="w-3 text-center">{icon}</span>
-                            <span>{stepText}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
-              </motion.div>
-
+              <BootSplashScreen onComplete={() => setShowSplash(false)} />
             </motion.div>
           )}
         </AnimatePresence>

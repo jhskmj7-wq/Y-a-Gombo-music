@@ -34,20 +34,13 @@ export default function PWAHandler() {
   // Smart Update Logic
   useEffect(() => {
     if (needRefresh) {
-      if (isDev) {
-        console.warn("🚀 [AFRIGOMBO] Developer detected. Auto-updating PWA to latest version...");
-        // For developers, we purge cache and update immediately
-        if ('caches' in window) {
-          caches.keys().then(names => {
-            names.forEach(name => caches.delete(name));
-          });
-        }
-        updateServiceWorker(true);
+      if (import.meta.env.DEV) {
+        console.log("🚀 [AFRIGOMBO] DEV mode detected. Auto-update & auto-cache purge disabled.");
       } else {
-        console.log("🔔 [AFRIGOMBO] Update available for Beta User.");
+        console.log("🔔 [AFRIGOMBO] Update available for Production / Beta User.");
       }
     }
-  }, [needRefresh, isDev, updateServiceWorker]);
+  }, [needRefresh]);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
