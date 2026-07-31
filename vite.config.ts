@@ -10,7 +10,7 @@ export default defineConfig({
     react(), 
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       injectRegister: 'auto',
       includeAssets: ['logo.png', 'sounds/*.mp3'],
       manifest: {
@@ -40,9 +40,9 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3}'],
-        cleanupOutdatedCaches: process.env.NODE_ENV === 'production',
-        skipWaiting: process.env.NODE_ENV === 'production',
-        clientsClaim: process.env.NODE_ENV === 'production',
+        cleanupOutdatedCaches: false,
+        skipWaiting: false,
+        clientsClaim: false,
         navigateFallback: 'index.html',
         runtimeCaching: [
           {

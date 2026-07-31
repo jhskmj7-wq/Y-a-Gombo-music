@@ -172,6 +172,26 @@ export default function AfrigomboWalletDashboard({
       syncTxList();
     });
 
+    const unsubTx3 = onSnapshot(collection(db, "walletRefunds"), (snap) => {
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.userId === uid || data.uid === uid) {
+          txMap.set(docSnap.id, { id: docSnap.id, ...data });
+        }
+      });
+      syncTxList();
+    });
+
+    const unsubTx4 = onSnapshot(collection(db, "walletAdjustments"), (snap) => {
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.userId === uid || data.uid === uid) {
+          txMap.set(docSnap.id, { id: docSnap.id, ...data });
+        }
+      });
+      syncTxList();
+    });
+
     // 3. Listen to all contracts in Firestore involving this user
     const unsubContracts = onSnapshot(collection(db, "contracts"), (snap) => {
       const list: any[] = [];
@@ -190,6 +210,8 @@ export default function AfrigomboWalletDashboard({
       unsubProfile();
       unsubTx1();
       unsubTx2();
+      unsubTx3();
+      unsubTx4();
       unsubContracts();
     };
   }, [uid]);

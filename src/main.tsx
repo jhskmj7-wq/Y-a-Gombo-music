@@ -30,31 +30,8 @@ import { supportConfig } from "./supportConfig";
 // 8. Console traces representing boot sequence
 console.log("🚀 [AFRIGOMBO] MAIN START", supportConfig.APP_VERSION);
 
-// EMERGENCY CACHE BUSTING: If the app crashed repeatedly or if we detect a version mismatch
-(async () => {
-  const CURRENT_APP_VERSION = supportConfig.APP_VERSION; 
-  const lastKnownVersion = localStorage.getItem("afrigombo_app_version");
-  
-  if (lastKnownVersion !== CURRENT_APP_VERSION) {
-    if (import.meta.env.PROD) {
-        console.warn("🔄 [AFRIGOMBO] Version mismatch detected in PROD. Purging old caches...");
-        if ('caches' in window) {
-          try {
-            const cacheNames = await caches.keys();
-            await Promise.all(cacheNames.map(name => caches.delete(name)));
-            console.log("✅ [AFRIGOMBO] Caches purged.");
-          } catch (e) {
-            console.error("❌ [AFRIGOMBO] Cache purge failed:", e);
-          }
-        }
-        localStorage.setItem("afrigombo_app_version", CURRENT_APP_VERSION);
-        window.location.reload();
-    } else {
-        console.log("🔄 [AFRIGOMBO] Version mismatch detected in DEV. Please reload to update.");
-        localStorage.setItem("afrigombo_app_version", CURRENT_APP_VERSION);
-    }
-  }
-})();
+console.log("BOOT 1: React & BrowserRouter Ready");
+console.log("BOOT 2: Firebase Initialized");
 
 // Disable specific logs if necessary, but keep console.log for critical startup tracing during MVP debugging
 if (import.meta.env.PROD) {

@@ -6,9 +6,10 @@ import {
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { PremiumEngine } from "../lib/premiumEngine";
+import { PaymentEngine } from "../lib/paymentEngine";
+import { InsufficientBalanceModal } from "./wallet/InsufficientBalanceModal";
 import { db } from "../firebase";
 import { doc, getDoc, updateDoc, setDoc, addDoc, collection } from "firebase/firestore";
-import { recordWalletTransaction } from "../lib/financial";
 
 interface GomboBoostManagerProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export default function GomboBoostManager({
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [step, setStep] = useState<"options" | "confirm" | "success">("options");
+  const [showInsufficientModal, setShowInsufficientModal] = useState<boolean>(false);
 
   // Selection state for publication boost
   const [selectedPubOption, setSelectedPubOption] = useState<string>("booster");
@@ -164,13 +166,36 @@ export default function GomboBoostManager({
     setErrorMsg(null);
 
     try {
-      if (walletBalance < finalPrice) {
-        setErrorMsg("Solde insuffisant dans votre Wallet AFRIGOMBO pour effectuer cette opération.");
+      const uid = currentUserProfile.uid;
+      const boostDescription = activeItem.type === "profile" 
+        ? `Boost Profil d'Artiste (${selectedDurationText})`
+        : `Boost Publication: ${selectedTitle} (${selectedDurationText})`;
+
+      const payRes = await PaymentEngine.processPayment({
+        userId: uid,
+        userName: currentUserProfile.artistName || currentUserProfile.firstName || "Membre Gombo",
+        amount: finalPrice,
+        module: activeItem.type === "profile" ? "Boost Profil" : "Boost Publication",
+        reason: boostDescription,
+        metadata: {
+          itemId: activeItem.id,
+          itemType: activeItem.type,
+          boostType: selectedPubOption
+        }
+      });
+
+      if (!payRes.success) {
+        if (payRes.insufficientBalance) {
+          setShowInsufficientModal(true);
+        } else {
+          setErrorMsg(payRes.error || "Erreur lors du paiement par Wallet.");
+        }
         setLoading(false);
         return;
       }
 
-      const uid = currentUserProfile.uid;
+      setWalletBalance(payRes.balanceAfter);
+
       const now = new Date();
       let expiresAt = new Date();
 
@@ -182,34 +207,7 @@ export default function GomboBoostManager({
       }
 
       const expiresAtIso = expiresAt.toISOString();
-      const newBalance = walletBalance - finalPrice;
-
-      // 1. Debit wallet
       const userRef = doc(db, "users", uid);
-      await updateDoc(userRef, {
-        walletBalance: newBalance,
-        wallet: {
-          ...(currentUserProfile.wallet || {}),
-          soldeDisponible: newBalance
-        }
-      });
-
-      // Update local wallet view
-      setWalletBalance(newBalance);
-
-      // 2. Add to transaction log
-      const boostDescription = activeItem.type === "profile" 
-        ? `Boost Profil d'Artiste (${selectedDurationText})`
-        : `Boost Publication: ${selectedTitle} (${selectedDurationText})`;
-
-      await recordWalletTransaction({
-        userId: uid,
-        userName: currentUserProfile.artistName || currentUserProfile.firstName || "Membre Gombo",
-        type: "service_boost",
-        amount: finalPrice,
-        status: "success",
-        description: boostDescription
-      });
 
       // 3. Write inside `boosts/` collection
       const boostRef = doc(collection(db, "boosts"));
@@ -600,6 +598,19 @@ export default function GomboBoostManager({
           )}
         </AnimatePresence>
       </div>
+
+      <InsufficientBalanceModal
+        isOpen={showInsufficientModal}
+        onClose={() => setShowInsufficientModal(false)}
+        onRecharge={() => {
+          setShowInsufficientModal(false);
+          onClose();
+          window.dispatchEvent(new CustomEvent("open_wallet_recharge"));
+        }}
+        currentBalance={walletBalance}
+        requiredAmount={finalPrice}
+        moduleName={activeItem.type === "profile" ? "booster votre profil" : "booster votre publication"}
+      />
     </div>
   );
 }

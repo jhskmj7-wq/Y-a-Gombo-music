@@ -22,10 +22,14 @@ const AdminUsers = lazyWithRetry(() => import("./AdminUsers"));
 const AdminRevenue = lazyWithRetry(() => import("./AdminRevenue"));
 const AdminSettings = lazyWithRetry(() => import("./AdminSettings"));
 const MultimediaCenter = lazyWithRetry(() => import("./MultimediaCenter"));
+const AdminWalletManagement = lazyWithRetry(() => import("./AdminWalletManagement"));
+const AdminContracts = lazyWithRetry(() => import("./AdminContracts"));
 
 export type AdminModuleType = 
   | "throne"
   | "dashboard"
+  | "contracts"
+  | "wallet_management"
   | "transactions"
   | "messaging"
   | "geolocation"
@@ -70,6 +74,8 @@ export default function AdminSuperFounderHub({
   const modulesNav = [
     { key: "throne" as AdminModuleType, label: "🏛 Tableau", icon: Crown, badge: "Fondateur" },
     { key: "dashboard" as AdminModuleType, label: "🛰 Supervision", icon: LayoutDashboard, badge: "Live" },
+    { key: "contracts" as AdminModuleType, label: "📜 Contrats (Escrow)", icon: ShieldCheck, badge: "Séquestre" },
+    { key: "wallet_management" as AdminModuleType, label: "💰 Gestion Wallet", icon: ShieldCheck, badge: "Souverain" },
     { key: "transactions" as AdminModuleType, label: "💳 Transactions", icon: CreditCard, badge: undefined },
     { key: "messaging" as AdminModuleType, label: "💬 Messagerie", icon: MessageSquare, badge: "Support" },
     { key: "geolocation" as AdminModuleType, label: "📍 Géolocalisation", icon: MapPin, badge: undefined },
@@ -192,6 +198,14 @@ export default function AdminSuperFounderHub({
 
           {activeModule === "messaging" && (
             <AdminSupportCenter audioSynth={audioSynth} />
+          )}
+
+          {activeModule === "contracts" && (
+            <AdminContracts currentUser={currentUser} />
+          )}
+
+          {activeModule === "wallet_management" && (
+            <AdminWalletManagement currentUser={currentUser} />
           )}
 
           {activeModule === "transactions" && (

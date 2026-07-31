@@ -5,16 +5,27 @@ import {
   Clock, MapPin, Calendar, CreditCard, 
   FileSignature, Lock, AlertTriangle, ArrowLeft,
   Download, History, MessageSquare,
-  BadgeCheck, Info, Loader2, Camera, Compass, Plus, Star as LucideStar
+  BadgeCheck, Info, Loader2, Camera, Compass, Plus, Star as LucideStar,
+  Image as ImageIcon, Video, Music, Paperclip, Send
 } from "lucide-react";
 import { gomboDB } from "../firebase";
 import { GomboSafeContract, UserProfile } from "../types";
 import { audioSynth } from "../lib/audio";
 import { db } from "../lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, onSnapshot, orderBy } from "firebase/firestore";
 import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
 import { createBetaTransaction, proceedToSupportAssistance } from "../lib/betaEscrowEngine";
 import { supportConfig } from "../supportConfig";
+import { 
+  payContractEscrow, 
+  acceptContract, 
+  refuseContract, 
+  completeContractAndReleaseFunds, 
+  openContractDispute as openContractDisputeEngine,
+  sendContractMessage,
+  ContractMessage,
+  ContractAttachment
+} from "../lib/contractEscrowEngine";
 
 interface GomboContractViewProps {
   contractId: string;
@@ -30,6 +41,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
   const [disputeReason, setDisputeReason] = useState("");
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
 
   // Review & reputation states
@@ -129,45 +141,71 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
     if (!contract || processing) return;
     setProcessing(true);
     try {
-      // 1. Create Beta transaction record in Firestore `transactions`
-      const txId = await createBetaTransaction({
-        contractId: contract.id,
-        gomboId: contract.gomboId || "",
-        gomboTitle: contract.gomboTitle || "Dépôt de Cachet - Contrat Gombo",
-        promoterId: currentUser.uid!,
-        promoterName: currentUser.displayName || currentUser.name || "Promoteur",
-        artistId: contract.artistId || "",
-        artistName: contract.artistName || "Artiste Gombo",
-        amount: contract.totalClientPaid || contract.amount || 0
-      });
+      const userObj = {
+        uid: currentUser.uid || "",
+        displayName: currentUser.displayName || currentUser.name || "Promoteur",
+        email: currentUser.email
+      };
+      const result = await payContractEscrow(contract.id, userObj);
 
-      // 2. Advance to support validation
-      await proceedToSupportAssistance(
-        txId,
-        currentUser.uid!,
-        currentUser.displayName || currentUser.name || "Promoteur",
-        contract.artistName || "Artiste",
-        contract.totalClientPaid || contract.amount || 0
-      );
-
-      // 3. Keep official Escrow status in sync
-      await gomboDB.depositToEscrow(
-        contract.id,
-        contract.amount || 0,
-        currentUser.uid!,
-        currentUser.displayName || currentUser.name || "Client"
-      );
+      if (!result.success) {
+        alert(`❌ Erreur de Paiement Escrow: ${result.error}`);
+        return;
+      }
 
       try { audioSynth.playValidationSuccess(); } catch(_) {}
-
-      // 4. Trigger support redirection for manual accompaniment in Phase Bêta Publique
-      supportConfig.openSupport(
-        `Dépôt Bêta de ${(contract.totalClientPaid || contract.amount || 0).toLocaleString()} FCFA pour le contrat ${contract.id}`
-      );
+      alert("✅ Dépôt Sécurisé Effectué avec Succès ! Le cachet est bloqué dans le séquestre AFRIGOMBO jusqu'à réalisation de la mission.");
 
       if (onUpdate) onUpdate();
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error holding payment in contract", e);
+      alert(`Erreur de dépôt: ${e.message || "Impossible d'effectuer le paiement."}`);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleAcceptContract = async () => {
+    if (!contract || processing) return;
+    setProcessing(true);
+    try {
+      const userObj = {
+        uid: currentUser.uid || "",
+        displayName: currentUser.displayName || currentUser.artisticName || currentUser.name || "Artiste"
+      };
+      const res = await acceptContract(contract.id, userObj);
+      if (!res.success) {
+        alert(`Erreur: ${res.error}`);
+        return;
+      }
+      try { audioSynth.playValidationSuccess(); } catch(_) {}
+      alert("📜 Contrat Accepté ! Vous pouvez démarrer la prestation à la date convenue.");
+      if (onUpdate) onUpdate();
+    } catch (e: any) {
+      alert(`Erreur: ${e.message}`);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleRefuseContract = async () => {
+    if (!contract || processing) return;
+    if (!window.confirm("Êtes-vous sûr de vouloir refuser ce contrat ? Le montant déposé sera immédiatement remboursé au promoteur.")) return;
+    setProcessing(true);
+    try {
+      const userObj = {
+        uid: currentUser.uid || "",
+        displayName: currentUser.displayName || currentUser.artisticName || currentUser.name || "Artiste"
+      };
+      const res = await refuseContract(contract.id, userObj);
+      if (!res.success) {
+        alert(`Erreur: ${res.error}`);
+        return;
+      }
+      alert("❌ Contrat Refusé. Les fonds ont été restitués au promoteur.");
+      if (onUpdate) onUpdate();
+    } catch (e: any) {
+      alert(`Erreur: ${e.message}`);
     } finally {
       setProcessing(false);
     }
@@ -374,44 +412,26 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
     if (!contract || processing) return;
     setProcessing(true);
     try {
-      const updates: any = {};
-      
       if (!isValid) {
         setShowDisputeModal(true);
         setProcessing(false);
         return;
       }
 
-      // True Double Validation: Both must confirm before release
-      if (isValid) {
-        if (isClient) {
-          updates.clientValidation = true;
-          updates.clientConformedAt = new Date().toISOString();
-        } else {
-          updates.artistValidation = true;
-          updates.artistConformedAt = new Date().toISOString();
-        }
-
-        const isClientConformed = isClient ? true : !!contract.clientValidation;
-        const isArtistConformed = isArtist ? true : !!contract.artistValidation;
-
-        if (isClientConformed && isArtistConformed) {
-          // Automatic funds release on double confirmation
-          updates.status = "completed";
-          await gomboDB.releaseEscrow(contract.id);
-          await gomboDB.updateContract(contract.id, updates, currentUser.uid!, "Prestation validée par les deux parties. Fonds libérés automatiquement ! ✨");
-          await gomboDB.updateGomboStatus(contract.gomboId, "mission_terminee", { paymentStatus: "paid" });
-        } else {
-          // Record single confirmation and wait
-          const roleLabel = isClient ? "Le promoteur" : "L'artiste";
-          await gomboDB.updateContract(contract.id, updates, currentUser.uid!, `✔️ ${roleLabel} a validé la prestation. En attente de la confirmation de l'autre partie. ⏳`);
-        }
+      // Execute Escrow Release via Central Engine
+      const res = await completeContractAndReleaseFunds(contract.id, currentUser.uid!);
+      if (!res.success) {
+        alert(`❌ Erreur lors de la libération des fonds: ${res.error}`);
+        return;
       }
 
       try { audioSynth.playValidationSuccess(); } catch(_) {}
+      alert(`✨ Prestation Validée ! Le cachet net de ${res.netArtistAmount?.toLocaleString("fr-FR")} FCFA a été transféré sur le Wallet de l'artiste.`);
+
       if (onUpdate) onUpdate();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      alert(`Erreur: ${e.message}`);
     } finally {
       setProcessing(false);
     }
@@ -421,16 +441,25 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
     if (!contract || !disputeReason || processing) return;
     setProcessing(true);
     try {
-      await gomboDB.openContractDispute(
-        contract.id,
-        disputeReason,
-        currentUser.uid!,
-        currentUser.artisticName || currentUser.displayName || currentUser.name || "User"
-      );
+      const res = await openContractDisputeEngine({
+        contractId: contract.id,
+        raisedBy: currentUser.uid!,
+        raisedByName: currentUser.displayName || currentUser.name || "Utilisateur",
+        reason: disputeReason
+      });
+
+      if (!res.success) {
+        alert(`Erreur: ${res.error}`);
+        return;
+      }
+
+      alert("🚨 Litige Ouvert ! Les fonds restent bloqués en séquestre pendant l'arbitrage du Super Fondateur.");
       setShowDisputeModal(false);
+      setDisputeReason("");
       if (onUpdate) onUpdate();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      alert(`Erreur: ${e.message}`);
     } finally {
       setProcessing(false);
     }
@@ -486,6 +515,15 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
           <span className="text-xs font-bold uppercase tracking-widest">Retour</span>
         </button>
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowChat(!showChat)}
+            className="p-2.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] rounded-xl text-afri-text-sec hover:text-[#D4AF37] transition-colors relative flex items-center gap-2 cursor-pointer"
+            title="Messagerie privée du contrat & Pièces jointes"
+          >
+            <MessageSquare className="w-5 h-5 text-[#D4AF37]" />
+            <span className="text-xs font-mono font-bold text-afri-text hidden sm:inline">Salon Privé</span>
+            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+          </button>
           <button 
             onClick={() => setShowHistory(!showHistory)}
             className="p-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-afri-text-sec hover:text-[#D4AF37] transition-colors"
@@ -1010,7 +1048,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   Signer numériquement
                 </button>
               </div>
-            ) : contract.status === "signed" && isClient ? (
+            ) : (contract.status === "signed" || contract.statut === "waiting_payment" || contract.status === "generated") && isClient ? (
               <div className="space-y-6">
                 <div className="p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-3xl flex items-start gap-4 text-center justify-center">
                   <div>
@@ -1019,16 +1057,49 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                       <h4 className="text-afri-text font-bold">Prêt pour le dépôt de garantie</h4>
                       <BetaEscrowInfoButton variant="badge" />
                     </div>
-                    <p className="text-afri-text-sec text-[11px]">Le contrat est signé et scellé. Veuillez effectuer le dépôt sécurisé d'un montant total de <span className="text-afri-text font-bold font-mono">{contract.totalClientPaid?.toLocaleString()} FCFA</span> pour engager la mission en toute sécurité.</p>
+                    <p className="text-afri-text-sec text-[11px]">Le contrat est prêt pour le séquestre. Veuillez effectuer le dépôt sécurisé via votre Wallet d'un montant de <span className="text-afri-text font-bold font-mono">{(contract.totalClientPaid || (contract.amount || 0) + (contract.commissionClient || 0)).toLocaleString()} FCFA</span> pour engager la mission en toute sécurité.</p>
                   </div>
                 </div>
                 <button 
                   onClick={handleDeposit}
                   disabled={processing}
-                  className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-afri-text font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-emerald-600/10 active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-afri-text font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-emerald-600/10 active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Effectuer le dépôt sécurisé"}
+                  {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : (
+                    <>
+                      <Lock className="w-5 h-5" />
+                      Payer & Déposer en Séquestre (Wallet Central)
+                    </>
+                  )}
                 </button>
+              </div>
+            ) : (contract.statut === "funded" || contract.status === "payment_held") && isArtist ? (
+              <div className="space-y-6">
+                <div className="p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-3xl text-center space-y-3">
+                  <ShieldCheck className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
+                  <h4 className="text-emerald-400 font-black uppercase tracking-widest text-sm">Fonds Financés & Sécurisés</h4>
+                  <p className="text-afri-text-sec text-xs max-w-md mx-auto">
+                    Le promoteur a déposé le cachet sur le compte de séquestre AFRIGOMBO. Veuillez accepter ou refuser cette prestation.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button
+                    onClick={handleAcceptContract}
+                    disabled={processing}
+                    className="py-5 bg-emerald-600 hover:bg-emerald-500 text-afri-text font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                    Accepter la mission
+                  </button>
+                  <button
+                    onClick={handleRefuseContract}
+                    disabled={processing}
+                    className="py-5 bg-afri-bg-sec border border-red-500/40 hover:bg-red-950/20 text-red-400 font-black uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <XCircle className="w-5 h-5" />
+                    Refuser (Rembourser Promoteur)
+                  </button>
+                </div>
               </div>
             ) : contract.status === "signed" && isArtist ? (
               <div className="p-6 bg-afri-bg-sec/5 border border-[#D4AF37]/20 rounded-3xl text-center space-y-3">
@@ -1189,6 +1260,17 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
             </div>
           </motion.div>
         </div>
+      )}
+
+      {/* Contract Chat Room Side Panel */}
+      {showChat && (
+        <ContractChatRoomModal 
+          contractId={contract.id} 
+          currentUser={currentUser} 
+          isClient={isClient} 
+          isArtist={isArtist} 
+          onClose={() => setShowChat(false)} 
+        />
       )}
 
       {/* Dispute Modal */}
@@ -1503,6 +1585,233 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function ContractChatRoomModal({ 
+  contractId, 
+  currentUser, 
+  isClient, 
+  isArtist, 
+  onClose 
+}: { 
+  contractId: string; 
+  currentUser: UserProfile; 
+  isClient: boolean; 
+  isArtist: boolean; 
+  onClose: () => void; 
+}) {
+  const [messages, setMessages] = useState<ContractMessage[]>([]);
+  const [textInput, setTextInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, "contractMessages"),
+      where("contractId", "==", contractId)
+    );
+
+    const unsub = onSnapshot(q, (snap) => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as ContractMessage));
+      list.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      setMessages(list);
+    });
+
+    return () => unsub();
+  }, [contractId]);
+
+  const handleSend = async (attachments?: ContractAttachment[]) => {
+    if ((!textInput.trim() && (!attachments || attachments.length === 0)) || sending) return;
+    setSending(true);
+    try {
+      const role = isClient ? "promoter" : isArtist ? "artist" : "admin";
+      await sendContractMessage({
+        contractId,
+        senderId: currentUser.uid!,
+        senderName: currentUser.displayName || currentUser.name || "Utilisateur",
+        senderRole: role,
+        text: textInput.trim(),
+        attachments: attachments || []
+      });
+      setTextInput("");
+    } catch (e: any) {
+      alert("Erreur d'envoi: " + e.message);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, fileType: "photo" | "video" | "audio" | "pdf") => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+
+    setUploadingAttachment(true);
+    try {
+      const filePath = `contract_attachments/${contractId}/${Date.now()}_${file.name}`;
+      const url = await gomboDB.uploadFile(file, filePath);
+
+      const attachment: ContractAttachment = {
+        id: "att_" + Date.now(),
+        type: fileType,
+        url,
+        name: file.name,
+        uploadedBy: currentUser.uid!,
+        uploadedAt: new Date().toISOString()
+      };
+
+      await handleSend([attachment]);
+    } catch (err: any) {
+      alert("Erreur téléversement pièce jointe: " + err.message);
+    } finally {
+      setUploadingAttachment(false);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[80] bg-afri-bg/85 backdrop-blur-md flex justify-end text-left">
+      <motion.div 
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        className="w-full max-w-lg bg-afri-bg-sec border-l border-afri-border h-full flex flex-col text-left shadow-2xl"
+      >
+        {/* Header */}
+        <div className="p-6 border-b border-afri-border flex items-center justify-between bg-afri-bg/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-[#D4AF37]/10 rounded-xl border border-[#D4AF37]/20">
+              <MessageSquare className="w-5 h-5 text-[#D4AF37]" />
+            </div>
+            <div>
+              <h3 className="text-afri-text font-black uppercase text-sm tracking-wider">SALON SÉCURISÉ EN DIRECT</h3>
+              <p className="text-[10px] text-afri-text-sec font-mono">Chat du Contrat & Pièces Jointes Cryptées</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 text-afri-text-sec hover:text-afri-text rounded-lg">
+            <XCircle className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Message Feed */}
+        <div className="flex-1 p-6 overflow-y-auto space-y-4">
+          {messages.length === 0 ? (
+            <div className="text-center py-12 space-y-2 text-afri-text-sec">
+              <MessageSquare className="w-10 h-10 mx-auto text-[#D4AF37]/40" />
+              <p className="text-xs font-mono">Aucun message. Démarrez la discussion avec votre partenaire.</p>
+            </div>
+          ) : (
+            messages.map((msg) => {
+              const isMe = msg.senderId === currentUser.uid;
+              return (
+                <div key={msg.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"} space-y-1`}>
+                  <div className="flex items-center gap-2 text-[9px] font-mono text-afri-text-sec">
+                    <span className="font-bold text-afri-text">{msg.senderName}</span>
+                    <span className={`px-1.5 py-0.5 rounded text-[8px] uppercase font-bold ${
+                      msg.senderRole === "admin" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
+                      msg.senderRole === "promoter" ? "bg-blue-500/10 text-blue-400" : "bg-purple-500/10 text-purple-400"
+                    }`}>
+                      {msg.senderRole === "admin" ? "👑 Fondateur" : msg.senderRole === "promoter" ? "Promoteur" : "Artiste"}
+                    </span>
+                    <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+
+                  <div className={`p-4 rounded-2xl max-w-[85%] text-xs space-y-2 ${
+                    isMe 
+                      ? "bg-gradient-to-r from-[#D4AF37]/20 to-[#D4AF37]/10 border border-[#D4AF37]/30 text-afri-text rounded-tr-none" 
+                      : "bg-afri-bg border border-afri-border text-afri-text rounded-tl-none"
+                  }`}>
+                    {msg.text && <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>}
+
+                    {/* Render Attachments */}
+                    {msg.attachments && msg.attachments.length > 0 && (
+                      <div className="space-y-2 pt-2 border-t border-afri-border/40">
+                        {msg.attachments.map((att) => (
+                          <div key={att.id} className="rounded-xl overflow-hidden bg-black/20 p-2 border border-afri-border/50">
+                            {att.type === "photo" && (
+                              <img referrerPolicy="no-referrer" src={att.url} alt={att.name} className="w-full max-h-48 object-cover rounded-lg" />
+                            )}
+                            {att.type === "video" && (
+                              <video src={att.url} controls className="w-full max-h-48 rounded-lg" />
+                            )}
+                            {att.type === "audio" && (
+                              <audio src={att.url} controls className="w-full" />
+                            )}
+                            {att.type === "pdf" && (
+                              <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#D4AF37] font-bold text-xs hover:underline p-1">
+                                <FileText className="w-4 h-4 shrink-0" />
+                                <span className="truncate">{att.name || "Document PDF"}</span>
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Input Bar */}
+        <div className="p-4 border-t border-afri-border bg-afri-bg/80 space-y-3">
+          {/* File Attachments Toolbar */}
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] font-mono font-bold text-afri-text-sec uppercase">Pièces jointes:</span>
+            
+            {/* Photo */}
+            <label className="p-2 bg-afri-bg hover:bg-afri-bg-ter border border-afri-border rounded-xl cursor-pointer text-afri-text-sec hover:text-[#D4AF37] transition-colors" title="Ajouter une photo">
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "photo")} disabled={uploadingAttachment} />
+              <ImageIcon className="w-4 h-4" />
+            </label>
+
+            {/* Video */}
+            <label className="p-2 bg-afri-bg hover:bg-afri-bg-ter border border-afri-border rounded-xl cursor-pointer text-afri-text-sec hover:text-[#D4AF37] transition-colors" title="Ajouter une vidéo">
+              <input type="file" accept="video/*" className="hidden" onChange={(e) => handleFileUpload(e, "video")} disabled={uploadingAttachment} />
+              <Video className="w-4 h-4" />
+            </label>
+
+            {/* Audio */}
+            <label className="p-2 bg-afri-bg hover:bg-afri-bg-ter border border-afri-border rounded-xl cursor-pointer text-afri-text-sec hover:text-[#D4AF37] transition-colors" title="Ajouter un audio">
+              <input type="file" accept="audio/*" className="hidden" onChange={(e) => handleFileUpload(e, "audio")} disabled={uploadingAttachment} />
+              <Music className="w-4 h-4" />
+            </label>
+
+            {/* PDF */}
+            <label className="p-2 bg-afri-bg hover:bg-afri-bg-ter border border-afri-border rounded-xl cursor-pointer text-afri-text-sec hover:text-[#D4AF37] transition-colors" title="Ajouter un document PDF">
+              <input type="file" accept="application/pdf" className="hidden" onChange={(e) => handleFileUpload(e, "pdf")} disabled={uploadingAttachment} />
+              <FileText className="w-4 h-4" />
+            </label>
+
+            {uploadingAttachment && (
+              <span className="text-[9px] font-mono text-[#D4AF37] animate-pulse flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" /> Envoi média...
+              </span>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <input 
+              type="text"
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Écrivez votre message sécurisé..."
+              className="flex-1 bg-afri-bg border border-afri-border rounded-xl px-4 py-3 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
+            />
+            <button 
+              onClick={() => handleSend()}
+              disabled={sending || (!textInput.trim() && !uploadingAttachment)}
+              className="p-3 bg-emerald-600 hover:bg-emerald-500 text-afri-text rounded-xl font-bold transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 }

@@ -106,7 +106,10 @@ class BootManager {
       }
     ];
 
+    let idx = 1;
     for (const task of tasks) {
+      console.log(`BOOT ${idx}: ${task.name}`);
+      idx++;
       if (onStep) onStep(task.name, "PENDING");
       try {
         const res = await task.run();

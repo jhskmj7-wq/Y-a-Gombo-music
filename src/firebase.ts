@@ -2507,7 +2507,7 @@ export const gomboDB = {
     if (db) {
       const q = query(
         collection(db, "contracts"),
-        or(where("clientId", "==", userId), where("artistId", "==", userId))
+        or(where("clientId", "==", userId), where("artistId", "==", userId), where("promoterId", "==", userId))
       );
       return onSnapshot(q, (snap) => {
         const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as GomboSafeContract));

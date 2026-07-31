@@ -148,20 +148,15 @@ function App() {
     }, 12000);
     
     let startTimestamp = Date.now();
-    const duration = 2500; // 2.5 seconds total
+    const duration = 1500; // 1.5 seconds fast boot
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTimestamp;
-      let calculatedProgress = Math.min((elapsed / duration) * 100, 100);
-
-      // Cap progress at 95% if Firebase authentication is still loading
-      if (authLoading && calculatedProgress >= 95) {
-        calculatedProgress = 95;
-      }
+      const calculatedProgress = Math.min((elapsed / duration) * 100, 100);
 
       setProgress(calculatedProgress);
 
-      if (calculatedProgress >= 100 && !authLoading) {
+      if (calculatedProgress >= 100) {
         clearInterval(interval);
         clearTimeout(safetyTimeout);
         // Play success kora sound
