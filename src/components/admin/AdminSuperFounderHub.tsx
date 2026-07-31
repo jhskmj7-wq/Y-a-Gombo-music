@@ -160,7 +160,7 @@ export default function AdminSuperFounderHub({
       </nav>
 
       {/* Main Content View Area */}
-      <main className="flex-1 p-3 sm:p-5 lg:p-6 overflow-y-auto w-full max-w-full">
+      <main className="flex-1 p-3 sm:p-5 lg:p-6 overflow-y-auto overscroll-contain w-full max-w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
         <Suspense fallback={
           <div className="p-16 text-center text-[#D4AF37] font-mono text-xs animate-pulse flex flex-col items-center justify-center gap-3">
             <Crown className="w-8 h-8 text-[#D4AF37] animate-bounce" />
