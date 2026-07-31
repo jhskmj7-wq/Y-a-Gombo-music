@@ -37,10 +37,13 @@ export interface SupportMessage {
 
 export const SUPPORT_PROFILE = {
   uid: "afrigombo_support",
-  name: "AFRIGOMBO SUPPORT",
+  name: "Équipe AFRIGOMBO",
   photo: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=150", // elegant graphic/logo URL
   badge: "✔ Support officiel",
-  description: "Service Client AFRIGOMBO"
+  description: "Service officiel d'assistance AFRIGOMBO",
+  type: "systemAccount",
+  role: "support",
+  status: "🟢 En ligne"
 };
 
 export const SupportService = {
@@ -50,6 +53,29 @@ export const SupportService = {
   async getOrCreateSupportConversation(userUid: string, userProfile?: any): Promise<string> {
     if (!db) throw new Error("Database not initialized");
     if (!userUid) throw new Error("User UID required");
+
+    // Seed the support user in 'users' collection to ensure it exists
+    try {
+      const supportUserRef = doc(db, "users", SUPPORT_PROFILE.uid);
+      const supportUserSnap = await getDoc(supportUserRef);
+      if (!supportUserSnap.exists()) {
+        await setDoc(supportUserRef, {
+          uid: SUPPORT_PROFILE.uid,
+          name: SUPPORT_PROFILE.name,
+          displayName: SUPPORT_PROFILE.name,
+          photoURL: SUPPORT_PROFILE.photo,
+          avatarUrl: SUPPORT_PROFILE.photo,
+          type: "systemAccount",
+          role: "support",
+          status: "🟢 En ligne",
+          description: SUPPORT_PROFILE.description,
+          createdAt: new Date().toISOString(),
+          isSystem: true
+        });
+      }
+    } catch (e) {
+      console.warn("Could not seed support user:", e);
+    }
 
     const convoRef = doc(db, "supportConversations", userUid);
     const convoSnap = await getDoc(convoRef);

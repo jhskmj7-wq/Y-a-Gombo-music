@@ -82,6 +82,7 @@ export default function AfrigomboWalletDashboard({
   const [processing, setProcessing] = useState(false);
   const [step, setStep] = useState<"form" | "otp" | "success">("form");
   const [createdDepositRef, setCreatedDepositRef] = useState<string>("");
+  const [createdTxId, setCreatedTxId] = useState<string>("");
   const [withdrawSubmitted, setWithdrawSubmitted] = useState<boolean>(false);
 
   useEffect(() => {
@@ -301,7 +302,8 @@ export default function AfrigomboWalletDashboard({
         operator: operator,
         phoneNumber: phoneNumber,
         createdAt: nowIso,
-        timestamp: serverTimestamp()
+        timestamp: serverTimestamp(),
+        conversationId: uid
       };
 
       const txRef = await addDoc(collection(db, "transactions"), txData);
@@ -322,11 +324,46 @@ export default function AfrigomboWalletDashboard({
         createdAtIso: nowIso,
         reference: reference,
         operator: operator,
-        phoneNumber: phoneNumber
+        phoneNumber: phoneNumber,
+        conversationId: uid
       };
 
       await setDoc(doc(db, "walletDepositRequests", txRef.id), requestPayload);
       await setDoc(doc(db, "walletRequests", txRef.id), requestPayload);
+
+      // 3. Create real transaction in `betaTransactions` collection
+      const betaTxPayload = {
+        id: txRef.id,
+        transactionId: txRef.id,
+        userId: uid,
+        uid: uid,
+        userName: userName,
+        userPhoto: userPhoto,
+        amount: depositAmount,
+        montant: depositAmount,
+        status: "pending",
+        statut: "en_attente",
+        createdAt: nowIso,
+        reference: reference,
+        operator: operator,
+        phoneNumber: phoneNumber,
+        conversationId: uid,
+        type: "deposit"
+      };
+      await setDoc(doc(db, "betaTransactions", txRef.id), betaTxPayload);
+
+      // 4. Update/Sync Support Conversation Metadata
+      try {
+        const convoId = await SupportService.getOrCreateSupportConversation(uid, currentUserProfile);
+        await setDoc(doc(db, "supportConversations", convoId), {
+          transactionId: txRef.id,
+          userId: uid,
+          status: "pending",
+          amount: depositAmount
+        }, { merge: true });
+      } catch (supportErr) {
+        console.warn("Could not sync support conversation metadata:", supportErr);
+      }
 
       // Send automated support message for deposit request
       try {
@@ -336,6 +373,7 @@ export default function AfrigomboWalletDashboard({
         console.warn("Could not notify support of deposit:", supportErr);
       }
 
+      setCreatedTxId(txRef.id);
       setCreatedDepositRef(reference);
       setStep("success");
       addToTerminal(`[BÊTA DÉPÔT] Demande ${reference} de ${depositAmount.toLocaleString('fr-FR')} FCFA créée avec succès. En attente de validation.`);
@@ -993,11 +1031,8 @@ export default function AfrigomboWalletDashboard({
                       type="button"
                       onClick={() => {
                         setShowDepositModal(false);
-                        if (onNavigateToMessages) {
-                          onNavigateToMessages("admin");
-                        } else {
-                          supportConfig.openSupport(`Bonjour 👋\n\nMa demande de rechargement Wallet de ${Number(amount).toLocaleString('fr-FR')} FCFA via ${operator.toUpperCase()} (${phoneNumber}) est enregistrée (Réf: ${createdDepositRef}). Je souhaite envoyer ma preuve de paiement.`);
-                        }
+                        const prefilledText = `Bonjour.\nJe souhaite effectuer un dépôt de :\n${Number(amount).toLocaleString('fr-FR')} FCFA.\nMerci de m'indiquer la procédure.\nTransaction :\n#${createdTxId || "id_attente"}`;
+                        supportConfig.openSupport(prefilledText);
                       }}
                       className="w-full py-3.5 bg-[#D4AF37] hover:bg-[#b8982e] text-black font-black text-xs uppercase font-mono tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-md"
                     >
@@ -1077,22 +1112,6 @@ export default function AfrigomboWalletDashboard({
                   </div>
 
                   <div className="space-y-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowWithdrawModal(false);
-                        if (onNavigateToMessages) {
-                          onNavigateToMessages("admin");
-                        } else {
-                          supportConfig.openSupport(`Bonjour 👋\n\nMa demande de retrait de ${Number(amount).toLocaleString('fr-FR')} FCFA vers ${operator.toUpperCase()} (${phoneNumber}) a été envoyée. Je souhaite transmettre les informations complémentaires.`);
-                        }
-                      }}
-                      className="w-full py-3.5 bg-[#D4AF37] hover:bg-[#b8982e] text-black font-black text-xs uppercase font-mono tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-md"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                      <span>Contacter le Service Client</span>
-                    </button>
-
                     <button
                       type="button"
                       onClick={() => { setShowWithdrawModal(false); playSound("click"); }}

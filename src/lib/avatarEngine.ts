@@ -180,7 +180,11 @@ export const AvatarEngine = {
       if (snapshot.empty) {
         // Seed default items asynchronously
         this.seedDefaultStoreItems();
-        callback([]);
+        const fallbackItems = DEFAULT_SEED_ITEMS.map((item, idx) => ({
+          id: `seed_${idx}`,
+          ...item
+        } as AvatarItem));
+        callback(fallbackItems);
         return;
       }
 
@@ -369,6 +373,11 @@ export const AvatarEngine = {
       if (avatarDataUri) {
         userUpdates.avatarDataUri = avatarDataUri;
         userUpdates.photoURLAvatar = avatarDataUri;
+        userUpdates.avatarImage = avatarDataUri;
+        userUpdates.avatarUpdatedAt = now;
+      }
+      if (data.config) {
+        userUpdates.avatarConfig = data.config;
       }
 
       if (Object.keys(userUpdates).length > 0) {

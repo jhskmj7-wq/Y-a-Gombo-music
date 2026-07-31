@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShoppingBag, Star, Crown, Wallet, Check, AlertCircle, X, ChevronRight, Filter,
   Sparkles, CheckCircle2, ShieldCheck, Shirt, Glasses, Music, Palette, UserCheck,
-  Gift, Coins, Zap, Clock, PlusCircle
+  Gift, Coins, Zap, Clock, PlusCircle, ArrowLeft
 } from 'lucide-react';
 import { AvatarItem, AvatarItemCategory, UserInventoryData } from '../../types/avatar';
 import { AvatarEngine, getLevelFromXp } from '../../lib/avatarEngine';
@@ -163,19 +163,27 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
   });
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn text-left font-sans">
-      <div className="w-full max-w-5xl bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden flex flex-col max-h-[92vh] shadow-2xl relative">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn text-left font-sans">
+      <div className="w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-5xl bg-zinc-900 sm:border sm:border-zinc-800 sm:rounded-3xl overflow-hidden flex flex-col shadow-2xl relative">
         
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-zinc-800 flex items-center justify-between bg-zinc-950 relative">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 blur-3xl rounded-full pointer-events-none" />
           <div className="flex items-center gap-3 relative z-10">
-            <div className="w-11 h-11 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
+            <button
+              onClick={onClose}
+              className="sm:hidden p-2 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl min-w-[40px] min-h-[40px] flex items-center justify-center active:scale-95 transition-transform"
+              title="Retour"
+              id="avatar-store-back-mobile"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="hidden sm:flex w-11 h-11 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 items-center justify-center text-[#D4AF37]">
               <ShoppingBag className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider">
+                <h2 className="text-sm sm:text-xl font-black text-white uppercase tracking-wider">
                   BOUTIQUE AVATAR
                 </h2>
                 <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-mono font-black rounded-full flex items-center gap-1">
@@ -183,7 +191,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
                   Niveau {levelInfo.level} • {levelInfo.title}
                 </span>
               </div>
-              <p className="text-xs text-zinc-400">
+              <p className="text-[10px] sm:text-xs text-zinc-400">
                 Gagnez des Gombo Coins, débloquez des raretés et offrez des boubous à vos amis
               </p>
             </div>
@@ -219,7 +227,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
 
             <button 
               onClick={onClose}
-              className="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition cursor-pointer"
+              className="hidden sm:flex w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 items-center justify-center text-zinc-400 hover:text-white transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -227,7 +235,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
         </div>
 
         {/* Categories Navigation Bar */}
-        <div className="flex overflow-x-auto p-3.5 gap-2 border-b border-zinc-800/80 bg-zinc-950/60 scrollbar-none">
+        <div className="flex overflow-x-auto p-3.5 gap-2 border-b border-zinc-800/80 bg-zinc-950/60 scrollbar-none w-full max-w-full touch-pan-x">
           {CATEGORIES.map(cat => (
             <button
               key={cat.id}
@@ -246,7 +254,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
 
         {/* Alerts banner */}
         {(errorMsg || successMsg) && (
-          <div className={`mx-6 mt-4 p-3.5 rounded-2xl text-xs font-bold flex items-center justify-between gap-3 ${
+          <div className={`mx-4 sm:mx-6 mt-4 p-3.5 rounded-2xl text-xs font-bold flex items-center justify-between gap-3 ${
             errorMsg 
               ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" 
               : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
@@ -274,7 +282,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
               <p className="text-zinc-400 font-bold text-xs">Aucun article disponible dans cette catégorie.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {filteredItems.map(item => {
                 const isOwned = userInventory.ownedItems.includes(item.id) || initialInventory.includes(item.id);
                 const isEquipped = userInventory.equippedItems.includes(item.id);

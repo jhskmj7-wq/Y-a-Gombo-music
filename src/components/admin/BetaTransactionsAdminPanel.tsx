@@ -28,6 +28,7 @@ import { collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, addDoc, up
 import { recordWalletTransaction } from "../../lib/financial";
 import { audioSynth } from "../../lib/audio";
 import { logAdminAction } from "../../lib/adminLogger";
+import { SupportService, SUPPORT_PROFILE } from "../../services/SupportService";
 
 interface WalletRequest {
   id: string;
@@ -277,214 +278,14 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
 
     try {
       const userRef = doc(db, "users", req.uid);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) throw new Error("Membre introuvable dans la base de données.");
+      const requestRef = doc(
+        db,
+        req.type === "deposit" ? "walletDepositRequests" : "walletWithdrawalRequests",
+        req.id
+      );
 
-      const uData = userSnap.data();
-      const currentDispo = uData.wallet?.soldeDisponible ?? 0;
-      const currentBalance = uData.wallet?.balance ?? currentDispo;
-
-      if (pendingAction === "VALIDATE") {
-        if (req.type === "deposit") {
-          // 4. VALIDATION D'UN DÉPÔT
-          // Update user wallet: balance & soldeDisponible
-          await setDoc(userRef, {
-            wallet: {
-              soldeDisponible: currentDispo + req.montant,
-              balance: currentBalance + req.montant,
-              depots: (uData.wallet?.depots ?? 0) + req.montant
-            }
-          }, { merge: true });
-
-          // Update requests
-          const refDeposit = doc(db, "walletDepositRequests", req.id);
-          await updateDoc(refDeposit, { status: "validated", statut: "validated", validatedAt: nowIso });
-          
-          try {
-            await setDoc(doc(db, "walletRequests", req.id), { status: "validated", statut: "validated", validatedAt: nowIso }, { merge: true });
-            await setDoc(doc(db, "transactions", req.id), { status: "valide", statut: "valide", validatedAt: nowIso }, { merge: true });
-          } catch (_) {}
-
-          // Record entry in walletTransactions/
-          await recordWalletTransaction({
-            userId: req.uid,
-            userName: req.userName,
-            type: "recharge_wallet",
-            amount: req.montant,
-            status: "success",
-            description: `Recharge validée par le Fondateur (Réf: ${req.reference || req.id})`
-          });
-
-          // Journal History
-          await addDoc(collection(db, "transactionHistory"), {
-            transactionId: req.id,
-            createdAt: nowIso,
-            date: dateStr,
-            heure: heureStr,
-            founderId: currentUser?.uid || "admin_souverain",
-            founderName: currentUser?.displayName || currentUser?.email || "Fondateur Souverain",
-            action: "VALIDATION",
-            oldStatus: req.status,
-            newStatus: "validated",
-            comment: comment || "Rechargement validé avec succès."
-          });
-
-          await logAdminAction("VALIDATION_DEPOT", { uid: req.uid, userName: req.userName }, { transactionId: req.id, amount: req.montant }, { uid: currentUser?.uid, displayName: currentUser?.displayName, email: currentUser?.email });
-
-          // User Notification
-          await addDoc(collection(db, "notifications"), {
-            userId: req.uid,
-            title: "💳 Dépôt Crédité avec Succès !",
-            message: `Votre rechargement Wallet de ${req.montant.toLocaleString('fr-FR')} FCFA (Réf: ${req.reference || req.id}) a été validé par le Fondateur.`,
-            type: "payment_received",
-            createdAt: nowIso,
-            isRead: false
-          });
-
-          showToast("✅ Dépôt validé et synchronisé !");
-          try { audioSynth.playValidationSuccess(); } catch (_) {}
-
-        } else {
-          // 5. VALIDATION D'UN RETRAIT
-          if (currentDispo < req.montant) {
-            throw new Error(`Solde insuffisant. Le membre dispose de ${currentDispo.toLocaleString('fr-FR')} FCFA.`);
-          }
-
-          // Debit wallet balance & soldeDisponible
-          await setDoc(userRef, {
-            wallet: {
-              soldeDisponible: Math.max(0, currentDispo - req.montant),
-              balance: Math.max(0, currentBalance - req.montant),
-              retraits: (uData.wallet?.retraits ?? 0) + req.montant
-            }
-          }, { merge: true });
-
-          // Update requests
-          const refWithdrawal = doc(db, "walletWithdrawalRequests", req.id);
-          await updateDoc(refWithdrawal, { status: "validated", statut: "validated", validatedAt: nowIso });
-
-          try {
-            await setDoc(doc(db, "walletRequests", req.id), { status: "validated", statut: "validated", validatedAt: nowIso }, { merge: true });
-            await setDoc(doc(db, "transactions", req.id), { status: "valide", statut: "valide", validatedAt: nowIso }, { merge: true });
-          } catch (_) {}
-
-          // Record in walletTransactions/
-          await recordWalletTransaction({
-            userId: req.uid,
-            userName: req.userName,
-            type: "retrait",
-            amount: req.montant,
-            status: "success",
-            description: `Retrait validé vers Mobile Money (${req.numero || req.phoneNumber})`
-          });
-
-          // Journal History
-          await addDoc(collection(db, "transactionHistory"), {
-            transactionId: req.id,
-            createdAt: nowIso,
-            date: dateStr,
-            heure: heureStr,
-            founderId: currentUser?.uid || "admin_souverain",
-            founderName: currentUser?.displayName || currentUser?.email || "Fondateur Souverain",
-            action: "VALIDATION",
-            oldStatus: req.status,
-            newStatus: "validated",
-            comment: comment || "Retrait validé et transféré."
-          });
-
-          // User Notification
-          await addDoc(collection(db, "notifications"), {
-            userId: req.uid,
-            title: "💸 Retrait Transféré !",
-            message: `Votre demande de retrait de ${req.montant.toLocaleString('fr-FR')} FCFA a été validée et exécutée vers le ${req.numero || req.phoneNumber}.`,
-            type: "payment_received",
-            createdAt: nowIso,
-            isRead: false
-          });
-
-          showToast("✅ Retrait validé et synchronisé !");
-          try { audioSynth.playValidationSuccess(); } catch (_) {}
-        }
-        
-        // Update selectedRequest locally to keep sheet updated immediately
-        setSelectedRequest(prev => prev ? { ...prev, status: "validated" } : null);
-
-      } else if (pendingAction === "REFUSE") {
-        // 6. REFUS
-        if (!comment) throw new Error("Un motif de refus explicite est obligatoire.");
-
-        const targetStatus = "refused";
-        if (req.type === "deposit") {
-          await updateDoc(doc(db, "walletDepositRequests", req.id), { status: targetStatus, statut: targetStatus, refusedAt: nowIso });
-        } else {
-          await updateDoc(doc(db, "walletWithdrawalRequests", req.id), { status: targetStatus, statut: targetStatus, refusedAt: nowIso });
-        }
-
-        try {
-          await setDoc(doc(db, "walletRequests", req.id), { status: targetStatus, statut: targetStatus, refusalReason: comment, refusedAt: nowIso }, { merge: true });
-          await setDoc(doc(db, "transactions", req.id), { status: "refuse", statut: "refuse", refusalReason: comment }, { merge: true });
-        } catch (_) {}
-
-        // Journal History
-        await addDoc(collection(db, "transactionHistory"), {
-          transactionId: req.id,
-          createdAt: nowIso,
-          date: dateStr,
-          heure: heureStr,
-          founderId: currentUser?.uid || "admin_souverain",
-          founderName: currentUser?.displayName || currentUser?.email || "Fondateur Souverain",
-          action: "REFUS",
-          oldStatus: req.status,
-          newStatus: targetStatus,
-          comment: comment
-        });
-
-        // User Notification
-        await addDoc(collection(db, "notifications"), {
-          userId: req.uid,
-          title: req.type === "deposit" ? "🔴 Rechargement Refusé" : "🔴 Retrait Refusé",
-          message: `Votre demande de ${req.type === "deposit" ? "dépôt" : "retrait"} de ${req.montant.toLocaleString('fr-FR')} FCFA a été refusée par le Fondateur. Motif : ${comment}`,
-          type: "payment_refused",
-          createdAt: nowIso,
-          isRead: false
-        });
-
-        showToast("❌ Demande refusée et membre notifié.");
-        setSelectedRequest(prev => prev ? { ...prev, status: targetStatus } : null);
-
-      } else if (pendingAction === "PENDING") {
-        // 7. EN ATTENTE
-        const targetStatus = "pending";
-        if (req.type === "deposit") {
-          await updateDoc(doc(db, "walletDepositRequests", req.id), { status: targetStatus, statut: targetStatus });
-        } else {
-          await updateDoc(doc(db, "walletWithdrawalRequests", req.id), { status: targetStatus, statut: targetStatus });
-        }
-
-        try {
-          await setDoc(doc(db, "walletRequests", req.id), { status: targetStatus, statut: targetStatus }, { merge: true });
-          await setDoc(doc(db, "transactions", req.id), { status: "en_attente", statut: "en_attente" }, { merge: true });
-        } catch (_) {}
-
-        // Journal History
-        await addDoc(collection(db, "transactionHistory"), {
-          transactionId: req.id,
-          createdAt: nowIso,
-          date: dateStr,
-          heure: heureStr,
-          founderId: currentUser?.uid || "admin_souverain",
-          founderName: currentUser?.displayName || currentUser?.email || "Fondateur Souverain",
-          action: "MISE_EN_ATTENTE",
-          oldStatus: req.status,
-          newStatus: targetStatus,
-          comment: comment || "Remis en attente de vérification."
-        });
-
-        showToast("⏳ Transaction remise en attente.");
-        setSelectedRequest(prev => prev ? { ...prev, status: targetStatus } : null);
-
-      } else if (pendingAction === "ADD_NOTE") {
-        // AJOUT DE NOTE INTERNE
+      if (pendingAction === "ADD_NOTE") {
+        // AJOUT DE NOTE INTERNE - Does not affect balance or status, can be simple log
         if (!comment) throw new Error("La note interne ne peut pas être vide.");
 
         await addDoc(collection(db, "transactionHistory"), {
@@ -501,6 +302,505 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
         });
 
         showToast("📝 Note interne enregistrée !");
+        setPendingAction(null);
+        setActionComment("");
+        setActionLoading(false);
+        return;
+      }
+
+      // We run everything else in an atomic Firestore transaction
+      await runTransaction(db, async (transaction) => {
+        // 1. Read Request status to prevent double-validation
+        const requestSnap = await transaction.get(requestRef);
+        if (!requestSnap.exists()) {
+          throw new Error("Demande de transaction introuvable.");
+        }
+
+        const requestData = requestSnap.data();
+        const currentStatus = requestData.status || requestData.statut || "pending";
+
+        // Check if the status is not pending or waiting support
+        if (currentStatus !== "pending" && currentStatus !== "waiting_support" && currentStatus !== "en_attente") {
+          throw new Error(`Cette transaction a déjà été traitée ou n'est plus en attente. Statut actuel : ${currentStatus}`);
+        }
+
+        // 2. Read User profile
+        const userSnap = await transaction.get(userRef);
+        if (!userSnap.exists()) {
+          throw new Error("Membre introuvable dans la base de données.");
+        }
+
+        const uData = userSnap.data();
+        const currentDispo = uData.wallet?.soldeDisponible ?? 0;
+        const currentBalance = uData.wallet?.balance ?? currentDispo;
+
+        const txId = `tx_${req.type}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+        if (pendingAction === "VALIDATE") {
+          if (req.type === "deposit") {
+            // Validation of Deposit
+            const newDispo = currentDispo + req.montant;
+            const newBalance = currentBalance + req.montant;
+            const newDepots = (uData.wallet?.depots ?? 0) + req.montant;
+
+            // Update user wallet atomically
+            transaction.update(userRef, {
+              "wallet.soldeDisponible": newDispo,
+              "wallet.balance": newBalance,
+              "wallet.depots": newDepots,
+              updatedAt: nowIso
+            });
+
+            // Update the request document atomically
+            transaction.update(requestRef, {
+              status: "validated",
+              statut: "validated",
+              validatedAt: nowIso,
+              validatedBy: currentUser?.uid || "admin_souverain",
+              walletOperationId: txId,
+              processed: true
+            });
+
+            // Set general request or transactions in the transaction
+            const walletRequestRef = doc(db, "walletRequests", req.id);
+            transaction.set(walletRequestRef, {
+              status: "validated",
+              statut: "validated",
+              validatedAt: nowIso,
+              validatedBy: currentUser?.uid || "admin_souverain",
+              walletOperationId: txId,
+              processed: true
+            }, { merge: true });
+
+            const transactionRef = doc(db, "transactions", req.id);
+            transaction.set(transactionRef, {
+              status: "valide",
+              statut: "valide",
+              validatedAt: nowIso,
+              validatedBy: currentUser?.uid || "admin_souverain",
+              walletOperationId: txId,
+              processed: true
+            }, { merge: true });
+
+            // Create entry in walletTransactions/
+            const walletTxRef = doc(db, "walletTransactions", txId);
+            const txData = {
+              id: txId,
+              reference: txId,
+              uid: req.uid,
+              userId: req.uid,
+              userName: req.userName,
+              userConcerned: req.userName,
+              type: "recharge_wallet",
+              amount: req.montant,
+              montant: req.montant,
+              status: "success",
+              statut: "success",
+              description: `Recharge validée par le Fondateur (Réf: ${req.reference || req.id})`,
+              date: dateStr,
+              heure: heureStr,
+              createdAt: nowIso,
+              updatedAt: nowIso,
+              timestamp: Date.now()
+            };
+            transaction.set(walletTxRef, txData, { merge: true });
+
+            // Move to Archive / Validated Automatically
+            const archiveRef = doc(db, "archivesValidated", req.id);
+            transaction.set(archiveRef, {
+              id: req.id,
+              uid: req.uid,
+              userName: req.userName,
+              montant: req.montant,
+              type: req.type,
+              reference: req.reference || "",
+              originalStatus: currentStatus,
+              status: "validated",
+              statut: "validated",
+              validatedAt: nowIso,
+              validatedBy: currentUser?.uid || "admin_souverain",
+              walletOperationId: txId,
+              processed: true,
+              archivedAt: nowIso
+            });
+
+            // Journal History
+            const histRef = doc(collection(db, "transactionHistory"));
+            transaction.set(histRef, {
+              transactionId: req.id,
+              createdAt: nowIso,
+              date: dateStr,
+              heure: heureStr,
+              founderId: currentUser?.uid || "admin_souverain",
+              founderName: currentUser?.displayName || currentUser?.email || "Fondateur Souverain",
+              action: "VALIDATION",
+              oldStatus: currentStatus,
+              newStatus: "validated",
+              comment: comment || "Rechargement validé avec succès."
+            });
+
+            // Create Admin Audit Log
+            const auditRef = doc(collection(db, "adminAuditLogs"));
+            transaction.set(auditRef, {
+              transactionId: req.id,
+              oldValue: currentStatus,
+              newValue: "validated",
+              admin: currentUser?.displayName || currentUser?.email || "Fondateur Souverain",
+              adminId: currentUser?.uid || "admin_souverain",
+              date: dateStr,
+              heure: heureStr,
+              action: "VALIDATION_DEPOT",
+              amount: req.montant,
+              createdAt: nowIso
+            });
+
+            // Update betaTransactions doc atomically if it exists
+            const betaTxRef = doc(db, "betaTransactions", req.id);
+            transaction.set(betaTxRef, {
+              status: "completed",
+              statut: "valide",
+              validatedAt: nowIso,
+              validatedBy: currentUser?.uid || "admin_souverain",
+              processed: true
+            }, { merge: true });
+
+            // User Notification
+            const notifRef = doc(collection(db, "notifications"));
+            transaction.set(notifRef, {
+              userId: req.uid,
+              title: "💳 Dépôt Crédité avec Succès !",
+              message: `Votre rechargement Wallet de ${req.montant.toLocaleString('fr-FR')} FCFA (Réf: ${req.reference || req.id}) a été validé par le Fondateur.`,
+              type: "payment_received",
+              createdAt: nowIso,
+              isRead: false
+            });
+
+          } else {
+            // Validation of Withdrawal
+            if (currentDispo < req.montant) {
+              throw new Error(`Solde insuffisant. Le membre dispose de ${currentDispo.toLocaleString('fr-FR')} FCFA.`);
+            }
+
+            const newDispo = Math.max(0, currentDispo - req.montant);
+            const newBalance = Math.max(0, currentBalance - req.montant);
+            const newRetraits = (uData.wallet?.retraits ?? 0) + req.montant;
+
+            // Update user wallet atomically
+            transaction.update(userRef, {
+              "wallet.soldeDisponible": newDispo,
+              "wallet.balance": newBalance,
+              "wallet.retraits": newRetraits,
+              updatedAt: nowIso
+            });
+
+            // Update the request document atomically
+            transaction.update(requestRef, {
+              status: "validated",
+              statut: "validated",
+              validatedAt: nowIso,
+              validatedBy: currentUser?.uid || "admin_souverain",
+              walletOperationId: txId,
+              processed: true
+            });
+
+            // Set general request or transactions in the transaction
+            const walletRequestRef = doc(db, "walletRequests", req.id);
+            transaction.set(walletRequestRef, {
+              status: "validated",
+              statut: "validated",
+              validatedAt: nowIso,
+              validatedBy: currentUser?.uid || "admin_souverain",
+              walletOperationId: txId,
+              processed: true
+            }, { merge: true });
+
+            const transactionRef = doc(db, "transactions", req.id);
+            transaction.set(transactionRef, {
+              status: "valide",
+              statut: "valide",
+              validatedAt: nowIso,
+              validatedBy: currentUser?.uid || "admin_souverain",
+              walletOperationId: txId,
+              processed: true
+            }, { merge: true });
+
+            // Create entry in walletTransactions/
+            const walletTxRef = doc(db, "walletTransactions", txId);
+            const txData = {
+              id: txId,
+              reference: txId,
+              uid: req.uid,
+              userId: req.uid,
+              userName: req.userName,
+              userConcerned: req.userName,
+              type: "retrait",
+              amount: req.montant,
+              montant: req.montant,
+              status: "success",
+              statut: "success",
+              description: `Retrait validé vers Mobile Money (${req.numero || req.phoneNumber})`,
+              date: dateStr,
+              heure: heureStr,
+              createdAt: nowIso,
+              updatedAt: nowIso,
+              timestamp: Date.now()
+            };
+            transaction.set(walletTxRef, txData, { merge: true });
+
+            // Move to Archive / Validated Automatically
+            const archiveRef = doc(db, "archivesValidated", req.id);
+            transaction.set(archiveRef, {
+              id: req.id,
+              uid: req.uid,
+              userName: req.userName,
+              montant: req.montant,
+              type: req.type,
+              reference: req.reference || "",
+              originalStatus: currentStatus,
+              status: "validated",
+              statut: "validated",
+              validatedAt: nowIso,
+              validatedBy: currentUser?.uid || "admin_souverain",
+              walletOperationId: txId,
+              processed: true,
+              archivedAt: nowIso
+            });
+
+            // Journal History
+            const histRef = doc(collection(db, "transactionHistory"));
+            transaction.set(histRef, {
+              transactionId: req.id,
+              createdAt: nowIso,
+              date: dateStr,
+              heure: heureStr,
+              founderId: currentUser?.uid || "admin_souverain",
+              founderName: currentUser?.displayName || currentUser?.email || "Fondateur Souverain",
+              action: "VALIDATION",
+              oldStatus: currentStatus,
+              newStatus: "validated",
+              comment: comment || "Retrait validé et transféré."
+            });
+
+            // Create Admin Audit Log
+            const auditRef = doc(collection(db, "adminAuditLogs"));
+            transaction.set(auditRef, {
+              transactionId: req.id,
+              oldValue: currentStatus,
+              newValue: "validated",
+              admin: currentUser?.displayName || currentUser?.email || "Fondateur Souverain",
+              adminId: currentUser?.uid || "admin_souverain",
+              date: dateStr,
+              heure: heureStr,
+              action: "VALIDATION_RETRAIT",
+              amount: req.montant,
+              createdAt: nowIso
+            });
+
+            // Update betaTransactions doc atomically if it exists
+            const betaTxRef = doc(db, "betaTransactions", req.id);
+            transaction.set(betaTxRef, {
+              status: "completed",
+              statut: "valide",
+              validatedAt: nowIso,
+              validatedBy: currentUser?.uid || "admin_souverain",
+              processed: true
+            }, { merge: true });
+
+            // User Notification
+            const notifRef = doc(collection(db, "notifications"));
+            transaction.set(notifRef, {
+              userId: req.uid,
+              title: "💸 Retrait Transféré !",
+              message: `Votre demande de retrait de ${req.montant.toLocaleString('fr-FR')} FCFA a été validée et exécutée vers le ${req.numero || req.phoneNumber}.`,
+              type: "payment_received",
+              createdAt: nowIso,
+              isRead: false
+            });
+          }
+        } else if (pendingAction === "REFUSE") {
+          if (!comment) throw new Error("Un motif de refus explicite est obligatoire.");
+
+          const targetStatus = "refused";
+
+          // Update status
+          transaction.update(requestRef, {
+            status: targetStatus,
+            statut: targetStatus,
+            refusedAt: nowIso
+          });
+
+          const walletRequestRef = doc(db, "walletRequests", req.id);
+          transaction.set(walletRequestRef, {
+            status: targetStatus,
+            statut: targetStatus,
+            refusalReason: comment,
+            refusedAt: nowIso
+          }, { merge: true });
+
+          const transactionRef = doc(db, "transactions", req.id);
+          transaction.set(transactionRef, {
+            status: "refuse",
+            statut: "refuse",
+            refusalReason: comment
+          }, { merge: true });
+
+          // Update betaTransactions doc atomically
+          const betaTxRef = doc(db, "betaTransactions", req.id);
+          transaction.set(betaTxRef, {
+            status: "rejected",
+            statut: "refuse",
+            refusedAt: nowIso,
+            refusalReason: comment,
+            processed: true
+          }, { merge: true });
+
+          // Journal History
+          const histRef = doc(collection(db, "transactionHistory"));
+          transaction.set(histRef, {
+            transactionId: req.id,
+            createdAt: nowIso,
+            date: dateStr,
+            heure: heureStr,
+            founderId: currentUser?.uid || "admin_souverain",
+            founderName: currentUser?.displayName || currentUser?.email || "Fondateur Souverain",
+            action: "REFUS",
+            oldStatus: currentStatus,
+            newStatus: targetStatus,
+            comment: comment
+          });
+
+          // Create Admin Audit Log
+          const auditRef = doc(collection(db, "adminAuditLogs"));
+          transaction.set(auditRef, {
+            transactionId: req.id,
+            oldValue: currentStatus,
+            newValue: targetStatus,
+            admin: currentUser?.displayName || currentUser?.email || "Fondateur Souverain",
+            adminId: currentUser?.uid || "admin_souverain",
+            date: dateStr,
+            heure: heureStr,
+            action: "REFUS_TRANSACTION",
+            amount: req.montant,
+            createdAt: nowIso
+          });
+
+          // User Notification
+          const notifRef = doc(collection(db, "notifications"));
+          transaction.set(notifRef, {
+            userId: req.uid,
+            title: req.type === "deposit" ? "🔴 Rechargement Refusé" : "🔴 Retrait Refusé",
+            message: `Votre demande de ${req.type === "deposit" ? "dépôt" : "retrait"} de ${req.montant.toLocaleString('fr-FR')} FCFA a été refusée par le Fondateur. Motif : ${comment}`,
+            type: "payment_refused",
+            createdAt: nowIso,
+            isRead: false
+          });
+
+        } else if (pendingAction === "PENDING") {
+          const targetStatus = "pending";
+
+          transaction.update(requestRef, {
+            status: targetStatus,
+            statut: targetStatus
+          });
+
+          const walletRequestRef = doc(db, "walletRequests", req.id);
+          transaction.set(walletRequestRef, {
+            status: targetStatus,
+            statut: targetStatus
+          }, { merge: true });
+
+          const transactionRef = doc(db, "transactions", req.id);
+          transaction.set(transactionRef, {
+            status: "en_attente",
+            statut: "en_attente"
+          }, { merge: true });
+
+          // Update betaTransactions doc atomically
+          const betaTxRef = doc(db, "betaTransactions", req.id);
+          transaction.set(betaTxRef, {
+            status: "pending",
+            statut: "en_attente"
+          }, { merge: true });
+
+          // Journal History
+          const histRef = doc(collection(db, "transactionHistory"));
+          transaction.set(histRef, {
+            transactionId: req.id,
+            createdAt: nowIso,
+            date: dateStr,
+            heure: heureStr,
+            founderId: currentUser?.uid || "admin_souverain",
+            founderName: currentUser?.displayName || currentUser?.email || "Fondateur Souverain",
+            action: "MISE_EN_ATTENTE",
+            oldStatus: currentStatus,
+            newStatus: targetStatus,
+            comment: comment || "Remis en attente de vérification."
+          });
+
+          // Create Admin Audit Log
+          const auditRef = doc(collection(db, "adminAuditLogs"));
+          transaction.set(auditRef, {
+            transactionId: req.id,
+            oldValue: currentStatus,
+            newValue: targetStatus,
+            admin: currentUser?.displayName || currentUser?.email || "Fondateur Souverain",
+            adminId: currentUser?.uid || "admin_souverain",
+            date: dateStr,
+            heure: heureStr,
+            action: "MISE_EN_ATTENTE",
+            amount: req.montant,
+            createdAt: nowIso
+          });
+        }
+      });
+
+      // Show success states post-transaction completion
+      if (pendingAction === "VALIDATE") {
+        showToast(req.type === "deposit" ? "✅ Dépôt validé et synchronisé !" : "✅ Retrait validé et synchronisé !");
+        try { audioSynth.playValidationSuccess(); } catch (_) {}
+        setSelectedRequest(prev => prev ? { ...prev, status: "validated" } : null);
+      } else if (pendingAction === "REFUSE") {
+        showToast("❌ Demande refusée et membre notifié.");
+        setSelectedRequest(prev => prev ? { ...prev, status: "refused" } : null);
+      } else if (pendingAction === "PENDING") {
+        showToast("⏳ Transaction remise en attente.");
+        setSelectedRequest(prev => prev ? { ...prev, status: "pending" } : null);
+      }
+
+      // Automatically send support message to user's support conversation
+      try {
+        const userConvoId = await SupportService.getOrCreateSupportConversation(req.uid);
+        let supportText = "";
+        if (pendingAction === "VALIDATE") {
+          if (req.type === "deposit") {
+            supportText = `✅ Votre dépôt a été validé.\nMontant crédité :\n${Number(req.montant).toLocaleString('fr-FR')} FCFA.\nVotre Wallet est maintenant à jour.`;
+          } else {
+            supportText = `✅ Votre retrait a été validé.\nMontant débité :\n${Number(req.montant).toLocaleString('fr-FR')} FCFA.\nVotre Wallet est maintenant à jour.`;
+          }
+        } else if (pendingAction === "REFUSE") {
+          if (req.type === "deposit") {
+            supportText = `❌ Votre dépôt n'a pas pu être validé.\nMotif :\n${comment || "Non spécifié"}`;
+          } else {
+            supportText = `❌ Votre retrait n'a pas pu être validé.\nMotif :\n${comment || "Non spécifié"}`;
+          }
+        }
+
+        if (supportText) {
+          await SupportService.sendSupportMessage(
+            userConvoId,
+            SUPPORT_PROFILE.uid,
+            SUPPORT_PROFILE.name,
+            supportText,
+            "Wallet"
+          );
+
+          // Update supportConversations metadata to reflect status
+          await setDoc(doc(db, "supportConversations", userConvoId), {
+            status: pendingAction === "VALIDATE" ? "closed" : "open"
+          }, { merge: true });
+        }
+      } catch (err) {
+        console.warn("Could not send automated support message on transaction update:", err);
       }
 
       setPendingAction(null);

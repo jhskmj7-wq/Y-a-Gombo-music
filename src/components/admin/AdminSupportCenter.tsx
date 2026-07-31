@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   MessageSquare, HelpCircle, CheckCircle, Clock, AlertTriangle, Send, 
   User, ShieldCheck, Coins, Zap, Search, Filter, CheckSquare, Sparkles, MapPin, Globe,
-  ShieldX, UserX, UserCheck, Wallet, FileText, Music, Flag, Crown, History
+  ShieldX, UserX, UserCheck, Wallet, FileText, Music, Flag, Crown, History, Paperclip
 } from "lucide-react";
 import { 
   collection, onSnapshot, query, orderBy, doc, getDoc, updateDoc, addDoc, where 
@@ -22,6 +22,9 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [modActionMessage, setModActionMessage] = useState("");
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const categories = ["all", "Wallet", "Premium", "Bug", "Contrat", "Signalement", "Autre"];
 
@@ -101,11 +104,16 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
 
   const handleSendReply = async (e?: React.FormEvent, customText?: string) => {
     if (e) e.preventDefault();
-    const textToSend = customText || replyText;
-    if (!textToSend.trim() || !selectedConversation?.id) return;
+    let textToSend = customText || replyText;
+    if (!textToSend.trim() && !selectedFile) return;
+    if (!selectedConversation?.id) return;
 
     setLoading(true);
     try {
+      if (selectedFile) {
+        textToSend = (textToSend.trim() ? textToSend + "\n\n" : "") + `📁 [Fichier joint: ${selectedFile.name}]`;
+      }
+
       await SupportService.sendSupportMessage(
         selectedConversation.id,
         SUPPORT_PROFILE.uid,
@@ -115,6 +123,8 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
       );
 
       setReplyText("");
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       try { audioSynth?.playValidationSuccess?.(); } catch(e){}
     } catch (err) {
       console.error("Error sending support reply:", err);
@@ -509,19 +519,71 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                 </div>
               </div>
 
+              {/* Specialized Support Actions */}
+              <div className="py-1.5 shrink-0 flex items-center gap-2 border-t border-zinc-800/60 pt-2">
+                <button
+                  type="button"
+                  onClick={() => handleSendReply(undefined, "📋 CONSIGNES DE SÉCURITÉ & DE PAIEMENT :\n1. Veuillez envoyer la somme exacte demandée.\n2. Partagez la capture d'écran complète de votre reçu de paiement ici.\n3. Ne partagez jamais votre code PIN.\nNotre équipe traitera votre demande rapidement. Merci pour votre confiance !")}
+                  className="px-2.5 py-1.5 bg-zinc-950 hover:bg-amber-500/10 hover:text-[#D4AF37] border border-zinc-800 text-zinc-400 text-[10px] font-bold uppercase transition rounded-xl cursor-pointer flex items-center gap-1"
+                >
+                  <span>📋 Envoyer des consignes</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendReply(undefined, "📥 REÇU & CONFIRMÉ :\nNous confirmons la bonne réception de vos informations et/ou de votre preuve de paiement. Votre transaction est en cours de traitement par notre équipe financière.")}
+                  className="px-2.5 py-1.5 bg-zinc-950 hover:bg-emerald-500/10 hover:text-emerald-400 border border-zinc-800 text-zinc-400 text-[10px] font-bold uppercase transition rounded-xl cursor-pointer flex items-center gap-1"
+                >
+                  <span>📥 Confirmer réception</span>
+                </button>
+              </div>
+
+              {/* Selected File Preview Bar */}
+              {selectedFile && (
+                <div className="p-2 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between text-xs text-[#D4AF37] font-mono shrink-0 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <span>📎 {selectedFile.name}</span>
+                    <span className="text-[10px] text-zinc-500">({Math.round(selectedFile.size / 1024)} KB)</span>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => { setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                    className="text-zinc-500 hover:text-white transition"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
               {/* Message Form */}
               <form onSubmit={(e) => handleSendReply(e)} className="flex items-center gap-2 mt-1 shrink-0">
                 <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) setSelectedFile(file);
+                  }}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-3 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl transition cursor-pointer flex items-center justify-center"
+                  title="Joindre un fichier"
+                >
+                  <Paperclip className="w-5 h-5" />
+                </button>
+                <input
                   type="text"
-                  required
+                  required={!selectedFile}
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Répondre en tant que Support..."
+                  placeholder={selectedFile ? "Ajouter un message ou envoyer le fichier..." : "Répondre en tant que Support..."}
                   className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:border-[#D4AF37] focus:outline-none placeholder:text-zinc-500"
                 />
                 <button
                   type="submit"
-                  disabled={loading || !replyText.trim()}
+                  disabled={loading || (!replyText.trim() && !selectedFile)}
                   className="p-3 bg-[#D4AF37] hover:bg-amber-400 text-black rounded-xl transition cursor-pointer flex items-center justify-center disabled:opacity-40"
                 >
                   <Send className="w-5 h-5" />
