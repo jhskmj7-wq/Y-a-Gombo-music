@@ -22,12 +22,12 @@ export const AvatarInventory: React.FC<AvatarInventoryProps> = ({ currentUser, o
   };
 
   return (
-    <PageContainer className="p-0 bg-black text-white" id="avatar-inventory-page-root">
+    <PageContainer className="p-0 bg-afri-bg text-afri-text" id="avatar-inventory-page-root">
       {/* Fixed Android Top Header */}
-      <header className="sticky top-0 z-40 bg-zinc-950/95 backdrop-blur-md border-b border-zinc-800 px-4 py-3.5 flex items-center justify-between w-full max-w-full box-border" id="avatar-inventory-header">
+      <header className="sticky top-0 z-40 bg-afri-bg/95 backdrop-blur-md border-b border-afri-border px-4 py-3.5 flex items-center justify-between w-full max-w-full box-border" id="avatar-inventory-header">
         <button 
           onClick={onBack}
-          className="p-2.5 rounded-full bg-zinc-900 border border-zinc-800 text-white min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform"
+          className="p-2.5 rounded-full bg-afri-bg-sec border border-afri-border text-afri-text min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform"
           id="avatar-inventory-btn-back"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -43,7 +43,7 @@ export const AvatarInventory: React.FC<AvatarInventoryProps> = ({ currentUser, o
             Chargement de l'inventaire...
           </div>
         ) : ownedItems.length === 0 ? (
-          <div className="py-20 text-center text-zinc-500 font-mono text-xs space-y-3" id="avatar-inventory-empty">
+          <div className="py-20 text-center text-afri-text-muted font-mono text-xs space-y-3" id="avatar-inventory-empty">
             <Shield className="w-12 h-12 mx-auto opacity-30 text-[#D4AF37]" />
             <p>Votre inventaire est vide. Visitez la boutique pour acquérir des articles.</p>
           </div>
@@ -54,12 +54,12 @@ export const AvatarInventory: React.FC<AvatarInventoryProps> = ({ currentUser, o
               return (
                 <div 
                   key={item.id} 
-                  className={`bg-zinc-900/90 border rounded-2xl p-3 flex flex-col justify-between space-y-3 w-full max-w-full box-border shadow-md ${
-                    isEquipped ? 'border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.2)]' : 'border-zinc-800/80'
+                  className={`bg-afri-bg-sec border rounded-2xl p-3 flex flex-col justify-between space-y-3 w-full max-w-full box-border shadow-md ${
+                    isEquipped ? 'border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.2)]' : 'border-afri-border/80'
                   }`}
                   id={`avatar-inventory-card-${item.id}`}
                 >
-                  <div className="relative h-32 rounded-xl bg-zinc-950 flex items-center justify-center overflow-hidden border border-zinc-800">
+                  <div className="relative h-32 rounded-xl bg-afri-bg flex items-center justify-center overflow-hidden border border-afri-border">
                     {item.imageUrl ? (
                       <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
@@ -73,15 +73,15 @@ export const AvatarInventory: React.FC<AvatarInventoryProps> = ({ currentUser, o
                   </div>
 
                   <div className="space-y-1">
-                    <h3 className="text-xs font-bold text-white truncate">{item.name}</h3>
-                    <p className="text-[10px] text-zinc-400 line-clamp-1">{item.category}</p>
+                    <h3 className="text-xs font-bold text-afri-text truncate">{item.name}</h3>
+                    <p className="text-[10px] text-afri-text-sec line-clamp-1">{item.category}</p>
                   </div>
 
                   <button
                     onClick={() => handleEquip(item)}
                     className={`w-full py-2.5 rounded-xl text-xs font-bold min-h-[40px] flex items-center justify-center gap-2 transition-all ${
                       isEquipped 
-                        ? 'bg-zinc-800 border border-zinc-700 text-zinc-300' 
+                        ? 'bg-afri-bg-ter border border-afri-border text-afri-text-sec' 
                         : 'bg-[#D4AF37] text-black hover:bg-amber-400 active:scale-95 shadow-lg'
                     }`}
                     id={`avatar-inventory-btn-equip-${item.id}`}

@@ -42,31 +42,31 @@ export default function DailyRewardModal({ onClose, onRewardClaimed }: DailyRewa
   };
 
   return (
-    <div className="fixed inset-0 z-[140] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn text-left font-sans">
-      <div className="w-full max-w-xl bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl relative">
+    <div className="fixed inset-0 z-[140] flex items-center justify-center p-3 sm:p-4 bg-afri-bg/80 backdrop-blur-md animate-fadeIn text-left font-sans">
+      <div className="w-full max-w-xl bg-afri-bg-sec border border-afri-border rounded-3xl overflow-hidden shadow-2xl relative">
         <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/10 blur-3xl rounded-full pointer-events-none" />
 
         {/* Header */}
-        <div className="p-6 border-b border-zinc-800 bg-zinc-950 flex items-center justify-between relative z-10">
+        <div className="p-6 border-b border-afri-border bg-afri-bg flex items-center justify-between relative z-10">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
               <Gift className="w-6 h-6 animate-bounce" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-lg font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
                 BONUS QUOTIDIEN
                 <span className="px-2 py-0.5 bg-[#D4AF37] text-black text-[9px] font-mono font-black rounded-full">
                   7 JOURS
                 </span>
               </h3>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-afri-text-sec">
                 Connectez-vous chaque jour pour cumuler des Gombo Coins et monter de niveau !
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition cursor-pointer"
+            className="w-10 h-10 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-afri-text transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -91,7 +91,7 @@ export default function DailyRewardModal({ onClose, onRewardClaimed }: DailyRewa
                 <div className="w-16 h-16 bg-[#D4AF37] text-black rounded-2xl flex items-center justify-center mx-auto shadow-xl">
                   <Sparkles className="w-8 h-8 animate-spin" />
                 </div>
-                <h4 className="text-xl font-black text-white uppercase tracking-wider">
+                <h4 className="text-xl font-black text-afri-text uppercase tracking-wider">
                   RÉCOMPENSE RÉCUPÉRÉE ! 🎉
                 </h4>
                 <div className="flex items-center justify-center gap-4 text-sm font-mono font-black">
@@ -127,8 +127,8 @@ export default function DailyRewardModal({ onClose, onRewardClaimed }: DailyRewa
                     isPast
                       ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 opacity-80"
                       : isCurrent
-                        ? "bg-[#D4AF37]/20 border-[#D4AF37] text-white shadow-lg shadow-[#D4AF37]/10 scale-105"
-                        : "bg-zinc-950 border-zinc-800 text-zinc-500"
+                        ? "bg-[#D4AF37]/20 border-[#D4AF37] text-afri-text shadow-lg shadow-[#D4AF37]/10 scale-105"
+                        : "bg-afri-bg border-afri-border text-afri-text-muted"
                   }`}
                 >
                   <span className="text-[9px] font-mono font-bold uppercase">J{dayNum}</span>
@@ -149,12 +149,12 @@ export default function DailyRewardModal({ onClose, onRewardClaimed }: DailyRewa
               disabled={claiming || isAlreadyClaimedToday}
               className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer shadow-xl ${
                 isAlreadyClaimedToday
-                  ? "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed"
+                  ? "bg-afri-bg-ter text-afri-text-muted border border-afri-border cursor-not-allowed"
                   : "bg-[#D4AF37] text-black hover:bg-white"
               }`}
             >
               {claiming ? (
-                <span className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin" />
+                <span className="w-5 h-5 border-3 border-afri-border border-t-transparent rounded-full animate-spin" />
               ) : isAlreadyClaimedToday ? (
                 <>
                   <CheckCircle2 className="w-5 h-5 text-emerald-400" />

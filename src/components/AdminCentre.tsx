@@ -2549,7 +2549,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                       <Music className="w-5 h-5 text-afri-gold" />
                                     )}
                                   </div>
-                                  <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-afri-gold rounded-full border-2 border-black flex items-center justify-center shadow-sm" title="Vérifié">
+                                  <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-afri-gold rounded-full border-2 border-afri-border flex items-center justify-center shadow-sm" title="Vérifié">
                                     <CheckCircle2 className="w-3 h-3 text-black" strokeWidth={4} />
                                   </span>
                                 </div>
@@ -2814,7 +2814,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 }
                               });
                             }, false, unreadNotifsCount > 0 ? (
-                              <span className="bg-gradient-to-r from-red-600 to-amber-500 text-white font-mono font-black text-[9px] px-1.5 py-0.5 rounded-full animate-pulse shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.5)]">
+                              <span className="bg-gradient-to-r from-red-600 to-amber-500 text-afri-text font-mono font-black text-[9px] px-1.5 py-0.5 rounded-full animate-pulse shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.5)]">
                                 {unreadNotifsCount > 9 ? "9+" : unreadNotifsCount}
                               </span>
                             ) : null)}
@@ -2911,14 +2911,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   <span className="text-[9px] font-mono font-black text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/15 px-2 py-0.5 rounded border border-[#D4AF37]/30">
                     {activeAdminBanner.type || activeAdminBanner.category || "ANNONCE TRÔNE"}
                   </span>
-                  <span className="text-[10px] text-zinc-400 font-mono">
+                  <span className="text-[10px] text-afri-text-sec font-mono">
                     {activeAdminBanner.createdAt ? new Date(activeAdminBanner.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "À l'instant"}
                   </span>
                 </div>
-                <h4 className="text-xs sm:text-sm font-black text-white truncate">
+                <h4 className="text-xs sm:text-sm font-black text-afri-text truncate">
                   {activeAdminBanner.title || activeAdminBanner.titre || activeAdminBanner.subject || "Message de l'Administration"}
                 </h4>
-                <p className="text-[11px] text-zinc-300 font-medium leading-relaxed line-clamp-2 mt-0.5">
+                <p className="text-[11px] text-afri-text-sec font-medium leading-relaxed line-clamp-2 mt-0.5">
                   {activeAdminBanner.message || activeAdminBanner.description || activeAdminBanner.body}
                 </p>
               </div>
@@ -2929,7 +2929,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   }
                   setActiveAdminBanner(null);
                 }}
-                className="text-zinc-400 hover:text-white p-1 rounded-lg bg-zinc-800/60 hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer"
+                className="text-afri-text-sec hover:text-afri-text p-1 rounded-lg bg-zinc-800/60 hover:bg-afri-bg-ter transition-colors shrink-0 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -3070,7 +3070,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                      >
                        <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
                        {unreadNotifsCount > 0 && (
-                         <span className="absolute -top-1 -right-1 sm:-top-0.5 sm:-right-0.5 bg-red-600 text-white font-mono font-black text-[9px] sm:text-[10px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center border-2 border-black shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse">
+                         <span className="absolute -top-1 -right-1 sm:-top-0.5 sm:-right-0.5 bg-red-600 text-afri-text font-mono font-black text-[9px] sm:text-[10px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center border-2 border-afri-border shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse">
                            {unreadNotifsCount > 99 ? "99+" : unreadNotifsCount}
                          </span>
                        )}
@@ -3096,7 +3096,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           </div>
                        )}
                        {(profile?.isCertified || profile?.gomboIdNumber) && (
-                          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-afri-gold rounded-full border border-black flex items-center justify-center">
+                          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-afri-gold rounded-full border border-afri-border flex items-center justify-center">
                             <CheckCircle2 className="w-1.5 sm:w-2 h-1.5 sm:h-2 text-black stroke-[4]" />
                           </div>
                        )}
@@ -4677,7 +4677,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             </p>
                           </div>
 
-                          <div className="border-t border-zinc-950 pt-3.5 flex items-center justify-between">
+                          <div className="border-t border-afri-border pt-3.5 flex items-center justify-between">
                             <div className="text-left">
                               <span className="text-[8px] uppercase font-mono text-afri-text-sec block">SCORE ACADÉMIE :</span>
                               <span className="text-xs font-mono font-bold text-afri-gold">
@@ -5012,7 +5012,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     
                     {/* Modal Solde Insuffisant */}
                     {showInsufficientFundsModal && insufficientFundsData && (
-                      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+                      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-afri-bg/85 backdrop-blur-md animate-fadeIn">
                         <div className="bg-afri-bg-sec border border-amber-500/40 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 text-center shadow-2xl relative overflow-hidden">
                           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-500 via-afri-gold to-amber-600" />
                           <div className="w-16 h-16 mx-auto bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center text-3xl">
@@ -5250,7 +5250,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 setPublishSuccess(false);
                                 setActiveMenu("user_terrain");
                               }}
-                              className="text-xs font-bold text-afri-text-sec hover:text-white underline cursor-pointer"
+                              className="text-xs font-bold text-afri-text-sec hover:text-afri-text underline cursor-pointer"
                             >
                               Retourner au Terrain (Validation ultérieure)
                             </button>
@@ -5796,7 +5796,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap cursor-pointer transition-all border ${
                               historyFilter === tab.id
                                 ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md font-black"
-                                : "bg-afri-bg-sec/70 border-afri-border text-zinc-400 hover:text-afri-text"
+                                : "bg-afri-bg-sec/70 border-afri-border text-afri-text-sec hover:text-afri-text"
                             }`}
                           >
                             {tab.label}
@@ -5823,7 +5823,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               <p className="text-xs text-afri-text-sec mt-0.5">{act.detail}</p>
                             </div>
                           </div>
-                          <span className="text-[10px] font-mono text-zinc-500 self-end sm:self-auto shrink-0">
+                          <span className="text-[10px] font-mono text-afri-text-muted self-end sm:self-auto shrink-0">
                             {act.date}
                           </span>
                         </div>
@@ -5918,7 +5918,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               <span className="text-[9px] font-mono font-black text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/10 px-2 py-0.5 rounded-md border border-[#D4AF37]/20">
                                 {item.category}
                               </span>
-                              <span className="text-[9px] font-mono font-bold text-zinc-400 bg-afri-bg-sec px-2 py-0.5 rounded-md">
+                              <span className="text-[9px] font-mono font-bold text-afri-text-sec bg-afri-bg-sec px-2 py-0.5 rounded-md">
                                 {item.badge}
                               </span>
                             </div>
@@ -6282,11 +6282,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap cursor-pointer transition-all flex items-center gap-1.5 border ${
                               pubFilter === tab.id
                                 ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md font-black"
-                                : "bg-afri-bg-sec/70 border-afri-border text-zinc-400 hover:text-afri-text"
+                                : "bg-afri-bg-sec/70 border-afri-border text-afri-text-sec hover:text-afri-text"
                             }`}
                           >
                             <span>{tab.label}</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${pubFilter === tab.id ? "bg-black text-[#D4AF37]" : "bg-afri-bg text-zinc-400"}`}>
+                            <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${pubFilter === tab.id ? "bg-afri-bg text-[#D4AF37]" : "bg-afri-bg text-afri-text-sec"}`}>
                               {tab.count}
                             </span>
                           </button>
@@ -6308,7 +6308,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-afri-border/60 pb-3">
                               <div>
                                 <strong className="text-sm font-bold text-afri-text block">{gombo.title}</strong>
-                                <span className="text-[10px] text-zinc-400 font-mono block mt-0.5">Organisé par : {gombo.organizerName} • {gombo.location || "Abidjan"}</span>
+                                <span className="text-[10px] text-afri-text-sec font-mono block mt-0.5">Organisé par : {gombo.organizerName} • {gombo.location || "Abidjan"}</span>
                               </div>
                               <div className="flex items-center gap-2 self-start sm:self-auto">
                                 <span className="px-2.5 py-1 rounded-lg bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 text-xs font-black uppercase font-mono">
@@ -6432,7 +6432,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               )}
 
                               {gombo.organizerId === currentArtist.id && (gombo.status === "contrat_accepte" || gombo.status === "contrat_confirme") && (
-                                <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "mission_terminee")} className="px-3 py-1.5 bg-blue-500 text-white text-[10px] font-bold uppercase rounded-xl hover:bg-blue-400 cursor-pointer">
+                                <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "mission_terminee")} className="px-3 py-1.5 bg-blue-500 text-afri-text text-[10px] font-bold uppercase rounded-xl hover:bg-blue-400 cursor-pointer">
                                   Valider la Prestation
                                 </button>
                               )}
@@ -6852,7 +6852,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {activeMenu === "user_messages" && (
-                <div className="w-full h-full min-h-screen flex flex-col justify-between p-0 m-0 border-none rounded-none bg-black animate-fadeIn text-left">
+                <div className="w-full h-full min-h-screen flex flex-col justify-between p-0 m-0 border-none rounded-none bg-afri-bg animate-fadeIn text-left">
                   <MessagesView
                     currentUser={currentUser || { uid: activeArtistId }}
                     currentProfile={profile || (users.find(u => u.id === activeArtistId) || users[0])}
@@ -9083,7 +9083,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             }} className="space-y-4">
               <div>
                 <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Type de retour</label>
-                <select name="type" className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none">
+                <select name="type" className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none">
                   <option value="bug">🐛 Signaler un bug</option>
                   <option value="idea">💡 Suggérer une idée</option>
                   <option value="other">💬 Autre remarque</option>
@@ -9097,7 +9097,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   rows={4} 
                   required
                   placeholder="Décrivez le problème rencontré ou votre idée d'amélioration..."
-                  className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
+                  className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
                 />
               </div>
 
@@ -9105,7 +9105,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 <button 
                   type="button" 
                   onClick={() => setIsBetaFeedbackOpen(false)}
-                  className="flex-1 py-3 border border-gray-800 hover:bg-gray-800 rounded-xl text-xs font-bold text-afri-text-sec transition-colors"
+                  className="flex-1 py-3 border border-afri-border hover:bg-afri-bg-ter rounded-xl text-xs font-bold text-afri-text-sec transition-colors"
                 >
                   Annuler
                 </button>
@@ -9219,7 +9219,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             }} className="space-y-4">
               <div>
                 <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Type de Problème</label>
-                <select name="issueType" className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none">
+                <select name="issueType" className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none">
                   <option value="Affichage">📱 Affichage & Interface</option>
                   <option value="Validation">⚖️ Validation & Paiement</option>
                   <option value="Audio">🎵 Audio & Musique</option>
@@ -9234,7 +9234,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   rows={4} 
                   required
                   placeholder="Décrivez précisément le bug rencontré..."
-                  className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
+                  className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
                 />
               </div>
 
@@ -9242,7 +9242,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 <button 
                   type="button" 
                   onClick={() => setIsBugModalOpen(false)}
-                  className="flex-1 py-3 border border-gray-800 hover:bg-gray-800 rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
+                  className="flex-1 py-3 border border-afri-border hover:bg-afri-bg-ter rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
                 >
                   Annuler
                 </button>
@@ -9313,7 +9313,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   rows={4} 
                   required
                   placeholder="Ex: J'aimerais voir un classement par commune..."
-                  className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
+                  className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
                 />
               </div>
 
@@ -9321,7 +9321,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 <button 
                   type="button" 
                   onClick={() => setIsSuggestionModalOpen(false)}
-                  className="flex-1 py-3 border border-gray-800 hover:bg-gray-800 rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
+                  className="flex-1 py-3 border border-afri-border hover:bg-afri-bg-ter rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
                 >
                   Annuler
                 </button>
@@ -9523,7 +9523,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         return (
           <div 
             onClick={() => setSelectedGomboDetails(null)}
-            className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end justify-center z-[100] animate-fadeIn text-left"
+            className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md flex items-end justify-center z-[100] animate-fadeIn text-left"
           >
             <motion.div
               initial={{ y: "100%", opacity: 0 }}
@@ -9579,7 +9579,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     {selectedGomboDetails.type || "Live Direct Showcase"}
                   </span>
                   {selectedGomboDetails.urgent && (
-                    <span className="text-[10px] font-mono font-black uppercase text-white bg-red-600 px-2.5 py-1 rounded-xl shadow-sm animate-pulse">
+                    <span className="text-[10px] font-mono font-black uppercase text-afri-text bg-red-600 px-2.5 py-1 rounded-xl shadow-sm animate-pulse">
                       ⚡ URGENT
                     </span>
                   )}
@@ -10144,7 +10144,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       {/* DISCRETE DEVELOPER VERSION OVERLAY */}
       {supportConfig.isDeveloper(profile) && (
         <div className="fixed bottom-2 right-2 z-[200] opacity-20 hover:opacity-100 transition-opacity pointer-events-none">
-          <div className="bg-black/80 backdrop-blur-md border border-afri-border rounded-lg p-2 text-[8px] font-mono text-afri-text-sec uppercase leading-tight text-right">
+          <div className="bg-afri-bg/80 backdrop-blur-md border border-afri-border rounded-lg p-2 text-[8px] font-mono text-afri-text-sec uppercase leading-tight text-right">
             <div>AFRIGOMBO v{supportConfig.APP_VERSION}</div>
             <div>BUILD: {supportConfig.BUILD_DATE}</div>
             <div className="text-[#D4AF37] font-black">MODE DÉVELOPPEUR ACTIF</div>

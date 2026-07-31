@@ -163,16 +163,16 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
   });
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn text-left font-sans">
-      <div className="w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-5xl bg-zinc-900 sm:border sm:border-zinc-800 sm:rounded-3xl overflow-hidden flex flex-col shadow-2xl relative">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center sm:p-4 bg-afri-bg/80 backdrop-blur-md animate-fadeIn text-left font-sans">
+      <div className="w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-5xl bg-afri-bg-sec sm:border sm:border-afri-border sm:rounded-3xl overflow-hidden flex flex-col shadow-2xl relative">
         
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-zinc-800 flex items-center justify-between bg-zinc-950 relative">
+        <div className="p-4 sm:p-6 border-b border-afri-border flex items-center justify-between bg-afri-bg relative">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 blur-3xl rounded-full pointer-events-none" />
           <div className="flex items-center gap-3 relative z-10">
             <button
               onClick={onClose}
-              className="sm:hidden p-2 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl min-w-[40px] min-h-[40px] flex items-center justify-center active:scale-95 transition-transform"
+              className="sm:hidden p-2 bg-afri-bg-sec border border-afri-border text-afri-text-sec rounded-xl min-w-[40px] min-h-[40px] flex items-center justify-center active:scale-95 transition-transform"
               title="Retour"
               id="avatar-store-back-mobile"
             >
@@ -183,7 +183,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-xl font-black text-white uppercase tracking-wider">
+                <h2 className="text-sm sm:text-xl font-black text-afri-text uppercase tracking-wider">
                   BOUTIQUE AVATAR
                 </h2>
                 <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-mono font-black rounded-full flex items-center gap-1">
@@ -191,7 +191,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
                   Niveau {levelInfo.level} • {levelInfo.title}
                 </span>
               </div>
-              <p className="text-[10px] sm:text-xs text-zinc-400">
+              <p className="text-[10px] sm:text-xs text-afri-text-sec">
                 Gagnez des Gombo Coins, débloquez des raretés et offrez des boubous à vos amis
               </p>
             </div>
@@ -201,17 +201,17 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
             {/* Daily Reward Trigger */}
             <button
               onClick={() => setShowDailyModal(true)}
-              className="px-3 py-2 bg-gradient-to-r from-emerald-500/20 to-[#D4AF37]/20 border border-[#D4AF37]/40 rounded-xl text-xs font-bold text-[#D4AF37] hover:text-white transition flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-2 bg-gradient-to-r from-emerald-500/20 to-[#D4AF37]/20 border border-[#D4AF37]/40 rounded-xl text-xs font-bold text-[#D4AF37] hover:text-afri-text transition flex items-center gap-1.5 cursor-pointer"
             >
               <Gift className="w-4 h-4 text-[#D4AF37] animate-bounce" />
               <span className="hidden sm:inline uppercase">Bonus 🎁</span>
             </button>
 
             {/* Gombo Coins Display */}
-            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-zinc-900 rounded-xl border border-zinc-800">
+            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-afri-bg-sec rounded-xl border border-afri-border">
               <Coins className="w-4 h-4 text-[#D4AF37]" />
               <div className="flex flex-col">
-                <span className="text-[8px] text-zinc-500 font-mono uppercase font-bold">Gombo Coins</span>
+                <span className="text-[8px] text-afri-text-muted font-mono uppercase font-bold">Gombo Coins</span>
                 <span className="text-xs font-mono font-black text-[#D4AF37]">
                   {avatarCoins.toLocaleString("fr-FR")} C
                 </span>
@@ -227,7 +227,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
 
             <button 
               onClick={onClose}
-              className="hidden sm:flex w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 items-center justify-center text-zinc-400 hover:text-white transition cursor-pointer"
+              className="hidden sm:flex w-10 h-10 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border items-center justify-center text-afri-text-sec hover:text-afri-text transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -243,7 +243,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl whitespace-nowrap text-xs font-bold uppercase tracking-wider transition cursor-pointer ${
                 activeCategory === cat.id 
                   ? "bg-[#D4AF37] text-black font-black shadow" 
-                  : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700"
+                  : "bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text hover:border-afri-border"
               }`}
             >
               <span>{cat.icon}</span>
@@ -263,23 +263,23 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
               {errorMsg ? <AlertCircle className="w-4 h-4 shrink-0" /> : <CheckCircle2 className="w-4 h-4 shrink-0" />}
               <span>{errorMsg || successMsg}</span>
             </div>
-            <button onClick={() => { setErrorMsg(null); setSuccessMsg(null); }} className="text-zinc-500 hover:text-white">
+            <button onClick={() => { setErrorMsg(null); setSuccessMsg(null); }} className="text-afri-text-muted hover:text-afri-text">
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
         {/* Store Items Grid */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 scrollbar-none bg-zinc-900/50">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 scrollbar-none bg-afri-bg-sec">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3 text-zinc-500 font-mono text-xs">
+            <div className="flex flex-col items-center justify-center py-20 gap-3 text-afri-text-muted font-mono text-xs">
               <div className="w-8 h-8 border-3 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
               <span>Chargement de la Boutique Économique...</span>
             </div>
           ) : filteredItems.length === 0 ? (
-            <div className="text-center py-20 bg-zinc-950 border border-zinc-800 rounded-3xl space-y-3">
+            <div className="text-center py-20 bg-afri-bg border border-afri-border rounded-3xl space-y-3">
               <ShoppingBag className="w-10 h-10 text-zinc-600 mx-auto" />
-              <p className="text-zinc-400 font-bold text-xs">Aucun article disponible dans cette catégorie.</p>
+              <p className="text-afri-text-sec font-bold text-xs">Aucun article disponible dans cette catégorie.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -298,17 +298,17 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
                     animate={{ opacity: 1, scale: 1 }}
                     className={`relative p-4 rounded-3xl border flex flex-col justify-between gap-3 transition ${
                       isEquipped
-                        ? "bg-zinc-900 border-[#D4AF37] shadow-lg shadow-[#D4AF37]/5"
+                        ? "bg-afri-bg-sec border-[#D4AF37] shadow-lg shadow-[#D4AF37]/5"
                         : item.isLimited
                           ? "bg-gradient-to-br from-amber-950/30 via-zinc-900 to-zinc-900 border-amber-500/50"
                           : isPremiumItem 
                             ? "bg-gradient-to-br from-zinc-900 via-zinc-900 to-[#D4AF37]/10 border-[#D4AF37]/40" 
-                            : "bg-zinc-950 border-zinc-800 hover:border-zinc-700"
+                            : "bg-afri-bg border-afri-border hover:border-afri-border"
                     }`}
                   >
                     {/* Item Image / SVG Visual */}
                     <div className="space-y-3">
-                      <div className="relative aspect-square w-full bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden flex items-center justify-center p-3 group">
+                      <div className="relative aspect-square w-full bg-afri-bg-sec rounded-2xl border border-afri-border overflow-hidden flex items-center justify-center p-3 group">
                         {item.imageUrl || item.previewImage || item.assetUrl ? (
                           <img
                             src={item.imageUrl || item.previewImage || item.assetUrl}
@@ -337,7 +337,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
                             </span>
                           )}
                           {item.rarity && (
-                            <span className="px-2 py-0.5 bg-zinc-900/90 text-zinc-300 border border-zinc-700 text-[8px] font-mono font-bold rounded-full">
+                            <span className="px-2 py-0.5 bg-afri-bg-sec text-afri-text-sec border border-afri-border text-[8px] font-mono font-bold rounded-full">
                               {item.rarity}
                             </span>
                           )}
@@ -350,11 +350,11 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
                               ✓ Équipé
                             </span>
                           ) : isOwned ? (
-                            <span className="px-2 py-0.5 bg-zinc-800 text-zinc-300 border border-zinc-700 font-bold text-[8px] uppercase rounded-full">
+                            <span className="px-2 py-0.5 bg-afri-bg-ter text-afri-text-sec border border-afri-border font-bold text-[8px] uppercase rounded-full">
                               Possédé
                             </span>
                           ) : isLevelLocked ? (
-                            <span className="px-2 py-0.5 bg-rose-500/80 text-white font-mono font-bold text-[8px] uppercase rounded-full">
+                            <span className="px-2 py-0.5 bg-rose-500/80 text-afri-text font-mono font-bold text-[8px] uppercase rounded-full">
                               Niveau {item.requiredLevel} requis
                             </span>
                           ) : null}
@@ -372,11 +372,11 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
                             {item.price.toLocaleString("fr-FR")} C
                           </span>
                         </div>
-                        <h4 className="text-xs font-black text-white uppercase tracking-tight mt-0.5 line-clamp-1">
+                        <h4 className="text-xs font-black text-afri-text uppercase tracking-tight mt-0.5 line-clamp-1">
                           {item.name}
                         </h4>
                         {item.description && (
-                          <p className="text-[11px] text-zinc-400 line-clamp-2 mt-1 font-sans">
+                          <p className="text-[11px] text-afri-text-sec line-clamp-2 mt-1 font-sans">
                             {item.description}
                           </p>
                         )}
@@ -392,7 +392,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
                             disabled={equipping === item.id}
                             className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 ${
                               isEquipped
-                                ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700"
+                                ? "bg-afri-bg-ter text-afri-text-sec hover:bg-zinc-700 border border-afri-border"
                                 : "bg-[#D4AF37] text-black hover:bg-white shadow"
                             }`}
                           >
@@ -413,7 +413,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
 
                           <button
                             onClick={() => setGiftingItem(item)}
-                            className="p-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-[#D4AF37] rounded-xl transition cursor-pointer"
+                            className="p-2.5 bg-afri-bg-ter hover:bg-zinc-700 border border-afri-border text-[#D4AF37] rounded-xl transition cursor-pointer"
                             title="Offrir cet article à un ami"
                           >
                             <Gift className="w-4 h-4" />
@@ -426,14 +426,14 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
                             disabled={purchasing === item.id || (!isAffordable && !isOwned) || isLevelLocked}
                             className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 ${
                               purchasing === item.id
-                                ? "bg-zinc-800 text-zinc-400"
+                                ? "bg-afri-bg-ter text-afri-text-sec"
                                 : !isAffordable || isLevelLocked
-                                  ? "bg-zinc-800/60 text-zinc-500 border border-zinc-800 cursor-not-allowed"
+                                  ? "bg-zinc-800/60 text-afri-text-muted border border-afri-border cursor-not-allowed"
                                   : "bg-[#D4AF37] text-black hover:bg-white shadow"
                             }`}
                           >
                             {purchasing === item.id ? (
-                              <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                              <span className="w-3.5 h-3.5 border-2 border-afri-border border-t-transparent rounded-full animate-spin" />
                             ) : (
                               <>
                                 <ShoppingBag className="w-3.5 h-3.5" />
@@ -444,7 +444,7 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
 
                           <button
                             onClick={() => setGiftingItem(item)}
-                            className="p-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-[#D4AF37] rounded-xl transition cursor-pointer"
+                            className="p-2.5 bg-afri-bg-ter hover:bg-zinc-700 border border-afri-border text-[#D4AF37] rounded-xl transition cursor-pointer"
                             title="Offrir en cadeau à un ami"
                           >
                             <Gift className="w-4 h-4" />

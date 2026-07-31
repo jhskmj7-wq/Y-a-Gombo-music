@@ -822,7 +822,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             initial={{ opacity: 0, y: -20, x: "-50%" }}
             animate={{ opacity: 1, y: 0, x: "-50%" }}
             exit={{ opacity: 0, y: -20, x: "-50%" }}
-            className="fixed top-20 left-1/2 z-55 bg-zinc-900 border border-[#D4AF37] text-white px-6 py-3.5 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold"
+            className="fixed top-20 left-1/2 z-55 bg-afri-bg-sec border border-[#D4AF37] text-afri-text px-6 py-3.5 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold"
           >
             <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
             <span>{toastMsg}</span>
@@ -839,17 +839,17 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                 <Wallet className="w-6 h-6" />
               </span>
               <div>
-                <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider">
+                <h2 className="text-lg sm:text-xl font-black text-afri-text uppercase tracking-wider">
                   CENTRE DE VALIDATION DES TRANSACTIONS BÊTA
                 </h2>
-                <p className="text-[10px] sm:text-xs text-zinc-400">
+                <p className="text-[10px] sm:text-xs text-afri-text-sec">
                   Gérez souverainement et en temps réel l'ensemble des rechargements et des retraits Mobile Money
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 bg-black/60 border border-neutral-850 px-4 py-2 rounded-2xl text-[10px] font-mono text-zinc-400">
+          <div className="flex items-center gap-2.5 bg-afri-bg/60 border border-neutral-850 px-4 py-2 rounded-2xl text-[10px] font-mono text-afri-text-sec">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>Souveraineté Financière Active</span>
           </div>
@@ -860,13 +860,13 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
       <div className="flex flex-col xl:flex-row gap-4 items-stretch justify-between">
         {/* Recherche */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-afri-text-muted" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Rechercher par membre, GOMBO ID, référence, UID..."
-            className="w-full pl-11 pr-4 py-3 bg-neutral-950 border border-neutral-850 focus:border-[#D4AF37]/60 rounded-2xl text-xs text-white outline-none placeholder:text-zinc-600 transition-all"
+            className="w-full pl-11 pr-4 py-3 bg-afri-bg border border-neutral-850 focus:border-[#D4AF37]/60 rounded-2xl text-xs text-afri-text outline-none placeholder:text-zinc-600 transition-all"
           />
         </div>
 
@@ -884,12 +884,12 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               onClick={() => setSelectedStatusFilter(f.id)}
               className={`px-3.5 py-2 rounded-xl text-[11px] font-mono font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                 selectedStatusFilter === f.id
-                  ? "bg-[#D4AF37] text-black font-black shadow-lg"
-                  : "bg-neutral-900 border border-neutral-850 text-zinc-400 hover:text-white"
+                  ? "bg-[#D4AF37] text-afri-text font-black shadow-lg"
+                  : "bg-afri-bg-sec border border-neutral-850 text-afri-text-sec hover:text-afri-text"
               }`}
             >
               <span>{f.label}</span>
-              <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${selectedStatusFilter === f.id ? "bg-black/20 text-black font-black" : "bg-black/40 text-zinc-500"}`}>
+              <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${selectedStatusFilter === f.id ? "bg-afri-bg/20 text-afri-text font-black" : "bg-afri-bg/40 text-afri-text-muted"}`}>
                 {f.count}
               </span>
             </button>
@@ -899,14 +899,14 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
 
       {/* Liste des requêtes */}
       {loading ? (
-        <div className="p-16 text-center bg-neutral-950 border border-neutral-850 rounded-3xl space-y-3">
+        <div className="p-16 text-center bg-afri-bg border border-neutral-850 rounded-3xl space-y-3">
           <RefreshCw className="w-8 h-8 text-[#D4AF37] animate-spin mx-auto" />
-          <p className="text-xs text-zinc-500 font-mono">Lecture et synchronisation de l'arbre à palabre financier...</p>
+          <p className="text-xs text-afri-text-muted font-mono">Lecture et synchronisation de l'arbre à palabre financier...</p>
         </div>
       ) : filteredRequests.length === 0 ? (
-        <div className="p-14 text-center bg-neutral-950 border border-neutral-850 rounded-3xl space-y-3">
+        <div className="p-14 text-center bg-afri-bg border border-neutral-850 rounded-3xl space-y-3">
           <Wallet className="w-10 h-10 text-zinc-700 mx-auto" />
-          <p className="text-sm font-bold text-zinc-400">Aucune demande ne correspond à vos filtres actuels.</p>
+          <p className="text-sm font-bold text-afri-text-sec">Aucune demande ne correspond à vos filtres actuels.</p>
           <p className="text-xs text-zinc-600">Toutes les recharges et retraits sont synchronisés en temps réel via Firestore.</p>
         </div>
       ) : (
@@ -929,7 +929,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                   setPendingAction(null);
                   setActionComment("");
                 }}
-                className="bg-neutral-950 border border-neutral-850 hover:border-[#D4AF37]/50 rounded-3xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all shadow-md cursor-pointer group"
+                className="bg-afri-bg border border-neutral-850 hover:border-[#D4AF37]/50 rounded-3xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all shadow-md cursor-pointer group"
               >
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow transition-transform group-hover:scale-105 shrink-0 ${
@@ -942,7 +942,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
 
                   <div className="space-y-1.5 text-left">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-sm font-black text-white uppercase tracking-tight">{req.userName}</h4>
+                      <h4 className="text-sm font-black text-afri-text uppercase tracking-tight">{req.userName}</h4>
                       <span className={`text-[8px] font-mono px-2 py-0.5 rounded border font-bold ${
                         isDeposit 
                           ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
@@ -952,12 +952,12 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-[10px] font-mono text-zinc-500 flex-wrap">
+                    <div className="flex items-center gap-3 text-[10px] font-mono text-afri-text-muted flex-wrap">
                       {req.reference && (
-                        <span>Réf : <strong className="text-zinc-300 font-bold">{req.reference}</strong></span>
+                        <span>Réf : <strong className="text-afri-text-sec font-bold">{req.reference}</strong></span>
                       )}
                       {(req.numero || req.phoneNumber) && (
-                        <span>Dest : <strong className="text-zinc-300 font-bold">{req.numero || req.phoneNumber}</strong></span>
+                        <span>Dest : <strong className="text-afri-text-sec font-bold">{req.numero || req.phoneNumber}</strong></span>
                       )}
                       <span>{dateStr} à {timeStr}</span>
                     </div>
@@ -980,7 +980,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                     </span>
                   </div>
 
-                  <div className="px-2.5 py-1.5 bg-neutral-900 border border-neutral-800 text-[#D4AF37] rounded-xl text-[10px] font-bold font-mono group-hover:bg-[#D4AF37]/10 group-hover:text-white transition-all">
+                  <div className="px-2.5 py-1.5 bg-afri-bg-sec border border-afri-border text-[#D4AF37] rounded-xl text-[10px] font-bold font-mono group-hover:bg-[#D4AF37]/10 group-hover:text-afri-text transition-all">
                     Ouvrir →
                   </div>
                 </div>
@@ -995,7 +995,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
            ========================================================= */}
       <AnimatePresence>
         {selectedRequest && (
-          <div className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[9999] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-afri-bg/45 backdrop-blur-[2px] z-[9999] flex items-center justify-center p-4">
             
             {/* Overlay background for closing on click outside */}
             <div 
@@ -1011,7 +1011,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.2 }}
-              className="w-[92%] max-w-[480px] max-h-[85vh] h-auto bg-[#08080a] border border-neutral-800 rounded-[24px] flex flex-col overflow-hidden relative shadow-2xl z-20"
+              className="w-[92%] max-w-[480px] max-h-[85vh] h-auto bg-[#08080a] border border-afri-border rounded-[24px] flex flex-col overflow-hidden relative shadow-2xl z-20"
             >
               
               {/* Android Pill Handle */}
@@ -1022,7 +1022,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                     setSelectedRequest(null);
                     setPendingAction(null);
                   }}
-                  className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs bg-neutral-900 px-3 py-1 rounded-xl font-mono"
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-afri-text-muted hover:text-afri-text text-xs bg-afri-bg-sec px-3 py-1 rounded-xl font-mono"
                 >
                   Fermer ✕
                 </button>
@@ -1032,10 +1032,10 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 scrollbar-none text-left">
                 
                 {/* Header de la Fiche */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-neutral-950 p-4 rounded-2xl border border-neutral-900">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-afri-bg p-4 rounded-2xl border border-neutral-900">
                   <div className="flex items-center gap-4">
                     {/* Photo Utilisateur */}
-                    <div className="w-14 h-14 rounded-2xl border border-neutral-800 overflow-hidden shrink-0 bg-neutral-900 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-2xl border border-afri-border overflow-hidden shrink-0 bg-afri-bg-sec flex items-center justify-center">
                       {(selectedReqUser?.photoURL || selectedReqUser?.photoUrl || selectedRequest.userPhoto) ? (
                         <img 
                           referrerPolicy="no-referrer"
@@ -1049,7 +1049,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-2">
+                      <h3 className="text-base font-black text-afri-text uppercase tracking-tight flex items-center gap-2">
                         <span>{selectedReqUser?.displayName || selectedRequest.userName}</span>
                         {selectedReqUser?.isPremium && (
                           <span className="text-[7.5px] font-black bg-amber-500/15 text-[#D4AF37] px-2 py-0.5 rounded border border-[#D4AF37]/30 tracking-widest">
@@ -1057,12 +1057,12 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                           </span>
                         )}
                       </h3>
-                      <p className="text-[10px] text-zinc-500 font-mono">UID : {selectedRequest.uid}</p>
+                      <p className="text-[10px] text-afri-text-muted font-mono">UID : {selectedRequest.uid}</p>
                     </div>
                   </div>
 
                   <div className="text-left sm:text-right shrink-0">
-                    <span className="text-[10px] font-mono text-zinc-500 uppercase block tracking-wider">Montant de la Transaction</span>
+                    <span className="text-[10px] font-mono text-afri-text-muted uppercase block tracking-wider">Montant de la Transaction</span>
                     <span className={`text-xl font-mono font-black block ${selectedRequest.type === "deposit" ? "text-emerald-400" : "text-amber-500"}`}>
                       {selectedRequest.type === "deposit" ? "+" : "-"}{selectedRequest.montant.toLocaleString('fr-FR')} FCFA
                     </span>
@@ -1072,7 +1072,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                 {/* Section Informations Complètes */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Détails Financiers */}
-                  <div className="bg-neutral-950 p-4 rounded-2xl border border-neutral-900 space-y-3.5">
+                  <div className="bg-afri-bg p-4 rounded-2xl border border-neutral-900 space-y-3.5">
                     <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest pb-1 border-b border-neutral-900">
                       Spécifications de la Demande
                     </h4>
@@ -1080,13 +1080,13 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                     <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs font-mono">
                       <div>
                         <span className="text-zinc-600 block text-[9px] uppercase">GOMBO ID</span>
-                        <span className="text-zinc-300 font-bold">
+                        <span className="text-afri-text-sec font-bold">
                           {typeof selectedReqUser?.gomboId === 'object' ? selectedReqUser.gomboId.id : (selectedReqUser?.gomboId || typeof selectedRequest.gomboId === 'object' ? (selectedRequest.gomboId as any).id : selectedRequest.gomboId || "Non renseigné")}
                         </span>
                       </div>
                       <div>
                         <span className="text-zinc-600 block text-[9px] uppercase">AFRI ID</span>
-                        <span className="text-zinc-300 font-bold">
+                        <span className="text-afri-text-sec font-bold">
                           {typeof selectedReqUser?.afriId === 'object' ? (selectedReqUser.afriId as any).id : (selectedReqUser?.afriId || typeof selectedRequest.afriId === 'object' ? (selectedRequest.afriId as any).id : selectedRequest.afriId || "Non renseigné")}
                         </span>
                       </div>
@@ -1098,25 +1098,25 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                       </div>
                       <div>
                         <span className="text-zinc-600 block text-[9px] uppercase">Moyen de Paiement</span>
-                        <span className="text-zinc-300 font-bold">{selectedRequest.operator || "Mobile Money"}</span>
+                        <span className="text-afri-text-sec font-bold">{selectedRequest.operator || "Mobile Money"}</span>
                       </div>
                       <div>
                         <span className="text-zinc-600 block text-[9px] uppercase">Référence</span>
-                        <span className="text-zinc-300 font-bold select-all">{selectedRequest.reference || selectedRequest.id}</span>
+                        <span className="text-afri-text-sec font-bold select-all">{selectedRequest.reference || selectedRequest.id}</span>
                       </div>
                       <div>
                         <span className="text-zinc-600 block text-[9px] uppercase">Numéro Dist.</span>
-                        <span className="text-zinc-300 font-bold">{selectedRequest.numero || selectedRequest.phoneNumber || "N/A"}</span>
+                        <span className="text-afri-text-sec font-bold">{selectedRequest.numero || selectedRequest.phoneNumber || "N/A"}</span>
                       </div>
                       <div>
                         <span className="text-zinc-600 block text-[9px] uppercase">Date de création</span>
-                        <span className="text-zinc-400">
+                        <span className="text-afri-text-sec">
                           {selectedRequest.createdAt ? new Date(selectedRequest.createdAt).toLocaleDateString("fr-FR") : "--"}
                         </span>
                       </div>
                       <div>
                         <span className="text-zinc-600 block text-[9px] uppercase">Heure de création</span>
-                        <span className="text-zinc-400">
+                        <span className="text-afri-text-sec">
                           {selectedRequest.createdAt ? new Date(selectedRequest.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "--"}
                         </span>
                       </div>
@@ -1124,7 +1124,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                   </div>
 
                   {/* Solde Live du Membre */}
-                  <div className="bg-neutral-950 p-4 rounded-2xl border border-neutral-900 flex flex-col justify-between space-y-4">
+                  <div className="bg-afri-bg p-4 rounded-2xl border border-neutral-900 flex flex-col justify-between space-y-4">
                     <div className="space-y-3">
                       <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest pb-1 border-b border-neutral-900">
                         État de Caisse du Membre (Live)
@@ -1132,7 +1132,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                       <div className="flex items-center gap-3">
                         <Coins className="w-5 h-5 text-emerald-400 shrink-0" />
                         <div>
-                          <span className="text-[9px] text-zinc-500 block uppercase font-mono">Solde Disponible Actuel</span>
+                          <span className="text-[9px] text-afri-text-muted block uppercase font-mono">Solde Disponible Actuel</span>
                           <span className="text-xl font-mono font-black text-emerald-400">
                             {(selectedReqUser?.wallet?.soldeDisponible ?? 0).toLocaleString('fr-FR')} FCFA
                           </span>
@@ -1140,21 +1140,21 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                       </div>
                     </div>
 
-                    <div className="bg-neutral-900/60 p-3 rounded-xl border border-neutral-850 text-[10px] font-mono text-zinc-400 space-y-1">
-                      <p>• Dépôts Cumulés : <strong className="text-white">{(selectedReqUser?.wallet?.depots ?? 0).toLocaleString('fr-FR')} FCFA</strong></p>
-                      <p>• Retraits Cumulés : <strong className="text-white">{(selectedReqUser?.wallet?.retraits ?? 0).toLocaleString('fr-FR')} FCFA</strong></p>
+                    <div className="bg-neutral-900/60 p-3 rounded-xl border border-neutral-850 text-[10px] font-mono text-afri-text-sec space-y-1">
+                      <p>• Dépôts Cumulés : <strong className="text-afri-text">{(selectedReqUser?.wallet?.depots ?? 0).toLocaleString('fr-FR')} FCFA</strong></p>
+                      <p>• Retraits Cumulés : <strong className="text-afri-text">{(selectedReqUser?.wallet?.retraits ?? 0).toLocaleString('fr-FR')} FCFA</strong></p>
                     </div>
                   </div>
                 </div>
 
                 {/* Preuve de Paiement (Capture) */}
-                <div className="bg-neutral-950 p-4 rounded-2xl border border-neutral-900 space-y-3">
+                <div className="bg-afri-bg p-4 rounded-2xl border border-neutral-900 space-y-3">
                   <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest pb-1 border-b border-neutral-900">
                     Capture de Preuve (si disponible)
                   </h4>
                   {selectedRequest.preuveUrl ? (
                     <div className="space-y-2">
-                      <div className="w-full max-h-80 rounded-xl overflow-hidden border border-neutral-800 bg-black relative group">
+                      <div className="w-full max-h-80 rounded-xl overflow-hidden border border-afri-border bg-afri-bg relative group">
                         <img 
                           referrerPolicy="no-referrer"
                           src={selectedRequest.preuveUrl} 
@@ -1175,16 +1175,16 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                       </div>
                     </div>
                   ) : (
-                    <div className="p-6 text-center border border-dashed border-neutral-800 rounded-xl space-y-1.5">
+                    <div className="p-6 text-center border border-dashed border-afri-border rounded-xl space-y-1.5">
                       <AlertCircle className="w-6 h-6 text-zinc-600 mx-auto" />
-                      <p className="text-[11px] font-mono text-zinc-500">Aucun fichier image de preuve attaché directement à la demande.</p>
+                      <p className="text-[11px] font-mono text-afri-text-muted">Aucun fichier image de preuve attaché directement à la demande.</p>
                       <p className="text-[9px] text-zinc-600">Le membre peut transmettre sa preuve de virement via le chat d'Arbre à Palabres.</p>
                     </div>
                   )}
                 </div>
 
                 {/* HISTORIQUE DES ACTIONS (JOURNAL TEMPS RÉEL) */}
-                <div className="bg-neutral-950 p-4 rounded-2xl border border-neutral-900 space-y-4">
+                <div className="bg-afri-bg p-4 rounded-2xl border border-neutral-900 space-y-4">
                   <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest pb-1 border-b border-neutral-900">
                     Historique Souverain des Actions
                   </h4>
@@ -1200,20 +1200,20 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                               log.action === "VALIDATION" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
                               log.action === "REFUS" ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" :
                               log.action === "MISE_EN_ATTENTE" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
-                              "bg-zinc-800 text-zinc-400"
+                              "bg-afri-bg-ter text-afri-text-sec"
                             }`}>
                               {log.action}
                             </span>
                             <span className="text-zinc-600 text-[9px]">{log.date} à {log.heure}</span>
                           </div>
                           
-                          <p className="text-zinc-300 leading-relaxed">
+                          <p className="text-afri-text-sec leading-relaxed">
                             {log.comment || "(Aucun commentaire enregistré)"}
                           </p>
 
-                          <div className="text-[9px] text-zinc-500 flex justify-between pt-1 border-t border-neutral-900">
-                            <span>Par : <strong className="text-zinc-400">{log.founderName}</strong></span>
-                            <span>Statut : <strong className="text-zinc-400">{log.oldStatus} ➔ {log.newStatus}</strong></span>
+                          <div className="text-[9px] text-afri-text-muted flex justify-between pt-1 border-t border-neutral-900">
+                            <span>Par : <strong className="text-afri-text-sec">{log.founderName}</strong></span>
+                            <span>Statut : <strong className="text-afri-text-sec">{log.oldStatus} ➔ {log.newStatus}</strong></span>
                           </div>
                         </div>
                       ))}
@@ -1247,13 +1247,13 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                           setPendingAction(null);
                           setActionComment("");
                         }}
-                        className="text-zinc-500 hover:text-white font-mono text-[10px]"
+                        className="text-afri-text-muted hover:text-afri-text font-mono text-[10px]"
                       >
                         Annuler
                       </button>
                     </div>
 
-                    <p className="text-[11px] font-sans text-zinc-400">
+                    <p className="text-[11px] font-sans text-afri-text-sec">
                       {pendingAction === "VALIDATE" && "Cette action mettra instantanément à jour le solde du Wallet de l'utilisateur, créera un enregistrement comptable et enverra une notification de confirmation."}
                       {pendingAction === "REFUSE" && "Veuillez spécifier le motif du refus. Cette information sera directement notifiée au membre de l'Arbre à Palabre."}
                       {pendingAction === "PENDING" && "Le statut sera remis à 'en attente'. Aucun fonds ne sera mouvementé."}
@@ -1273,7 +1273,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                             : "Entrez un commentaire pour le journal d'administration..."
                         }
                         rows={2}
-                        className="w-full bg-neutral-950 border border-neutral-800 focus:border-[#D4AF37]/40 rounded-xl p-3 text-xs text-white font-mono outline-none placeholder:text-zinc-700"
+                        className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37]/40 rounded-xl p-3 text-xs text-afri-text font-mono outline-none placeholder:text-zinc-700"
                       />
                     </div>
 
@@ -1283,16 +1283,16 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                           setPendingAction(null);
                           setActionComment("");
                         }}
-                        className="flex-1 py-3 bg-neutral-900 border border-neutral-850 hover:bg-neutral-850 text-white rounded-xl text-xs font-mono font-bold uppercase transition-colors"
+                        className="flex-1 py-3 bg-afri-bg-sec border border-neutral-850 hover:bg-neutral-850 text-afri-text rounded-xl text-xs font-mono font-bold uppercase transition-colors"
                       >
                         Annuler
                       </button>
                       <button
                         onClick={handleActionExecute}
                         disabled={actionLoading || (pendingAction === "REFUSE" && !actionComment.trim())}
-                        className={`flex-1 py-3 text-black font-black rounded-xl text-xs font-mono uppercase shadow-lg transition-colors flex items-center justify-center gap-1.5 ${
+                        className={`flex-1 py-3 text-afri-text font-black rounded-xl text-xs font-mono uppercase shadow-lg transition-colors flex items-center justify-center gap-1.5 ${
                           pendingAction === "VALIDATE" ? "bg-emerald-400 hover:bg-emerald-300" :
-                          pendingAction === "REFUSE" ? "bg-rose-500 hover:bg-rose-400 text-white" :
+                          pendingAction === "REFUSE" ? "bg-rose-500 hover:bg-rose-400 text-afri-text" :
                           "bg-[#D4AF37] hover:bg-[#D4AF37]/80"
                         } disabled:opacity-40`}
                       >
@@ -1309,13 +1309,13 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
 
               {/* Actions Footer de la Fiche (Masqué si une confirmation d'action est en cours) */}
               {!pendingAction && (
-                <div className="p-4 sm:p-5 bg-neutral-950 border-t border-neutral-900 grid grid-cols-2 xs:grid-cols-4 gap-2 shrink-0 z-10">
+                <div className="p-4 sm:p-5 bg-afri-bg border-t border-neutral-900 grid grid-cols-2 xs:grid-cols-4 gap-2 shrink-0 z-10">
                   <button
                     onClick={() => {
                       setPendingAction("VALIDATE");
                       setActionComment("");
                     }}
-                    className="py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow flex items-center justify-center gap-1.5 active:scale-98"
+                    className="py-3 bg-emerald-600 hover:bg-emerald-500 text-afri-text text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow flex items-center justify-center gap-1.5 active:scale-98"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Valider</span>
@@ -1326,7 +1326,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                       setPendingAction("REFUSE");
                       setActionComment("");
                     }}
-                    className="py-3 bg-rose-600 hover:bg-rose-500 text-white text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow flex items-center justify-center gap-1.5 active:scale-98"
+                    className="py-3 bg-rose-600 hover:bg-rose-500 text-afri-text text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow flex items-center justify-center gap-1.5 active:scale-98"
                   >
                     <XCircle className="w-4 h-4" />
                     <span>Refuser</span>
@@ -1337,7 +1337,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                       setPendingAction("PENDING");
                       setActionComment("");
                     }}
-                    className="py-3 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-zinc-300 text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
+                    className="py-3 bg-afri-bg-sec hover:bg-neutral-850 border border-afri-border text-afri-text-sec text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
                   >
                     <Clock className="w-4 h-4" />
                     <span>Attente</span>
@@ -1348,7 +1348,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                       setPendingAction("ADD_NOTE");
                       setActionComment("");
                     }}
-                    className="py-3 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-[#D4AF37] text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
+                    className="py-3 bg-afri-bg-sec hover:bg-neutral-850 border border-afri-border text-[#D4AF37] text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
                   >
                     <FileText className="w-4 h-4" />
                     <span>Note</span>

@@ -1729,7 +1729,7 @@ function ContractChatRoomModal({
                     {msg.attachments && msg.attachments.length > 0 && (
                       <div className="space-y-2 pt-2 border-t border-afri-border/40">
                         {msg.attachments.map((att) => (
-                          <div key={att.id} className="rounded-xl overflow-hidden bg-black/20 p-2 border border-afri-border/50">
+                          <div key={att.id} className="rounded-xl overflow-hidden bg-afri-bg/20 p-2 border border-afri-border/50">
                             {att.type === "photo" && (
                               <img referrerPolicy="no-referrer" src={att.url} alt={att.name} className="w-full max-h-48 object-cover rounded-lg" />
                             )}

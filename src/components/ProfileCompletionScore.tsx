@@ -73,7 +73,7 @@ export const ProfileCompletionScore: React.FC<ProfileCompletionScoreProps> = ({
   }
 
   return (
-    <div id="section-profile-completeness" className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm space-y-4">
+    <div id="section-profile-completeness" className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-afri-border rounded-3xl p-5 shadow-sm space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h3 className="text-xs font-black uppercase text-afri-text-sec tracking-wider">📈 Score de Complétude du Profil PRO</h3>
@@ -113,7 +113,7 @@ export const ProfileCompletionScore: React.FC<ProfileCompletionScoreProps> = ({
                 key={idx}
                 type="button"
                 onClick={onEdit}
-                className="px-3 py-1.5 bg-gray-50 hover:bg-afri-bg-sec/5 dark:bg-afri-bg-sec dark:hover:bg-afri-bg-sec/10 border border-gray-150 dark:border-afri-border text-gray-650 dark:text-gray-300 rounded-xl text-[10px] font-bold flex items-center gap-1.5 transition-all text-left cursor-pointer"
+                className="px-3 py-1.5 bg-gray-50 hover:bg-afri-bg-sec/5 dark:bg-afri-bg-sec dark:hover:bg-afri-bg-sec/10 border border-gray-150 dark:border-afri-border text-gray-650 dark:text-afri-text-sec rounded-xl text-[10px] font-bold flex items-center gap-1.5 transition-all text-left cursor-pointer"
               >
                 <span className="text-[#D4AF37] font-extrabold">{it.bonus}</span>
                 <span>{it.name}</span>

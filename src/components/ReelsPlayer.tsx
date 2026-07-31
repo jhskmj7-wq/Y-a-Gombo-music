@@ -285,7 +285,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black text-white font-sans overflow-hidden flex flex-col h-[100dvh] w-screen">
+    <div className="fixed inset-0 z-[100] bg-afri-bg text-afri-text font-sans overflow-hidden flex flex-col h-[100dvh] w-screen">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[120] bg-[#D4AF37] text-black font-mono font-black text-xs px-4 py-2 rounded-full shadow-2xl animate-bounce border border-black/20">
@@ -297,7 +297,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       <div className="absolute top-0 left-0 right-0 z-50 p-4 pt-4 flex items-center justify-between bg-gradient-to-b from-black/90 via-black/40 to-transparent">
         <button 
           onClick={onClose}
-          className="p-2.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 active:scale-95 transition cursor-pointer"
+          className="p-2.5 rounded-full bg-afri-bg/50 backdrop-blur-md border border-afri-border text-afri-text hover:bg-white/20 active:scale-95 transition cursor-pointer"
           title="Fermer le Fil Réel"
         >
           <ChevronLeft className="w-6 h-6" />
@@ -313,7 +313,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
           {/* Sound Toggle */}
           <button 
             onClick={() => setIsMuted(!isMuted)}
-            className="p-2.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 active:scale-95 transition cursor-pointer"
+            className="p-2.5 rounded-full bg-afri-bg/50 backdrop-blur-md border border-afri-border text-afri-text hover:bg-white/20 active:scale-95 transition cursor-pointer"
             title={isMuted ? "Activer le son" : "Couper le son"}
           >
             {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5 text-emerald-400" />}
@@ -346,7 +346,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
           return (
             <div 
               key={reel.id} 
-              className="relative w-full h-[100dvh] snap-start bg-black flex justify-center items-center overflow-hidden shrink-0"
+              className="relative w-full h-[100dvh] snap-start bg-afri-bg flex justify-center items-center overflow-hidden shrink-0"
             >
               {/* VIDEO PLAYER LAYER (Render video tag only for active or next item for max performance) */}
               {isActive || isNext ? (
@@ -361,9 +361,9 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   onClick={() => setIsMuted(!isMuted)}
                 />
               ) : (
-                <div className="w-full h-full bg-zinc-900 flex items-center justify-center relative">
+                <div className="w-full h-full bg-afri-bg-sec flex items-center justify-center relative">
                   <img src={reel.authorAvatar} alt="" className="w-full h-full object-cover opacity-30 blur-lg" />
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-afri-bg/60 flex items-center justify-center">
                     <Music className="w-12 h-12 text-[#D4AF37]/40 animate-pulse" />
                   </div>
                 </div>
@@ -373,20 +373,20 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/40 pointer-events-none" />
 
               {/* RIGHT INTERACTION SIDEBAR */}
-              <div className="absolute bottom-16 right-3 sm:right-5 z-40 flex flex-col items-center gap-4 text-white">
+              <div className="absolute bottom-16 right-3 sm:right-5 z-40 flex flex-col items-center gap-4 text-afri-text">
                 {/* Author Avatar + Follow Button */}
                 <div className="relative mb-2">
                   <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#D4AF37] to-amber-200 shadow-xl overflow-hidden">
                     <img 
                       src={reel.authorAvatar} 
                       alt={reel.authorName}
-                      className="w-full h-full rounded-full object-cover bg-black"
+                      className="w-full h-full rounded-full object-cover bg-afri-bg"
                     />
                   </div>
                   <button 
                     onClick={() => handleToggleFollow(reel.userId)}
                     className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full p-1 shadow-lg transition-transform active:scale-90 ${
-                      isFollowing ? "bg-emerald-500 text-white" : "bg-[#D4AF37] text-black"
+                      isFollowing ? "bg-emerald-500 text-afri-text" : "bg-[#D4AF37] text-black"
                     }`}
                     title={isFollowing ? "Abonné" : "Suivre l'artiste"}
                   >
@@ -400,12 +400,12 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   className="flex flex-col items-center gap-1 group cursor-pointer"
                   title="Honorer ce réel"
                 >
-                  <div className={`p-3 rounded-full bg-black/40 backdrop-blur-md border transition-transform group-active:scale-75 ${
-                    reel.isLiked ? "border-red-500/80 bg-red-500/20" : "border-white/20 hover:bg-white/20"
+                  <div className={`p-3 rounded-full bg-afri-bg/40 backdrop-blur-md border transition-transform group-active:scale-75 ${
+                    reel.isLiked ? "border-red-500/80 bg-red-500/20" : "border-afri-border hover:bg-white/20"
                   }`}>
-                    <Heart className={`w-6 h-6 transition-colors ${reel.isLiked ? "text-red-500 fill-current" : "text-white"}`} />
+                    <Heart className={`w-6 h-6 transition-colors ${reel.isLiked ? "text-red-500 fill-current" : "text-afri-text"}`} />
                   </div>
-                  <span className="text-[10px] font-mono font-black text-white drop-shadow-md">
+                  <span className="text-[10px] font-mono font-black text-afri-text drop-shadow-md">
                     {reel.likesCount}
                   </span>
                 </button>
@@ -416,10 +416,10 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   className="flex flex-col items-center gap-1 group cursor-pointer"
                   title="Ouvrir les Palabres"
                 >
-                  <div className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-transform group-active:scale-75">
-                    <MessageCircle className="w-6 h-6 text-white" />
+                  <div className="p-3 rounded-full bg-afri-bg/40 backdrop-blur-md border border-afri-border hover:bg-white/20 transition-transform group-active:scale-75">
+                    <MessageCircle className="w-6 h-6 text-afri-text" />
                   </div>
-                  <span className="text-[10px] font-mono font-black text-white drop-shadow-md">
+                  <span className="text-[10px] font-mono font-black text-afri-text drop-shadow-md">
                     {reel.commentsCount}
                   </span>
                 </button>
@@ -430,8 +430,8 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   className="flex flex-col items-center gap-1 group cursor-pointer"
                   title="Partager ce réel"
                 >
-                  <div className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-transform group-active:scale-75">
-                    <Share2 className="w-6 h-6 text-white" />
+                  <div className="p-3 rounded-full bg-afri-bg/40 backdrop-blur-md border border-afri-border hover:bg-white/20 transition-transform group-active:scale-75">
+                    <Share2 className="w-6 h-6 text-afri-text" />
                   </div>
                   <span className="text-[9px] font-mono font-bold text-white/90 drop-shadow-md">
                     Partager
@@ -444,10 +444,10 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   className="flex flex-col items-center gap-1 group cursor-pointer"
                   title="Enregistrer"
                 >
-                  <div className={`p-3 rounded-full bg-black/40 backdrop-blur-md border transition-transform group-active:scale-75 ${
-                    reel.isBookmarked ? "border-[#D4AF37] bg-[#D4AF37]/20" : "border-white/20 hover:bg-white/20"
+                  <div className={`p-3 rounded-full bg-afri-bg/40 backdrop-blur-md border transition-transform group-active:scale-75 ${
+                    reel.isBookmarked ? "border-[#D4AF37] bg-[#D4AF37]/20" : "border-afri-border hover:bg-white/20"
                   }`}>
-                    <Bookmark className={`w-6 h-6 transition-colors ${reel.isBookmarked ? "text-[#D4AF37] fill-current" : "text-white"}`} />
+                    <Bookmark className={`w-6 h-6 transition-colors ${reel.isBookmarked ? "text-[#D4AF37] fill-current" : "text-afri-text"}`} />
                   </div>
                   <span className="text-[9px] font-mono font-bold text-white/90 drop-shadow-md">
                     Favoris
@@ -460,8 +460,8 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   className="flex flex-col items-center gap-1 group cursor-pointer"
                   title="Plus d'options"
                 >
-                  <div className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-transform group-active:scale-75">
-                    <MoreVertical className="w-6 h-6 text-white" />
+                  <div className="p-3 rounded-full bg-afri-bg/40 backdrop-blur-md border border-afri-border hover:bg-white/20 transition-transform group-active:scale-75">
+                    <MoreVertical className="w-6 h-6 text-afri-text" />
                   </div>
                   <span className="text-[9px] font-mono font-bold text-white/90 drop-shadow-md">
                     Plus
@@ -474,7 +474,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                 {/* Author Info & Location */}
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-black text-white uppercase tracking-wider drop-shadow-lg">
+                    <span className="text-sm font-black text-afri-text uppercase tracking-wider drop-shadow-lg">
                       {reel.authorArtisticName || reel.authorName}
                     </span>
                     <span className="text-[10px] font-mono bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 px-2 py-0.5 rounded-full font-bold uppercase">
@@ -482,7 +482,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                     </span>
                   </div>
                   {reel.commune && (
-                    <div className="flex items-center gap-1 text-[11px] font-mono text-zinc-300 drop-shadow">
+                    <div className="flex items-center gap-1 text-[11px] font-mono text-afri-text-sec drop-shadow">
                       <MapPin className="w-3.5 h-3.5 text-[#D4AF37]" />
                       <span>{reel.commune}</span>
                     </div>
@@ -518,18 +518,18 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
       {/* PALABRES / COMMENTS DRAWER MODAL */}
       {showCommentsFor && (
-        <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md flex flex-col justify-end animate-fadeIn">
-          <div className="bg-zinc-950 border-t border-[#D4AF37]/40 rounded-t-3xl max-h-[75vh] flex flex-col w-full max-w-lg mx-auto p-4 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+        <div className="fixed inset-0 z-[120] bg-afri-bg/80 backdrop-blur-md flex flex-col justify-end animate-fadeIn">
+          <div className="bg-afri-bg border-t border-[#D4AF37]/40 rounded-t-3xl max-h-[75vh] flex flex-col w-full max-w-lg mx-auto p-4 space-y-4">
+            <div className="flex items-center justify-between border-b border-afri-border pb-3">
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-5 h-5 text-[#D4AF37]" />
-                <h3 className="text-sm font-black text-white uppercase tracking-wider">
+                <h3 className="text-sm font-black text-afri-text uppercase tracking-wider">
                   Arbre à Palabres ({commentsList.length})
                 </h3>
               </div>
               <button 
                 onClick={() => setShowCommentsFor(null)}
-                className="p-1 rounded-full bg-zinc-800 text-zinc-400 hover:text-white"
+                className="p-1 rounded-full bg-afri-bg-ter text-afri-text-sec hover:text-afri-text"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -538,27 +538,27 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
             {/* Comments List */}
             <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[45vh]">
               {commentsList.map(c => (
-                <div key={c.id} className="flex gap-3 items-start bg-zinc-900/60 p-2.5 rounded-2xl border border-zinc-800">
+                <div key={c.id} className="flex gap-3 items-start bg-zinc-900/60 p-2.5 rounded-2xl border border-afri-border">
                   <img src={c.avatar} alt="" className="w-8 h-8 rounded-full object-cover border border-[#D4AF37]/30 shrink-0" />
                   <div className="flex-1 text-left space-y-0.5">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-[#D4AF37] uppercase">{c.author}</span>
-                      <span className="text-[9px] font-mono text-zinc-500">{c.time}</span>
+                      <span className="text-[9px] font-mono text-afri-text-muted">{c.time}</span>
                     </div>
-                    <p className="text-xs text-zinc-200">{c.text}</p>
+                    <p className="text-xs text-afri-text">{c.text}</p>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Comment Form */}
-            <form onSubmit={handleAddComment} className="flex gap-2 pt-2 border-t border-zinc-800">
+            <form onSubmit={handleAddComment} className="flex gap-2 pt-2 border-t border-afri-border">
               <input 
                 type="text" 
                 value={commentInput}
                 onChange={(e) => setCommentInput(e.target.value)}
                 placeholder="Partager votre palabre..."
-                className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#D4AF37]"
+                className="flex-1 bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text placeholder-zinc-500 focus:outline-none focus:border-[#D4AF37]"
               />
               <button 
                 type="submit"
@@ -573,11 +573,11 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
       {/* MORE OPTIONS MODAL */}
       {showMoreFor && (
-        <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-[#D4AF37]/40 rounded-3xl w-full max-w-sm p-5 space-y-4 text-left">
-            <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+        <div className="fixed inset-0 z-[120] bg-afri-bg/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-afri-bg border border-[#D4AF37]/40 rounded-3xl w-full max-w-sm p-5 space-y-4 text-left">
+            <div className="flex justify-between items-center border-b border-afri-border pb-2">
               <h3 className="text-xs font-black uppercase text-[#D4AF37] tracking-wider">Option du Réel</h3>
-              <button onClick={() => setShowMoreFor(null)} className="p-1 text-zinc-400 hover:text-white">
+              <button onClick={() => setShowMoreFor(null)} className="p-1 text-afri-text-sec hover:text-afri-text">
                 <X className="w-5 h-5" />
               </button>
             </div>

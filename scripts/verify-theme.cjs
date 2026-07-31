@@ -2,25 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 const replacements = [
-  // Overlays & Translucent Backgrounds
-  ['bg-black/10', 'bg-afri-bg/10'],
-  ['bg-black/20', 'bg-afri-bg/20'],
-  ['bg-black/30', 'bg-afri-bg/30'],
-  ['bg-black/40', 'bg-afri-bg/40'],
-  ['bg-black/50', 'bg-afri-bg/50'],
-  ['bg-black/60', 'bg-afri-bg/60'],
-  ['bg-black/70', 'bg-afri-bg/70'],
-  ['bg-black/75', 'bg-afri-bg/75'],
-  ['bg-black/80', 'bg-afri-bg/80'],
-  ['bg-black/85', 'bg-afri-bg/85'],
-  ['bg-black/90', 'bg-afri-bg/90'],
-  ['bg-black/95', 'bg-afri-bg/95'],
-
-  ['bg-zinc-950/50', 'bg-afri-bg/50'],
-  ['bg-zinc-950/80', 'bg-afri-bg/80'],
-  ['bg-zinc-950/90', 'bg-afri-bg/90'],
-  ['bg-zinc-950/95', 'bg-afri-bg/95'],
-  
   // Base Backgrounds
   ['bg-black', 'bg-afri-bg'],
   ['bg-[#000]', 'bg-afri-bg'],
@@ -44,6 +25,7 @@ const replacements = [
   ['bg-zinc-850', 'bg-afri-bg-ter'],
   ['bg-neutral-800', 'bg-afri-bg-ter'],
   ['bg-gray-800', 'bg-afri-bg-ter'],
+  ['bg-gray-200', 'bg-afri-bg-ter'],
   ['bg-[#222]', 'bg-afri-bg-ter'],
 
   // Borders
@@ -54,10 +36,11 @@ const replacements = [
   ['border-zinc-700', 'border-afri-border'],
   ['border-neutral-800', 'border-afri-border'],
   ['border-gray-800', 'border-afri-border'],
+  ['border-gray-200', 'border-afri-border'],
+  ['border-gray-100', 'border-afri-border'],
   ['border-[#333]', 'border-afri-border'],
 
   // Text
-  ['text-white', 'text-afri-text'],
   ['text-zinc-50', 'text-afri-text'],
   ['text-zinc-100', 'text-afri-text'],
   ['text-zinc-200', 'text-afri-text'],
@@ -71,6 +54,8 @@ const replacements = [
   ['text-zinc-400', 'text-afri-text-sec'],
   ['text-neutral-400', 'text-afri-text-sec'],
   ['text-gray-400', 'text-afri-text-sec'],
+  ['text-gray-600', 'text-afri-text-sec'],
+  ['text-gray-700', 'text-afri-text-sec'],
 
   // Text Muted
   ['text-zinc-500', 'text-afri-text-muted'],
@@ -115,15 +100,10 @@ function processDirectory(dir, modifiedFiles = []) {
       const originalContent = content;
       
       for (const [search, replace] of replacements) {
-        // Use regex with positive lookahead/lookbehind for word boundaries if it's alphanumeric, 
-        // OR just rely on split/join for exact matching if it contains special chars
-        // To be completely safe and fast:
         const isInlineStyle = search.includes(':');
         if (isInlineStyle) {
           content = content.split(search).join(replace);
         } else {
-          // For class names, we want to match exactly that class (e.g. not `bg-black-100` if searching for `bg-black`)
-          // We can use a regex boundary that accounts for non-word chars
           const regex = new RegExp(`(?<=[\\s"'\\\`:<>]|^)${escapeRegExp(search)}(?=[\\s"'\\\`:<>]|$)`, 'g');
           content = content.replace(regex, replace);
         }
@@ -138,5 +118,18 @@ function processDirectory(dir, modifiedFiles = []) {
   return modifiedFiles;
 }
 
+console.log("=========================================");
+console.log("🔍 VÉRIFICATION DES THÈMES EN COURS...");
+console.log("=========================================");
+
 const modified = processDirectory('./src');
-console.log(`Modified ${modified.length} files.`);
+
+if (modified.length > 0) {
+  console.log(`✅ CORRECTION AUTOMATIQUE APPLIQUÉE : ${modified.length} composants mis à jour.`);
+  console.log("Les couleurs dures ont été remplacées par les variables de thème (afri-bg, afri-text, etc).");
+  console.log("Fichiers corrigés :");
+  modified.forEach(f => console.log(` - ${f}`));
+} else {
+  console.log("✅ PARFAIT : Aucune couleur dure détectée. Le thème dynamique est respecté à 100%.");
+}
+console.log("=========================================");

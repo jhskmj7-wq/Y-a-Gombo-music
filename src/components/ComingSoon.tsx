@@ -114,7 +114,7 @@ export default function ComingSoon({ featureId, onBack }: ComingSoonProps) {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="relative bg-white dark:bg-afri-bg-sec rounded-3xl overflow-hidden shadow-xl border border-gray-100 dark:border-gray-800 p-8 text-center"
+        className="relative bg-white dark:bg-afri-bg-sec rounded-3xl overflow-hidden shadow-xl border border-afri-border dark:border-afri-border p-8 text-center"
       >
         {/* Colorful top abstract blob */}
         <div className={`absolute top-0 left-0 right-0 h-3 bg-gradient-to-r ${currentFeature.color}`} />
@@ -144,17 +144,17 @@ export default function ComingSoon({ featureId, onBack }: ComingSoonProps) {
               repeat: Infinity,
               ease: "easeInOut"
             }}
-            className="relative bg-gradient-to-tr from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-md"
+            className="relative bg-gradient-to-tr from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-6 rounded-2xl border border-afri-border dark:border-afri-border shadow-md"
           >
             <Sparkles className="w-12 h-12 text-orange-500" />
           </motion.div>
         </div>
 
-        <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-base max-w-md mx-auto">
+        <p className="text-afri-text-sec dark:text-afri-text-sec leading-relaxed text-base max-w-md mx-auto">
           {currentFeature.description}
         </p>
 
-        <div className="mt-6 bg-gray-50 dark:bg-gray-800/40 rounded-xl p-4 border border-dashed border-gray-200 dark:border-gray-700 max-w-md mx-auto">
+        <div className="mt-6 bg-gray-50 dark:bg-gray-800/40 rounded-xl p-4 border border-dashed border-afri-border dark:border-afri-border max-w-md mx-auto">
           <p className="text-xs font-semibold text-afri-text-sec dark:text-afri-text-sec">
             ⭐ {currentFeature.incentive}
           </p>

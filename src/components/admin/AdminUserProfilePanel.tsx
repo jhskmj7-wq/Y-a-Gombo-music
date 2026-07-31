@@ -175,21 +175,21 @@ export default function AdminUserProfilePanel({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[9999] flex items-center justify-end">
-      <div className="w-full max-w-2xl bg-zinc-950 border-l border-zinc-800 h-full flex flex-col shadow-2xl relative animate-slideLeft">
+    <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-md z-[9999] flex items-center justify-end">
+      <div className="w-full max-w-2xl bg-afri-bg border-l border-afri-border h-full flex flex-col shadow-2xl relative animate-slideLeft">
         
         {/* Header */}
-        <div className="p-4 border-b border-zinc-800 flex items-center justify-between shrink-0 bg-zinc-900/40">
+        <div className="p-4 border-b border-afri-border flex items-center justify-between shrink-0 bg-zinc-900/40">
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-[#D4AF37]" />
             <div>
-              <h3 className="text-sm font-black text-white uppercase tracking-wider">Panneau Souverain Utilisateur</h3>
-              <p className="text-[10px] text-zinc-500 font-mono">Détails et Contrôle de Compte</p>
+              <h3 className="text-sm font-black text-afri-text uppercase tracking-wider">Panneau Souverain Utilisateur</h3>
+              <p className="text-[10px] text-afri-text-muted font-mono">Détails et Contrôle de Compte</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition cursor-pointer"
+            className="p-1.5 rounded-xl bg-afri-bg-ter hover:bg-zinc-700 text-afri-text-sec hover:text-afri-text transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -198,17 +198,17 @@ export default function AdminUserProfilePanel({
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-3">
             <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
-            <p className="text-xs text-zinc-400 font-mono">Chargement des données souveraines...</p>
+            <p className="text-xs text-afri-text-sec font-mono">Chargement des données souveraines...</p>
           </div>
         ) : !profile ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-2">
             <ShieldAlert className="w-10 h-10 text-rose-500" />
-            <p className="text-xs text-zinc-400">Le profil de cet utilisateur n'a pas pu être chargé.</p>
+            <p className="text-xs text-afri-text-sec">Le profil de cet utilisateur n'a pas pu être chargé.</p>
           </div>
         ) : (
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Quick Profile Summary Card */}
-            <div className="p-5 border-b border-zinc-800 flex items-center gap-4 bg-gradient-to-r from-zinc-900/60 to-transparent">
+            <div className="p-5 border-b border-afri-border flex items-center gap-4 bg-gradient-to-r from-zinc-900/60 to-transparent">
               <img 
                 src={profile.avatarUrl || profile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
                 alt="" 
@@ -217,7 +217,7 @@ export default function AdminUserProfilePanel({
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-black text-white uppercase truncate">
+                  <h4 className="text-sm font-black text-afri-text uppercase truncate">
                     {profile.firstName || ""} {profile.lastName || "Membre Gombo"}
                   </h4>
                   {profile.isPremium || profile.premium ? (
@@ -225,22 +225,22 @@ export default function AdminUserProfilePanel({
                       👑 Premium
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 bg-zinc-800 text-zinc-400 text-[8px] font-black uppercase rounded-full">
+                    <span className="px-2 py-0.5 bg-afri-bg-ter text-afri-text-sec text-[8px] font-black uppercase rounded-full">
                       Standard
                     </span>
                   )}
                 </div>
                 <p className="text-[11px] text-[#D4AF37] font-mono mt-0.5">@{profile.artisticName || "Artiste"}</p>
                 
-                <div className="flex items-center gap-3 mt-2 text-[10px] text-zinc-400 font-mono">
-                  <span>AFRI ID: <span className="text-zinc-300 font-bold">{profile.afriId || "Non défini"}</span></span>
-                  <span>GOMBO ID: <span className="text-zinc-300 font-bold">{profile.gomboId?.id || "Non défini"}</span></span>
+                <div className="flex items-center gap-3 mt-2 text-[10px] text-afri-text-sec font-mono">
+                  <span>AFRI ID: <span className="text-afri-text-sec font-bold">{profile.afriId || "Non défini"}</span></span>
+                  <span>GOMBO ID: <span className="text-afri-text-sec font-bold">{profile.gomboId?.id || "Non défini"}</span></span>
                 </div>
               </div>
             </div>
 
             {/* Custom Navigation Sub-Tabs */}
-            <div className="border-b border-zinc-800 bg-zinc-950 flex p-1 shrink-0">
+            <div className="border-b border-afri-border bg-afri-bg flex p-1 shrink-0">
               {[
                 { id: "general", label: "Informations" },
                 { id: "history", label: "Historiques & Stats" },
@@ -251,8 +251,8 @@ export default function AdminUserProfilePanel({
                   onClick={() => { setActiveSubTab(tab.id as any); setModMessage(null); }}
                   className={`flex-1 py-2 text-center text-xs font-bold uppercase transition rounded-xl cursor-pointer ${
                     activeSubTab === tab.id 
-                      ? "bg-zinc-800 text-white" 
-                      : "text-zinc-400 hover:text-white"
+                      ? "bg-afri-bg-ter text-afri-text" 
+                      : "text-afri-text-sec hover:text-afri-text"
                   }`}
                 >
                   {tab.label}
@@ -276,34 +276,34 @@ export default function AdminUserProfilePanel({
                 <div className="space-y-4">
                   {/* Grid fields */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800/80">
-                      <span className="text-[9px] text-zinc-500 uppercase font-bold block">Prénom / Nom :</span>
-                      <span className="text-xs text-white font-medium block mt-0.5">{profile.firstName || ""} {profile.lastName || ""}</span>
+                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80">
+                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Prénom / Nom :</span>
+                      <span className="text-xs text-afri-text font-medium block mt-0.5">{profile.firstName || ""} {profile.lastName || ""}</span>
                     </div>
-                    <div className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800/80">
-                      <span className="text-[9px] text-zinc-500 uppercase font-bold block">Nom artistique :</span>
+                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80">
+                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Nom artistique :</span>
                       <span className="text-xs text-[#D4AF37] font-medium block mt-0.5">{profile.artisticName || "N/A"}</span>
                     </div>
-                    <div className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800/80">
-                      <span className="text-[9px] text-zinc-500 uppercase font-bold block">Email :</span>
-                      <span className="text-xs text-white block truncate mt-0.5">{profile.email || "N/A"}</span>
+                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80">
+                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Email :</span>
+                      <span className="text-xs text-afri-text block truncate mt-0.5">{profile.email || "N/A"}</span>
                     </div>
-                    <div className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800/80">
-                      <span className="text-[9px] text-zinc-500 uppercase font-bold block">Téléphone :</span>
-                      <span className="text-xs text-white block mt-0.5">{profile.phone || "N/A"}</span>
+                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80">
+                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Téléphone :</span>
+                      <span className="text-xs text-afri-text block mt-0.5">{profile.phone || "N/A"}</span>
                     </div>
-                    <div className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800/80 col-span-2">
-                      <span className="text-[9px] text-zinc-500 uppercase font-bold block">Localisation :</span>
-                      <span className="text-xs text-white block mt-0.5">
+                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80 col-span-2">
+                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Localisation :</span>
+                      <span className="text-xs text-afri-text block mt-0.5">
                         {profile.ville || "Abidjan"}, {profile.commune || "N/A"} {profile.quartier ? `(${profile.quartier})` : ""}
                       </span>
                     </div>
-                    <div className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800/80">
-                      <span className="text-[9px] text-zinc-500 uppercase font-bold block">Activité :</span>
-                      <span className="text-xs text-white block mt-0.5">{profile.specialty || "Musique"}</span>
+                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80">
+                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Activité :</span>
+                      <span className="text-xs text-afri-text block mt-0.5">{profile.specialty || "Musique"}</span>
                     </div>
-                    <div className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800/80">
-                      <span className="text-[9px] text-zinc-500 uppercase font-bold block">Score de confiance :</span>
+                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80">
+                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Score de confiance :</span>
                       <span className={`text-xs font-bold block mt-0.5 ${profile.trustScore >= 90 ? "text-emerald-400" : profile.trustScore >= 70 ? "text-amber-400" : "text-rose-400"}`}>
                         {profile.trustScore !== undefined ? `${profile.trustScore}%` : "100%"}
                       </span>
@@ -311,30 +311,30 @@ export default function AdminUserProfilePanel({
                   </div>
 
                   {/* Skills Section */}
-                  <div className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-4 space-y-3">
-                    <h5 className="text-xs font-bold text-white uppercase tracking-wider">Identité Artistique</h5>
+                  <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 space-y-3">
+                    <h5 className="text-xs font-bold text-afri-text uppercase tracking-wider">Identité Artistique</h5>
                     <div className="space-y-2">
                       <div>
-                        <span className="text-[9px] text-zinc-500 uppercase block">Styles musicaux :</span>
+                        <span className="text-[9px] text-afri-text-muted uppercase block">Styles musicaux :</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {profile.stylesMusicaux && profile.stylesMusicaux.length > 0 ? (
                             profile.stylesMusicaux.map((s: string) => (
-                              <span key={s} className="px-2 py-0.5 bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 rounded-lg">{s}</span>
+                              <span key={s} className="px-2 py-0.5 bg-afri-bg-ter border border-afri-border text-[10px] text-afri-text-sec rounded-lg">{s}</span>
                             ))
                           ) : (
-                            <span className="text-xs text-zinc-500 italic">Aucun style enregistré</span>
+                            <span className="text-xs text-afri-text-muted italic">Aucun style enregistré</span>
                           )}
                         </div>
                       </div>
                       <div>
-                        <span className="text-[9px] text-zinc-500 uppercase block">Instruments maîtrisés :</span>
+                        <span className="text-[9px] text-afri-text-muted uppercase block">Instruments maîtrisés :</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {profile.instruments && profile.instruments.length > 0 ? (
                             profile.instruments.map((i: string) => (
-                              <span key={i} className="px-2 py-0.5 bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 rounded-lg">{i}</span>
+                              <span key={i} className="px-2 py-0.5 bg-afri-bg-ter border border-afri-border text-[10px] text-afri-text-sec rounded-lg">{i}</span>
                             ))
                           ) : (
-                            <span className="text-xs text-zinc-500 italic">Aucun instrument enregistré</span>
+                            <span className="text-xs text-afri-text-muted italic">Aucun instrument enregistré</span>
                           )}
                         </div>
                       </div>
@@ -342,13 +342,13 @@ export default function AdminUserProfilePanel({
                   </div>
 
                   {/* Connection Details */}
-                  <div className="bg-zinc-900/20 border border-zinc-800 rounded-2xl p-4 flex justify-between items-center text-xs text-zinc-400">
+                  <div className="bg-zinc-900/20 border border-afri-border rounded-2xl p-4 flex justify-between items-center text-xs text-afri-text-sec">
                     <div>
-                      <span className="text-[9px] text-zinc-500 uppercase font-black block">Dernière connexion :</span>
-                      <span className="font-mono text-zinc-300">{profile.lastLoginAt || profile.lastSeen || "Inconnue"}</span>
+                      <span className="text-[9px] text-afri-text-muted uppercase font-black block">Dernière connexion :</span>
+                      <span className="font-mono text-afri-text-sec">{profile.lastLoginAt || profile.lastSeen || "Inconnue"}</span>
                     </div>
                     <div>
-                      <span className="text-[9px] text-zinc-500 uppercase font-black block">Statut Compte :</span>
+                      <span className="text-[9px] text-afri-text-muted uppercase font-black block">Statut Compte :</span>
                       <span className={`font-bold uppercase ${profile.isSuspended ? "text-amber-400" : "text-emerald-400"}`}>
                         {profile.isSuspended ? "⏸️ Suspendu" : "🟢 Actif"}
                       </span>
@@ -362,41 +362,41 @@ export default function AdminUserProfilePanel({
                 <div className="space-y-6">
                   {/* Key Counts Row */}
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="p-3 bg-zinc-900 text-center rounded-xl border border-zinc-800">
+                    <div className="p-3 bg-afri-bg-sec text-center rounded-xl border border-afri-border">
                       <strong className="text-lg text-[#D4AF37] block font-mono">{posts.length}</strong>
-                      <span className="text-[9px] text-zinc-500 uppercase font-bold">Publications</span>
+                      <span className="text-[9px] text-afri-text-muted uppercase font-bold">Publications</span>
                     </div>
-                    <div className="p-3 bg-zinc-900 text-center rounded-xl border border-zinc-800">
+                    <div className="p-3 bg-afri-bg-sec text-center rounded-xl border border-afri-border">
                       <strong className="text-lg text-indigo-400 block font-mono">{applications.length}</strong>
-                      <span className="text-[9px] text-zinc-500 uppercase font-bold">Candidatures</span>
+                      <span className="text-[9px] text-afri-text-muted uppercase font-bold">Candidatures</span>
                     </div>
-                    <div className="p-3 bg-zinc-900 text-center rounded-xl border border-zinc-800">
+                    <div className="p-3 bg-afri-bg-sec text-center rounded-xl border border-afri-border">
                       <strong className="text-lg text-emerald-400 block font-mono">{contracts.length}</strong>
-                      <span className="text-[9px] text-zinc-500 uppercase font-bold">Contrats</span>
+                      <span className="text-[9px] text-afri-text-muted uppercase font-bold">Contrats</span>
                     </div>
                   </div>
 
                   {/* Wallet details */}
-                  <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 space-y-3">
-                    <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
-                      <h5 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <div className="bg-zinc-900/40 border border-afri-border rounded-2xl p-4 space-y-3">
+                    <div className="flex justify-between items-center border-b border-afri-border pb-2">
+                      <h5 className="text-xs font-bold text-afri-text uppercase tracking-wider flex items-center gap-1.5">
                         <CreditCard className="w-4 h-4 text-emerald-400" /> Solde du Wallet
                       </h5>
                       <span className="text-xs text-emerald-400 font-mono font-bold">
                         {Number(profile.wallet?.soldeDisponible || 0).toLocaleString()} FCFA
                       </span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs font-mono text-zinc-400">
-                      <div>Solde bloqué: <span className="text-zinc-300">{Number(profile.wallet?.soldeBloque || 0).toLocaleString()} FCFA</span></div>
-                      <div>Total Dépôts: <span className="text-zinc-300">{deposits.length}</span></div>
-                      <div>Total Retraits: <span className="text-zinc-300">{withdrawals.length}</span></div>
+                    <div className="grid grid-cols-2 gap-2 text-xs font-mono text-afri-text-sec">
+                      <div>Solde bloqué: <span className="text-afri-text-sec">{Number(profile.wallet?.soldeBloque || 0).toLocaleString()} FCFA</span></div>
+                      <div>Total Dépôts: <span className="text-afri-text-sec">{deposits.length}</span></div>
+                      <div>Total Retraits: <span className="text-afri-text-sec">{withdrawals.length}</span></div>
                     </div>
                   </div>
 
                   {/* Wallet History Table */}
                   <div className="space-y-2">
-                    <h5 className="text-[10px] font-mono font-black text-zinc-400 uppercase tracking-widest">Historique du Wallet</h5>
-                    <div className="bg-zinc-950 border border-zinc-800 rounded-xl max-h-40 overflow-y-auto divide-y divide-zinc-900">
+                    <h5 className="text-[10px] font-mono font-black text-afri-text-sec uppercase tracking-widest">Historique du Wallet</h5>
+                    <div className="bg-afri-bg border border-afri-border rounded-xl max-h-40 overflow-y-auto divide-y divide-afri-border">
                       {walletHistory.length === 0 ? (
                         <p className="p-3 text-center text-zinc-600 text-xs italic">Aucune transaction trouvée</p>
                       ) : (
@@ -409,8 +409,8 @@ export default function AdminUserProfilePanel({
                                 <ArrowDownLeft className="w-3.5 h-3.5 text-rose-400" />
                               )}
                               <div>
-                                <span className="text-zinc-300 font-bold block uppercase">{tx.type || "transaction"}</span>
-                                <span className="text-[9px] text-zinc-500">{tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : ""}</span>
+                                <span className="text-afri-text-sec font-bold block uppercase">{tx.type || "transaction"}</span>
+                                <span className="text-[9px] text-afri-text-muted">{tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : ""}</span>
                               </div>
                             </div>
                             <span className={`font-bold ${tx.montant > 0 ? "text-emerald-400" : "text-rose-400"}`}>
@@ -425,13 +425,13 @@ export default function AdminUserProfilePanel({
                   {/* Deposits & Withdrawals lists */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <span className="text-[9px] text-zinc-500 uppercase font-black block">Dépôts récents :</span>
-                      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 space-y-1.5 text-[11px] font-mono max-h-32 overflow-y-auto">
+                      <span className="text-[9px] text-afri-text-muted uppercase font-black block">Dépôts récents :</span>
+                      <div className="bg-afri-bg border border-afri-border rounded-xl p-2.5 space-y-1.5 text-[11px] font-mono max-h-32 overflow-y-auto">
                         {deposits.length === 0 ? (
                           <span className="text-zinc-600 italic">Aucun dépôt</span>
                         ) : (
                           deposits.map(d => (
-                            <div key={d.id} className="flex justify-between text-zinc-400">
+                            <div key={d.id} className="flex justify-between text-afri-text-sec">
                               <span>{Number(d.montant).toLocaleString()} F</span>
                               <span className="text-emerald-400 uppercase font-bold text-[9px]">{d.statut || "valide"}</span>
                             </div>
@@ -440,13 +440,13 @@ export default function AdminUserProfilePanel({
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <span className="text-[9px] text-zinc-500 uppercase font-black block">Retraits récents :</span>
-                      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 space-y-1.5 text-[11px] font-mono max-h-32 overflow-y-auto">
+                      <span className="text-[9px] text-afri-text-muted uppercase font-black block">Retraits récents :</span>
+                      <div className="bg-afri-bg border border-afri-border rounded-xl p-2.5 space-y-1.5 text-[11px] font-mono max-h-32 overflow-y-auto">
                         {withdrawals.length === 0 ? (
                           <span className="text-zinc-600 italic">Aucun retrait</span>
                         ) : (
                           withdrawals.map(w => (
-                            <div key={w.id} className="flex justify-between text-zinc-400">
+                            <div key={w.id} className="flex justify-between text-afri-text-sec">
                               <span>{Number(w.montant).toLocaleString()} F</span>
                               <span className="text-amber-500 uppercase font-bold text-[9px]">{w.statut || "attente"}</span>
                             </div>
@@ -458,18 +458,18 @@ export default function AdminUserProfilePanel({
 
                   {/* Signalements History (Security alerts) */}
                   <div className="space-y-2">
-                    <h5 className="text-[10px] font-mono font-black text-zinc-400 uppercase tracking-widest text-rose-400">Historique des Signalements / Alertes</h5>
-                    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 divide-y divide-zinc-900 max-h-32 overflow-y-auto">
+                    <h5 className="text-[10px] font-mono font-black text-afri-text-sec uppercase tracking-widest text-rose-400">Historique des Signalements / Alertes</h5>
+                    <div className="bg-afri-bg border border-afri-border rounded-xl p-3 divide-y divide-afri-border max-h-32 overflow-y-auto">
                       {securityAlerts.length === 0 ? (
                         <p className="text-zinc-600 text-xs italic text-center py-1">Zéro signalement. Profil vierge.</p>
                       ) : (
                         securityAlerts.map(alert => (
-                          <div key={alert.id} className="py-2 text-[11px] text-zinc-400 font-mono flex items-center justify-between">
+                          <div key={alert.id} className="py-2 text-[11px] text-afri-text-sec font-mono flex items-center justify-between">
                             <div>
                               <span className="text-rose-400 font-bold block">{alert.type || "Infraction"}</span>
                               <span className="text-[10px]">{alert.details || "Bypass ou comportement non conforme"}</span>
                             </div>
-                            <span className="text-zinc-500">{alert.createdAt ? new Date(alert.createdAt).toLocaleDateString() : ""}</span>
+                            <span className="text-afri-text-muted">{alert.createdAt ? new Date(alert.createdAt).toLocaleDateString() : ""}</span>
                           </div>
                         ))
                       )}
@@ -481,13 +481,13 @@ export default function AdminUserProfilePanel({
               {/* TAB 3: ACTIONS */}
               {activeSubTab === "actions" && (
                 <div className="space-y-4">
-                  <h5 className="text-xs font-bold text-white uppercase tracking-wider border-b border-zinc-800 pb-2">Contrôle du Compte</h5>
+                  <h5 className="text-xs font-bold text-afri-text uppercase tracking-wider border-b border-afri-border pb-2">Contrôle du Compte</h5>
 
                   {/* Premium Actions */}
-                  <div className="bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800 flex items-center justify-between">
+                  <div className="bg-zinc-900/40 p-4 rounded-2xl border border-afri-border flex items-center justify-between">
                     <div>
-                      <strong className="text-xs text-white block">Abonnement Premium</strong>
-                      <span className="text-[10px] text-zinc-500">Donne accès à des privilèges et une réduction des taxes (1.5%)</span>
+                      <strong className="text-xs text-afri-text block">Abonnement Premium</strong>
+                      <span className="text-[10px] text-afri-text-muted">Donne accès à des privilèges et une réduction des taxes (1.5%)</span>
                     </div>
                     <button
                       onClick={handleTogglePremium}
@@ -502,10 +502,10 @@ export default function AdminUserProfilePanel({
                   </div>
 
                   {/* Suspensions Actions */}
-                  <div className="bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800 flex items-center justify-between">
+                  <div className="bg-zinc-900/40 p-4 rounded-2xl border border-afri-border flex items-center justify-between">
                     <div>
-                      <strong className="text-xs text-white block">Statut d'Activité</strong>
-                      <span className="text-[10px] text-zinc-500">Un membre suspendu ne peut plus se connecter ni candidater aux Gombos</span>
+                      <strong className="text-xs text-afri-text block">Statut d'Activité</strong>
+                      <span className="text-[10px] text-afri-text-muted">Un membre suspendu ne peut plus se connecter ni candidater aux Gombos</span>
                     </div>
                     <button
                       onClick={handleToggleSuspension}
@@ -521,32 +521,32 @@ export default function AdminUserProfilePanel({
 
                   {/* Other action links with alert redirects */}
                   <div className="pt-2">
-                    <span className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-2">Autres liens d'inspection</span>
+                    <span className="text-[10px] font-mono font-black text-afri-text-muted uppercase tracking-widest block mb-2">Autres liens d'inspection</span>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => alert(`Inspection complète des transactions pour ${profile.firstName}`)}
-                        className="p-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-left text-xs text-zinc-300 rounded-xl transition flex items-center justify-between"
+                        className="p-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-left text-xs text-afri-text-sec rounded-xl transition flex items-center justify-between"
                       >
                         <span>Voir Transactions</span>
                         <ArrowUpRight className="w-4 h-4 text-[#D4AF37]" />
                       </button>
                       <button
                         onClick={() => alert(`Inspection des publications de ${profile.firstName}`)}
-                        className="p-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-left text-xs text-zinc-300 rounded-xl transition flex items-center justify-between"
+                        className="p-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-left text-xs text-afri-text-sec rounded-xl transition flex items-center justify-between"
                       >
                         <span>Voir Publications</span>
                         <ArrowUpRight className="w-4 h-4 text-[#D4AF37]" />
                       </button>
                       <button
                         onClick={() => alert(`Inspection des candidatures de ${profile.firstName}`)}
-                        className="p-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-left text-xs text-zinc-300 rounded-xl transition flex items-center justify-between"
+                        className="p-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-left text-xs text-afri-text-sec rounded-xl transition flex items-center justify-between"
                       >
                         <span>Voir Candidatures</span>
                         <ArrowUpRight className="w-4 h-4 text-[#D4AF37]" />
                       </button>
                       <button
                         onClick={() => alert(`Consultation du Portfolio et des fichiers de ${profile.firstName}`)}
-                        className="p-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-left text-xs text-zinc-300 rounded-xl transition flex items-center justify-between"
+                        className="p-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-left text-xs text-afri-text-sec rounded-xl transition flex items-center justify-between"
                       >
                         <span>Ouvrir Portfolio</span>
                         <ArrowUpRight className="w-4 h-4 text-[#D4AF37]" />

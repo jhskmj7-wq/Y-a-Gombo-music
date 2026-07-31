@@ -453,7 +453,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
               </p>
               <p className="text-xs mt-0.5">{notificationMsg.text}</p>
             </div>
-            <button onClick={() => setNotificationMsg(null)} className="ml-auto text-afri-text-sec hover:text-gray-600 dark:hover:text-gray-200">
+            <button onClick={() => setNotificationMsg(null)} className="ml-auto text-afri-text-sec hover:text-afri-text-sec dark:hover:text-afri-text">
               <X className="w-4 h-4" />
             </button>
           </motion.div>
@@ -464,13 +464,13 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
       <div className="bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-orange-600 text-afri-text rounded-3xl p-6 sm:p-10 shadow-xl relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/20 via-transparent to-transparent"></div>
         <div className="relative z-10 max-w-3xl space-y-4">
-          <span className="px-3.5 py-1 bg-white/20 text-afri-text text-[11px] font-black uppercase rounded-full tracking-wider border border-white/20">
+          <span className="px-3.5 py-1 bg-white/20 text-afri-text text-[11px] font-black uppercase rounded-full tracking-wider border border-afri-border">
             ⚡️ Solution de secours instantanée
           </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight uppercase" id="renfort-title-head">
             🎼 Renfort Express
           </h2>
-          <p className="text-sm sm:text-base text-gray-100 leading-relaxed">
+          <p className="text-sm sm:text-base text-afri-text leading-relaxed">
             Trouve rapidement un musicien disponible pour une répétition, un remplacement urgent ou un événement culturel en Côte d'Ivoire. Simple, rapide et direct !
           </p>
 
@@ -496,7 +496,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                 setFilterAvail("Tous");
                 setSearchFilter("");
               }}
-              className="px-4 py-3 bg-white/10 hover:bg-white/25 border border-white/20 font-black rounded-xl text-xs transition-all flex items-center gap-1.5"
+              className="px-4 py-3 bg-white/10 hover:bg-white/25 border border-afri-border font-black rounded-xl text-xs transition-all flex items-center gap-1.5"
             >
               <RefreshCw className="w-4 h-4" /> Réinitialiser filtres
             </button>
@@ -511,9 +511,9 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 overflow-hidden"
+            className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 overflow-hidden"
           >
-            <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-4">
+            <div className="flex justify-between items-center border-b border-afri-border dark:border-afri-border pb-4">
               <div>
                 <h3 className="text-lg font-black text-gray-900 dark:text-afri-text uppercase flex items-center gap-2">
                   <Flame className="text-orange-500 w-5 h-5 fill-current" /> Publier une Demande de Renfort
@@ -522,7 +522,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
               </div>
               <button 
                 onClick={() => setShowForm(false)}
-                className="p-1 text-afri-text-sec hover:text-gray-600 dark:hover:text-gray-200"
+                className="p-1 text-afri-text-sec hover:text-afri-text-sec dark:hover:text-afri-text"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -533,7 +533,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                 
                 {/* Demand type Choice */}
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase text-gray-600 dark:text-afri-text-sec">Type de demande *</label>
+                  <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">Type de demande *</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {REQUEST_TYPES.map(type => (
                       <button
@@ -543,7 +543,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                         className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all text-center ${
                           requestType === type 
                             ? "bg-afri-bg-sec text-afri-text border-transparent shadow" 
-                            : "bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-750"
+                            : "bg-afri-bg hover:bg-afri-bg-ter dark:bg-afri-bg-sec dark:hover:bg-afri-bg-ter text-afri-text-sec dark:text-afri-text-sec border-afri-border dark:border-gray-750"
                         }`}
                       >
                         {type}
@@ -554,7 +554,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
 
                 {/* Titre */}
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase text-gray-600 dark:text-afri-text-sec">Titre de la demande *</label>
+                  <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">Titre de la demande *</label>
                   <input
                     type="text"
                     required
@@ -562,13 +562,13 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                     placeholder="Ex: Pianiste Gospel disponible ce dimanche matin"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                    className="w-full px-4 py-3 border border-afri-border dark:border-afri-border rounded-xl bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
                   />
                 </div>
 
                 {/* Description */}
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-xs font-black uppercase text-gray-600 dark:text-afri-text-sec">Description détaillée *</label>
+                  <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">Description détaillée *</label>
                   <textarea
                     required
                     maxLength={1500}
@@ -576,16 +576,16 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                     placeholder="Précisez le répertoire à maîtriser, l'ambiance attendue, les heures de répétition, s'il y a des transports de prévus..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                    className="w-full px-4 py-3 border border-afri-border dark:border-afri-border rounded-xl bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
                   />
                 </div>
 
                 {/* Multi-specialty Instrument wanted */}
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-xs font-black uppercase text-gray-600 dark:text-afri-text-sec">
+                  <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">
                     Instruments / Spécialités recherchées * (Multiselect)
                   </label>
-                  <div className="flex flex-wrap gap-1.5 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100/50 dark:bg-gray-900/50 max-h-44 overflow-y-auto">
+                  <div className="flex flex-wrap gap-1.5 p-3 rounded-xl border border-afri-border dark:border-afri-border bg-afri-bg-ter/50 dark:bg-afri-bg-sec/50 max-h-44 overflow-y-auto">
                     {SPECIALTIES_LIST.map(spec => (
                       <button
                         key={spec}
@@ -594,7 +594,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
                           selectedSpecialties.includes(spec)
                             ? "bg-orange-500 text-afri-text border-transparent"
-                            : "bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700"
+                            : "bg-white text-afri-text-sec dark:bg-afri-bg-ter dark:text-afri-text-sec border-afri-border dark:border-afri-border"
                         }`}
                       >
                         {selectedSpecialties.includes(spec) ? "✓ " : ""}{spec}
@@ -610,17 +610,17 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                       placeholder="Ex: Saxophone Ténor"
                       value={customSpecialty}
                       onChange={(e) => setCustomSpecialty(e.target.value)}
-                      className="px-3 py-1.5 text-xs border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-850 dark:text-afri-text"
+                      className="px-3 py-1.5 text-xs border border-afri-border dark:border-afri-border rounded-lg bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text"
                     />
                   </div>
                 </div>
 
                 {/* Genre Musical Style Checkbox */}
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-xs font-black uppercase text-gray-600 dark:text-afri-text-sec">
+                  <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">
                     Styles & Genres musicaux souhaités (Multiselect)
                   </label>
-                  <div className="flex flex-wrap gap-1.5 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100/50 dark:bg-gray-900/50 max-h-40 overflow-y-auto">
+                  <div className="flex flex-wrap gap-1.5 p-3 rounded-xl border border-afri-border dark:border-afri-border bg-afri-bg-ter/50 dark:bg-afri-bg-sec/50 max-h-40 overflow-y-auto">
                     {GENRES_LIST.map(genre => (
                       <button
                         key={genre}
@@ -629,7 +629,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
                           selectedGenres.includes(genre)
                             ? "bg-purple-600 text-afri-text border-transparent"
-                            : "bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700"
+                            : "bg-white text-afri-text-sec dark:bg-afri-bg-ter dark:text-afri-text-sec border-afri-border dark:border-afri-border"
                         }`}
                       >
                         {selectedGenres.includes(genre) ? "✓ " : ""}{genre}
@@ -645,39 +645,39 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                       placeholder="Ex: Afro-Jazz"
                       value={customGenre}
                       onChange={(e) => setCustomGenre(e.target.value)}
-                      className="px-3 py-1.5 text-xs border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-850 dark:text-afri-text"
+                      className="px-3 py-1.5 text-xs border border-afri-border dark:border-afri-border rounded-lg bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text"
                     />
                   </div>
                 </div>
 
                 {/* Date constraint */}
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase text-gray-600 dark:text-afri-text-sec">Date de l'événement *</label>
+                  <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">Date de l'événement *</label>
                   <input
                     type="date"
                     required
                     min={new Date().toISOString().split("T")[0]}
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                    className="w-full px-4 py-3 border border-afri-border dark:border-afri-border rounded-xl bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
                   />
                 </div>
 
                 {/* Heure constraint */}
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase text-gray-600 dark:text-afri-text-sec">Heure de début *</label>
+                  <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">Heure de début *</label>
                   <input
                     type="time"
                     required
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                    className="w-full px-4 py-3 border border-afri-border dark:border-afri-border rounded-xl bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
                   />
                 </div>
 
                 {/* Number of musicians wanted */}
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase text-gray-600 dark:text-afri-text-sec">Nombre de musiciens recherchés *</label>
+                  <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">Nombre de musiciens recherchés *</label>
                   <input
                     type="number"
                     min={1}
@@ -685,30 +685,30 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                     required
                     value={musiciansCount}
                     onChange={(e) => setMusiciansCount(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                    className="w-full px-4 py-3 border border-afri-border dark:border-afri-border rounded-xl bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
                   />
                 </div>
 
                 {/* Rémunération check */}
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase text-gray-600 dark:text-afri-text-sec">Rémunération par musicien (FCFA, 0 si bénévole)</label>
+                  <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">Rémunération par musicien (FCFA, 0 si bénévole)</label>
                   <input
                     type="number"
                     min={0}
                     placeholder="Ex: 25000"
                     value={budget}
                     onChange={(e) => setBudget(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                    className="w-full px-4 py-3 border border-afri-border dark:border-afri-border rounded-xl bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
                   />
                 </div>
 
                 {/* Location with other input options */}
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase text-gray-600 dark:text-afri-text-sec">Commune / Ville *</label>
+                  <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">Commune / Ville *</label>
                   <select
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                    className="w-full px-4 py-3 border border-afri-border dark:border-afri-border rounded-xl bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
                   >
                     <optgroup label="Communes d'Abidjan">
                       {COMMUNES_ABIDJAN.map(com => (
@@ -732,31 +732,31 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                       placeholder="Saisissez la ville / commune"
                       value={customLocation}
                       onChange={(e) => setCustomLocation(e.target.value)}
-                      className="w-full mt-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-xs focus:ring-1 focus:ring-[#7C3AED]"
+                      className="w-full mt-2 px-4 py-2 border border-afri-border dark:border-afri-border rounded-xl bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-xs focus:ring-1 focus:ring-[#7C3AED]"
                     />
                   )}
                 </div>
 
                 {/* Contact Connection */}
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase text-gray-600 dark:text-afri-text-sec">Numéro WhatsApp * (Requis)</label>
+                  <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">Numéro WhatsApp * (Requis)</label>
                   <input
                     type="tel"
                     required
                     placeholder="Ex: 0707070707"
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                    className="w-full px-4 py-3 border border-afri-border dark:border-afri-border rounded-xl bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
                   />
                 </div>
 
               </div>
 
-              <div className="flex justify-end gap-3 border-t border-gray-100 dark:border-gray-800 pt-5">
+              <div className="flex justify-end gap-3 border-t border-afri-border dark:border-afri-border pt-5">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-5 py-3 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  className="px-5 py-3 border border-afri-border dark:border-afri-border text-afri-text-sec dark:text-afri-text-sec rounded-xl text-xs font-bold hover:bg-afri-bg-ter dark:hover:bg-afri-bg-ter transition-colors"
                 >
                   Annuler
                 </button>
@@ -773,10 +773,10 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
       </AnimatePresence>
 
       {/* FILTER CONTROLS GRID */}
-      <div className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 p-5 rounded-2xl shadow-sm space-y-4">
-        <div className="flex items-center gap-2 border-b border-gray-150 dark:border-gray-800 pb-3">
+      <div className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border p-5 rounded-2xl shadow-sm space-y-4">
+        <div className="flex items-center gap-2 border-b border-gray-150 dark:border-afri-border pb-3">
           <Filter className="w-4.5 h-4.5 text-[#7C3AED]" />
-          <span className="text-xs font-black tracking-wider text-gray-700 dark:text-afri-text uppercase">Affiner la recherche</span>
+          <span className="text-xs font-black tracking-wider text-afri-text-sec dark:text-afri-text uppercase">Affiner la recherche</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -791,7 +791,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                 placeholder="Rechercher..."
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-xs border border-gray-200 dark:border-gray-700 rounded-xl"
+                className="w-full pl-9 pr-4 py-2 bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-xs border border-afri-border dark:border-afri-border rounded-xl"
               />
             </div>
           </div>
@@ -802,7 +802,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-xs border border-gray-200 dark:border-gray-700 rounded-xl"
+              className="w-full px-3 py-2 bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-xs border border-afri-border dark:border-afri-border rounded-xl"
             >
               <option value="Tous">Tous</option>
               {REQUEST_TYPES.map(t => (
@@ -817,7 +817,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
             <select
               value={filterLocation}
               onChange={(e) => setFilterLocation(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-xs border border-gray-200 dark:border-gray-700 rounded-xl"
+              className="w-full px-3 py-2 bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-xs border border-afri-border dark:border-afri-border rounded-xl"
             >
               <option value="Tous">Toutes Villes / Communes</option>
               <optgroup label="Abidjan">
@@ -839,7 +839,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
             <select
               value={filterSpecialty}
               onChange={(e) => setFilterSpecialty(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-xs border border-gray-200 dark:border-gray-700 rounded-xl"
+              className="w-full px-3 py-2 bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-xs border border-afri-border dark:border-afri-border rounded-xl"
             >
               <option value="Tous">Tous instruments</option>
               {SPECIALTIES_LIST.map(spec => (
@@ -854,7 +854,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
             <select
               value={filterGenre}
               onChange={(e) => setFilterGenre(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-xs border border-gray-200 dark:border-gray-700 rounded-xl"
+              className="w-full px-3 py-2 bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-xs border border-afri-border dark:border-afri-border rounded-xl"
             >
               <option value="Tous">Tous les styles</option>
               {GENRES_LIST.map(g => (
@@ -866,14 +866,14 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
         </div>
 
         {/* Quick availability switcher list */}
-        <div className="flex gap-2 items-center text-xs pt-1 border-t border-gray-100 dark:border-gray-850">
+        <div className="flex gap-2 items-center text-xs pt-1 border-t border-afri-border dark:border-gray-850">
           <span className="text-afri-text-sec font-bold">Disponibilité :</span>
           <button
             onClick={() => setFilterAvail(filterAvail === "Disponible uniquement" ? "Tous" : "Disponible uniquement")}
-            className={`px-3 py-1 bg-gray-50 dark:bg-gray-800 font-extrabold rounded-full transition-all border ${
+            className={`px-3 py-1 bg-afri-bg dark:bg-afri-bg-ter font-extrabold rounded-full transition-all border ${
               filterAvail === "Disponible uniquement" 
                 ? "bg-amber-100 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-600 dark:text-amber-400" 
-                : "text-afri-text-sec border-gray-200 dark:border-gray-700"
+                : "text-afri-text-sec border-afri-border dark:border-afri-border"
             }`}
           >
             🔥 Actifs non pourvus uniquement
@@ -888,8 +888,8 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
           <p className="text-sm text-afri-text-sec font-bold animate-pulse">Chargement des opportunités de renfort...</p>
         </div>
       ) : filteredRenforts.length === 0 ? (
-        <div className="bg-white dark:bg-afri-bg-sec border border-dashed border-gray-200 dark:border-gray-800 rounded-3xl p-12 text-center" id="renfort-empty-list">
-          <AlertCircle className="w-12 h-12 text-gray-350 dark:text-gray-600 mx-auto mb-4" />
+        <div className="bg-white dark:bg-afri-bg-sec border border-dashed border-afri-border dark:border-afri-border rounded-3xl p-12 text-center" id="renfort-empty-list">
+          <AlertCircle className="w-12 h-12 text-gray-350 dark:text-afri-text-sec mx-auto mb-4" />
           <h4 className="font-extrabold text-[#7C3AED] uppercase text-sm tracking-wide">Aucun appel de renfort trouvé</h4>
           <p className="text-xs text-afri-text-sec mt-2 max-w-sm mx-auto">
             Utilisez d'autres critères de recherche ou soyez le premier à publier une demande si vous cherchez de l'assistance !
@@ -935,7 +935,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                 className={`bg-white dark:bg-afri-bg-sec border rounded-3xl p-6 transition-all shadow-xs space-y-4 hover:shadow-md ${
                   hasApplied 
                     ? "border-purple-300 dark:border-purple-800"
-                    : "border-gray-150 dark:border-gray-800"
+                    : "border-gray-150 dark:border-afri-border"
                 }`}
               >
                 {/* Creator header */}
@@ -946,10 +946,10 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                         src={renfort.userAvatar} 
                         alt={renfort.userName}
                         referrerPolicy="no-referrer"
-                        className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-700 object-cover"
+                        className="w-10 h-10 rounded-full border border-afri-border dark:border-afri-border object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-850 flex items-center justify-center text-afri-text-sec">
+                      <div className="w-10 h-10 rounded-full bg-afri-bg-ter dark:bg-afri-bg-sec flex items-center justify-center text-afri-text-sec">
                         <User className="w-5 h-5" />
                       </div>
                     )}
@@ -981,7 +981,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                   <h4 className="text-base font-extrabold text-gray-900 dark:text-afri-text leading-snug">
                     {renfort.title}
                   </h4>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                  <p className="text-xs text-afri-text-sec dark:text-afri-text-sec leading-relaxed">
                     {expandedPostId === renfort.id 
                       ? renfort.description 
                       : `${renfort.description.substring(0, 180)}${renfort.description.length > 180 ? "..." : ""}`
@@ -998,7 +998,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                 </div>
 
                 {/* Grid criteria info */}
-                <div className="grid grid-cols-2 gap-3 bg-gray-50/50 dark:bg-gray-900/40 p-3.5 rounded-2xl text-xs font-semibold text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-850">
+                <div className="grid grid-cols-2 gap-3 bg-afri-bg/50 dark:bg-afri-bg-sec/40 p-3.5 rounded-2xl text-xs font-semibold text-afri-text-sec dark:text-afri-text-sec border border-afri-border dark:border-gray-850">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-orange-500" />
                     <span>{renfort.date}</span>
@@ -1024,12 +1024,12 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                     {renfort.instruments?.map(spec => (
                       <span 
                         key={spec} 
-                        className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-[10px] font-bold"
+                        className="px-2 py-0.5 bg-afri-bg-ter dark:bg-afri-bg-ter text-afri-text-sec dark:text-afri-text-sec rounded text-[10px] font-bold"
                       >
                         🎹 {spec}
                       </span>
                     )) || (
-                      <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-[10px] font-bold">
+                      <span className="px-2 py-0.5 bg-afri-bg-ter dark:bg-afri-bg-ter text-afri-text-sec dark:text-afri-text-sec rounded text-[10px] font-bold">
                         🎹 {renfort.instrument}
                       </span>
                     )}
@@ -1054,7 +1054,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                 )}
 
                 {/* Remuneration bottom bar row */}
-                <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-850 pt-3.5 mt-2">
+                <div className="flex items-center justify-between border-t border-afri-border dark:border-gray-850 pt-3.5 mt-2">
                   <div>
                     <p className="text-[10px] font-black uppercase text-afri-text-sec leading-tight">Rémunération</p>
                     <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">{remunerationDisplay}</p>
@@ -1122,7 +1122,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="border-t border-gray-100 dark:border-gray-850 pt-4 mt-3 space-y-3 overflow-hidden"
+                      className="border-t border-afri-border dark:border-gray-850 pt-4 mt-3 space-y-3 overflow-hidden"
                     >
                       <h5 className="text-[11px] font-black uppercase tracking-wider text-afri-text-sec">
                         Candidats déclarés disponibles ({postApplicants.length}) :
@@ -1135,7 +1135,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                           {postApplicants.map(app => (
                             <div 
                               key={app.id} 
-                              className="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-850/30 flex flex-col sm:flex-row gap-3 sm:items-center justify-between"
+                              className="p-3 rounded-xl border border-afri-border dark:border-afri-border bg-afri-bg/50 dark:bg-afri-bg-sec/30 flex flex-col sm:flex-row gap-3 sm:items-center justify-between"
                             >
                               <div className="flex items-center gap-2.5">
                                 {app.musicianAvatar ? (
@@ -1145,7 +1145,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                                     className="w-9 h-9 rounded-full object-cover border border-gray-150"
                                   />
                                 ) : (
-                                  <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-850 flex items-center justify-center text-afri-text-sec shrink-0">
+                                  <div className="w-9 h-9 rounded-full bg-afri-bg-ter dark:bg-afri-bg-sec flex items-center justify-center text-afri-text-sec shrink-0">
                                     <User className="w-4 h-4" />
                                   </div>
                                 )}
@@ -1184,7 +1184,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                                     <span className={`px-2.5 py-1 text-[9px] font-extrabold uppercase rounded-full tracking-wider ${
                                       app.status === "accepte" 
                                         ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-450 dark:border-emerald-900 border" 
-                                        : "bg-gray-100 text-afri-text-sec border-gray-200 dark:bg-gray-850 dark:text-afri-text-sec border"
+                                        : "bg-afri-bg-ter text-afri-text-sec border-afri-border dark:bg-afri-bg-sec dark:text-afri-text-sec border"
                                     }`}>
                                       {app.status === "accepte" ? "Retenu ✓" : "Refusé"}
                                     </span>
@@ -1224,13 +1224,13 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-sm"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-afri-bg-sec dark:bg-gray-900 border border-[#D4AF37]/30 rounded-3xl w-full max-w-lg p-6 sm:p-8 relative shadow-2xl space-y-5 flex flex-col text-center"
+              className="bg-afri-bg-sec dark:bg-afri-bg-sec border border-[#D4AF37]/30 rounded-3xl w-full max-w-lg p-6 sm:p-8 relative shadow-2xl space-y-5 flex flex-col text-center"
             >
               <div className="w-16 h-16 mx-auto bg-amber-500/10 border border-amber-500/40 rounded-2xl flex items-center justify-center text-amber-400 text-3xl shadow-lg">
                 <AlertCircle className="w-10 h-10 text-amber-400" />
@@ -1249,7 +1249,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
               </div>
 
               {/* Summary Box */}
-              <div className="bg-afri-bg dark:bg-gray-850 border border-afri-border dark:border-gray-700 rounded-xl p-4 space-y-2.5 text-left text-xs">
+              <div className="bg-afri-bg dark:bg-afri-bg-sec border border-afri-border dark:border-afri-border rounded-xl p-4 space-y-2.5 text-left text-xs">
                 <div className="flex justify-between items-center">
                   <span className="text-afri-text-sec">Renfort Express :</span>
                   <span className="font-bold text-afri-text truncate max-w-[180px]">{renfortInsufficientFundsDetails.title}</span>
@@ -1300,7 +1300,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                 <button
                   type="button"
                   onClick={() => setShowRenfortInsufficientModal(false)}
-                  className="w-full py-2.5 bg-afri-bg dark:bg-gray-800 border border-afri-border text-afri-text-sec text-[10px] font-mono uppercase rounded-xl transition-colors cursor-pointer"
+                  className="w-full py-2.5 bg-afri-bg dark:bg-afri-bg-ter border border-afri-border text-afri-text-sec text-[10px] font-mono uppercase rounded-xl transition-colors cursor-pointer"
                 >
                   ⚪ Annuler
                 </button>

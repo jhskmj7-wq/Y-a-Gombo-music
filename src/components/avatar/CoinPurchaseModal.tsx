@@ -60,27 +60,27 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn text-left font-sans">
-      <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl relative max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-4 bg-afri-bg/80 backdrop-blur-md animate-fadeIn text-left font-sans">
+      <div className="w-full max-w-2xl bg-afri-bg-sec border border-afri-border rounded-3xl overflow-hidden shadow-2xl relative max-h-[92vh] flex flex-col">
         
         {/* Header */}
-        <div className="p-6 border-b border-zinc-800 bg-zinc-950 flex items-center justify-between relative z-10">
+        <div className="p-6 border-b border-afri-border bg-afri-bg flex items-center justify-between relative z-10">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
               <Coins className="w-6 h-6 animate-pulse" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-lg font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
                 RECHARGER GOMBO COINS
               </h3>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-afri-text-sec">
                 Achetez des Gombo Coins pour débloquer vêtements, couronnes et boubous royaux
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition cursor-pointer"
+            className="w-10 h-10 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-afri-text transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -105,7 +105,7 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
 
           {/* Packages Selection */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono font-bold text-zinc-400 uppercase">
+            <h4 className="text-xs font-mono font-bold text-afri-text-sec uppercase">
               1. Choisissez votre pack Gombo Coins
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -119,8 +119,8 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
                     onClick={() => setSelectedPkg(pkg)}
                     className={`p-4 rounded-2xl border transition cursor-pointer relative flex flex-col justify-between gap-3 ${
                       isSelected
-                        ? "bg-zinc-900 border-[#D4AF37] shadow-lg shadow-[#D4AF37]/5"
-                        : "bg-zinc-950 border-zinc-800 hover:border-zinc-700"
+                        ? "bg-afri-bg-sec border-[#D4AF37] shadow-lg shadow-[#D4AF37]/5"
+                        : "bg-afri-bg border-afri-border hover:border-afri-border"
                     }`}
                   >
                     {pkg.popular && (
@@ -132,7 +132,7 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Coins className="w-5 h-5 text-[#D4AF37]" />
-                        <span className="text-lg font-black text-white font-mono">
+                        <span className="text-lg font-black text-afri-text font-mono">
                           {pkg.coins.toLocaleString("fr-FR")}
                         </span>
                       </div>
@@ -154,7 +154,7 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
 
           {/* Payment Method Selection */}
           <div className="space-y-3 pt-2">
-            <h4 className="text-xs font-mono font-bold text-zinc-400 uppercase">
+            <h4 className="text-xs font-mono font-bold text-afri-text-sec uppercase">
               2. Mode de paiement
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -164,14 +164,14 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
                   onClick={() => setPaymentMethod(m.id)}
                   className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition cursor-pointer ${
                     paymentMethod === m.id
-                      ? "bg-zinc-900 border-[#D4AF37] text-white"
-                      : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                      ? "bg-afri-bg-sec border-[#D4AF37] text-afri-text"
+                      : "bg-afri-bg border-afri-border text-afri-text-sec hover:border-afri-border"
                   }`}
                 >
                   <span className="text-lg">{m.icon}</span>
                   <div>
-                    <div className="text-xs font-black uppercase text-white">{m.name}</div>
-                    <div className="text-[10px] text-zinc-500">{m.desc}</div>
+                    <div className="text-xs font-black uppercase text-afri-text">{m.name}</div>
+                    <div className="text-[10px] text-afri-text-muted">{m.desc}</div>
                   </div>
                 </button>
               ))}
@@ -179,17 +179,17 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
 
             {paymentMethod !== "wallet" && (
               <div className="mt-3">
-                <label className="text-[11px] font-mono font-bold text-zinc-400 uppercase block mb-1">
+                <label className="text-[11px] font-mono font-bold text-afri-text-sec uppercase block mb-1">
                   Numéro de téléphone Mobile Money
                 </label>
                 <div className="relative">
-                  <PhoneCall className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3" />
+                  <PhoneCall className="w-4 h-4 text-afri-text-muted absolute left-3.5 top-3" />
                   <input
                     type="tel"
                     placeholder="e.g. 0708091011"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full pl-10 pr-4 py-2.5 bg-afri-bg border border-afri-border rounded-xl text-xs text-afri-text placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
               </div>
@@ -198,9 +198,9 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between">
+        <div className="p-6 border-t border-afri-border bg-afri-bg flex items-center justify-between">
           <div className="flex flex-col">
-            <span className="text-[10px] text-zinc-500 font-mono uppercase font-bold">Total à régler</span>
+            <span className="text-[10px] text-afri-text-muted font-mono uppercase font-bold">Total à régler</span>
             <span className="text-base font-mono font-black text-emerald-400">
               {selectedPkg.priceFcfa.toLocaleString("fr-FR")} FCFA
             </span>
@@ -212,7 +212,7 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
             className="px-8 py-3 bg-[#D4AF37] text-black font-black text-xs uppercase tracking-wider rounded-xl shadow hover:bg-white transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {purchasing ? (
-              <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              <span className="w-4 h-4 border-2 border-afri-border border-t-transparent rounded-full animate-spin" />
             ) : (
               <Coins className="w-4 h-4" />
             )}

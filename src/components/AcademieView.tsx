@@ -454,7 +454,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
               >
                 <BookOpen className="w-4 h-4" />
                 <span>Catalogue</span>
-                <span className="px-1.5 py-0.2 bg-black/20 text-[10px] rounded-full font-mono font-bold">
+                <span className="px-1.5 py-0.2 bg-afri-bg/20 text-[10px] rounded-full font-mono font-bold">
                   {courses.length}
                 </span>
               </button>
@@ -469,7 +469,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
               >
                 <Award className="w-4 h-4" />
                 <span>Mes Cours</span>
-                <span className="px-1.5 py-0.2 bg-black/20 text-[10px] rounded-full font-mono font-bold">
+                <span className="px-1.5 py-0.2 bg-afri-bg/20 text-[10px] rounded-full font-mono font-bold">
                   {myEnrolledCourses.length}
                 </span>
               </button>
@@ -556,7 +556,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                 >
                   <div>
                     {/* MEDIA PREVIEW */}
-                    <div className="relative h-36 sm:h-44 w-full bg-black overflow-hidden">
+                    <div className="relative h-36 sm:h-44 w-full bg-afri-bg overflow-hidden">
                       <img
                         src={course.previewVideoUrl || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800"}
                         alt={course.title}
@@ -565,10 +565,10 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
                       
                       <div className="absolute top-2 left-2 flex items-center gap-1">
-                        <span className="px-2 py-0.5 bg-black/80 backdrop-blur-md border border-white/10 text-[9px] font-bold text-[#D4AF37] uppercase rounded-lg truncate">
+                        <span className="px-2 py-0.5 bg-afri-bg/80 backdrop-blur-md border border-afri-border text-[9px] font-bold text-[#D4AF37] uppercase rounded-lg truncate">
                           {course.level}
                         </span>
-                        <span className="px-2 py-0.5 bg-black/80 backdrop-blur-md border border-white/10 text-[9px] font-mono font-bold text-afri-text uppercase rounded-lg truncate">
+                        <span className="px-2 py-0.5 bg-afri-bg/80 backdrop-blur-md border border-afri-border text-[9px] font-mono font-bold text-afri-text uppercase rounded-lg truncate">
                           {course.format}
                         </span>
                       </div>
@@ -687,7 +687,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                 className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-xl bg-black border border-[#D4AF37]/40 flex items-center justify-center shrink-0 text-[#D4AF37]">
+                  <div className="w-14 h-14 rounded-xl bg-afri-bg border border-[#D4AF37]/40 flex items-center justify-center shrink-0 text-[#D4AF37]">
                     <GraduationCap className="w-7 h-7" />
                   </div>
                   <div className="space-y-1">
@@ -779,18 +779,18 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
         {selectedCourse && (
           <div className="space-y-4 text-left">
             {/* VIDEO PLAYER PREVIEW */}
-            <div className="relative h-52 w-full rounded-xl overflow-hidden border border-afri-border bg-black">
+            <div className="relative h-52 w-full rounded-xl overflow-hidden border border-afri-border bg-afri-bg">
               <img
                 src={selectedCourse.previewVideoUrl || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800"}
                 alt={selectedCourse.title}
                 className="w-full h-full object-cover opacity-70"
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <div className="absolute inset-0 flex items-center justify-center bg-afri-bg/40">
                 <div className="w-14 h-14 rounded-full bg-[#D4AF37] text-black flex items-center justify-center shadow-2xl">
                   <Play className="w-6 h-6 fill-black ml-0.5" />
                 </div>
               </div>
-              <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-black/80 backdrop-blur-md rounded text-[10px] font-mono text-emerald-400 border border-emerald-500/30 font-bold">
+              <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-afri-bg/80 backdrop-blur-md rounded text-[10px] font-mono text-emerald-400 border border-emerald-500/30 font-bold">
                 ✓ Extrait Gratuit Disponible
               </div>
             </div>

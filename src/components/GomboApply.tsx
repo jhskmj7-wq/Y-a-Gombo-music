@@ -266,7 +266,7 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
               className="px-6 py-2.5 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-extrabold rounded-xl shadow-md transition-all active:scale-98 flex items-center gap-1.5 text-sm cursor-pointer"
             >
               {loading ? (
-                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-afri-border border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <Send className="w-4 h-4" />

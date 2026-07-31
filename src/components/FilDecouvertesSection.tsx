@@ -228,7 +228,7 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
 
               <div className="space-y-3 relative z-10">
                 {/* Image Container with Badge */}
-                <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-black/40 border border-afri-border/80">
+                <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-afri-bg/40 border border-afri-border/80">
                   <img
                     src={item.imageUrl}
                     alt={item.title}
@@ -240,7 +240,7 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
                   <div className="absolute top-2 left-2 flex items-center gap-1.5 flex-wrap">
                     <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider font-mono flex items-center gap-1 shadow-md ${
                       isMarket 
-                        ? "bg-black/80 text-[#D4AF37] border border-[#D4AF37]/40" 
+                        ? "bg-afri-bg/80 text-[#D4AF37] border border-[#D4AF37]/40" 
                         : "bg-[#D4AF37] text-black border border-black/20"
                     }`}>
                       {isMarket ? (
@@ -264,7 +264,7 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
                   </div>
 
                   {/* Price overlay at bottom of image */}
-                  <div className="absolute bottom-2 right-2 bg-black/85 border border-[#D4AF37]/50 text-[#D4AF37] text-[10px] font-black font-mono px-2 py-0.5 rounded-xl shadow-lg">
+                  <div className="absolute bottom-2 right-2 bg-afri-bg/85 border border-[#D4AF37]/50 text-[#D4AF37] text-[10px] font-black font-mono px-2 py-0.5 rounded-xl shadow-lg">
                     {formatPrice(item.price, item.priceText)}
                   </div>
                 </div>
@@ -328,13 +328,13 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
           >
             <div className="space-y-4 text-left">
               {/* Image Preview */}
-              <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-afri-border">
+              <div className="relative aspect-video rounded-2xl overflow-hidden bg-afri-bg border border-afri-border">
                 <img
                   src={selectedDetail.imageUrl}
                   alt={selectedDetail.title}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute top-3 left-3 bg-black/80 border border-[#D4AF37] text-[#D4AF37] text-xs font-bold font-mono px-3 py-1 rounded-xl">
+                <div className="absolute top-3 left-3 bg-afri-bg/80 border border-[#D4AF37] text-[#D4AF37] text-xs font-bold font-mono px-3 py-1 rounded-xl">
                   {selectedDetail.type === "market" ? "Produit / Matériel" : "Formation Académique"}
                 </div>
               </div>

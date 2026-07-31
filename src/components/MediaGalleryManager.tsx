@@ -147,7 +147,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
   const videos = mediaGallery.filter(m => m.type === "video" || m.type === "youtube");
 
   return (
-    <div id="section-medias" className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4">
+    <div id="section-medias" className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-afri-border rounded-3xl p-6 shadow-sm space-y-4">
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-sm font-black uppercase text-afri-text-sec tracking-wider">🌟 Section Médias / Galerie Artiste</h3>
@@ -164,7 +164,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-100 dark:border-gray-800 gap-4 text-xs font-black">
+      <div className="flex border-b border-afri-border dark:border-afri-border gap-4 text-xs font-black">
         {[
           { id: "youtube", label: "🎥 Vidéos & YouTube", count: videos.length },
           { id: "audio", label: "🎵 Audios & Chansons", count: audios.length },
@@ -180,7 +180,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
             }`}
           >
             <span>{t.label}</span>
-            <span className="ml-1.5 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-[10px] text-afri-text-sec dark:text-afri-text-sec rounded-full font-bold">{t.count}</span>
+            <span className="ml-1.5 px-2 py-0.5 bg-gray-100 dark:bg-afri-bg-ter text-[10px] text-afri-text-sec dark:text-afri-text-sec rounded-full font-bold">{t.count}</span>
           </button>
         ))}
       </div>
@@ -202,7 +202,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                   : "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&q=80&w=350";
                 
                 return (
-                  <div key={vid.id} className="relative group overflow-hidden bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-2xl flex flex-col">
+                  <div key={vid.id} className="relative group overflow-hidden bg-gray-50 dark:bg-gray-850 border border-afri-border dark:border-afri-border rounded-2xl flex flex-col">
                     <div className="aspect-video w-full bg-afri-bg relative flex items-center justify-center overflow-hidden">
                       {isRawVideo ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-afri-bg-sec p-4 font-mono text-center select-none">
@@ -234,7 +234,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                       </div>
                       <button
                         onClick={() => handleDelete(vid.id)}
-                        className="p-1.5 hover:bg-rose-50 hover:text-rose-600 text-gray-300 dark:text-gray-600 rounded-lg transition-all cursor-pointer"
+                        className="p-1.5 hover:bg-rose-50 hover:text-rose-600 text-afri-text-sec dark:text-afri-text-sec rounded-lg transition-all cursor-pointer"
                         title="Détruire"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -255,7 +255,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
               </div>
             ) : (
               audios.map((aud) => (
-                <div key={aud.id} className="p-3 bg-gray-50 dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-800 rounded-xl flex items-center justify-between gap-4">
+                <div key={aud.id} className="p-3 bg-gray-50 dark:bg-afri-bg-sec border border-afri-border dark:border-afri-border rounded-xl flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3- w-full truncate">
                     <button
                       onClick={() => toggleAudio(aud.url, aud.title)}
@@ -274,7 +274,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                   </div>
                   <button
                     onClick={() => handleDelete(aud.id)}
-                    className="p-1.5 text-gray-300 hover:text-rose-550 dark:text-gray-600 rounded-lg cursor-pointer"
+                    className="p-1.5 text-afri-text-sec hover:text-rose-550 dark:text-afri-text-sec rounded-lg cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -292,7 +292,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
               </div>
             ) : (
               photos.map((ph) => (
-                <div key={ph.id} className="relative group overflow-hidden aspect-square border border-gray-100 dark:border-gray-800 rounded-xl bg-gray-100">
+                <div key={ph.id} className="relative group overflow-hidden aspect-square border border-afri-border dark:border-afri-border rounded-xl bg-gray-100">
                   <img src={ph.url} alt={ph.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-afri-bg/60 opacity-0 hover:opacity-100 transition-opacity flex flex-col justify-between p-2.5">
                     <div className="flex justify-end">
@@ -315,7 +315,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
       {/* Upload lightboxes popup additions Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/70 backdrop-blur-xs font-sans">
-          <div className="w-full max-w-md bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-2xl relative space-y-4 animate-scaleUp">
+          <div className="w-full max-w-md bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-afri-border rounded-3xl p-6 shadow-2xl relative space-y-4 animate-scaleUp">
             <h4 className="text-sm font-black uppercase tracking-wider text-gray-900 dark:text-afri-text">🚀 Ajouter un élément de portfolio</h4>
             
             <form onSubmit={handleAddMedia} className="space-y-3.5">
@@ -324,7 +324,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                 <select
                   value={mediaType}
                   onChange={(e) => setMediaType(e.target.value as any)}
-                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-xl text-xs font-bold dark:text-afri-text"
+                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-afri-border rounded-xl text-xs font-bold dark:text-afri-text"
                 >
                   <option value="youtube">👁️‍🗨️ Lien Vidéo YouTube / Vidéothèque</option>
                   <option value="video">🎥 Importer Fichier Vidéo (MP4, WebM)</option>
@@ -341,14 +341,14 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                   required
                   value={mediaTitle}
                   onChange={(e) => setMediaTitle(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-xl text-xs font-bold dark:text-afri-text"
+                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-afri-border rounded-xl text-xs font-bold dark:text-afri-text"
                 />
               </div>
 
               {mediaType !== "youtube" ? (
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-afri-text-sec mb-1">Sélectionner un fichier</label>
-                  <div className="border-2 border-dashed border-gray-200 dark:border-gray-850 rounded-xl p-4 text-center space-y-2 hover:bg-gray-50/50 transition-all">
+                  <div className="border-2 border-dashed border-afri-border dark:border-gray-850 rounded-xl p-4 text-center space-y-2 hover:bg-gray-50/50 transition-all">
                     <input
                       type="file"
                       required
@@ -363,7 +363,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                     />
                     <label htmlFor="portfolio-file-picker" className="cursor-pointer space-y-1 block">
                       <Camera className="w-6 h-6 mx-auto text-orange-550" />
-                      <span className="text-xs font-black block text-gray-700 dark:text-gray-300">
+                      <span className="text-xs font-black block text-afri-text-sec dark:text-afri-text-sec">
                         {mediaFile ? `✅ ${mediaFile.name}` : "Choisir un fichier sur mon appareil"}
                       </span>
                       <span className="text-[10px] text-afri-text-sec block">Fichiers max 10MB pour un streaming rapide</span>
@@ -379,7 +379,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                     required
                     value={mediaUrl}
                     onChange={(e) => setMediaUrl(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-xl text-xs font-bold dark:text-afri-text font-mono"
+                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-afri-border rounded-xl text-xs font-bold dark:text-afri-text font-mono"
                   />
                 </div>
               )}
@@ -390,7 +390,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                     <span>Téléversement sécurisé...</span>
                     <span>{progress}%</span>
                   </div>
-                  <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-gray-100 dark:bg-afri-bg-ter rounded-full overflow-hidden">
                     <div className="h-full bg-orange-555 transition-all" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
@@ -400,7 +400,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-black rounded-xl cursor-pointer"
+                  className="px-4 py-2 bg-gray-100 hover:bg-afri-bg-ter dark:bg-afri-bg-ter dark:hover:bg-gray-700 text-afri-text-sec dark:text-afri-text-sec text-xs font-black rounded-xl cursor-pointer"
                 >
                   Annuler
                 </button>
@@ -423,7 +423,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
           <div className="w-full max-w-3xl aspect-video bg-afri-bg rounded-2xl overflow-hidden relative border border-gray-850">
             <button
               onClick={() => setLightboxVideoId(null)}
-              className="absolute top-3 right-3 z-10 p-2 bg-afri-bg/60 hover:bg-afri-bg/90 text-afri-text rounded-full text-xs font-bold border border-white/20 hover:scale-105 cursor-pointer leading-none"
+              className="absolute top-3 right-3 z-10 p-2 bg-afri-bg/60 hover:bg-afri-bg/90 text-afri-text rounded-full text-xs font-bold border border-afri-border hover:scale-105 cursor-pointer leading-none"
             >
               Fermer ✖
             </button>
@@ -445,7 +445,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
           <div className="w-full max-w-3xl aspect-video bg-afri-bg rounded-2xl overflow-hidden relative border border-gray-850 flex items-center justify-center">
             <button
               onClick={() => setLightboxVideoUrl(null)}
-              className="absolute top-3 right-3 z-10 p-2 bg-afri-bg/60 hover:bg-afri-bg/90 text-afri-text rounded-full text-xs font-bold border border-white/20 hover:scale-105 cursor-pointer leading-none"
+              className="absolute top-3 right-3 z-10 p-2 bg-afri-bg/60 hover:bg-afri-bg/90 text-afri-text rounded-full text-xs font-bold border border-afri-border hover:scale-105 cursor-pointer leading-none"
             >
               Fermer ✖
             </button>

@@ -203,7 +203,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
           <div className="space-y-2">
             <h3 className="text-sm font-black text-[#D4AF37] uppercase tracking-widest font-mono">Connexion Réussie 🇨🇮</h3>
-            <p className="text-xs text-gray-300 leading-relaxed max-w-xs mx-auto">
+            <p className="text-xs text-afri-text-sec leading-relaxed max-w-xs mx-auto">
               Votre session sécurisée est connectée ! Synchronisation terminée avec l'app principale.
             </p>
           </div>
@@ -307,7 +307,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
             </span>
           </div>
           <div className="h-[1px] w-1/3 bg-afri-bg-sec/20 mx-auto mb-4" />
-          <p className="text-xs text-gray-300 font-sans font-bold leading-relaxed whitespace-pre-line max-w-sm mx-auto">
+          <p className="text-xs text-afri-text-sec font-sans font-bold leading-relaxed whitespace-pre-line max-w-sm mx-auto">
             {"Le Temple du Gombo :\nVos opportunités musicales certifiées,\nvos cachets sécurisés."}
           </p>
         </div>
@@ -451,7 +451,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
           <button
             type="button"
             onClick={() => setShowDiagnostic(true)}
-            className="text-[9px] font-mono text-zinc-500 hover:text-amber-400 underline tracking-wider cursor-pointer uppercase transition-colors"
+            className="text-[9px] font-mono text-afri-text-muted hover:text-amber-400 underline tracking-wider cursor-pointer uppercase transition-colors"
           >
             🔍 Outil Diagnostic Auth & Session
           </button>

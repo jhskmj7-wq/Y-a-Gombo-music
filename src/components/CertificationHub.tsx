@@ -574,7 +574,7 @@ export default function CertificationHub({
       </div>
 
       {/* Navigation tabs */}
-      <div id="tab-navigation" className="flex border-b border-gray-100 dark:border-zinc-805">
+      <div id="tab-navigation" className="flex border-b border-afri-border dark:border-zinc-805">
         {[
           { id: "badges", label: "🏆 Badges & Dossier", icon: Award },
           { id: "premium", label: "💎 Premium AFRIGOMBO", icon: Sparkles },
@@ -610,7 +610,7 @@ export default function CertificationHub({
             <div id="levels-container" className="md:col-span-2 space-y-6">
               
               {/* LEVEL 1: GOOGLE SIGN-IN */}
-              <div className="bg-white dark:bg-afri-bg-sec p-6 rounded-2xl border border-gray-100 dark:border-afri-border space-y-4 shadow-xs">
+              <div className="bg-white dark:bg-afri-bg-sec p-6 rounded-2xl border border-afri-border dark:border-afri-border space-y-4 shadow-xs">
                 <div className="flex items-center justify-between border-b border-gray-50 dark:border-afri-border pb-3">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center font-bold">1</div>
@@ -627,14 +627,14 @@ export default function CertificationHub({
                 <p className="text-xs text-afri-text-sec dark:text-afri-text-sec leading-relaxed">
                   Votre compte a été authentifié de manière sécurisée par Google. Ce badge certifie que votre adresse e-mail unique est vérifiée et liée à un utilisateur réel d'Abidjan.
                 </p>
-                <div className="p-3 bg-zinc-50 dark:bg-afri-bg-sec/30 rounded-xl flex items-center justify-between text-xs font-semibold text-gray-600 dark:text-afri-text-sec">
+                <div className="p-3 bg-zinc-50 dark:bg-afri-bg-sec/30 rounded-xl flex items-center justify-between text-xs font-semibold text-afri-text-sec dark:text-afri-text-sec">
                   <span>Adresse e-mail liée :</span>
                   <span className="font-mono text-[11px] text-gray-950 dark:text-afri-text">{currentUserProfile?.email || "Connecté"}</span>
                 </div>
               </div>
 
               {/* LEVEL 2: GOMBO ID */}
-              <div className="bg-white dark:bg-afri-bg-sec p-6 rounded-2xl border border-gray-100 dark:border-afri-border space-y-4 shadow-xs">
+              <div className="bg-white dark:bg-afri-bg-sec p-6 rounded-2xl border border-afri-border dark:border-afri-border space-y-4 shadow-xs">
                 <div className="flex items-center justify-between border-b border-gray-50 dark:border-afri-border pb-3">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-950/40 text-[#7C3AED] flex items-center justify-center font-bold">2</div>
@@ -836,7 +836,7 @@ export default function CertificationHub({
               </div>
 
               {/* Card checkout action */}
-              <div className="md:col-span-2 bg-afri-bg-sec/95 border border-gray-800 rounded-xl p-3.5 sm:p-4 space-y-2.5 shadow-xl relative">
+              <div className="md:col-span-2 bg-afri-bg-sec/95 border border-afri-border rounded-xl p-3.5 sm:p-4 space-y-2.5 shadow-xl relative">
                 {currentUserProfile?.badges?.includes("💎 Adhérent Premium") || premiumSuccess ? (
                   <div className="text-center py-6 space-y-3">
                     <div className="text-4xl text-[#D4AF37] animate-bounce">💎</div>
@@ -850,7 +850,7 @@ export default function CertificationHub({
                   </div>
                 ) : (
                   <form onSubmit={handleSubscribePremium} className="space-y-4">
-                    <div className="text-center pb-2 border-b border-gray-800">
+                    <div className="text-center pb-2 border-b border-afri-border">
                       <div className="text-2xl font-black text-[#D4AF37] font-mono">5 000 FCFA <span className="text-xs font-normal text-afri-text-sec">/ an</span></div>
                       <p className="text-[10px] text-afri-text-sec uppercase font-bold tracking-wider mt-0.5">Mobile Money Intégré</p>
                     </div>
@@ -884,7 +884,7 @@ export default function CertificationHub({
                         placeholder="Ex: 0709847253"
                         value={mobilePhoneNumber}
                         onChange={e => setMobilePhoneNumber(e.target.value)}
-                        className="w-full bg-afri-bg-sec border border-gray-800 text-afri-text rounded-lg p-2.5 font-mono text-center focus:border-[#D4AF37] outline-none"
+                        className="w-full bg-afri-bg-sec border border-afri-border text-afri-text rounded-lg p-2.5 font-mono text-center focus:border-[#D4AF37] outline-none"
                       />
                     </div>
 
@@ -915,7 +915,7 @@ export default function CertificationHub({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
               {/* Product 1: Sponsored Event / Gombo */}
-              <div className="bg-afri-bg-sec border border-gray-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+              <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-5 flex flex-col justify-between space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between items-start">
                     <span className="p-1 px-2 bg-pink-500/10 text-pink-400 border border-pink-500/25 text-[9px] font-black uppercase rounded-lg">
@@ -952,7 +952,7 @@ export default function CertificationHub({
               </div>
 
               {/* Product 2: Studio Priority Booking */}
-              <div className="bg-afri-bg-sec border border-gray-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+              <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-5 flex flex-col justify-between space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between items-start">
                     <span className="p-1 px-2 bg-sky-500/10 text-sky-450 border border-sky-500/25 text-[9px] font-black uppercase rounded-lg">
@@ -989,7 +989,7 @@ export default function CertificationHub({
               </div>
 
               {/* Product 3: Live Ticket Sales & Target Ads */}
-              <div className="bg-afri-bg-sec border border-gray-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+              <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-5 flex flex-col justify-between space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between items-start">
                     <span className="p-1 px-2 bg-emerald-500/10 text-emerald-405 border border-emerald-500/25 text-[9px] font-black uppercase rounded-lg">
@@ -1056,7 +1056,7 @@ export default function CertificationHub({
               ) : (
                 <div className="space-y-3">
                   {myGombos.map(g => (
-                    <div key={g.id} className="p-4 bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-zinc-855 rounded-xl flex items-center justify-between shadow-xs">
+                    <div key={g.id} className="p-4 bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-zinc-855 rounded-xl flex items-center justify-between shadow-xs">
                       <div className="space-y-1">
                         <div className="font-bold text-xs text-gray-900 dark:text-afri-text max-w-xs truncate">{g.title}</div>
                         <div className="text-[11px] text-afri-text-sec">💰 {g.budget.toLocaleString()} FCFA • 📍 {g.commune}</div>
@@ -1088,7 +1088,7 @@ export default function CertificationHub({
               ) : (
                 <div className="space-y-3">
                   {myPosts.map(p => (
-                    <div key={p.id} className="p-4 bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-zinc-855 rounded-xl flex items-center justify-between shadow-xs">
+                    <div key={p.id} className="p-4 bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-zinc-855 rounded-xl flex items-center justify-between shadow-xs">
                       <div className="space-y-1">
                         <div className="font-bold text-xs text-gray-900 dark:text-afri-text max-w-xs truncate">{p.title || p.caption}</div>
                         <div className="text-[11px] text-afri-text-sec">🎵 {p.type || "DÉMO"} • 🗣️ {p.commentsCount || 0} comms</div>
@@ -1115,8 +1115,8 @@ export default function CertificationHub({
       {/* VIEW 3: PAYMENTS TRANSACTIONS HISTORY */}
       {activeTab === "payments" && (
         <div id="payments-panel" className="space-y-6 animate-fadeIn">
-          <div className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-zinc-855 rounded-2xl overflow-hidden shadow-xs">
-            <div className="p-5 border-b border-gray-100 dark:border-afri-border bg-gray-50/50 dark:bg-afri-bg-sec/30">
+          <div className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-zinc-855 rounded-2xl overflow-hidden shadow-xs">
+            <div className="p-5 border-b border-afri-border dark:border-afri-border bg-gray-50/50 dark:bg-afri-bg-sec/30">
               <h3 className="font-black text-xs uppercase tracking-wider text-gray-900 dark:text-afri-text">
                 Historique de vos ordres de facturation à Abidjan 
               </h3>
@@ -1166,8 +1166,8 @@ export default function CertificationHub({
             </p>
           </div>
 
-          <div className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-zinc-855 rounded-2xl overflow-hidden shadow-xs">
-            <div className="p-4 border-b border-gray-100 dark:border-afri-border bg-gray-50/50 dark:bg-afri-bg-sec/30">
+          <div className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-zinc-855 rounded-2xl overflow-hidden shadow-xs">
+            <div className="p-4 border-b border-afri-border dark:border-afri-border bg-gray-50/50 dark:bg-afri-bg-sec/30">
               <h3 className="font-bold text-xs uppercase tracking-tight text-gray-950 dark:text-afri-text">
                 Dossiers de compétences en attente d&#39;examen ({adminRequests.length})
               </h3>
@@ -1297,7 +1297,7 @@ export default function CertificationHub({
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-afri-border rounded-3xl p-6 sm:p-8 max-w-xl w-full relative overflow-y-auto max-h-[90vh] text-zinc-900 dark:text-afri-text shadow-2xl space-y-6 text-left"
+              className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-afri-border rounded-3xl p-6 sm:p-8 max-w-xl w-full relative overflow-y-auto max-h-[90vh] text-zinc-900 dark:text-afri-text shadow-2xl space-y-6 text-left"
             >
                  {!gomboSuccess ? (
                 <form onSubmit={handleApplyGomboID} className="space-y-4">
@@ -1411,7 +1411,7 @@ export default function CertificationHub({
                   </div>
 
                   {/* CHOIX DU MODE DE TRAITEMENT */}
-                  <div className="space-y-2 border-t border-gray-100 dark:border-afri-border pt-3">
+                  <div className="space-y-2 border-t border-afri-border dark:border-afri-border pt-3">
                     <span className="text-[11px] font-black uppercase text-afri-text-sec block mb-1">Type de traitement du dossier :</span>
                     
                     <div className="grid grid-cols-2 gap-3">
@@ -1535,7 +1535,7 @@ export default function CertificationHub({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-afri-border rounded-3xl p-6 sm:p-8 max-w-md w-full relative overflow-hidden text-gray-900 dark:text-afri-text shadow-2xl space-y-5"
+              className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-afri-border rounded-3xl p-6 sm:p-8 max-w-md w-full relative overflow-hidden text-gray-900 dark:text-afri-text shadow-2xl space-y-5"
             >
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 to-yellow-500" />
 
@@ -1572,7 +1572,7 @@ export default function CertificationHub({
                         className={`p-2.5 rounded-xl border text-center transition flex flex-col items-center justify-center gap-0.5 ${
                           selectedBoostDuration === d.value 
                             ? "bg-purple-600 text-afri-text border-purple-600 shadow-md" 
-                            : "bg-gray-50 dark:bg-gray-850 text-afri-text-sec border-gray-100 dark:border-gray-800"
+                            : "bg-gray-50 dark:bg-gray-850 text-afri-text-sec border-afri-border dark:border-afri-border"
                         }`}
                       >
                         <span className="text-[10px] font-black uppercase tracking-tight">{d.label}</span>
@@ -1593,7 +1593,7 @@ export default function CertificationHub({
                         className={`py-2 text-[10px] font-black uppercase rounded-lg border text-center transition ${
                           selectedMobileNetwork === n 
                             ? "bg-purple-600 text-afri-text border-purple-600" 
-                            : "bg-gray-50 dark:bg-gray-850 text-afri-text-sec border-gray-100 dark:border-gray-800"
+                            : "bg-gray-50 dark:bg-gray-850 text-afri-text-sec border-afri-border dark:border-afri-border"
                         }`}
                       >
                         {(typeof n === "string" ? n : String(n ?? "")).split(" ")[0]}
@@ -1610,7 +1610,7 @@ export default function CertificationHub({
                     placeholder="07 00 00 00 00"
                     value={mobilePhoneNumber}
                     onChange={(e) => setMobilePhoneNumber(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-55 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-950 dark:text-afri-text"
+                    className="w-full px-4 py-2 bg-gray-55 bg-gray-50 dark:bg-gray-850 border border-afri-border dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-950 dark:text-afri-text"
                   />
                 </div>
 

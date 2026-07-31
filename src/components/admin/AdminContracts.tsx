@@ -228,9 +228,9 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
         return <span className="px-2.5 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-lg text-[9px] font-mono uppercase font-bold">Litige Actif 🚨</span>;
       case "cancelled":
       case "refunded":
-        return <span className="px-2.5 py-1 bg-zinc-800 text-zinc-400 border border-zinc-700 rounded-lg text-[9px] font-mono uppercase font-bold">Annulé / Remboursé</span>;
+        return <span className="px-2.5 py-1 bg-afri-bg-ter text-afri-text-sec border border-afri-border rounded-lg text-[9px] font-mono uppercase font-bold">Annulé / Remboursé</span>;
       default:
-        return <span className="px-2.5 py-1 bg-zinc-800 text-zinc-400 border border-zinc-700 rounded-lg text-[9px] font-mono uppercase font-bold">{status}</span>;
+        return <span className="px-2.5 py-1 bg-afri-bg-ter text-afri-text-sec border border-afri-border rounded-lg text-[9px] font-mono uppercase font-bold">{status}</span>;
     }
   };
 
@@ -246,8 +246,8 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
             exit={{ opacity: 0, y: -20, x: "-50%" }}
             className={`fixed top-20 left-1/2 z-[120] px-6 py-3.5 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold border ${
               toast.type === "success" 
-                ? "bg-zinc-950 border-[#D4AF37] text-[#D4AF37]" 
-                : "bg-zinc-950 border-rose-500 text-rose-400"
+                ? "bg-afri-bg border-[#D4AF37] text-[#D4AF37]" 
+                : "bg-afri-bg border-rose-500 text-rose-400"
             }`}
           >
             {toast.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
@@ -257,30 +257,30 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
       </AnimatePresence>
 
       {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-zinc-950 border border-[#D4AF37]/40 shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="p-6 rounded-3xl bg-afri-bg border border-[#D4AF37]/40 shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider font-sans">
+            <h2 className="text-lg sm:text-xl font-black text-afri-text uppercase tracking-wider font-sans">
               SUPERVISION ET ARBITRAGE DES CONTRATS (ESCROW)
             </h2>
-            <p className="text-xs text-zinc-400 font-mono">
+            <p className="text-xs text-afri-text-sec font-mono">
               Tiers de confiance souverain : suivi temps réel, coffre-fort séquestre et arbitrage de litiges
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <div className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-2xl text-right">
-            <span className="text-[9px] text-zinc-500 font-mono uppercase block">Total Séquestre Bloqué</span>
+          <div className="px-4 py-2 bg-afri-bg-sec border border-afri-border rounded-2xl text-right">
+            <span className="text-[9px] text-afri-text-muted font-mono uppercase block">Total Séquestre Bloqué</span>
             <span className="text-sm font-black font-mono text-[#D4AF37]">
               {totalEscrowLocked.toLocaleString("fr-FR")} FCFA
             </span>
           </div>
-          <div className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-2xl text-right">
-            <span className="text-[9px] text-zinc-500 font-mono uppercase block">Commissions Perçues</span>
+          <div className="px-4 py-2 bg-afri-bg-sec border border-afri-border rounded-2xl text-right">
+            <span className="text-[9px] text-afri-text-muted font-mono uppercase block">Commissions Perçues</span>
             <span className="text-sm font-black font-mono text-emerald-400">
               {totalCommissionsEarned.toLocaleString("fr-FR")} FCFA
             </span>
@@ -296,7 +296,7 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
           { label: "En Cours", count: countInProgress, color: "text-purple-400 border-purple-500/20 bg-purple-500/5", id: "in_progress" },
           { label: "Terminés", count: countCompleted, color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/5", id: "completed" },
           { label: "Litiges", count: countDisputed, color: "text-rose-400 border-rose-500/20 bg-rose-500/5", id: "disputed" },
-          { label: "Annulés/Remb.", count: countCancelled, color: "text-zinc-400 border-zinc-800 bg-zinc-900", id: "cancelled" },
+          { label: "Annulés/Remb.", count: countCancelled, color: "text-afri-text-sec border-afri-border bg-afri-bg-sec", id: "cancelled" },
         ].map((item) => (
           <button
             key={item.id}
@@ -312,32 +312,32 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
       </div>
 
       {/* SEARCH AND TAB BAR */}
-      <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-5 space-y-4">
+      <div className="bg-afri-bg border border-zinc-800/80 rounded-3xl p-5 space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-zinc-800/80 pb-3">
           <div>
             <h3 className="text-sm font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-2">
               <FileText className="w-4 h-4" />
               <span>Liste des Contrats ({filteredContracts.length})</span>
             </h3>
-            <p className="text-[10px] text-zinc-400 font-mono">Consultez, écoutez les échanges et arbitrez en temps réel</p>
+            <p className="text-[10px] text-afri-text-sec font-mono">Consultez, écoutez les échanges et arbitrez en temps réel</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-afri-text-muted" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Titre, Promoteur, Artiste, ID..."
-                className="w-full pl-8 pr-3 py-1.5 bg-zinc-900 border border-zinc-800 focus:border-[#D4AF37]/60 rounded-xl text-xs text-white outline-none font-mono"
+                className="w-full pl-8 pr-3 py-1.5 bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37]/60 rounded-xl text-xs text-afri-text outline-none font-mono"
               />
             </div>
 
             <button
               onClick={() => setActiveTab("all")}
               className={`py-1 px-3 rounded-lg text-[9px] font-mono font-bold uppercase transition border cursor-pointer ${
-                activeTab === "all" ? "bg-[#D4AF37] text-black border-[#D4AF37]" : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
+                activeTab === "all" ? "bg-[#D4AF37] text-black border-[#D4AF37]" : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
               }`}
             >
               Tous
@@ -348,7 +348,7 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
         {/* CONTRACTS TABLE LIST */}
         <div className="divide-y divide-zinc-800/60 max-h-[480px] overflow-y-auto no-scrollbar">
           {filteredContracts.length === 0 ? (
-            <div className="py-12 text-center text-zinc-500 font-mono text-xs">
+            <div className="py-12 text-center text-afri-text-muted font-mono text-xs">
               Aucun contrat correspondant.
             </div>
           ) : (
@@ -359,36 +359,36 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
               return (
                 <div
                   key={contract.id}
-                  className={`py-3.5 px-3 hover:bg-zinc-900/50 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-left transition ${
+                  className={`py-3.5 px-3 hover:bg-afri-bg-sec rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-left transition ${
                     isDisputed ? "bg-rose-950/15 border border-rose-500/30" : ""
                   }`}
                 >
                   <div className="flex items-start gap-3 min-w-0 flex-1">
-                    <div className="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#D4AF37] shrink-0 mt-0.5">
+                    <div className="w-10 h-10 rounded-2xl bg-afri-bg-sec border border-afri-border flex items-center justify-center text-[#D4AF37] shrink-0 mt-0.5">
                       <FileText className="w-5 h-5" />
                     </div>
 
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-xs font-black text-white truncate max-w-xs sm:max-w-md">
+                        <h4 className="text-xs font-black text-afri-text truncate max-w-xs sm:max-w-md">
                           {contract.titre}
                         </h4>
                         {renderStatusBadge(contract.statut || contract.status || "")}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-zinc-400">
-                        <span>Promoteur : <strong className="text-white">{contract.promoterName || contract.promoterId}</strong></span>
+                      <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-afri-text-sec">
+                        <span>Promoteur : <strong className="text-afri-text">{contract.promoterName || contract.promoterId}</strong></span>
                         <span>➔</span>
                         <span>Artiste : <strong className="text-[#D4AF37]">{contract.artistName || contract.artistId}</strong></span>
                         <span>•</span>
-                        <span className="text-zinc-500">Créé le {dateStr}</span>
+                        <span className="text-afri-text-muted">Créé le {dateStr}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between md:justify-end gap-4 shrink-0">
                     <div className="text-right">
-                      <span className="text-[9px] text-zinc-500 uppercase font-mono block">Montant Contrat</span>
+                      <span className="text-[9px] text-afri-text-muted uppercase font-mono block">Montant Contrat</span>
                       <span className="text-sm font-black font-mono text-[#D4AF37]">
                         {contract.montant.toLocaleString("fr-FR")} FCFA
                       </span>
@@ -396,7 +396,7 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
 
                     <button
                       onClick={() => setSelectedContract(contract)}
-                      className="px-3.5 py-2 bg-zinc-900 hover:bg-[#D4AF37] hover:text-black border border-zinc-800 text-zinc-300 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer"
+                      className="px-3.5 py-2 bg-afri-bg-sec hover:bg-[#D4AF37] hover:text-black border border-afri-border text-afri-text-sec rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>Détails & Salon</span>
@@ -412,12 +412,12 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
       {/* MODAL: CONTRACT DETAILS, PRIVATE CHAT & DISPUTE ARBITRATION */}
       <AnimatePresence>
         {selectedContract && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-afri-bg/85 backdrop-blur-md">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-4xl max-h-[90vh] bg-zinc-950 border border-[#D4AF37]/50 rounded-3xl shadow-2xl overflow-hidden flex flex-col text-left"
+              className="relative w-full max-w-4xl max-h-[90vh] bg-afri-bg border border-[#D4AF37]/50 rounded-3xl shadow-2xl overflow-hidden flex flex-col text-left"
             >
               {/* Modal Header */}
               <div className="p-5 border-b border-zinc-800/80 bg-zinc-900/60 flex items-center justify-between gap-3">
@@ -426,17 +426,17 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-white uppercase tracking-wider font-sans flex items-center gap-2">
+                    <h3 className="text-sm font-black text-afri-text uppercase tracking-wider font-sans flex items-center gap-2">
                       <span>{selectedContract.titre}</span>
                       {renderStatusBadge(selectedContract.statut || selectedContract.status || "")}
                     </h3>
-                    <p className="text-[10px] text-zinc-400 font-mono">ID Contrat : {selectedContract.id}</p>
+                    <p className="text-[10px] text-afri-text-sec font-mono">ID Contrat : {selectedContract.id}</p>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setSelectedContract(null)}
-                  className="p-1.5 rounded-full text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 cursor-pointer"
+                  className="p-1.5 rounded-full text-afri-text-sec hover:text-afri-text bg-afri-bg-sec border border-afri-border cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -447,29 +447,29 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
 
                 {/* Financial Overview Cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
-                  <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-2xl">
-                    <span className="text-[9px] text-zinc-500 uppercase block">Montant Prestation</span>
+                  <div className="p-3 bg-afri-bg-sec border border-afri-border rounded-2xl">
+                    <span className="text-[9px] text-afri-text-muted uppercase block">Montant Prestation</span>
                     <span className="text-sm font-black text-[#D4AF37]">
                       {selectedContract.montant.toLocaleString("fr-FR")} FCFA
                     </span>
                   </div>
 
-                  <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-2xl">
-                    <span className="text-[9px] text-zinc-500 uppercase block">Commission Plateforme</span>
+                  <div className="p-3 bg-afri-bg-sec border border-afri-border rounded-2xl">
+                    <span className="text-[9px] text-afri-text-muted uppercase block">Commission Plateforme</span>
                     <span className="text-sm font-black text-emerald-400">
                       {(selectedContract.commission || 0).toLocaleString("fr-FR")} FCFA
                     </span>
                   </div>
 
-                  <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-2xl">
-                    <span className="text-[9px] text-zinc-500 uppercase block">Net Versé Artiste</span>
+                  <div className="p-3 bg-afri-bg-sec border border-afri-border rounded-2xl">
+                    <span className="text-[9px] text-afri-text-muted uppercase block">Net Versé Artiste</span>
                     <span className="text-sm font-black text-sky-400">
                       {(selectedContract.netArtistAmount || Math.round(selectedContract.montant * 0.975)).toLocaleString("fr-FR")} FCFA
                     </span>
                   </div>
 
-                  <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-2xl">
-                    <span className="text-[9px] text-zinc-500 uppercase block">Solde en Séquestre</span>
+                  <div className="p-3 bg-afri-bg-sec border border-afri-border rounded-2xl">
+                    <span className="text-[9px] text-afri-text-muted uppercase block">Solde en Séquestre</span>
                     <span className="text-sm font-black text-amber-400">
                       {(selectedContract.escrowBalance || 0).toLocaleString("fr-FR")} FCFA
                     </span>
@@ -478,16 +478,16 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
 
                 {/* Parties details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
-                  <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl space-y-1">
-                    <span className="text-[9px] text-zinc-500 uppercase font-bold block">Promoteur (Donneur d'Ordre)</span>
-                    <div className="text-white font-bold">{selectedContract.promoterName || "Promoteur Anonyme"}</div>
-                    <div className="text-[10px] text-zinc-500">ID: {selectedContract.promoterId}</div>
+                  <div className="p-3.5 bg-zinc-900/60 border border-afri-border rounded-2xl space-y-1">
+                    <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Promoteur (Donneur d'Ordre)</span>
+                    <div className="text-afri-text font-bold">{selectedContract.promoterName || "Promoteur Anonyme"}</div>
+                    <div className="text-[10px] text-afri-text-muted">ID: {selectedContract.promoterId}</div>
                   </div>
 
-                  <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl space-y-1">
-                    <span className="text-[9px] text-zinc-500 uppercase font-bold block">Musicien (Prestataire)</span>
+                  <div className="p-3.5 bg-zinc-900/60 border border-afri-border rounded-2xl space-y-1">
+                    <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Musicien (Prestataire)</span>
                     <div className="text-[#D4AF37] font-bold">{selectedContract.artistName || "Artiste Virtuose"}</div>
-                    <div className="text-[10px] text-zinc-500">ID: {selectedContract.artistId}</div>
+                    <div className="text-[10px] text-afri-text-muted">ID: {selectedContract.artistId}</div>
                   </div>
                 </div>
 
@@ -499,13 +499,13 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
                       <span>Panneau d'Arbitrage de Litige Impérial</span>
                     </div>
 
-                    <div className="p-3 bg-zinc-900 border border-rose-500/30 rounded-xl space-y-1 font-mono text-[11px]">
-                      <div className="text-zinc-400">Motif du litige soumis par <strong className="text-white">{activeDispute.raisedByName}</strong> :</div>
+                    <div className="p-3 bg-afri-bg-sec border border-rose-500/30 rounded-xl space-y-1 font-mono text-[11px]">
+                      <div className="text-afri-text-sec">Motif du litige soumis par <strong className="text-afri-text">{activeDispute.raisedByName}</strong> :</div>
                       <div className="text-rose-200 font-semibold italic">"{activeDispute.reason}"</div>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block">
+                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
                         Décision d'Arbitrage du Super Fondateur
                       </label>
                       <div className="grid grid-cols-2 gap-2">
@@ -515,7 +515,7 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
                           className={`p-2.5 rounded-xl border font-mono text-xs font-bold uppercase transition cursor-pointer ${
                             resolutionType === "release_artist"
                               ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
-                              : "bg-zinc-900 border-zinc-800 text-zinc-400"
+                              : "bg-afri-bg-sec border-afri-border text-afri-text-sec"
                           }`}
                         >
                           Valider & Libérer pour l'Artiste
@@ -527,7 +527,7 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
                           className={`p-2.5 rounded-xl border font-mono text-xs font-bold uppercase transition cursor-pointer ${
                             resolutionType === "refund_promoter"
                               ? "bg-amber-500/20 border-amber-500 text-amber-400"
-                              : "bg-zinc-900 border-zinc-800 text-zinc-400"
+                              : "bg-afri-bg-sec border-afri-border text-afri-text-sec"
                           }`}
                         >
                           Annuler & Rembourser le Promoteur
@@ -538,13 +538,13 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
                         value={resolutionNotes}
                         onChange={(e) => setResolutionNotes(e.target.value)}
                         placeholder="Précisez le motif souverain de votre décision d'arbitrage..."
-                        className="w-full bg-zinc-900 border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3 text-white font-mono text-xs outline-none h-18 resize-none"
+                        className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl p-3 text-afri-text font-mono text-xs outline-none h-18 resize-none"
                       />
 
                       <button
                         onClick={handleExecuteArbitration}
                         disabled={processing}
-                        className="w-full py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-mono font-black uppercase text-xs rounded-xl transition cursor-pointer disabled:opacity-50"
+                        className="w-full py-2.5 bg-rose-500 hover:bg-rose-600 text-afri-text font-mono font-black uppercase text-xs rounded-xl transition cursor-pointer disabled:opacity-50"
                       >
                         {processing ? "Arbitrage en cours..." : "Exécuter la Décision d'Arbitrage"}
                       </button>
@@ -553,19 +553,19 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
                 )}
 
                 {/* PRIVATE CHAT SALON (`contractMessages`) */}
-                <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 space-y-3">
-                  <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                <div className="bg-zinc-900/80 border border-afri-border rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between border-b border-afri-border pb-2">
                     <h4 className="text-xs font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-2 font-mono">
                       <MessageSquare className="w-4 h-4" />
                       <span>Salon de Discussion Privé du Contrat ({messages.length} messages)</span>
                     </h4>
-                    <span className="text-[9px] text-zinc-500 font-mono">Accès Administration Souverain</span>
+                    <span className="text-[9px] text-afri-text-muted font-mono">Accès Administration Souverain</span>
                   </div>
 
                   {/* Messages list */}
                   <div className="max-h-52 overflow-y-auto space-y-2 pr-1 font-mono text-xs no-scrollbar">
                     {messages.length === 0 ? (
-                      <div className="text-center py-6 text-zinc-500 text-[11px]">
+                      <div className="text-center py-6 text-afri-text-muted text-[11px]">
                         Aucun message échangé pour le moment.
                       </div>
                     ) : (
@@ -577,11 +577,11 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
                             className={`p-2.5 rounded-xl border text-left ${
                               isAdminMsg 
                                 ? "bg-[#D4AF37]/10 border-[#D4AF37]/40 text-amber-200" 
-                                : "bg-zinc-950 border-zinc-800 text-zinc-300"
+                                : "bg-afri-bg border-afri-border text-afri-text-sec"
                             }`}
                           >
-                            <div className="flex items-center justify-between text-[9px] text-zinc-500 mb-1">
-                              <span className="font-bold text-white">{m.senderName} ({m.senderRole || "membre"})</span>
+                            <div className="flex items-center justify-between text-[9px] text-afri-text-muted mb-1">
+                              <span className="font-bold text-afri-text">{m.senderName} ({m.senderRole || "membre"})</span>
                               <span>{m.createdAt ? new Date(m.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : ""}</span>
                             </div>
                             <p className="text-xs leading-relaxed">{m.text}</p>
@@ -592,14 +592,14 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
                   </div>
 
                   {/* Send message box for Admin */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-zinc-800">
+                  <div className="flex items-center gap-2 pt-2 border-t border-afri-border">
                     <input
                       type="text"
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleSendAdminMessage()}
                       placeholder="Envoyer une directive officielle dans le salon..."
-                      className="flex-1 bg-zinc-950 border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2 text-xs text-white outline-none font-mono"
+                      className="flex-1 bg-afri-bg border border-afri-border focus:border-[#D4AF37] rounded-xl px-3 py-2 text-xs text-afri-text outline-none font-mono"
                     />
                     <button
                       onClick={handleSendAdminMessage}
@@ -613,10 +613,10 @@ export default function AdminContracts({ currentUser }: AdminContractsProps) {
               </div>
 
               {/* Modal Footer */}
-              <div className="p-4 bg-zinc-900/80 border-t border-zinc-800 flex justify-end">
+              <div className="p-4 bg-zinc-900/80 border-t border-afri-border flex justify-end">
                 <button
                   onClick={() => setSelectedContract(null)}
-                  className="py-2 px-5 bg-zinc-800 hover:bg-zinc-700 text-white font-mono font-bold text-xs uppercase rounded-xl transition cursor-pointer"
+                  className="py-2 px-5 bg-afri-bg-ter hover:bg-zinc-700 text-afri-text font-mono font-bold text-xs uppercase rounded-xl transition cursor-pointer"
                 >
                   Fermer
                 </button>

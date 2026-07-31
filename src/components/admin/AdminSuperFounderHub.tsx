@@ -97,16 +97,16 @@ export default function AdminSuperFounderHub({
   };
 
   return (
-    <div className="min-h-[100dvh] h-[100dvh] bg-black text-white font-sans antialiased flex flex-col w-full overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="min-h-[100dvh] h-[100dvh] bg-afri-bg text-afri-text font-sans antialiased flex flex-col w-full overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       
       {/* Imperial Top Header Bar */}
-      <header className="bg-zinc-950 border-b border-zinc-800/80 px-4 py-3 flex items-center justify-between shrink-0 sticky top-0 z-40">
+      <header className="bg-afri-bg border-b border-zinc-800/80 px-4 py-3 flex items-center justify-between shrink-0 sticky top-0 z-40">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] shadow-lg shadow-[#D4AF37]/10">
             <Crown className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+            <h1 className="text-xs sm:text-sm font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
               <span>TABLEAU DU SUPER FONDATEUR</span>
               <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                 <Radio className="w-2.5 h-2.5 animate-pulse" /> SOUVERAIN
@@ -121,7 +121,7 @@ export default function AdminSuperFounderHub({
         {onExit && (
           <button
             onClick={onExit}
-            className="px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700 rounded-xl text-xs font-bold uppercase transition flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-1.5 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec hover:text-afri-text border border-afri-border hover:border-afri-border rounded-xl text-xs font-bold uppercase transition flex items-center gap-1.5 cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5 text-rose-400" />
             <span className="hidden sm:inline">Quitter la Console</span>
@@ -130,7 +130,7 @@ export default function AdminSuperFounderHub({
       </header>
 
       {/* Premium Top Horizontal Scrollable Bar - NO SIDEBAR */}
-      <nav className="bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800/80 px-3 py-2.5 flex items-center gap-2 overflow-x-auto scrollbar-none sticky top-[57px] z-30 shrink-0">
+      <nav className="bg-afri-bg/90 backdrop-blur-md border-b border-zinc-800/80 px-3 py-2.5 flex items-center gap-2 overflow-x-auto scrollbar-none sticky top-[57px] z-30 shrink-0">
         {modulesNav.map((m) => {
           const IconComp = m.icon;
           const isActive = activeModule === m.key;
@@ -142,14 +142,14 @@ export default function AdminSuperFounderHub({
               className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 isActive
                   ? "bg-[#D4AF37] text-black font-black shadow-lg shadow-[#D4AF37]/20 border border-[#D4AF37]"
-                  : "bg-zinc-900/90 text-zinc-300 border border-zinc-800 hover:border-zinc-700 hover:text-white hover:bg-zinc-800/60"
+                  : "bg-afri-bg-sec text-afri-text-sec border border-afri-border hover:border-afri-border hover:text-afri-text hover:bg-zinc-800/60"
               }`}
             >
               <IconComp className={`w-3.5 h-3.5 ${isActive ? "text-black" : "text-[#D4AF37]"}`} />
               <span>{m.label}</span>
               {m.badge && (
                 <span className={`px-1.5 py-0.2 rounded-full text-[8px] font-mono font-black uppercase ${
-                  isActive ? "bg-black text-[#D4AF37]" : "bg-zinc-800 text-[#D4AF37]"
+                  isActive ? "bg-afri-bg text-[#D4AF37]" : "bg-afri-bg-ter text-[#D4AF37]"
                 }`}>
                   {m.badge}
                 </span>

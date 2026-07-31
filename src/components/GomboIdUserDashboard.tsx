@@ -517,7 +517,7 @@ export default function GomboIdUserDashboard({
                             id="terms"
                             checked={acceptedTerms}
                             onChange={(e) => setAcceptedTerms(e.target.checked)}
-                            className="mt-1 w-4 h-4 text-[#D4AF37] border-white/20 rounded focus:ring-[#D4AF37] bg-afri-bg"
+                            className="mt-1 w-4 h-4 text-[#D4AF37] border-afri-border rounded focus:ring-[#D4AF37] bg-afri-bg"
                           />
                           <label htmlFor="terms" className="text-xs text-afri-text/80 select-none cursor-pointer font-semibold">
                             C'est d'accord, j'ai lu avec rigueur et j'accepte l'ensemble des conditions d'excellence.
@@ -740,7 +740,7 @@ export default function GomboIdUserDashboard({
                             className={`p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between min-h-[160px] ${
                               selectedKycType === "standard"
                                 ? "border-zinc-500 bg-white/5"
-                                : "border-afri-border hover:border-white/20 bg-afri-bg/40"
+                                : "border-afri-border hover:border-afri-border bg-afri-bg/40"
                             }`}
                           >
                             <div className="space-y-2">

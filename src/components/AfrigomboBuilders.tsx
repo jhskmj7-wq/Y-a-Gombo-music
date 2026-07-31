@@ -378,7 +378,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
       <AnimatePresence>
         {selectedOption && (
           <div 
-            className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-[999] bg-afri-bg/80 backdrop-blur-md flex items-center justify-center p-4"
             onClick={() => setSelectedOption(null)}
           >
             <motion.div
@@ -408,7 +408,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
                 <div className="p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl space-y-1 mb-2">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-afri-text-sec">Solde Wallet :</span>
-                    <span className="font-mono font-bold text-white">
+                    <span className="font-mono font-bold text-afri-text">
                       {((currentUser?.wallet?.soldeDisponible ?? 0)).toLocaleString('fr-FR')} FCFA
                     </span>
                   </div>
@@ -476,7 +476,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
       <AnimatePresence>
         {showSuccess && (
           <div 
-            className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-[999] bg-afri-bg/80 backdrop-blur-md flex items-center justify-center p-4"
             onClick={() => setShowSuccess(false)}
           >
             <motion.div
@@ -514,7 +514,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
       <AnimatePresence>
         {isInsufficientBalanceModalOpen && insufficientBalanceDetails && (
           <div 
-            className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-[999] bg-afri-bg/80 backdrop-blur-md flex items-center justify-center p-4"
             onClick={() => setIsInsufficientBalanceModalOpen(false)}
           >
             <motion.div
@@ -535,7 +535,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
                 <div className="w-14 h-14 bg-red-500/10 border border-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
-                <h3 className="text-sm font-black text-white uppercase tracking-wider">Solde Insuffisant</h3>
+                <h3 className="text-sm font-black text-afri-text uppercase tracking-wider">Solde Insuffisant</h3>
                 <p className="text-xs text-afri-text-sec">
                   Votre solde Wallet est insuffisant pour finaliser cette contribution.
                 </p>
@@ -544,7 +544,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
               <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-afri-text-sec">Montant requis</span>
-                  <span className="font-mono font-bold text-white">{insufficientBalanceDetails.required.toLocaleString()} FCFA</span>
+                  <span className="font-mono font-bold text-afri-text">{insufficientBalanceDetails.required.toLocaleString()} FCFA</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-afri-text-sec">Solde actuel</span>
@@ -580,7 +580,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
                 <button
                   type="button"
                   onClick={() => setIsInsufficientBalanceModalOpen(false)}
-                  className="w-full py-3 bg-afri-bg border border-afri-border text-white font-black uppercase tracking-wider rounded-xl hover:bg-afri-border transition-all text-xs cursor-pointer"
+                  className="w-full py-3 bg-afri-bg border border-afri-border text-afri-text font-black uppercase tracking-wider rounded-xl hover:bg-afri-border transition-all text-xs cursor-pointer"
                 >
                   Annuler
                 </button>

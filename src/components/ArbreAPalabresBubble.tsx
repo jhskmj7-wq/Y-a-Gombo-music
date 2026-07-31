@@ -153,7 +153,7 @@ export const ArbreAPalabresBubble: React.FC<ArbreAPalabresBubbleProps> = ({ unre
           scale: isLongPressing ? 1.15 : isDragging ? 1.08 : 1
         }}
         transition={{ duration: 0.15 }}
-        className={`relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-black border-2 border-[#D4AF37] flex items-center justify-center shadow-[0_4px_20px_rgba(212,175,55,0.4)] ${
+        className={`relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-afri-bg border-2 border-[#D4AF37] flex items-center justify-center shadow-[0_4px_20px_rgba(212,175,55,0.4)] ${
           isLongPressing ? "ring-4 ring-[#D4AF37]/50" : ""
         }`}
       >
@@ -168,7 +168,7 @@ export const ArbreAPalabresBubble: React.FC<ArbreAPalabresBubbleProps> = ({ unre
 
         {/* Badge Notification */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-600 text-white font-black text-[9px] w-5 h-5 rounded-full flex items-center justify-center animate-pulse border border-black shadow-md z-10">
+          <span className="absolute -top-1 -right-1 bg-red-600 text-afri-text font-black text-[9px] w-5 h-5 rounded-full flex items-center justify-center animate-pulse border border-afri-border shadow-md z-10">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}

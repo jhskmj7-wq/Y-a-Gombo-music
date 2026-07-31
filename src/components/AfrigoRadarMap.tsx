@@ -205,7 +205,7 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
         symbol = "⭐";
       }
 
-      el.className = `w-9 h-9 rounded-full ${bg} border-2 border-black shadow-xl flex items-center justify-center text-xs font-bold cursor-pointer hover:scale-125 transition`;
+      el.className = `w-9 h-9 rounded-full ${bg} border-2 border-afri-border shadow-xl flex items-center justify-center text-xs font-bold cursor-pointer hover:scale-125 transition`;
       el.innerHTML = `<span>${symbol}</span>`;
 
       el.addEventListener("click", () => {
@@ -267,7 +267,7 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
             {/* Heatmap Button */}
             <button
               onClick={() => setShowHeatmapModal(true)}
-              className="px-3 py-1.5 bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500 hover:text-white transition rounded-xl text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1.5 bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500 hover:text-afri-text transition rounded-xl text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
             >
               <Flame className="w-3.5 h-3.5" /> Activité 🔥
             </button>
@@ -294,7 +294,7 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
         {/* Disponible Maintenant Toggle Bar */}
         <div className="flex items-center justify-between p-2.5 bg-afri-bg border border-afri-border rounded-xl">
           <div className="flex items-center gap-2">
-            <div className={`w-2.5 h-2.5 rounded-full ${dispoMode !== "off" ? "bg-emerald-500 animate-pulse" : "bg-zinc-500"}`} />
+            <div className={`w-2.5 h-2.5 rounded-full ${dispoMode !== "off" ? "bg-emerald-500 animate-pulse" : "bg-afri-text-muted"}`} />
             <div>
               <span className="text-[10px] font-black text-afri-text uppercase tracking-wider">🟢 Disponible maintenant</span>
               <p className="text-[8px] text-afri-text-sec">Permet aux promoteurs proches de vous inviter instantanément</p>
@@ -358,7 +358,7 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
         <div ref={mapContainerRef} className="w-full h-full" />
 
         {/* Legend Overlay */}
-        <div className="absolute bottom-4 left-4 bg-black/85 backdrop-blur-md border border-afri-border p-3 rounded-2xl space-y-1.5 text-[9px] font-mono text-afri-text z-10">
+        <div className="absolute bottom-4 left-4 bg-afri-bg/85 backdrop-blur-md border border-afri-border p-3 rounded-2xl space-y-1.5 text-[9px] font-mono text-afri-text z-10">
           <div className="font-bold text-[#D4AF37] uppercase mb-1">Légende Radar :</div>
           <div className="flex items-center gap-2"><span>🟢</span> Gombo standard</div>
           <div className="flex items-center gap-2"><span>🔴</span> Renfort express</div>
@@ -370,7 +370,7 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
 
       {/* HEATMAP / ACTIVITÉ MODAL */}
       {showHeatmapModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md z-[250] flex items-center justify-center p-4">
           <div className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4 text-left relative">
             <div className="flex justify-between items-center border-b border-afri-border pb-3">
               <div className="flex items-center gap-2">
@@ -418,7 +418,7 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
 
       {/* ANDROID BOTTOM SHEET: GOMBO DETAILS */}
       {isBottomSheetOpen && activeGombo && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-afri-bg-sec border-t sm:border border-afri-border rounded-t-[2.55rem] sm:rounded-3xl p-6 w-full max-w-lg shadow-2xl relative max-h-[85vh] flex flex-col animate-slideUp text-left">
             <div className="flex justify-between items-center border-b border-afri-border pb-3 mb-4">
               <div className="flex items-center gap-2.5">

@@ -476,11 +476,11 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       {/* FLOATING REAL-TIME TOAST NOTIFICATION */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100000] max-w-sm w-[90%] sm:w-auto px-4 py-3 rounded-2xl bg-zinc-950/95 dark:bg-black/95 text-white border border-amber-400/50 shadow-[0_10px_30px_rgba(0,0,0,0.8)] backdrop-blur-md flex items-center gap-3 animate-fade-in transition-all">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100000] max-w-sm w-[90%] sm:w-auto px-4 py-3 rounded-2xl bg-afri-bg/95 dark:bg-afri-bg/95 text-afri-text border border-amber-400/50 shadow-[0_10px_30px_rgba(0,0,0,0.8)] backdrop-blur-md flex items-center gap-3 animate-fade-in transition-all">
           <div className="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 shrink-0">
             <Check className="w-4 h-4 stroke-[2.5]" />
           </div>
-          <p className="text-[11px] font-sans font-bold text-gray-100 uppercase tracking-tight leading-snug">
+          <p className="text-[11px] font-sans font-bold text-afri-text uppercase tracking-tight leading-snug">
             {toast.message}
           </p>
         </div>

@@ -183,7 +183,7 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-20 right-4 z-[999] bg-[#D4AF37] text-black px-4 py-2.5 rounded-2xl font-mono font-bold text-xs shadow-2xl border border-white/20 flex items-center gap-2"
+            className="fixed top-20 right-4 z-[999] bg-[#D4AF37] text-black px-4 py-2.5 rounded-2xl font-mono font-bold text-xs shadow-2xl border border-afri-border flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4 shrink-0" />
             <span>{toastMessage}</span>
@@ -377,7 +377,7 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
                     </div>
                   )}
                   {item.pinned && (
-                    <span className="absolute top-0.5 right-0.5 p-0.5 bg-indigo-500 text-white rounded-full">
+                    <span className="absolute top-0.5 right-0.5 p-0.5 bg-indigo-500 text-afri-text rounded-full">
                       <Pin className="w-2.5 h-2.5" />
                     </span>
                   )}
@@ -425,7 +425,7 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
                   title={item.pinned ? "Désépingler" : "Épingler en tête"}
                   className={`p-2 rounded-xl border text-xs font-mono font-bold transition-all flex items-center gap-1 cursor-pointer ${
                     item.pinned
-                      ? "bg-indigo-500 text-white border-indigo-400"
+                      ? "bg-indigo-500 text-afri-text border-indigo-400"
                       : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-indigo-400 hover:border-indigo-400/40"
                   }`}
                 >
@@ -451,7 +451,7 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
                 <button
                   onClick={() => handleRemove(item)}
                   title="Retirer des tendances"
-                  className="p-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all cursor-pointer"
+                  className="p-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-afri-text transition-all cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -464,7 +464,7 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
       {/* Modal: Add Publication to Trending */}
       <AnimatePresence>
         {isAddModalOpen && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-md">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

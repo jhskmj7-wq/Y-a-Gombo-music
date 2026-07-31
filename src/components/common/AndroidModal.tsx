@@ -24,7 +24,7 @@ export const AndroidModal: React.FC<AndroidModalProps> = ({ isOpen, onClose, tit
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-[2px] select-none">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-afri-bg/60 backdrop-blur-[2px] select-none">
           <div className="absolute inset-0 cursor-pointer" onClick={onClose} />
           
           <motion.div
@@ -32,7 +32,7 @@ export const AndroidModal: React.FC<AndroidModalProps> = ({ isOpen, onClose, tit
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2 }}
-            className="w-[92%] max-w-[480px] max-h-[85vh] h-auto bg-[#08080a] border border-zinc-800 rounded-[24px] flex flex-col overflow-hidden relative shadow-2xl z-20"
+            className="w-[92%] max-w-[480px] max-h-[85vh] h-auto bg-[#08080a] border border-afri-border rounded-[24px] flex flex-col overflow-hidden relative shadow-2xl z-20"
           >
             {/* Android Pill Handle */}
             <div className="w-12 h-1.5 bg-zinc-700 rounded-full mx-auto my-3 shrink-0" />
@@ -42,7 +42,7 @@ export const AndroidModal: React.FC<AndroidModalProps> = ({ isOpen, onClose, tit
                 <h3 className="text-sm font-bold text-[#D4AF37] font-mono tracking-wider">{title}</h3>
                 <button 
                   onClick={onClose}
-                  className="p-2 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white min-h-[40px] min-w-[40px] flex items-center justify-center"
+                  className="p-2 rounded-full bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text min-h-[40px] min-w-[40px] flex items-center justify-center"
                 >
                   <X className="w-4 h-4" />
                 </button>

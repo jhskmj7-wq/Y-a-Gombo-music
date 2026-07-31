@@ -230,7 +230,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     <Camera className="w-8 h-8 opacity-30 text-[#D4AF37]" />
                   </div>
                 )}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                <div className="absolute inset-0 flex items-center justify-center bg-afri-bg/40 backdrop-blur-[2px]">
                   <label className="afri-btn-primary w-auto py-2.5 px-5 text-xs font-bold min-h-[44px] flex items-center gap-2 cursor-pointer shadow-xl">
                     <Upload className="w-4 h-4" />
                     <span>{coverUploading ? `${coverUploadProgress}%` : "Changer Bannière"}</span>
@@ -253,7 +253,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     )}
                   </div>
                   {uploading && (
-                    <div className="absolute inset-0 bg-black/75 flex items-center justify-center rounded-[2.5rem]">
+                    <div className="absolute inset-0 bg-afri-bg/75 flex items-center justify-center rounded-[2.5rem]">
                       <span className="text-xs font-black text-[#D4AF37]">{uploadProgress}%</span>
                     </div>
                   )}
@@ -464,7 +464,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {AVAILABILITIES_LIST.map(avail => {
                     const active = availabilities.includes(avail);
                     return (
-                      <button key={avail} type="button" onClick={() => active ? setAvailabilities(availabilities.filter(a => a !== avail)) : setAvailabilities([...availabilities, avail])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={avail} type="button" onClick={() => active ? setAvailabilities(availabilities.filter(a => a !== avail)) : setAvailabilities([...availabilities, avail])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-emerald-600 border-emerald-600 text-afri-text" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {avail}
                       </button>
                     );

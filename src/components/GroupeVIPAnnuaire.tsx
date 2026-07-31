@@ -449,7 +449,7 @@ export default function GroupeVIPAnnuaire({
                 <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight leading-none bg-gradient-to-r from-white via-gray-100 to-purple-250 bg-clip-text text-transparent">
                   Trouvez le Groupe Musical Idéal au Pays !
                 </h1>
-                <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-xl font-medium">
+                <p className="text-xs sm:text-sm text-afri-text-sec leading-relaxed max-w-xl font-medium">
                   Le répertoire de référence pour dégoter le parfait orchestre Zouglou, chorale d'église, fanfare traditionnelle ou groupe rumba d'Abidjan pour tous vos événements de prestige.
                 </p>
               </div>
@@ -529,7 +529,7 @@ export default function GroupeVIPAnnuaire({
                   price: "Gratuit / Simulation", 
                   badge: "Gratuit", 
                   benefits: ["Référencement standard de base", "Mise en relation par téléphone", "Sélection de genres artistiques"], 
-                  color: "border-gray-100 dark:border-gray-800 text-afri-text-sec bg-white/50 dark:bg-afri-bg-sec/50" 
+                  color: "border-afri-border dark:border-afri-border text-afri-text-sec bg-white/50 dark:bg-afri-bg-sec/50" 
                 },
                 { 
                   title: "Statut Annuaire VIP ⭐", 
@@ -553,7 +553,7 @@ export default function GroupeVIPAnnuaire({
                       <span className="text-[8px] uppercase font-black tracking-widest px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-afri-text-sec">{plan.badge}</span>
                     </div>
                     <div className="text-sm font-black">{plan.price}</div>
-                    <ul className="text-[11px] space-y-1 pt-0.5 font-medium text-gray-600 dark:text-gray-300">
+                    <ul className="text-[11px] space-y-1 pt-0.5 font-medium text-afri-text-sec dark:text-afri-text-sec">
                       {plan.benefits.map((b) => (
                         <li key={b} className="flex items-center gap-1.5 focus:outline-none">
                           <Check className="w-3 h-3 text-emerald-500 shrink-0" />
@@ -562,7 +562,7 @@ export default function GroupeVIPAnnuaire({
                       ))}
                     </ul>
                   </div>
-                  <div className="text-[8px] text-afri-text-sec text-center uppercase tracking-widest border-t border-dashed border-gray-100 dark:border-gray-800/80 pt-2 mt-1">
+                  <div className="text-[8px] text-afri-text-sec text-center uppercase tracking-widest border-t border-dashed border-afri-border dark:border-gray-800/80 pt-2 mt-1">
                     Réseau Persistant • Aucun paiement requis
                   </div>
                 </div>
@@ -570,7 +570,7 @@ export default function GroupeVIPAnnuaire({
             </div>
 
             {/* Smart Search, Filters & Local Catalog index card */}
-            <div className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs space-y-4">
+            <div className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-afri-border dark:border-afri-border shadow-xs space-y-4">
               
               <div className="text-xs font-black uppercase text-purple-600 dark:text-purple-400 tracking-widest flex items-center gap-1">
                 <Search className="w-4 h-4" />
@@ -586,7 +586,7 @@ export default function GroupeVIPAnnuaire({
                     placeholder="Saisir un nom de groupe, style ou commune..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-3 pr-4 py-2 bg-gray-50/70 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:bg-white dark:focus:bg-afri-bg-sec text-gray-950 dark:text-afri-text"
+                    className="w-full pl-3 pr-4 py-2 bg-gray-50/70 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:bg-white dark:focus:bg-afri-bg-sec text-gray-950 dark:text-afri-text"
                   />
                 </div>
 
@@ -595,7 +595,7 @@ export default function GroupeVIPAnnuaire({
                   <select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50/70 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-850 dark:text-afri-text"
+                    className="w-full px-3 py-2 bg-gray-50/70 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-850 dark:text-afri-text"
                   >
                     <option value="all">Tous Types de Groupes</option>
                     {TYPES_GROUPES.map(tg => <option key={tg} value={tg}>{tg}</option>)}
@@ -607,7 +607,7 @@ export default function GroupeVIPAnnuaire({
                   <select
                     value={selectedStyle}
                     onChange={(e) => setSelectedStyle(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50/70 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-850 dark:text-afri-text"
+                    className="w-full px-3 py-2 bg-gray-50/70 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-850 dark:text-afri-text"
                   >
                     <option value="all">Tous Styles Musicaux</option>
                     {STYLES_MUSICAUX.map(st => <option key={st} value={st}>{st}</option>)}
@@ -619,7 +619,7 @@ export default function GroupeVIPAnnuaire({
                   <select
                     value={selectedCommune}
                     onChange={(e) => setSelectedCommune(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50/70 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-850 dark:text-afri-text"
+                    className="w-full px-3 py-2 bg-gray-50/70 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-850 dark:text-afri-text"
                   >
                     <option value="all">Toutes Communes</option>
                     {COMMUNES_LIST.map(cm => <option key={cm} value={cm}>{cm}</option>)}
@@ -630,7 +630,7 @@ export default function GroupeVIPAnnuaire({
 
               {/* Dynamic Group results query grid output */}
               {filteredGroups.length === 0 ? (
-                <div className="text-center py-16 text-afri-text-sec space-y-3.5 border border-dashed border-gray-100 dark:border-gray-800/85 rounded-2xl">
+                <div className="text-center py-16 text-afri-text-sec space-y-3.5 border border-dashed border-afri-border dark:border-gray-800/85 rounded-2xl">
                   <div className="p-3.5 bg-purple-50 dark:bg-purple-950/20 text-purple-500 rounded-full inline-flex">
                     <Music className="w-8 h-8" />
                   </div>
@@ -700,7 +700,7 @@ export default function GroupeVIPAnnuaire({
                             {/* Genres / Tags styles list */}
                             <div className="flex flex-wrap gap-1 pt-1">
                               {(group.genres || []).map(g => (
-                                <span key={g} className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 text-afri-text-sec dark:text-afri-text-sec">
+                                <span key={g} className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-50 dark:bg-gray-850 border border-afri-border dark:border-afri-border text-afri-text-sec dark:text-afri-text-sec">
                                   #{g}
                                 </span>
                               ))}
@@ -710,7 +710,7 @@ export default function GroupeVIPAnnuaire({
                         </div>
 
                         {/* Underline actions */}
-                        <div className="sm:w-36 flex sm:flex-col justify-end gap-2 shrink-0 border-t sm:border-t-0 sm:border-l border-gray-100 dark:border-gray-800 pt-3 sm:pt-0 sm:pl-3.5 mt-3 sm:mt-0 items-stretch">
+                        <div className="sm:w-36 flex sm:flex-col justify-end gap-2 shrink-0 border-t sm:border-t-0 sm:border-l border-afri-border dark:border-afri-border pt-3 sm:pt-0 sm:pl-3.5 mt-3 sm:mt-0 items-stretch">
                           
                           <div className="text-[9px] text-afri-text-sec flex items-center gap-1 pb-1 sm:self-center">
                             <MapPin className="w-3 h-3 text-purple-500 shrink-0" />
@@ -767,7 +767,7 @@ export default function GroupeVIPAnnuaire({
             <div className="flex items-center justify-between pb-3 border-b border-gray-150 dark:border-gray-850">
               <button
                 onClick={() => setSelectedGroup(null)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase tracking-wider text-gray-600 dark:text-gray-300 hover:text-purple-650 dark:hover:text-purple-400 bg-white dark:bg-afri-bg-sec/85 border border-gray-200 dark:border-gray-850 rounded-xl transition-all cursor-pointer shadow-inner"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase tracking-wider text-afri-text-sec dark:text-afri-text-sec hover:text-purple-650 dark:hover:text-purple-400 bg-white dark:bg-afri-bg-sec/85 border border-afri-border dark:border-gray-850 rounded-xl transition-all cursor-pointer shadow-inner"
               >
                 <span>← Retour à l'annuaire</span>
               </button>
@@ -779,7 +779,7 @@ export default function GroupeVIPAnnuaire({
                       initFormFields(selectedGroup);
                       setShowFormModal(true);
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-afri-text hover:bg-purple-600 rounded-xl border border-gray-250 dark:border-gray-800 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-afri-text-sec dark:text-afri-text hover:text-afri-text hover:bg-purple-600 rounded-xl border border-gray-250 dark:border-afri-border transition-all cursor-pointer"
                   >
                     <Edit3 className="w-4 h-4" />
                     <span>Modifier mon Groupe</span>
@@ -788,7 +788,7 @@ export default function GroupeVIPAnnuaire({
 
                 <button
                   onClick={() => simulateShareLocalLink(selectedGroup.id)}
-                  className="p-2 bg-gray-50 hover:bg-gray-100 dark:bg-afri-bg-sec/85 dark:hover:bg-afri-bg-sec border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 font-bold text-xs"
+                  className="p-2 bg-gray-50 hover:bg-gray-100 dark:bg-afri-bg-sec/85 dark:hover:bg-afri-bg-sec border border-afri-border dark:border-afri-border text-afri-text-sec dark:text-afri-text-sec rounded-xl transition-all cursor-pointer flex items-center gap-1.5 font-bold text-xs"
                 >
                   <Share2 className="w-4.5 h-4.5" />
                   <span>{copiedFeedback ? "Lien Copié !" : "Transmettre"}</span>
@@ -797,10 +797,10 @@ export default function GroupeVIPAnnuaire({
             </div>
 
             {/* Immersive Cover Visual Profile card */}
-            <div className="relative rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-850 bg-white dark:bg-afri-bg-sec shadow-sm">
+            <div className="relative rounded-3xl overflow-hidden border border-afri-border dark:border-gray-850 bg-white dark:bg-afri-bg-sec shadow-sm">
               
               {/* Cover Banner page */}
-              <div className="h-44 sm:h-60 relative w-full overflow-hidden bg-slate-900 border-b border-gray-100 dark:border-gray-850">
+              <div className="h-44 sm:h-60 relative w-full overflow-hidden bg-afri-bg-sec border-b border-afri-border dark:border-gray-850">
                 <img 
                   src={selectedGroup.photoUrl} 
                   alt={selectedGroup.name} 
@@ -867,7 +867,7 @@ export default function GroupeVIPAnnuaire({
                     className={`px-4 py-2.5 rounded-xl border font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                       currentUserProfile && (selectedGroup.followers || []).includes(currentUserProfile.uid)
                         ? "bg-rose-50 text-rose-600 border-rose-300 dark:bg-rose-950/20 dark:text-rose-400"
-                        : "bg-white text-gray-700 border-gray-205 dark:bg-afri-bg-sec dark:text-gray-300 dark:border-gray-800"
+                        : "bg-white text-afri-text-sec border-gray-205 dark:bg-afri-bg-sec dark:text-afri-text-sec dark:border-afri-border"
                     }`}
                   >
                     <Heart className={`w-4 h-4 ${currentUserProfile && (selectedGroup.followers || []).includes(currentUserProfile.uid) ? "fill-rose-500 stroke-rose-500" : ""}`} />
@@ -888,7 +888,7 @@ export default function GroupeVIPAnnuaire({
                   <a
                     href={`tel:${selectedGroup.phone}`}
                     onClick={() => handleContactAction(selectedGroup.id, "phone")}
-                    className="flex-1 md:flex-initial px-4 py-2.5 bg-slate-900 hover:bg-afri-bg text-afri-text font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 border border-transparent dark:border-gray-800"
+                    className="flex-1 md:flex-initial px-4 py-2.5 bg-afri-bg-sec hover:bg-afri-bg text-afri-text font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 border border-transparent dark:border-afri-border"
                   >
                     <Mail className="w-4 h-4" />
                     <span>Appeler</span>
@@ -898,7 +898,7 @@ export default function GroupeVIPAnnuaire({
               </div>
 
               {/* Statistics Panel */}
-              <div className="bg-gray-50 dark:bg-afri-bg-sec border-t border-gray-100 dark:border-gray-850 px-6 py-4 grid grid-cols-3 gap-4 text-center">
+              <div className="bg-gray-50 dark:bg-afri-bg-sec border-t border-afri-border dark:border-gray-850 px-6 py-4 grid grid-cols-3 gap-4 text-center">
                 <div className="space-y-0.5">
                   <div className="text-xs text-afri-text-sec py-0.5 flex items-center justify-center gap-1 font-bold">
                     <Eye className="w-4 h-4 text-purple-500" />
@@ -960,9 +960,9 @@ export default function GroupeVIPAnnuaire({
                   
                   {/* Left block cover descriptions */}
                   <div className="md:col-span-2 space-y-4">
-                    <div className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-850 p-6 rounded-3xl shadow-xs space-y-3">
+                    <div className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-gray-850 p-6 rounded-3xl shadow-xs space-y-3">
                       <h3 className="text-xs font-black uppercase tracking-widest text-[#7C3AED] dark:text-[#A78BFA]">Présentation Générale</h3>
-                      <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300 whitespace-pre-line font-medium">
+                      <p className="text-xs leading-relaxed text-afri-text-sec dark:text-afri-text-sec whitespace-pre-line font-medium">
                         {selectedGroup.description}
                       </p>
                     </div>
@@ -970,10 +970,10 @@ export default function GroupeVIPAnnuaire({
 
                   {/* Right block details metadata */}
                   <div className="space-y-4">
-                    <div className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-850 p-6 rounded-3xl shadow-xs space-y-4 text-xs font-bold">
+                    <div className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-gray-850 p-6 rounded-3xl shadow-xs space-y-4 text-xs font-bold">
                       <h3 className="text-xs font-black uppercase tracking-widest text-[#7C3AED] dark:text-[#A78BFA]">Fiche d'Information</h3>
                       
-                      <div className="space-y-2 text-gray-600 dark:text-gray-350">
+                      <div className="space-y-2 text-afri-text-sec dark:text-gray-350">
                         <div className="flex justify-between pb-2 border-b border-gray-50 dark:border-gray-850">
                           <span className="text-xs text-afri-text-sec font-bold">Commune :</span>
                           <span>{selectedGroup.commune}</span>
@@ -1018,7 +1018,7 @@ export default function GroupeVIPAnnuaire({
                         </button>
                         
                         {showMemberForm && (
-                          <div className="flex bg-gray-100 dark:bg-slate-900 p-1 rounded-lg text-[10px] font-bold">
+                          <div className="flex bg-gray-100 dark:bg-afri-bg-sec p-1 rounded-lg text-[10px] font-bold">
                             <button
                               type="button"
                               onClick={() => setInviteMethod("manual")}
@@ -1062,7 +1062,7 @@ export default function GroupeVIPAnnuaire({
                                     required
                                     value={selectedUserIdToInvite}
                                     onChange={e => setSelectedUserIdToInvite(e.target.value)}
-                                    className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
+                                    className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
                                   >
                                     <option value="">-- Choisir un artiste --</option>
                                     {allUsers
@@ -1083,7 +1083,7 @@ export default function GroupeVIPAnnuaire({
                                     value={newMemberName}
                                     onChange={e => setNewMemberName(e.target.value)}
                                     placeholder="Nom Complet"
-                                    className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
+                                    className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
                                   />
                                 </div>
                               )}
@@ -1093,7 +1093,7 @@ export default function GroupeVIPAnnuaire({
                                 <select
                                   value={newMemberRole}
                                   onChange={e => setNewMemberRole(e.target.value)}
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
+                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
                                 >
                                   <option value="Chanteur Solo">Chanteur Solo</option>
                                   <option value="Choriste">Choriste</option>
@@ -1115,7 +1115,7 @@ export default function GroupeVIPAnnuaire({
                                   value={newMemberInstrument}
                                   onChange={e => setNewMemberInstrument(e.target.value)}
                                   placeholder="Ex: Guitare, Batterie, Keni"
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
+                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
                                 />
                               </div>
                             </div>
@@ -1140,7 +1140,7 @@ export default function GroupeVIPAnnuaire({
                             {activeGroupInvitations.map((inv) => {
                               const recUser = allUsers.find(u => u.uid === inv.receiverId);
                               return (
-                                <div key={inv.id} className="flex items-center justify-between text-[11px] bg-white dark:bg-purple-950/20 p-2 rounded-xl border border-gray-100 dark:border-purple-950/40">
+                                <div key={inv.id} className="flex items-center justify-between text-[11px] bg-white dark:bg-purple-950/20 p-2 rounded-xl border border-afri-border dark:border-purple-950/40">
                                   <span className="font-bold">
                                     👤 {recUser ? `${recUser.firstName} ${recUser.lastName}` : "Artiste"} &rarr; <span className="text-purple-600 dark:text-purple-300">{inv.role} ({inv.instrument})</span>
                                   </span>
@@ -1162,7 +1162,7 @@ export default function GroupeVIPAnnuaire({
 
                   {/* Rendering Members view hierarchy */}
                   {(selectedGroup.members || []).length === 0 ? (
-                    <div className="text-center py-8 text-afri-text-sec bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-850 rounded-2xl p-6">
+                    <div className="text-center py-8 text-afri-text-sec bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-gray-850 rounded-2xl p-6">
                       <p className="text-xs">Aucun membre officiel n'a encore été enregistré sous ce groupe.</p>
                     </div>
                   ) : (
@@ -1170,7 +1170,7 @@ export default function GroupeVIPAnnuaire({
                       {selectedGroup.members.map(member => (
                         <div 
                           key={member.id} 
-                          className="bg-white dark:bg-afri-bg-sec/60 border border-gray-100 dark:border-gray-850 p-4 rounded-2xl flex flex-col items-center text-center gap-2 shadow-inner relative group"
+                          className="bg-white dark:bg-afri-bg-sec/60 border border-afri-border dark:border-gray-850 p-4 rounded-2xl flex flex-col items-center text-center gap-2 shadow-inner relative group"
                         >
                           <div className="w-14 h-14 rounded-full bg-slate-50 border-2 border-purple-100 dark:border-purple-950 overflow-hidden shrink-0">
                             <img 
@@ -1222,7 +1222,7 @@ export default function GroupeVIPAnnuaire({
                         className={`px-3 py-1 rounded-lg text-[10px] uppercase font-black tracking-wider transition-all cursor-pointer ${
                           gallerySubTab === st.type 
                             ? "bg-purple-650 text-afri-text"
-                            : "bg-gray-100 dark:bg-gray-850 text-afri-text-sec dark:text-afri-text-sec hover:bg-gray-200"
+                            : "bg-gray-100 dark:bg-gray-850 text-afri-text-sec dark:text-afri-text-sec hover:bg-afri-bg-ter"
                         }`}
                       >
                         {st.label}
@@ -1259,7 +1259,7 @@ export default function GroupeVIPAnnuaire({
                                   value={newMediaTitle}
                                   onChange={e => setNewMediaTitle(e.target.value)}
                                   placeholder="Ex: Live Sofitel, Répétition..."
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none"
                                 />
                               </div>
                               <div>
@@ -1267,7 +1267,7 @@ export default function GroupeVIPAnnuaire({
                                 <select
                                   value={newMediaType}
                                   onChange={e => setNewMediaType(e.target.value as any)}
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none"
                                 >
                                   <option value="photo">Photo 📸</option>
                                   <option value="video">Vidéo YouTube Link 🎥</option>
@@ -1282,7 +1282,7 @@ export default function GroupeVIPAnnuaire({
                                   value={newMediaUrl}
                                   onChange={e => setNewMediaUrl(e.target.value)}
                                   placeholder="Coller l'adresse URL du fichier"
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none"
                                 />
                               </div>
                             </div>
@@ -1308,7 +1308,7 @@ export default function GroupeVIPAnnuaire({
 
                     if (filteredGallery.length === 0) {
                       return (
-                        <div className="text-center py-8 text-afri-text-sec bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-850 rounded-2xl p-6">
+                        <div className="text-center py-8 text-afri-text-sec bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-gray-850 rounded-2xl p-6">
                           <p className="text-xs">Aucun média enregistré de cette catégorie.</p>
                         </div>
                       );
@@ -1319,12 +1319,12 @@ export default function GroupeVIPAnnuaire({
                         {filteredGallery.map(item => (
                           <div 
                             key={item.id} 
-                            className="bg-white dark:bg-afri-bg-sec/60 border border-gray-100 dark:border-gray-850 rounded-2xl p-4 flex flex-col gap-2 relative group overflow-hidden"
+                            className="bg-white dark:bg-afri-bg-sec/60 border border-afri-border dark:border-gray-850 rounded-2xl p-4 flex flex-col gap-2 relative group overflow-hidden"
                           >
                             {/* Render Photo items */}
                             {item.type === "photo" && (
                               <div 
-                                className="h-44 w-full bg-slate-900 rounded-xl overflow-hidden cursor-pointer relative"
+                                className="h-44 w-full bg-afri-bg-sec rounded-xl overflow-hidden cursor-pointer relative"
                                 onClick={() => setLightboxUrl(item.url)}
                               >
                                 <img src={item.url} alt={item.title} className="w-full h-full object-cover hover:scale-105 transition-all" referrerPolicy="no-referrer" />
@@ -1344,7 +1344,7 @@ export default function GroupeVIPAnnuaire({
                                     allowFullScreen
                                   />
                                 ) : (
-                                  <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 border border-slate-800 text-purple-400 gap-1 font-bold text-[10px] p-4 text-center">
+                                  <div className="w-full h-full flex flex-col items-center justify-center bg-afri-bg-sec border border-slate-800 text-purple-400 gap-1 font-bold text-[10px] p-4 text-center">
                                     <Video className="w-8 h-8" />
                                     <span>Lien Vidéo Externe</span>
                                     <a href={item.url} target="_blank" rel="noopener noreferrer" className="underline mt-1">Ouvrir dans un nouvel onglet</a>
@@ -1444,7 +1444,7 @@ export default function GroupeVIPAnnuaire({
               initial={{ scale: 0.94, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.94, opacity: 0 }}
-              className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-3xl p-6 sm:p-8 max-w-xl w-full relative overflow-hidden text-gray-900 dark:text-afri-text shadow-2xl my-8 max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-3xl p-6 sm:p-8 max-w-xl w-full relative overflow-hidden text-gray-900 dark:text-afri-text shadow-2xl my-8 max-h-[90vh] overflow-y-auto"
             >
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-600 to-indigo-600" />
 
@@ -1477,7 +1477,7 @@ export default function GroupeVIPAnnuaire({
                         placeholder="Ex: Les Chocs de Yopougon"
                         value={formName}
                         onChange={e => setFormName(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
 
@@ -1486,7 +1486,7 @@ export default function GroupeVIPAnnuaire({
                       <select
                         value={formType}
                         onChange={e => setFormType(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-extrabold focus:outline-none"
                       >
                         {TYPES_GROUPES.map(tg => <option key={tg} value={tg}>{tg}</option>)}
                       </select>
@@ -1500,7 +1500,7 @@ export default function GroupeVIPAnnuaire({
                       <select
                         value={formCommune}
                         onChange={e => setFormCommune(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-extrabold focus:outline-none"
                       >
                         {COMMUNES_LIST.map(tg => <option key={tg} value={tg}>{tg}</option>)}
                       </select>
@@ -1514,7 +1514,7 @@ export default function GroupeVIPAnnuaire({
                         placeholder="Ex: Abidjan, Yamoussoukro"
                         value={formVille}
                         onChange={e => setFormVille(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1529,7 +1529,7 @@ export default function GroupeVIPAnnuaire({
                         placeholder="0707..."
                         value={formPhone}
                         onChange={e => setFormPhone(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
 
@@ -1541,7 +1541,7 @@ export default function GroupeVIPAnnuaire({
                         placeholder="0505..."
                         value={formWhatsapp}
                         onChange={e => setFormWhatsapp(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
 
@@ -1553,7 +1553,7 @@ export default function GroupeVIPAnnuaire({
                         placeholder="groupe@gmail.com"
                         value={formEmail}
                         onChange={e => setFormEmail(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1568,7 +1568,7 @@ export default function GroupeVIPAnnuaire({
                         required
                         value={formMembersCount}
                         onChange={e => setFormMembersCount(Number(e.target.value))}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
 
@@ -1581,7 +1581,7 @@ export default function GroupeVIPAnnuaire({
                         required
                         value={formCreationYear}
                         onChange={e => setFormCreationYear(Number(e.target.value))}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1595,7 +1595,7 @@ export default function GroupeVIPAnnuaire({
                         placeholder="Laisser vide pour photo par défaut"
                         value={formPhotoUrl}
                         onChange={e => setFormPhotoUrl(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
 
@@ -1606,7 +1606,7 @@ export default function GroupeVIPAnnuaire({
                         placeholder="Laisser vide pour logo par défaut"
                         value={formLogoUrl}
                         onChange={e => setFormLogoUrl(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1620,14 +1620,14 @@ export default function GroupeVIPAnnuaire({
                       placeholder="Présentation du groupe, tarifs indicatifs, répertoires..."
                       value={formDescription}
                       onChange={e => setFormDescription(e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none resize-none"
+                      className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl text-xs font-semibold focus:outline-none resize-none"
                     />
                   </div>
 
                   {/* Styles Musicaux - Multiple choosing */}
                   <div className="space-y-1.5">
                     <label className="text-[10px] uppercase font-black text-afri-text-sec block">Styles Musicaux (Sélection Multiple*)</label>
-                    <div className="flex flex-wrap gap-1 bg-gray-50 dark:bg-afri-bg-sec p-2.5 rounded-xl border border-gray-150 dark:border-gray-800">
+                    <div className="flex flex-wrap gap-1 bg-gray-50 dark:bg-afri-bg-sec p-2.5 rounded-xl border border-gray-150 dark:border-afri-border">
                       {STYLES_MUSICAUX.map(st => {
                         const isChosen = formGenres.includes(st);
                         return (
@@ -1638,7 +1638,7 @@ export default function GroupeVIPAnnuaire({
                             className={`px-2 py-1 rounded-lg text-[9px] uppercase font-black tracking-wider transition-all cursor-pointer ${
                               isChosen 
                                 ? "bg-purple-600 text-afri-text"
-                                : "bg-white dark:bg-afri-bg-sec border border-gray-200 dark:border-gray-800 text-afri-text-sec dark:text-gray-405 hover:bg-slate-100"
+                                : "bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-afri-border text-afri-text-sec dark:text-gray-405 hover:bg-slate-100"
                             }`}
                           >
                             {st}
@@ -1665,7 +1665,7 @@ export default function GroupeVIPAnnuaire({
                             className={`p-2 rounded-xl text-center border transition flex flex-col items-center justify-center cursor-pointer ${
                               formPlan === opt.value 
                                 ? "bg-purple-550/20 text-purple-600 dark:text-purple-300 border-purple-500 ring-2 ring-purple-500/10" 
-                                : "bg-gray-50 dark:bg-afri-bg-sec text-afri-text-sec border-gray-150 dark:border-gray-800"
+                                : "bg-gray-50 dark:bg-afri-bg-sec text-afri-text-sec border-gray-150 dark:border-afri-border"
                             }`}
                           >
                             <span className="text-[10px] font-black uppercase tracking-tight">{opt.label}</span>
@@ -1688,7 +1688,7 @@ export default function GroupeVIPAnnuaire({
                           <select
                             value={paymentProvider}
                             onChange={e => setPaymentProvider(e.target.value as any)}
-                            className="w-full px-2 py-1 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-lg text-[10px] font-extrabold text-slate-800 dark:text-afri-text"
+                            className="w-full px-2 py-1 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-lg text-[10px] font-extrabold text-slate-800 dark:text-afri-text"
                           >
                             <option value="Wave">Wave</option>
                             <option value="Orange Money">Orange Money</option>
@@ -1703,7 +1703,7 @@ export default function GroupeVIPAnnuaire({
                             required
                             value={paymentPhone}
                             onChange={e => setPaymentPhone(e.target.value)}
-                            className="w-full px-2 py-1 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-lg text-[10px]"
+                            className="w-full px-2 py-1 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-lg text-[10px]"
                           />
                         </div>
                       </div>

@@ -508,7 +508,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#12100C] border-2 border-[#D4AF37] text-white px-5 py-2.5 rounded-2xl shadow-[0_10px_30px_rgba(212,175,55,0.3)] flex items-center gap-2 text-xs font-bold"
+            className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#12100C] border-2 border-[#D4AF37] text-afri-text px-5 py-2.5 rounded-2xl shadow-[0_10px_30px_rgba(212,175,55,0.3)] flex items-center gap-2 text-xs font-bold"
           >
             <Flame className="w-4 h-4 text-[#D4AF37] fill-current animate-pulse" />
             <span>{toastMessage}</span>
@@ -531,7 +531,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
               <Flame className="w-6 h-6 fill-current animate-bounce" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <h2 className="text-sm sm:text-lg font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
                 <span>🔥 TENDANCES AFRIGOMBO</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 uppercase font-bold">
                   Vitrine Officielle
@@ -576,7 +576,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                     <Crown className="w-3.5 h-3.5 fill-current" />
                     🔥 EN TENDANCE
                   </span>
-                  <span className="px-3 py-1 rounded-full bg-black/80 backdrop-blur-md border border-[#D4AF37]/50 text-[#D4AF37] text-[10px] font-mono font-black uppercase tracking-wider">
+                  <span className="px-3 py-1 rounded-full bg-afri-bg/80 backdrop-blur-md border border-[#D4AF37]/50 text-[#D4AF37] text-[10px] font-mono font-black uppercase tracking-wider">
                     {(featuredItem.category as string) === "renfort" ? "⚡ Renfort Express" :
                      (featuredItem.category as string) === "evenements" ? "📅 Événement" :
                      (featuredItem.category as string) === "castings" ? "🎤 Casting" :
@@ -587,7 +587,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                 </div>
 
                 {featuredItem.pinned && (
-                  <span className="px-3 py-1 rounded-full bg-indigo-600 text-white text-[9.5px] font-mono font-black uppercase tracking-wider flex items-center gap-1 shadow-lg">
+                  <span className="px-3 py-1 rounded-full bg-indigo-600 text-afri-text text-[9.5px] font-mono font-black uppercase tracking-wider flex items-center gap-1 shadow-lg">
                     <ShieldCheck className="w-3.5 h-3.5" /> Choix Super Fondateur
                   </span>
                 )}
@@ -607,17 +607,17 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                   )}
                 </div>
 
-                <h3 className="text-lg sm:text-2xl font-black text-white leading-tight drop-shadow-lg group-hover:text-[#D4AF37] transition-colors">
+                <h3 className="text-lg sm:text-2xl font-black text-afri-text leading-tight drop-shadow-lg group-hover:text-[#D4AF37] transition-colors">
                   {featuredItem.title}
                 </h3>
 
-                <p className="text-xs sm:text-sm text-zinc-300 line-clamp-2 max-w-2xl font-sans">
+                <p className="text-xs sm:text-sm text-afri-text-sec line-clamp-2 max-w-2xl font-sans">
                   {featuredItem.description}
                 </p>
 
                 {/* Bottom Stats & Button */}
-                <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-white/10">
-                  <div className="flex items-center gap-3 text-xs font-mono text-zinc-300">
+                <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-afri-border">
+                  <div className="flex items-center gap-3 text-xs font-mono text-afri-text-sec">
                     <span className="flex items-center gap-1">👀 {featuredItem.viewsCount} vues</span>
                     <span className="flex items-center gap-1">👍 {featuredItem.likesCount} honneurs</span>
                     <span className="flex items-center gap-1">💬 {featuredItem.discussionsCount} palabres</span>
@@ -653,7 +653,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                 🔥 CARROUSEL DES TENDANCES AUTOMATIQUES
               </h3>
             </div>
-            <span className="text-[10px] font-mono text-zinc-400">← Balayer sur mobile →</span>
+            <span className="text-[10px] font-mono text-afri-text-sec">← Balayer sur mobile →</span>
           </div>
 
           <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-3 touch-pan-x [-webkit-overflow-scrolling:touch]">
@@ -671,7 +671,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                 className="min-w-[260px] sm:min-w-[300px] max-w-[320px] shrink-0 snap-start bg-[#12100C] border border-[#D4AF37]/35 hover:border-[#D4AF37] rounded-2xl p-3.5 flex flex-col justify-between shadow-xl transition-all cursor-pointer group relative overflow-hidden"
               >
                 <div className="space-y-2.5">
-                  <div className="relative h-28 w-full rounded-xl overflow-hidden bg-zinc-900 border border-afri-border">
+                  <div className="relative h-28 w-full rounded-xl overflow-hidden bg-afri-bg-sec border border-afri-border">
                     <img 
                       src={item.imageUrl} 
                       alt={item.title} 
@@ -685,29 +685,29 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                         #{index + 1} Tendance
                       </span>
                       {(item.category as string) === "artiste" && (
-                        <span className="px-2 py-0.5 rounded-md bg-purple-600 text-white text-[8.5px] font-mono font-black uppercase">
+                        <span className="px-2 py-0.5 rounded-md bg-purple-600 text-afri-text text-[8.5px] font-mono font-black uppercase">
                           Artiste
                         </span>
                       )}
                       {(item.category as string) === "evenements" && (
-                        <span className="px-2 py-0.5 rounded-md bg-orange-600 text-white text-[8.5px] font-mono font-black uppercase">
+                        <span className="px-2 py-0.5 rounded-md bg-orange-600 text-afri-text text-[8.5px] font-mono font-black uppercase">
                           Événement
                         </span>
                       )}
                       {(item.category as string) === "marche" && (
-                        <span className="px-2 py-0.5 rounded-md bg-pink-600 text-white text-[8.5px] font-mono font-black uppercase">
+                        <span className="px-2 py-0.5 rounded-md bg-pink-600 text-afri-text text-[8.5px] font-mono font-black uppercase">
                           Marché
                         </span>
                       )}
                       {(item.category as string) === "academie" && (
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[8.5px] font-mono font-black uppercase">
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-afri-text text-[8.5px] font-mono font-black uppercase">
                           Académie
                         </span>
                       )}
                     </div>
 
-                    <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center text-[9px] font-mono text-white font-bold">
-                      <span className="bg-black/70 px-1.5 py-0.5 rounded border border-white/20">📍 {item.commune}</span>
+                    <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center text-[9px] font-mono text-afri-text font-bold">
+                      <span className="bg-afri-bg/70 px-1.5 py-0.5 rounded border border-afri-border">📍 {item.commune}</span>
                       {item.budget ? (
                         <span className="bg-emerald-500 text-black px-1.5 py-0.5 rounded font-black">{item.budget.toLocaleString("fr-FR")} F</span>
                       ) : null}
@@ -715,16 +715,16 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-black text-white truncate group-hover:text-[#D4AF37] transition-colors">
+                    <h4 className="text-xs font-black text-afri-text truncate group-hover:text-[#D4AF37] transition-colors">
                       {item.title}
                     </h4>
-                    <p className="text-[10px] text-zinc-400 truncate mt-0.5">
+                    <p className="text-[10px] text-afri-text-sec truncate mt-0.5">
                       {item.authorName} • {item.description}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-3 pt-2.5 border-t border-zinc-800 flex items-center justify-between text-[10px] font-mono text-zinc-400">
+                <div className="mt-3 pt-2.5 border-t border-afri-border flex items-center justify-between text-[10px] font-mono text-afri-text-sec">
                   <span className="flex items-center gap-1">👀 {item.viewsCount}</span>
                   <span className="flex items-center gap-1">👍 {item.likesCount}</span>
                   <span className="text-[#D4AF37] font-bold group-hover:underline flex items-center gap-0.5">
@@ -817,9 +817,9 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                       rank === 1 
                         ? "bg-[#D4AF37] text-black" 
                         : rank === 2 
-                        ? "bg-zinc-300 text-black dark:bg-zinc-700 dark:text-white" 
+                        ? "bg-zinc-300 text-black dark:bg-zinc-700 dark:text-afri-text" 
                         : rank === 3 
-                        ? "bg-amber-700 text-white" 
+                        ? "bg-amber-700 text-afri-text" 
                         : "bg-afri-bg border border-afri-border text-afri-text-sec"
                     }`}>
                       <span className="text-[9px] uppercase leading-none font-mono">#{rank}</span>
@@ -833,7 +833,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       {item.type === "gombo" && (
-                        <span className="absolute bottom-1 right-1 bg-black/80 text-white text-[8px] font-bold px-1.5 py-0.5 rounded uppercase font-mono">
+                        <span className="absolute bottom-1 right-1 bg-afri-bg/80 text-afri-text text-[8px] font-bold px-1.5 py-0.5 rounded uppercase font-mono">
                           Gombo
                         </span>
                       )}
@@ -961,59 +961,59 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
           const scoreBreakdown = calculateAfrigomboScore(item, userCommune);
 
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-sm animate-fade-in">
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 className="bg-[#12100C] border-2 border-[#D4AF37] rounded-3xl p-6 max-w-md w-full space-y-5 shadow-2xl text-left"
               >
-                <div className="flex justify-between items-start border-b border-zinc-800 pb-3">
+                <div className="flex justify-between items-start border-b border-afri-border pb-3">
                   <div className="flex items-center gap-2">
                     <span className="p-2 bg-[#D4AF37]/20 text-[#D4AF37] rounded-xl">
                       <Flame className="w-5 h-5 fill-current" />
                     </span>
                     <div>
-                      <h3 className="text-base font-black text-white uppercase">SCORE AFRIGOMBO</h3>
-                      <p className="text-[10px] text-zinc-400 font-mono">Décomposition officielle du classement</p>
+                      <h3 className="text-base font-black text-afri-text uppercase">SCORE AFRIGOMBO</h3>
+                      <p className="text-[10px] text-afri-text-sec font-mono">Décomposition officielle du classement</p>
                     </div>
                   </div>
                   <button 
                     onClick={() => setSelectedScoreExplainer(null)}
-                    className="p-1 rounded-lg text-zinc-400 hover:text-white font-mono text-xs cursor-pointer"
+                    className="p-1 rounded-lg text-afri-text-sec hover:text-afri-text font-mono text-xs cursor-pointer"
                   >
                     ✕
                   </button>
                 </div>
 
                 <div className="space-y-2 text-xs font-mono">
-                  <div className="flex justify-between p-2 bg-zinc-900 rounded-xl text-zinc-300">
+                  <div className="flex justify-between p-2 bg-afri-bg-sec rounded-xl text-afri-text-sec">
                     <span>👀 Vues ({item.viewsCount})</span>
-                    <span className="font-bold text-white">+{item.viewsCount * 1} pts</span>
+                    <span className="font-bold text-afri-text">+{item.viewsCount * 1} pts</span>
                   </div>
-                  <div className="flex justify-between p-2 bg-zinc-900 rounded-xl text-zinc-300">
+                  <div className="flex justify-between p-2 bg-afri-bg-sec rounded-xl text-afri-text-sec">
                     <span>⭐ Favoris ({item.favoritesCount})</span>
-                    <span className="font-bold text-white">+{item.favoritesCount * 5} pts</span>
+                    <span className="font-bold text-afri-text">+{item.favoritesCount * 5} pts</span>
                   </div>
-                  <div className="flex justify-between p-2 bg-zinc-900 rounded-xl text-zinc-300">
+                  <div className="flex justify-between p-2 bg-afri-bg-sec rounded-xl text-afri-text-sec">
                     <span>💬 Palabres ({item.discussionsCount})</span>
-                    <span className="font-bold text-white">+{item.discussionsCount * 8} pts</span>
+                    <span className="font-bold text-afri-text">+{item.discussionsCount * 8} pts</span>
                   </div>
-                  <div className="flex justify-between p-2 bg-zinc-900 rounded-xl text-zinc-300">
+                  <div className="flex justify-between p-2 bg-afri-bg-sec rounded-xl text-afri-text-sec">
                     <span>📤 Partages ({item.sharesCount})</span>
-                    <span className="font-bold text-white">+{item.sharesCount * 10} pts</span>
+                    <span className="font-bold text-afri-text">+{item.sharesCount * 10} pts</span>
                   </div>
-                  <div className="flex justify-between p-2 bg-zinc-900 rounded-xl text-zinc-300">
+                  <div className="flex justify-between p-2 bg-afri-bg-sec rounded-xl text-afri-text-sec">
                     <span>👍 J'honore ({item.likesCount})</span>
-                    <span className="font-bold text-white">+{item.likesCount * 12} pts</span>
+                    <span className="font-bold text-afri-text">+{item.likesCount * 12} pts</span>
                   </div>
-                  <div className="flex justify-between p-2 bg-zinc-900 rounded-xl text-zinc-300">
+                  <div className="flex justify-between p-2 bg-afri-bg-sec rounded-xl text-afri-text-sec">
                     <span>🤝 Candidatures ({item.candidaturesCount})</span>
-                    <span className="font-bold text-white">+{item.candidaturesCount * 20} pts</span>
+                    <span className="font-bold text-afri-text">+{item.candidaturesCount * 20} pts</span>
                   </div>
 
-                  <div className="pt-2 border-t border-zinc-800 flex justify-between items-center text-sm font-sans">
-                    <span className="font-bold text-white">Score Total Calculé</span>
+                  <div className="pt-2 border-t border-afri-border flex justify-between items-center text-sm font-sans">
+                    <span className="font-bold text-afri-text">Score Total Calculé</span>
                     <span className="font-black text-[#D4AF37] text-lg">{calculateTrendingScore(item)} pts</span>
                   </div>
                 </div>

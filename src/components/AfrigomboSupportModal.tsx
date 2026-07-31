@@ -106,7 +106,7 @@ export const AfrigomboSupportModal: React.FC<AfrigomboSupportModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-[99999] animate-fadeIn">
+    <div className="fixed inset-0 bg-afri-bg/75 backdrop-blur-md flex items-center justify-center p-4 z-[99999] animate-fadeIn">
       <div className="bg-afri-bg-sec border border-afri-gold/40 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col h-[80vh] max-h-[700px]">
         {/* Header - Official Support Profile Card */}
         <div className="p-4 bg-afri-bg-sec border-b border-afri-border flex items-center justify-between shrink-0">

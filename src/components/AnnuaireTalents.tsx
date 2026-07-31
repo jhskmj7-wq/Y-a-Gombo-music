@@ -358,10 +358,10 @@ export default function AnnuaireTalents({
         <div className="max-w-3xl mx-auto space-y-6 animate-fade-in py-4">
           
           {/* Back button header */}
-          <div className="flex items-center justify-between pb-4 border-b border-gray-150 dark:border-gray-800">
+          <div className="flex items-center justify-between pb-4 border-b border-gray-150 dark:border-afri-border">
             <button
               onClick={handleBackToAnnuaire}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-[#7C3AED] dark:hover:text-[#A78BFA] bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl transition cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-afri-text-sec dark:text-afri-text-sec hover:text-[#7C3AED] dark:hover:text-[#A78BFA] bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-xl transition cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Retour à l'annuaire</span>
@@ -372,7 +372,7 @@ export default function AnnuaireTalents({
           </div>
 
           {/* Majestic Public Profil Plate */}
-          <div className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-850 rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden space-y-6">
+          <div className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-gray-850 rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden space-y-6">
             
             {/* Ambient Background decoration */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl pointer-events-none" />
@@ -421,7 +421,7 @@ export default function AnnuaireTalents({
                 <div className="flex items-center gap-1.5 text-xs text-afri-text-sec justify-center sm:justify-start font-bold">
                   <MapPin className="w-3.5 h-3.5 text-orange-600" />
                   <span>{selectedTalent.commune || "Abidjan"}, Côte d'Ivoire</span>
-                  <span className="text-gray-300 dark:text-gray-700">|</span>
+                  <span className="text-afri-text-sec dark:text-afri-text-sec">|</span>
                   <span className="p-1 px-2 bg-purple-50 dark:bg-purple-950/20 text-[#7C3AED] text-[10px] font-black uppercase rounded">
                     🎹 {selectedTalent.specialty || "Musicien"}
                   </span>
@@ -454,7 +454,7 @@ export default function AnnuaireTalents({
                 className={`p-3 rounded-full border transition cursor-pointer ${
                   favorites.includes(selectedTalent.uid)
                     ? "bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-950/25 dark:border-rose-900" 
-                    : "bg-gray-50 border-gray-150 text-afri-text-sec hover:text-gray-800 dark:bg-gray-800 dark:border-gray-700"
+                    : "bg-gray-50 border-gray-150 text-afri-text-sec hover:text-gray-800 dark:bg-afri-bg-ter dark:border-afri-border"
                 }`}
               >
                 <Heart className={`w-5 h-5 ${favorites.includes(selectedTalent.uid) ? "fill-current" : ""}`} />
@@ -466,7 +466,7 @@ export default function AnnuaireTalents({
               <h3 className="text-xs font-black uppercase tracking-wider text-gray-950 dark:text-afri-text">
                 📖 Biographie & Parcours Showbiz
               </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-afri-bg-sec p-4 rounded-2xl border border-gray-100 dark:border-gray-800/60 font-medium">
+              <p className="text-xs text-afri-text-sec dark:text-afri-text-sec leading-relaxed bg-gray-50 dark:bg-afri-bg-sec p-4 rounded-2xl border border-afri-border dark:border-gray-800/60 font-medium">
                 {selectedTalent.bio || "Aucune biographie rédigée pour l'instant. Cet artiste se concentre sur sa virtuosité scénique, l'entraînement quotidien et les répétitions d'orchestres à Abidjan."}
               </p>
             </div>
@@ -474,19 +474,19 @@ export default function AnnuaireTalents({
             {/* Specialties & Musical styles info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Spécialités */}
-              <div className="space-y-2 p-4 bg-gray-50 dark:bg-afri-bg-sec rounded-2xl border border-gray-100 dark:border-gray-800/60">
+              <div className="space-y-2 p-4 bg-gray-50 dark:bg-afri-bg-sec rounded-2xl border border-afri-border dark:border-gray-800/60">
                 <h4 className="text-[11px] font-extrabold text-afri-text-sec uppercase tracking-widest flex items-center gap-1">
                   🎻 Spécialités & Rôles
                 </h4>
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {selectedTalent.specialties && selectedTalent.specialties.length > 0 ? (
                     selectedTalent.specialties.map(spec => (
-                      <span key={spec} className="px-2.5 py-1 bg-white dark:bg-gray-900 text-xs text-gray-800 dark:text-gray-300 rounded-lg font-bold shadow-xs">
+                      <span key={spec} className="px-2.5 py-1 bg-white dark:bg-afri-bg-sec text-xs text-gray-800 dark:text-afri-text-sec rounded-lg font-bold shadow-xs">
                         {spec === "Autre spécialité" && selectedTalent.specialtyCustom ? selectedTalent.specialtyCustom : spec}
                       </span>
                     ))
                   ) : (
-                    <span className="px-2.5 py-1 bg-white dark:bg-gray-900 text-xs text-gray-700 dark:text-gray-300 rounded-lg font-bold">
+                    <span className="px-2.5 py-1 bg-white dark:bg-afri-bg-sec text-xs text-afri-text-sec dark:text-afri-text-sec rounded-lg font-bold">
                       {selectedTalent.specialty || "Musicien"}
                     </span>
                   )}
@@ -494,37 +494,37 @@ export default function AnnuaireTalents({
               </div>
 
               {/* Instruments */}
-              <div className="space-y-2 p-4 bg-gray-50 dark:bg-afri-bg-sec rounded-2xl border border-gray-100 dark:border-gray-800/60">
+              <div className="space-y-2 p-4 bg-gray-50 dark:bg-afri-bg-sec rounded-2xl border border-afri-border dark:border-gray-800/60">
                 <h4 className="text-[11px] font-extrabold text-afri-text-sec uppercase tracking-widest flex items-center gap-1">
                   🎹 Instruments maîtrisés
                 </h4>
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {selectedTalent.instruments && selectedTalent.instruments.length > 0 ? (
                     selectedTalent.instruments.map(inst => (
-                      <span key={inst} className="px-2.5 py-1 bg-white dark:bg-gray-900 text-xs text-gray-800 dark:text-gray-300 rounded-lg font-bold shadow-xs">
+                      <span key={inst} className="px-2.5 py-1 bg-white dark:bg-afri-bg-sec text-xs text-gray-800 dark:text-afri-text-sec rounded-lg font-bold shadow-xs">
                         {inst === "Autre instrument" && selectedTalent.instrumentCustom ? selectedTalent.instrumentCustom : inst}
                       </span>
                     ))
                   ) : (
-                    <span className="text-xs text-gray-500 font-bold dark:text-gray-400 italic">Non précisé</span>
+                    <span className="text-xs text-afri-text-muted font-bold dark:text-afri-text-sec italic">Non précisé</span>
                   )}
                 </div>
               </div>
 
               {/* Styles Musicaux */}
-              <div className="space-y-2 p-4 bg-gray-50 dark:bg-afri-bg-sec rounded-2xl border border-gray-100 dark:border-gray-800/60">
+              <div className="space-y-2 p-4 bg-gray-50 dark:bg-afri-bg-sec rounded-2xl border border-afri-border dark:border-gray-800/60">
                 <h4 className="text-[11px] font-extrabold text-afri-text-sec uppercase tracking-widest flex items-center gap-1">
                   🎼 Styles Musicaux
                 </h4>
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {selectedTalent.musicGenres && selectedTalent.musicGenres.length > 0 ? (
                     selectedTalent.musicGenres.map(g => (
-                      <span key={g} className="px-2.5 py-1 bg-white dark:bg-gray-900 text-xs text-gray-800 dark:text-gray-300 rounded-lg font-bold shadow-xs">
+                      <span key={g} className="px-2.5 py-1 bg-white dark:bg-afri-bg-sec text-xs text-gray-800 dark:text-afri-text-sec rounded-lg font-bold shadow-xs">
                         {g === "Autre style" && selectedTalent.musicGenreCustom ? selectedTalent.musicGenreCustom : g}
                       </span>
                     ))
                   ) : (
-                    <span className="px-2.5 py-1 bg-white dark:bg-gray-900 text-xs text-gray-700 dark:text-gray-300 rounded-lg font-bold">
+                    <span className="px-2.5 py-1 bg-white dark:bg-afri-bg-sec text-xs text-afri-text-sec dark:text-afri-text-sec rounded-lg font-bold">
                       {selectedTalent.musicGenre || "Variété"}
                     </span>
                   )}
@@ -532,18 +532,18 @@ export default function AnnuaireTalents({
               </div>
 
               {/* Niveau & Langues */}
-              <div className="space-y-2 p-4 bg-gray-50 dark:bg-afri-bg-sec rounded-2xl border border-gray-100 dark:border-gray-800/60">
+              <div className="space-y-2 p-4 bg-gray-50 dark:bg-afri-bg-sec rounded-2xl border border-afri-border dark:border-gray-800/60">
                 <h4 className="text-[11px] font-extrabold text-afri-text-sec uppercase tracking-widest flex items-center gap-1">
                   🎓 Niveau & Langues
                 </h4>
                 <div className="space-y-1.5 pt-1">
-                  <div className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                  <div className="text-xs font-bold text-gray-800 dark:text-afri-text">
                     Niveau : <span className="text-[#D4AF37] font-black">{selectedTalent.experience || "Intermédiaire"}</span>
                   </div>
                   {selectedTalent.languages && selectedTalent.languages.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {selectedTalent.languages.map(lang => (
-                        <span key={lang} className="px-1.5 py-0.5 bg-white dark:bg-gray-900 text-[10px] text-gray-700 dark:text-gray-300 rounded-md font-bold shadow-xs">
+                        <span key={lang} className="px-1.5 py-0.5 bg-white dark:bg-afri-bg-sec text-[10px] text-afri-text-sec dark:text-afri-text-sec rounded-md font-bold shadow-xs">
                           {lang === "Autre langue" && selectedTalent.languageCustom ? selectedTalent.languageCustom : lang}
                         </span>
                       ))}
@@ -571,19 +571,19 @@ export default function AnnuaireTalents({
 
             {/* Stats list */}
             <div className="grid grid-cols-4 gap-2.5 pt-3 border-t border-gray-55 dark:border-gray-850">
-              <div className="text-center p-2 bg-gray-50/50 dark:bg-afri-bg-sec/55 rounded-xl border border-gray-100 dark:border-gray-850">
+              <div className="text-center p-2 bg-gray-50/50 dark:bg-afri-bg-sec/55 rounded-xl border border-afri-border dark:border-gray-850">
                 <div className="text-sm sm:text-base font-black text-gray-950 dark:text-afri-text">
                   {selectedTalent.gombosCompleted || selectedTalent.gigsCompleted || 0}
                 </div>
                 <div className="text-[8px] uppercase font-bold text-afri-text-sec">Gombos</div>
               </div>
-              <div className="text-center p-2 bg-gray-50/50 dark:bg-afri-bg-sec/55 rounded-xl border border-gray-100 dark:border-gray-850">
+              <div className="text-center p-2 bg-gray-50/50 dark:bg-afri-bg-sec/55 rounded-xl border border-afri-border dark:border-gray-850">
                 <div className="text-sm sm:text-base font-black text-emerald-500 font-mono">
                   {selectedTalent.trustScore !== undefined ? selectedTalent.trustScore : 100}%
                 </div>
                 <div className="text-[8px] uppercase font-bold text-afri-text-sec">Confiance</div>
               </div>
-              <div className="text-center p-2 bg-gray-50/50 dark:bg-afri-bg-sec/55 rounded-xl border border-gray-100 dark:border-gray-850">
+              <div className="text-center p-2 bg-gray-50/50 dark:bg-afri-bg-sec/55 rounded-xl border border-afri-border dark:border-gray-850">
                 <div className="text-sm sm:text-base font-black text-yellow-600 dark:text-yellow-500 font-mono">
                   ★{selectedTalent.averageRating !== undefined ? selectedTalent.averageRating : 4.5}
                 </div>
@@ -638,7 +638,7 @@ export default function AnnuaireTalents({
                   navigator.clipboard.writeText(window.location.href);
                   alert("Lien du profil public copié ! Partagez-le avec les promoteurs.");
                 }}
-                className="px-4 py-3.5 bg-gray-100 hover:bg-gray-150 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-800 dark:text-gray-300 rounded-xl text-xs font-black transition cursor-pointer"
+                className="px-4 py-3.5 bg-gray-100 hover:bg-gray-150 dark:bg-afri-bg-ter dark:hover:bg-gray-750 text-gray-800 dark:text-afri-text-sec rounded-xl text-xs font-black transition cursor-pointer"
                 title="Copier le lien de partage"
               >
                 <Share2 className="w-4.5 h-4.5" />
@@ -695,7 +695,7 @@ export default function AnnuaireTalents({
                     setSelectedCommune(e.target.value);
                     if (e.target.value !== "all") setSelectedCity("all");
                   }}
-                  className="px-3.5 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-2xl text-xs font-bold text-gray-800 dark:text-afri-text focus:outline-none focus:ring-1 focus:ring-purple-600"
+                  className="px-3.5 py-2.5 bg-gray-50 dark:bg-gray-850 border border-afri-border dark:border-afri-border rounded-2xl text-xs font-bold text-gray-800 dark:text-afri-text focus:outline-none focus:ring-1 focus:ring-purple-600"
                 >
                   <option value="all">📍 Abidjan (Toutes Communes)</option>
                   {COMMUNES_ABIDJAN.map(c => <option key={c} value={c}>{c}</option>)}
@@ -707,7 +707,7 @@ export default function AnnuaireTalents({
                     setSelectedCity(e.target.value);
                     if (e.target.value !== "all") setSelectedCommune("all");
                   }}
-                  className="px-3.5 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-2xl text-xs font-bold text-gray-800 dark:text-afri-text focus:outline-none focus:ring-1 focus:ring-purple-600"
+                  className="px-3.5 py-2.5 bg-gray-50 dark:bg-gray-850 border border-afri-border dark:border-afri-border rounded-2xl text-xs font-bold text-gray-800 dark:text-afri-text focus:outline-none focus:ring-1 focus:ring-purple-600"
                 >
                   <option value="all">🌍 Côte d'Ivoire (Toutes Villes)</option>
                   {VILLES_CI.map(v => <option key={v} value={v}>{v}</option>)}
@@ -716,7 +716,7 @@ export default function AnnuaireTalents({
                 <select
                   value={filterAvailability}
                   onChange={(e) => setFilterAvailability(e.target.value as any)}
-                  className="px-3.5 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-2xl text-xs font-bold text-gray-800 dark:text-afri-text focus:outline-none focus:ring-1 focus:ring-purple-600"
+                  className="px-3.5 py-2.5 bg-gray-50 dark:bg-gray-850 border border-afri-border dark:border-afri-border rounded-2xl text-xs font-bold text-gray-800 dark:text-afri-text focus:outline-none focus:ring-1 focus:ring-purple-600"
                 >
                   <option value="all">⚡ Tous les Statuts</option>
                   <option value="disponible">🟢 Disponible maintenant</option>
@@ -737,7 +737,7 @@ export default function AnnuaireTalents({
                     className={`px-3.5 py-2 rounded-2xl text-xs font-semibold flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
                       selectedSpecialty === s.value
                         ? "bg-afri-bg-sec text-afri-text font-extrabold shadow-sm"
-                        : "bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-[#222]"
+                        : "bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-afri-bg-ter text-afri-text-sec dark:text-afri-text-sec border border-afri-border dark:border-[#222]"
                     }`}
                   >
                     <span>{s.icon}</span>
@@ -906,7 +906,7 @@ export default function AnnuaireTalents({
                               className={`p-1.5 rounded-lg border transition cursor-pointer ${
                                 isFavorited 
                                   ? "bg-rose-50 border-rose-100 text-rose-600 dark:bg-rose-950/20" 
-                                  : "bg-gray-50 text-afri-text-sec hover:text-rose-600 dark:bg-gray-800"
+                                  : "bg-gray-50 text-afri-text-sec hover:text-rose-600 dark:bg-afri-bg-ter"
                               }`}
                             >
                               <Heart className={`w-3.5 h-3.5 ${isFavorited ? "fill-current" : ""}`} />
@@ -944,7 +944,7 @@ export default function AnnuaireTalents({
                 <p className="text-xs text-afri-text-sec font-extrabold">Chargement de l'annuaire de Côte d'Ivoire...</p>
               </div>
             ) : filteredTalents.length === 0 ? (
-              <div className="bg-white dark:bg-afri-bg-sec border border-dashed border-gray-200 dark:border-gray-800 text-center py-12 px-4 rounded-3xl space-y-3 max-w-sm mx-auto">
+              <div className="bg-white dark:bg-afri-bg-sec border border-dashed border-afri-border dark:border-afri-border text-center py-12 px-4 rounded-3xl space-y-3 max-w-sm mx-auto">
                 <AlertCircle className="w-10 h-10 text-afri-text-sec mx-auto" />
                 <h3 className="text-sm font-black text-gray-950 dark:text-afri-text uppercase leading-none">Aucun talent trouvé</h3>
                 <p className="text-xs text-afri-text-sec">Modifiez vos critères de recherche, votre spécialité ou commune pour explorer d'autres musiciens.</p>
@@ -972,7 +972,7 @@ export default function AnnuaireTalents({
                     <div 
                       key={talent.uid}
                       onClick={() => handleViewProfileDetail(talent.uid)}
-                      className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-850/80 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] cursor-pointer flex flex-col justify-between space-y-4"
+                      className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-gray-850/80 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] cursor-pointer flex flex-col justify-between space-y-4"
                     >
                       <div className="space-y-3">
                         {/* Upper card header : name and ratings */}
@@ -982,7 +982,7 @@ export default function AnnuaireTalents({
                             <img 
                               src={talent.avatarUrl || talent.photoURL || AVATARS[0]} 
                               alt={talent.firstName} 
-                              className="w-14 h-14 rounded-xl object-cover border border-gray-200" 
+                              className="w-14 h-14 rounded-xl object-cover border border-afri-border" 
                             />
                             <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-[#121214] ${
                               status === "disponible" ? "bg-emerald-500" : status === "occupe" ? "bg-amber-500" : "bg-red-500"
@@ -1040,12 +1040,12 @@ export default function AnnuaireTalents({
                                 <MapPin className="w-3 h-3 text-orange-650" />
                                 <span className="truncate">{talent.commune || "Cocody"}</span>
                               </p>
-                              <span className="text-gray-300 dark:text-zinc-700">•</span>
+                              <span className="text-afri-text-sec dark:text-zinc-700">•</span>
                               <p className="text-yellow-600 dark:text-yellow-500 font-mono font-black flex items-center gap-0.5">
                                 ★ {talent.averageRating !== undefined ? talent.averageRating : "4.5"}
                                 <span className="text-afri-text-sec font-normal">({talent.ratingCount || 0})</span>
                               </p>
-                              <span className="text-gray-300 dark:text-zinc-700">•</span>
+                              <span className="text-afri-text-sec dark:text-zinc-700">•</span>
                               <p className="text-emerald-500 font-mono font-black">
                                 📈 {talent.trustScore !== undefined ? talent.trustScore : "100"}%
                               </p>
@@ -1194,7 +1194,7 @@ export default function AnnuaireTalents({
       {/* DIRECT MESSAGING CONTACT BOTTOM SHEET MODAL */}
       <AnimatePresence>
         {contactingTalent && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-end justify-center z-50">
+          <div className="fixed inset-0 bg-afri-bg/60 backdrop-blur-xs flex items-end justify-center z-50">
             {/* Click backdrop to close */}
             <div 
               className="absolute inset-0 cursor-pointer" 
@@ -1207,12 +1207,12 @@ export default function AnnuaireTalents({
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="relative w-full max-w-lg bg-white dark:bg-[#111111] border-t border-x border-[#D4AF37]/30 rounded-t-[32px] p-6 pb-8 space-y-5 shadow-[0_-8px_40px_rgba(0,0,0,0.4)] z-10 text-left"
+              className="relative w-full max-w-lg bg-white dark:bg-afri-bg-sec border-t border-x border-[#D4AF37]/30 rounded-t-[32px] p-6 pb-8 space-y-5 shadow-[0_-8px_40px_rgba(0,0,0,0.4)] z-10 text-left"
             >
               {/* Handlebar for dragging feeling */}
-              <div className="w-12 h-1.5 bg-gray-300 dark:bg-zinc-800 rounded-full mx-auto mb-2" />
+              <div className="w-12 h-1.5 bg-gray-300 dark:bg-afri-bg-ter rounded-full mx-auto mb-2" />
 
-              <div className="flex justify-between items-start pb-2 border-b border-gray-100 dark:border-zinc-900">
+              <div className="flex justify-between items-start pb-2 border-b border-afri-border dark:border-afri-border">
                 <div>
                   <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-wider font-mono">
                     {isAllianceProposal ? "🤝 ALLIANCE & COLLABORATION SOUVERAINE" : "💬 DIRECT MESSAGING CONTACT"}
@@ -1223,7 +1223,7 @@ export default function AnnuaireTalents({
                 </div>
                 <button 
                   onClick={() => setContactingTalent(null)}
-                  className="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-900 hover:bg-gray-200 dark:hover:bg-zinc-800 text-gray-650 dark:text-gray-300 flex items-center justify-center font-black transition cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-gray-100 dark:bg-afri-bg-sec hover:bg-afri-bg-ter dark:hover:bg-afri-bg-ter text-gray-650 dark:text-afri-text-sec flex items-center justify-center font-black transition cursor-pointer"
                 >
                   ✕
                 </button>
@@ -1244,14 +1244,14 @@ export default function AnnuaireTalents({
               ) : (
                 <form onSubmit={handleSendMessageSubmit} className="space-y-4">
                   {/* Artist Mini Card */}
-                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-950 p-3 rounded-2xl border border-gray-100 dark:border-zinc-900">
+                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-afri-bg p-3 rounded-2xl border border-afri-border dark:border-afri-border">
                     <img 
                       src={contactingTalent.avatarUrl || contactingTalent.photoURL || AVATARS[0]} 
                       alt="" 
                       className="w-11 h-11 rounded-xl object-cover border border-[#D4AF37]/35"
                     />
                     <div>
-                      <h4 className="text-xs font-black text-gray-950 dark:text-white uppercase">
+                      <h4 className="text-xs font-black text-gray-950 dark:text-afri-text uppercase">
                         {contactingTalent.firstName} {contactingTalent.lastName}
                       </h4>
                       <p className="text-[10px] text-afri-gold font-bold font-mono">
@@ -1268,7 +1268,7 @@ export default function AnnuaireTalents({
                       value={contactMessage}
                       onChange={(e) => setContactMessage(e.target.value)}
                       rows={4}
-                      className="w-full p-4.5 bg-gray-50 dark:bg-zinc-950 border border-gray-150 dark:border-zinc-850 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-2xl text-xs font-semibold focus:outline-none dark:text-afri-text transition-all resize-none shadow-inner animate-none focus:ring-offset-0"
+                      className="w-full p-4.5 bg-gray-50 dark:bg-afri-bg border border-gray-150 dark:border-zinc-850 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-2xl text-xs font-semibold focus:outline-none dark:text-afri-text transition-all resize-none shadow-inner animate-none focus:ring-offset-0"
                       placeholder={isAllianceProposal ? "Proposez un projet d'alliance (album, concert, répétition, co-production)..." : "Écrivez votre message..."}
                       required
                     />
@@ -1281,7 +1281,7 @@ export default function AnnuaireTalents({
                         setContactingTalent(null);
                         if (onNavigateView) onNavigateView("messages");
                       }}
-                      className="flex-1 py-3 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-850 text-gray-850 dark:text-gray-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border border-transparent dark:border-zinc-800"
+                      className="flex-1 py-3 bg-zinc-100 hover:bg-zinc-200 dark:bg-afri-bg-sec dark:hover:bg-afri-bg-ter text-gray-850 dark:text-afri-text rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border border-transparent dark:border-afri-border"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
                       <span>Aller aux discussions</span>

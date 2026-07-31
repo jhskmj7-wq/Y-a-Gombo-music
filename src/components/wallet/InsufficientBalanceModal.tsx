@@ -27,16 +27,16 @@ export function InsufficientBalanceModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-md">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="relative w-full max-w-md bg-zinc-950 border border-amber-500/40 rounded-3xl p-6 shadow-2xl text-left space-y-5"
+          className="relative w-full max-w-md bg-afri-bg border border-amber-500/40 rounded-3xl p-6 shadow-2xl text-left space-y-5"
         >
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1 rounded-full text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800"
+            className="absolute top-4 right-4 p-1 rounded-full text-afri-text-sec hover:text-afri-text bg-afri-bg-sec border border-afri-border"
           >
             <X className="w-5 h-5" />
           </button>
@@ -45,21 +45,21 @@ export function InsufficientBalanceModal({
             <div className="w-14 h-14 mx-auto rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
               <AlertCircle className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-black text-white uppercase tracking-tight font-sans">
+            <h3 className="text-xl font-black text-afri-text uppercase tracking-tight font-sans">
               Solde insuffisant
             </h3>
-            <p className="text-xs text-zinc-400 font-mono">
+            <p className="text-xs text-afri-text-sec font-mono">
               Votre Wallet AFRIGOMBO ne contient pas les fonds nécessaires pour {moduleName}.
             </p>
           </div>
 
-          <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-4 space-y-2.5 font-mono text-xs">
-            <div className="flex justify-between items-center text-zinc-400">
+          <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 space-y-2.5 font-mono text-xs">
+            <div className="flex justify-between items-center text-afri-text-sec">
               <span>Solde actuel :</span>
-              <span className="font-bold text-white">{currentBalance.toLocaleString("fr-FR")} FCFA</span>
+              <span className="font-bold text-afri-text">{currentBalance.toLocaleString("fr-FR")} FCFA</span>
             </div>
             {requiredAmount > 0 && (
-              <div className="flex justify-between items-center text-zinc-400">
+              <div className="flex justify-between items-center text-afri-text-sec">
                 <span>Prix requis :</span>
                 <span className="font-bold text-amber-400">{requiredAmount.toLocaleString("fr-FR")} FCFA</span>
               </div>
@@ -87,7 +87,7 @@ export function InsufficientBalanceModal({
 
             <button
               onClick={onClose}
-              className="w-full py-3 px-4 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold uppercase text-xs tracking-wider rounded-xl border border-zinc-800 transition-all cursor-pointer"
+              className="w-full py-3 px-4 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold uppercase text-xs tracking-wider rounded-xl border border-afri-border transition-all cursor-pointer"
             >
               Annuler
             </button>

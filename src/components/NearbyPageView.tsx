@@ -78,7 +78,7 @@ export const NearbyPageView: React.FC<NearbyPageViewProps> = ({
           <button
             key={r}
             onClick={() => setRadius(r)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold shrink-0 transition border ${radius === r ? "bg-afri-gold text-black border-afri-gold" : "bg-afri-bg-sec text-afri-text-sec border-afri-border hover:text-afri-text"}`}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold shrink-0 transition border ${radius === r ? "bg-afri-gold text-afri-text border-afri-gold" : "bg-afri-bg-sec text-afri-text-sec border-afri-border hover:text-afri-text"}`}
           >
             {r} km
           </button>
@@ -91,7 +91,7 @@ export const NearbyPageView: React.FC<NearbyPageViewProps> = ({
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-3.5 py-1.5 rounded-xl text-[10px] font-bold uppercase shrink-0 transition border ${selectedCategory === cat ? "bg-afri-gold text-black border-afri-gold" : "bg-afri-bg-sec text-afri-text-sec border-afri-border hover:text-afri-text"}`}
+            className={`px-3.5 py-1.5 rounded-xl text-[10px] font-bold uppercase shrink-0 transition border ${selectedCategory === cat ? "bg-afri-gold text-afri-text border-afri-gold" : "bg-afri-bg-sec text-afri-text-sec border-afri-border hover:text-afri-text"}`}
           >
             {cat === "all" ? "Tous" : cat === "eglise" ? "Église" : cat}
           </button>
@@ -115,14 +115,14 @@ export const NearbyPageView: React.FC<NearbyPageViewProps> = ({
           {!mapInteractive && (
             <div 
               onClick={() => setMapInteractive(true)}
-              className="absolute inset-0 bg-black/45 backdrop-blur-[1px] z-[999] flex flex-col items-center justify-center p-4 cursor-pointer select-none active:bg-black/50 transition-colors"
+              className="absolute inset-0 bg-afri-bg/45 backdrop-blur-[1px] z-[999] flex flex-col items-center justify-center p-4 cursor-pointer select-none active:bg-afri-bg/50 transition-colors"
             >
               <div className="bg-[#0A0A0A] border border-afri-gold/40 rounded-2xl p-4 flex flex-col items-center gap-2 max-w-xs text-center shadow-2xl animate-fadeIn">
                 <span className="p-2 rounded-full bg-afri-gold/10 text-afri-gold">
                   <Compass className="w-5 h-5 animate-spin" style={{ animationDuration: '6s' }} />
                 </span>
-                <strong className="text-xs text-white uppercase tracking-wider font-bold">Carte Interactive verrouillée</strong>
-                <p className="text-[10px] text-zinc-400 leading-relaxed font-medium">
+                <strong className="text-xs text-afri-text uppercase tracking-wider font-bold">Carte Interactive verrouillée</strong>
+                <p className="text-[10px] text-afri-text-sec leading-relaxed font-medium">
                   Tapotez la carte pour l'activer et naviguer.
                 </p>
               </div>
@@ -133,7 +133,7 @@ export const NearbyPageView: React.FC<NearbyPageViewProps> = ({
           {mapInteractive && (
             <button
               onClick={() => setMapInteractive(false)}
-              className="absolute top-4 left-4 bg-[#0A0A0A] hover:bg-zinc-900 border border-afri-gold/40 text-afri-gold px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider shadow-lg z-[999] flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+              className="absolute top-4 left-4 bg-[#0A0A0A] hover:bg-afri-bg-sec border border-afri-gold/40 text-afri-gold px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider shadow-lg z-[999] flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
             >
               <span>Verrouiller 🔒</span>
             </button>
@@ -147,7 +147,7 @@ export const NearbyPageView: React.FC<NearbyPageViewProps> = ({
               <button
                 key={r}
                 onClick={() => setRadius(r)}
-                className={`px-3 py-1 rounded-lg text-[10px] font-mono font-bold transition ${radius === r ? "bg-afri-gold text-black" : "bg-afri-bg-sec text-afri-text-sec"}`}
+                className={`px-3 py-1 rounded-lg text-[10px] font-mono font-bold transition ${radius === r ? "bg-afri-gold text-afri-text" : "bg-afri-bg-sec text-afri-text-sec"}`}
               >
                 {r}km
               </button>
@@ -161,7 +161,7 @@ export const NearbyPageView: React.FC<NearbyPageViewProps> = ({
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase transition ${selectedCategory === cat ? "bg-afri-gold text-black" : "bg-afri-bg-sec text-afri-text-sec"}`}
+                className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase transition ${selectedCategory === cat ? "bg-afri-gold text-afri-text" : "bg-afri-bg-sec text-afri-text-sec"}`}
               >
                 {cat === "all" ? "Tous" : cat === "eglise" ? "Église" : cat}
               </button>
@@ -180,7 +180,7 @@ export const NearbyPageView: React.FC<NearbyPageViewProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {filteredGombos.length === 0 ? (
-              <div className="col-span-full py-12 text-center text-zinc-500 text-xs">Aucun Gombo trouvé.</div>
+              <div className="col-span-full py-12 text-center text-afri-text-muted text-xs">Aucun Gombo trouvé.</div>
             ) : (
               filteredGombos.map((gombo: any) => {
                 const travel = estimateTravelTimes(gombo.distance || 3);
@@ -191,10 +191,10 @@ export const NearbyPageView: React.FC<NearbyPageViewProps> = ({
                     className="bg-afri-bg-sec/20 border border-afri-border rounded-2xl p-4 space-y-2 cursor-pointer hover:border-afri-gold/50 transition"
                   >
                     <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-white">{gombo.title}</span>
+                      <span className="font-bold text-afri-text">{gombo.title}</span>
                       <span className="text-emerald-400 font-black">{Number(gombo.budget || 0).toLocaleString()} FCFA</span>
                     </div>
-                    <div className="text-[10px] text-zinc-400 flex justify-between">
+                    <div className="text-[10px] text-afri-text-sec flex justify-between">
                       <span>{gombo.location || "Abidjan"}</span>
                       <span>🛵 ~{travel.moto} min</span>
                     </div>

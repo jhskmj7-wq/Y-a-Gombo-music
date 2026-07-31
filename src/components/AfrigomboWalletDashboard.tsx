@@ -775,7 +775,7 @@ export default function AfrigomboWalletDashboard({
                 key={tab.id}
                 onClick={() => { setActiveTab(tab.id as any); playSound("click"); }}
                 className="py-1 px-2.5 sm:py-1 sm:px-3 rounded-full text-[9px] font-mono font-extrabold uppercase transition-all cursor-pointer bg-afri-bg text-afri-text-sec hover:text-afri-text border border-afri-border"
-                style={activeTab === tab.id ? { backgroundColor: '#D4AF37', color: '#000000', fontWeight: '900' } : undefined}
+                style={activeTab === tab.id ? { backgroundColor: '#D4AF37', color: "var(--afri-text)", fontWeight: '900' } : undefined}
               >
                 {tab.label}
               </button>
@@ -875,7 +875,7 @@ export default function AfrigomboWalletDashboard({
       {/* MODAL 1: RECHARGER / DÉPÔT MOBILE MONEY (MOBILE MODAL) */}
       <AnimatePresence>
         {showDepositModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
             <div 
               className="absolute inset-0"
               onClick={() => { setShowDepositModal(false); playSound("click"); }}
@@ -892,7 +892,7 @@ export default function AfrigomboWalletDashboard({
 
               <button 
                 onClick={() => { setShowDepositModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-full bg-zinc-900 border border-zinc-800"
+                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text p-1 rounded-full bg-afri-bg-sec border border-afri-border"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1011,15 +1011,15 @@ export default function AfrigomboWalletDashboard({
 
                   <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 space-y-2 text-left text-xs font-mono">
                     <div className="flex justify-between items-center">
-                      <span className="text-zinc-400">Numéro de Référence :</span>
+                      <span className="text-afri-text-sec">Numéro de Référence :</span>
                       <strong className="text-[#D4AF37]">{createdDepositRef}</strong>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-zinc-400">Montant du Dépôt :</span>
+                      <span className="text-afri-text-sec">Montant du Dépôt :</span>
                       <strong className="text-emerald-400">+{Number(amount).toLocaleString('fr-FR')} FCFA</strong>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-zinc-400">Statut du Dépôt :</span>
+                      <span className="text-afri-text-sec">Statut du Dépôt :</span>
                       <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[10px]">
                         🟡 En attente de validation
                       </span>
@@ -1068,7 +1068,7 @@ export default function AfrigomboWalletDashboard({
       {/* MODAL 2: RETIRER / RETRAIT MOBILE MONEY (MOBILE MODAL) */}
       <AnimatePresence>
         {showWithdrawModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
             <div 
               className="absolute inset-0"
               onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
@@ -1085,7 +1085,7 @@ export default function AfrigomboWalletDashboard({
 
               <button 
                 onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-full bg-zinc-900 border border-zinc-800"
+                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text p-1 rounded-full bg-afri-bg-sec border border-afri-border"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1224,7 +1224,7 @@ export default function AfrigomboWalletDashboard({
       {/* MODAL 3: SCANNER / P2P TRANSFER (ANDROID BOTTOM SHEET) */}
       <AnimatePresence>
         {showScannerModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end justify-center z-50 p-0 sm:p-4">
+          <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md flex items-end justify-center z-50 p-0 sm:p-4">
             <div 
               className="absolute inset-0"
               onClick={() => { setShowScannerModal(false); playSound("click"); }}
@@ -1241,7 +1241,7 @@ export default function AfrigomboWalletDashboard({
 
               <button 
                 onClick={() => { setShowScannerModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-full bg-zinc-900 border border-zinc-800"
+                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text p-1 rounded-full bg-afri-bg-sec border border-afri-border"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1330,7 +1330,7 @@ export default function AfrigomboWalletDashboard({
                   <button
                     type="submit"
                     disabled={processing || !scanRecipient || !scanAmount || Number(scanAmount) > wallet.soldeDisponible}
-                    className="w-full py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 bg-purple-600 hover:bg-purple-700 text-afri-text font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98 flex items-center justify-center gap-2"
                   >
                     {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <>
                       <Send className="w-4 h-4" />

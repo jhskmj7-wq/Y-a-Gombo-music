@@ -214,7 +214,7 @@ export default function FounderThrone({
             <div className="flex gap-6 items-start">
               <div className="relative mt-2">
                 <Bell className="w-6 h-6 2xl:w-8 2xl:h-8 text-[#D4AF37]" strokeWidth={1.5} />
-                <span className="absolute -top-2 -right-2 bg-red-600 text-afri-text text-[9px] 2xl:text-[10px] font-black w-4 h-4 2xl:w-5 2xl:h-5 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(220,38,38,0.8)] border border-black z-10">12</span>
+                <span className="absolute -top-2 -right-2 bg-red-600 text-afri-text text-[9px] 2xl:text-[10px] font-black w-4 h-4 2xl:w-5 2xl:h-5 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(220,38,38,0.8)] border border-afri-border z-10">12</span>
               </div>
               
               <div className="hidden md:flex flex-col items-end text-right border-l border-[#D4AF37]/20 pl-6 h-12 justify-between">
@@ -358,8 +358,8 @@ export default function FounderThrone({
                             <XAxis dataKey="name" stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} tickMargin={10} />
                             <YAxis stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${v/1000}K`} tickMargin={10} />
                             <Tooltip 
-                               contentStyle={{ backgroundColor: "#000", border: "1px solid #D4AF37", borderRadius: "8px", fontSize: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.8)" }} 
-                               itemStyle={{ color: "#fff", fontWeight: "bold" }}
+                               contentStyle={{ backgroundcolor: "var(--afri-text)", border: "1px solid #D4AF37", borderRadius: "8px", fontSize: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.8)" }} 
+                               itemStyle={{ color: "var(--afri-text)", fontWeight: "bold" }}
                                labelStyle={{ color: "#D4AF37", marginBottom: "4px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "bold" }}
                             />
                             <Area type="monotone" dataKey="Utilisateurs" stroke="#D4AF37" strokeWidth={3} fillOpacity={1} fill="url(#colorU)" />
@@ -440,7 +440,7 @@ export default function FounderThrone({
                        </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-afri-bg-sec text-black flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.6)] border-[3px] border-black shrink-0 relative">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-afri-bg-sec text-black flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.6)] border-[3px] border-afri-border shrink-0 relative">
                         <span className="font-mono font-black text-xl">💰</span>
                       </div>
                       <span className="text-3xl sm:text-4xl 2xl:text-5xl font-sans font-black text-afri-text tracking-tight leading-none drop-shadow-md">
@@ -694,10 +694,10 @@ export default function FounderThrone({
 
                    <button 
                      onClick={handleForceUpdate}
-                     className="w-full flex items-center justify-between p-3 bg-afri-bg-sec/5 border border-afri-border rounded-xl hover:bg-emerald-500 hover:text-white transition-all group"
+                     className="w-full flex items-center justify-between p-3 bg-afri-bg-sec/5 border border-afri-border rounded-xl hover:bg-emerald-500 hover:text-afri-text transition-all group"
                    >
                      <div className="flex items-center gap-3">
-                       <RefreshCw className="w-4 h-4 text-emerald-500 group-hover:text-white" />
+                       <RefreshCw className="w-4 h-4 text-emerald-500 group-hover:text-afri-text" />
                        <span className="text-[10px] font-mono font-black uppercase tracking-widest">Forcer la mise à jour</span>
                      </div>
                      <ChevronRight className="w-4 h-4 opacity-30" />

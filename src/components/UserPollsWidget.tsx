@@ -297,7 +297,7 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
       {/* 2. RICH INTERACTIVE MODAL DIALOG */}
       <AnimatePresence>
         {isModalOpen && selectedPoll && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}

@@ -471,7 +471,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
       <div className="bg-afri-bg-sec border border-[#D4AF37]/25 rounded-3xl p-5 shadow-sm text-left relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-[#D4AF37]/5 to-transparent rounded-full blur-2xl pointer-events-none" />
         
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-800 pb-4 mb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-afri-border pb-4 mb-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="p-1 px-2.5 bg-afri-bg-sec/10 border border-[#D4AF37]/35 text-[#D4AF37] text-[10px] font-black uppercase rounded-lg tracking-wider">
@@ -494,7 +494,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
-            className="bg-afri-bg-sec border border-gray-800 rounded-2xl p-4 flex flex-col justify-between"
+            className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 flex flex-col justify-between"
           >
             <div>
               <p className="text-xs font-black text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -508,7 +508,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                     const isPrefMatch = g.commune?.toLowerCase().includes(userCommuneClean) || 
                                         g.description?.toLowerCase().includes(userGenreClean);
                     return (
-                      <div key={g.id} className="p-3 bg-afri-bg-sec border border-gray-800 hover:border-[#D4AF37]/40 rounded-xl transition-all">
+                      <div key={g.id} className="p-3 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/40 rounded-xl transition-all">
                         <div className="flex justify-between items-start gap-1">
                           <h4 className="text-xs font-black text-afri-text truncate max-w-[140px]">{g.title}</h4>
                           <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-afri-bg-sec/10 text-[#D4AF37] shrink-0">
@@ -518,7 +518,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                         <p className="text-[10px] text-afri-text-sec truncate mt-1">{g.location} ({g.commune})</p>
                         <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-800/50">
                           <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${
-                            isPrefMatch ? "bg-amber-950/40 text-amber-400" : "bg-gray-800 text-afri-text-sec"
+                            isPrefMatch ? "bg-amber-950/40 text-amber-400" : "bg-afri-bg-ter text-afri-text-sec"
                           }`}>
                             {isPrefMatch ? "🎯 Match parfait" : "⭐ Suggéré"}
                           </span>
@@ -544,7 +544,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-            className="bg-afri-bg-sec border border-gray-800 rounded-2xl p-4 flex flex-col justify-between"
+            className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 flex flex-col justify-between"
           >
             <div>
               <p className="text-xs font-black text-cyan-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -557,7 +557,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                   {displayRenforts.map(r => {
                     const isNear = r.commune?.toLowerCase().includes(userCommuneClean);
                     return (
-                      <div key={r.id} className="p-3 bg-afri-bg-sec border border-gray-800 hover:border-[#D4AF37]/40 rounded-xl transition-all">
+                      <div key={r.id} className="p-3 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/40 rounded-xl transition-all">
                         <div className="flex justify-between items-start">
                           <h4 className="text-xs font-black text-afri-text truncate max-w-[140px]">{r.roleNeeded}</h4>
                           <span className="text-[9px] font-black text-cyan-400">⚡ SOS</span>
@@ -565,7 +565,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                         <p className="text-[10px] text-afri-text-sec truncate mt-1">Lieu: {r.commune} | {r.budget ? `${r.budget.toLocaleString()} F` : "Négociable"}</p>
                         <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-800/50">
                           <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${
-                            isNear ? "bg-cyan-950/40 text-cyan-400" : "bg-gray-800 text-afri-text-sec"
+                            isNear ? "bg-cyan-950/40 text-cyan-400" : "bg-afri-bg-ter text-afri-text-sec"
                           }`}>
                             {isNear ? "📍 Proche" : "⭐ Recommandé"}
                           </span>
@@ -591,7 +591,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
-            className="bg-afri-bg-sec border border-gray-800 rounded-2xl p-4 flex flex-col justify-between"
+            className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 flex flex-col justify-between"
           >
             <div>
               <p className="text-xs font-black text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -605,7 +605,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                     const isSpecMatch = g.description?.toLowerCase().includes(userSpecialtyClean) || 
                                         g.name?.toLowerCase().includes(userSpecialtyClean);
                     return (
-                      <div key={g.id} className="p-3 bg-afri-bg-sec border border-gray-800 hover:border-[#D4AF37]/40 rounded-xl transition-all">
+                      <div key={g.id} className="p-3 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/40 rounded-xl transition-all">
                         <div className="flex justify-between items-start">
                           <h4 className="text-xs font-black text-afri-text truncate max-w-[140px]">{g.name}</h4>
                           <span className="text-[9.5px] text-[#D4AF37] font-black uppercase">Orchestre</span>
@@ -613,7 +613,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                         <p className="text-[10px] text-afri-text-sec truncate mt-1">{g.genres?.join(", ") || "Tous styles"}</p>
                         <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-800/50">
                           <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${
-                            isSpecMatch ? "bg-purple-950/40 text-purple-400" : "bg-gray-800 text-afri-text-sec"
+                            isSpecMatch ? "bg-purple-950/40 text-purple-400" : "bg-afri-bg-ter text-afri-text-sec"
                           }`}>
                             {isSpecMatch ? "🎷 Spécialité" : "⭐ Tendance"}
                           </span>
@@ -648,7 +648,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between overflow-hidden cursor-pointer ${
               activeTab === "applications"
                 ? "bg-afri-bg-sec/10 border-[#D4AF37] shadow-md scale-102"
-                : "bg-white dark:bg-afri-bg-sec border-gray-100 dark:border-gray-800 hover:border-[#D4AF37]/50"
+                : "bg-white dark:bg-afri-bg-sec border-afri-border dark:border-afri-border hover:border-[#D4AF37]/50"
             }`}
           >
             <div className="flex justify-between items-start w-full">
@@ -673,7 +673,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between overflow-hidden cursor-pointer ${
               activeTab === "gombos"
                 ? "bg-afri-bg-sec/10 border-[#D4AF37] shadow-md scale-102"
-                : "bg-white dark:bg-afri-bg-sec border-gray-100 dark:border-gray-800 hover:border-[#D4AF37]/50"
+                : "bg-white dark:bg-afri-bg-sec border-afri-border dark:border-afri-border hover:border-[#D4AF37]/50"
             }`}
           >
             <div className="flex justify-between items-start w-full">
@@ -696,7 +696,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between overflow-hidden cursor-pointer ${
               activeTab === "renfort_express"
                 ? "bg-afri-bg-sec/10 border-[#D4AF37] shadow-md scale-102"
-                : "bg-white dark:bg-afri-bg-sec border-gray-100 dark:border-gray-800 hover:border-[#D4AF37]/50"
+                : "bg-white dark:bg-afri-bg-sec border-afri-border dark:border-afri-border hover:border-[#D4AF37]/50"
             }`}
           >
             <div className="flex justify-between items-start w-full">
@@ -719,7 +719,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between overflow-hidden cursor-pointer ${
               activeTab === "favoris"
                 ? "bg-afri-bg-sec/10 border-[#D4AF37] shadow-md scale-102"
-                : "bg-white dark:bg-afri-bg-sec border-gray-100 dark:border-gray-800 hover:border-[#D4AF37]/50"
+                : "bg-white dark:bg-afri-bg-sec border-afri-border dark:border-afri-border hover:border-[#D4AF37]/50"
             }`}
           >
             <div className="flex justify-between items-start w-full">
@@ -742,7 +742,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between overflow-hidden cursor-pointer ${
               activeTab === "groupes"
                 ? "bg-afri-bg-sec/10 border-[#D4AF37] shadow-md scale-102"
-                : "bg-white dark:bg-afri-bg-sec border-gray-100 dark:border-gray-800 hover:border-[#D4AF37]/50"
+                : "bg-white dark:bg-afri-bg-sec border-afri-border dark:border-afri-border hover:border-[#D4AF37]/50"
             }`}
           >
             <div className="flex justify-between items-start w-full">
@@ -765,7 +765,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between overflow-hidden cursor-pointer ${
               activeTab === "historique"
                 ? "bg-afri-bg-sec/10 border-[#D4AF37] shadow-md scale-102"
-                : "bg-white dark:bg-afri-bg-sec border-gray-100 dark:border-gray-800 hover:border-[#D4AF37]/50"
+                : "bg-white dark:bg-afri-bg-sec border-afri-border dark:border-afri-border hover:border-[#D4AF37]/50"
             }`}
           >
             <div className="flex justify-between items-start w-full">
@@ -784,13 +784,13 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
         </div>
 
         {/* Traditional secondary tabs for client reservations or general admin */}
-        <div className="flex gap-2.5 mt-4 border-b border-gray-100 dark:border-gray-850 pb-2">
+        <div className="flex gap-2.5 mt-4 border-b border-afri-border dark:border-gray-850 pb-2">
           <button
             onClick={() => setActiveTab("reservations")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               activeTab === "reservations"
                 ? "bg-emerald-500 text-afri-text"
-                : "bg-gray-100 dark:bg-gray-800 text-afri-text-sec hover:text-gray-950 dark:hover:text-afri-text"
+                : "bg-gray-100 dark:bg-afri-bg-ter text-afri-text-sec hover:text-gray-950 dark:hover:text-afri-text"
             }`}
           >
             🏆 Réservations Effectives ({myReservations.length})
@@ -803,7 +803,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                   activeTab === "admin"
                     ? "bg-rose-650 text-afri-text"
-                    : "bg-gray-100 dark:bg-gray-800 text-rose-500 hover:bg-rose-50"
+                    : "bg-gray-100 dark:bg-afri-bg-ter text-rose-500 hover:bg-rose-50"
                 }`}
               >
                 🛡️ Gérer les Comptes ({allUsers.length})
@@ -813,7 +813,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                   activeTab === "waiting"
                     ? "bg-amber-600 text-afri-text"
-                    : "bg-gray-100 dark:bg-gray-800 text-amber-500 hover:bg-amber-50"
+                    : "bg-gray-100 dark:bg-afri-bg-ter text-amber-500 hover:bg-amber-50"
                 }`}
               >
                 ⏳ Listes d'Attente ({waitingAnalytics.length})
@@ -836,22 +836,22 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           {/* 1. APPLICATIONS PANEL (Sent or Received) */}
           {activeTab === "applications" && (
             <div className="space-y-4">
-              <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+              <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-afri-border dark:border-afri-border pb-2.5">
                 <span>📂</span> Mes dossiers de candidatures ({candidaturesCount})
               </h3>
               
               {/* If Musician */}
               {currentUserProfile.role === "musicien" && (
                 myApplications.length === 0 ? (
-                  <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                    <Briefcase className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                  <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-afri-border dark:border-afri-border shadow-sm">
+                    <Briefcase className="w-12 h-12 text-afri-text-sec dark:text-afri-text-sec mx-auto mb-3" />
                     <p className="text-sm font-bold text-afri-text-sec">Aucun dossier de candidature envoyé pour le moment.</p>
                     <p className="text-xs text-afri-text-sec mt-1">Parcourez Le Terrain pour postuler aux offres de cachets disponibles.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {myApplications.map((app) => (
-                      <div key={app.id} className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs relative flex flex-col justify-between">
+                      <div key={app.id} className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-afri-border dark:border-afri-border shadow-xs relative flex flex-col justify-between">
                         <div>
                           <div className="flex justify-between items-start gap-4 mb-2.5">
                             <div>
@@ -870,8 +870,8 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                           </div>
 
                           <div className="space-y-1.5 text-xs text-afri-text-sec dark:text-afri-text-sec border-t border-gray-50 dark:border-gray-800/60 pt-3">
-                            <p>🎸 Spécialité : <strong className="text-gray-900 dark:text-gray-200">{app.musicianSpecialty || "Instrumentiste"}</strong></p>
-                            <p>📅 Disponibilité : <strong className="text-gray-900 dark:text-gray-200">{app.disponibilite || "Totalement disponible"}</strong></p>
+                            <p>🎸 Spécialité : <strong className="text-gray-900 dark:text-afri-text">{app.musicianSpecialty || "Instrumentiste"}</strong></p>
+                            <p>📅 Disponibilité : <strong className="text-gray-900 dark:text-afri-text">{app.disponibilite || "Totalement disponible"}</strong></p>
                             <blockquote className="italic border-l-2 border-[#D4AF37] pl-3.5 text-afri-text-sec dark:text-afri-text-sec py-1.5 mt-3 bg-gray-50/50 dark:bg-gray-900/10 rounded-r-xl">
                               "{app.message || "Aucune note additionnelle."}"
                             </blockquote>
@@ -893,8 +893,8 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
               {/* If Client */}
               {currentUserProfile.role === "client" && (
                 receivedApplications.length === 0 ? (
-                  <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                    <Users className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                  <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-afri-border dark:border-afri-border shadow-sm">
+                    <Users className="w-12 h-12 text-afri-text-sec dark:text-afri-text-sec mx-auto mb-3" />
                     <p className="text-sm font-bold text-afri-text-sec">Aucune candidature reçue pour vos offres pour l'instant.</p>
                   </div>
                 ) : (
@@ -908,7 +908,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                       const waLink = `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(waText)}`;
 
                       return (
-                        <div key={app.id} className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs">
+                        <div key={app.id} className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-afri-border dark:border-afri-border shadow-xs">
                           <div className="flex justify-between items-start gap-4">
                             <div className="flex items-center gap-3">
                               <img 
@@ -928,14 +928,14 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                             </span>
                           </div>
 
-                          <div className="mt-4 p-4 bg-gray-50/50 dark:bg-gray-900/10 rounded-2xl border border-gray-100 dark:border-gray-800 text-xs text-gray-600 dark:text-gray-300 space-y-2">
+                          <div className="mt-4 p-4 bg-gray-50/50 dark:bg-gray-900/10 rounded-2xl border border-afri-border dark:border-afri-border text-xs text-afri-text-sec dark:text-afri-text-sec space-y-2">
                             <p>🎹 Instrument : <strong className="text-gray-900 dark:text-afri-text">{app.musicianSpecialty || "Musicien"}</strong></p>
                             <p>📅 Disponibilité : <strong className="text-gray-900 dark:text-afri-text">{app.disponibilite || "Ok"}</strong></p>
                             <p className="italic bg-white/50 dark:bg-afri-bg/10 p-2 rounded-lg border border-gray-100/40">💬 "{app.message}"</p>
                           </div>
 
                           {/* Action panel */}
-                          <div className="flex items-center justify-end gap-3.5 mt-4 pt-3.5 border-t border-gray-100 dark:border-gray-850">
+                          <div className="flex items-center justify-end gap-3.5 mt-4 pt-3.5 border-t border-afri-border dark:border-gray-850">
                             {waPhone && (
                               <a
                                 href={waLink}
@@ -951,7 +951,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => handleRejectCandidacy(app)}
-                                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-afri-text-sec dark:bg-gray-800 dark:hover:bg-gray-750 font-bold rounded-xl text-xs"
+                                  className="px-3 py-2 bg-gray-100 hover:bg-afri-bg-ter text-afri-text-sec dark:bg-afri-bg-ter dark:hover:bg-gray-750 font-bold rounded-xl text-xs"
                                 >
                                   Refuser
                                 </button>
@@ -999,19 +999,19 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 case "mission_annulee":
                   return { label: "Annulé", color: "bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/25 dark:text-red-400 dark:border-red-900/30", emoji: "❌" };
                 default:
-                  return { label: status || "En attente", color: "bg-gray-50 text-gray-600 border border-gray-200 dark:bg-afri-bg-sec dark:text-afri-text-sec dark:border-afri-border", emoji: "⏳" };
+                  return { label: status || "En attente", color: "bg-gray-50 text-afri-text-sec border border-afri-border dark:bg-afri-bg-sec dark:text-afri-text-sec dark:border-afri-border", emoji: "⏳" };
               }
             };
 
             return (
               <div className="space-y-4">
-                <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+                <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-afri-border dark:border-afri-border pb-2.5">
                   <span>🔥</span> Mes publications de plans scéniques ({myGombos.length})
                 </h3>
 
                 {myGombos.length === 0 ? (
-                  <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                    <Briefcase className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                  <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-afri-border dark:border-afri-border shadow-sm">
+                    <Briefcase className="w-12 h-12 text-afri-text-sec dark:text-afri-text-sec mx-auto mb-3" />
                     <p className="text-sm font-bold text-afri-text-sec">Vous n'avez publié aucun contrat live de musique.</p>
                     <p className="text-xs text-afri-text-sec mt-1">Utilisez l'option ➕ Publier pour poster un gombo et recruter le meilleur orchestre d'Abidjan.</p>
                   </div>
@@ -1020,7 +1020,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                     {myGombos.map((gombo) => {
                       const badge = getGomboStatusHelper(gombo.status);
                       return (
-                        <div key={gombo.id} className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-gray-150 dark:border-gray-800 shadow-sm relative flex flex-col justify-between">
+                        <div key={gombo.id} className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-gray-150 dark:border-afri-border shadow-sm relative flex flex-col justify-between">
                           <div>
                             <div className="flex justify-between items-start gap-4 mb-2.5">
                               <span className={`text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded-full border ${badge.color}`}>
@@ -1049,7 +1049,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           {/* 3. RENFORT EXPRESS PANEL */}
           {activeTab === "renfort_express" && (
             <div className="space-y-4">
-              <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+              <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-afri-border dark:border-afri-border pb-2.5">
                 <span>🎼</span> Mon Journal Renfort Express ({renfortExpressCount})
               </h3>
 
@@ -1061,7 +1061,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {myRenforts.map(rn => (
-                      <div key={rn.id} className="p-4 bg-white dark:bg-afri-bg-sec rounded-2xl border border-gray-100 dark:border-gray-800">
+                      <div key={rn.id} className="p-4 bg-white dark:bg-afri-bg-sec rounded-2xl border border-afri-border dark:border-afri-border">
                         <div className="flex justify-between items-center mb-1.5">
                           <span className="text-[10px] uppercase font-bold text-cyan-500 bg-cyan-500/10 px-2 py-0.5 rounded-full">{rn.requestType}</span>
                           <span className="text-xs font-extrabold text-[#D4AF37]">{rn.budget.toLocaleString()} FCFA</span>
@@ -1083,7 +1083,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {myRenfortApps.map(ra => (
-                      <div key={ra.id} className="p-4 bg-white dark:bg-afri-bg-sec rounded-2xl border border-gray-155 dark:border-gray-800">
+                      <div key={ra.id} className="p-4 bg-white dark:bg-afri-bg-sec rounded-2xl border border-gray-155 dark:border-afri-border">
                         <div className="flex justify-between items-center mb-1.5">
                           <span className="text-[10px] font-bold text-afri-text-sec uppercase">Application n° {ra.id.slice(0,6)}</span>
                           <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
@@ -1105,13 +1105,13 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           {/* 4. FAVORIS PANEL */}
           {activeTab === "favoris" && (
             <div className="space-y-4">
-              <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+              <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-afri-border dark:border-afri-border pb-2.5">
                 <span>❤️</span> Mes talents favoris ({favoriteTalents.length})
               </h3>
 
               {favoriteTalents.length === 0 ? (
-                <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                  <Heart className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-afri-border dark:border-afri-border shadow-sm">
+                  <Heart className="w-12 h-12 text-afri-text-sec dark:text-afri-text-sec mx-auto mb-3" />
                   <p className="text-sm font-bold text-afri-text-sec">Aucun talent favori enregistré.</p>
                   <p className="text-xs text-afri-text-sec mt-1">Explorez l'Annuaire des Talents et cliquez sur ❤️ pour enregistrer des profils.</p>
                 </div>
@@ -1123,7 +1123,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                     const waLink = `https://wa.me/225${cleanPhone}?text=Bonjour%20${talent.firstName},%20votre%20profil%20sur%20AFRIGOMBO%20m'intéresse.`;
 
                     return (
-                      <div key={talent.uid} className="bg-white dark:bg-afri-bg-sec p-5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs flex items-start gap-4">
+                      <div key={talent.uid} className="bg-white dark:bg-afri-bg-sec p-5 rounded-3xl border border-afri-border dark:border-afri-border shadow-xs flex items-start gap-4">
                         <img 
                           src={talent.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
                           alt="" 
@@ -1165,20 +1165,20 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           {/* 5. MES GROUPES PANEL */}
           {activeTab === "groupes" && (
             <div className="space-y-4">
-              <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+              <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-afri-border dark:border-afri-border pb-2.5">
                 <span>🎼</span> Mes Groupes & Orchestres VIP ({myGroups.length})
               </h3>
 
               {myGroups.length === 0 ? (
-                <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                  <Music className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-3 animate-pulse" />
+                <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-afri-border dark:border-afri-border shadow-sm">
+                  <Music className="w-12 h-12 text-afri-text-sec dark:text-afri-text-sec mx-auto mb-3 animate-pulse" />
                   <p className="text-sm font-bold text-afri-text-sec">Aucun groupe de musique associé à votre session.</p>
                   <p className="text-xs text-afri-text-sec mt-1">Créez votre propre orchestre VIP ou abonnez-vous à un groupe dans l'onglet Groupes VIP.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {myGroups.map(grp => (
-                    <div key={grp.id} className="p-5 bg-white dark:bg-afri-bg-sec rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs">
+                    <div key={grp.id} className="p-5 bg-white dark:bg-afri-bg-sec rounded-3xl border border-afri-border dark:border-afri-border shadow-xs">
                       <div className="flex items-center gap-3">
                         <img 
                           src={grp.logoUrl || grp.photoUrl || "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&q=80&w=150"} 
@@ -1205,19 +1205,19 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           {/* 6. HISTORIQUE PANEL (Personal Activity logs loop) */}
           {activeTab === "historique" && (
             <div className="space-y-4">
-              <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+              <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-afri-border dark:border-afri-border pb-2.5">
                 <span>📈</span> Mon Journal d'Activités AFRIGOMBO ({myActivities.length})
               </h3>
 
               {myActivities.length === 0 ? (
-                <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                  <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-afri-border dark:border-afri-border shadow-sm">
+                  <Activity className="w-12 h-12 text-afri-text-sec mx-auto mb-3" />
                   <p className="text-sm font-bold text-afri-text-sec">Aucun journal d'activité enregistré pour vous.</p>
                   <p className="text-xs text-afri-text-sec mt-1">Vos actions (publications, candidatures, thèmes, favoris) alimenteront ce journal d'audit.</p>
                 </div>
               ) : (
-                <div className="bg-afri-bg/90 text-afri-text font-mono text-[11px] p-5 rounded-3xl border border-gray-800 shadow-2xl h-[460px] overflow-y-auto space-y-3.5 leading-relaxed antialiased">
-                  <p className="text-yellow-500 font-extrabold border-b border-gray-800 pb-1.5">★ SYSTEM FEED LOGS FOR {currentUserProfile.firstName.toUpperCase()} : REGISTERED</p>
+                <div className="bg-afri-bg/90 text-afri-text font-mono text-[11px] p-5 rounded-3xl border border-afri-border shadow-2xl h-[460px] overflow-y-auto space-y-3.5 leading-relaxed antialiased">
+                  <p className="text-yellow-500 font-extrabold border-b border-afri-border pb-1.5">★ SYSTEM FEED LOGS FOR {currentUserProfile.firstName.toUpperCase()} : REGISTERED</p>
                   {myActivities.map((act) => (
                     <div key={act.id} className="border-b border-afri-border/40 pb-2 flex items-start gap-3">
                       <span className="text-afri-text-sec block pt-0.5">[{new Date(act.createdAt).toLocaleTimeString("fr-FR")}]</span>
@@ -1235,19 +1235,19 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           {/* 7. RESERVATIONS PANEL (Bookings approved) */}
           {activeTab === "reservations" && (
             <div className="space-y-4">
-              <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+              <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-afri-border dark:border-afri-border pb-2.5">
                 <span>🔒</span> Réservations Effectives & Cachets Enregistrés (Cash : {myReservations.reduce((sum, r) => sum + r.amount, 0).toLocaleString()} FCFA)
               </h3>
 
               {myReservations.length === 0 ? (
-                <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                  <Star className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-afri-border dark:border-afri-border shadow-sm">
+                  <Star className="w-12 h-12 text-afri-text-sec dark:text-afri-text-sec mx-auto mb-3" />
                   <p className="text-sm font-bold text-afri-text-sec">Aucun contrat réservé d'un commun accord pour l'instant.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {myReservations.map((res) => (
-                    <div key={res.id} className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs">
+                    <div key={res.id} className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-afri-border dark:border-afri-border shadow-xs">
                       <div className="flex justify-between items-center mb-3">
                         {res.status === "paye" ? (
                           <span className="text-[9px] uppercase font-black text-[#D4AF37] bg-afri-bg-sec/10 px-2.5 py-1 rounded-md flex items-center gap-1">
@@ -1263,7 +1263,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                         </span>
                       </div>
                       <h4 className="font-black text-gray-950 dark:text-afri-text text-base leading-snug">{res.gomboTitle}</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3 text-xs bg-afri-bg-sec dark:bg-afri-bg/15 p-3.5 rounded-2xl text-gray-600 dark:text-gray-350">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3 text-xs bg-afri-bg-sec dark:bg-afri-bg/15 p-3.5 rounded-2xl text-afri-text-sec dark:text-gray-350">
                         {currentUserProfile.role === "client" ? (
                           <>
                             <p>🎸 Artiste retenu : <strong className="text-gray-950 dark:text-afri-text">{res.musicianName}</strong></p>
@@ -1279,7 +1279,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
 
                       {/* PAYMENT ACTIONS  */}
                       {currentUserProfile.role === "client" && (
-                        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800/80 space-y-3">
+                        <div className="mt-4 pt-4 border-t border-afri-border dark:border-gray-800/80 space-y-3">
                           {res.status === "paye" ? (
                             <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-3.5 text-xs text-emerald-700 dark:text-emerald-400 font-mono flex items-start gap-2.5">
                               <span className="text-lg">🛡️</span>
@@ -1313,7 +1313,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                                   />
                                 </div>
                               ) : (
-                                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-afri-bg-sec dark:bg-afri-bg/10 p-3.5 rounded-2xl border border-gray-100 dark:border-afri-border">
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-afri-bg-sec dark:bg-afri-bg/10 p-3.5 rounded-2xl border border-afri-border dark:border-afri-border">
                                   <div className="flex gap-2 text-xs text-afri-text-sec dark:text-afri-text-sec">
                                     <Info className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
                                     <p className="text-[11px] leading-normal">
@@ -1358,7 +1358,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           {/* 8. GENERAL ADMIN COMPTES PANEL (Admin only) */}
           {activeTab === "admin" && currentUserProfile.role === "admin" && (
             <div className="space-y-4 animate-fadeIn">
-              <div className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl">
+              <div className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-afri-border dark:border-afri-border shadow-xl">
                 <h4 className="text-base font-black text-gray-950 dark:text-afri-text mb-4.5 flex items-center gap-2">
                   <Shield className="w-5.5 h-5.5 text-orange-500" />
                   Gérer les Comptes Utilisateurs ({allUsers.length})
@@ -1367,7 +1367,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse font-sans">
                     <thead>
-                      <tr className="border-b border-gray-100 dark:border-gray-800 text-afri-text-sec uppercase tracking-widest text-[9px] font-black pb-2">
+                      <tr className="border-b border-afri-border dark:border-afri-border text-afri-text-sec uppercase tracking-widest text-[9px] font-black pb-2">
                         <th className="py-2.5">Artiste / Recruteur</th>
                         <th className="py-2.5">Rôle</th>
                         <th className="py-2.5">Coordonnées</th>
@@ -1407,7 +1407,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           {/* 9. WAITING LIST FEATURE STATS (Admin only) */}
           {activeTab === "waiting" && currentUserProfile.role === "admin" && (
             <div className="space-y-4 animate-fadeIn">
-              <div className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl">
+              <div className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-afri-border dark:border-afri-border shadow-xl">
                 <h4 className="text-base font-black text-gray-950 dark:text-afri-text mb-3 flex items-center gap-1.5">
                   <Star className="w-5 h-5 text-yellow-500 fill-current" />
                   Listes d'Attente pour les Futures Fonctionnalités
@@ -1423,7 +1423,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                     {["academie", "groupe", "marche", "certification"].map((feat) => {
                       const list = waitingAnalytics.filter(w => w.featureName === feat);
                       return (
-                        <div key={feat} className="p-4 bg-afri-bg-sec dark:bg-afri-bg/15 rounded-2xl flex items-center justify-between border border-gray-100 dark:border-gray-800">
+                        <div key={feat} className="p-4 bg-afri-bg-sec dark:bg-afri-bg/15 rounded-2xl flex items-center justify-between border border-afri-border dark:border-afri-border">
                           <div>
                             <span className="text-xs font-black text-gray-900 dark:text-afri-text capitalize">
                               {feat === "academie" ? "L'Académie" : feat === "groupe" ? "Coin des Groupes" : feat === "marche" ? "Le Marché d'Occasions" : "Assistance Certification Pro"}

@@ -330,8 +330,8 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
             exit={{ opacity: 0, y: -20, x: "-50%" }}
             className={`fixed top-20 left-1/2 z-[120] px-6 py-3.5 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold border ${
               toast.type === "success" 
-                ? "bg-zinc-950 border-[#D4AF37] text-[#D4AF37]" 
-                : "bg-zinc-950 border-rose-500 text-rose-400"
+                ? "bg-afri-bg border-[#D4AF37] text-[#D4AF37]" 
+                : "bg-afri-bg border-rose-500 text-rose-400"
             }`}
           >
             {toast.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -341,16 +341,16 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
       </AnimatePresence>
 
       {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-zinc-950 border border-[#D4AF37]/40 shadow-2xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="p-6 rounded-3xl bg-afri-bg border border-[#D4AF37]/40 shadow-2xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
             <Wallet className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider font-sans">
+            <h2 className="text-lg sm:text-xl font-black text-afri-text uppercase tracking-wider font-sans">
               GESTION DU WALLET CENTRAL (SUPER FONDATEUR)
             </h2>
-            <p className="text-xs text-zinc-400 font-mono">
+            <p className="text-xs text-afri-text-sec font-mono">
               Contrôle souverain : créditer, débiter, rembourser, bloquer et audits financiers directes
             </p>
           </div>
@@ -359,14 +359,14 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={exportCSV}
-            className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer"
+            className="px-3.5 py-2 bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border text-afri-text-sec hover:text-afri-text rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
             <span>Export CSV</span>
           </button>
           <button
             onClick={exportJSON}
-            className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer"
+            className="px-3.5 py-2 bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border text-afri-text-sec hover:text-afri-text rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 text-amber-400" />
             <span>Export JSON</span>
@@ -376,26 +376,26 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
       {/* FINANCIAL SUMMARY BOARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 bg-zinc-950 border border-[#D4AF37]/20 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden">
+        <div className="p-5 bg-afri-bg border border-[#D4AF37]/20 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none" />
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-widest block">Fonds Séquestrés</span>
+            <span className="text-[10px] font-mono font-black text-afri-text-muted uppercase tracking-widest block">Fonds Séquestrés</span>
             <div className="p-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded-lg border border-[#D4AF37]/20">
               <Landmark className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
-            <h3 className="text-lg sm:text-2xl font-black font-mono text-white tracking-tight">
+            <h3 className="text-lg sm:text-2xl font-black font-mono text-afri-text tracking-tight">
               {totalSequestered.toLocaleString("fr-FR")} <span className="text-xs text-[#D4AF37]">F</span>
             </h3>
-            <p className="text-[9px] text-zinc-400 font-mono mt-1">Cumul soldes comptes actifs</p>
+            <p className="text-[9px] text-afri-text-sec font-mono mt-1">Cumul soldes comptes actifs</p>
           </div>
         </div>
 
-        <div className="p-5 bg-zinc-950 border border-zinc-800/80 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden">
+        <div className="p-5 bg-afri-bg border border-zinc-800/80 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-widest block">Recharges Globales</span>
+            <span className="text-[10px] font-mono font-black text-afri-text-muted uppercase tracking-widest block">Recharges Globales</span>
             <div className="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
               <ArrowUpRight className="w-4 h-4" />
             </div>
@@ -404,14 +404,14 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
             <h3 className="text-lg sm:text-2xl font-black font-mono text-emerald-400 tracking-tight">
               {totalRecharges.toLocaleString("fr-FR")} <span className="text-xs">F</span>
             </h3>
-            <p className="text-[9px] text-zinc-400 font-mono mt-1">Total dépôts & recharges</p>
+            <p className="text-[9px] text-afri-text-sec font-mono mt-1">Total dépôts & recharges</p>
           </div>
         </div>
 
-        <div className="p-5 bg-zinc-950 border border-zinc-800/80 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden">
+        <div className="p-5 bg-afri-bg border border-zinc-800/80 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-widest block">Commissions Est. (2.5%)</span>
+            <span className="text-[10px] font-mono font-black text-afri-text-muted uppercase tracking-widest block">Commissions Est. (2.5%)</span>
             <div className="p-1.5 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20">
               <TrendingUp className="w-4 h-4" />
             </div>
@@ -420,15 +420,15 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
             <h3 className="text-lg sm:text-2xl font-black font-mono text-amber-500 tracking-tight">
               {commissions.toLocaleString("fr-FR")} <span className="text-xs">F</span>
             </h3>
-            <p className="text-[9px] text-zinc-400 font-mono mt-1">Part système de sécurité</p>
+            <p className="text-[9px] text-afri-text-sec font-mono mt-1">Part système de sécurité</p>
           </div>
         </div>
 
-        <div className="p-5 bg-zinc-950 border border-zinc-800/80 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden">
+        <div className="p-5 bg-afri-bg border border-zinc-800/80 rounded-2xl flex flex-col justify-between shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl pointer-events-none" />
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-widest block">Retraits En Attente</span>
-            <div className={`p-1.5 rounded-lg border ${pendingWithdrawalsCount > 0 ? "bg-rose-500/20 text-rose-400 border-rose-500/30 animate-pulse" : "bg-zinc-800 text-zinc-500 border-zinc-700"}`}>
+            <span className="text-[10px] font-mono font-black text-afri-text-muted uppercase tracking-widest block">Retraits En Attente</span>
+            <div className={`p-1.5 rounded-lg border ${pendingWithdrawalsCount > 0 ? "bg-rose-500/20 text-rose-400 border-rose-500/30 animate-pulse" : "bg-afri-bg-ter text-afri-text-muted border-afri-border"}`}>
               <Clock className="w-4 h-4" />
             </div>
           </div>
@@ -436,7 +436,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
             <h3 className="text-lg sm:text-2xl font-black font-mono text-rose-400 tracking-tight">
               {pendingWithdrawalsAmount.toLocaleString("fr-FR")} <span className="text-xs">F</span>
             </h3>
-            <p className="text-[9px] text-zinc-400 font-mono mt-1">
+            <p className="text-[9px] text-afri-text-sec font-mono mt-1">
               {pendingWithdrawalsCount} demandes de transfert
             </p>
           </div>
@@ -444,14 +444,14 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
       </div>
 
       {/* DAILY EVOLUTION AREA CHART */}
-      <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-5 sm:p-6 space-y-4 shadow-xl">
+      <div className="bg-afri-bg border border-zinc-800/80 rounded-3xl p-5 sm:p-6 space-y-4 shadow-xl">
         <div className="flex justify-between items-center border-b border-zinc-800/80 pb-3">
           <div>
             <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-[#D4AF37]" />
               <span>Évolution des Flux Quotidiens (Dépôts vs. Retraits)</span>
             </h3>
-            <p className="text-[10px] text-zinc-400 font-mono">Volume d'échanges réels des 7 derniers jours synchronisé via onSnapshot()</p>
+            <p className="text-[10px] text-afri-text-sec font-mono">Volume d'échanges réels des 7 derniers jours synchronisé via onSnapshot()</p>
           </div>
         </div>
 
@@ -484,24 +484,24 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
       </div>
 
       {/* SECTION 1: USER MANAGEMENT SEARCH & ACTIONS */}
-      <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-5 sm:p-6 space-y-4">
+      <div className="bg-afri-bg border border-zinc-800/80 rounded-3xl p-5 sm:p-6 space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-zinc-800/80 pb-3">
           <div>
             <h3 className="text-sm font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-2">
               <User className="w-4 h-4" />
               <span>Gestion des Comptes Utilisateurs ({filteredUsers.length})</span>
             </h3>
-            <p className="text-[10px] text-zinc-400 font-mono">Recherchez un membre par nom, email, GOMBO ID ou UID</p>
+            <p className="text-[10px] text-afri-text-sec font-mono">Recherchez un membre par nom, email, GOMBO ID ou UID</p>
           </div>
 
           <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-afri-text-muted" />
             <input
               type="text"
               value={userSearchTerm}
               onChange={(e) => setUserSearchTerm(e.target.value)}
               placeholder="Nom, email, ID..."
-              className="w-full pl-9 pr-3 py-2 bg-zinc-900 border border-zinc-800 focus:border-[#D4AF37]/60 rounded-xl text-xs text-white outline-none font-mono"
+              className="w-full pl-9 pr-3 py-2 bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37]/60 rounded-xl text-xs text-afri-text outline-none font-mono"
             />
           </div>
         </div>
@@ -509,7 +509,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
         {/* Users grid list */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 max-h-[380px] overflow-y-auto pr-1 no-scrollbar">
           {filteredUsers.length === 0 ? (
-            <div className="col-span-full text-center py-8 text-zinc-500 font-mono text-xs">
+            <div className="col-span-full text-center py-8 text-afri-text-muted font-mono text-xs">
               Aucun utilisateur trouvé.
             </div>
           ) : (
@@ -529,7 +529,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="space-y-0.5 min-w-0">
-                      <h4 className="text-xs font-black text-white uppercase truncate flex items-center gap-1.5">
+                      <h4 className="text-xs font-black text-afri-text uppercase truncate flex items-center gap-1.5">
                         <span>{name}</span>
                         {isBlocked && (
                           <span className="px-1.5 py-0.2 bg-rose-500/20 text-rose-400 text-[8px] font-mono border border-rose-500/40 rounded uppercase font-black">
@@ -537,12 +537,12 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                           </span>
                         )}
                       </h4>
-                      <p className="text-[10px] text-zinc-500 font-mono truncate">{usr.email || "Sans email"}</p>
+                      <p className="text-[10px] text-afri-text-muted font-mono truncate">{usr.email || "Sans email"}</p>
                       <p className="text-[9px] text-zinc-600 font-mono truncate">UID: {usr.uid || usr.id}</p>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-[9px] text-zinc-500 uppercase font-mono block">Solde Wallet</span>
+                      <span className="text-[9px] text-afri-text-muted uppercase font-mono block">Solde Wallet</span>
                       <span className="text-sm font-black font-mono text-[#D4AF37]">
                         {solde.toLocaleString("fr-FR")} F
                       </span>
@@ -599,25 +599,25 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
       </div>
 
       {/* SECTION 2: GLOBAL REAL-TIME TRANSACTION AUDIT */}
-      <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-5 sm:p-6 space-y-4">
+      <div className="bg-afri-bg border border-zinc-800/80 rounded-3xl p-5 sm:p-6 space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-zinc-800/80 pb-3">
           <div>
             <h3 className="text-sm font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-2">
               <FileText className="w-4 h-4" />
               <span>Historique Général des Transactions ({filteredTxs.length})</span>
             </h3>
-            <p className="text-[10px] text-zinc-400 font-mono">Toutes les opérations système (achats, recharges, retraits, remboursements)</p>
+            <p className="text-[10px] text-afri-text-sec font-mono">Toutes les opérations système (achats, recharges, retraits, remboursements)</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-60">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-afri-text-muted" />
               <input
                 type="text"
                 value={txSearchTerm}
                 onChange={(e) => setTxSearchTerm(e.target.value)}
                 placeholder="Filtrer transactions..."
-                className="w-full pl-8 pr-3 py-1.5 bg-zinc-900 border border-zinc-800 focus:border-[#D4AF37]/60 rounded-xl text-xs text-white outline-none font-mono"
+                className="w-full pl-8 pr-3 py-1.5 bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37]/60 rounded-xl text-xs text-afri-text outline-none font-mono"
               />
             </div>
 
@@ -635,7 +635,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                   className={`py-1 px-2.5 rounded-lg text-[9px] font-mono font-bold uppercase transition cursor-pointer border ${
                     txFilterType === f.id
                       ? "bg-[#D4AF37] text-black border-[#D4AF37]"
-                      : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
+                      : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
                   }`}
                 >
                   {f.label}
@@ -648,7 +648,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
         {/* Transaction list table */}
         <div className="divide-y divide-zinc-800/60 max-h-[420px] overflow-y-auto no-scrollbar">
           {filteredTxs.length === 0 ? (
-            <div className="py-12 text-center text-zinc-500 font-mono text-xs">
+            <div className="py-12 text-center text-afri-text-muted font-mono text-xs">
               Aucune transaction enregistrée.
             </div>
           ) : (
@@ -670,16 +670,16 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
                     <div className="space-y-0.5 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[8px] font-mono font-black uppercase px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 text-[#D4AF37] rounded">
+                        <span className="text-[8px] font-mono font-black uppercase px-1.5 py-0.5 bg-afri-bg-sec border border-afri-border text-[#D4AF37] rounded">
                           {tx.module || tx.type || "Général"}
                         </span>
-                        <h4 className="text-xs font-bold text-white truncate max-w-[200px] sm:max-w-md">
+                        <h4 className="text-xs font-bold text-afri-text truncate max-w-[200px] sm:max-w-md">
                           {tx.reason || tx.description || "Opération financière"}
                         </h4>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 text-[9px] font-mono text-zinc-500">
-                        <span>User: <strong className="text-zinc-300">{tx.userName || tx.userId}</strong></span>
+                      <div className="flex flex-wrap items-center gap-2 text-[9px] font-mono text-afri-text-muted">
+                        <span>User: <strong className="text-afri-text-sec">{tx.userName || tx.userId}</strong></span>
                         <span>•</span>
                         <span>ID: {tx.id}</span>
                         <span>•</span>
@@ -738,16 +738,16 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
       {/* MODAL: ACTION SUR UN UTILISATEUR (CRÉDIT / DÉBIT / CORRECTION / BLOCAGE) */}
       <AnimatePresence>
         {selectedUser && actionType && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-md">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-zinc-950 border border-[#D4AF37]/50 rounded-3xl p-6 shadow-2xl text-left space-y-5"
+              className="relative w-full max-w-md bg-afri-bg border border-[#D4AF37]/50 rounded-3xl p-6 shadow-2xl text-left space-y-5"
             >
               <button
                 onClick={() => setActionType(null)}
-                className="absolute top-4 right-4 p-1 rounded-full text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800"
+                className="absolute top-4 right-4 p-1 rounded-full text-afri-text-sec hover:text-afri-text bg-afri-bg-sec border border-afri-border"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -756,33 +756,33 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                 <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mx-auto">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-black text-white uppercase tracking-wider font-sans">
+                <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-sans">
                   {actionType === "credit" ? "Créditer le Wallet" :
                    actionType === "debit" ? "Débiter le Wallet" :
                    actionType === "correction" ? "Correction de Solde" :
                    actionType === "block" ? "Verrouiller le Wallet" : "Déverrouiller le Wallet"}
                 </h3>
-                <p className="text-xs text-zinc-400 font-mono">
-                  Bénéficiaire : <span className="text-white font-bold">{selectedUser.displayName || selectedUser.artistName || "Membre Gombo"}</span>
+                <p className="text-xs text-afri-text-sec font-mono">
+                  Bénéficiaire : <span className="text-afri-text font-bold">{selectedUser.displayName || selectedUser.artistName || "Membre Gombo"}</span>
                 </p>
               </div>
 
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-3.5 space-y-1 font-mono text-xs">
-                <div className="flex justify-between text-zinc-400">
+              <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-3.5 space-y-1 font-mono text-xs">
+                <div className="flex justify-between text-afri-text-sec">
                   <span>Solde actuel :</span>
                   <span className="font-bold text-[#D4AF37]">
                     {(selectedUser.wallet?.soldeDisponible ?? selectedUser.walletBalance ?? 0).toLocaleString("fr-FR")} FCFA
                   </span>
                 </div>
-                <div className="flex justify-between text-zinc-400">
+                <div className="flex justify-between text-afri-text-sec">
                   <span>UID :</span>
-                  <span className="text-zinc-500">{selectedUser.uid || selectedUser.id}</span>
+                  <span className="text-afri-text-muted">{selectedUser.uid || selectedUser.id}</span>
                 </div>
               </div>
 
               {(actionType === "credit" || actionType === "debit" || actionType === "correction") && (
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block">
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
                     {actionType === "correction" ? "Nouveau Solde Exact (FCFA)" : "Montant de l'opération (FCFA)"}
                   </label>
                   <input
@@ -791,20 +791,20 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                     value={amountInput}
                     onChange={(e) => setAmountInput(e.target.value)}
                     placeholder="Ex: 5000"
-                    className="w-full bg-zinc-900 border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-4 py-3 text-white font-mono text-sm outline-none"
+                    className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-3 text-afri-text font-mono text-sm outline-none"
                   />
                 </div>
               )}
 
               <div className="space-y-1">
-                <label className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block">
+                <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
                   Motif Souverain Obligatoire
                 </label>
                 <textarea
                   value={reasonInput}
                   onChange={(e) => setReasonInput(e.target.value)}
                   placeholder="Ex: Régularisation de paiement, bonus exceptionnel..."
-                  className="w-full bg-zinc-900 border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-white font-mono text-xs outline-none h-20 resize-none"
+                  className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-afri-text font-mono text-xs outline-none h-20 resize-none"
                 />
               </div>
 
@@ -819,7 +819,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                 <button
                   onClick={() => setActionType(null)}
                   disabled={processing}
-                  className="py-3 px-4 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold uppercase text-xs tracking-wider rounded-xl border border-zinc-800 transition cursor-pointer"
+                  className="py-3 px-4 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold uppercase text-xs tracking-wider rounded-xl border border-afri-border transition cursor-pointer"
                 >
                   Annuler
                 </button>
@@ -832,16 +832,16 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
       {/* MODAL: REMBOURSER UNE TRANSACTION */}
       <AnimatePresence>
         {selectedTxForRefund && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-md">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-zinc-950 border border-rose-500/50 rounded-3xl p-6 shadow-2xl text-left space-y-5"
+              className="relative w-full max-w-md bg-afri-bg border border-rose-500/50 rounded-3xl p-6 shadow-2xl text-left space-y-5"
             >
               <button
                 onClick={() => setSelectedTxForRefund(null)}
-                className="absolute top-4 right-4 p-1 rounded-full text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800"
+                className="absolute top-4 right-4 p-1 rounded-full text-afri-text-sec hover:text-afri-text bg-afri-bg-sec border border-afri-border"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -850,36 +850,36 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                 <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 mx-auto">
                   <RotateCcw className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-black text-white uppercase tracking-wider font-sans">
+                <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-sans">
                   Rembourser la Transaction
                 </h3>
-                <p className="text-xs text-zinc-400 font-mono">
-                  Réf : <span className="text-white font-bold">{selectedTxForRefund.id}</span>
+                <p className="text-xs text-afri-text-sec font-mono">
+                  Réf : <span className="text-afri-text font-bold">{selectedTxForRefund.id}</span>
                 </p>
               </div>
 
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-3.5 space-y-1 font-mono text-xs">
-                <div className="flex justify-between text-zinc-400">
+              <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-3.5 space-y-1 font-mono text-xs">
+                <div className="flex justify-between text-afri-text-sec">
                   <span>Montant à créditer :</span>
                   <span className="font-bold text-rose-400">
                     +{(selectedTxForRefund.amount || selectedTxForRefund.montant || 0).toLocaleString("fr-FR")} FCFA
                   </span>
                 </div>
-                <div className="flex justify-between text-zinc-400">
+                <div className="flex justify-between text-afri-text-sec">
                   <span>Bénéficiaire :</span>
-                  <span className="text-white font-bold">{selectedTxForRefund.userName || selectedTxForRefund.userId}</span>
+                  <span className="text-afri-text font-bold">{selectedTxForRefund.userName || selectedTxForRefund.userId}</span>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block">
+                <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
                   Motif du Remboursement
                 </label>
                 <textarea
                   value={refundReason}
                   onChange={(e) => setRefundReason(e.target.value)}
                   placeholder="Ex: Annulation d'achat suite à incident technique..."
-                  className="w-full bg-zinc-900 border border-zinc-800 focus:border-rose-500 rounded-xl px-4 py-2.5 text-white font-mono text-xs outline-none h-20 resize-none"
+                  className="w-full bg-afri-bg-sec border border-afri-border focus:border-rose-500 rounded-xl px-4 py-2.5 text-afri-text font-mono text-xs outline-none h-20 resize-none"
                 />
               </div>
 
@@ -887,14 +887,14 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                 <button
                   onClick={handleExecuteRefund}
                   disabled={processing}
-                  className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white font-black uppercase text-xs tracking-wider rounded-xl transition cursor-pointer disabled:opacity-50"
+                  className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-afri-text font-black uppercase text-xs tracking-wider rounded-xl transition cursor-pointer disabled:opacity-50"
                 >
                   {processing ? "Remboursement..." : "Confirmer le Remboursement"}
                 </button>
                 <button
                   onClick={() => setSelectedTxForRefund(null)}
                   disabled={processing}
-                  className="py-3 px-4 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold uppercase text-xs tracking-wider rounded-xl border border-zinc-800 transition cursor-pointer"
+                  className="py-3 px-4 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold uppercase text-xs tracking-wider rounded-xl border border-afri-border transition cursor-pointer"
                 >
                   Annuler
                 </button>

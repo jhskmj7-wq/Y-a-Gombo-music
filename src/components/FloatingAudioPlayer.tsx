@@ -57,7 +57,7 @@ export const FloatingAudioPlayer: React.FC = () => {
                   )}
                 </div>
                 {isLoading && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-xl">
+                  <div className="absolute inset-0 bg-afri-bg/40 flex items-center justify-center rounded-xl">
                     <Loader2 className="w-4 h-4 text-afri-gold animate-spin" />
                   </div>
                 )}

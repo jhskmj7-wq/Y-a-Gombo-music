@@ -321,7 +321,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   if (!currentUser) {
     return (
       fallback || (
-        <div className="max-w-md mx-auto text-center p-8 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-3xl shadow-xl mt-12 space-y-4">
+        <div className="max-w-md mx-auto text-center p-8 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border rounded-3xl shadow-xl mt-12 space-y-4">
           <Lock className="w-12 h-12 text-orange-500 mx-auto" />
           <h3 className="text-xl font-bold text-gray-900 dark:text-afri-text">Accès Réservé</h3>
           <p className="text-sm text-afri-text-sec">Veuillez vous connecter pour accéder à cet espace showbiz.</p>

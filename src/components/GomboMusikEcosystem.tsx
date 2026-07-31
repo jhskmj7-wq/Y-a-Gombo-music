@@ -445,52 +445,52 @@ export default function GomboMusikEcosystem({
       </div>
 
       {/* --- PREMIUM MOBILE & DESKTOP SUB NAV --- */}
-      <div className="flex gap-2.5 overflow-x-auto pb-3 scrollbar-none border-b border-gray-100 dark:border-gray-800/80">
+      <div className="flex gap-2.5 overflow-x-auto pb-3 scrollbar-none border-b border-afri-border dark:border-gray-800/80">
         <button
           onClick={() => setActiveTab("academy")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "academy" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-gray-600 dark:text-gray-300"}`}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "academy" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-afri-text-sec dark:text-afri-text-sec"}`}
         >
           <BookOpen className="w-4 h-4" />
           Academy 🎓
         </button>
         <button
           onClick={() => setActiveTab("safe_contracts")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "safe_contracts" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-gray-600 dark:text-gray-300"}`}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "safe_contracts" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-afri-text-sec dark:text-afri-text-sec"}`}
         >
           <ShieldCheck className="w-4 h-4" />
           Gombo Safe 🔒
         </button>
         <button
           onClick={() => setActiveTab("billetterie")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "billetterie" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-gray-600 dark:text-gray-300"}`}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "billetterie" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-afri-text-sec dark:text-afri-text-sec"}`}
         >
           <Ticket className="w-4 h-4" />
           Billetterie 🎟️
         </button>
         <button
           onClick={() => setActiveTab("studios")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "studios" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-gray-600 dark:text-gray-300"}`}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "studios" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-afri-text-sec dark:text-afri-text-sec"}`}
         >
           <ShoppingBag className="w-4 h-4" />
           Studios & Beatz 🎧
         </button>
         <button
           onClick={() => setActiveTab("castings")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "castings" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-gray-600 dark:text-gray-300"}`}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "castings" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-afri-text-sec dark:text-afri-text-sec"}`}
         >
           <Users className="w-4 h-4" />
           AudiCastings 🎤
         </button>
         <button
           onClick={() => setActiveTab("voix")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "voix" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-gray-600 dark:text-gray-300"}`}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "voix" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-afri-text-sec dark:text-afri-text-sec"}`}
         >
           <AudioLines className="w-4 h-4" />
           Annonces Vocales 📻
         </button>
         <button
           onClick={() => setActiveTab("recompenses")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "recompenses" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-gray-600 dark:text-gray-300"}`}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${activeTab === "recompenses" ? "bg-afri-bg-sec text-black" : "bg-gray-100 dark:bg-gray-850 text-afri-text-sec dark:text-afri-text-sec"}`}
         >
           <Award className="w-4 h-4" />
           Boutique Récompenses 🎁
@@ -514,7 +514,7 @@ export default function GomboMusikEcosystem({
                   {guides.map((g) => (
                     <div 
                       key={g.id} 
-                      className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 p-5 rounded-2xl flex flex-col justify-between hover:border-[#D4AF37] hover:shadow-lg transition-all"
+                      className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border p-5 rounded-2xl flex flex-col justify-between hover:border-[#D4AF37] hover:shadow-lg transition-all"
                     >
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -527,7 +527,7 @@ export default function GomboMusikEcosystem({
                         <p className="text-xs text-afri-text-sec leading-relaxed line-clamp-3">{g.excerpt}</p>
                       </div>
 
-                      <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100 dark:border-gray-800/80">
+                      <div className="flex items-center justify-between mt-5 pt-4 border-t border-afri-border dark:border-gray-800/80">
                         <span className="text-[10px] text-[#D4AF37] font-black uppercase">🎓 Accès Libre</span>
                         <button
                           onClick={() => setActiveGuide(g)}
@@ -541,7 +541,7 @@ export default function GomboMusikEcosystem({
                   ))}
                 </div>
               ) : (
-                <div className="bg-white dark:bg-afri-bg-sec border border-gray-200 dark:border-gray-800 p-6 sm:p-8 rounded-3xl space-y-6 relative">
+                <div className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-afri-border p-6 sm:p-8 rounded-3xl space-y-6 relative">
                   <button 
                     onClick={() => setActiveGuide(null)}
                     className="flex items-center gap-1.5 text-xs text-afri-text-sec hover:text-black dark:text-afri-text-sec dark:hover:text-afri-text transition-colors uppercase font-mono font-bold cursor-pointer"
@@ -559,11 +559,11 @@ export default function GomboMusikEcosystem({
                   </div>
 
                   {/* Formatted body simulation */}
-                  <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line space-y-4 font-sans bg-gray-50 dark:bg-afri-bg/40 p-5 rounded-2xl">
+                  <div className="text-xs sm:text-sm text-afri-text-sec dark:text-afri-text-sec leading-relaxed whitespace-pre-line space-y-4 font-sans bg-gray-50 dark:bg-afri-bg/40 p-5 rounded-2xl">
                     {activeGuide.content}
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-3 pt-6 border-t border-gray-100 dark:border-gray-800">
+                  <div className="flex flex-col sm:flex-row items-center gap-3 pt-6 border-t border-afri-border dark:border-afri-border">
                     <button 
                       onClick={() => alert("⬇️ Téléchargement de la version PDF officiel d'AFRIGOMBO-CONTRAT pour consultations hors-ligne.")}
                       className="w-full sm:w-auto px-4 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-black uppercase rounded-xl border border-emerald-500/10 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
@@ -614,7 +614,7 @@ export default function GomboMusikEcosystem({
                         placeholder="Ex: Bassiste pour Cabaret de Cocody..."
                         value={contractTitle}
                         onChange={e => setContractTitle(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -625,7 +625,7 @@ export default function GomboMusikEcosystem({
                         placeholder="Ex: yoro@gombo.ci..."
                         value={contractPartnerEmail}
                         onChange={e => setContractPartnerEmail(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -636,7 +636,7 @@ export default function GomboMusikEcosystem({
                         placeholder="50000"
                         value={contractAmount || ""}
                         onChange={e => setContractAmount(Number(e.target.value))}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
                         required
                       />
                       {contractAmount > 0 && (
@@ -650,7 +650,7 @@ export default function GomboMusikEcosystem({
                         placeholder="Yorobo Sangaré..."
                         value={contractPartnerName}
                         onChange={e => setContractPartnerName(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
                       />
                     </div>
                   </div>
@@ -662,7 +662,7 @@ export default function GomboMusikEcosystem({
                       value={contractConditions}
                       onChange={e => setContractConditions(e.target.value)}
                       rows={3}
-                      className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text font-sans"
+                      className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text font-sans"
                       required
                     />
                   </div>
@@ -671,7 +671,7 @@ export default function GomboMusikEcosystem({
                     <button 
                       type="button" 
                       onClick={() => setShowContractForm(false)}
-                      className="px-4 py-2 border border-gray-200 dark:border-gray-800 text-xs text-afri-text-sec rounded-xl hover:text-afri-text transition"
+                      className="px-4 py-2 border border-afri-border dark:border-afri-border text-xs text-afri-text-sec rounded-xl hover:text-afri-text transition"
                     >
                       Annuler
                     </button>
@@ -700,7 +700,7 @@ export default function GomboMusikEcosystem({
                     return (
                       <div 
                         key={c.id} 
-                        className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 p-5 rounded-2xl space-y-4"
+                        className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border p-5 rounded-2xl space-y-4"
                       >
                         <div className="flex items-center justify-between gap-2 border-b border-gray-55 bg-gray-50 dark:bg-afri-bg/30 p-3 rounded-xl">
                           <div className="space-y-0.5">
@@ -722,7 +722,7 @@ export default function GomboMusikEcosystem({
                         </div>
 
                         {/* Details */}
-                        <div className="text-[11.5px] space-y-2 text-gray-300">
+                        <div className="text-[11.5px] space-y-2 text-afri-text-sec">
                           <p className="line-clamp-3 text-xs leading-relaxed italic bg-afri-bg-sec p-2.5 rounded-xl text-afri-text-sec">{c.conditions}</p>
                           
                           <div className="flex justify-between items-center bg-afri-bg-sec px-3 py-2 rounded-xl text-xs font-mono">
@@ -790,7 +790,7 @@ export default function GomboMusikEcosystem({
           {/* ==================== 3. BILLETTERIE ==================== */}
           {activeTab === "billetterie" && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-gray-150 dark:border-gray-800 pb-4">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-gray-150 dark:border-afri-border pb-4">
                 <div className="space-y-1">
                   <h3 className="text-sm font-black uppercase text-gray-900 dark:text-afri-text">🎟️ BILLETTERIE NUMÉRIQUE EXCLUSIVE</h3>
                   <p className="text-xs text-afri-text-sec">Publiez votre concert ou masterclass live, vendez des billets, et validez les via code de sécurité.</p>
@@ -819,7 +819,7 @@ export default function GomboMusikEcosystem({
                         placeholder="Ex: Zouglou Live au Maquis Angré..."
                         value={eventTitle}
                         onChange={e => setEventTitle(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -830,7 +830,7 @@ export default function GomboMusikEcosystem({
                         placeholder="Ex: VIP Châteaux, Cocody..."
                         value={eventLocation}
                         onChange={e => setEventLocation(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -840,7 +840,7 @@ export default function GomboMusikEcosystem({
                         type="date" 
                         value={eventDate}
                         onChange={e => setEventDate(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -851,7 +851,7 @@ export default function GomboMusikEcosystem({
                         placeholder="20:00"
                         value={eventTime}
                         onChange={e => setEventTime(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -862,7 +862,7 @@ export default function GomboMusikEcosystem({
                         placeholder="5000"
                         value={eventPrice || ""}
                         onChange={e => setEventPrice(Number(e.target.value))}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -873,7 +873,7 @@ export default function GomboMusikEcosystem({
                         placeholder="50"
                         value={eventCapacity}
                         onChange={e => setEventCapacity(Number(e.target.value))}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -886,7 +886,7 @@ export default function GomboMusikEcosystem({
                       value={eventDescription}
                       onChange={e => setEventDescription(e.target.value)}
                       rows={2}
-                      className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text font-sans"
+                      className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text font-sans"
                     />
                   </div>
 
@@ -894,7 +894,7 @@ export default function GomboMusikEcosystem({
                     <button 
                       type="button" 
                       onClick={() => setShowEventForm(false)}
-                      className="px-4 py-2 border border-gray-200 dark:border-gray-800 text-xs text-afri-text-sec rounded-xl hover:text-afri-text transition"
+                      className="px-4 py-2 border border-afri-border dark:border-afri-border text-xs text-afri-text-sec rounded-xl hover:text-afri-text transition"
                     >
                       Annuler
                     </button>
@@ -913,13 +913,13 @@ export default function GomboMusikEcosystem({
                 {events.map((ev) => (
                   <div 
                     key={ev.id} 
-                    className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 p-5 rounded-3xl relative overflow-hidden flex flex-col justify-between hover:shadow-xl hover:border-gray-700 transition-all"
+                    className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border p-5 rounded-3xl relative overflow-hidden flex flex-col justify-between hover:shadow-xl hover:border-afri-border transition-all"
                   >
                     <div className="absolute top-0 right-0 w-24 h-24 bg-afri-bg-sec/5 rounded-bl-full pointer-events-none" />
                     
                     <div className="space-y-4">
                       {/* Event Banner info */}
-                      <div className="space-y-1 border-b border-gray-100 dark:border-gray-800 pb-3">
+                      <div className="space-y-1 border-b border-afri-border dark:border-afri-border pb-3">
                         <span className="text-[9px] font-bold font-mono text-[#D4AF37] uppercase bg-afri-bg-sec/10 px-2 py-0.5 rounded-lg">SHOW LIVE</span>
                         <h4 className="text-sm font-black uppercase text-gray-950 dark:text-afri-text tracking-tight mt-1">{ev.title}</h4>
                         <p className="text-[10px] text-gray-450">{ev.description || "Grand concert d'un artiste du pays à l'honneur !"}</p>
@@ -952,7 +952,7 @@ export default function GomboMusikEcosystem({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 mt-5 pt-4">
+                    <div className="flex items-center justify-between border-t border-afri-border dark:border-afri-border mt-5 pt-4">
                       <div className="flex flex-col">
                         <span className="text-[10px] text-afri-text-sec font-mono">TARIF</span>
                         <span className="text-sm font-black text-afri-text">{ev.price === 0 ? "GRATUIT" : `${ev.price} FCFA`}</span>
@@ -962,7 +962,7 @@ export default function GomboMusikEcosystem({
                         disabled={(ev.ticketsSold || 0) >= ev.capacity}
                         className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
                           (ev.ticketsSold || 0) >= ev.capacity
-                            ? "bg-gray-800/20 text-gray-600 border border-gray-800/20 cursor-not-allowed"
+                            ? "bg-gray-800/20 text-afri-text-sec border border-gray-800/20 cursor-not-allowed"
                             : "bg-afri-bg-sec/10 hover:bg-afri-bg-sec text-[#D4AF37] hover:text-[#0B0B0B] border border-[#D4AF37]/30"
                         }`}
                       >
@@ -989,7 +989,7 @@ export default function GomboMusikEcosystem({
                       <div 
                         key={t.id}
                         onClick={() => setTicketToView(t)}
-                        className="p-4 bg-afri-bg border border-dashed border-gray-800 rounded-2xl flex flex-col justify-between gap-3 cursor-pointer hover:border-[#D4AF37]"
+                        className="p-4 bg-afri-bg border border-dashed border-afri-border rounded-2xl flex flex-col justify-between gap-3 cursor-pointer hover:border-[#D4AF37]"
                       >
                         <div className="space-y-1">
                           <span className="text-[9px] text-[#D4AF37] font-mono font-black uppercase">BILLET VALIDÉ</span>
@@ -1088,7 +1088,7 @@ export default function GomboMusikEcosystem({
                         placeholder="Ex: Studio Red Zone..."
                         value={studioName}
                         onChange={e => setStudioName(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -1097,7 +1097,7 @@ export default function GomboMusikEcosystem({
                       <select 
                         value={studioCat}
                         onChange={e => setStudioCat(e.target.value as any)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
                       >
                         <option value="studio">Studio d'Enregistrement</option>
                         <option value="beatmaker">Compositeur / Beatmaker</option>
@@ -1113,7 +1113,7 @@ export default function GomboMusikEcosystem({
                         placeholder="Ex: 15 000 FCFA / Heure, 50 000 FCFA le beat..."
                         value={studioPrice}
                         onChange={e => setStudioPrice(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -1124,7 +1124,7 @@ export default function GomboMusikEcosystem({
                         placeholder="+225 05..."
                         value={studioPhone}
                         onChange={e => setStudioPhone(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -1133,7 +1133,7 @@ export default function GomboMusikEcosystem({
                       <select 
                         value={studioCom}
                         onChange={e => setStudioCom(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
                       >
                         <option value="Cocody">Cocody</option>
                         <option value="Yopougon">Yopougon</option>
@@ -1153,7 +1153,7 @@ export default function GomboMusikEcosystem({
                       value={studioDesc}
                       onChange={e => setStudioDesc(e.target.value)}
                       rows={2}
-                      className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text font-sans"
+                      className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text font-sans"
                     />
                   </div>
 
@@ -1161,7 +1161,7 @@ export default function GomboMusikEcosystem({
                     <button 
                       type="button" 
                       onClick={() => setShowStudioForm(false)}
-                      className="px-4 py-2 border border-gray-200 dark:border-gray-800 text-xs text-afri-text-sec rounded-xl hover:text-afri-text transition"
+                      className="px-4 py-2 border border-afri-border dark:border-afri-border text-xs text-afri-text-sec rounded-xl hover:text-afri-text transition"
                     >
                       Annuler
                     </button>
@@ -1176,11 +1176,11 @@ export default function GomboMusikEcosystem({
               )}
 
               {/* Filters Header toolbar */}
-              <div className="flex flex-wrap gap-2.5 bg-gray-50 dark:bg-afri-bg/35 p-3 rounded-2xl border border-gray-100 dark:border-gray-850">
+              <div className="flex flex-wrap gap-2.5 bg-gray-50 dark:bg-afri-bg/35 p-3 rounded-2xl border border-afri-border dark:border-gray-850">
                 <select 
                   value={studioCategory} 
                   onChange={e => setStudioCategory(e.target.value)}
-                  className="bg-white dark:bg-afri-bg-sec p-2 text-xs border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-afri-text focus:border-[#D4AF37] cursor-pointer"
+                  className="bg-white dark:bg-afri-bg-sec p-2 text-xs border border-afri-border dark:border-afri-border rounded-lg text-gray-900 dark:text-afri-text focus:border-[#D4AF37] cursor-pointer"
                 >
                   <option value="all">Filtre Activité (Toutes)</option>
                   <option value="studio">Studios d'Enregistrement</option>
@@ -1193,7 +1193,7 @@ export default function GomboMusikEcosystem({
                 <select 
                   value={studioCommune} 
                   onChange={e => setStudioCommune(e.target.value)}
-                  className="bg-white dark:bg-afri-bg-sec p-2 text-xs border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-afri-text focus:border-[#D4AF37] cursor-pointer"
+                  className="bg-white dark:bg-afri-bg-sec p-2 text-xs border border-afri-border dark:border-afri-border rounded-lg text-gray-900 dark:text-afri-text focus:border-[#D4AF37] cursor-pointer"
                 >
                   <option value="all">Toutes Communes d'Abidjan</option>
                   <option value="Cocody">Cocody</option>
@@ -1210,7 +1210,7 @@ export default function GomboMusikEcosystem({
                 {filteredStudios.map((item) => (
                   <div 
                     key={item.id}
-                    className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 p-5 rounded-3xl space-y-4 flex flex-col justify-between"
+                    className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border p-5 rounded-3xl space-y-4 flex flex-col justify-between"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
@@ -1231,7 +1231,7 @@ export default function GomboMusikEcosystem({
                       <p className="text-[11.5px] text-afri-text-sec leading-relaxed font-sans line-clamp-3">{item.description}</p>
                     </div>
 
-                    <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-800 mt-4">
+                    <div className="space-y-3 pt-4 border-t border-afri-border dark:border-afri-border mt-4">
                       <div className="flex justify-between items-center text-xs font-mono">
                         <span className="text-afri-text-sec">Tarif initié :</span>
                         <span className="text-afri-text font-black">{item.price}</span>
@@ -1244,7 +1244,7 @@ export default function GomboMusikEcosystem({
                           {item.reviews.map((v, idx) => (
                             <div key={idx} className="text-[10px] leading-relaxed">
                               <span className="text-afri-text-sec font-bold font-mono">{v.userName} : </span>
-                              <span className="text-gray-300 italic">"{v.comment}"</span>
+                              <span className="text-afri-text-sec italic">"{v.comment}"</span>
                             </div>
                           ))}
                         </div>
@@ -1291,7 +1291,7 @@ export default function GomboMusikEcosystem({
                         <select
                           value={reviewRating}
                           onChange={e => setReviewRating(Number(e.target.value))}
-                          className="w-full bg-afri-bg border border-gray-800 p-2.5 text-xs rounded-xl text-afri-text outline-none"
+                          className="w-full bg-afri-bg border border-afri-border p-2.5 text-xs rounded-xl text-afri-text outline-none"
                         >
                           <option value={5}>⭐⭐⭐⭐⭐ (5/5 Exceptionnel)</option>
                           <option value={4}>⭐⭐⭐⭐ (4/5 Très Bon)</option>
@@ -1308,7 +1308,7 @@ export default function GomboMusikEcosystem({
                           rows={2}
                           value={reviewComment}
                           onChange={e => setReviewComment(e.target.value)}
-                          className="w-full bg-afri-bg border border-gray-800 p-2.5 text-xs rounded-xl outline-none text-afri-text font-sans"
+                          className="w-full bg-afri-bg border border-afri-border p-2.5 text-xs rounded-xl outline-none text-afri-text font-sans"
                           required
                         />
                       </div>
@@ -1358,7 +1358,7 @@ export default function GomboMusikEcosystem({
                         placeholder="Ex: Casting Choristes Backup..."
                         value={castingTitle}
                         onChange={e => setCastingTitle(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -1369,7 +1369,7 @@ export default function GomboMusikEcosystem({
                         placeholder="Ex: 2 Altis, 1 Soprano..."
                         value={castingRoles}
                         onChange={e => setCastingRoles(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -1380,7 +1380,7 @@ export default function GomboMusikEcosystem({
                         placeholder="Ex: 300 000 FCFA / mois..."
                         value={castingBudget}
                         onChange={e => setCastingBudget(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                       />
                     </div>
                     <div className="space-y-1 p-0.5">
@@ -1389,7 +1389,7 @@ export default function GomboMusikEcosystem({
                         type="date" 
                         value={castingDeadline}
                         onChange={e => setCastingDeadline(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                         required
                       />
                     </div>
@@ -1398,7 +1398,7 @@ export default function GomboMusikEcosystem({
                       <select 
                         value={castingCom}
                         onChange={e => setCastingCom(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
                       >
                         <option value="Cocody">Cocody</option>
                         <option value="Yopougon">Yopougon</option>
@@ -1417,7 +1417,7 @@ export default function GomboMusikEcosystem({
                       value={castingDesc}
                       onChange={e => setCastingDesc(e.target.value)}
                       rows={2}
-                      className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text font-sans"
+                      className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text font-sans"
                     />
                   </div>
 
@@ -1425,7 +1425,7 @@ export default function GomboMusikEcosystem({
                     <button 
                       type="button" 
                       onClick={() => setShowCastingForm(false)}
-                      className="px-4 py-2 border border-gray-200 dark:border-gray-800 text-xs text-afri-text-sec rounded-xl hover:text-afri-text transition"
+                      className="px-4 py-2 border border-afri-border dark:border-afri-border text-xs text-afri-text-sec rounded-xl hover:text-afri-text transition"
                     >
                       Annuler
                     </button>
@@ -1440,12 +1440,12 @@ export default function GomboMusikEcosystem({
               )}
 
               {/* Special Filter Églises / Chorales toggle */}
-              <div className="flex flex-wrap items-center justify-between gap-3 bg-gray-50 dark:bg-afri-bg/35 p-3.5 rounded-2xl border border-gray-100 dark:border-gray-850">
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-gray-50 dark:bg-afri-bg/35 p-3.5 rounded-2xl border border-afri-border dark:border-gray-850">
                 <div className="flex items-center gap-2">
                   <select 
                     value={castingCommune}
                     onChange={e => setCastingCommune(e.target.value)}
-                    className="bg-white dark:bg-afri-bg-sec p-2 text-xs border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-afri-text focus:border-[#D4AF37] cursor-pointer"
+                    className="bg-white dark:bg-afri-bg-sec p-2 text-xs border border-afri-border dark:border-afri-border rounded-lg text-gray-900 dark:text-afri-text focus:border-[#D4AF37] cursor-pointer"
                   >
                     <option value="all">Secteur Abidjan (Tous)</option>
                     <option value="Cocody">Cocody</option>
@@ -1457,7 +1457,7 @@ export default function GomboMusikEcosystem({
                   {/* Church network checkbox toggle */}
                   <button
                     onClick={() => setIsEgliseFilter(!isEgliseFilter)}
-                    className={`px-3 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${isEgliseFilter ? "bg-amber-500/10 border-amber-500/25 text-[#D4AF37]" : "bg-white dark:bg-afri-bg-sec border-gray-200 dark:border-gray-800 text-afri-text-sec"}`}
+                    className={`px-3 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${isEgliseFilter ? "bg-amber-500/10 border-amber-500/25 text-[#D4AF37]" : "bg-white dark:bg-afri-bg-sec border-afri-border dark:border-afri-border text-afri-text-sec"}`}
                   >
                      ⛪ Réseau Églises & Chorales
                   </button>
@@ -1476,7 +1476,7 @@ export default function GomboMusikEcosystem({
                     return (
                       <div 
                         key={cast.id}
-                        className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 p-5 rounded-3xl space-y-4 flex flex-col justify-between"
+                        className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border p-5 rounded-3xl space-y-4 flex flex-col justify-between"
                       >
                         <div className="space-y-3">
                           <div className="flex justify-between items-center bg-gray-5 transition p-3 rounded-xl">
@@ -1491,7 +1491,7 @@ export default function GomboMusikEcosystem({
                             "{cast.description || "Aucun détail complémentaire spécifié par le producteur."}"
                           </p>
 
-                          <div className="grid grid-cols-2 gap-3.5 text-[10.5px] font-mono text-gray-300">
+                          <div className="grid grid-cols-2 gap-3.5 text-[10.5px] font-mono text-afri-text-sec">
                             <div className="space-y-0.5">
                               <span className="text-gray-550 block">Rôles requis :</span>
                               <span className="text-afri-text font-bold">{cast.rolesNeeded}</span>
@@ -1509,7 +1509,7 @@ export default function GomboMusikEcosystem({
                             <h5 className="text-[8.5px] font-black uppercase text-[#D4AF37] font-mono">Candidatures reçues ({cast.applications.length}) :</h5>
                             <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
                               {cast.applications.map((app, idx) => (
-                                <div key={idx} className="flex justify-between items-center text-[10px] bg-afri-bg p-2 rounded-xl text-gray-300 font-mono">
+                                <div key={idx} className="flex justify-between items-center text-[10px] bg-afri-bg p-2 rounded-xl text-afri-text-sec font-mono">
                                   <div>
                                     <p className="font-bold whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">{app.userName}</p>
                                     <span className="text-[9px] text-afri-text-sec">{app.phone}</span>
@@ -1519,13 +1519,13 @@ export default function GomboMusikEcosystem({
                                   <div className="flex gap-1">
                                     <button 
                                       onClick={() => handleUpdateCastingApplication(cast.id, app.userId, "convoc")}
-                                      className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${app.status === "convoc" ? "bg-emerald-500/20 text-emerald-400" : "bg-gray-800 text-afri-text-sec"}`}
+                                      className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${app.status === "convoc" ? "bg-emerald-500/20 text-emerald-400" : "bg-afri-bg-ter text-afri-text-sec"}`}
                                     >
                                       Convoquer
                                     </button>
                                     <button 
                                       onClick={() => handleUpdateCastingApplication(cast.id, app.userId, "refus")}
-                                      className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${app.status === "refus" ? "bg-red-500/20 text-red-400" : "bg-gray-800 text-afri-text-sec"}`}
+                                      className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${app.status === "refus" ? "bg-red-500/20 text-red-400" : "bg-afri-bg-ter text-afri-text-sec"}`}
                                     >
                                       Refuser
                                     </button>
@@ -1536,7 +1536,7 @@ export default function GomboMusikEcosystem({
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4 mt-2">
+                        <div className="flex items-center justify-between border-t border-afri-border dark:border-afri-border pt-4 mt-2">
                           <span className="text-[9px] text-afri-text-sec font-mono">Délai : {cast.deadline}</span>
                           
                           {!isMyOwnCasting && (
@@ -1588,7 +1588,7 @@ export default function GomboMusikEcosystem({
                       placeholder="Ex: Cherche un pianiste jazz pour samedi VIP à Marcory..."
                       value={voiceTitle}
                       onChange={e => setVoiceTitle(e.target.value)}
-                      className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
+                      className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl outline-none focus:border-[#D4AF37] text-gray-900 dark:text-afri-text"
                       required
                     />
                   </div>
@@ -1599,7 +1599,7 @@ export default function GomboMusikEcosystem({
                       <select 
                         value={voiceCom}
                         onChange={e => setVoiceCom(e.target.value)}
-                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-gray-200 dark:border-gray-800 rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
+                        className="w-full bg-white dark:bg-afri-bg p-3 text-xs border border-afri-border dark:border-afri-border rounded-xl focus:border-[#D4AF37] outline-none text-gray-900 dark:text-afri-text"
                       >
                         <option value="Cocody">Cocody</option>
                         <option value="Yopougon">Yopougon</option>
@@ -1619,7 +1619,7 @@ export default function GomboMusikEcosystem({
                     <button 
                       type="button" 
                       onClick={() => setShowVoiceForm(false)}
-                      className="px-4 py-2 border border-gray-200 dark:border-gray-800 text-xs text-afri-text-sec rounded-xl hover:text-afri-text transition"
+                      className="px-4 py-2 border border-afri-border dark:border-afri-border text-xs text-afri-text-sec rounded-xl hover:text-afri-text transition"
                     >
                       Annuler
                     </button>
@@ -1634,11 +1634,11 @@ export default function GomboMusikEcosystem({
               )}
 
               {/* Commune Filters */}
-              <div className="flex gap-2 bg-gray-50 dark:bg-afri-bg/35 p-3 rounded-2xl border border-gray-100 dark:border-gray-850">
+              <div className="flex gap-2 bg-gray-50 dark:bg-afri-bg/35 p-3 rounded-2xl border border-afri-border dark:border-gray-850">
                 <select 
                   value={voiceCommune}
                   onChange={e => setVoiceCommune(e.target.value)}
-                  className="bg-white dark:bg-afri-bg-sec p-2 text-xs border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-afri-text focus:border-[#D4AF37] cursor-pointer"
+                  className="bg-white dark:bg-afri-bg-sec p-2 text-xs border border-afri-border dark:border-afri-border rounded-lg text-gray-900 dark:text-afri-text focus:border-[#D4AF37] cursor-pointer"
                 >
                   <option value="all">Secteur Abidjan (Toutes voix)</option>
                   <option value="Cocody">Cocody</option>
@@ -1655,14 +1655,14 @@ export default function GomboMusikEcosystem({
                   return (
                     <div 
                       key={v.id}
-                      className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 p-5 rounded-3xl space-y-4"
+                      className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border p-5 rounded-3xl space-y-4"
                     >
                       <div className="flex items-center gap-3">
                         <img 
                           src={v.userAvatar} 
                           alt="avatar" 
                           referrerPolicy="no-referrer"
-                          className="w-10 h-10 rounded-full bg-gray-200 border-2 border-amber-500/20"
+                          className="w-10 h-10 rounded-full bg-afri-bg-ter border-2 border-amber-500/20"
                         />
                         <div className="space-y-0.5 min-w-0">
                           <h4 className="text-xs font-black font-mono text-afri-text truncate uppercase">{v.userName}</h4>
@@ -1671,7 +1671,7 @@ export default function GomboMusikEcosystem({
                       </div>
 
                       {/* Header block voc */}
-                      <p className="text-[11.5px] text-gray-300 font-bold leading-tight font-sans italic">
+                      <p className="text-[11.5px] text-afri-text-sec font-bold leading-tight font-sans italic">
                         "{v.title}"
                       </p>
 
@@ -1703,7 +1703,7 @@ export default function GomboMusikEcosystem({
                               return (
                                 <div 
                                   key={i} 
-                                  className={`w-1 rounded-t transition-all duration-300 ${isPlaying ? "bg-afri-bg-sec" : "bg-gray-800"}`}
+                                  className={`w-1 rounded-t transition-all duration-300 ${isPlaying ? "bg-afri-bg-sec" : "bg-afri-bg-ter"}`}
                                   style={{ height: `${randomHeight}px` }}
                                 />
                               );
@@ -1742,7 +1742,7 @@ export default function GomboMusikEcosystem({
                 <div className="space-y-1.5">
                   <span className="text-[9.5px] text-emerald-450 font-black uppercase font-mono">FIDÉLITÉ ARTISTIQUE</span>
                   <h4 className="text-sm font-black text-afri-text uppercase">Solde Gagné en temps réel</h4>
-                  <p className="text-xs text-gray-300">Votre score est de : <span className="text-[#D4AF37] font-black">{currentUserProfile?.points || 0} Points Gumbo</span>. Continuez d'aider les autres !</p>
+                  <p className="text-xs text-afri-text-sec">Votre score est de : <span className="text-[#D4AF37] font-black">{currentUserProfile?.points || 0} Points Gumbo</span>. Continuez d'aider les autres !</p>
                 </div>
 
                 <div className="flex gap-2">
@@ -1758,14 +1758,14 @@ export default function GomboMusikEcosystem({
               {/* Store grid listings */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Reward Item 1 */}
-                <div className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 p-5 rounded-3xl space-y-4 flex flex-col justify-between">
+                <div className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border p-5 rounded-3xl space-y-4 flex flex-col justify-between">
                   <div className="space-y-2">
                     <span className="px-2.5 py-0.5 text-[8.5px] font-black uppercase bg-amber-500/15 text-[#D4AF37] rounded-lg font-mono">SPOTLIGHT</span>
                     <h4 className="text-xs font-black uppercase text-afri-text font-sans mt-1">Dossier Spotlight 48h</h4>
                     <p className="text-xs text-afri-text-sec leading-relaxed">Fixez votre fiche d'artiste tout en haut des vibes à Abidjan pour un maximum de propositions téléphoniques directes.</p>
                   </div>
                   
-                  <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 mt-4 pt-4">
+                  <div className="flex items-center justify-between border-t border-afri-border dark:border-afri-border mt-4 pt-4">
                     <span className="text-xs font-extrabold font-mono text-[#D4AF37]">400 POINTS</span>
                     <button 
                       onClick={() => handleRedeemBenefit(400, "Mise en avant Spotlight 48h")}
@@ -1777,14 +1777,14 @@ export default function GomboMusikEcosystem({
                 </div>
 
                 {/* Reward Item 2 */}
-                <div className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 p-5 rounded-3xl space-y-4 flex flex-col justify-between">
+                <div className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border p-5 rounded-3xl space-y-4 flex flex-col justify-between">
                   <div className="space-y-2">
                     <span className="px-2.5 py-0.5 text-[8.5px] font-black uppercase bg-emerald-500/15 text-emerald-400 rounded-lg font-mono">EXPRESS CHECK</span>
                     <h4 className="text-xs font-black uppercase text-afri-text font-sans mt-1">✓ Talent Certifié VIP</h4>
                     <p className="text-xs text-afri-text-sec leading-relaxed">Passez en canal de validation prioritaire sans justificatif technique. Badge visible instantanément sur votre profil.</p>
                   </div>
                   
-                  <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 mt-4 pt-4">
+                  <div className="flex items-center justify-between border-t border-afri-border dark:border-afri-border mt-4 pt-4">
                     <span className="text-xs font-extrabold font-mono text-[#D4AF37]">600 POINTS</span>
                     <button 
                       onClick={() => handleRedeemBenefit(600, "✓ Talent Certifié Prioritaire")}
@@ -1796,14 +1796,14 @@ export default function GomboMusikEcosystem({
                 </div>
 
                 {/* Reward Item 3 */}
-                <div className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 p-5 rounded-3xl space-y-4 flex flex-col justify-between">
+                <div className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-afri-border p-5 rounded-3xl space-y-4 flex flex-col justify-between">
                   <div className="space-y-2">
                     <span className="px-2.5 py-0.5 text-[8.5px] font-black uppercase bg-blue-500/15 text-blue-400 rounded-lg font-mono">ABONNEMENT</span>
                     <h4 className="text-xs font-black uppercase text-afri-text font-sans mt-1">Premium Gold 30 Jours</h4>
                     <p className="text-xs text-afri-text-sec leading-relaxed">Débloquez l'intégration de vidéos YouTube illimitées, accès direct aux numéros de téléphones et messagerie sans limites.</p>
                   </div>
                   
-                  <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 mt-4 pt-4">
+                  <div className="flex items-center justify-between border-t border-afri-border dark:border-afri-border mt-4 pt-4">
                     <span className="text-xs font-extrabold font-mono text-[#D4AF37]">1000 POINTS</span>
                     <button 
                       onClick={() => handleRedeemBenefit(1000, "Premium Gold 1 Mois gratuit")}

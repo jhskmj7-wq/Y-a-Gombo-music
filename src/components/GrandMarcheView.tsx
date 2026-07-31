@@ -443,7 +443,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               >
                 <Package className="w-4 h-4" />
                 <span>Catalogue</span>
-                <span className="px-1.5 py-0.2 bg-black/20 text-[10px] rounded-full font-mono font-bold">
+                <span className="px-1.5 py-0.2 bg-afri-bg/20 text-[10px] rounded-full font-mono font-bold">
                   {items.length}
                 </span>
               </button>
@@ -458,7 +458,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               >
                 <Tag className="w-4 h-4" />
                 <span>Mes Annonces</span>
-                <span className="px-1.5 py-0.2 bg-black/20 text-[10px] rounded-full font-mono font-bold">
+                <span className="px-1.5 py-0.2 bg-afri-bg/20 text-[10px] rounded-full font-mono font-bold">
                   {myItems.length}
                 </span>
               </button>
@@ -604,13 +604,13 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               >
                 <div>
                   {/* IMAGE PREVIEW */}
-                  <div className="relative h-36 sm:h-44 w-full bg-black overflow-hidden">
+                  <div className="relative h-36 sm:h-44 w-full bg-afri-bg overflow-hidden">
                     <img
                       src={item.image}
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute top-2 left-2 px-2.5 py-1 bg-black/80 backdrop-blur-md rounded-lg border border-white/10 text-[10px] font-bold font-mono text-[#D4AF37] uppercase truncate">
+                    <div className="absolute top-2 left-2 px-2.5 py-1 bg-afri-bg/80 backdrop-blur-md rounded-lg border border-afri-border text-[10px] font-bold font-mono text-[#D4AF37] uppercase truncate">
                       {item.condition}
                     </div>
                     <div className="absolute top-2 right-2 px-2.5 py-1 bg-[#D4AF37] text-black rounded-lg text-xs font-black font-mono shadow-md truncate">
@@ -809,7 +809,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
       >
         {selectedItem && (
           <div className="space-y-4 text-left">
-            <div className="relative h-56 w-full rounded-xl overflow-hidden border border-afri-border bg-black">
+            <div className="relative h-56 w-full rounded-xl overflow-hidden border border-afri-border bg-afri-bg">
               <img
                 src={selectedItem.image}
                 alt={selectedItem.title}

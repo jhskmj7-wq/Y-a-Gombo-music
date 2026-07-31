@@ -343,7 +343,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
               {faqs.map((faq, idx) => {
                 const isOpen = openFaqIndex === idx;
                 return (
-                  <div key={idx} className="border border-afri-border rounded-xl bg-[#111] overflow-hidden">
+                  <div key={idx} className="border border-afri-border rounded-xl bg-afri-bg overflow-hidden">
                     <button
                       onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
                       className="w-full flex items-center justify-between p-4 text-left font-bold text-xs text-afri-text hover:text-afri-gold transition-colors cursor-pointer"
@@ -386,7 +386,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
 
             <div className="space-y-4">
               {guides.map((g, i) => (
-                <div key={i} className="p-4 rounded-xl bg-[#111] border border-afri-border space-y-2">
+                <div key={i} className="p-4 rounded-xl bg-afri-bg border border-afri-border space-y-2">
                   <div className="flex justify-between items-center">
                     <h4 className="text-xs font-black text-afri-text uppercase">{g.title}</h4>
                     <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">{g.cat}</span>
@@ -430,7 +430,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                   <select 
                     value={bugType} 
                     onChange={(e) => setBugType(e.target.value)}
-                    className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none"
+                    className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none"
                   >
                     <option value="Affichage">📱 Affichage & Interface</option>
                     <option value="Validation">⚖️ Validation & Paiement</option>
@@ -447,7 +447,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                     value={bugDesc}
                     onChange={(e) => setBugDesc(e.target.value)}
                     placeholder="Décrivez précisément le problème rencontré..."
-                    className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
+                    className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
                   />
                 </div>
 
@@ -455,7 +455,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                   <button 
                     type="button" 
                     onClick={() => setActiveModal("none")}
-                    className="flex-1 py-3 border border-gray-800 hover:bg-gray-800 rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
+                    className="flex-1 py-3 border border-afri-border hover:bg-afri-bg-ter rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
                   >
                     Annuler
                   </button>
@@ -507,7 +507,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                     value={disputeGomboId}
                     onChange={(e) => setDisputeGomboId(e.target.value)}
                     placeholder="Entrez la Réf Gombo concernée (ex: #GMB-881)"
-                    className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600"
+                    className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600"
                   />
                 </div>
 
@@ -516,7 +516,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                   <select 
                     value={disputeReason}
                     onChange={(e) => setDisputeReason(e.target.value)}
-                    className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none"
+                    className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none"
                   >
                     <option value="Non-prestation">❌ Non-prestation ou absence</option>
                     <option value="Retard de paiement">⏳ Retard ou blocage de paiement</option>
@@ -533,7 +533,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                     value={disputeDesc}
                     onChange={(e) => setDisputeDesc(e.target.value)}
                     placeholder="Expliquez en détail les faits et fournissez les éléments..."
-                    className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
+                    className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
                   />
                 </div>
 
@@ -541,7 +541,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                   <button 
                     type="button" 
                     onClick={() => setActiveModal("none")}
-                    className="flex-1 py-3 border border-gray-800 hover:bg-gray-800 rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
+                    className="flex-1 py-3 border border-afri-border hover:bg-afri-bg-ter rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
                   >
                     Annuler
                   </button>
@@ -589,7 +589,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                       key={s}
                       type="button"
                       onClick={() => setRating(s)}
-                      className={`p-2 rounded-lg transition-transform hover:scale-125 cursor-pointer ${s <= rating ? "text-afri-gold" : "text-gray-700"}`}
+                      className={`p-2 rounded-lg transition-transform hover:scale-125 cursor-pointer ${s <= rating ? "text-afri-gold" : "text-afri-text-sec"}`}
                     >
                       <Star className="w-6 h-6 fill-current" />
                     </button>
@@ -604,7 +604,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                     value={reviewComment}
                     onChange={(e) => setReviewComment(e.target.value)}
                     placeholder="Qu'avez-vous pensé de l'application ?"
-                    className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
+                    className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
                   />
                 </div>
 
@@ -612,7 +612,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                   <button 
                     type="button" 
                     onClick={() => setActiveModal("none")}
-                    className="flex-1 py-3 border border-gray-800 hover:bg-gray-800 rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
+                    className="flex-1 py-3 border border-afri-border hover:bg-afri-bg-ter rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
                   >
                     Annuler
                   </button>
@@ -664,7 +664,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                     value={suggestionText}
                     onChange={(e) => setSuggestionText(e.target.value)}
                     placeholder="Ex: J'aimerais voir un classement par commune..."
-                    className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
+                    className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
                   />
                 </div>
 
@@ -672,7 +672,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                   <button 
                     type="button" 
                     onClick={() => setActiveModal("none")}
-                    className="flex-1 py-3 border border-gray-800 hover:bg-gray-800 rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
+                    className="flex-1 py-3 border border-afri-border hover:bg-afri-bg-ter rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
                   >
                     Annuler
                   </button>

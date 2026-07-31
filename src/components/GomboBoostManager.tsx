@@ -320,27 +320,27 @@ export default function GomboBoostManager({
 
   const currentThemeClasses = isLight 
     ? "bg-[#FDFBF7] text-gray-900 border-[#D4AF37]/40 shadow-xl" 
-    : "bg-[#111111] text-[#E5E5E5] border-amber-500/20 shadow-2xl";
+    : "bg-afri-bg-sec text-[#E5E5E5] border-amber-500/20 shadow-2xl";
 
   const cardThemeClasses = isLight
     ? "bg-stone-50/80 border-stone-200/60 hover:bg-stone-100 hover:border-[#D4AF37]/50"
-    : "bg-zinc-900/50 border-zinc-800/80 hover:bg-zinc-800 hover:border-amber-500/35";
+    : "bg-afri-bg-sec border-afri-border/80 hover:bg-afri-bg-ter hover:border-amber-500/35";
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-afri-bg/75 backdrop-blur-sm animate-fadeIn">
       <div className={`w-full max-w-lg rounded-3xl border p-5 sm:p-6 overflow-hidden relative ${currentThemeClasses} animate-slideUp`}>
         {/* Absolute design accents */}
         <div className="absolute top-0 right-0 w-40 h-40 bg-[#D4AF37]/10 blur-3xl rounded-full pointer-events-none" />
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-stone-200/50 dark:border-zinc-800/60 pb-3.5 relative z-10">
+        <div className="flex items-center justify-between border-b border-stone-200/50 dark:border-afri-border/60 pb-3.5 relative z-10">
           <div className="flex items-center gap-2.5">
             <span className="text-2xl">⚡</span>
             <div>
               <h2 className="text-base sm:text-lg font-black uppercase tracking-tight text-[#D4AF37]">
                 {activeItem.type === "profile" ? "⭐ Booster mon Profil" : "🚀 Propulser ma publication"}
               </h2>
-              <p className="text-[10px] sm:text-xs text-stone-500 dark:text-zinc-400 font-mono">
+              <p className="text-[10px] sm:text-xs text-stone-500 dark:text-afri-text-sec font-mono">
                 {activeItem.type === "profile" ? "Visibilité maximale auprès des recruteurs" : `Annonce : "${activeItem.title || "Gombo"}"`}
               </p>
             </div>
@@ -348,9 +348,9 @@ export default function GomboBoostManager({
           <button 
             disabled={loading}
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-stone-100 dark:bg-zinc-900 hover:bg-[#D4AF37]/20 border border-stone-200 dark:border-zinc-800 cursor-pointer active:scale-95 transition-all"
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-stone-100 dark:bg-afri-bg-sec hover:bg-[#D4AF37]/20 border border-stone-200 dark:border-afri-border cursor-pointer active:scale-95 transition-all"
           >
-            <X className="w-4 h-4 text-stone-500 dark:text-zinc-400" />
+            <X className="w-4 h-4 text-stone-500 dark:text-afri-text-sec" />
           </button>
         </div>
 
@@ -368,7 +368,7 @@ export default function GomboBoostManager({
               <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-500/5 border border-amber-500/10">
                 <div className="flex items-center gap-2">
                   <Wallet className="w-4 h-4 text-[#D4AF37]" />
-                  <span className="text-xs text-stone-600 dark:text-zinc-300 font-sans font-semibold">Votre Solde Wallet :</span>
+                  <span className="text-xs text-stone-600 dark:text-afri-text-sec font-sans font-semibold">Votre Solde Wallet :</span>
                 </div>
                 <span className="text-sm font-black font-mono text-[#D4AF37]">
                   {walletBalance.toLocaleString()} FCFA
@@ -415,19 +415,19 @@ export default function GomboBoostManager({
                         }`}
                       >
                         <div className="space-y-0.5 max-w-[70%]">
-                          <strong className={`text-xs block font-black uppercase ${isSelected ? "text-[#D4AF37]" : "text-stone-800 dark:text-zinc-200"}`}>
+                          <strong className={`text-xs block font-black uppercase ${isSelected ? "text-[#D4AF37]" : "text-stone-800 dark:text-afri-text"}`}>
                             {opt.label}
                           </strong>
-                          <span className="text-[10px] text-stone-500 dark:text-zinc-400 block font-sans">
+                          <span className="text-[10px] text-stone-500 dark:text-afri-text-sec block font-sans">
                             {opt.description}
                           </span>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="text-xs font-black font-mono text-[#D4AF37] bg-black/25 px-2.5 py-1 rounded-xl border border-stone-200/10 dark:border-zinc-800">
+                          <div className="text-xs font-black font-mono text-[#D4AF37] bg-afri-bg/25 px-2.5 py-1 rounded-xl border border-stone-200/10 dark:border-afri-border">
                             {price.toLocaleString()} F
                           </div>
                           {isPremium && (
-                            <span className="text-[8px] text-stone-400 dark:text-zinc-500 line-through font-mono block mt-1">
+                            <span className="text-[8px] text-stone-400 dark:text-afri-text-muted line-through font-mono block mt-1">
                               {opt.priceStandard} F
                             </span>
                           )}
@@ -460,22 +460,22 @@ export default function GomboBoostManager({
                           <Icon className="w-4 h-4" />
                         </div>
                         <div className="space-y-0.5 flex-1 max-w-[65%]">
-                          <strong className={`text-xs block font-black uppercase ${isSelected ? "text-[#D4AF37]" : "text-stone-800 dark:text-zinc-200"}`}>
+                          <strong className={`text-xs block font-black uppercase ${isSelected ? "text-[#D4AF37]" : "text-stone-800 dark:text-afri-text"}`}>
                             {opt.title}
                           </strong>
-                          <p className="text-[9.5px] text-stone-500 dark:text-zinc-400 leading-normal font-sans">
+                          <p className="text-[9.5px] text-stone-500 dark:text-afri-text-sec leading-normal font-sans">
                             {opt.description}
                           </p>
-                          <span className="text-[8px] font-mono text-stone-400 dark:text-zinc-500 block">
+                          <span className="text-[8px] font-mono text-stone-400 dark:text-afri-text-muted block">
                             ⌛ Durée : {opt.durationHours} Heures
                           </span>
                         </div>
                         <div className="text-right shrink-0 self-center">
-                          <div className="text-xs font-black font-mono text-[#D4AF37] bg-black/20 px-2.5 py-1 rounded-xl border border-stone-200/10 dark:border-zinc-800">
+                          <div className="text-xs font-black font-mono text-[#D4AF37] bg-afri-bg/20 px-2.5 py-1 rounded-xl border border-stone-200/10 dark:border-afri-border">
                             {price.toLocaleString()} F
                           </div>
                           {isPremium && (
-                            <span className="text-[8px] text-stone-400 dark:text-zinc-500 line-through font-mono block mt-1">
+                            <span className="text-[8px] text-stone-400 dark:text-afri-text-muted line-through font-mono block mt-1">
                               {opt.priceStandard} F
                             </span>
                           )}
@@ -490,7 +490,7 @@ export default function GomboBoostManager({
               <button
                 type="button"
                 onClick={() => setStep("confirm")}
-                className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 text-afri-text font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
               >
                 <span>🚀 Continuer vers le paiement</span>
               </button>
@@ -511,18 +511,18 @@ export default function GomboBoostManager({
               </div>
 
               {/* Receipt detail layout */}
-              <div className="p-4 rounded-2xl bg-stone-50/50 dark:bg-zinc-900/40 border border-stone-200/40 dark:border-zinc-800/50 space-y-3 font-sans">
+              <div className="p-4 rounded-2xl bg-stone-50/50 dark:bg-zinc-900/40 border border-stone-200/40 dark:border-afri-border/50 space-y-3 font-sans">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-stone-500 dark:text-zinc-400">Prestation demandée</span>
-                  <strong className="text-stone-800 dark:text-zinc-200 font-extrabold uppercase">{selectedTitle}</strong>
+                  <span className="text-stone-500 dark:text-afri-text-sec">Prestation demandée</span>
+                  <strong className="text-stone-800 dark:text-afri-text font-extrabold uppercase">{selectedTitle}</strong>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-stone-500 dark:text-zinc-400">Durée du boost</span>
-                  <strong className="text-stone-800 dark:text-zinc-200 font-bold">{selectedDurationText}</strong>
+                  <span className="text-stone-500 dark:text-afri-text-sec">Durée du boost</span>
+                  <strong className="text-stone-800 dark:text-afri-text font-bold">{selectedDurationText}</strong>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-stone-500 dark:text-zinc-400">Tarif standard</span>
-                  <span className="font-mono text-stone-500 dark:text-zinc-400">{standardPrice.toLocaleString()} FCFA</span>
+                  <span className="text-stone-500 dark:text-afri-text-sec">Tarif standard</span>
+                  <span className="font-mono text-stone-500 dark:text-afri-text-sec">{standardPrice.toLocaleString()} FCFA</span>
                 </div>
                 {savings > 0 && (
                   <div className="flex justify-between items-center text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
@@ -530,7 +530,7 @@ export default function GomboBoostManager({
                     <span className="font-mono">- {savings.toLocaleString()} FCFA</span>
                   </div>
                 )}
-                <div className="border-t border-stone-200/50 dark:border-zinc-800/50 pt-2 flex justify-between items-center font-black">
+                <div className="border-t border-stone-200/50 dark:border-afri-border/50 pt-2 flex justify-between items-center font-black">
                   <span className="text-xs uppercase text-[#D4AF37]">Montant à débiter</span>
                   <span className="text-base font-mono text-[#D4AF37]">{finalPrice.toLocaleString()} FCFA</span>
                 </div>
@@ -550,10 +550,10 @@ export default function GomboBoostManager({
                   type="button"
                   disabled={loading}
                   onClick={handlePayAndBoost}
-                  className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 text-afri-text font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? (
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-afri-border border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <span>💰 Confirmer et débiter mon Wallet</span>
                   )}
@@ -562,7 +562,7 @@ export default function GomboBoostManager({
                   type="button"
                   disabled={loading}
                   onClick={() => setStep("options")}
-                  className="w-full py-2.5 bg-stone-100 dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 hover:bg-stone-200/50 hover:border-[#D4AF37]/40 text-stone-600 dark:text-zinc-300 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="w-full py-2.5 bg-stone-100 dark:bg-afri-bg-sec border border-stone-200 dark:border-afri-border hover:bg-stone-200/50 hover:border-[#D4AF37]/40 text-stone-600 dark:text-afri-text-sec font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   Retour
                 </button>
@@ -583,14 +583,14 @@ export default function GomboBoostManager({
               </div>
               <div>
                 <h3 className="text-base sm:text-lg font-black uppercase text-emerald-500">Boost Activé avec Succès !</h3>
-                <p className="text-xs text-stone-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto font-sans leading-relaxed">
+                <p className="text-xs text-stone-500 dark:text-afri-text-sec mt-1 max-w-sm mx-auto font-sans leading-relaxed">
                   Votre {activeItem.type === "profile" ? "profil" : "publication"} a été propulsé(e) au sommet de l'affiche. Merci de faire confiance à AFRIGOMBO !
                 </p>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer inline-block mt-3"
+                className="px-6 py-2 bg-[#D4AF37] hover:bg-amber-400 text-afri-text font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer inline-block mt-3"
               >
                 Fermer
               </button>

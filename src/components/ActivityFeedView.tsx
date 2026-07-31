@@ -119,7 +119,7 @@ export default function ActivityFeedView({ currentUserProfile, onNavigateView }:
           className={`px-4 py-2.5 rounded-xl border transition-all flex items-center gap-1.5 ${
             activeFilter === "groupe"
               ? "bg-purple-600 text-afri-text border-purple-600 shadow-sm"
-              : "bg-white dark:bg-afri-bg-sec border-gray-150 dark:border-gray-800 text-afri-text-sec hover:text-purple-600"
+              : "bg-white dark:bg-afri-bg-sec border-gray-150 dark:border-afri-border text-afri-text-sec hover:text-purple-600"
           }`}
         >
           <Users className="w-3.5 h-3.5" /> Groupes VIP
@@ -129,7 +129,7 @@ export default function ActivityFeedView({ currentUserProfile, onNavigateView }:
           className={`px-4 py-2.5 rounded-xl border transition-all flex items-center gap-1.5 ${
             activeFilter === "certification"
               ? "bg-yellow-600 text-afri-text border-yellow-600 shadow-sm"
-              : "bg-white dark:bg-afri-bg-sec border-gray-150 dark:border-gray-800 text-afri-text-sec hover:text-yellow-600"
+              : "bg-white dark:bg-afri-bg-sec border-gray-150 dark:border-afri-border text-afri-text-sec hover:text-yellow-600"
           }`}
         >
           <Star className="w-3.5 h-3.5" /> Certifications
@@ -139,7 +139,7 @@ export default function ActivityFeedView({ currentUserProfile, onNavigateView }:
           className={`px-4 py-2.5 rounded-xl border transition-all flex items-center gap-1.5 ${
             activeFilter === "gombo"
               ? "bg-orange-600 text-afri-text border-orange-600 shadow-sm"
-              : "bg-white dark:bg-afri-bg-sec border-gray-150 dark:border-gray-800 text-afri-text-sec hover:text-orange-600"
+              : "bg-white dark:bg-afri-bg-sec border-gray-150 dark:border-afri-border text-afri-text-sec hover:text-orange-600"
           }`}
         >
           <Briefcase className="w-3.5 h-3.5" /> Gombos
@@ -153,12 +153,12 @@ export default function ActivityFeedView({ currentUserProfile, onNavigateView }:
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-16 text-center bg-white dark:bg-afri-bg-sec rounded-2xl border border-gray-150 dark:border-gray-800/80 text-afri-text-sec dark:text-afri-text-sec p-8">
-          <Activity className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-700 mb-3" />
-          <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">Aucun événement à signaler</h4>
+          <Activity className="w-12 h-12 mx-auto text-afri-text-sec dark:text-afri-text-sec mb-3" />
+          <h4 className="text-sm font-bold text-afri-text-sec dark:text-afri-text-sec">Aucun événement à signaler</h4>
           <p className="text-xs mt-1">Revenez plus tard ou publiez votre propre démo pour initier de l'ambiance !</p>
         </div>
       ) : (
-        <div className="relative border-l-2 border-gray-100 dark:border-gray-800/60 ml-4 pl-6 space-y-8">
+        <div className="relative border-l-2 border-afri-border dark:border-gray-800/60 ml-4 pl-6 space-y-8">
           <AnimatePresence mode="wait">
             {filtered.map((item, index) => {
               const th = getActivityTheme(item.type);
@@ -184,7 +184,7 @@ export default function ActivityFeedView({ currentUserProfile, onNavigateView }:
                         <img 
                           src={item.userAvatar} 
                           alt="" 
-                          className="w-11 h-11 rounded-full object-cover shrink-0 border border-gray-100 dark:border-gray-700" 
+                          className="w-11 h-11 rounded-full object-cover shrink-0 border border-afri-border dark:border-afri-border" 
                         />
                       ) : (
                         <div className="w-11 h-11 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-afri-text font-black text-xs flex items-center justify-center shrink-0">
@@ -204,13 +204,13 @@ export default function ActivityFeedView({ currentUserProfile, onNavigateView }:
                         <h3 className="text-sm font-extrabold text-gray-900 dark:text-afri-text">
                           {item.title}
                         </h3>
-                        <p className="text-xs text-gray-600 dark:text-gray-300">
+                        <p className="text-xs text-afri-text-sec dark:text-afri-text-sec">
                           {item.message}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex sm:flex-col items-start sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-gray-100 dark:border-gray-800/50 pt-3 sm:pt-0 shrink-0">
+                    <div className="flex sm:flex-col items-start sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-afri-border dark:border-gray-800/50 pt-3 sm:pt-0 shrink-0">
                       <span className="text-[10px] text-gray-450 dark:text-afri-text-sec font-medium flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5" />
                         {new Date(item.createdAt).toLocaleTimeString("fr-FR", {

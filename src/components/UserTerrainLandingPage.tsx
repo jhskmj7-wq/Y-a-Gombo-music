@@ -1188,7 +1188,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                  label: "Urgences", 
                  emoji: "🚨", 
                  badge: gombos.filter(g => g.urgent || g.isExpress || (g as any).type === "renfort" || g.category === "casting" || g.isRenfort).length || undefined,
-                 badgeColor: "bg-red-600 text-white animate-pulse",
+                 badgeColor: "bg-red-600 text-afri-text animate-pulse",
                  action: () => { 
                    setIsUrgencesModalOpen(true); 
                    try { audioSynth?.playValidationSuccess?.(); } catch (_) {} 
@@ -1210,7 +1210,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                  label: "Candidatures", 
                  emoji: "🎫", 
                  badge: userApplications.length > 0 ? userApplications.length : undefined,
-                 badgeColor: "bg-emerald-500 text-white",
+                 badgeColor: "bg-emerald-500 text-afri-text",
                  action: () => requireAuthThen(() => { 
                    setIsCandidaturesModalOpen(true); 
                    try { audioSynth?.playValidationSuccess?.(); } catch (_) {} 
@@ -1472,7 +1472,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               >
                 <div className="relative aspect-video rounded-xl overflow-hidden mb-2 bg-afri-bg">
                   <img src={prod.image} alt={prod.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  <span className="absolute top-1.5 left-1.5 bg-black/80 text-[#D4AF37] font-mono text-[8px] font-black px-2 py-0.5 rounded-full border border-[#D4AF37]/30 uppercase">
+                  <span className="absolute top-1.5 left-1.5 bg-afri-bg/80 text-[#D4AF37] font-mono text-[8px] font-black px-2 py-0.5 rounded-full border border-[#D4AF37]/30 uppercase">
                     {prod.tag}
                   </span>
                 </div>
@@ -2566,7 +2566,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               >
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[8px] font-black uppercase tracking-wider animate-pulse">
+                    <span className="px-2 py-0.5 rounded-full bg-red-600 text-afri-text text-[8px] font-black uppercase tracking-wider animate-pulse">
                       🚨 URGENT
                     </span>
                     {((g as any).type === "renfort" || g.isRenfort) && (

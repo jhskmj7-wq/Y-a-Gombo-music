@@ -358,7 +358,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto overscroll-contain touch-pan-y"
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-sm overflow-y-auto overscroll-contain touch-pan-y"
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -462,7 +462,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-afri-text-sec">Réf ID :</span>
-                        <span className="font-mono text-[10px] bg-afri-bg-sec px-2 py-0.5 rounded text-afri-text-sec border border-white/5">{depositDetails.refId}</span>
+                        <span className="font-mono text-[10px] bg-afri-bg-sec px-2 py-0.5 rounded text-afri-text-sec border border-afri-border">{depositDetails.refId}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-afri-text-sec">Nouveau solde Coffre :</span>
@@ -690,7 +690,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   step="any"
                   value={latitude}
                   onChange={(e) => setLatitude(parseFloat(e.target.value) || 5.36)}
-                  className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs font-mono text-afri-text"
+                  className="w-full px-3 py-2 bg-afri-bg/40 border border-afri-border rounded-xl text-xs font-mono text-afri-text"
                 />
               </div>
               <div>
@@ -700,7 +700,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   step="any"
                   value={longitude}
                   onChange={(e) => setLongitude(parseFloat(e.target.value) || -4.0083)}
-                  className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs font-mono text-afri-text"
+                  className="w-full px-3 py-2 bg-afri-bg/40 border border-afri-border rounded-xl text-xs font-mono text-afri-text"
                 />
               </div>
             </div>
@@ -724,7 +724,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     className={`py-2 px-1 rounded-xl text-[9px] font-black uppercase font-mono transition cursor-pointer border ${
                       searchRadius === item.r
                         ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md"
-                        : "bg-white/[0.04] text-afri-text border-white/10 hover:border-[#D4AF37]/50"
+                        : "bg-white/[0.04] text-afri-text border-afri-border hover:border-[#D4AF37]/50"
                     }`}
                   >
                     {item.label}
@@ -744,7 +744,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
                     locationPrivacy === "exact"
                       ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text"
-                      : "bg-white/[0.02] border-white/10 text-afri-text-sec hover:border-white/30"
+                      : "bg-white/[0.02] border-afri-border text-afri-text-sec hover:border-white/30"
                   }`}
                 >
                   <div className="text-[10px] font-black uppercase">✓ Position exacte</div>
@@ -756,7 +756,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
                     locationPrivacy === "approximate"
                       ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text"
-                      : "bg-white/[0.02] border-white/10 text-afri-text-sec hover:border-white/30"
+                      : "bg-white/[0.02] border-afri-border text-afri-text-sec hover:border-white/30"
                   }`}
                 >
                   <div className="text-[10px] font-black uppercase">🔒 Position approximative</div>
@@ -822,12 +822,12 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     <span>Commission AFRIGOMBO ({isUserPremium ? "1,5%" : "2,5%"}):</span>
                     <span className="font-mono font-bold text-[#D4AF37]">{financials.fee.toLocaleString()} FCFA</span>
                   </div>
-                  <div className="pt-2 border-t border-white/10 flex justify-between items-center">
+                  <div className="pt-2 border-t border-afri-border flex justify-between items-center">
                     <span className="font-bold text-afri-text uppercase">Total à payer :</span>
                     <span className="font-mono font-black text-emerald-400 text-sm">{financials.total.toLocaleString()} FCFA</span>
                   </div>
                 </div>
-                <p className="text-[10px] text-afri-text-sec/80 leading-relaxed pt-1 border-t border-white/5">
+                <p className="text-[10px] text-afri-text-sec/80 leading-relaxed pt-1 border-t border-afri-border">
                   ℹ️ Les frais de publication sont prélevés uniquement au moment de la publication du Gombo. Le montant du contrat reste entièrement réservé au musicien jusqu'à la fin de la prestation.
                 </p>
               </div>
@@ -857,7 +857,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               ) : (
                 <div className="space-y-1">
                   <ImageIcon className="w-5 h-5 text-afri-text-sec mx-auto" />
-                  <span className="text-[10px] font-black block text-gray-300">Photo d'illustration</span>
+                  <span className="text-[10px] font-black block text-afri-text-sec">Photo d'illustration</span>
                   <span className="text-[8px] text-afri-text-sec block font-semibold">(Optionnel)</span>
                 </div>
               )}
@@ -889,7 +889,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               ) : (
                 <div className="space-y-1">
                   <Music className="w-5 h-5 text-[#D4AF37]/80 mx-auto animate-pulse" />
-                  <span className="text-[10px] font-black block text-gray-200">🎤 Audio court (30s max)</span>
+                  <span className="text-[10px] font-black block text-afri-text">🎤 Audio court (30s max)</span>
                   <span className="text-[8px] text-[#D4AF37] block font-semibold">Présentation express !</span>
                 </div>
               )}
@@ -940,7 +940,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-afri-bg/80 backdrop-blur-sm flex items-center justify-center p-4"
           >
             <motion.div 
               initial={{ scale: 0.95, y: 10 }}
@@ -1012,7 +1012,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   onClick={executePublish}
                   className="flex-1 py-3.5 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> : "Publier maintenant"}
+                  {loading ? <div className="w-4 h-4 border-2 border-afri-border border-t-transparent rounded-full animate-spin" /> : "Publier maintenant"}
                 </button>
               </div>
             </motion.div>

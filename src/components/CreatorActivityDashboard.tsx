@@ -101,7 +101,7 @@ export const CreatorActivityDashboard: React.FC<CreatorActivityDashboardProps> =
                 alt={currentUserProfile?.displayName || "Créateur"}
                 className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-[#D4AF37] shadow-lg"
               />
-              <span className="absolute -bottom-1 -right-1 p-1 bg-emerald-500 text-black rounded-full border-2 border-black" title="Profil Vérifié">
+              <span className="absolute -bottom-1 -right-1 p-1 bg-emerald-500 text-black rounded-full border-2 border-afri-border" title="Profil Vérifié">
                 <CheckCircle2 className="w-3.5 h-3.5" />
               </span>
             </div>
@@ -450,7 +450,7 @@ export const CreatorActivityDashboard: React.FC<CreatorActivityDashboardProps> =
 
       {/* WITHDRAWAL MODAL */}
       {isWithdrawModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-afri-bg/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-afri-bg-sec border border-[#D4AF37] rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl text-left">
             <div className="flex justify-between items-center border-b border-afri-border/60 pb-3">
               <h3 className="text-sm font-black text-afri-text uppercase flex items-center gap-2">

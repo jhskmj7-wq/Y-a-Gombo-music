@@ -218,7 +218,7 @@ export function PublicProfileModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-2 xs:p-3 sm:p-5 bg-black/80 backdrop-blur-md overflow-y-auto">
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-2 xs:p-3 sm:p-5 bg-afri-bg/80 backdrop-blur-md overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -456,7 +456,7 @@ export function PublicProfileModal({
                       className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                         activeTab === "reels"
                           ? "bg-afri-gold text-black shadow-md"
-                          : "bg-afri-bg-sec text-afri-text-sec hover:text-white"
+                          : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
                       }`}
                     >
                       <Film className="w-3.5 h-3.5" />
@@ -468,7 +468,7 @@ export function PublicProfileModal({
                       className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                         activeTab === "audios"
                           ? "bg-afri-gold text-black shadow-md"
-                          : "bg-afri-bg-sec text-afri-text-sec hover:text-white"
+                          : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
                       }`}
                     >
                       <Volume2 className="w-3.5 h-3.5" />
@@ -480,7 +480,7 @@ export function PublicProfileModal({
                       className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                         activeTab === "photos"
                           ? "bg-afri-gold text-black shadow-md"
-                          : "bg-afri-bg-sec text-afri-text-sec hover:text-white"
+                          : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
                       }`}
                     >
                       <ImageIcon className="w-3.5 h-3.5" />
@@ -492,7 +492,7 @@ export function PublicProfileModal({
                       className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                         activeTab === "posts"
                           ? "bg-afri-gold text-black shadow-md"
-                          : "bg-afri-bg-sec text-afri-text-sec hover:text-white"
+                          : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
                       }`}
                     >
                       <FileText className="w-3.5 h-3.5" />
@@ -505,7 +505,7 @@ export function PublicProfileModal({
                         className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                           activeTab === "gombos"
                             ? "bg-afri-gold text-black shadow-md"
-                            : "bg-afri-bg-sec text-afri-text-sec hover:text-white"
+                            : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
                         }`}
                       >
                         <Briefcase className="w-3.5 h-3.5" />
@@ -526,7 +526,7 @@ export function PublicProfileModal({
                         reelsMedia.map((m, idx) => (
                           <div
                             key={m.id || idx}
-                            className="relative aspect-[9/16] rounded-2xl bg-black overflow-hidden border border-afri-border group shadow-md"
+                            className="relative aspect-[9/16] rounded-2xl bg-afri-bg overflow-hidden border border-afri-border group shadow-md"
                           >
                             {m.url ? (
                               <video
@@ -536,13 +536,13 @@ export function PublicProfileModal({
                                 preload="metadata"
                               />
                             ) : (
-                              <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-zinc-900">
+                              <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-afri-bg-sec">
                                 <Film className="w-6 h-6 text-afri-gold mb-1" />
                                 <span className="text-[10px] font-bold text-afri-text line-clamp-2">{m.title}</span>
                               </div>
                             )}
                             <div className="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none">
-                              <p className="text-[10px] font-bold text-white truncate">{m.title || "Réel Scène"}</p>
+                              <p className="text-[10px] font-bold text-afri-text truncate">{m.title || "Réel Scène"}</p>
                             </div>
                           </div>
                         ))
@@ -600,7 +600,7 @@ export function PublicProfileModal({
                         photoMedia.map((p, idx) => (
                           <div
                             key={p.id || idx}
-                            className="aspect-square rounded-2xl overflow-hidden border border-afri-border bg-zinc-900 group relative shadow-sm"
+                            className="aspect-square rounded-2xl overflow-hidden border border-afri-border bg-afri-bg-sec group relative shadow-sm"
                           >
                             <img
                               src={p.url}
@@ -609,7 +609,7 @@ export function PublicProfileModal({
                             />
                             {p.title && (
                               <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black via-black/50 to-transparent">
-                                <p className="text-[9px] font-bold text-white truncate">{p.title}</p>
+                                <p className="text-[9px] font-bold text-afri-text truncate">{p.title}</p>
                               </div>
                             )}
                           </div>
@@ -707,7 +707,7 @@ export function PublicProfileModal({
 
       {/* REPORT DIALOG MODAL */}
       {showReportDialog && (
-        <div className="fixed inset-0 z-[10005] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+        <div className="fixed inset-0 z-[10005] flex items-center justify-center p-4 bg-afri-bg/85 backdrop-blur-md">
           <div className="w-full max-w-md bg-afri-bg-sec border border-red-500/40 rounded-2xl p-5 space-y-4 shadow-2xl font-sans text-afri-text">
             <div className="flex items-center justify-between border-b border-afri-border/60 pb-3">
               <h3 className="text-sm font-black text-red-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -766,7 +766,7 @@ export function PublicProfileModal({
                   </button>
                   <button
                     onClick={handleSendReport}
-                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-black uppercase tracking-wider cursor-pointer shadow-md"
+                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-afri-text rounded-xl font-black uppercase tracking-wider cursor-pointer shadow-md"
                   >
                     Envoyer
                   </button>

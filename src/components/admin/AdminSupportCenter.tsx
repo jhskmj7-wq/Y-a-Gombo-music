@@ -237,16 +237,16 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
     <div className="space-y-6 animate-fadeIn text-left max-w-full overflow-hidden">
       {/* Header & Metrics Dashboard Bar */}
       <div className="space-y-4">
-        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 p-6 rounded-3xl shadow-xl">
+        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-afri-bg-sec border border-afri-border p-6 rounded-3xl shadow-xl">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center">
               <MessageSquare className="w-6 h-6 text-[#D4AF37]" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-white uppercase tracking-wider font-sans">
+              <h2 className="text-lg font-black text-afri-text uppercase tracking-wider font-sans">
                 CENTRE DE MESSAGERIE & WHATSAPP SUPPORT
               </h2>
-              <p className="text-xs font-mono text-zinc-400">
+              <p className="text-xs font-mono text-afri-text-sec">
                 Discussions en direct, assistance SAV et outils de modération en temps réel
               </p>
             </div>
@@ -261,11 +261,11 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                 className={`px-3.5 py-2 rounded-xl text-[10px] font-bold uppercase transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
                   filterCategory === cat 
                     ? "bg-[#D4AF37] text-black shadow-md border-transparent font-black" 
-                    : "bg-zinc-950 text-zinc-400 hover:text-white border border-zinc-800"
+                    : "bg-afri-bg text-afri-text-sec hover:text-afri-text border border-afri-border"
                 }`}
               >
                 <span>{cat === "all" ? "Toutes" : cat}</span>
-                <span className="px-1.5 py-0.2 rounded-full bg-black/20 text-[8px] font-mono font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-afri-bg/20 text-[8px] font-mono font-bold">
                   {cat === "all" ? conversations.length : conversations.filter(c => c.category === cat).length}
                 </span>
               </button>
@@ -275,32 +275,32 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
 
         {/* Section 5 Metrics Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center">
-            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">Conversations Actives</span>
-            <span className="text-base font-black text-white">{activeConversationsCount}</span>
+          <div className="bg-afri-bg-sec border border-afri-border p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-mono text-afri-text-muted uppercase font-bold block">Conversations Actives</span>
+            <span className="text-base font-black text-afri-text">{activeConversationsCount}</span>
           </div>
-          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center">
-            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">Tickets Support</span>
+          <div className="bg-afri-bg-sec border border-afri-border p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-mono text-afri-text-muted uppercase font-bold block">Tickets Support</span>
             <span className="text-base font-black text-[#D4AF37]">{supportCount}</span>
           </div>
-          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center">
-            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">Transactions</span>
+          <div className="bg-afri-bg-sec border border-afri-border p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-mono text-afri-text-muted uppercase font-bold block">Transactions</span>
             <span className="text-base font-black text-emerald-400">{walletTransactionsCount}</span>
           </div>
-          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center">
-            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">Signalements</span>
+          <div className="bg-afri-bg-sec border border-afri-border p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-mono text-afri-text-muted uppercase font-bold block">Signalements</span>
             <span className="text-base font-black text-rose-400">{reportsCount}</span>
           </div>
-          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center">
-            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">En Ligne</span>
+          <div className="bg-afri-bg-sec border border-afri-border p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-mono text-afri-text-muted uppercase font-bold block">En Ligne</span>
             <span className="text-base font-black text-sky-400">124</span>
           </div>
-          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center">
-            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">Messages Aujourd'hui</span>
+          <div className="bg-afri-bg-sec border border-afri-border p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-mono text-afri-text-muted uppercase font-bold block">Messages Aujourd'hui</span>
             <span className="text-base font-black text-purple-400">412</span>
           </div>
-          <div className="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-center col-span-2 sm:col-span-1">
-            <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">Temps Moyen Réponse</span>
+          <div className="bg-afri-bg-sec border border-afri-border p-3 rounded-2xl text-center col-span-2 sm:col-span-1">
+            <span className="text-[9px] font-mono text-afri-text-muted uppercase font-bold block">Temps Moyen Réponse</span>
             <span className="text-base font-black text-emerald-400">&lt; 3 min</span>
           </div>
         </div>
@@ -310,24 +310,24 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Column 1: Conversations list (4 cols) */}
-        <div className="lg:col-span-4 bg-zinc-900 border border-zinc-800 rounded-3xl p-4 space-y-4 max-h-[750px] overflow-y-auto flex flex-col h-[750px]">
+        <div className="lg:col-span-4 bg-afri-bg-sec border border-afri-border rounded-3xl p-4 space-y-4 max-h-[750px] overflow-y-auto flex flex-col h-[750px]">
           <div className="px-2 shrink-0 space-y-2">
-            <h3 className="text-xs font-mono font-black text-zinc-400 uppercase tracking-widest">
+            <h3 className="text-xs font-mono font-black text-afri-text-sec uppercase tracking-widest">
               Fil des Discussions ({filteredConversations.length})
             </h3>
             {/* Search Input */}
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-zinc-500" />
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-afri-text-muted" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher par nom..."
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#D4AF37]"
+                className="w-full bg-afri-bg border border-afri-border rounded-xl pl-9 pr-4 py-2 text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37]"
               />
             </div>
             {/* Status Tabs Switcher */}
-            <div className="grid grid-cols-3 gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+            <div className="grid grid-cols-3 gap-1 bg-afri-bg p-1 rounded-xl border border-afri-border">
               {(["all", "open", "closed"] as const).map((st) => (
                 <button
                   key={st}
@@ -335,7 +335,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                   className={`py-1 rounded-lg text-[9px] font-mono font-bold uppercase transition-all cursor-pointer ${
                     filterStatus === st
                       ? "bg-[#D4AF37] text-black font-black"
-                      : "text-zinc-400 hover:text-white"
+                      : "text-afri-text-sec hover:text-afri-text"
                   }`}
                 >
                   {st === "all" ? "Tous" : st === "open" ? "Ouverts" : "Résolus"}
@@ -346,14 +346,14 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
 
           <div className="flex-1 overflow-y-auto space-y-2 min-h-0 pr-1">
             {filteredConversations.length === 0 ? (
-              <div className="p-8 text-center text-zinc-500 text-xs font-mono">Aucun ticket support trouvé</div>
+              <div className="p-8 text-center text-afri-text-muted text-xs font-mono">Aucun ticket support trouvé</div>
             ) : (
               filteredConversations.map(convo => {
                 const isSelected = selectedConversation?.id === convo.id;
                 const unreadForSupport = convo.unreadCount?.afrigombo_support || 0;
                 
                 // Determine Category Badge Colors
-                let catStyle = "bg-zinc-950 border-zinc-800 text-[#D4AF37]";
+                let catStyle = "bg-afri-bg border-afri-border text-[#D4AF37]";
                 if (convo.category === "Wallet") catStyle = "bg-purple-500/10 border-purple-500/20 text-purple-400";
                 else if (convo.category === "Bug") catStyle = "bg-rose-500/10 border-rose-500/20 text-rose-400";
                 else if (convo.category === "Contrat") catStyle = "bg-emerald-500/10 border-emerald-500/20 text-emerald-400";
@@ -375,8 +375,8 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                     onClick={() => setSelectedConversation(convo)}
                     className={`p-3.5 rounded-2xl border transition cursor-pointer space-y-3 relative ${
                       isSelected 
-                        ? "bg-zinc-800 border-[#D4AF37] shadow-lg" 
-                        : "bg-zinc-950/60 border-zinc-800/80 hover:border-zinc-700"
+                        ? "bg-afri-bg-ter border-[#D4AF37] shadow-lg" 
+                        : "bg-zinc-950/60 border-zinc-800/80 hover:border-afri-border"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -388,7 +388,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                           referrerPolicy="no-referrer"
                         />
                         <div className="min-w-0">
-                          <h4 className="text-xs font-black text-white uppercase truncate flex items-center gap-1">
+                          <h4 className="text-xs font-black text-afri-text uppercase truncate flex items-center gap-1">
                             <span>{convo.userName}</span>
                             {convo.status === "closed" ? (
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Résolu" />
@@ -396,11 +396,11 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 animate-pulse" title="En traitement" />
                             )}
                           </h4>
-                          <p className="text-[10px] text-zinc-400 truncate font-mono mt-0.5">{convo.lastMessage}</p>
+                          <p className="text-[10px] text-afri-text-sec truncate font-mono mt-0.5">{convo.lastMessage}</p>
                         </div>
                       </div>
                       
-                      <span className="text-[8px] font-mono text-zinc-500 shrink-0">
+                      <span className="text-[8px] font-mono text-afri-text-muted shrink-0">
                         {convo.lastMessageAt ? new Date(convo.lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
                       </span>
                     </div>
@@ -426,7 +426,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                           </span>
                         )}
                         {unreadForSupport > 0 && (
-                          <span className="w-4 h-4 bg-red-500 text-white rounded-full text-[8px] font-bold flex items-center justify-center animate-pulse">
+                          <span className="w-4 h-4 bg-red-500 text-afri-text rounded-full text-[8px] font-bold flex items-center justify-center animate-pulse">
                             {unreadForSupport}
                           </span>
                         )}
@@ -440,11 +440,11 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
         </div>
 
         {/* Column 2: Active Discussion Stream (5 cols) */}
-        <div className="lg:col-span-5 bg-zinc-900 border border-zinc-800 rounded-3xl p-4 flex flex-col h-[750px] shadow-xl">
+        <div className="lg:col-span-5 bg-afri-bg-sec border border-afri-border rounded-3xl p-4 flex flex-col h-[750px] shadow-xl">
           {selectedConversation ? (
             <>
               {/* Discussion Header */}
-              <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-2xl flex items-center justify-between mb-3 shrink-0">
+              <div className="p-3 bg-afri-bg border border-afri-border rounded-2xl flex items-center justify-between mb-3 shrink-0">
                 <div 
                   onClick={() => setShowUserPanel(true)}
                   className="flex items-center gap-2 cursor-pointer hover:opacity-85 transition"
@@ -457,8 +457,8 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                     referrerPolicy="no-referrer"
                   />
                   <div>
-                    <h3 className="text-xs font-bold text-white uppercase">{selectedConversation.userName}</h3>
-                    <p className="text-[9px] font-mono text-zinc-500">
+                    <h3 className="text-xs font-bold text-afri-text uppercase">{selectedConversation.userName}</h3>
+                    <p className="text-[9px] font-mono text-afri-text-muted">
                       ID : <span className="text-[#D4AF37] font-bold">{selectedConversation.category || "Général"}</span>
                     </p>
                   </div>
@@ -473,7 +473,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                       Résoudre ✓
                     </button>
                   ) : (
-                    <span className="px-2.5 py-1.5 bg-zinc-800 text-zinc-400 border border-zinc-700 rounded-xl text-[10px] font-bold uppercase">
+                    <span className="px-2.5 py-1.5 bg-afri-bg-ter text-afri-text-sec border border-afri-border rounded-xl text-[10px] font-bold uppercase">
                       Résolu ✓
                     </span>
                   )}
@@ -481,9 +481,9 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
               </div>
 
               {/* Message flow */}
-              <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-zinc-950/80 rounded-2xl border border-zinc-800/80 min-h-0">
+              <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-afri-bg/80 rounded-2xl border border-zinc-800/80 min-h-0">
                 {messages.length === 0 ? (
-                  <div className="text-center py-20 text-zinc-500 text-xs font-mono">Chargement des messages...</div>
+                  <div className="text-center py-20 text-afri-text-muted text-xs font-mono">Chargement des messages...</div>
                 ) : (
                   messages.map(m => {
                     const isSupport = m.senderUid === SUPPORT_PROFILE.uid;
@@ -492,7 +492,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                         <div className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap ${
                           isSupport 
                             ? "bg-[#D4AF37] text-black font-semibold rounded-tr-none" 
-                            : "bg-zinc-900 text-white border border-zinc-800 rounded-tl-none"
+                            : "bg-afri-bg-sec text-afri-text border border-afri-border rounded-tl-none"
                         }`}>
                           <span className={`text-[8px] font-mono block font-black mb-0.5 ${isSupport ? "text-black/70" : "text-[#D4AF37]"}`}>
                             {m.senderName}
@@ -510,14 +510,14 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
 
               {/* Quick Response Shortcuts */}
               <div className="py-2 shrink-0">
-                <p className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider mb-1.5 px-1 font-bold">RÉPONSES RAPIDES :</p>
+                <p className="text-[9px] font-mono text-afri-text-muted uppercase tracking-wider mb-1.5 px-1 font-bold">RÉPONSES RAPIDES :</p>
                 <div className="flex flex-wrap gap-1.5">
                   {quickReplies.map((qr, idx) => (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => handleSendReply(undefined, qr)}
-                      className="px-2.5 py-1 bg-zinc-900 hover:bg-[#D4AF37] hover:text-black text-zinc-300 rounded-xl text-[10px] font-bold transition cursor-pointer border border-zinc-800"
+                      className="px-2.5 py-1 bg-afri-bg-sec hover:bg-[#D4AF37] hover:text-black text-afri-text-sec rounded-xl text-[10px] font-bold transition cursor-pointer border border-afri-border"
                     >
                       ⚡ {qr}
                     </button>
@@ -530,14 +530,14 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                 <button
                   type="button"
                   onClick={() => handleSendReply(undefined, "📋 CONSIGNES DE SÉCURITÉ & DE PAIEMENT :\n1. Veuillez envoyer la somme exacte demandée.\n2. Partagez la capture d'écran complète de votre reçu de paiement ici.\n3. Ne partagez jamais votre code PIN.\nNotre équipe traitera votre demande rapidement. Merci pour votre confiance !")}
-                  className="px-2.5 py-1.5 bg-zinc-950 hover:bg-amber-500/10 hover:text-[#D4AF37] border border-zinc-800 text-zinc-400 text-[10px] font-bold uppercase transition rounded-xl cursor-pointer flex items-center gap-1"
+                  className="px-2.5 py-1.5 bg-afri-bg hover:bg-amber-500/10 hover:text-[#D4AF37] border border-afri-border text-afri-text-sec text-[10px] font-bold uppercase transition rounded-xl cursor-pointer flex items-center gap-1"
                 >
                   <span>📋 Envoyer des consignes</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSendReply(undefined, "📥 REÇU & CONFIRMÉ :\nNous confirmons la bonne réception de vos informations et/ou de votre preuve de paiement. Votre transaction est en cours de traitement par notre équipe financière.")}
-                  className="px-2.5 py-1.5 bg-zinc-950 hover:bg-emerald-500/10 hover:text-emerald-400 border border-zinc-800 text-zinc-400 text-[10px] font-bold uppercase transition rounded-xl cursor-pointer flex items-center gap-1"
+                  className="px-2.5 py-1.5 bg-afri-bg hover:bg-emerald-500/10 hover:text-emerald-400 border border-afri-border text-afri-text-sec text-[10px] font-bold uppercase transition rounded-xl cursor-pointer flex items-center gap-1"
                 >
                   <span>📥 Confirmer réception</span>
                 </button>
@@ -545,15 +545,15 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
 
               {/* Selected File Preview Bar */}
               {selectedFile && (
-                <div className="p-2 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between text-xs text-[#D4AF37] font-mono shrink-0 mb-1">
+                <div className="p-2 bg-afri-bg border border-afri-border rounded-xl flex items-center justify-between text-xs text-[#D4AF37] font-mono shrink-0 mb-1">
                   <div className="flex items-center gap-1.5">
                     <span>📎 {selectedFile.name}</span>
-                    <span className="text-[10px] text-zinc-500">({Math.round(selectedFile.size / 1024)} KB)</span>
+                    <span className="text-[10px] text-afri-text-muted">({Math.round(selectedFile.size / 1024)} KB)</span>
                   </div>
                   <button 
                     type="button" 
                     onClick={() => { setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                    className="text-zinc-500 hover:text-white transition"
+                    className="text-afri-text-muted hover:text-afri-text transition"
                   >
                     ✕
                   </button>
@@ -574,7 +574,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-3 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl transition cursor-pointer flex items-center justify-center"
+                  className="p-3 bg-afri-bg hover:bg-afri-bg-ter border border-afri-border text-afri-text-sec hover:text-afri-text rounded-xl transition cursor-pointer flex items-center justify-center"
                   title="Joindre un fichier"
                 >
                   <Paperclip className="w-5 h-5" />
@@ -585,7 +585,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder={selectedFile ? "Ajouter un message ou envoyer le fichier..." : "Répondre en tant que Support..."}
-                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:border-[#D4AF37] focus:outline-none placeholder:text-zinc-500"
+                  className="flex-1 bg-afri-bg border border-afri-border rounded-xl px-4 py-3 text-xs text-afri-text focus:border-[#D4AF37] focus:outline-none placeholder:text-afri-text-muted"
                 />
                 <button
                   type="submit"
@@ -597,7 +597,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
               </form>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 text-xs font-mono space-y-2">
+            <div className="flex-1 flex flex-col items-center justify-center text-afri-text-muted text-xs font-mono space-y-2">
               <MessageSquare className="w-8 h-8 text-[#D4AF37]/40" />
               <p>Sélectionnez une discussion pour commencer</p>
             </div>
@@ -605,9 +605,9 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
         </div>
 
         {/* Column 3: User Details & Moderation Tools (3 cols) */}
-        <div className="lg:col-span-3 bg-zinc-900 border border-zinc-800 rounded-3xl p-5 space-y-4 shadow-xl min-h-[750px] flex flex-col justify-between">
+        <div className="lg:col-span-3 bg-afri-bg-sec border border-afri-border rounded-3xl p-5 space-y-4 shadow-xl min-h-[750px] flex flex-col justify-between">
           <div className="space-y-4">
-            <h3 className="text-xs font-mono font-black text-zinc-400 uppercase tracking-widest border-b border-zinc-800 pb-2">
+            <h3 className="text-xs font-mono font-black text-afri-text-sec uppercase tracking-widest border-b border-afri-border pb-2">
               Profil & Modération
             </h3>
 
@@ -625,7 +625,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                     referrerPolicy="no-referrer"
                   />
                   <div>
-                    <h4 className="text-xs font-black text-white uppercase">{selectedConversation.userName}</h4>
+                    <h4 className="text-xs font-black text-afri-text uppercase">{selectedConversation.userName}</h4>
                     <span className="px-1.5 py-0.5 bg-[#D4AF37]/15 text-[#D4AF37] text-[8px] font-mono font-bold rounded">
                       {selectedUserProfile?.afriId || "AFRI-MEMBER"}
                     </span>
@@ -639,14 +639,14 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                 )}
 
                 {/* Metadata details */}
-                <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-3 space-y-2.5 text-left text-xs font-mono">
+                <div className="bg-afri-bg border border-afri-border rounded-2xl p-3 space-y-2.5 text-left text-xs font-mono">
                   <div>
-                    <span className="text-[9px] text-zinc-500 uppercase block font-bold">UID :</span>
-                    <span className="text-[9px] text-zinc-400 block break-all">{selectedConversation.userUid}</span>
+                    <span className="text-[9px] text-afri-text-muted uppercase block font-bold">UID :</span>
+                    <span className="text-[9px] text-afri-text-sec block break-all">{selectedConversation.userUid}</span>
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-zinc-500 uppercase font-bold">Wallet Solde :</span>
+                    <span className="text-[9px] text-afri-text-muted uppercase font-bold">Wallet Solde :</span>
                     <span className="text-xs text-emerald-400 font-bold">
                       {selectedUserProfile?.wallet?.soldeDisponible !== undefined 
                         ? `${Number(selectedUserProfile.wallet.soldeDisponible).toLocaleString()} FCFA`
@@ -656,14 +656,14 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-zinc-500 uppercase font-bold">Statut Premium :</span>
-                    <span className={`text-xs font-bold ${selectedUserProfile?.isPremium || selectedUserProfile?.premium ? "text-amber-400" : "text-zinc-500"}`}>
+                    <span className="text-[9px] text-afri-text-muted uppercase font-bold">Statut Premium :</span>
+                    <span className={`text-xs font-bold ${selectedUserProfile?.isPremium || selectedUserProfile?.premium ? "text-amber-400" : "text-afri-text-muted"}`}>
                       {selectedUserProfile?.isPremium || selectedUserProfile?.premium ? "👑 Premium (1.5%)" : "Standard (2.5%)"}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-zinc-500 uppercase font-bold">Statut Compte :</span>
+                    <span className="text-[9px] text-afri-text-muted uppercase font-bold">Statut Compte :</span>
                     <span className={`text-xs font-bold ${selectedUserProfile?.isBanned ? "text-rose-500" : selectedUserProfile?.isSuspended ? "text-amber-400" : "text-emerald-400"}`}>
                       {selectedUserProfile?.isBanned ? "🚫 Banni" : selectedUserProfile?.isSuspended ? "⏸️ Suspendu" : "🟢 Actif"}
                     </span>
@@ -671,8 +671,8 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                 </div>
 
                 {/* Section 6: Real Moderation Actions */}
-                <div className="space-y-2 pt-2 border-t border-zinc-800">
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold block">
+                <div className="space-y-2 pt-2 border-t border-afri-border">
+                  <span className="text-[9px] font-mono text-afri-text-muted uppercase font-bold block">
                     OUTILS DE MODÉRATION :
                   </span>
 
@@ -697,28 +697,28 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <button
                       onClick={() => alert(`Historique des actions de ${selectedConversation.userName}`)}
-                      className="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1"
+                      className="p-2 bg-afri-bg hover:bg-afri-bg-ter border border-afri-border text-afri-text-sec rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1"
                     >
                       <History className="w-3.5 h-3.5 text-[#D4AF37]" /> Historique
                     </button>
 
                     <button
                       onClick={() => alert(`Transactions Wallet de ${selectedConversation.userName}`)}
-                      className="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1"
+                      className="p-2 bg-afri-bg hover:bg-afri-bg-ter border border-afri-border text-afri-text-sec rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1"
                     >
                       <Wallet className="w-3.5 h-3.5 text-emerald-400" /> Wallet
                     </button>
 
                     <button
                       onClick={() => alert(`Publications de ${selectedConversation.userName}`)}
-                      className="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1"
+                      className="p-2 bg-afri-bg hover:bg-afri-bg-ter border border-afri-border text-afri-text-sec rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1"
                     >
                       <FileText className="w-3.5 h-3.5 text-sky-400" /> Publications
                     </button>
 
                     <button
                       onClick={() => alert(`Gombos créés par ${selectedConversation.userName}`)}
-                      className="p-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1"
+                      className="p-2 bg-afri-bg hover:bg-afri-bg-ter border border-afri-border text-afri-text-sec rounded-xl text-[10px] font-bold uppercase transition flex items-center justify-center gap-1"
                     >
                       <Music className="w-3.5 h-3.5 text-purple-400" /> Gombos
                     </button>
@@ -726,7 +726,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
                 </div>
               </div>
             ) : (
-              <div className="text-center py-16 text-zinc-500 text-xs font-mono">
+              <div className="text-center py-16 text-afri-text-muted text-xs font-mono">
                 Aucune sélection
               </div>
             )}

@@ -1518,7 +1518,7 @@ export default function AdminFounderThrone({
         animate={{ opacity: 1, y: 0 }}
         className={`relative overflow-hidden rounded-3xl border-2 border-[#D4AF37]/50 shadow-xl transition-all duration-500 mb-4 p-0 ${
           isDark 
-            ? 'bg-[#050505] shadow-[0_10px_40px_-10px_rgba(212,175,55,0.15)]' 
+            ? 'bg-afri-bg shadow-[0_10px_40px_-10px_rgba(212,175,55,0.15)]' 
             : 'bg-[#EDEDED] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)]'
         }`}
       >
@@ -1538,7 +1538,7 @@ export default function AdminFounderThrone({
         </div>
 
         {/* FOLD / UNFOLD BAR */}
-        <div className="relative z-10 flex items-center justify-between px-5 py-3 border-b border-[#D4AF37]/20 bg-black/30">
+        <div className="relative z-10 flex items-center justify-between px-5 py-3 border-b border-[#D4AF37]/20 bg-afri-bg/30">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/50 flex items-center justify-center text-[#D4AF37]">
               <Crown className="w-4 h-4 animate-pulse" />
@@ -1588,14 +1588,14 @@ export default function AdminFounderThrone({
                   <div className="relative shrink-0">
                     <div className="absolute -inset-1 bg-[#D4AF37] rounded-2xl blur-[3px] opacity-25 animate-pulse" />
                     <div className={`relative w-14 h-14 rounded-2xl border-2 border-[#D4AF37] flex items-center justify-center shadow-lg ${
-                      isDark ? 'bg-zinc-900 text-[#D4AF37]' : 'bg-zinc-200 text-[#B8860B]'
+                      isDark ? 'bg-afri-bg-sec text-[#D4AF37]' : 'bg-zinc-200 text-[#B8860B]'
                     }`}>
                       <Crown className="w-8 h-8" />
                     </div>
                   </div>
                   <div className="space-y-1">
                     <h1 className={`text-lg sm:text-2xl font-display font-black tracking-tight flex items-center gap-2 ${
-                      isDark ? 'text-white' : 'text-[#1A1A1A]'
+                      isDark ? 'text-afri-text' : 'text-[#1A1A1A]'
                     }`}>
                       {getGreeting()}, <span className="text-[#D4AF37]">Sylvester</span>
                     </h1>
@@ -1654,7 +1654,7 @@ export default function AdminFounderThrone({
                 <div className="flex items-center gap-4 bg-afri-bg/60 border border-[#D4AF37]/30 px-4 py-2 rounded-2xl">
                   <div className="flex flex-col items-end">
                     <span className="text-[9px] font-mono font-black uppercase text-[#D4AF37] tracking-widest">Hymne de l'Empire</span>
-                    <div className="h-1.5 w-24 rounded-full overflow-hidden bg-zinc-800 mt-1">
+                    <div className="h-1.5 w-24 rounded-full overflow-hidden bg-afri-bg-ter mt-1">
                       <div 
                         className="h-full bg-[#D4AF37] shadow-[0_0_8px_#D4AF37]"
                         style={{ width: `${(audioState.progress! / (audioState.duration || 1)) * 100}%` }}
@@ -1665,7 +1665,7 @@ export default function AdminFounderThrone({
                     onClick={() => globalAudioManager.playHymn()}
                     className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer transform hover:scale-105 ${
                       audioState.currentPlaying === 'hymne' && !audioState.isPaused
-                        ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)]'
+                        ? 'bg-amber-500 text-afri-text shadow-[0_0_15px_rgba(245,158,11,0.5)]'
                         : 'bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30 border border-[#D4AF37]/40'
                     }`}
                   >
@@ -1680,12 +1680,12 @@ export default function AdminFounderThrone({
                 <div className="flex items-center gap-2">
                   <Server className="w-4 h-4 text-[#D4AF37]" />
                   <div>
-                    <span className="text-[10px] font-mono font-black uppercase text-zinc-400 block tracking-wider">Statut Général de la Plateforme</span>
-                    <span className="text-[9px] text-zinc-500 font-mono">Modifiable par le fondateur en temps réel</span>
+                    <span className="text-[10px] font-mono font-black uppercase text-afri-text-sec block tracking-wider">Statut Général de la Plateforme</span>
+                    <span className="text-[9px] text-afri-text-muted font-mono">Modifiable par le fondateur en temps réel</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-1 bg-black/60 p-1 rounded-2xl border border-[#D4AF37]/20 w-full sm:w-auto">
+                <div className="grid grid-cols-3 gap-1 bg-afri-bg/60 p-1 rounded-2xl border border-[#D4AF37]/20 w-full sm:w-auto">
                   {[
                     { id: "operational", label: "🟢 Opérationnel", style: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
                     { id: "maintenance", label: "🛠️ Maintenance", style: "text-rose-400 bg-rose-500/10 border-rose-500/20 animate-pulse" },
@@ -1699,7 +1699,7 @@ export default function AdminFounderThrone({
                         className={`px-3 py-1 rounded-xl text-[9px] font-mono font-bold uppercase transition-all cursor-pointer border ${
                           isActive
                             ? st.style + " shadow-md"
-                            : "bg-transparent border-transparent text-zinc-500 hover:text-zinc-300"
+                            : "bg-transparent border-transparent text-afri-text-muted hover:text-afri-text-sec"
                         }`}
                       >
                         {st.label}
@@ -1839,7 +1839,7 @@ export default function AdminFounderThrone({
                       </span>
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Tendances</span>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Tendances</span>
                       <div className="flex items-baseline justify-between mt-0.5">
                         <strong className="text-lg font-display font-black text-amber-400 leading-none">
                           {featuredContentList.length || displayPosts.length || 0}
@@ -1863,7 +1863,7 @@ export default function AdminFounderThrone({
                       </span>
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Membres</span>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Membres</span>
                       <div className="flex items-baseline justify-between mt-0.5">
                         <strong className="text-lg font-display font-black text-[#D4AF37] leading-none">
                           {displayUsers.length}
@@ -1883,7 +1883,7 @@ export default function AdminFounderThrone({
                         <FileText className="w-3.5 h-3.5" />
                       </span>
                       {pendingPostsCount > 0 ? (
-                        <span className="px-1 py-0.5 bg-amber-500 text-black rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                        <span className="px-1 py-0.5 bg-amber-500 text-afri-text rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
                           {pendingPostsCount} REQ
                         </span>
                       ) : (
@@ -1891,7 +1891,7 @@ export default function AdminFounderThrone({
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Publications</span>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Publications</span>
                       <div className="flex items-baseline justify-between mt-0.5">
                         <strong className="text-lg font-display font-black text-sky-400 leading-none">
                           {pendingPostsCount}
@@ -1911,7 +1911,7 @@ export default function AdminFounderThrone({
                         <CreditCard className="w-3.5 h-3.5" />
                       </span>
                       {pendingBetaTransactions.length > 0 ? (
-                        <span className="px-1 py-0.5 bg-emerald-500 text-black rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                        <span className="px-1 py-0.5 bg-emerald-500 text-afri-text rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
                           {pendingBetaTransactions.length} PAY
                         </span>
                       ) : (
@@ -1919,7 +1919,7 @@ export default function AdminFounderThrone({
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Dépôts Bêta</span>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Dépôts Bêta</span>
                       <div className="flex items-baseline justify-between mt-0.5">
                         <strong className="text-lg font-display font-black text-emerald-400 leading-none">
                           {pendingBetaTransactions.length}
@@ -1939,13 +1939,13 @@ export default function AdminFounderThrone({
                         <ShieldAlert className="w-3.5 h-3.5 animate-bounce" />
                       </span>
                       {highAlertsCount > 0 && (
-                        <span className="px-1 py-0.5 bg-red-500 text-white rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                        <span className="px-1 py-0.5 bg-red-500 text-afri-text rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
                           ALERTE
                         </span>
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Signalements</span>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Signalements</span>
                       <div className="flex items-baseline justify-between mt-0.5">
                         <strong className="text-lg font-display font-black text-red-400 leading-none">
                           {highAlertsCount}
@@ -1965,7 +1965,7 @@ export default function AdminFounderThrone({
                         <ShieldCheck className="w-3.5 h-3.5" />
                       </span>
                       {pendingKycCount > 0 ? (
-                        <span className="px-1 py-0.5 bg-purple-500 text-white rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                        <span className="px-1 py-0.5 bg-purple-500 text-afri-text rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
                           {pendingKycCount} NEW
                         </span>
                       ) : (
@@ -1973,7 +1973,7 @@ export default function AdminFounderThrone({
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Gombo IDs</span>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Gombo IDs</span>
                       <div className="flex items-baseline justify-between mt-0.5">
                         <strong className="text-lg font-display font-black text-purple-400 leading-none">
                           {kycRequests.length}
@@ -1993,7 +1993,7 @@ export default function AdminFounderThrone({
                         <Mail className="w-3.5 h-3.5" />
                       </span>
                       {pendingTicketsCount > 0 ? (
-                        <span className="px-1 py-0.5 bg-indigo-500 text-white rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                        <span className="px-1 py-0.5 bg-indigo-500 text-afri-text rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
                           {pendingTicketsCount} MSG
                         </span>
                       ) : (
@@ -2001,7 +2001,7 @@ export default function AdminFounderThrone({
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Support</span>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Support</span>
                       <div className="flex items-baseline justify-between mt-0.5">
                         <strong className="text-lg font-display font-black text-indigo-400 leading-none">
                           {ticketsSupport.length}
@@ -2021,7 +2021,7 @@ export default function AdminFounderThrone({
                         <AlertTriangle className="w-3.5 h-3.5 animate-pulse" />
                       </span>
                       {pendingDisputesCount > 0 ? (
-                        <span className="px-1 py-0.5 bg-amber-500 text-black rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                        <span className="px-1 py-0.5 bg-amber-500 text-afri-text rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
                           {pendingDisputesCount} JUG
                         </span>
                       ) : (
@@ -2029,7 +2029,7 @@ export default function AdminFounderThrone({
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Litiges</span>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Litiges</span>
                       <div className="flex items-baseline justify-between mt-0.5">
                         <strong className="text-lg font-display font-black text-amber-500 leading-none">
                           {disputesList.length}
@@ -2049,7 +2049,7 @@ export default function AdminFounderThrone({
                         <Wrench className="w-3.5 h-3.5" />
                       </span>
                       {pendingBugsCount > 0 ? (
-                        <span className="px-1 py-0.5 bg-rose-500 text-white rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                        <span className="px-1 py-0.5 bg-rose-500 text-afri-text rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
                           {pendingBugsCount} FIX
                         </span>
                       ) : (
@@ -2057,7 +2057,7 @@ export default function AdminFounderThrone({
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Bugs reports</span>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Bugs reports</span>
                       <div className="flex items-baseline justify-between mt-0.5">
                         <strong className="text-lg font-display font-black text-rose-400 leading-none">
                           {bugReports.length}
@@ -2077,7 +2077,7 @@ export default function AdminFounderThrone({
                         <Bell className="w-3.5 h-3.5 animate-pulse" />
                       </span>
                       {unreadNotifsCount > 0 ? (
-                        <span className="px-1 py-0.5 bg-[#D4AF37] text-black rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                        <span className="px-1 py-0.5 bg-[#D4AF37] text-afri-text rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
                           {unreadNotifsCount} ALRT
                         </span>
                       ) : (
@@ -2085,7 +2085,7 @@ export default function AdminFounderThrone({
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Notifications</span>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Notifications</span>
                       <div className="flex items-baseline justify-between mt-0.5">
                         <strong className="text-lg font-display font-black text-[#D4AF37] leading-none">
                           {unreadNotifsCount}
@@ -2099,7 +2099,7 @@ export default function AdminFounderThrone({
             </div>
 
             {/* GÉOLOCALISATION ET ACTIVITÉ DE ZONE */}
-            <div className="p-4 sm:p-5 bg-zinc-950 border border-zinc-800 rounded-3xl space-y-4 shadow-xl text-left">
+            <div className="p-4 sm:p-5 bg-afri-bg border border-afri-border rounded-3xl space-y-4 shadow-xl text-left">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
@@ -2109,7 +2109,7 @@ export default function AdminFounderThrone({
                     <h3 className="text-xs font-mono uppercase font-black text-rose-400 tracking-widest">
                       📡 GÉOLOCALISATION & STATUT DES ZONES
                     </h3>
-                    <p className="text-[10px] text-zinc-400 font-mono">
+                    <p className="text-[10px] text-afri-text-sec font-mono">
                       Suivi spatial en temps réel des utilisateurs, des Gombos et de l'activité locale d'Abidjan
                     </p>
                   </div>
@@ -2124,49 +2124,49 @@ export default function AdminFounderThrone({
                 {/* Card 1: Nearby Users */}
                 <div className="p-3 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl flex flex-col justify-between h-[110px] relative overflow-hidden group hover:border-[#D4AF37]/40 transition">
                   <div className="flex justify-between items-start">
-                    <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-widest">Nearby Users</span>
+                    <span className="text-[9px] font-mono font-bold text-afri-text-muted uppercase tracking-widest">Nearby Users</span>
                     <div className="p-1 bg-rose-500/10 text-rose-400 rounded-lg border border-rose-500/20">
                       <Users className="w-3.5 h-3.5" />
                     </div>
                   </div>
                   <div className="mt-2">
-                    <h4 className="text-xl font-black font-mono text-white">
-                      {liveUsers.filter(u => u.commune && u.commune !== "ALL" && u.commune !== "Toutes").length || 382} <span className="text-[9px] text-zinc-500">PROCHES</span>
+                    <h4 className="text-xl font-black font-mono text-afri-text">
+                      {liveUsers.filter(u => u.commune && u.commune !== "ALL" && u.commune !== "Toutes").length || 382} <span className="text-[9px] text-afri-text-muted">PROCHES</span>
                     </h4>
-                    <p className="text-[9px] text-zinc-400 font-mono mt-1">Abidjan & alentours directs</p>
+                    <p className="text-[9px] text-afri-text-sec font-mono mt-1">Abidjan & alentours directs</p>
                   </div>
                 </div>
 
                 {/* Card 2: Nearby Gombos */}
                 <div className="p-3 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl flex flex-col justify-between h-[110px] relative overflow-hidden group hover:border-[#D4AF37]/40 transition">
                   <div className="flex justify-between items-start">
-                    <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-widest">Nearby Gombos</span>
+                    <span className="text-[9px] font-mono font-bold text-afri-text-muted uppercase tracking-widest">Nearby Gombos</span>
                     <div className="p-1 bg-[#D4AF37]/10 text-[#D4AF37] rounded-lg border border-[#D4AF37]/20">
                       <MapPin className="w-3.5 h-3.5" />
                     </div>
                   </div>
                   <div className="mt-2">
                     <h4 className="text-xl font-black font-mono text-[#D4AF37]">
-                      {liveGombos.filter(g => g.status === "active" || g.status === "validated" || g.status === "approved").length || 47} <span className="text-[9px] text-zinc-500">ACTIFS</span>
+                      {liveGombos.filter(g => g.status === "active" || g.status === "validated" || g.status === "approved").length || 47} <span className="text-[9px] text-afri-text-muted">ACTIFS</span>
                     </h4>
-                    <p className="text-[9px] text-zinc-400 font-mono mt-1">Prestations d'artistes à pourvoir</p>
+                    <p className="text-[9px] text-afri-text-sec font-mono mt-1">Prestations d'artistes à pourvoir</p>
                   </div>
                 </div>
 
                 {/* Card 3: Active Zones */}
                 <div className="p-3 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl flex flex-col justify-between h-[110px] relative overflow-hidden group hover:border-[#D4AF37]/40 transition">
                   <div className="flex justify-between items-start">
-                    <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-widest">Active Zones</span>
+                    <span className="text-[9px] font-mono font-bold text-afri-text-muted uppercase tracking-widest">Active Zones</span>
                     <div className="p-1 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20">
                       <Globe className="w-3.5 h-3.5" />
                     </div>
                   </div>
                   <div className="mt-2">
-                    <h4 className="text-xs font-black text-white font-mono flex items-center gap-1">
+                    <h4 className="text-xs font-black text-afri-text font-mono flex items-center gap-1">
                       <span>📍 Cocody</span>
                       <span className="text-amber-400">({liveUsers.filter(u => (u.commune || "").toLowerCase().includes("cocody")).length || 142})</span>
                     </h4>
-                    <p className="text-[8px] text-zinc-500 font-mono mt-0.5">
+                    <p className="text-[8px] text-afri-text-muted font-mono mt-0.5">
                       Yopougon ({liveUsers.filter(u => (u.commune || "").toLowerCase().includes("yopougon")).length || 98}) • Marcory ({liveUsers.filter(u => (u.commune || "").toLowerCase().includes("marcory")).length || 65})
                     </p>
                   </div>
@@ -2175,16 +2175,16 @@ export default function AdminFounderThrone({
                 {/* Card 4: 24h Activity */}
                 <div className="p-3 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl flex flex-col justify-between h-[110px] relative overflow-hidden group hover:border-[#D4AF37]/40 transition">
                   <div className="flex justify-between items-start">
-                    <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-widest">24h Activity</span>
+                    <span className="text-[9px] font-mono font-bold text-afri-text-muted uppercase tracking-widest">24h Activity</span>
                     <div className="p-1 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
                       <Activity className="w-3.5 h-3.5" />
                     </div>
                   </div>
                   <div className="mt-2">
                     <h4 className="text-xl font-black font-mono text-emerald-400">
-                      {livePosts.length + liveGombos.length || 234} <span className="text-[9px] text-zinc-500">FLUX</span>
+                      {livePosts.length + liveGombos.length || 234} <span className="text-[9px] text-afri-text-muted">FLUX</span>
                     </h4>
-                    <p className="text-[9px] text-zinc-400 font-mono mt-1">Interactions & publications 24h</p>
+                    <p className="text-[9px] text-afri-text-sec font-mono mt-1">Interactions & publications 24h</p>
                   </div>
                 </div>
               </div>
@@ -2493,14 +2493,14 @@ export default function AdminFounderThrone({
                   onClick={() => setSelectedSection("system_settings")}
                   className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
                 >
-                  <span className="p-2.5 bg-zinc-500/10 border border-zinc-500/20 rounded-2xl text-zinc-300 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                  <span className="p-2.5 bg-zinc-500/10 border border-zinc-500/20 rounded-2xl text-afri-text-sec block w-fit mb-3 group-hover:scale-110 transition-transform">
                     <Server className="w-5 h-5" />
                   </span>
                   <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                     Paramètres système
                   </h4>
                   <p className="text-[10px] font-mono text-afri-text-sec mt-1">Inscriptions & configurations</p>
-                  <span className="text-[9px] font-mono text-zinc-300 font-bold block mt-3">Configurer la plateforme →</span>
+                  <span className="text-[9px] font-mono text-afri-text-sec font-bold block mt-3">Configurer la plateforme →</span>
                 </div>
 
                 {/* Centre Communication */}
@@ -2649,7 +2649,7 @@ export default function AdminFounderThrone({
                             <span className="text-[9px] text-afri-text-sec block truncate">{log.description}</span>
                           </div>
                         </div>
-                        <span className="text-[8px] text-zinc-500 uppercase shrink-0">
+                        <span className="text-[8px] text-afri-text-muted uppercase shrink-0">
                           Exécuteur : {log.executor || "Fondateur"}
                         </span>
                       </div>
@@ -2772,7 +2772,7 @@ export default function AdminFounderThrone({
                             </span>
                             <button
                               onClick={() => handleToggleSatellite(serv.id)}
-                              className="px-2.5 py-1.5 bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text-sec hover:text-black font-mono font-black text-[9px] uppercase rounded-lg transition-all"
+                              className="px-2.5 py-1.5 bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text-sec hover:text-afri-text font-mono font-black text-[9px] uppercase rounded-lg transition-all"
                             >
                               Alterner
                             </button>
@@ -2800,7 +2800,7 @@ export default function AdminFounderThrone({
                           onChange={(e) => setNewFounderInput(e.target.value)}
                           className="flex-1 bg-afri-bg border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
                         />
-                        <button type="submit" className="px-3.5 py-2 bg-afri-bg-sec text-black text-[10px] font-mono font-black uppercase rounded-xl hover:opacity-90 transition-all cursor-pointer">
+                        <button type="submit" className="px-3.5 py-2 bg-afri-bg-sec text-afri-text text-[10px] font-mono font-black uppercase rounded-xl hover:opacity-90 transition-all cursor-pointer">
                           Ajouter
                         </button>
                       </div>
@@ -2832,7 +2832,7 @@ export default function AdminFounderThrone({
                           onChange={(e) => setNewAdminInput(e.target.value)}
                           className="flex-1 bg-afri-bg border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
                         />
-                        <button type="submit" className="px-3.5 py-2 bg-emerald-500 text-black text-[10px] font-mono font-black uppercase rounded-xl hover:opacity-90 transition-all cursor-pointer">
+                        <button type="submit" className="px-3.5 py-2 bg-emerald-500 text-afri-text text-[10px] font-mono font-black uppercase rounded-xl hover:opacity-90 transition-all cursor-pointer">
                           Ajouter
                         </button>
                       </div>
@@ -2882,7 +2882,7 @@ export default function AdminFounderThrone({
                   <button
                     onClick={triggerSecurityScan}
                     disabled={isScanning}
-                    className="px-5 py-3 bg-emerald-500 text-black hover:bg-emerald-400 rounded-xl font-mono font-black text-[10px] uppercase tracking-wider transition-all disabled:opacity-40 cursor-pointer"
+                    className="px-5 py-3 bg-emerald-500 text-afri-text hover:bg-emerald-400 rounded-xl font-mono font-black text-[10px] uppercase tracking-wider transition-all disabled:opacity-40 cursor-pointer"
                   >
                     {isScanning ? "Analyse en cours..." : "Lancer l'audit cyber"}
                   </button>
@@ -2915,7 +2915,7 @@ export default function AdminFounderThrone({
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => handleApproveCert(u.id)}
-                                className="px-3 py-1.5 bg-emerald-500 text-black hover:bg-emerald-400 font-mono font-black text-[10px] uppercase rounded-xl transition-all cursor-pointer"
+                                className="px-3 py-1.5 bg-emerald-500 text-afri-text hover:bg-emerald-400 font-mono font-black text-[10px] uppercase rounded-xl transition-all cursor-pointer"
                               >
                                 Certifier
                               </button>
@@ -2958,7 +2958,7 @@ export default function AdminFounderThrone({
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => handleUnflagPost(p.id)}
-                                className="px-2.5 py-1.5 bg-afri-bg-sec text-black font-mono font-black text-[10px] uppercase rounded-xl transition-all cursor-pointer"
+                                className="px-2.5 py-1.5 bg-afri-bg-sec text-afri-text font-mono font-black text-[10px] uppercase rounded-xl transition-all cursor-pointer"
                               >
                                 Lever
                               </button>
@@ -3128,7 +3128,7 @@ export default function AdminFounderThrone({
                     <div className="font-mono text-[10px] text-afri-text-sec space-y-2 h-64 overflow-y-auto scrollbar-none pr-1 bg-afri-bg p-4 border border-afri-border/60 rounded-2xl leading-relaxed flex flex-col-reverse text-left">
                       <div>
                         {logs.map((logLine, idx) => (
-                          <div key={idx} className="hover:text-afri-text transition-colors py-1 border-b border-zinc-950 font-mono">
+                          <div key={idx} className="hover:text-afri-text transition-colors py-1 border-b border-afri-border font-mono">
                             {logLine}
                           </div>
                         ))}
@@ -3207,7 +3207,7 @@ export default function AdminFounderThrone({
                     onClick={() => setFormSubTab("support")}
                     className={`px-4 py-2.5 rounded-2xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
                       formSubTab === "support"
-                        ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20"
+                        ? "bg-indigo-500 text-afri-text shadow-lg shadow-indigo-500/20"
                         : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border"
                     }`}
                   >
@@ -3222,7 +3222,7 @@ export default function AdminFounderThrone({
                     onClick={() => setFormSubTab("disputes")}
                     className={`px-4 py-2.5 rounded-2xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
                       formSubTab === "disputes"
-                        ? "bg-amber-600 text-white shadow-lg shadow-amber-600/20"
+                        ? "bg-amber-600 text-afri-text shadow-lg shadow-amber-600/20"
                         : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border"
                     }`}
                   >
@@ -3237,7 +3237,7 @@ export default function AdminFounderThrone({
                     onClick={() => setFormSubTab("kyc")}
                     className={`px-4 py-2.5 rounded-2xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
                       formSubTab === "kyc"
-                        ? "bg-purple-600 text-white shadow-lg shadow-purple-600/20"
+                        ? "bg-purple-600 text-afri-text shadow-lg shadow-purple-600/20"
                         : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border"
                     }`}
                   >
@@ -3252,7 +3252,7 @@ export default function AdminFounderThrone({
                     onClick={() => setFormSubTab("bugs")}
                     className={`px-4 py-2.5 rounded-2xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
                       formSubTab === "bugs"
-                        ? "bg-rose-600 text-white shadow-lg shadow-rose-600/20"
+                        ? "bg-rose-600 text-afri-text shadow-lg shadow-rose-600/20"
                         : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border"
                     }`}
                   >
@@ -3315,7 +3315,7 @@ export default function AdminFounderThrone({
                               {ticket.status !== "RESOLVED" && (
                                 <button
                                   onClick={() => handleResolveTicketSupport(ticket)}
-                                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold cursor-pointer transition-all shadow-md"
+                                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-afri-text rounded-xl font-bold cursor-pointer transition-all shadow-md"
                                 >
                                   ✓ Marquer comme Traité & Notifier
                                 </button>
@@ -3376,7 +3376,7 @@ export default function AdminFounderThrone({
                               {dispute.status !== "RESOLVED" && (
                                 <button
                                   onClick={() => handleResolveDispute(dispute)}
-                                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-black font-black rounded-xl cursor-pointer transition-all shadow-md"
+                                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-afri-text font-black rounded-xl cursor-pointer transition-all shadow-md"
                                 >
                                   ⚖️ Arbitrer & Résoudre le Litige
                                 </button>
@@ -3448,7 +3448,7 @@ export default function AdminFounderThrone({
                                   </button>
                                   <button
                                     onClick={() => handleApproveKYC(kyc)}
-                                    className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-black cursor-pointer transition-all shadow-md"
+                                    className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-afri-text rounded-xl font-black cursor-pointer transition-all shadow-md"
                                   >
                                     🎖️ Valider KYC & Certifier GOMBO ID
                                   </button>
@@ -3510,7 +3510,7 @@ export default function AdminFounderThrone({
                               {bug.status !== "RESOLVED" && (
                                 <button
                                   onClick={() => handleResolveBugReport(bug)}
-                                  className="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold cursor-pointer transition-all shadow-md"
+                                  className="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-afri-text rounded-xl font-bold cursor-pointer transition-all shadow-md"
                                 >
                                   ✓ Marquer comme Corrigé & Notifier
                                 </button>
@@ -3784,7 +3784,7 @@ export default function AdminFounderThrone({
                             className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-afri-text focus:outline-none focus:border-[#D4AF37]"
                           />
                         </div>
-                        <button type="submit" className="w-full py-2.5 bg-afri-bg-sec text-black font-black uppercase text-[10px] tracking-wider hover:opacity-90 transition-all rounded-xl cursor-pointer">
+                        <button type="submit" className="w-full py-2.5 bg-afri-bg-sec text-afri-text font-black uppercase text-[10px] tracking-wider hover:opacity-90 transition-all rounded-xl cursor-pointer">
                           Enregistrer dans l'Empire
                         </button>
                       </form>
@@ -3999,7 +3999,7 @@ export default function AdminFounderThrone({
                         />
                       </div>
 
-                      <button type="submit" className="w-full py-2.5 bg-afri-bg-sec text-black font-black uppercase text-[10px] tracking-wider hover:opacity-90 transition-all rounded-xl cursor-pointer">
+                      <button type="submit" className="w-full py-2.5 bg-afri-bg-sec text-afri-text font-black uppercase text-[10px] tracking-wider hover:opacity-90 transition-all rounded-xl cursor-pointer">
                         Diffuser maintenant
                       </button>
                     </form>
@@ -4260,7 +4260,7 @@ export default function AdminFounderThrone({
                                 });
                               });
                             }}
-                            className="bg-afri-bg-sec hover:bg-afri-bg-sec text-black px-6 py-2.5 rounded-xl font-bold font-mono text-[10px] uppercase transition-colors cursor-pointer"
+                            className="bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text px-6 py-2.5 rounded-xl font-bold font-mono text-[10px] uppercase transition-colors cursor-pointer"
                           >
                             Sauvegarder les Paramètres
                           </button>
@@ -4380,7 +4380,7 @@ export default function AdminFounderThrone({
                           onChange={(e) => setGlobalUserSearch(e.target.value)}
                           className="w-full bg-afri-bg-sec border border-afri-border rounded-2xl pl-10 pr-4 py-2.5 text-xs text-zinc-900 dark:text-afri-text font-mono focus:outline-none focus:border-[#D4AF37]"
                         />
-                        <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-3" />
+                        <Search className="w-4 h-4 text-afri-text-sec absolute left-3.5 top-3" />
                       </div>
                     </div>
 
@@ -4451,7 +4451,7 @@ export default function AdminFounderThrone({
 
                   {/* Users grid list */}
                   {filteredUsers.length === 0 ? (
-                    <div className="p-12 text-center text-zinc-500 font-mono text-sm border border-afri-border rounded-3xl bg-afri-bg/40">
+                    <div className="p-12 text-center text-afri-text-muted font-mono text-sm border border-afri-border rounded-3xl bg-afri-bg/40">
                       📭 Aucune donnée disponible
                     </div>
                   ) : (
@@ -4494,8 +4494,8 @@ export default function AdminFounderThrone({
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec truncate font-mono">Nom: {u.displayName || "Non spécifié"} • {u.email}</p>
-                                  <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec truncate font-mono">Ville: {u.commune || "Non spécifiée"} • Activité: {u.musicalActivity || u.musicalGenre || "Aucune"}</p>
+                                  <p className="text-[10px] text-afri-text-muted dark:text-afri-text-sec truncate font-mono">Nom: {u.displayName || "Non spécifié"} • {u.email}</p>
+                                  <p className="text-[10px] text-afri-text-muted dark:text-afri-text-sec truncate font-mono">Ville: {u.commune || "Non spécifiée"} • Activité: {u.musicalActivity || u.musicalGenre || "Aucune"}</p>
                                 </div>
                               </div>
 
@@ -4590,7 +4590,7 @@ export default function AdminFounderThrone({
                   {viewingUser && (
                     <div 
                       onClick={() => setViewingUser(null)}
-                      className="fixed inset-0 bg-zinc-950/80 backdrop-blur-md z-[150] flex items-center justify-center p-4 cursor-pointer"
+                      className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md z-[150] flex items-center justify-center p-4 cursor-pointer"
                     >
                       <div 
                         onClick={(e) => e.stopPropagation()}
@@ -4602,7 +4602,7 @@ export default function AdminFounderThrone({
                           <button 
                             type="button"
                             onClick={() => setViewingUser(null)} 
-                            className="w-8 h-8 rounded-full bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] flex items-center justify-center text-zinc-400 hover:text-afri-text transition-all cursor-pointer text-sm font-bold"
+                            className="w-8 h-8 rounded-full bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] flex items-center justify-center text-afri-text-sec hover:text-afri-text transition-all cursor-pointer text-sm font-bold"
                             title="Fermer le profil"
                           >
                             ✕
@@ -4623,8 +4623,8 @@ export default function AdminFounderThrone({
                               {viewingUser.artisticName || "Sans nom artistique"}
                               {viewingUser.isPremium && <span className="text-[8px] bg-amber-500/15 text-[#D4AF37] px-1.5 py-0.5 rounded">ELITE</span>}
                             </h4>
-                            <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec font-mono">{viewingUser.displayName || "Aucun nom complet"} • {viewingUser.email}</p>
-                            <p className="text-[9px] text-zinc-500 dark:text-afri-text-sec font-mono">Dernier accès: {viewingUser.lastActive && !isNaN(new Date(viewingUser.lastActive).getTime()) ? new Date(viewingUser.lastActive).toLocaleString() : "Non enregistré"}</p>
+                            <p className="text-[10px] text-afri-text-muted dark:text-afri-text-sec font-mono">{viewingUser.displayName || "Aucun nom complet"} • {viewingUser.email}</p>
+                            <p className="text-[9px] text-afri-text-muted dark:text-afri-text-sec font-mono">Dernier accès: {viewingUser.lastActive && !isNaN(new Date(viewingUser.lastActive).getTime()) ? new Date(viewingUser.lastActive).toLocaleString() : "Non enregistré"}</p>
                           </div>
                         </div>
 
@@ -4711,11 +4711,11 @@ export default function AdminFounderThrone({
 
                   {/* Profile Edit Modal */}
                   {editingUser && (
-                    <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-md z-[150] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md z-[150] flex items-center justify-center p-4">
                       <div className="bg-afri-bg border border-[#D4AF37]/30 max-w-lg w-full rounded-3xl p-6 space-y-4 shadow-2xl relative text-zinc-900 dark:text-afri-text">
                         <div className="flex items-start justify-between">
                           <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider">Modifier le Profil Impérial</h3>
-                          <button onClick={() => setEditingUser(null)} className="text-zinc-500 hover:text-afri-text font-mono text-xs cursor-pointer">Annuler [X]</button>
+                          <button onClick={() => setEditingUser(null)} className="text-afri-text-muted hover:text-afri-text font-mono text-xs cursor-pointer">Annuler [X]</button>
                         </div>
                         <form
                           onSubmit={(e) => {
@@ -4765,7 +4765,7 @@ export default function AdminFounderThrone({
                           </div>
                           <div className="flex justify-end gap-2 pt-2">
                             <button type="button" onClick={() => setEditingUser(null)} className="px-4 py-2 bg-zinc-950/25 border border-afri-border rounded-xl text-[10px] font-mono uppercase cursor-pointer">Annuler</button>
-                            <button type="submit" className="px-5 py-2 bg-[#D4AF37] hover:bg-[#D4AF37]/80 text-black font-bold rounded-xl text-[10px] font-mono uppercase cursor-pointer">Sauvegarder</button>
+                            <button type="submit" className="px-5 py-2 bg-[#D4AF37] hover:bg-[#D4AF37]/80 text-afri-text font-bold rounded-xl text-[10px] font-mono uppercase cursor-pointer">Sauvegarder</button>
                           </div>
                         </form>
                       </div>
@@ -4812,13 +4812,13 @@ export default function AdminFounderThrone({
                         onChange={(e) => setGlobalUserSearch(e.target.value)}
                         className="w-full bg-afri-bg-sec border border-afri-border rounded-2xl pl-10 pr-4 py-2.5 text-xs text-zinc-900 dark:text-afri-text font-mono focus:outline-none focus:border-[#D4AF37]"
                       />
-                      <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-3" />
+                      <Search className="w-4 h-4 text-afri-text-sec absolute left-3.5 top-3" />
                     </div>
                   </div>
 
                   {/* Premium Users list */}
                   {premiumUsers.length === 0 ? (
-                    <div className="p-12 text-center text-zinc-500 font-mono text-sm border border-afri-border rounded-3xl bg-afri-bg/40">
+                    <div className="p-12 text-center text-afri-text-muted font-mono text-sm border border-afri-border rounded-3xl bg-afri-bg/40">
                       📭 Aucune donnée disponible
                     </div>
                   ) : (
@@ -4842,7 +4842,7 @@ export default function AdminFounderThrone({
                               <h4 className="text-xs font-sans font-black text-zinc-900 dark:text-afri-text truncate uppercase">
                                 {u.artisticName || u.displayName || "Sans nom"}
                               </h4>
-                              <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec truncate font-mono">{u.email}</p>
+                              <p className="text-[10px] text-afri-text-muted dark:text-afri-text-sec truncate font-mono">{u.email}</p>
                               <span className="inline-block text-[8px] font-mono bg-amber-500/10 text-[#D4AF37] border border-[#D4AF37]/25 px-2 py-0.5 rounded-full font-black uppercase">
                                 💎 {u.subscriptionType?.toUpperCase() || "ELITE"}
                               </span>
@@ -4898,13 +4898,13 @@ export default function AdminFounderThrone({
                         onChange={(e) => setGlobalUserSearch(e.target.value)}
                         className="w-full bg-afri-bg-sec border border-afri-border rounded-2xl pl-10 pr-4 py-2.5 text-xs text-zinc-900 dark:text-afri-text font-mono focus:outline-none focus:border-[#D4AF37]"
                       />
-                      <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-3" />
+                      <Search className="w-4 h-4 text-afri-text-sec absolute left-3.5 top-3" />
                     </div>
                   </div>
 
                   {/* Certified/Pending list */}
                   {gomboIdUsers.length === 0 ? (
-                    <div className="p-12 text-center text-zinc-500 font-mono text-sm border border-afri-border rounded-3xl bg-afri-bg/40">
+                    <div className="p-12 text-center text-afri-text-muted font-mono text-sm border border-afri-border rounded-3xl bg-afri-bg/40">
                       📭 Aucune donnée disponible
                     </div>
                   ) : (
@@ -4930,13 +4930,13 @@ export default function AdminFounderThrone({
                                 <h4 className="text-xs font-sans font-black text-zinc-900 dark:text-afri-text truncate uppercase">
                                   {u.artisticName || u.displayName || "Sans nom"}
                                 </h4>
-                                <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec truncate font-mono">{u.email}</p>
+                                <p className="text-[10px] text-afri-text-muted dark:text-afri-text-sec truncate font-mono">{u.email}</p>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <span className={`text-[8px] font-mono px-2 py-0.5 rounded-full font-black uppercase ${isCert ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-500/10 text-zinc-400'}`}>
+                                  <span className={`text-[8px] font-mono px-2 py-0.5 rounded-full font-black uppercase ${isCert ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-500/10 text-afri-text-sec'}`}>
                                     {isCert ? '🛂 CERTIFIÉ' : '❌ NON CERTIFIÉ'}
                                   </span>
                                   {u.gomboId?.numero && (
-                                    <span className="text-[8px] font-mono text-zinc-500">
+                                    <span className="text-[8px] font-mono text-afri-text-muted">
                                       {u.gomboId.numero}
                                     </span>
                                   )}
@@ -5012,7 +5012,7 @@ export default function AdminFounderThrone({
                     {unreadNotifsCount > 0 && (
                       <button
                         onClick={handleMarkAllAsRead}
-                        className="px-4 py-2 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black font-sans font-black uppercase text-[10px] tracking-wider rounded-xl hover:opacity-90 shadow-lg cursor-pointer transition-all"
+                        className="px-4 py-2 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-afri-text font-sans font-black uppercase text-[10px] tracking-wider rounded-xl hover:opacity-90 shadow-lg cursor-pointer transition-all"
                       >
                         Tout marquer comme lu ({unreadNotifsCount})
                       </button>
@@ -5035,17 +5035,17 @@ export default function AdminFounderThrone({
                       <button
                         key={f.key}
                         onClick={() => setNotifFilter(f.key)}
-                        className={`px-3 py-1.5 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border ${notifFilter === f.key ? 'bg-[#D4AF37] text-black border-[#D4AF37] font-black' : 'bg-afri-bg-sec border-afri-border text-zinc-900 dark:text-afri-text-sec hover:border-[#D4AF37]/50'}`}
+                        className={`px-3 py-1.5 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border ${notifFilter === f.key ? 'bg-[#D4AF37] text-afri-text border-[#D4AF37] font-black' : 'bg-afri-bg-sec border-afri-border text-zinc-900 dark:text-afri-text-sec hover:border-[#D4AF37]/50'}`}
                       >
                         <span>{f.label}</span>
-                        <span className={`px-1.5 py-0.5 rounded-full text-[8px] ${notifFilter === f.key ? 'bg-black/25 text-black' : 'bg-zinc-500/10 text-zinc-500'}`}>{f.count}</span>
+                        <span className={`px-1.5 py-0.5 rounded-full text-[8px] ${notifFilter === f.key ? 'bg-afri-bg/25 text-afri-text' : 'bg-zinc-500/10 text-afri-text-muted'}`}>{f.count}</span>
                       </button>
                     ))}
                   </div>
 
                   {/* List of Notifications */}
                   {filteredNotifs.length === 0 ? (
-                    <div className="p-16 text-center text-zinc-500 font-mono text-sm border border-afri-border rounded-3xl bg-afri-bg/40">
+                    <div className="p-16 text-center text-afri-text-muted font-mono text-sm border border-afri-border rounded-3xl bg-afri-bg/40">
                       📭 Aucune notification dans cette catégorie
                     </div>
                   ) : (
@@ -5086,17 +5086,17 @@ export default function AdminFounderThrone({
                                     <h4 className="text-xs font-sans font-black text-zinc-900 dark:text-afri-text uppercase">
                                       {n.title || n.titre || "Alerte Système"}
                                     </h4>
-                                    <span className={`text-[8px] font-mono px-2 py-0.5 rounded-full font-black uppercase ${n.priority === "HIGH" ? 'bg-red-500/15 text-red-400' : 'bg-zinc-500/15 text-zinc-400'}`}>
+                                    <span className={`text-[8px] font-mono px-2 py-0.5 rounded-full font-black uppercase ${n.priority === "HIGH" ? 'bg-red-500/15 text-red-400' : 'bg-zinc-500/15 text-afri-text-sec'}`}>
                                       {n.priority || "NORMAL"}
                                     </span>
-                                    <span className="text-[8px] font-mono text-zinc-500">
+                                    <span className="text-[8px] font-mono text-afri-text-muted">
                                       {n.source || "WEB"}
                                     </span>
                                   </div>
                                   <p className="text-xs text-zinc-600 dark:text-afri-text-sec font-mono">
                                     {n.message}
                                   </p>
-                                  <p className="text-[9px] text-zinc-400 font-mono">
+                                  <p className="text-[9px] text-afri-text-sec font-mono">
                                     Reçu le : {n.createdAt && !isNaN(new Date(n.createdAt).getTime()) ? new Date(n.createdAt).toLocaleString('fr-FR') : "Date inconnue"}
                                   </p>
                                 </div>
@@ -5220,7 +5220,7 @@ export default function AdminFounderThrone({
                         onClick={() => setTrendFilter(tab.id)}
                         className={`px-4 py-2 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer ${
                           trendFilter === tab.id
-                            ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                            ? 'bg-amber-500 text-afri-text shadow-lg shadow-amber-500/20'
                             : 'bg-afri-bg border border-afri-border text-afri-text hover:border-amber-500/40'
                         }`}
                       >
@@ -5299,7 +5299,7 @@ export default function AdminFounderThrone({
                               onClick={() => handleToggleFeature(item)}
                               className={`flex-1 py-2 px-2.5 rounded-xl font-mono text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
                                 item.featured 
-                                  ? 'bg-emerald-500 text-black shadow-md' 
+                                  ? 'bg-emerald-500 text-afri-text shadow-md' 
                                   : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                               }`}
                             >
@@ -5311,7 +5311,7 @@ export default function AdminFounderThrone({
                               onClick={() => handleTogglePin(item)}
                               className={`py-2 px-2.5 rounded-xl font-mono text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
                                 item.pinned 
-                                  ? 'bg-amber-500 text-black shadow-md' 
+                                  ? 'bg-amber-500 text-afri-text shadow-md' 
                                   : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30'
                               }`}
                               title="Épingler au sommet"
@@ -5323,8 +5323,8 @@ export default function AdminFounderThrone({
                               onClick={() => handleToggleHide(item)}
                               className={`py-2 px-2.5 rounded-xl font-mono text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
                                 item.hidden 
-                                  ? 'bg-zinc-700 text-white' 
-                                  : 'bg-zinc-500/10 hover:bg-zinc-500/20 text-zinc-300 border border-zinc-500/30'
+                                  ? 'bg-zinc-700 text-afri-text' 
+                                  : 'bg-zinc-500/10 hover:bg-zinc-500/20 text-afri-text-sec border border-zinc-500/30'
                               }`}
                               title="Masquer / Afficher"
                             >
@@ -5369,7 +5369,7 @@ export default function AdminFounderThrone({
                     <div className="flex items-center justify-between p-4 bg-afri-bg-sec/5 border border-afri-border rounded-2xl">
                       <div>
                         <h4 className="text-xs font-sans font-bold text-zinc-900 dark:text-afri-text uppercase">Inscriptions des membres</h4>
-                        <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec font-mono mt-1">Permet ou bloque l'arrivée de nouveaux artistes et promoteurs sur la plateforme.</p>
+                        <p className="text-[10px] text-afri-text-muted dark:text-afri-text-sec font-mono mt-1">Permet ou bloque l'arrivée de nouveaux artistes et promoteurs sur la plateforme.</p>
                       </div>
                       <button 
                         type="button"
@@ -5400,7 +5400,7 @@ export default function AdminFounderThrone({
                     <div className="flex items-center justify-between p-4 bg-afri-bg-sec/5 border border-afri-border rounded-2xl">
                       <div>
                         <h4 className="text-xs font-sans font-bold text-zinc-900 dark:text-afri-text uppercase">Mode Auto-Pilotage (Validation automatique)</h4>
-                        <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec font-mono mt-1">Valide automatiquement les publications, les contrats et les certifications de base sans intervention humaine.</p>
+                        <p className="text-[10px] text-afri-text-muted dark:text-afri-text-sec font-mono mt-1">Valide automatiquement les publications, les contrats et les certifications de base sans intervention humaine.</p>
                       </div>
                       <button 
                         type="button"
@@ -5468,7 +5468,7 @@ export default function AdminFounderThrone({
 
             <div className="bg-afri-bg border border-afri-border p-3 rounded-xl text-left h-24 overflow-y-auto scrollbar-none space-y-1 font-mono text-[9px] text-afri-text-sec leading-tight">
               {scanLogs.map((logLine, idx) => (
-                <div key={idx} className="border-b border-zinc-950 py-0.5">
+                <div key={idx} className="border-b border-afri-border py-0.5">
                   {logLine}
                 </div>
               ))}
@@ -5652,8 +5652,8 @@ function QuickPremiumModal({
   }).slice(0, 10);
 
   return (
-    <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-md z-[150] flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-[#D4AF37]/35 max-w-lg w-full rounded-3xl p-6 space-y-4 shadow-2xl relative text-zinc-100 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md z-[150] flex items-center justify-center p-4">
+      <div className="bg-afri-bg-sec border border-[#D4AF37]/35 max-w-lg w-full rounded-3xl p-6 space-y-4 shadow-2xl relative text-afri-text flex flex-col max-h-[90vh]">
         <div className="flex items-start justify-between shrink-0">
           <div className="flex items-center gap-2">
             <Crown className="w-5 h-5 text-[#D4AF37]" />
@@ -5662,30 +5662,30 @@ function QuickPremiumModal({
           <button 
             type="button"
             onClick={onClose} 
-            className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 hover:border-[#D4AF37] flex items-center justify-center text-zinc-400 hover:text-white transition-all cursor-pointer text-sm font-bold"
+            className="w-8 h-8 rounded-full bg-afri-bg-ter border border-afri-border hover:border-[#D4AF37] flex items-center justify-center text-afri-text-sec hover:text-afri-text transition-all cursor-pointer text-sm font-bold"
           >
             ✕
           </button>
         </div>
 
-        <p className="text-[10px] font-mono text-zinc-400 shrink-0 leading-relaxed">
+        <p className="text-[10px] font-mono text-afri-text-sec shrink-0 leading-relaxed">
           Recherchez un membre par son nom complet, son nom d'artiste ou son adresse e-mail pour lui attribuer ou lui révoquer les privilèges de l'abonnement souverain **Premium Elite**.
         </p>
 
         <div className="relative shrink-0">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-afri-text-sec" />
           <input
             type="text"
             placeholder="Rechercher un citoyen d'Afrique de l'Ouest..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-zinc-850 border border-zinc-750 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
+            className="w-full bg-afri-bg-ter border border-zinc-750 rounded-xl pl-10 pr-4 py-2.5 text-xs text-afri-text font-mono focus:outline-none focus:border-[#D4AF37]"
           />
         </div>
 
         <div className="space-y-2 overflow-y-auto flex-1 min-h-[220px] pr-1">
           {matchedUsers.length === 0 ? (
-            <div className="text-center py-12 text-xs font-mono text-zinc-500">
+            <div className="text-center py-12 text-xs font-mono text-afri-text-muted">
               Aucun membre trouvé pour "{search}"
             </div>
           ) : (
@@ -5695,10 +5695,10 @@ function QuickPremiumModal({
                 className="p-3 bg-zinc-800/40 border border-zinc-750 rounded-2xl flex items-center justify-between gap-3 text-xs"
               >
                 <div className="min-w-0 text-left">
-                  <span className="font-sans font-bold text-white block truncate">
+                  <span className="font-sans font-bold text-afri-text block truncate">
                     {u.artisticName || u.displayName || "Sans nom artistique"}
                   </span>
-                  <span className="text-[9px] text-zinc-400 font-mono block truncate">
+                  <span className="text-[9px] text-afri-text-sec font-mono block truncate">
                     {u.email}
                   </span>
                   {u.isPremium && (
@@ -5726,7 +5726,7 @@ function QuickPremiumModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-2.5 bg-zinc-800 border border-zinc-700 hover:border-[#D4AF37] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+            className="w-full py-2.5 bg-afri-bg-ter border border-afri-border hover:border-[#D4AF37] text-afri-text font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
           >
             Fermer
           </button>
@@ -5762,7 +5762,7 @@ function AlertItem({ icon, text }: { icon: React.ReactNode, text: string }) {
   return (
     <div className="flex items-center gap-2.5 group cursor-default">
       <div className="shrink-0 transition-transform group-hover:scale-125 duration-300">{icon}</div>
-      <span className="text-[10px] font-mono font-bold text-zinc-500 dark:text-zinc-400 group-hover:text-afri-text transition-colors truncate">{text}</span>
+      <span className="text-[10px] font-mono font-bold text-afri-text-muted dark:text-afri-text-sec group-hover:text-afri-text transition-colors truncate">{text}</span>
     </div>
   );
 }

@@ -231,7 +231,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 text-left">
-      <div className="bg-white dark:bg-afri-bg-sec p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl">
+      <div className="bg-white dark:bg-afri-bg-sec p-6 rounded-3xl border border-afri-border dark:border-afri-border shadow-xl">
         <h3 className="text-xl font-black text-gray-900 dark:text-afri-text mb-6 flex items-center justify-between">
           <span className="flex items-center gap-2">
             <User className="w-5.5 h-5.5 text-[#D4AF37]" />
@@ -344,7 +344,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
               required
               value={artistName}
               onChange={(e) => setArtistName(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text font-bold"
+              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-afri-border dark:border-afri-border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text font-bold"
             />
           </div>
 
@@ -355,7 +355,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
               required
               value={ville}
               onChange={(e) => setVille(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
+              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-afri-border dark:border-afri-border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
             />
           </div>
 
@@ -366,7 +366,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
               required
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
+              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-afri-border dark:border-afri-border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
             />
           </div>
 
@@ -377,7 +377,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
               required
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
+              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-afri-border dark:border-afri-border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
             />
           </div>
 
@@ -392,7 +392,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
+                className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-afri-border dark:border-afri-border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
               />
             </div>
           </div>
@@ -406,7 +406,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
               <select
                 value={commune}
                 onChange={(e) => setCommune(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
+                className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-afri-border dark:border-afri-border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
               >
                 {ABIDJAN_COMMUNES.map((com) => (
                   <option key={com} value={com}>{com}</option>
@@ -428,7 +428,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
               placeholder="Ex : Bassiste de live ayant accompagné de nombreux groupes, disponible pour des sessions régulières sur Marcory et Cocody..."
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
+              className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-afri-border dark:border-afri-border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
             />
           </div>
         </div>
@@ -439,7 +439,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-afri-bg-sec p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl space-y-4"
+          className="bg-white dark:bg-afri-bg-sec p-6 rounded-3xl border border-afri-border dark:border-afri-border shadow-xl space-y-4"
         >
           <h3 className="text-lg font-bold text-gray-900 dark:text-afri-text flex items-center gap-2">
             <Music className="w-5 h-5 text-[#D4AF37]" />
@@ -456,7 +456,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
                 <select
                   value={specialty}
                   onChange={(e) => setSpecialty(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-afri-border dark:border-afri-border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
                 >
                   {SPECIALTIES.map((spec) => (
                     <option key={spec} value={spec}>{spec}</option>
@@ -474,7 +474,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
                 <select
                   value={experience}
                   onChange={(e) => setExperience(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-afri-border dark:border-afri-border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
                 >
                   {EXPERIENCES.map((exp) => (
                     <option key={exp} value={exp}>{exp}</option>
@@ -484,8 +484,8 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
             </div>
           </div>
 
-          <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
-            <h4 className="text-sm font-bold text-gray-800 dark:text-gray-300 mb-2 flex items-center gap-2">
+          <div className="border-t border-afri-border dark:border-afri-border pt-4">
+            <h4 className="text-sm font-bold text-gray-800 dark:text-afri-text-sec mb-2 flex items-center gap-2">
               <Wallet className="w-4.5 h-4.5 text-[#D4AF37]" />
               Réception des Paiements Mobiles (Wave / Orange)
             </h4>
@@ -499,7 +499,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
                 <select
                   value={paymentProvider}
                   onChange={(e) => setPaymentProvider(e.target.value as PaymentProvider)}
-                  className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
+                  className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-afri-border dark:border-afri-border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
                 >
                   <option value="Wave">Wave 🌊</option>
                   <option value="Orange Money">Orange Money 🍊</option>
@@ -515,7 +515,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
                   placeholder="Ex : 0500112233"
                   value={paymentNumber}
                   onChange={(e) => setPaymentNumber(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
+                  className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-afri-border dark:border-afri-border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
                 />
               </div>
             </div>
@@ -535,7 +535,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 sm:flex-none px-6 py-3 bg-gray-150 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 font-bold rounded-xl text-xs transition-all cursor-pointer"
+              className="flex-1 sm:flex-none px-6 py-3 bg-gray-150 hover:bg-afri-bg-ter dark:bg-afri-bg-ter dark:hover:bg-gray-750 text-afri-text-sec dark:text-afri-text-sec font-bold rounded-xl text-xs transition-all cursor-pointer"
             >
               Annuler
             </button>

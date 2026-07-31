@@ -489,7 +489,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                 />
                 <button 
                   onClick={() => setAvatarUrl("")}
-                  className="absolute -top-1 -right-1 bg-red-600 p-1 rounded-full border border-black hover:bg-red-500 transition-colors"
+                  className="absolute -top-1 -right-1 bg-red-600 p-1 rounded-full border border-afri-border hover:bg-red-500 transition-colors"
                 >
                   <X className="w-3 h-3 text-afri-text" />
                 </button>
@@ -752,7 +752,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                     type="button"
                     onClick={() => handleToggleSpecialty(spec)}
                     className={`px-2 py-1 rounded text-[10px] font-mono font-bold uppercase transition-all ${
-                      selected ? "bg-afri-gold text-black border border-amber-500" : "bg-afri-bg-sec text-afri-text-sec border border-zinc-950"
+                      selected ? "bg-afri-gold text-black border border-amber-500" : "bg-afri-bg-sec text-afri-text-sec border border-afri-border"
                     }`}
                   >
                     {spec}
@@ -773,7 +773,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                     type="button"
                     onClick={() => handleToggleGenre(gen)}
                     className={`px-2 py-1 rounded text-[10px] font-mono font-bold uppercase transition-all ${
-                      selected ? "bg-afri-gold text-black border border-amber-500" : "bg-afri-bg-sec text-afri-text-sec border border-zinc-950"
+                      selected ? "bg-afri-gold text-black border border-amber-500" : "bg-afri-bg-sec text-afri-text-sec border border-afri-border"
                     }`}
                   >
                     {gen}
@@ -948,7 +948,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-afri-bg-sec/50 h-2 rounded-full overflow-hidden border border-zinc-950">
+        <div className="w-full bg-afri-bg-sec/50 h-2 rounded-full overflow-hidden border border-afri-border">
           <motion.div 
             className="bg-gradient-to-r from-amber-500 via-[#D4AF37] to-amber-300 h-full rounded-full"
             initial={{ width: 0 }}
@@ -1060,7 +1060,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
           >
             {submitLoading ? (
               <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                <span className="w-4 h-4 border-2 border-afri-border border-t-transparent rounded-full animate-spin" />
                 <span>Soumission du dossier...</span>
               </span>
             ) : (

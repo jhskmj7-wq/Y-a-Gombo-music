@@ -321,16 +321,16 @@ export default function AdminAvatarStore() {
   return (
     <div className="space-y-6 animate-fadeIn font-sans text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 p-6 rounded-3xl shadow-xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-afri-bg-sec border border-afri-border p-6 rounded-3xl shadow-xl">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
             <Crown className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg font-black text-white uppercase tracking-wider font-sans">
+            <h2 className="text-lg font-black text-afri-text uppercase tracking-wider font-sans">
               AVATAR STORE — MOTEUR D'ARTICLES
             </h2>
-            <p className="text-xs text-zinc-400 font-mono">
+            <p className="text-xs text-afri-text-sec font-mono">
               Création, tarification, animations et collections officielles de la boutique Avatar
             </p>
           </div>
@@ -346,7 +346,7 @@ export default function AdminAvatarStore() {
           </button>
           <button
             onClick={() => setIsAiModalOpen(true)}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2"
+            className="px-4 py-2 bg-afri-bg-ter hover:bg-zinc-700 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4" />
             ✨ Générer avec IA
@@ -363,49 +363,49 @@ export default function AdminAvatarStore() {
 
       {/* KPI Economy Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center gap-3">
+        <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
             <Coins className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Total Articles Vendus</div>
-            <div className="text-lg font-black text-white font-mono">
+            <div className="text-[10px] font-mono text-afri-text-muted uppercase font-bold">Total Articles Vendus</div>
+            <div className="text-lg font-black text-afri-text font-mono">
               {stats?.totalItemsSold ?? 0} Ventes
             </div>
           </div>
         </div>
 
-        <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center gap-3">
+        <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/20 text-[#D4AF37] flex items-center justify-center font-bold">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Coins Échangés</div>
+            <div className="text-[10px] font-mono text-afri-text-muted uppercase font-bold">Coins Échangés</div>
             <div className="text-lg font-black text-[#D4AF37] font-mono">
               {(stats?.totalCoinsGenerated ?? 0).toLocaleString("fr-FR")} C
             </div>
           </div>
         </div>
 
-        <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center gap-3">
+        <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
             <DollarSign className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Valeur Économique</div>
+            <div className="text-[10px] font-mono text-afri-text-muted uppercase font-bold">Valeur Économique</div>
             <div className="text-lg font-black text-emerald-400 font-mono">
               {(stats?.totalRevenueFcfa ?? 0).toLocaleString("fr-FR")} FCFA
             </div>
           </div>
         </div>
 
-        <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center gap-3">
+        <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold">
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Collectionneurs Actifs</div>
-            <div className="text-lg font-black text-white font-mono">
+            <div className="text-[10px] font-mono text-afri-text-muted uppercase font-bold">Collectionneurs Actifs</div>
+            <div className="text-lg font-black text-afri-text font-mono">
               {stats?.activeUsersCount ?? 0} Membres
             </div>
           </div>
@@ -419,7 +419,7 @@ export default function AdminAvatarStore() {
           className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition cursor-pointer whitespace-nowrap ${
             selectedCategory === "all"
               ? "bg-[#D4AF37] text-black"
-              : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-white"
+              : "bg-afri-bg-sec text-afri-text-sec border border-afri-border hover:text-afri-text"
           }`}
         >
           Tous ({items.length})
@@ -431,7 +431,7 @@ export default function AdminAvatarStore() {
             className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition cursor-pointer whitespace-nowrap ${
               selectedCategory === cat.key
                 ? "bg-[#D4AF37] text-black"
-                : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-white"
+                : "bg-afri-bg-sec text-afri-text-sec border border-afri-border hover:text-afri-text"
             }`}
           >
             {cat.label} ({items.filter((i) => i.category === cat.key).length})
@@ -441,13 +441,13 @@ export default function AdminAvatarStore() {
 
       {/* Items Grid */}
       {loading ? (
-        <div className="p-12 text-center text-zinc-500 font-mono text-xs">
+        <div className="p-12 text-center text-afri-text-muted font-mono text-xs">
           Chargement des articles de l'Avatar Store...
         </div>
       ) : filteredItems.length === 0 ? (
-        <div className="p-12 bg-zinc-900 border border-zinc-800 rounded-3xl text-center space-y-3">
+        <div className="p-12 bg-afri-bg-sec border border-afri-border rounded-3xl text-center space-y-3">
           <Crown className="w-10 h-10 text-zinc-600 mx-auto" />
-          <p className="text-zinc-400 text-xs font-mono">Aucun article trouvé.</p>
+          <p className="text-afri-text-sec text-xs font-mono">Aucun article trouvé.</p>
           <button
             onClick={openCreateModal}
             className="px-4 py-2 bg-[#D4AF37] text-black font-bold text-xs uppercase rounded-xl"
@@ -460,15 +460,15 @@ export default function AdminAvatarStore() {
           {filteredItems.map((item) => (
             <div
               key={item.id}
-              className={`bg-zinc-900 border rounded-3xl p-4 flex flex-col justify-between gap-4 transition relative ${
+              className={`bg-afri-bg-sec border rounded-3xl p-4 flex flex-col justify-between gap-4 transition relative ${
                 item.isActive
-                  ? "border-zinc-800 hover:border-[#D4AF37]/50"
+                  ? "border-afri-border hover:border-[#D4AF37]/50"
                   : "border-zinc-800/40 opacity-60"
               }`}
             >
               {/* Item preview header */}
               <div className="space-y-3">
-                <div className="relative aspect-square bg-zinc-950 border border-zinc-800/80 rounded-2xl overflow-hidden flex items-center justify-center p-4">
+                <div className="relative aspect-square bg-afri-bg border border-zinc-800/80 rounded-2xl overflow-hidden flex items-center justify-center p-4">
                   {item.imageUrl ? (
                     <img
                       src={item.imageUrl}
@@ -492,7 +492,7 @@ export default function AdminAvatarStore() {
                       </span>
                     )}
                     {item.rarity && (
-                      <span className="px-2 py-0.5 bg-zinc-900/90 text-zinc-300 border border-zinc-700 text-[8px] font-mono font-bold rounded-full">
+                      <span className="px-2 py-0.5 bg-afri-bg-sec text-afri-text-sec border border-afri-border text-[8px] font-mono font-bold rounded-full">
                         {item.rarity}
                       </span>
                     )}
@@ -521,9 +521,9 @@ export default function AdminAvatarStore() {
                       {item.price.toLocaleString("fr-FR")} FCFA
                     </span>
                   </div>
-                  <h3 className="text-sm font-bold text-white uppercase">{item.name}</h3>
+                  <h3 className="text-sm font-bold text-afri-text uppercase">{item.name}</h3>
                   {item.description && (
-                    <p className="text-[11px] text-zinc-400 line-clamp-2 mt-1">
+                    <p className="text-[11px] text-afri-text-sec line-clamp-2 mt-1">
                       {item.description}
                     </p>
                   )}
@@ -535,14 +535,14 @@ export default function AdminAvatarStore() {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => openEditModal(item)}
-                    className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs transition cursor-pointer"
+                    className="p-2 bg-afri-bg-ter hover:bg-zinc-700 text-afri-text-sec rounded-xl text-xs transition cursor-pointer"
                     title="Modifier"
                   >
                     <Edit className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => handleDuplicateItem(item)}
-                    className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs transition cursor-pointer"
+                    className="p-2 bg-afri-bg-ter hover:bg-zinc-700 text-afri-text-sec rounded-xl text-xs transition cursor-pointer"
                     title="Dupliquer"
                   >
                     <Copy className="w-3.5 h-3.5" />
@@ -552,7 +552,7 @@ export default function AdminAvatarStore() {
                     className={`p-2 rounded-xl text-xs transition cursor-pointer ${
                       item.isPremiumOnly
                         ? "bg-[#D4AF37]/20 text-[#D4AF37]"
-                        : "bg-zinc-800 text-zinc-500 hover:text-white"
+                        : "bg-afri-bg-ter text-afri-text-muted hover:text-afri-text"
                     }`}
                     title="Toggle Premium"
                   >
@@ -575,16 +575,16 @@ export default function AdminAvatarStore() {
 
       {/* Form Modal: Create / Edit Article */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-xl p-6 space-y-5 animate-scaleUp text-left my-8">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-              <h3 className="text-base font-black text-white uppercase flex items-center gap-2">
+        <div className="fixed inset-0 z-50 bg-afri-bg/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-afri-bg-sec border border-afri-border rounded-3xl w-full max-w-xl p-6 space-y-5 animate-scaleUp text-left my-8">
+            <div className="flex items-center justify-between border-b border-afri-border pb-4">
+              <h3 className="text-base font-black text-afri-text uppercase flex items-center gap-2">
                 <Crown className="w-5 h-5 text-[#D4AF37]" />
                 {editingItem ? "Modifier l'article Avatar" : "Créer un article Avatar"}
               </h3>
               <button
                 onClick={() => setIsFormOpen(false)}
-                className="p-2 text-zinc-400 hover:text-white"
+                className="p-2 text-afri-text-sec hover:text-afri-text"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -593,23 +593,23 @@ export default function AdminAvatarStore() {
             <form onSubmit={handleSaveItem} className="space-y-4 text-xs font-sans">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-zinc-400 font-bold uppercase">Nom de l'article *</label>
+                  <label className="text-afri-text-sec font-bold uppercase">Nom de l'article *</label>
                   <input
                     type="text"
                     required
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
                     placeholder="ex: Boubou Royal Doré"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white focus:border-[#D4AF37] focus:outline-none"
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl px-3 py-2.5 text-afri-text focus:border-[#D4AF37] focus:outline-none"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-zinc-400 font-bold uppercase">Catégorie</label>
+                  <label className="text-afri-text-sec font-bold uppercase">Catégorie</label>
                   <select
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white focus:border-[#D4AF37] focus:outline-none"
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl px-3 py-2.5 text-afri-text focus:border-[#D4AF37] focus:outline-none"
                   >
                     {categories.map((c) => (
                       <option key={c.key} value={c.key}>
@@ -622,23 +622,23 @@ export default function AdminAvatarStore() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-zinc-400 font-bold uppercase">Prix (FCFA)</label>
+                  <label className="text-afri-text-sec font-bold uppercase">Prix (FCFA)</label>
                   <input
                     type="number"
                     min="0"
                     step="50"
                     value={formPrice}
                     onChange={(e) => setFormPrice(Number(e.target.value))}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white focus:border-[#D4AF37] focus:outline-none font-mono"
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl px-3 py-2.5 text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-zinc-400 font-bold uppercase">Rareté</label>
+                  <label className="text-afri-text-sec font-bold uppercase">Rareté</label>
                   <select
                     value={formRarity}
                     onChange={(e) => setFormRarity(e.target.value as any)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white focus:border-[#D4AF37] focus:outline-none"
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl px-3 py-2.5 text-afri-text focus:border-[#D4AF37] focus:outline-none"
                   >
                     {rarities.map((r) => (
                       <option key={r} value={r}>
@@ -651,11 +651,11 @@ export default function AdminAvatarStore() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-zinc-400 font-bold uppercase">Animation</label>
+                  <label className="text-afri-text-sec font-bold uppercase">Animation</label>
                   <select
                     value={formAnimation}
                     onChange={(e) => setFormAnimation(e.target.value as any)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white focus:border-[#D4AF37] focus:outline-none"
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl px-3 py-2.5 text-afri-text focus:border-[#D4AF37] focus:outline-none"
                   >
                     {animations.map((a) => (
                       <option key={a} value={a}>
@@ -666,27 +666,27 @@ export default function AdminAvatarStore() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-zinc-400 font-bold uppercase">Couleur Thématique</label>
+                  <label className="text-afri-text-sec font-bold uppercase">Couleur Thématique</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={formColor}
                       onChange={(e) => setFormColor(e.target.value)}
-                      className="w-10 h-10 bg-zinc-950 border border-zinc-800 rounded-xl p-1 cursor-pointer"
+                      className="w-10 h-10 bg-afri-bg border border-afri-border rounded-xl p-1 cursor-pointer"
                     />
                     <input
                       type="text"
                       value={formColor}
                       onChange={(e) => setFormColor(e.target.value)}
-                      className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white font-mono"
+                      className="flex-1 bg-afri-bg border border-afri-border rounded-xl px-3 py-2.5 text-afri-text font-mono"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Image upload / URL */}
-              <div className="space-y-2 bg-zinc-950 p-4 rounded-2xl border border-zinc-800">
-                <label className="text-zinc-300 font-bold uppercase block">Visuel / Fichier Image</label>
+              <div className="space-y-2 bg-afri-bg p-4 rounded-2xl border border-afri-border">
+                <label className="text-afri-text-sec font-bold uppercase block">Visuel / Fichier Image</label>
 
                 <div className="flex items-center gap-3">
                   <input
@@ -698,12 +698,12 @@ export default function AdminAvatarStore() {
                   />
                   <label
                     htmlFor="avatar-image-upload"
-                    className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold cursor-pointer flex items-center gap-2"
+                    className="px-3 py-2 bg-afri-bg-ter hover:bg-zinc-700 text-afri-text rounded-xl text-xs font-bold cursor-pointer flex items-center gap-2"
                   >
                     <Upload className="w-4 h-4 text-[#D4AF37]" />
                     {uploadingImage ? "Téléversement..." : "Charger un fichier image"}
                   </label>
-                  <span className="text-[10px] text-zinc-500">ou entrez une URL ci-dessous</span>
+                  <span className="text-[10px] text-afri-text-muted">ou entrez une URL ci-dessous</span>
                 </div>
 
                 <input
@@ -711,29 +711,29 @@ export default function AdminAvatarStore() {
                   value={formImageUrl}
                   onChange={(e) => setFormImageUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-white font-mono text-[11px]"
+                  className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-afri-text font-mono text-[11px]"
                 />
 
                 {formImageUrl && (
-                  <div className="w-16 h-16 bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden flex items-center justify-center mt-2">
+                  <div className="w-16 h-16 bg-afri-bg-sec rounded-xl border border-afri-border overflow-hidden flex items-center justify-center mt-2">
                     <img src={formImageUrl} alt="Preview" className="w-full h-full object-contain" />
                   </div>
                 )}
               </div>
 
               <div className="space-y-1">
-                <label className="text-zinc-400 font-bold uppercase">Description</label>
+                <label className="text-afri-text-sec font-bold uppercase">Description</label>
                 <textarea
                   rows={2}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   placeholder="Brève description de la pièce ou de sa signification..."
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white focus:border-[#D4AF37] focus:outline-none"
+                  className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-afri-text focus:border-[#D4AF37] focus:outline-none"
                 />
               </div>
 
               {/* Toggles */}
-              <div className="flex flex-wrap items-center justify-between gap-4 p-3 bg-zinc-950 rounded-2xl border border-zinc-800">
+              <div className="flex flex-wrap items-center justify-between gap-4 p-3 bg-afri-bg rounded-2xl border border-afri-border">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -741,7 +741,7 @@ export default function AdminAvatarStore() {
                     onChange={(e) => setFormIsPremium(e.target.checked)}
                     className="w-4 h-4 accent-[#D4AF37]"
                   />
-                  <span className="font-bold text-white uppercase">Réservé aux membres Premium 👑</span>
+                  <span className="font-bold text-afri-text uppercase">Réservé aux membres Premium 👑</span>
                 </label>
 
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -751,15 +751,15 @@ export default function AdminAvatarStore() {
                     onChange={(e) => setFormIsActive(e.target.checked)}
                     className="w-4 h-4 accent-emerald-500"
                   />
-                  <span className="font-bold text-white uppercase">Disponible en boutique ✓</span>
+                  <span className="font-bold text-afri-text uppercase">Disponible en boutique ✓</span>
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-afri-border">
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
-                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold uppercase rounded-xl"
+                  className="px-4 py-2 bg-afri-bg-ter hover:bg-zinc-700 text-afri-text-sec font-bold uppercase rounded-xl"
                 >
                   Annuler
                 </button>
@@ -777,44 +777,44 @@ export default function AdminAvatarStore() {
 
       {/* AI Preparation Modal */}
       {isAiModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-md p-6 space-y-4 animate-scaleUp text-left">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
+        <div className="fixed inset-0 z-50 bg-afri-bg/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-afri-bg-sec border border-afri-border rounded-3xl w-full max-w-md p-6 space-y-4 animate-scaleUp text-left">
+            <div className="flex items-center justify-between border-b border-afri-border pb-3">
+              <h3 className="text-sm font-black text-afri-text uppercase flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#D4AF37]" />
                 Moteur de Génération IA Avatar
               </h3>
               <button
                 onClick={() => setIsAiModalOpen(false)}
-                className="p-2 text-zinc-400 hover:text-white"
+                className="p-2 text-afri-text-sec hover:text-afri-text"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-afri-text-sec">
               Générez automatiquement des tenues, bijoux, instruments ou couronnes traditionnels africains vectorisés.
             </p>
 
             <form onSubmit={handleGenerateAiItem} className="space-y-4 text-xs font-sans">
               <div className="space-y-1">
-                <label className="text-zinc-400 font-bold uppercase">Prompt de création</label>
+                <label className="text-afri-text-sec font-bold uppercase">Prompt de création</label>
                 <textarea
                   rows={3}
                   required
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
                   placeholder="ex: Boubou royal Akan en tissu Kente orné de pépites d'or et broderies..."
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white focus:border-[#D4AF37] focus:outline-none"
+                  className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-afri-text focus:border-[#D4AF37] focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-zinc-400 font-bold uppercase">Catégorie cible</label>
+                <label className="text-afri-text-sec font-bold uppercase">Catégorie cible</label>
                 <select
                   value={aiCategory}
                   onChange={(e) => setAiCategory(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-white focus:border-[#D4AF37] focus:outline-none"
+                  className="w-full bg-afri-bg border border-afri-border rounded-xl px-3 py-2.5 text-afri-text focus:border-[#D4AF37] focus:outline-none"
                 >
                   {categories.map((c) => (
                     <option key={c.key} value={c.key}>
@@ -824,11 +824,11 @@ export default function AdminAvatarStore() {
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-afri-border">
                 <button
                   type="button"
                   onClick={() => setIsAiModalOpen(false)}
-                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold uppercase rounded-xl"
+                  className="px-4 py-2 bg-afri-bg-ter hover:bg-zinc-700 text-afri-text-sec font-bold uppercase rounded-xl"
                 >
                   Fermer
                 </button>
@@ -847,76 +847,76 @@ export default function AdminAvatarStore() {
       )}
       {/* Admin Manual Coins & XP Adjustment Modal */}
       {isCoinsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-md p-6 space-y-4 animate-scaleUp text-left">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
+        <div className="fixed inset-0 z-50 bg-afri-bg/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-afri-bg-sec border border-afri-border rounded-3xl w-full max-w-md p-6 space-y-4 animate-scaleUp text-left">
+            <div className="flex items-center justify-between border-b border-afri-border pb-3">
+              <h3 className="text-sm font-black text-afri-text uppercase flex items-center gap-2">
                 <Coins className="w-5 h-5 text-emerald-400" />
                 Ajustement Manuel de Gombo Coins & XP
               </h3>
               <button
                 onClick={() => setIsCoinsModalOpen(false)}
-                className="p-2 text-zinc-400 hover:text-white"
+                className="p-2 text-afri-text-sec hover:text-afri-text"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-afri-text-sec">
               Attribuez ou retirez directement des Gombo Coins et des points d'expérience (XP) à un membre.
             </p>
 
             <form onSubmit={handleAdminAdjustCoins} className="space-y-4 text-xs font-sans">
               <div className="space-y-1">
-                <label className="text-zinc-400 font-bold uppercase">ID Utilisateur (UID)</label>
+                <label className="text-afri-text-sec font-bold uppercase">ID Utilisateur (UID)</label>
                 <input
                   type="text"
                   required
                   placeholder="UID du membre dans Firebase..."
                   value={targetUserId}
                   onChange={(e) => setTargetUserId(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white focus:border-[#D4AF37] focus:outline-none font-mono"
+                  className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-zinc-400 font-bold uppercase">Gombo Coins (Δ)</label>
+                  <label className="text-afri-text-sec font-bold uppercase">Gombo Coins (Δ)</label>
                   <input
                     type="number"
                     value={coinsDelta}
                     onChange={(e) => setCoinsDelta(Number(e.target.value))}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-[#D4AF37] font-mono font-bold focus:border-[#D4AF37] focus:outline-none"
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-[#D4AF37] font-mono font-bold focus:border-[#D4AF37] focus:outline-none"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-zinc-400 font-bold uppercase">XP (Δ)</label>
+                  <label className="text-afri-text-sec font-bold uppercase">XP (Δ)</label>
                   <input
                     type="number"
                     value={xpDelta}
                     onChange={(e) => setXpDelta(Number(e.target.value))}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-emerald-400 font-mono font-bold focus:border-emerald-500 focus:outline-none"
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-emerald-400 font-mono font-bold focus:border-emerald-500 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-zinc-400 font-bold uppercase">Motif de la transaction</label>
+                <label className="text-afri-text-sec font-bold uppercase">Motif de la transaction</label>
                 <input
                   type="text"
                   value={adjustReason}
                   onChange={(e) => setAdjustReason(e.target.value)}
                   placeholder="ex: Concours, Récompense Spéciale, Correction..."
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white focus:border-[#D4AF37] focus:outline-none"
+                  className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-afri-text focus:border-[#D4AF37] focus:outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-afri-border">
                 <button
                   type="button"
                   onClick={() => setIsCoinsModalOpen(false)}
-                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold uppercase rounded-xl"
+                  className="px-4 py-2 bg-afri-bg-ter hover:bg-zinc-700 text-afri-text-sec font-bold uppercase rounded-xl"
                 >
                   Annuler
                 </button>

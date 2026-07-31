@@ -255,7 +255,7 @@ export default function GriotIA() {
                       e.preventDefault();
                       handleQuery(inputQuery);
                     }}
-                    className="p-3 bg-afri-bg-sec border-t border-zinc-950 flex gap-2"
+                    className="p-3 bg-afri-bg-sec border-t border-afri-border flex gap-2"
                   >
                     <input
                       type="text"

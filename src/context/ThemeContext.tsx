@@ -126,6 +126,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.style.setProperty("--afri-success", cols.success);
     root.style.setProperty("--afri-warning", cols.warning);
     
+    let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute("content", cols.background);
+    }
+
     safeSetItem("gombo_theme", theme);
   }, [theme]);
 

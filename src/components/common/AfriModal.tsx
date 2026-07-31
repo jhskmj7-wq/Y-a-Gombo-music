@@ -127,7 +127,7 @@ export const AfriModal: React.FC<AfriModalProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             onClick={handleOutsideClick}
-            className="absolute inset-0 bg-black/70 backdrop-blur-md cursor-pointer"
+            className="absolute inset-0 bg-afri-bg/70 backdrop-blur-md cursor-pointer"
           />
 
           {/* Modal Container */}
@@ -163,7 +163,7 @@ export const AfriModal: React.FC<AfriModalProps> = ({
                   {showCloseButton && (
                     <button
                       onClick={onClose}
-                      className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-white flex items-center justify-center cursor-pointer shrink-0"
+                      className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text flex items-center justify-center cursor-pointer shrink-0"
                       aria-label="Fermer"
                     >
                       <X className="w-4 h-4" />
@@ -205,7 +205,7 @@ export const AfriModal: React.FC<AfriModalProps> = ({
                   {showCloseButton && (
                     <button
                       onClick={onClose}
-                      className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-white flex items-center justify-center cursor-pointer shrink-0"
+                      className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text flex items-center justify-center cursor-pointer shrink-0"
                       aria-label="Fermer"
                     >
                       <X className="w-4 h-4" />
@@ -283,7 +283,7 @@ function renderModalBody(
           </div>
           <button
             onClick={onClose}
-            className="w-full py-2.5 bg-rose-500 hover:bg-rose-400 text-white font-black uppercase text-xs tracking-wider rounded-xl transition-all cursor-pointer shadow-md"
+            className="w-full py-2.5 bg-rose-500 hover:bg-rose-400 text-afri-text font-black uppercase text-xs tracking-wider rounded-xl transition-all cursor-pointer shadow-md"
           >
             Fermer
           </button>

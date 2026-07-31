@@ -81,12 +81,12 @@ export function WebRTCCallModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/90 backdrop-blur-xl">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          className="w-full max-w-md bg-zinc-950 border border-[#D4AF37]/40 rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between h-[580px] relative text-white"
+          className="w-full max-w-md bg-afri-bg border border-[#D4AF37]/40 rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between h-[580px] relative text-afri-text"
         >
           {/* Header */}
           <div className="p-4 bg-gradient-to-b from-black/80 to-transparent flex items-center justify-between z-20">
@@ -130,8 +130,8 @@ export function WebRTCCallModal({
                   )}
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-white">{partnerName}</h3>
-                  <p className="text-xs text-zinc-400 font-mono mt-1">
+                  <h3 className="text-lg font-black text-afri-text">{partnerName}</h3>
+                  <p className="text-xs text-afri-text-sec font-mono mt-1">
                     {callSession.status === "offered"
                       ? isIncoming
                         ? "Appel entrant..."
@@ -146,7 +146,7 @@ export function WebRTCCallModal({
 
             {/* Local Video Thumbnail (PIP) */}
             {isVideo && localStream && !isVideoOff && (
-              <div className="absolute bottom-4 right-4 w-28 h-36 rounded-2xl border-2 border-[#D4AF37] overflow-hidden shadow-2xl z-20 bg-zinc-900">
+              <div className="absolute bottom-4 right-4 w-28 h-36 rounded-2xl border-2 border-[#D4AF37] overflow-hidden shadow-2xl z-20 bg-afri-bg-sec">
                 <video
                   ref={(node) => {
                     if (node && localStream) node.srcObject = localStream;
@@ -161,12 +161,12 @@ export function WebRTCCallModal({
           </div>
 
           {/* Controls Footer */}
-          <div className="p-6 bg-gradient-to-t from-black via-zinc-950 to-transparent border-t border-zinc-900 flex items-center justify-around z-20">
+          <div className="p-6 bg-gradient-to-t from-black via-zinc-950 to-transparent border-t border-afri-border flex items-center justify-around z-20">
             {isIncoming && callSession.status === "offered" ? (
               <>
                 <button
                   onClick={onReject}
-                  className="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-600/30 transition-all active:scale-95 cursor-pointer"
+                  className="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-500 text-afri-text flex items-center justify-center shadow-lg shadow-rose-600/30 transition-all active:scale-95 cursor-pointer"
                   title="Refuser"
                 >
                   <PhoneOff className="w-7 h-7" />
@@ -186,7 +186,7 @@ export function WebRTCCallModal({
                   className={`p-4 rounded-2xl transition-all cursor-pointer border ${
                     isMuted
                       ? "bg-rose-500/20 border-rose-500 text-rose-400"
-                      : "bg-zinc-900 border-zinc-800 text-white hover:border-zinc-700"
+                      : "bg-afri-bg-sec border-afri-border text-afri-text hover:border-afri-border"
                   }`}
                   title={isMuted ? "Activer le micro" : "Couper le micro"}
                 >
@@ -200,7 +200,7 @@ export function WebRTCCallModal({
                       className={`p-4 rounded-2xl transition-all cursor-pointer border ${
                         isVideoOff
                           ? "bg-rose-500/20 border-rose-500 text-rose-400"
-                          : "bg-zinc-900 border-zinc-800 text-white hover:border-zinc-700"
+                          : "bg-afri-bg-sec border-afri-border text-afri-text hover:border-afri-border"
                       }`}
                       title={isVideoOff ? "Activer caméra" : "Désactiver caméra"}
                     >
@@ -209,7 +209,7 @@ export function WebRTCCallModal({
 
                     <button
                       onClick={handleSwitchCamera}
-                      className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-white hover:border-zinc-700 transition-all cursor-pointer"
+                      className="p-4 rounded-2xl bg-afri-bg-sec border border-afri-border text-afri-text hover:border-afri-border transition-all cursor-pointer"
                       title="Changer de caméra"
                     >
                       <RefreshCw className="w-6 h-6" />
@@ -219,7 +219,7 @@ export function WebRTCCallModal({
 
                 <button
                   onClick={onEndCall}
-                  className="p-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white transition-all shadow-lg shadow-rose-600/30 active:scale-95 cursor-pointer"
+                  className="p-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-afri-text transition-all shadow-lg shadow-rose-600/30 active:scale-95 cursor-pointer"
                   title="Raccrocher"
                 >
                   <PhoneOff className="w-6 h-6" />
