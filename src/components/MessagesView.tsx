@@ -8,8 +8,9 @@ import {
   Route, FileText, Bell, Radio, Ban, FileUp, MoreVertical, Play, Pause, Navigation, Plus, PhoneForwarded, PhoneIncoming, PhoneOutgoing, Users, Settings
 } from "lucide-react";
 import { gomboDB, db } from "../firebase";
-import { collection, query, where, onSnapshot, doc, getDocs, addDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDocs, addDoc, updateDoc, orderBy } from "firebase/firestore";
 import { Conversation, Message, UserProfile } from "../types";
+import { SupportService } from "../services/SupportService";
 import { WebRTCCallService, CallSession } from "../lib/webrtcCallEngine";
 import { setUserPresence, listenUserPresence, setTypingState, listenPartnerTyping, UserPresence } from "../lib/presenceEngine";
 import { sanitizeMessageContent, logBypassAttempt } from "../lib/chatModerationEngine";
@@ -40,8 +41,18 @@ export default function MessagesView({
   onNavigateToSearch,
   onBack
 }: MessagesViewProps) {
-  // 1. Navigation Tabs (WhatsApp style: Discussions, Contrats, Appels)
-  const [activeTab, setActiveTab] = useState<"conversations" | "contrats" | "appels">("conversations");
+  // 1. Navigation Tabs (WhatsApp style: Discussions, Appels, Activité, Paramètres)
+  const [activeTab, setActiveTab] = useState<"conversations" | "appels" | "activite" | "parametres">("conversations");
+  const [autoReplyMessage, setAutoReplyMessage] = useState(() => {
+    return localStorage.getItem(`auto_reply_${currentUser?.uid}`) || "Bonjour, je suis actuellement indisponible. Je vous recontacte au plus vite !";
+  });
+  const [enableAutoReply, setEnableAutoReply] = useState(() => {
+    return localStorage.getItem(`enable_auto_reply_${currentUser?.uid}`) === "true";
+  });
+  const [notifyGombos, setNotifyGombos] = useState(true);
+  const [notifyMessages, setNotifyMessages] = useState(true);
+  const [showCallSoonAlert, setShowCallSoonAlert] = useState(false);
+  const [supportConvo, setSupportConvo] = useState<any | null>(null);
 
   // 2. Core Messaging State
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -112,7 +123,7 @@ export default function MessagesView({
       setConversations(convos);
       setLoadingConvos(false);
 
-      if (openConvoWithUserId) {
+      if (openConvoWithUserId && openConvoWithUserId !== "afrigombo_support") {
         const existing = convos.find(c => c.participants.includes(openConvoWithUserId));
         if (existing) {
           setActiveConvo(existing);
@@ -123,6 +134,52 @@ export default function MessagesView({
     return () => unsub();
   }, [currentUser?.uid, openConvoWithUserId]);
 
+  // Listen to support conversation document in real-time
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const supportRef = doc(db, "supportConversations", currentUser.uid);
+    const unsub = onSnapshot(supportRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setSupportConvo({ id: docSnap.id, ...docSnap.data() });
+      } else {
+        setSupportConvo({
+          id: currentUser.uid,
+          isPlaceholder: true,
+          userName: "Équipe AFRIGOMBO",
+          userPhoto: "/logo.png",
+          lastMessage: "Bonjour 👋 Comment pouvons-nous vous aider aujourd'hui ?",
+          lastMessageAt: new Date().toISOString(),
+          unreadCount: { [currentUser.uid]: 0 }
+        });
+      }
+    });
+    return () => unsub();
+  }, [currentUser?.uid]);
+
+  // Handle auto-opening of Support Chat and prefilling of drafts
+  useEffect(() => {
+    if (openConvoWithUserId === "afrigombo_support" && supportConvo) {
+      setActiveConvo({
+        id: currentUser.uid,
+        type: "support",
+        participants: [currentUser.uid, "afrigombo_support"],
+        userName: "Équipe AFRIGOMBO",
+        userPhoto: "/logo.png",
+        ...supportConvo
+      });
+
+      // Clear the trigger
+      setOpenConvoWithUserId(null);
+
+      // Prefill support draft if it exists
+      const draft = localStorage.getItem("support_draft");
+      if (draft) {
+        setInputText(draft);
+        localStorage.removeItem("support_draft");
+      }
+    }
+  }, [openConvoWithUserId, supportConvo, currentUser?.uid]);
+
   // Listen to messages of active conversation
   useEffect(() => {
     if (!activeConvo) {
@@ -130,13 +187,37 @@ export default function MessagesView({
       return;
     }
 
-    const unsub = gomboDB.listenMessages(activeConvo.id, (msgs) => {
-      setMessages(msgs);
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    });
-
-    return () => unsub();
-  }, [activeConvo?.id]);
+    if (activeConvo.type === "support") {
+      const q = query(
+        collection(db, "supportMessages"),
+        where("conversationId", "==", currentUser.uid),
+        orderBy("createdAt", "asc")
+      );
+      const unsub = onSnapshot(q, (snapshot) => {
+        const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Message));
+        setMessages(msgs);
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }, (err) => {
+        const qFallback = query(
+          collection(db, "supportMessages"),
+          where("conversationId", "==", currentUser.uid)
+        );
+        getDocs(qFallback).then(snap => {
+          const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Message));
+          msgs.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+          setMessages(msgs);
+          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+        });
+      });
+      return () => unsub();
+    } else {
+      const unsub = gomboDB.listenMessages(activeConvo.id, (msgs) => {
+        setMessages(msgs);
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      });
+      return () => unsub();
+    }
+  }, [activeConvo?.id, activeConvo?.type, currentUser?.uid]);
 
   // Listen to partner presence and typing
   useEffect(() => {
@@ -213,14 +294,27 @@ export default function MessagesView({
     }
 
     try {
-      const senderName = currentProfile?.firstName ? `${currentProfile.firstName} ${currentProfile.lastName}` : "Moi";
-      await gomboDB.sendMessage(
-        activeConvo.id,
-        currentUser.uid,
-        senderName,
-        sanitizeResult.text,
-        "text"
-      );
+      if (activeConvo.type === "support") {
+        if (supportConvo?.isPlaceholder) {
+          await SupportService.getOrCreateSupportConversation(currentUser.uid, currentProfile);
+        }
+        await SupportService.sendSupportMessage(
+          currentUser.uid,
+          currentUser.uid,
+          currentProfile?.firstName ? `${currentProfile.firstName} ${currentProfile.lastName}` : "Client Gombo",
+          sanitizeResult.text,
+          "Autre"
+        );
+      } else {
+        const senderName = currentProfile?.firstName ? `${currentProfile.firstName} ${currentProfile.lastName}` : "Moi";
+        await gomboDB.sendMessage(
+          activeConvo.id,
+          currentUser.uid,
+          senderName,
+          sanitizeResult.text,
+          "text"
+        );
+      }
     } catch (err: any) {
       console.error("Failed to send message:", err);
       if (err.message && err.message.includes("AFRIGOMBO")) {
@@ -457,7 +551,70 @@ export default function MessagesView({
                 activeConvo ? "hidden md:flex" : "flex h-full"
               }`}
             >
-              <div className="flex-1 overflow-y-auto divide-y divide-zinc-900 flex flex-col">
+              <div className="flex-1 overflow-y-auto divide-y divide-zinc-900 flex flex-col pt-2">
+                {/* Permanent Support Card */}
+                {supportConvo && (
+                  <div
+                    onClick={() => {
+                      setActiveConvo({
+                        id: currentUser.uid,
+                        type: "support",
+                        participants: [currentUser.uid, "afrigombo_support"],
+                        userName: "Équipe AFRIGOMBO",
+                        userPhoto: "/logo.png",
+                        ...supportConvo
+                      });
+                      
+                      // Clear unread count when clicking support card
+                      if (supportConvo.unreadCount?.[currentUser.uid] > 0) {
+                        try {
+                          const convoRef = doc(db, "supportConversations", currentUser.uid);
+                          updateDoc(convoRef, {
+                            [`unreadCount.${currentUser.uid}`]: 0
+                          });
+                        } catch (err) {}
+                      }
+                    }}
+                    className={`p-4 transition-colors cursor-pointer flex items-center justify-between gap-3 border-l-4 ${
+                      activeConvo?.type === "support"
+                        ? "border-[#D4AF37] bg-zinc-900/90"
+                        : currentProfile?.isPremium || currentProfile?.premium
+                        ? "border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/10"
+                        : "border-zinc-800 bg-zinc-900/30 hover:bg-zinc-900/50"
+                    } shadow-md mb-2 shrink-0 rounded-2xl mx-2 border border-zinc-800`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="relative">
+                        <img
+                          src="/logo.png"
+                          alt="Équipe AFRIGOMBO"
+                          className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]"
+                          referrerPolicy="no-referrer"
+                        />
+                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border border-zinc-950" title="En ligne" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <strong className="text-xs text-white font-black uppercase">Équipe AFRIGOMBO</strong>
+                          <span className="text-[#D4AF37] text-[10px] font-black" title="Support officiel">✔ Vérifié</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                          {supportConvo.lastMessage || "Démarrer l'échange..."}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-[9px] font-mono text-[#D4AF37] font-black">SUPPORT</span>
+                      {supportConvo.unreadCount?.[currentUser.uid] > 0 && (
+                        <span className="px-1.5 py-0.5 bg-rose-500 text-white font-black text-[9px] rounded-full min-w-[18px] text-center animate-pulse">
+                          {supportConvo.unreadCount[currentUser.uid]}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {loadingConvos ? (
                   <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-2">
                     <Loader2 className="w-6 h-6 animate-spin text-[#D4AF37] mx-auto" />
@@ -471,7 +628,7 @@ export default function MessagesView({
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                        Aucune discussion active
+                        Aucune autre discussion active
                       </h3>
                       <p className="text-xs text-zinc-400 max-w-xs mt-1.5 leading-relaxed">
                         Démarrez un échange suite à une candidature, une invitation ou un Gombo.
@@ -554,12 +711,12 @@ export default function MessagesView({
 
                       <div className="relative">
                         <img
-                          src={partnerDetails?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"}
+                          src={activeConvo.type === "support" ? "/logo.png" : partnerDetails?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"}
                           alt=""
                           className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]/40"
                           referrerPolicy="no-referrer"
                         />
-                        {partnerPresence?.status === "online" ? (
+                        {activeConvo.type === "support" || partnerPresence?.status === "online" ? (
                           <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-zinc-900" title="En ligne" />
                         ) : (
                           <span className="absolute bottom-0 right-0 w-3 h-3 bg-zinc-600 rounded-full border-2 border-zinc-900" title="Hors ligne" />
@@ -567,11 +724,18 @@ export default function MessagesView({
                       </div>
 
                       <div className="min-w-0">
-                        <h3 className="text-xs font-bold text-white truncate">
-                          {partnerUid ? activeConvo.participantNames?.[partnerUid] : "Partenaire Gombo"}
-                        </h3>
+                        <div className="flex items-center gap-1">
+                          <h3 className="text-xs font-bold text-white truncate">
+                            {activeConvo.type === "support" ? "Équipe AFRIGOMBO" : partnerUid ? activeConvo.participantNames?.[partnerUid] : "Partenaire Gombo"}
+                          </h3>
+                          {activeConvo.type === "support" && (
+                            <span className="text-[#D4AF37] text-[10px] font-black" title="Support officiel">✔</span>
+                          )}
+                        </div>
                         <p className="text-[10px] text-emerald-400 font-mono">
-                          {partnerTyping?.isTyping
+                          {activeConvo.type === "support"
+                            ? "🟢 En ligne (Support 24/7)"
+                            : partnerTyping?.isTyping
                             ? "en train d'écrire..."
                             : partnerTyping?.isRecording
                             ? "🎙️ enregistrement audio..."
@@ -584,23 +748,27 @@ export default function MessagesView({
 
                     {/* Chat Header Actions: Audio Call & Video Call on top right */}
                     <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => handleStartCall("audio")}
-                        className="p-2.5 rounded-xl bg-zinc-800 hover:bg-emerald-500/20 text-emerald-400 hover:border-emerald-500/40 border border-zinc-700 transition cursor-pointer flex items-center gap-1.5"
-                        title="Appel Audio"
-                      >
-                        <PhoneCall className="w-4 h-4" />
-                        <span className="hidden sm:inline text-[10px] font-bold uppercase">Appel</span>
-                      </button>
+                      {activeConvo.type !== "support" && (
+                        <>
+                          <button
+                            onClick={() => handleStartCall("audio")}
+                            className="p-2.5 rounded-xl bg-zinc-800 hover:bg-emerald-500/20 text-emerald-400 hover:border-emerald-500/40 border border-zinc-700 transition cursor-pointer flex items-center gap-1.5"
+                            title="Appel Audio"
+                          >
+                            <PhoneCall className="w-4 h-4" />
+                            <span className="hidden sm:inline text-[10px] font-bold uppercase">Appel</span>
+                          </button>
 
-                      <button
-                        onClick={() => handleStartCall("video")}
-                        className="p-2.5 rounded-xl bg-zinc-800 hover:bg-amber-500/20 text-amber-400 hover:border-amber-500/40 border border-zinc-700 transition cursor-pointer flex items-center gap-1.5"
-                        title="Appel Vidéo"
-                      >
-                        <Video className="w-4 h-4" />
-                        <span className="hidden sm:inline text-[10px] font-bold uppercase">Vidéo</span>
-                      </button>
+                          <button
+                            onClick={() => handleStartCall("video")}
+                            className="p-2.5 rounded-xl bg-zinc-800 hover:bg-amber-500/20 text-amber-400 hover:border-amber-500/40 border border-zinc-700 transition cursor-pointer flex items-center gap-1.5"
+                            title="Appel Vidéo"
+                          >
+                            <Video className="w-4 h-4" />
+                            <span className="hidden sm:inline text-[10px] font-bold uppercase">Vidéo</span>
+                          </button>
+                        </>
+                      )}
 
                       <button
                         onClick={handleShareLocation}
@@ -763,36 +931,28 @@ export default function MessagesView({
           </div>
         )}
 
-        {/* TAB 2: CONTRATS */}
-        {activeTab === "contrats" && (
-          <div className="p-6 overflow-y-auto w-full h-full space-y-4">
-            <div className="p-4 bg-zinc-900 border border-[#D4AF37]/30 rounded-2xl">
-              <h3 className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">
-                📜 Contrats & Accords Écosystème
+        {/* TAB 2: APPELS */}
+        {activeTab === "appels" && (
+          <div className="p-6 overflow-y-auto w-full h-full space-y-4 relative pb-24">
+            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                📞 Historique des Appels Audio / Vidéo
               </h3>
               <p className="text-xs text-zinc-400 mt-1">
-                Historique des prestations, gombos signés et séquestres sécurisés.
+                Appels passés et reçus via le réseau souverain sécurisé AFRIGOMBO.
               </p>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center text-xs text-zinc-400">
-              Aucun litige ou contrat en attente. Tous les accords sont validés par le Trône.
-            </div>
-          </div>
-        )}
 
-        {/* TAB 3: APPELS */}
-        {activeTab === "appels" && (
-          <div className="p-6 overflow-y-auto w-full h-full space-y-4 relative">
-            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-between">
-              <div>
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                  📞 Historique des Appels Audio / Vidéo
-                </h3>
-                <p className="text-xs text-zinc-400 mt-1">
-                  Appels passés et reçus via le réseau souverain sécurisé AFRIGOMBO.
-                </p>
+            {/* Notification Banner for call action */}
+            {showCallSoonAlert && (
+              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center gap-3 text-xs text-amber-300 animate-pulse">
+                <Radio className="w-5 h-5 text-amber-400 shrink-0" />
+                <div>
+                  <strong className="block font-bold">Réseau GSM Souverain sécurisé</strong>
+                  <span>Cette fonctionnalité de numérotation directe est bientôt disponible.</span>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="space-y-2">
               {callLogs.length === 0 ? (
@@ -825,14 +985,139 @@ export default function MessagesView({
             </div>
 
             {/* Floating Action Button (FAB) for Nouvel Appel Direct */}
-            <div className="absolute bottom-8 right-8">
+            <div className="absolute bottom-20 right-6">
               <button
-                onClick={() => setShowNewCallModal(true)}
+                onClick={() => {
+                  setShowCallSoonAlert(true);
+                  setTimeout(() => setShowCallSoonAlert(false), 5000);
+                }}
                 className="w-14 h-14 bg-[#D4AF37] hover:bg-amber-400 text-black rounded-full shadow-2xl flex items-center justify-center transition hover:scale-110 cursor-pointer border-2 border-black"
-                title="Nouvel Appel Direct"
+                title="Lancer un nouvel appel direct"
               >
-                <Plus className="w-7 h-7 stroke-[2.5]" />
+                <PhoneCall className="w-6 h-6" />
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: ACTIVITÉ */}
+        {activeTab === "activite" && (
+          <div className="p-6 overflow-y-auto w-full h-full space-y-4 pb-24">
+            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
+              <h3 className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">
+                📊 Tableau de Bord d'Activité
+              </h3>
+              <p className="text-xs text-zinc-400 mt-1">
+                Suivez vos performances professionnelles et votre réputation au sein de la communauté.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col justify-between">
+                <span className="text-[10px] text-zinc-500 font-bold uppercase">Indice de Confiance</span>
+                <span className="text-xl font-bold text-emerald-400 mt-2">{currentProfile?.trustScore || 100}%</span>
+                <span className="text-[9px] text-zinc-400 mt-1">Prestations de haut niveau</span>
+              </div>
+              <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col justify-between">
+                <span className="text-[10px] text-zinc-500 font-bold uppercase">Statut Élite</span>
+                <span className="text-xl font-bold text-[#D4AF37] mt-2">
+                  {currentProfile?.isPremium || currentProfile?.premium ? "Premium 👑" : "Membre Standard"}
+                </span>
+                <span className="text-[9px] text-zinc-400 mt-1">Visibilité et privilèges</span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl space-y-3">
+              <h4 className="text-[11px] font-bold text-white uppercase tracking-wider">📜 Historique & Télémetrie</h4>
+              <div className="divide-y divide-zinc-800">
+                <div className="py-2.5 flex justify-between text-xs text-zinc-400">
+                  <span>Inscription Réseau</span>
+                  <span className="font-mono text-white text-[11px]">{currentProfile?.createdAt ? new Date(currentProfile.createdAt).toLocaleDateString() : "Récemment"}</span>
+                </div>
+                <div className="py-2.5 flex justify-between text-xs text-zinc-400">
+                  <span>Prestations Séquestrées</span>
+                  <span className="font-mono text-white text-[11px]">Tous les gombos validés</span>
+                </div>
+                <div className="py-2.5 flex justify-between text-xs text-zinc-400">
+                  <span>ID Unique Afri</span>
+                  <span className="font-mono text-[#D4AF37] text-[11px]">{currentProfile?.afriId || "AFRI-MEMBER"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: PARAMÈTRES */}
+        {activeTab === "parametres" && (
+          <div className="p-6 overflow-y-auto w-full h-full space-y-4 pb-24">
+            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                ⚙️ Réglages & Auto-Répondeur d'Absence
+              </h3>
+              <p className="text-xs text-zinc-400 mt-1">
+                Configurez vos réponses automatiques et vos préférences de messagerie.
+              </p>
+            </div>
+
+            {/* Offline Auto-Reply Form */}
+            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-white uppercase tracking-wide">🔴 Réponse Automatique</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={enableAutoReply}
+                    onChange={(e) => {
+                      const enabled = e.target.checked;
+                      setEnableAutoReply(enabled);
+                      localStorage.setItem(`enable_auto_reply_${currentUser?.uid}`, enabled ? "true" : "false");
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37]"></div>
+                </label>
+              </div>
+
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                Ce message sera envoyé automatiquement aux artistes ou recruteurs qui vous écrivent lorsque vous êtes absent ou en pleine prestation.
+              </p>
+
+              <textarea
+                value={autoReplyMessage}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setAutoReplyMessage(val);
+                  localStorage.setItem(`auto_reply_${currentUser?.uid}`, val);
+                }}
+                placeholder="Exemple: Bonjour, je suis actuellement en prestation Gombo. Je vous recontacte dès la fin de ma session !"
+                rows={3}
+                className="w-full p-3 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-[#D4AF37] placeholder:text-zinc-600 resize-none"
+              />
+            </div>
+
+            {/* Notification settings */}
+            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl space-y-3">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wide">🔔 Préférences de Notification</h4>
+              <div className="space-y-2">
+                <label className="flex items-center gap-3 text-xs text-zinc-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={notifyMessages}
+                    onChange={(e) => setNotifyMessages(e.target.checked)}
+                    className="rounded border-zinc-800 bg-zinc-950 text-[#D4AF37] focus:ring-[#D4AF37]"
+                  />
+                  <span>Notifier lors de la réception d'un message</span>
+                </label>
+                <label className="flex items-center gap-3 text-xs text-zinc-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={notifyGombos}
+                    onChange={(e) => setNotifyGombos(e.target.checked)}
+                    className="rounded border-zinc-800 bg-zinc-950 text-[#D4AF37] focus:ring-[#D4AF37]"
+                  />
+                  <span>Alerte instantanée sur offres de gombo</span>
+                </label>
+              </div>
             </div>
           </div>
         )}
@@ -924,16 +1209,22 @@ export default function MessagesView({
       {/* WhatsApp-Style Bottom Navigation Bar (4 Essential Tabs) */}
       <div className="absolute bottom-0 left-0 w-full pb-6 pt-2 bg-neutral-900 border-t border-neutral-800 flex items-center justify-around px-2 z-30 shadow-2xl">
         {[
-          { id: "conversations", label: "💬 DISCUSSIONS", icon: MessageSquare, badge: conversations.length },
+          { id: "conversations", label: "💬 DISCUSSIONS", icon: MessageSquare, badge: (conversations.length || 0) + ((supportConvo?.unreadCount?.[currentUser?.uid] > 0) ? 1 : 0) },
           { id: "appels", label: "📞 APPELS", icon: PhoneCall, badge: callLogs.length },
-          { id: "contacts", label: "👥 CONTACTS", icon: Users },
-          { id: "parametres", label: "⚙️ RÉGLAGES", icon: Settings }
+          { id: "activite", label: "📊 ACTIVITÉ", icon: Trophy },
+          { id: "parametres", label: "⚙️ PARAMÈTRES", icon: Settings }
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => {
+                setActiveTab(tab.id as any);
+                // Also reset activeConvo when switching tabs so you can see lists cleanly
+                if (tab.id !== "conversations") {
+                  setActiveConvo(null);
+                }
+              }}
               className={`flex-1 flex flex-col items-center justify-center py-2 transition-all duration-200 cursor-pointer relative ${
                 isActive ? "text-[#D4AF37] scale-105" : "text-zinc-400 hover:text-white"
               }`}

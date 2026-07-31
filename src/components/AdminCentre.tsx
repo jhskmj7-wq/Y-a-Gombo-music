@@ -680,8 +680,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   useEffect(() => {
     const handleOpenInternalSupport = (e: CustomEvent<{ reason?: string }>) => {
-      setSupportModalReason(e.detail?.reason || "");
-      setIsSupportModalOpen(true);
+      const reason = e.detail?.reason || "";
+      if (reason) {
+        localStorage.setItem("support_draft", reason);
+      }
+      setOpenConvoWithUserId("afrigombo_support");
+      setActiveMenu("user_messages");
     };
     window.addEventListener("open-internal-support" as any, handleOpenInternalSupport as any);
     return () => {

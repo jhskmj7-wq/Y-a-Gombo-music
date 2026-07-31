@@ -38,9 +38,9 @@ export interface SupportMessage {
 export const SUPPORT_PROFILE = {
   uid: "afrigombo_support",
   name: "Équipe AFRIGOMBO",
-  photo: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=150", // elegant graphic/logo URL
-  badge: "✔ Support officiel",
-  description: "Service officiel d'assistance AFRIGOMBO",
+  photo: "/logo.png",
+  badge: "✔ Vérifié",
+  description: "Support officiel AFRIGOMBO",
   type: "systemAccount",
   role: "support",
   status: "🟢 En ligne"
@@ -97,7 +97,7 @@ export const SupportService = {
       type: "support",
       status: "open",
       createdAt: new Date().toISOString(),
-      lastMessage: "Bienvenue. Merci de nous décrire votre problème. Notre équipe vous répondra rapidement.",
+      lastMessage: "Bonjour 👋 Bienvenue chez AFRIGOMBO. Notre équipe est disponible pour répondre à toutes vos questions.",
       lastMessageAt: new Date().toISOString(),
       category: "Autre",
       unreadCount: {
@@ -114,7 +114,7 @@ export const SupportService = {
       conversationId: userUid,
       senderUid: SUPPORT_PROFILE.uid,
       senderName: SUPPORT_PROFILE.name,
-      text: "Bienvenue.\nMerci de nous décrire votre problème.\nNotre équipe vous répondra rapidement.",
+      text: "Bonjour 👋\nBienvenue chez AFRIGOMBO.\nNotre équipe est disponible pour répondre à toutes vos questions.\nChoisissez votre besoin ou écrivez directement votre message.",
       createdAt: new Date().toISOString()
     });
 

@@ -10,6 +10,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { SupportService, SUPPORT_PROFILE } from "../../services/SupportService";
+import AdminUserProfilePanel from "./AdminUserProfilePanel";
 
 export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any }) {
   const [conversations, setConversations] = useState<any[]>([]);
@@ -22,6 +23,7 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [modActionMessage, setModActionMessage] = useState("");
+  const [showUserPanel, setShowUserPanel] = useState(false);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -443,7 +445,11 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
             <>
               {/* Discussion Header */}
               <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-2xl flex items-center justify-between mb-3 shrink-0">
-                <div className="flex items-center gap-2">
+                <div 
+                  onClick={() => setShowUserPanel(true)}
+                  className="flex items-center gap-2 cursor-pointer hover:opacity-85 transition"
+                  title="Cliquer pour inspecter le profil complet"
+                >
                   <img
                     src={selectedConversation.userPhoto || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"}
                     alt={selectedConversation.userName}
@@ -607,7 +613,11 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
 
             {selectedConversation ? (
               <div className="space-y-4">
-                <div className="text-center space-y-1.5">
+                <div 
+                  onClick={() => setShowUserPanel(true)}
+                  className="text-center space-y-1.5 cursor-pointer hover:opacity-85 transition"
+                  title="Cliquer pour inspecter le profil"
+                >
                   <img
                     src={selectedConversation.userPhoto || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"}
                     alt={selectedConversation.userName}
@@ -723,6 +733,23 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
           </div>
         </div>
       </div>
+
+      {selectedConversation?.userUid && (
+        <AdminUserProfilePanel
+          isOpen={showUserPanel}
+          onClose={() => setShowUserPanel(false)}
+          userUid={selectedConversation.userUid}
+          onRefreshProfile={async () => {
+            try {
+              const userRef = doc(db, "users", selectedConversation.userUid);
+              const userSnap = await getDoc(userRef);
+              if (userSnap.exists()) {
+                setSelectedUserProfile({ uid: userSnap.id, ...userSnap.data() });
+              }
+            } catch {}
+          }}
+        />
+      )}
     </div>
   );
 }
