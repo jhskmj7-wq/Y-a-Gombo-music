@@ -1,9 +1,10 @@
 import React from 'react';
-import { ArrowLeft, Shield, Sparkles, Check } from 'lucide-react';
+import { Shield, Sparkles, Check } from 'lucide-react';
 import { useAvatarRealtime } from '../../hooks/useAvatarRealtime';
 import { avatarService } from '../../services/avatar.service';
 import { PageContainer } from '../../components/common/PageContainer';
 import { ScrollContainer } from '../../components/common/ScrollContainer';
+import { AndroidTopBar, AndroidButton, AndroidCard } from '../../components/common/AndroidComponents';
 
 interface AvatarInventoryProps {
   currentUser: any;
@@ -23,18 +24,11 @@ export const AvatarInventory: React.FC<AvatarInventoryProps> = ({ currentUser, o
 
   return (
     <PageContainer className="p-0 bg-afri-bg text-afri-text" id="avatar-inventory-page-root">
-      {/* Fixed Android Top Header */}
-      <header className="sticky top-0 z-40 bg-afri-bg/95 backdrop-blur-md border-b border-afri-border px-4 py-3.5 flex items-center justify-between w-full max-w-full box-border" id="avatar-inventory-header">
-        <button 
-          onClick={onBack}
-          className="p-2.5 rounded-full bg-afri-bg-sec border border-afri-border text-afri-text min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform"
-          id="avatar-inventory-btn-back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-base font-bold font-mono tracking-wider text-[#D4AF37] truncate px-2">Mon Inventaire Avatar</h1>
-        <div className="w-9 h-9" />
-      </header>
+      <AndroidTopBar
+        title="Mon Inventaire Avatar"
+        subtitle="AFRIGOMBO Android First"
+        onBack={onBack}
+      />
 
       {/* Main Container */}
       <ScrollContainer className="flex-1 p-4 space-y-4" id="avatar-inventory-scroll-container">
@@ -52,10 +46,11 @@ export const AvatarInventory: React.FC<AvatarInventoryProps> = ({ currentUser, o
             {ownedItems.map((item) => {
               const isEquipped = equippedItems.includes(item.id);
               return (
-                <div 
+                <AndroidCard 
                   key={item.id} 
-                  className={`bg-afri-bg-sec border rounded-2xl p-3 flex flex-col justify-between space-y-3 w-full max-w-full box-border shadow-md ${
-                    isEquipped ? 'border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.2)]' : 'border-afri-border/80'
+                  variant={isEquipped ? 'elevated' : 'outlined'}
+                  className={`flex flex-col justify-between space-y-3 w-full box-border ${
+                    isEquipped ? 'border-[#D4AF37] ring-1 ring-[#D4AF37]/50' : ''
                   }`}
                   id={`avatar-inventory-card-${item.id}`}
                 >
@@ -77,18 +72,16 @@ export const AvatarInventory: React.FC<AvatarInventoryProps> = ({ currentUser, o
                     <p className="text-[10px] text-afri-text-sec line-clamp-1">{item.category}</p>
                   </div>
 
-                  <button
+                  <AndroidButton
+                    size="sm"
+                    variant={isEquipped ? 'outlined' : 'filled'}
                     onClick={() => handleEquip(item)}
-                    className={`w-full py-2.5 rounded-xl text-xs font-bold min-h-[40px] flex items-center justify-center gap-2 transition-all ${
-                      isEquipped 
-                        ? 'bg-afri-bg-ter border border-afri-border text-afri-text-sec' 
-                        : 'bg-[#D4AF37] text-black hover:bg-amber-400 active:scale-95 shadow-lg'
-                    }`}
+                    fullWidth
                     id={`avatar-inventory-btn-equip-${item.id}`}
                   >
                     {isEquipped ? 'Déséquiper' : 'Équiper'}
-                  </button>
-                </div>
+                  </AndroidButton>
+                </AndroidCard>
               );
             })}
           </div>

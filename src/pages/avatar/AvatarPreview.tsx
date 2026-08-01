@@ -1,8 +1,9 @@
 import React from 'react';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useAvatarRealtime } from '../../hooks/useAvatarRealtime';
 import { PageContainer } from '../../components/common/PageContainer';
 import { ScrollContainer } from '../../components/common/ScrollContainer';
+import { AndroidTopBar, AndroidCard } from '../../components/common/AndroidComponents';
 
 interface AvatarPreviewProps {
   currentUser: any;
@@ -18,24 +19,17 @@ export const AvatarPreview: React.FC<AvatarPreviewProps> = ({ currentUser, curre
 
   return (
     <PageContainer className="p-0 bg-afri-bg text-afri-text" id="avatar-preview-page-root">
-      {/* Fixed Android Top Header */}
-      <header className="sticky top-0 z-40 bg-afri-bg/95 backdrop-blur-md border-b border-afri-border px-4 py-3.5 flex items-center justify-between w-full max-w-full box-border" id="avatar-preview-header">
-        <button 
-          onClick={onBack}
-          className="p-2.5 rounded-full bg-afri-bg-sec border border-afri-border text-afri-text min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform"
-          id="avatar-preview-btn-back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-base font-bold font-mono tracking-wider text-[#D4AF37] truncate px-2">Aperçu en Direct</h1>
-        <div className="w-9 h-9" />
-      </header>
+      <AndroidTopBar
+        title="Aperçu en Direct"
+        subtitle="AFRIGOMBO Android First"
+        onBack={onBack}
+      />
 
       {/* Main Container */}
       <ScrollContainer className="flex-1 p-4 space-y-6 flex flex-col items-center" id="avatar-preview-scroll-container">
         
         {/* Avatar Display Card */}
-        <div className="w-full max-w-sm bg-afri-bg-sec border border-afri-border rounded-[2.5rem] p-6 flex flex-col items-center space-y-5 shadow-2xl relative overflow-hidden" id="avatar-preview-display-card">
+        <AndroidCard variant="elevated" className="w-full max-w-sm flex flex-col items-center space-y-5 shadow-2xl relative overflow-hidden" id="avatar-preview-display-card">
           <div className="absolute top-0 right-0 w-40 h-40 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative w-48 h-48 rounded-[2rem] overflow-hidden border-4 border-[#D4AF37] bg-afri-bg shadow-2xl">
@@ -61,7 +55,7 @@ export const AvatarPreview: React.FC<AvatarPreviewProps> = ({ currentUser, curre
               </div>
             )}
           </div>
-        </div>
+        </AndroidCard>
 
       </ScrollContainer>
     </PageContainer>

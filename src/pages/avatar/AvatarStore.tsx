@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ShoppingBag, Sparkles, Search } from 'lucide-react';
+import { ShoppingBag, Sparkles, Search } from 'lucide-react';
 import { useAvatarRealtime } from '../../hooks/useAvatarRealtime';
 import { avatarService } from '../../services/avatar.service';
 import { PageContainer } from '../../components/common/PageContainer';
 import { ScrollContainer } from '../../components/common/ScrollContainer';
+import { AndroidTopBar, AndroidChip, AndroidCard, AndroidButton, AndroidInput } from '../../components/common/AndroidComponents';
 
 interface AvatarStoreProps {
   currentUser: any;
@@ -38,52 +39,38 @@ export const AvatarStore: React.FC<AvatarStoreProps> = ({ currentUser, currentUs
 
   return (
     <PageContainer className="p-0 bg-afri-bg text-afri-text" id="avatar-store-page-root">
-      {/* Fixed Android Top Header */}
-      <header className="sticky top-0 z-40 bg-afri-bg/95 backdrop-blur-md border-b border-afri-border px-4 py-3.5 flex items-center justify-between w-full max-w-full box-border" id="avatar-store-header">
-        <button 
-          onClick={onBack}
-          className="p-2.5 rounded-full bg-afri-bg-sec border border-afri-border text-afri-text min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform"
-          id="avatar-store-btn-back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-base font-bold font-mono tracking-wider text-[#D4AF37] truncate px-2">Boutique Avatar</h1>
-        <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full" id="avatar-store-wallet-coins">
-          <span className="text-xs font-mono font-bold text-amber-400">{currentUserProfile?.wallet?.coins || 0} 🪙</span>
-        </div>
-      </header>
+      <AndroidTopBar
+        title="Boutique Avatar"
+        subtitle="AFRIGOMBO Android First"
+        onBack={onBack}
+        actions={
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full" id="avatar-store-wallet-coins">
+            <span className="text-xs font-mono font-bold text-amber-400">{currentUserProfile?.wallet?.coins || 0} 🪙</span>
+          </div>
+        }
+      />
 
       {/* Main Container */}
       <ScrollContainer className="flex-1 p-4 space-y-5" id="avatar-store-scroll-container">
         
         {/* Search & Categories */}
         <div className="space-y-3" id="avatar-store-controls">
-          <div className="relative w-full">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-afri-text-sec" />
-            <input 
-              type="text" 
-              placeholder="Rechercher un article..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-afri-bg-sec border border-afri-border rounded-2xl pl-10 pr-4 py-3 text-xs text-afri-text placeholder-zinc-500 focus:outline-none focus:border-[#D4AF37] box-border"
-              id="avatar-store-search-input"
-            />
-          </div>
+          <AndroidInput
+            icon={Search}
+            placeholder="Rechercher un article..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            id="avatar-store-search-input"
+          />
 
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2 w-full max-w-full touch-pan-x" id="avatar-store-categories-list">
             {categories.map((cat) => (
-              <button
+              <AndroidChip
                 key={cat}
+                label={cat}
+                selected={selectedCategory === cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase whitespace-nowrap transition-all min-h-[40px] flex items-center ${
-                  selectedCategory === cat 
-                    ? 'bg-[#D4AF37] text-black shadow-lg shadow-amber-500/20' 
-                    : 'bg-afri-bg-sec text-afri-text-sec border border-afri-border hover:border-afri-border'
-                }`}
-                id={`avatar-store-category-btn-${cat}`}
-              >
-                {cat}
-              </button>
+              />
             ))}
           </div>
         </div>
@@ -103,9 +90,10 @@ export const AvatarStore: React.FC<AvatarStoreProps> = ({ currentUser, currentUs
             {filteredItems.map((item) => {
               const isOwned = inventory?.ownedItems?.includes(item.id);
               return (
-                <div 
+                <AndroidCard 
                   key={item.id} 
-                  className="bg-afri-bg-sec border border-afri-border/80 rounded-2xl p-3 flex flex-col justify-between space-y-3 w-full max-w-full box-border shadow-md"
+                  variant="outlined"
+                  className="flex flex-col justify-between space-y-3 w-full box-border shadow-md"
                   id={`avatar-store-card-${item.id}`}
                 >
                   <div className="relative h-32 rounded-xl bg-afri-bg flex items-center justify-center overflow-hidden border border-afri-border">
@@ -121,30 +109,28 @@ export const AvatarStore: React.FC<AvatarStoreProps> = ({ currentUser, currentUs
 
                   <div className="space-y-1">
                     <h3 className="text-xs font-bold text-afri-text truncate">{item.name}</h3>
-                    <p className="text-[10px] text-afri-text-sec line-clamp-1">{item.description || 'Article exclusif Afrigombo'}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] text-afri-text-sec line-clamp-1">{item.category}</p>
+                      <span className="text-xs font-mono font-bold text-amber-400">{item.price} 🪙</span>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-afri-border">
-                    <span className="text-xs font-mono font-bold text-amber-400">{item.price} 🪙</span>
-                    <button
-                      disabled={isOwned || purchasingId === item.id}
-                      onClick={() => handleBuy(item)}
-                      className={`px-3 py-2 rounded-xl text-[11px] font-bold min-h-[38px] flex items-center justify-center transition-all ${
-                        isOwned 
-                          ? 'bg-afri-bg-ter text-afri-text-muted cursor-not-allowed' 
-                          : 'bg-[#D4AF37] text-black hover:bg-amber-400 active:scale-95 shadow-lg'
-                      }`}
-                      id={`avatar-store-btn-buy-${item.id}`}
-                    >
-                      {isOwned ? 'Possédé' : purchasingId === item.id ? '...' : 'Acheter'}
-                    </button>
-                  </div>
-                </div>
+                  <AndroidButton
+                    size="sm"
+                    variant={isOwned ? 'tonal' : 'filled'}
+                    onClick={() => handleBuy(item)}
+                    isLoading={purchasingId === item.id}
+                    disabled={isOwned}
+                    fullWidth
+                    id={`avatar-store-btn-buy-${item.id}`}
+                  >
+                    {isOwned ? 'Possédé' : 'Acheter'}
+                  </AndroidButton>
+                </AndroidCard>
               );
             })}
           </div>
         )}
-
       </ScrollContainer>
     </PageContainer>
   );
