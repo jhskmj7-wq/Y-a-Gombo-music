@@ -443,33 +443,37 @@ export default function SettingsModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="grid grid-cols-2 gap-3 pt-1">
             <button 
+              id="btn-settings-edit"
               onClick={() => onClose()}
-              className="py-2.5 px-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-[10.5px] text-center transition-all cursor-pointer"
+              className="py-3 px-4 min-h-[48px] rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-xs text-center transition-all cursor-pointer flex items-center justify-center"
             >
               {mt("modifier_profil")}
             </button>
             <button 
+              id="btn-settings-reset-pass"
               onClick={() => sendPasswordReset()}
-              className="py-2.5 px-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-[10.5px] text-center transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              className="py-3 px-4 min-h-[48px] rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-xs text-center transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
-              <Key className="w-3.5 h-3.5 text-afri-gold" />
+              <Key className="w-4 h-4 text-afri-gold" />
               Réinitialiser Pass
             </button>
             <button 
+              id="btn-settings-view-heritage"
               onClick={() => onClose()}
-              className="py-2.5 px-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-[10.5px] text-center transition-all cursor-pointer col-span-2"
+              className="py-3 px-4 min-h-[48px] rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-xs text-center transition-all cursor-pointer col-span-2 flex items-center justify-center"
             >
               {mt("voir_heritage")}
             </button>
           </div>
 
           <button 
+            id="btn-settings-logout"
             onClick={() => {
               if (onLogout) onLogout();
             }}
-            className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 hover:text-red-300 font-bold text-[10.5px] transition-all cursor-pointer"
+            className="w-full py-3 px-4 min-h-[48px] rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 hover:text-red-300 font-bold text-xs transition-all cursor-pointer flex items-center justify-center"
           >
             {mt("deconnexion")}
           </button>

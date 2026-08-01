@@ -178,18 +178,18 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="afri-container space-y-6 pb-24 overflow-y-auto overscroll-contain w-full max-w-full"
+      className="w-full max-w-full space-y-6 pb-24 overflow-y-auto overscroll-contain px-3 xs:px-4"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
-      <div className="afri-section space-y-6 w-full max-w-full">
+      <div className="pt-3 pb-16 sm:pb-20 space-y-6 w-full max-w-full">
         
         {/* HEADER */}
         <div className="flex items-center justify-between gap-4">
-          <button onClick={onCancel} className="afri-btn-ghost p-3 min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <button onClick={onCancel} className="afri-btn-ghost p-3 min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl" id="profile-edit-back">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h3 className="afri-title-md flex-1 text-center truncate">Édition d'Héritage</h3>
-          <div className="w-9 h-9" /> {/* Spacer */}
+          <h3 className="afri-title-md flex-1 text-center truncate font-black text-sm" id="profile-edit-title">Édition d'Héritage</h3>
+          <div className="w-12 h-12" /> {/* Spacer */}
         </div>
 
         {/* STATUS BAR */}
@@ -201,12 +201,12 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               exit={{ opacity: 0, y: -10 }}
               className="flex justify-center"
             >
-              <div className={`px-4 py-2 rounded-full border text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-lg ${
+              <div className={`px-4 py-2.5 rounded-full border text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-lg ${
                 autoSaveStatus === "saving" ? "bg-amber-500/10 border-amber-500/30 text-amber-500 animate-pulse" :
                 autoSaveStatus === "saved" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" :
                 "bg-red-500/10 border-red-500/30 text-red-500"
               }`}>
-                {autoSaveStatus === "saving" && <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />}
+                {autoSaveStatus === "saving" && <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />}
                 {autoSaveStatus === "saving" ? "Sauvegarde automatique..." : 
                  autoSaveStatus === "saved" ? "Profil synchronisé" : "Erreur de synchro"}
               </div>
@@ -231,10 +231,10 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   </div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center bg-afri-bg/40 backdrop-blur-[2px]">
-                  <label className="afri-btn-primary w-auto py-2.5 px-5 text-xs font-bold min-h-[44px] flex items-center gap-2 cursor-pointer shadow-xl">
+                  <label id="change-banner-label" className="afri-btn-primary w-auto py-3 px-6 text-xs font-bold min-h-[48px] flex items-center gap-2 cursor-pointer shadow-xl rounded-xl">
                     <Upload className="w-4 h-4" />
                     <span>{coverUploading ? `${coverUploadProgress}%` : "Changer Bannière"}</span>
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    <input id="change-banner-input" type="file" accept="image/*" className="hidden" onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) handleCoverUpload(file);
                     }} />
@@ -262,24 +262,24 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                 <div className="flex flex-wrap items-center justify-center gap-2.5 w-full">
                   {cameraActive ? (
                     <>
-                      <button type="button" onClick={capturePhoto} className="afri-btn-primary py-2.5 px-5 text-xs font-bold min-h-[44px] flex items-center gap-2">
+                      <button id="btn-capture-photo" type="button" onClick={capturePhoto} className="afri-btn-primary py-3 px-6 text-xs font-bold min-h-[48px] flex items-center gap-2 shadow-md rounded-xl">
                         <Camera className="w-4 h-4" /> Prendre
                       </button>
-                      <button type="button" onClick={stopCamera} className="afri-btn-secondary py-2.5 px-4 text-xs font-bold min-h-[44px] flex items-center justify-center">
+                      <button id="btn-stop-camera" type="button" onClick={stopCamera} className="afri-btn-secondary py-3 px-5 text-xs font-bold min-h-[48px] flex items-center justify-center shadow-md rounded-xl">
                         <X className="w-4 h-4" />
                       </button>
                     </>
                   ) : (
                     <>
-                      <label className="afri-btn-secondary py-2.5 px-5 text-xs font-bold min-h-[44px] flex items-center gap-2 cursor-pointer shadow-md">
+                      <label id="btn-upload-album" className="afri-btn-secondary py-3 px-6 text-xs font-bold min-h-[48px] flex items-center gap-2 cursor-pointer shadow-md rounded-xl">
                         <Upload className="w-4 h-4" />
                         <span>Album</span>
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                        <input id="input-upload-album" type="file" accept="image/*" className="hidden" onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) handleFileUpload(file);
                         }} />
                       </label>
-                      <button type="button" onClick={startCamera} className="afri-btn-primary py-2.5 px-5 text-xs font-bold min-h-[44px] flex items-center gap-2 shadow-md">
+                      <button id="btn-start-camera" type="button" onClick={startCamera} className="afri-btn-primary py-3 px-6 text-xs font-bold min-h-[48px] flex items-center gap-2 shadow-md rounded-xl">
                         <Camera className="w-4 h-4" /> Caméra
                       </button>
                     </>
@@ -290,78 +290,81 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           </div>
 
           {/* 2. INFOS PERSONNELLES */}
-          <div className="afri-card p-6 space-y-6">
-            <p className="afri-text-tiny">Informations d'Artiste</p>
+          <div className="afri-card p-4 sm:p-6 space-y-6">
+            <p className="afri-text-tiny uppercase tracking-widest text-[#D4AF37]">Informations d'Artiste</p>
             
             <div className="space-y-4">
-              <div className="afri-grid-2">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3.5 sm:gap-4">
                 <div className="space-y-1.5">
                   <label className="afri-text-tiny text-afri-text-sec">Prénom</label>
-                  <input value={firstName} onChange={e => setFirstName(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
+                  <input id="input-first-name" value={firstName} onChange={e => setFirstName(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="afri-text-tiny text-afri-text-sec">Nom</label>
-                  <input value={lastName} onChange={e => setLastName(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
+                  <input id="input-last-name" value={lastName} onChange={e => setLastName(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <label className="afri-text-tiny text-afri-text-sec">Nom de Scène</label>
-                <input value={artistName} onChange={e => setArtistName(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-black text-[#D4AF37] outline-none focus:border-[#D4AF37]/40" placeholder="Votre blaze..." />
+                <input id="input-artist-name" value={artistName} onChange={e => setArtistName(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-black text-[#D4AF37] outline-none focus:border-[#D4AF37]/40" placeholder="Votre blaze..." />
               </div>
 
-              <div className="afri-grid-2">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3.5 sm:gap-4">
                 <div className="space-y-1.5">
                   <label className="afri-text-tiny text-afri-text-sec">Téléphone</label>
-                  <input value={phone} onChange={e => setPhone(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
+                  <input id="input-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="afri-text-tiny text-afri-text-sec">WhatsApp</label>
-                  <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
+                  <input id="input-whatsapp" type="tel" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <label className="afri-text-tiny text-afri-text-sec">Ma Biographie</label>
-                <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className="afri-card-inset w-full p-3 text-xs font-medium text-afri-text outline-none focus:border-[#D4AF37]/40 resize-none" placeholder="Présentez-vous au showbiz..." />
+                <textarea id="input-bio" value={bio} onChange={e => setBio(e.target.value)} rows={3} className="afri-card-inset w-full p-3.5 text-sm font-medium text-afri-text outline-none focus:border-[#D4AF37]/40 resize-none" placeholder="Présentez-vous au showbiz..." />
               </div>
             </div>
           </div>
 
           {/* 3. LOCALISATION */}
-          <div className="afri-card p-6 space-y-4">
-            <p className="afri-text-tiny">Zone d'Activité</p>
-            <div className="afri-grid-2">
+          <div className="afri-card p-4 sm:p-6 space-y-4">
+            <p className="afri-text-tiny uppercase tracking-widest text-[#D4AF37]">Zone d'Activité</p>
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3.5 sm:gap-4">
               <div className="space-y-1.5">
                 <label className="afri-text-tiny text-afri-text-sec">Ville</label>
-                <input value={ville} onChange={e => setVille(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none" />
+                <input id="input-ville" value={ville} onChange={e => setVille(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
               </div>
-              <div className="relative space-y-1.5">
+              <div className="space-y-1.5">
                 <label className="afri-text-tiny text-afri-text-sec">Commune</label>
-                <button type="button" onClick={() => setShowCommuneDropdown(!showCommuneDropdown)} className="afri-card-inset w-full p-3 text-xs font-black text-afri-text flex items-center justify-between">
-                  <span>{commune || "Choisir"}</span>
-                  <ChevronDown className="w-4 h-4 text-[#D4AF37]" />
-                </button>
-                {showCommuneDropdown && (
-                  <div className="absolute z-20 left-0 right-0 mt-1 afri-card p-2 max-h-40 overflow-y-auto space-y-1">
-                    {filteredCommunes.map(c => (
-                      <button key={c} type="button" onClick={() => { setCommune(c); setShowCommuneDropdown(false); }} className="w-full text-left p-2 rounded-xl text-xs font-bold hover:bg-afri-bg-sec/10 text-afri-text-sec hover:text-afri-text">
+                <div className="relative">
+                  <select 
+                    id="select-commune"
+                    value={commune} 
+                    onChange={e => setCommune(e.target.value)} 
+                    className="afri-card-inset w-full p-3.5 text-sm font-black text-afri-text appearance-none bg-transparent outline-none pr-10 cursor-pointer focus:border-[#D4AF37]/40"
+                  >
+                    <option value="" className="bg-[#121212] text-afri-text">Choisir une commune</option>
+                    {COMMUNES.map(c => (
+                      <option key={c} value={c} className="bg-[#121212] text-afri-text">
                         {c}
-                      </button>
+                      </option>
                     ))}
-                  </div>
-                )}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-[#D4AF37] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
             </div>
             <div className="space-y-1.5">
               <label className="afri-text-tiny text-afri-text-sec">Quartier</label>
-              <input value={quartier} onChange={e => setQuartier(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none" />
+              <input id="input-quartier" value={quartier} onChange={e => setQuartier(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
             </div>
           </div>
 
           {/* 4. MUSIQUE & TALENTS */}
-          <div className="afri-card p-6 space-y-6">
-            <p className="afri-text-tiny">Identité Musicale & Profil Showbiz</p>
+          <div className="afri-card p-4 sm:p-6 space-y-6">
+            <p className="afri-text-tiny uppercase tracking-widest text-[#D4AF37]">Identité Musicale & Profil Showbiz</p>
             
             <div className="space-y-6">
               {/* Spécialités */}
@@ -371,7 +374,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {SPECIALTIES_LIST.map(spec => {
                     const active = specialties.includes(spec);
                     return (
-                      <button key={spec} type="button" onClick={() => active ? setSpecialties(specialties.filter(s => s !== spec)) : setSpecialties([...specialties, spec])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={spec} type="button" onClick={() => active ? setSpecialties(specialties.filter(s => s !== spec)) : setSpecialties([...specialties, spec])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {spec}
                       </button>
                     );
@@ -381,9 +384,10 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   <div className="mt-2 space-y-1">
                     <label className="text-[10px] font-extrabold text-[#D4AF37] uppercase">Précisez votre spécialité</label>
                     <input 
+                      id="input-specialty-custom"
                       value={specialtyCustom} 
                       onChange={e => setSpecialtyCustom(e.target.value)} 
-                      className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" 
+                      className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" 
                       placeholder="Saisissez votre spécialité custom..." 
                     />
                   </div>
@@ -397,7 +401,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {INSTRUMENTS_LIST.map(inst => {
                     const active = instruments.includes(inst);
                     return (
-                      <button key={inst} type="button" onClick={() => active ? setInstruments(instruments.filter(i => i !== inst)) : setInstruments([...instruments, inst])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={inst} type="button" onClick={() => active ? setInstruments(instruments.filter(i => i !== inst)) : setInstruments([...instruments, inst])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {inst}
                       </button>
                     );
@@ -407,9 +411,10 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   <div className="mt-2 space-y-1">
                     <label className="text-[10px] font-extrabold text-[#D4AF37] uppercase">Précisez votre instrument</label>
                     <input 
+                      id="input-instrument-custom"
                       value={instrumentCustom} 
                       onChange={e => setInstrumentCustom(e.target.value)} 
-                      className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" 
+                      className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" 
                       placeholder="Saisissez votre instrument custom..." 
                     />
                   </div>
@@ -423,7 +428,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {GENRES_LIST.map(gen => {
                     const active = musicGenres.includes(gen);
                     return (
-                      <button key={gen} type="button" onClick={() => active ? setMusicGenres(musicGenres.filter(g => g !== gen)) : setMusicGenres([...musicGenres, gen])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-amber-500 border-amber-500 text-afri-text" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={gen} type="button" onClick={() => active ? setMusicGenres(musicGenres.filter(g => g !== gen)) : setMusicGenres([...musicGenres, gen])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-amber-500 border-amber-500 text-afri-text" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {gen}
                       </button>
                     );
@@ -433,9 +438,10 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   <div className="mt-2 space-y-1">
                     <label className="text-[10px] font-extrabold text-[#D4AF37] uppercase">Précisez votre style musical</label>
                     <input 
+                      id="input-genre-custom"
                       value={musicGenreCustom} 
                       onChange={e => setMusicGenreCustom(e.target.value)} 
-                      className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" 
+                      className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" 
                       placeholder="Saisissez votre style custom..." 
                     />
                   </div>
@@ -449,7 +455,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {EXPERIENCES.map(exp => {
                     const active = experience === exp;
                     return (
-                      <button key={exp} type="button" onClick={() => setExperience(exp)} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-[#D4AF37] border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={exp} type="button" onClick={() => setExperience(exp)} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-[#D4AF37] border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {exp}
                       </button>
                     );
@@ -464,7 +470,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {AVAILABILITIES_LIST.map(avail => {
                     const active = availabilities.includes(avail);
                     return (
-                      <button key={avail} type="button" onClick={() => active ? setAvailabilities(availabilities.filter(a => a !== avail)) : setAvailabilities([...availabilities, avail])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-emerald-600 border-emerald-600 text-afri-text" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={avail} type="button" onClick={() => active ? setAvailabilities(availabilities.filter(a => a !== avail)) : setAvailabilities([...availabilities, avail])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-emerald-600 border-emerald-600 text-afri-text" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {avail}
                       </button>
                     );
@@ -479,7 +485,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {LANGUAGES_LIST.map(lang => {
                     const active = languages.includes(lang);
                     return (
-                      <button key={lang} type="button" onClick={() => active ? setLanguages(languages.filter(l => l !== lang)) : setLanguages([...languages, lang])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={lang} type="button" onClick={() => active ? setLanguages(languages.filter(l => l !== lang)) : setLanguages([...languages, lang])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {lang}
                       </button>
                     );
@@ -489,9 +495,10 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   <div className="mt-2 space-y-1">
                     <label className="text-[10px] font-extrabold text-[#D4AF37] uppercase">Précisez votre langue</label>
                     <input 
+                      id="input-language-custom"
                       value={languageCustom} 
                       onChange={e => setLanguageCustom(e.target.value)} 
-                      className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" 
+                      className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" 
                       placeholder="Saisissez votre langue custom..." 
                     />
                   </div>
@@ -501,9 +508,9 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           </div>
 
           {/* 5. VÉRIFICATION (KYC) */}
-          <div className="afri-card p-6 space-y-4">
+          <div className="afri-card p-4 sm:p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <p className="afri-text-tiny">Sécurité Afritrust</p>
+              <p className="afri-text-tiny uppercase tracking-widest text-[#D4AF37]">Sécurité Afritrust</p>
               {kycStatus === "approved" && <div className="afri-badge afri-badge-gold">Vérifié</div>}
             </div>
             
@@ -511,20 +518,20 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               <p className="text-[10px] text-afri-text-sec leading-relaxed">Téléchargez une pièce d'identité pour certifier votre héritage musical.</p>
               {verifyingIdentity ? (
                 <div className="space-y-2">
-                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                     <div className="h-full bg-afri-bg-sec" style={{ width: `${kycProgress}%` }} />
                   </div>
-                  <p className="text-[9px] font-black text-center text-[#D4AF37] animate-pulse">ENVOI EN COURS...</p>
+                  <p className="text-[9px] font-black text-center text-[#D4AF37] animate-pulse uppercase tracking-widest">ENVOI EN COURS...</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-                  <label className="afri-btn-secondary py-2 text-[10px] w-full flex items-center justify-center gap-2">
-                    <Upload className="w-3 h-3" />
+                  <label id="btn-kyc-album" className="afri-btn-secondary py-3 px-4 text-xs font-bold min-h-[48px] w-full flex items-center justify-center gap-2 rounded-xl cursor-pointer">
+                    <Upload className="w-4 h-4" />
                     Album
                     <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onIdentityUpload(f); }} />
                   </label>
-                  <button type="button" onClick={startCamera} className="afri-btn-secondary py-2 text-[10px] w-full flex items-center justify-center gap-2">
-                    <Camera className="w-3 h-3" />
+                  <button id="btn-kyc-camera" type="button" onClick={startCamera} className="afri-btn-secondary py-3 px-4 text-xs font-bold min-h-[48px] w-full flex items-center justify-center gap-2 rounded-xl">
+                    <Camera className="w-4 h-4" />
                     Caméra
                   </button>
                 </div>
@@ -534,10 +541,10 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 
           {/* ACTIONS FINAL */}
           <div className="grid grid-cols-1 gap-3 pt-4">
-            <button type="submit" disabled={editLoading} className="afri-btn-primary py-4">
+            <button id="btn-profile-submit" type="submit" disabled={editLoading} className="afri-btn-primary py-3.5 min-h-[52px] text-sm font-black uppercase tracking-wider rounded-xl">
               {editLoading ? "Synchronisation..." : "Enregistrer les modifications"}
             </button>
-            <button type="button" onClick={onCancel} className="afri-btn-secondary py-4">
+            <button id="btn-profile-cancel" type="button" onClick={onCancel} className="afri-btn-secondary py-3.5 min-h-[52px] text-sm font-black uppercase tracking-wider rounded-xl">
               Fermer sans enregistrer
             </button>
           </div>

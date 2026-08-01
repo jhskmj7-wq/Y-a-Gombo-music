@@ -119,7 +119,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="w-full max-w-xl mx-auto space-y-6 pt-2 text-left pb-12"
+      className="w-full max-w-full space-y-6 pt-2 text-left pb-12 px-3 xs:px-4"
     >
       
       {/* FOUNDER COMMAND CENTER CARD */}
@@ -220,7 +220,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           <div className="flex flex-col sm:flex-row gap-3 mt-4 relative z-10">
             <button 
               onClick={() => onNavigateView("user_gombo_plus")}
-              className="flex-1 py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="flex-1 py-3.5 min-h-[48px] bg-[#D4AF37] hover:bg-amber-400 text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <span>✨ Découvrir Premium</span>
             </button>
@@ -231,7 +231,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                   window.dispatchEvent(new CustomEvent("gombo_trigger_profile_boost"));
                 }
               }}
-              className={`flex-1 py-3 border font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              className={`flex-1 py-3.5 min-h-[48px] border font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 ${
                 isLight 
                   ? "bg-amber-50 border-amber-400/50 text-amber-800 hover:bg-amber-100" 
                   : "bg-amber-950/20 border-amber-400/40 text-amber-400 hover:bg-amber-950/40"
@@ -242,7 +242,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
             <button 
               onClick={() => onNavigateView("user_mes_gombos")}
-              className={`flex-1 py-3 border font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              className={`flex-1 py-3.5 min-h-[48px] border font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 ${
                 isLight 
                   ? "bg-[#FDFBF7] border-[#D4AF37]/40 text-amber-800 hover:bg-[#D4AF37]/10" 
                   : "bg-afri-bg-sec border-amber-400/40 text-amber-400 hover:bg-amber-500/10"
