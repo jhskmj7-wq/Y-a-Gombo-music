@@ -93,7 +93,7 @@ export default function AdminUsers({
       </div>
 
       {/* SLOGAN & PROFILE SEARCH */}
-      <div className="flex justify-between items-center bg-afri-bg-sec/5 p-5 border border-[#D4AF37]/10 rounded-lg text-left">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-afri-bg-sec/5 p-4 sm:p-5 border border-[#D4AF37]/10 rounded-lg text-left gap-4">
         <div>
           <h4 className="text-md font-display font-bold text-[#D4AF37]">
             ⚜️ Gestion d'Héritage Musical & Gombo ID
@@ -103,7 +103,7 @@ export default function AdminUsers({
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           <button
             id="kyc-tab-all"
             onClick={() => setKycActiveTab("all")}

@@ -474,7 +474,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                 {/* Author Info & Location */}
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-black text-afri-text uppercase tracking-wider drop-shadow-lg">
+                    <span className="text-sm font-black text-afri-text uppercase tracking-wider drop-shadow-lg truncate max-w-[140px] xs:max-w-[180px] block">
                       {reel.authorArtisticName || reel.authorName}
                     </span>
                     <span className="text-[10px] font-mono bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 px-2 py-0.5 rounded-full font-bold uppercase">

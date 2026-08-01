@@ -252,7 +252,7 @@ export default function UserCommentsView({
               }`}
             >
               <span>Reçus</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${activeTab === "received" ? "bg-black text-[#D4AF37]" : "bg-afri-bg text-zinc-400"}`}>
+              <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${activeTab === "received" ? "bg-afri-bg text-[#D4AF37]" : "bg-afri-bg text-afri-text-sec"}`}>
                 {receivedCount}
               </span>
             </button>
@@ -265,7 +265,7 @@ export default function UserCommentsView({
               }`}
             >
               <span>Envoyés</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${activeTab === "sent" ? "bg-black text-[#D4AF37]" : "bg-afri-bg text-zinc-400"}`}>
+              <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${activeTab === "sent" ? "bg-afri-bg text-[#D4AF37]" : "bg-afri-bg text-afri-text-sec"}`}>
                 {sentCount}
               </span>
             </button>
@@ -275,13 +275,13 @@ export default function UserCommentsView({
         {/* SEARCH & CATEGORY FILTERS */}
         <div className="flex flex-col sm:flex-row gap-2.5 pt-2 border-t border-afri-border/60">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-zinc-500" />
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-afri-text-muted" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Rechercher un palabre ou nom..."
-              className="w-full pl-9 pr-3 py-1.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-zinc-500 focus:outline-none focus:border-[#D4AF37]"
+              className="w-full pl-9 pr-3 py-1.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37]"
             />
           </div>
 
@@ -301,7 +301,7 @@ export default function UserCommentsView({
                 className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider whitespace-nowrap cursor-pointer border transition-all ${
                   filterType === f.id 
                     ? "bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]" 
-                    : "bg-afri-bg-sec/50 border-afri-border text-zinc-400 hover:text-afri-text"
+                    : "bg-afri-bg-sec/50 border-afri-border text-afri-text-sec hover:text-afri-text"
                 }`}
               >
                 {f.label}
@@ -331,11 +331,11 @@ export default function UserCommentsView({
               key={comment.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 sm:p-5 rounded-2xl bg-afri-bg border border-afri-border hover:border-[#D4AF37]/40 transition-all shadow-md space-y-3"
+              className="w-full max-w-full overflow-hidden p-4 sm:p-5 rounded-2xl bg-afri-bg border border-afri-border hover:border-[#D4AF37]/40 transition-all shadow-md space-y-3"
             >
               {/* TOP HEADER */}
               <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="w-10 h-10 rounded-full bg-afri-bg-sec border border-[#D4AF37]/50 overflow-hidden shrink-0 flex items-center justify-center text-[#D4AF37] font-bold text-sm">
                     {comment.authorAvatar ? (
                       <img src={comment.authorAvatar} alt="" className="w-full h-full object-cover" />
@@ -344,9 +344,9 @@ export default function UserCommentsView({
                     )}
                   </div>
 
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <h4 className="text-xs sm:text-sm font-bold text-afri-text">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h4 className="text-xs sm:text-sm font-bold text-afri-text truncate max-w-[140px] xs:max-w-[180px] sm:max-w-none block">
                         {comment.authorName}
                       </h4>
                       {comment.authorBadge && (
@@ -355,7 +355,7 @@ export default function UserCommentsView({
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 text-[9.5px] text-zinc-500 font-mono mt-0.5">
+                    <div className="flex items-center gap-1 text-[9.5px] text-afri-text-muted font-mono mt-0.5">
                       <Clock className="w-3 h-3 text-[#D4AF37]/70" />
                       <span>{comment.createdAt}</span>
                     </div>
@@ -363,7 +363,7 @@ export default function UserCommentsView({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 bg-afri-bg-sec border border-afri-border text-[9px] font-mono font-bold text-zinc-400 uppercase rounded-lg truncate max-w-[160px]">
+                  <span className="px-2 py-0.5 bg-afri-bg-sec border border-afri-border text-[9px] font-mono font-bold text-afri-text-sec uppercase rounded-lg truncate max-w-[160px]">
                     {comment.targetTitle}
                   </span>
                   <button
@@ -378,7 +378,7 @@ export default function UserCommentsView({
               </div>
 
               {/* COMMENT TEXT */}
-              <div className="p-3.5 bg-afri-bg-sec/70 rounded-xl border border-afri-border/60 text-xs sm:text-sm text-afri-text leading-relaxed font-sans">
+              <div className="p-3.5 bg-afri-bg-sec/70 rounded-xl border border-afri-border/60 text-xs sm:text-sm text-afri-text leading-relaxed font-sans break-words w-full">
                 {comment.text}
               </div>
 
@@ -391,7 +391,7 @@ export default function UserCommentsView({
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
                       comment.isLiked
                         ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
-                        : "bg-afri-bg-sec border border-afri-border text-zinc-400 hover:text-afri-text"
+                        : "bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text"
                     }`}
                   >
                     <Heart className={`w-3.5 h-3.5 ${comment.isLiked ? "fill-current text-rose-500" : ""}`} />
@@ -432,7 +432,7 @@ export default function UserCommentsView({
                           <CheckCircle2 className="w-3 h-3" />
                           {rep.authorName}
                         </span>
-                        <span className="text-[9px] font-mono text-zinc-500">{rep.createdAt}</span>
+                        <span className="text-[9px] font-mono text-afri-text-muted">{rep.createdAt}</span>
                       </div>
                       <p className="text-afri-text leading-snug">{rep.text}</p>
                     </div>
@@ -458,7 +458,7 @@ export default function UserCommentsView({
                           if (e.key === "Enter") handleSendReply(comment.id);
                         }}
                         placeholder="Écrivez votre réponse publique..."
-                        className="flex-1 bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl px-3 py-2 text-xs text-afri-text placeholder:text-zinc-500 focus:outline-none"
+                        className="flex-1 bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl px-3 py-2 text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none"
                       />
                       <button
                         type="button"

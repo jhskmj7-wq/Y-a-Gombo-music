@@ -473,16 +473,16 @@ export default function SocialPostCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className={`bg-afri-bg border rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 ${
+      className={`w-full max-w-full bg-afri-bg border rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 ${
         post.urgent 
           ? "border-afri-gold shadow-afri-gold/5 bg-gradient-to-tr from-afri-gold/[0.02] to-transparent ring-2 ring-afri-gold/10" 
           : "border-afri-border"
       }`}
     >
       {/* 1. Header block: user info */}
-      <div className="p-4 sm:p-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="relative w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-[#D4AF37] to-amber-400">
+      <div className="p-4 sm:p-5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="relative w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-[#D4AF37] to-amber-400 shrink-0">
             <img 
               
               src={authorProfile?.avatarUrl || authorProfile?.photoURL || post.userAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
@@ -490,9 +490,9 @@ export default function SocialPostCard({
               className="w-full h-full rounded-full object-cover border border-afri-bg" 
             />
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-extrabold text-sm text-gray-950 dark:text-afri-text leading-tight">
+                <span className="font-extrabold text-sm text-gray-950 dark:text-afri-text leading-tight truncate max-w-[130px] xs:max-w-[170px] sm:max-w-none block">
                   {authorProfile?.artistName || authorProfile?.displayName || post.userName || "Artiste Gombo"}
                 </span>
                 {(() => {
@@ -507,7 +507,7 @@ export default function SocialPostCard({
                 })()}
              </div>
              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-               <span className="text-[10px] text-afri-text-sec dark:text-afri-text-sec font-bold block">
+               <span className="text-[10px] text-afri-text-sec dark:text-afri-text-sec font-bold block truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
                  📍 {post.commune || authorProfile?.commune || "Abidjan, CIV"}
                </span>
                <span className="text-afri-text-sec dark:text-zinc-700 font-black">•</span>
@@ -593,7 +593,7 @@ export default function SocialPostCard({
          })()}
  
          {post.title && (
-           <h4 className="text-xs font-black text-gray-950 dark:text-afri-text uppercase tracking-tight flex items-center gap-1">
+           <h4 className="text-xs font-black text-gray-950 dark:text-afri-text uppercase tracking-tight flex items-center gap-1 break-words w-full">
              {post.type === "gombo" && <Briefcase className="w-3.5 h-3.5 text-[#D4AF37]" />}
              {post.type === "demo" && <Music className="w-3.5 h-3.5 text-[#D4AF37]" />}
              {post.type === "annonce" && <MessageSquare className="w-3.5 h-3.5 text-[#D4AF37]" />}
@@ -601,7 +601,7 @@ export default function SocialPostCard({
            </h4>
          )}
          
-         <p className="text-xs text-gray-650 dark:text-afri-text-sec leading-relaxed font-semibold">
+         <p className="text-xs text-gray-650 dark:text-afri-text-sec leading-relaxed font-semibold break-words w-full">
            {post.caption || post.description}
          </p>
  
@@ -757,76 +757,76 @@ export default function SocialPostCard({
           <button
             id="btn-honore"
             onClick={handleHonourToggle}
-            className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer ${
+            className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer min-w-0 ${
               hasHonoured 
                 ? "bg-afri-bg-sec/10 border-[#D4AF37]/20 text-[#D4AF37]" 
                 : "bg-transparent border-afri-border dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-afri-text-sec dark:text-afri-text-sec hover:text-[#D4AF37]"
             }`}
           >
-            <span className="text-[14px]">{hasHonoured ? "🪘" : "🪘"}</span>
-            <span>J'honore ({honours})</span>
+            <span className="text-[14px] shrink-0">{hasHonoured ? "🪘" : "🪘"}</span>
+            <span className="truncate">J'honore ({honours})</span>
           </button>
  
           {/* Comment button - 🗣️ Palabres */}
           <button
             id="btn-palabre"
             onClick={() => setShowComments(!showComments)}
-            className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer ${
+            className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer min-w-0 ${
               showComments 
                 ? "bg-afri-bg-sec/10 border-[#D4AF37]/40 text-[#D4AF37]" 
                 : "bg-transparent border-afri-border dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-afri-text-sec dark:text-afri-text-sec hover:text-[#D4AF37]"
             }`}
           >
-            <MessageSquare className="w-4 h-4" />
-            <span>🗣️ Palabres ({commentsList.length})</span>
+            <MessageSquare className="w-4 h-4 shrink-0" />
+            <span className="truncate">🗣️ Palabres ({commentsList.length})</span>
           </button>
 
           {/* Save button - 📌 Je garde */}
           <button
             id="btn-je-garde"
             onClick={handleSaveToggle}
-            className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer ${
+            className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer min-w-0 ${
               hasSaved 
                 ? "bg-afri-bg-sec/10 border-[#D4AF37]/40 text-[#D4AF37]" 
                 : "bg-transparent border-afri-border dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-afri-text-sec dark:text-afri-text-sec hover:text-[#D4AF37]"
             }`}
           >
-            <Bookmark className={`w-4 h-4 ${hasSaved ? "fill-current text-[#D4AF37]" : ""}`} />
-            <span>📌 Je garde</span>
+            <Bookmark className={`w-4 h-4 shrink-0 ${hasSaved ? "fill-current text-[#D4AF37]" : ""}`} />
+            <span className="truncate">📌 Je garde</span>
           </button>
  
           {/* Share button - 📢 Transmettre */}
           <button
             id="btn-fais-tourner"
             onClick={handleShare}
-            className="flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border bg-transparent border-afri-border dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-afri-text-sec dark:text-afri-text-sec hover:text-[#D4AF37] focus:outline-none active:scale-95 text-[11px] font-black uppercase cursor-pointer"
+            className="flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border bg-transparent border-afri-border dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-afri-text-sec dark:text-afri-text-sec hover:text-[#D4AF37] focus:outline-none active:scale-95 text-[11px] font-black uppercase cursor-pointer min-w-0"
           >
-            <Share2 className="w-4 h-4" />
-            <span>📢 Transmettre</span>
+            <Share2 className="w-4 h-4 shrink-0" />
+            <span className="truncate">📢 Transmettre</span>
           </button>
 
           {/* Report button - 🚨 Alerter */}
           <button
             id="btn-alerter"
             onClick={handleReportAction}
-            className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer ${
+            className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer min-w-0 ${
               hasReported 
                 ? "bg-red-500/10 border-red-550/25 text-red-500" 
                 : "bg-transparent border-afri-border dark:border-[#2B2B2B] hover:border-red-500 text-afri-text-sec dark:text-afri-text-sec hover:text-red-500"
             }`}
           >
-            <Flag className="w-4 h-4" />
-            <span>🚨 Alerter</span>
+            <Flag className="w-4 h-4 shrink-0" />
+            <span className="truncate">🚨 Alerter</span>
           </button>
 
           {/* Apply button - 🎤 Répondre */}
           <button
             id="btn-repondre"
             onClick={handleRespondToGombo}
-            className="col-span-2 xs:col-span-1 sm:col-span-1 flex items-center justify-center md:justify-start gap-1.5 px-3.5 py-2.5 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-sec text-black font-black active:scale-95 transition-all text-[11px] uppercase cursor-pointer md:ml-auto shadow-sm"
+            className="col-span-2 xs:col-span-1 sm:col-span-1 flex items-center justify-center md:justify-start gap-1.5 px-3.5 py-2.5 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-sec text-black font-black active:scale-95 transition-all text-[11px] uppercase cursor-pointer md:ml-auto shadow-sm min-w-0"
           >
-            <Music className="w-4 h-4 text-black animate-pulse" />
-            <span>🎤 Répondre</span>
+            <Music className="w-4 h-4 text-black animate-pulse shrink-0" />
+            <span className="truncate">🎤 Répondre</span>
           </button>
         </div>
       </div>

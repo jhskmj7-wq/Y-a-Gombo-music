@@ -621,7 +621,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
               />
             </div>
 
-            <div className="flex gap-1">
+            <div className="flex flex-wrap gap-1">
               {[
                 { id: "all", label: "Tous" },
                 { id: "credit", label: "Crédits" },
@@ -658,9 +658,9 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
               const dateStr = tx.createdAt ? new Date(tx.createdAt).toLocaleString("fr-FR") : "Récent";
 
               return (
-                <div key={tx.id} className="py-3 px-2 hover:bg-zinc-900/40 rounded-xl flex items-center justify-between gap-3 text-left transition">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 ${
+                <div key={tx.id} className="py-4 px-2 hover:bg-zinc-900/40 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-left transition border-b border-zinc-800/20 last:border-0">
+                  <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1 w-full">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 mt-0.5 sm:mt-0 ${
                       isCredit
                         ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                         : "bg-amber-500/10 border-amber-500/30 text-amber-400"
@@ -668,17 +668,17 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                       {isCredit ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownLeft className="w-4 h-4" />}
                     </div>
 
-                    <div className="space-y-0.5 min-w-0 flex-1">
+                    <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[8px] font-mono font-black uppercase px-1.5 py-0.5 bg-afri-bg-sec border border-afri-border text-[#D4AF37] rounded">
                           {tx.module || tx.type || "Général"}
                         </span>
-                        <h4 className="text-xs font-bold text-afri-text truncate max-w-[200px] sm:max-w-md">
+                        <h4 className="text-xs font-bold text-afri-text break-words w-full sm:w-auto">
                           {tx.reason || tx.description || "Opération financière"}
                         </h4>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 text-[9px] font-mono text-afri-text-muted">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] font-mono text-afri-text-muted">
                         <span>User: <strong className="text-afri-text-sec">{tx.userName || tx.userId}</strong></span>
                         <span>•</span>
                         <span>ID: {tx.id}</span>
@@ -713,7 +713,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                     </div>
                   </div>
 
-                  <div className="text-right shrink-0 space-y-1">
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start w-full sm:w-auto gap-2 sm:gap-1.5 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-800/40 shrink-0">
                     <span className={`text-xs sm:text-sm font-mono font-black block ${isCredit ? "text-emerald-400" : "text-amber-500"}`}>
                       {isCredit ? "+" : "-"}{amount.toLocaleString("fr-FR")} FCFA
                     </span>
@@ -721,7 +721,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                     {!tx.refunded && tx.type !== "refund" && (
                       <button
                         onClick={() => { setSelectedTxForRefund(tx); setRefundReason(""); }}
-                        className="py-1 px-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 rounded text-[8px] font-mono font-bold uppercase transition cursor-pointer inline-flex items-center gap-1"
+                        className="py-1 px-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 rounded text-[9px] font-mono font-bold uppercase transition cursor-pointer inline-flex items-center gap-1"
                       >
                         <RotateCcw className="w-2.5 h-2.5" />
                         <span>Rembourser</span>

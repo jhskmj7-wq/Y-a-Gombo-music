@@ -294,9 +294,9 @@ export default function NotificationCenter({
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <h4 className={`text-xs sm:text-sm font-bold uppercase tracking-tight truncate ${isUnread ? "text-afri-text font-black" : "text-afri-text-sec font-semibold"}`}>
+                    <div className="flex items-start justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                        <h4 className={`text-xs sm:text-sm font-bold uppercase tracking-tight break-words ${isUnread ? "text-afri-text font-black" : "text-afri-text-sec font-semibold"}`}>
                           {(notif as any).title || "Notification"}
                         </h4>
                         {isUnread ? (
@@ -317,7 +317,7 @@ export default function NotificationCenter({
                             e.stopPropagation();
                             if (notif.id) handleDeleteNotif(notif.id, e);
                           }}
-                          className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
+                          className="p-1.5 text-afri-text-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
                           title="Supprimer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -325,7 +325,7 @@ export default function NotificationCenter({
                         {isExpanded ? (
                           <ChevronUp className="w-4 h-4 text-[#D4AF37]" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-zinc-500 group-hover:text-afri-text transition-colors" />
+                          <ChevronDown className="w-4 h-4 text-afri-text-muted group-hover:text-afri-text transition-colors" />
                         )}
                       </div>
                     </div>
@@ -366,8 +366,8 @@ export default function NotificationCenter({
                             {notif.message}
                           </div>
 
-                          <div className="flex items-center justify-between gap-3 pt-1">
-                            <span className="text-[9.5px] font-mono text-emerald-400 font-bold flex items-center gap-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                            <span className="text-[9.5px] font-mono text-emerald-400 font-bold flex items-center gap-1 shrink-0">
                               <CheckCheck className="w-3.5 h-3.5" /> Statut : Marqué comme lu
                             </span>
 
@@ -376,7 +376,7 @@ export default function NotificationCenter({
                                 e.stopPropagation();
                                 triggerDeepLink(notif);
                               }}
-                              className="px-3.5 py-2 bg-gradient-to-r from-[#D4AF37] to-amber-600 hover:from-amber-400 hover:to-amber-600 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                              className="w-full sm:w-auto px-3.5 py-2 bg-gradient-to-r from-[#D4AF37] to-amber-600 hover:from-amber-400 hover:to-amber-600 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
                             >
                               <span>{getDeepLinkLabel(notif.type || "")}</span>
                               <ExternalLink className="w-3.5 h-3.5" />
@@ -498,7 +498,7 @@ export default function NotificationCenter({
               {notifications.length > 0 && (
                 <button
                   onClick={handleDeleteAll}
-                  className="p-2 bg-afri-bg-sec hover:bg-red-950/40 text-zinc-400 hover:text-red-400 border border-afri-border hover:border-red-500/30 rounded-xl transition cursor-pointer"
+                  className="p-2 bg-afri-bg-sec hover:bg-red-950/40 text-afri-text-sec hover:text-red-400 border border-afri-border hover:border-red-500/30 rounded-xl transition cursor-pointer"
                   title="Vider toutes les notifications"
                 >
                   <Trash2 className="w-4 h-4" />

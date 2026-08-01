@@ -8,7 +8,7 @@ import {
   Route, FileText, Bell, Radio, Ban, FileUp, MoreVertical, Play, Pause, Navigation, Plus, PhoneForwarded, PhoneIncoming, PhoneOutgoing, Users, Settings
 } from "lucide-react";
 import { gomboDB, db } from "../firebase";
-import { collection, query, where, onSnapshot, doc, getDocs, addDoc, updateDoc, orderBy } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDocs, addDoc, updateDoc, orderBy, deleteField } from "firebase/firestore";
 import { Conversation, Message, UserProfile } from "../types";
 import { SupportService } from "../services/SupportService";
 import { WebRTCCallService, CallSession } from "../lib/webrtcCallEngine";
@@ -96,6 +96,67 @@ export default function MessagesView({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Android Keyboard & Message Optimization States
+  const [activeReactionMenuMsgId, setActiveReactionMenuMsgId] = useState<string | null>(null);
+  const [showMsgSearch, setShowMsgSearch] = useState(false);
+  const [msgSearchQuery, setMsgSearchQuery] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  
+  const quickEmojis = ["👋", "🪘", "🎤", "👑", "🔥", "👍", "❤️", "😂", "🙏", "📍", "📷", "🤝", "💵", "🦁", "🎉", "⚡", "🌟", "✨"];
+  const reactionEmojis = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+
+  // Toggle/Update Message Reaction
+  const handleToggleReaction = async (msgId: string, emoji: string, currentReaction?: string) => {
+    if (!activeConvo || !currentUser?.uid) return;
+    try {
+      const collectionName = activeConvo.type === "support" ? "supportMessages" : "messages";
+      const msgRef = doc(db, collectionName, msgId);
+      if (currentReaction === emoji) {
+        await updateDoc(msgRef, {
+          [`reactions.${currentUser.uid}`]: deleteField()
+        });
+      } else {
+        await updateDoc(msgRef, {
+          [`reactions.${currentUser.uid}`]: emoji
+        });
+      }
+      setActiveReactionMenuMsgId(null);
+    } catch (err) {
+      console.error("Failed to toggle reaction:", err);
+    }
+  };
+
+  // Helper to Highlight Matching Search Text
+  const highlightText = (text: string, highlight: string) => {
+    if (!highlight.trim()) return text;
+    const parts = text.split(new RegExp(`(${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, "gi"));
+    return (
+      <span className="break-words">
+        {parts.map((part, i) =>
+          part.toLowerCase() === highlight.toLowerCase() ? (
+            <mark key={i} className="bg-[#D4AF37] text-black rounded px-0.5 font-bold">
+              {part}
+            </mark>
+          ) : (
+            part
+          )
+        )}
+      </span>
+    );
+  };
+
+  // Auto-scroll when keyboard opens/resizes viewport on Android
+  useEffect(() => {
+    if (!window.visualViewport) return;
+    const handleViewportResize = () => {
+      if (activeConvo) {
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }
+    };
+    window.visualViewport.addEventListener("resize", handleViewportResize);
+    return () => window.visualViewport?.removeEventListener("resize", handleViewportResize);
+  }, [activeConvo]);
 
   // Set user presence online on mount
   useEffect(() => {
@@ -525,7 +586,9 @@ export default function MessagesView({
   }
 
   return (
-    <div className="w-full flex-1 flex flex-col justify-between p-0 m-0 border-none rounded-none bg-afri-bg text-afri-text select-none overflow-hidden relative pb-[88px]">
+    <div className={`w-full flex-1 flex flex-col justify-between p-0 m-0 border-none rounded-none bg-afri-bg text-afri-text select-none overflow-hidden relative ${
+      activeConvo ? "pb-0 md:pb-[88px]" : "pb-[88px]"
+    }`}>
       {/* HAUT (Barre de recherche) : Une barre de recherche rapide avec icône loupe (w-full px-4 py-3 bg-neutral-900/50) */}
       <div className="w-full px-4 py-3 bg-neutral-900/50 border-b border-afri-border shrink-0">
         <div className="relative w-full">
@@ -793,8 +856,57 @@ export default function MessagesView({
                       >
                         <ShieldAlert className="w-4 h-4" />
                       </button>
+
+                      <button
+                        onClick={() => {
+                          setShowMsgSearch(!showMsgSearch);
+                          if (showMsgSearch) setMsgSearchQuery("");
+                        }}
+                        className={`p-2 rounded-xl border transition cursor-pointer ${
+                          showMsgSearch
+                            ? "bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/40"
+                            : "bg-afri-bg-ter hover:bg-zinc-700 text-afri-text-sec border-afri-border"
+                        }`}
+                        title="Rechercher des messages"
+                      >
+                        <Search className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
+
+                  {/* Inline message search input */}
+                  {showMsgSearch && (
+                    <div className="px-4 py-2 bg-zinc-900 border-b border-afri-border flex items-center justify-between gap-2 shrink-0">
+                      <div className="relative flex-1">
+                        <Search className="w-3.5 h-3.5 text-afri-text-muted absolute left-3 top-2.5" />
+                        <input
+                          type="text"
+                          placeholder="Rechercher dans cette discussion..."
+                          value={msgSearchQuery}
+                          onChange={(e) => setMsgSearchQuery(e.target.value)}
+                          className="w-full pl-9 pr-8 py-1.5 bg-afri-bg border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37]"
+                          autoFocus
+                        />
+                        {msgSearchQuery && (
+                          <button
+                            onClick={() => setMsgSearchQuery("")}
+                            className="absolute right-2.5 top-2.5 text-afri-text-muted hover:text-afri-text"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowMsgSearch(false);
+                          setMsgSearchQuery("");
+                        }}
+                        className="text-[11px] font-bold text-afri-text-sec hover:text-afri-text uppercase px-2 py-1 shrink-0"
+                      >
+                        Fermer
+                      </button>
+                    </div>
+                  )}
 
                   {/* Messages Stream */}
                   <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -807,32 +919,100 @@ export default function MessagesView({
 
                     {messages.map((m) => {
                       const isMe = m.senderId === currentUser?.uid;
-                      return (
-                        <div key={m.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                          <div
-                            className={`max-w-[82%] p-3.5 rounded-2xl text-xs leading-relaxed ${
-                              isMe
-                                ? "bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black font-medium rounded-br-xs shadow-md"
-                                : "bg-afri-bg-ter text-afri-text rounded-bl-xs border border-afri-border"
-                            }`}
-                          >
-                            {m.type === "text" && <p className="whitespace-pre-wrap">{m.text}</p>}
-                            {m.type === "image" && (
-                              <img src={m.mediaUrl || m.text} alt="" className="rounded-xl max-h-60 object-cover" />
-                            )}
-                            {m.type === "audio" && (
-                              <audio controls src={m.mediaUrl} className="w-full max-w-xs h-8 mt-1" />
-                            )}
-                            {m.type === "location" && (
-                              <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-emerald-400" />
-                                <span>{m.text}</span>
-                              </div>
-                            )}
+                      const hasReactions = m.reactions && Object.keys(m.reactions).length > 0;
+                      const myReaction = m.reactions?.[currentUser?.uid || ""];
 
-                            <span className={`text-[9px] font-mono mt-1 block text-right ${isMe ? "text-black/70" : "text-afri-text-sec"}`}>
-                              {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+                      return (
+                        <div key={m.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"} relative mb-3 group w-full`}>
+                          {/* Reaction Picker Bar popup above bubble if this message is selected */}
+                          {activeReactionMenuMsgId === m.id && (
+                            <div className="absolute z-50 -top-10 flex items-center gap-1.5 bg-zinc-950/95 border border-[#D4AF37]/50 p-1 rounded-full shadow-2xl animate-fadeIn">
+                              {reactionEmojis.map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  type="button"
+                                  onClick={() => handleToggleReaction(m.id || "", emoji, myReaction)}
+                                  className={`w-7 h-7 flex items-center justify-center text-sm rounded-full hover:bg-zinc-800 transition active:scale-125 ${
+                                    myReaction === emoji ? "bg-[#D4AF37]/20 border border-[#D4AF37]/40" : ""
+                                  }`}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={() => setActiveReactionMenuMsgId(null)}
+                                className="w-5 h-5 flex items-center justify-center text-xs text-afri-text-muted hover:text-afri-text hover:bg-zinc-800 rounded-full ml-1"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
+
+                          <div className={`flex items-center gap-2 max-w-[85%] ${isMe ? "flex-row-reverse" : "flex-row"}`}>
+                            {/* Message bubble */}
+                            <div
+                              className={`relative p-3.5 rounded-2xl text-xs leading-relaxed select-text ${
+                                isMe
+                                  ? "bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black font-medium rounded-br-xs shadow-md"
+                                  : "bg-afri-bg-ter text-afri-text rounded-bl-xs border border-afri-border"
+                              } break-words min-w-[70px] ${hasReactions ? "pb-5" : ""}`}
+                            >
+                              {m.type === "text" && (
+                                <p className="whitespace-pre-wrap break-words">{highlightText(m.text || "", msgSearchQuery)}</p>
+                              )}
+                              {m.type === "image" && (
+                                <img src={m.mediaUrl || m.text} alt="" className="rounded-xl max-h-60 object-cover" />
+                              )}
+                              {m.type === "audio" && (
+                                <audio controls src={m.mediaUrl} className="w-full max-w-xs h-8 mt-1" />
+                              )}
+                              {m.type === "location" && (
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
+                                  <span className="break-words">{m.text}</span>
+                                </div>
+                              )}
+
+                              {/* Reactions Overlapping on Bubble Corner */}
+                              {hasReactions && (
+                                <div className={`absolute -bottom-2 ${isMe ? "right-3" : "left-3"} flex items-center gap-0.5 bg-zinc-950 border border-afri-border/60 px-1.5 py-0.5 rounded-full shadow-md text-[10px] z-10 select-none`}>
+                                  {Object.entries(m.reactions as Record<string, string>).map(([uid, rEmoji]) => {
+                                    if (!rEmoji) return null;
+                                    return (
+                                      <span
+                                        key={uid}
+                                        title={uid === currentUser?.uid ? "Vous" : "Partenaire"}
+                                        onClick={() => handleToggleReaction(m.id || "", rEmoji, rEmoji)}
+                                        className="cursor-pointer hover:scale-125 transition-transform"
+                                      >
+                                        {rEmoji}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              )}
+
+                              <span className={`text-[9px] font-mono mt-1 block text-right ${isMe ? "text-black/70" : "text-afri-text-sec"}`}>
+                                {(() => {
+                                  try {
+                                    return new Date(m.timestamp || m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                  } catch (e) {
+                                    return "";
+                                  }
+                                })()}
+                              </span>
+                            </div>
+
+                            {/* Hover/Tap Quick Reaction Sparkles trigger button next to the bubble */}
+                            <button
+                              type="button"
+                              onClick={() => setActiveReactionMenuMsgId(activeReactionMenuMsgId === m.id ? null : (m.id || null))}
+                              className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-opacity p-1.5 rounded-full bg-afri-bg-ter border border-afri-border/40 hover:border-[#D4AF37]/40 text-afri-text-muted hover:text-[#D4AF37] shrink-0"
+                              title="Réagir"
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
                       );
@@ -842,6 +1022,24 @@ export default function MessagesView({
 
                   {/* Bottom Chat Input Bar */}
                   <div className="p-3 bg-afri-bg-sec border-t border-afri-border relative">
+                    {showEmojiPicker && (
+                      <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-2 pt-1 scrollbar-none border-b border-afri-border/30">
+                        {quickEmojis.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => {
+                              setInputText((prev) => prev + emoji);
+                              setShowEmojiPicker(false);
+                            }}
+                            className="w-8 h-8 flex items-center justify-center bg-afri-bg border border-afri-border hover:border-[#D4AF37] rounded-lg text-sm active:scale-95 transition shrink-0"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     {isVoiceRecording ? (
                       <div
                         onTouchMove={handleVoiceTouchMove}
@@ -873,10 +1071,23 @@ export default function MessagesView({
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="p-2.5 rounded-xl bg-afri-bg-ter hover:bg-zinc-700 text-afri-text-sec hover:text-afri-text transition cursor-pointer"
+                          className="p-2.5 rounded-xl bg-afri-bg-ter hover:bg-zinc-700 text-afri-text-sec hover:text-afri-text transition cursor-pointer shrink-0"
                           title="Joindre une photo"
                         >
                           <ImageIcon className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                          className={`p-2.5 rounded-xl transition cursor-pointer shrink-0 ${
+                            showEmojiPicker
+                              ? "bg-[#D4AF37]/20 text-[#D4AF37]"
+                              : "bg-afri-bg-ter text-afri-text-sec hover:text-afri-text"
+                          }`}
+                          title="Choisir un Emoji"
+                        >
+                          <Sparkles className="w-4 h-4" />
                         </button>
 
                         <input
@@ -884,6 +1095,7 @@ export default function MessagesView({
                           placeholder="Écrivez votre message..."
                           value={inputText}
                           onChange={handleInputChange}
+                          onFocus={() => setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 150)}
                           className="flex-1 py-2.5 px-4 bg-afri-bg border border-afri-border rounded-2xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37]"
                         />
 
@@ -891,7 +1103,7 @@ export default function MessagesView({
                           <button
                             type="submit"
                             disabled={isSending}
-                            className="p-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-bold rounded-xl transition cursor-pointer shadow-md"
+                            className="p-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-bold rounded-xl transition cursor-pointer shadow-md shrink-0"
                           >
                             <Send className="w-4 h-4" />
                           </button>
@@ -902,7 +1114,7 @@ export default function MessagesView({
                             onTouchStart={startVoiceRecording}
                             onMouseUp={() => stopVoiceRecording(false)}
                             onTouchEnd={() => stopVoiceRecording(false)}
-                            className="p-2.5 bg-afri-bg-ter hover:bg-amber-500/20 text-amber-400 border border-afri-border rounded-xl transition cursor-pointer"
+                            className="p-2.5 bg-afri-bg-ter hover:bg-amber-500/20 text-amber-400 border border-afri-border rounded-xl transition cursor-pointer shrink-0"
                             title="Maintenir pour enregistrer une note vocale"
                           >
                             <Mic className="w-4 h-4" />
@@ -1207,7 +1419,9 @@ export default function MessagesView({
       )}
 
       {/* WhatsApp-Style Bottom Navigation Bar (4 Essential Tabs) */}
-      <div className="absolute bottom-0 left-0 w-full pb-6 pt-2 bg-afri-bg-sec border-t border-afri-border flex items-center justify-around px-2 z-30 shadow-2xl">
+      <div className={`absolute bottom-0 left-0 w-full pb-6 pt-2 bg-afri-bg-sec border-t border-afri-border items-center justify-around px-2 z-30 shadow-2xl ${
+        activeConvo ? "hidden md:flex" : "flex"
+      }`}>
         {[
           { id: "conversations", label: "💬 DISCUSSIONS", icon: MessageSquare, badge: (conversations.length || 0) + ((supportConvo?.unreadCount?.[currentUser?.uid] > 0) ? 1 : 0) },
           { id: "appels", label: "📞 APPELS", icon: PhoneCall, badge: callLogs.length },

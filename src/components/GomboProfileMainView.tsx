@@ -419,7 +419,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       {/* 4. GÉRER MON ABONNEMENT BUTTON (SCREENSHOT STYLE) */}
       <button 
         onClick={() => onNavigateView("user_subscription_management")}
-        className="w-full max-w-sm mx-auto flex items-center justify-between py-2.5 px-5 bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text-sec font-mono font-black text-[9.5px] uppercase tracking-widest rounded-full shadow-md hover:text-afri-text transition-all active:scale-98 cursor-pointer"
+        className="w-full flex items-center justify-between py-3 px-5 bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text-sec font-mono font-black text-[10px] uppercase tracking-widest rounded-full shadow-md hover:text-afri-text transition-all active:scale-98 cursor-pointer"
       >
         <span />
         <span className="text-center flex-1">GÉRER MON ABONNEMENT</span>
@@ -965,7 +965,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-afri-bg/95 backdrop-blur-md z-[99999] flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 bg-afri-bg/95 backdrop-blur-md z-[99999] flex items-start sm:items-center justify-center p-4 overflow-y-auto"
           >
             <motion.div 
               initial={{ scale: 0.9, y: 30 }}

@@ -563,7 +563,7 @@ export default function AfrigomboWalletDashboard({
   });
 
   return (
-    <div className="w-full max-w-none px-4 py-3 space-y-5 text-left animate-fadeIn">
+    <div className="w-full max-w-none px-3 xs:px-4 sm:px-6 py-3 space-y-5 text-left animate-fadeIn">
       
       {/* COMPACT TOP HEADER */}
       <div className="flex items-center justify-between border-b border-afri-border/80 pb-3">
@@ -588,8 +588,9 @@ export default function AfrigomboWalletDashboard({
           </span>
           {onBack && (
             <button 
+              id="btn-wallet-back"
               onClick={onBack}
-              className="text-[10px] font-mono px-3 py-1 bg-afri-bg-sec border border-afri-border rounded-lg text-afri-text-sec hover:text-afri-gold transition-colors"
+              className="text-xs font-mono px-4 py-2.5 min-h-[48px] inline-flex items-center justify-center bg-afri-bg-sec border border-afri-border rounded-xl text-afri-text-sec hover:text-afri-gold transition-colors font-bold cursor-pointer"
             >
               &larr; Retour
             </button>
@@ -600,12 +601,12 @@ export default function AfrigomboWalletDashboard({
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           1. 💰 SOLDE DISPONIBLE (EN TRÈS GRAND)
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="bg-afri-bg-sec border border-[#D4AF37]/30 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl group">
+      <div className="bg-afri-bg-sec border border-[#D4AF37]/30 rounded-3xl p-4 xs:p-5 sm:p-8 relative overflow-hidden shadow-2xl group">
         <div className="absolute top-0 right-0 w-72 h-72 bg-[#D4AF37]/5 rounded-full blur-[90px] -mr-24 -mt-24 pointer-events-none"></div>
         
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-[0.2em] font-black flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 💰 Solde disponible
@@ -613,21 +614,21 @@ export default function AfrigomboWalletDashboard({
               <BetaEscrowInfoButton variant="badge" />
             </div>
 
-            <div className="flex items-baseline gap-2">
-              <h1 className="text-4xl xs:text-5xl sm:text-6xl font-black text-afri-text font-mono tracking-tight text-shadow-sm">
+            <div className="flex items-baseline gap-1.5 flex-wrap">
+              <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-black text-afri-text font-mono tracking-tight text-shadow-sm break-all">
                 {wallet.soldeDisponible.toLocaleString('fr-FR')}
               </h1>
-              <span className="text-lg xs:text-xl sm:text-2xl font-black text-[#D4AF37] font-mono uppercase">
+              <span className="text-base xs:text-lg sm:text-xl md:text-2xl font-black text-[#D4AF37] font-mono uppercase">
                 FCFA
               </span>
             </div>
 
-            <div className="pt-1 flex items-center gap-3">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-afri-bg/60 border border-afri-border text-[10px] font-mono text-amber-400 font-bold">
+            <div className="pt-1 flex items-center gap-2.5 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-afri-bg/60 border border-afri-border text-[10px] font-mono text-amber-400 font-bold">
                 <Lock className="w-3 h-3 text-[#D4AF37]" />
                 Séquestre : {wallet.soldeBloque.toLocaleString('fr-FR')} FCFA
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-afri-bg/60 border border-afri-border text-[10px] font-mono text-emerald-400 font-bold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-afri-bg/60 border border-afri-border text-[10px] font-mono text-emerald-400 font-bold">
                 <TrendingUp className="w-3 h-3" />
                 Gains : +{wallet.revenus?.toLocaleString('fr-FR') || 0} FCFA
               </span>
@@ -635,7 +636,7 @@ export default function AfrigomboWalletDashboard({
           </div>
 
           {/* Quick Level Badge */}
-          <div className="sm:text-right flex flex-col sm:items-end justify-center border-t sm:border-t-0 sm:border-l border-afri-border/60 pt-4 sm:pt-0 sm:pl-6 space-y-1">
+          <div className="sm:text-right flex flex-col sm:items-end justify-center border-t sm:border-t-0 sm:border-l border-afri-border/60 pt-4 sm:pt-0 sm:pl-6 space-y-1 shrink-0">
             <span className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest font-black">NIVEAU COMPTE</span>
             <span className="px-3 py-1 bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/35 rounded-xl text-xs font-black uppercase font-mono tracking-wider inline-block">
               👑 {wallet.niveauWallet || "SOUVERAIN"}
@@ -655,58 +656,62 @@ export default function AfrigomboWalletDashboard({
           
           {/* • Recharger */}
           <button
+            id="btn-wallet-recharger"
             onClick={openDeposit}
-            className="p-4 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-2xl flex flex-col items-center justify-center text-center gap-2 hover:bg-[#D4AF37]/10 transition-all group cursor-pointer shadow-md active:scale-98"
+            className="p-4 min-h-[110px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-2xl flex flex-col items-center justify-center text-center gap-2 hover:bg-[#D4AF37]/10 transition-all group cursor-pointer shadow-md active:scale-98"
           >
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
               <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <div>
+            <div className="space-y-0.5">
               <span className="text-xs font-black font-sans text-afri-text uppercase block">Recharger</span>
-              <span className="text-[8px] font-mono text-emerald-400 uppercase tracking-widest block font-bold">Dépôt Mobile</span>
+              <span className="text-[8.5px] font-mono text-emerald-400 uppercase tracking-wider block font-bold">Dépôt Mobile</span>
             </div>
           </button>
 
           {/* • Retirer */}
           <button
+            id="btn-wallet-retirer"
             onClick={openWithdraw}
             disabled={wallet.soldeDisponible <= 0}
-            className="p-4 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-2xl flex flex-col items-center justify-center text-center gap-2 hover:bg-amber-500/10 transition-all group cursor-pointer shadow-md disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
+            className="p-4 min-h-[110px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-2xl flex flex-col items-center justify-center text-center gap-2 hover:bg-amber-500/10 transition-all group cursor-pointer shadow-md disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
           >
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
               <ArrowDownLeft className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <div>
+            <div className="space-y-0.5">
               <span className="text-xs font-black font-sans text-afri-text uppercase block">Retirer</span>
-              <span className="text-[8px] font-mono text-amber-400 uppercase tracking-widest block font-bold">Vers Mobile</span>
+              <span className="text-[8.5px] font-mono text-amber-400 uppercase tracking-wider block font-bold">Vers Mobile</span>
             </div>
           </button>
 
           {/* • Historique */}
           <button
+            id="btn-wallet-historique"
             onClick={scrollToHistory}
-            className="p-4 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-2xl flex flex-col items-center justify-center text-center gap-2 hover:bg-sky-500/10 transition-all group cursor-pointer shadow-md active:scale-98"
+            className="p-4 min-h-[110px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-2xl flex flex-col items-center justify-center text-center gap-2 hover:bg-sky-500/10 transition-all group cursor-pointer shadow-md active:scale-98"
           >
             <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 group-hover:scale-110 transition-transform">
               <History className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <div>
+            <div className="space-y-0.5">
               <span className="text-xs font-black font-sans text-afri-text uppercase block">Historique</span>
-              <span className="text-[8px] font-mono text-sky-400 uppercase tracking-widest block font-bold">Journaux</span>
+              <span className="text-[8.5px] font-mono text-sky-400 uppercase tracking-wider block font-bold">Journaux</span>
             </div>
           </button>
 
           {/* • Scanner */}
           <button
+            id="btn-wallet-scanner"
             onClick={openScanner}
-            className="p-4 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-2xl flex flex-col items-center justify-center text-center gap-2 hover:bg-purple-500/10 transition-all group cursor-pointer shadow-md active:scale-98"
+            className="p-4 min-h-[110px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-2xl flex flex-col items-center justify-center text-center gap-2 hover:bg-purple-500/10 transition-all group cursor-pointer shadow-md active:scale-98"
           >
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
               <QrCode className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <div>
+            <div className="space-y-0.5">
               <span className="text-xs font-black font-sans text-afri-text uppercase block">Scanner</span>
-              <span className="text-[8px] font-mono text-purple-400 uppercase tracking-widest block font-bold">Paiement QR</span>
+              <span className="text-[8.5px] font-mono text-purple-400 uppercase tracking-wider block font-bold">Paiement QR</span>
             </div>
           </button>
 
@@ -723,41 +728,41 @@ export default function AfrigomboWalletDashboard({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           
           {/* • Argent reçu */}
-          <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 space-y-1">
+          <div className="bg-afri-bg border border-afri-border rounded-2xl p-3.5 space-y-1 flex flex-col justify-center min-h-[72px]">
             <span className="text-[9px] font-mono text-afri-text-sec block uppercase tracking-wider">
               📥 Argent reçu
             </span>
-            <span className="text-base sm:text-lg font-black text-emerald-400 font-mono block">
+            <span className="text-sm xs:text-base font-black text-emerald-400 font-mono block truncate">
               +{wallet.revenus?.toLocaleString('fr-FR') || 0} <span className="text-[9px]">FCFA</span>
             </span>
           </div>
 
           {/* • Argent dépensé */}
-          <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 space-y-1">
+          <div className="bg-afri-bg border border-afri-border rounded-2xl p-3.5 space-y-1 flex flex-col justify-center min-h-[72px]">
             <span className="text-[9px] font-mono text-afri-text-sec block uppercase tracking-wider">
               📤 Argent dépensé
             </span>
-            <span className="text-base sm:text-lg font-black text-rose-400 font-mono block">
+            <span className="text-sm xs:text-base font-black text-rose-400 font-mono block truncate">
               -{(wallet.retraits || wallet.depots || 0).toLocaleString('fr-FR')} <span className="text-[9px]">FCFA</span>
             </span>
           </div>
 
           {/* • Commissions */}
-          <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 space-y-1">
+          <div className="bg-afri-bg border border-afri-border rounded-2xl p-3.5 space-y-1 flex flex-col justify-center min-h-[72px]">
             <span className="text-[9px] font-mono text-afri-text-sec block uppercase tracking-wider">
               🛡️ Commissions
             </span>
-            <span className="text-base sm:text-lg font-black text-amber-400 font-mono block">
+            <span className="text-sm xs:text-base font-black text-amber-400 font-mono block truncate">
               {(wallet.economiesPremium || 0).toLocaleString('fr-FR')} <span className="text-[9px]">FCFA</span>
             </span>
           </div>
 
           {/* • Solde disponible */}
-          <div className="bg-afri-bg border border-[#D4AF37]/30 rounded-2xl p-4 space-y-1 bg-[#D4AF37]/5">
+          <div className="bg-afri-bg border border-[#D4AF37]/30 rounded-2xl p-3.5 space-y-1 bg-[#D4AF37]/5 flex flex-col justify-center min-h-[72px]">
             <span className="text-[9px] font-mono text-[#D4AF37] block uppercase tracking-wider font-bold">
               💰 Solde disponible
             </span>
-            <span className="text-base sm:text-lg font-black text-afri-text font-mono block">
+            <span className="text-sm xs:text-base font-black text-afri-text font-mono block truncate">
               {wallet.soldeDisponible.toLocaleString('fr-FR')} <span className="text-[9px]">FCFA</span>
             </span>
           </div>
@@ -789,8 +794,9 @@ export default function AfrigomboWalletDashboard({
             ].map(tab => (
               <button
                 key={tab.id}
+                id={`btn-history-tab-${tab.id}`}
                 onClick={() => { setActiveTab(tab.id as any); playSound("click"); }}
-                className="py-1 px-2.5 sm:py-1 sm:px-3 rounded-full text-[9px] font-mono font-extrabold uppercase transition-all cursor-pointer bg-afri-bg text-afri-text-sec hover:text-afri-text border border-afri-border"
+                className="py-2 px-3.5 min-h-[40px] rounded-full text-[10px] font-mono font-black uppercase transition-all cursor-pointer bg-afri-bg text-afri-text-sec hover:text-afri-text border border-afri-border flex items-center justify-center whitespace-nowrap"
                 style={activeTab === tab.id ? { backgroundColor: '#D4AF37', color: "var(--afri-text)", fontWeight: '900' } : undefined}
               >
                 {tab.label}
@@ -821,7 +827,7 @@ export default function AfrigomboWalletDashboard({
 
               const formattedDate = tx.date || (tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("fr-FR") : "Récent");
               const formattedHeure = tx.heure || (tx.createdAt ? new Date(tx.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "");
-              const txAmount = Number(tx.amount || tx.montant || 0);
+              const txAmount = Math.abs(Number(tx.amount || tx.montant || 0));
 
               return (
                 <div key={tx.id || tx.reference} className="py-2.5 flex items-center justify-between gap-2 text-left hover:bg-afri-bg/30 px-1.5 rounded-xl transition-colors">
@@ -840,23 +846,23 @@ export default function AfrigomboWalletDashboard({
                     </div>
 
                     <div className="space-y-0.5 min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[7.5px] font-mono font-black uppercase px-1.5 py-0.5 bg-afri-bg border border-afri-border text-[#D4AF37] rounded">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 flex-wrap">
+                        <span className="text-[7.5px] font-mono font-black uppercase px-1.5 py-0.5 bg-afri-bg border border-afri-border text-[#D4AF37] rounded w-fit">
                           {typeLabel}
                         </span>
-                        <p className="text-[11px] font-bold text-afri-text truncate max-w-[130px] sm:max-w-[320px]">
+                        <p className="text-[11px] font-bold text-afri-text break-words">
                           {tx.description || "Opération financière"}
                         </p>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[8.5px] font-mono text-afri-text-muted">
-                        <span className="truncate max-w-[90px]">Réf: {tx.reference || tx.id}</span>
+                        <span className="break-words">Réf: {tx.reference || tx.id}</span>
                         <span>•</span>
-                        <span>{formattedDate} {formattedHeure}</span>
+                        <span className="whitespace-nowrap">{formattedDate} {formattedHeure}</span>
                         {tx.userConcerned && (
                           <>
                             <span>•</span>
-                            <span className="text-afri-text-sec truncate max-w-[80px]">{tx.userConcerned}</span>
+                            <span className="text-afri-text-sec break-words">{tx.userConcerned}</span>
                           </>
                         )}
                       </div>
@@ -907,15 +913,16 @@ export default function AfrigomboWalletDashboard({
               <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
 
               <button 
+                id="btn-close-deposit-modal"
                 onClick={() => { setShowDepositModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text p-1 rounded-full bg-afri-bg-sec border border-afri-border"
+                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text w-12 h-12 flex items-center justify-center rounded-full bg-afri-bg-sec border border-afri-border cursor-pointer transition-colors active:scale-95"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
 
               {step === "form" && (
                 <form onSubmit={(e) => { e.preventDefault(); handleDepositRequest(); }} className="space-y-5">
-                  <div className="text-center space-y-1.5">
+                  <div className="text-center space-y-1.5 pt-4">
                     <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mx-auto">
                       <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
                     </div>
@@ -929,7 +936,7 @@ export default function AfrigomboWalletDashboard({
 
                   {/* Operator Choice */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
+                    <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
                       Opérateur Mobile Money
                     </label>
                     <div className="grid grid-cols-4 gap-2">
@@ -941,9 +948,10 @@ export default function AfrigomboWalletDashboard({
                       ].map(op => (
                         <button
                           key={op.id}
+                          id={`btn-deposit-op-${op.id}`}
                           type="button"
                           onClick={() => { setOperator(op.id as any); playSound("click"); }}
-                          className={`py-2 text-[10px] font-black uppercase rounded-xl border text-center transition-all cursor-pointer ${
+                          className={`py-3 min-h-[48px] text-xs font-black uppercase rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center ${
                             operator === op.id 
                               ? `${op.color} bg-afri-bg font-black scale-102` 
                               : "border-afri-border text-afri-text-muted hover:border-afri-text-sec"
@@ -958,46 +966,51 @@ export default function AfrigomboWalletDashboard({
                   {/* Fields */}
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
+                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
                         Numéro Mobile Money (+225)
                       </label>
                       <div className="relative">
-                        <Phone className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
+                        <Phone className="absolute left-4 top-4 w-4 h-4 text-afri-text-muted" />
                         <input 
+                          id="input-deposit-phone"
                           type="tel" 
                           required
                           value={phoneNumber} 
                           onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
                           placeholder="0707070707" 
-                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
+                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest flex justify-between">
-                        <span>Montant du rechargement (FCFA)</span>
-                        <span className="text-[#D4AF37]">Min: 1 000 FCFA</span>
-                      </label>
+                      <div className="flex justify-between items-center">
+                        <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest font-bold">
+                          Montant du rechargement (FCFA)
+                        </label>
+                        <span className="text-[9px] font-mono text-[#D4AF37] font-bold">Min: 1 000 FCFA</span>
+                      </div>
                       <div className="relative">
-                        <Coins className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
+                        <Coins className="absolute left-4 top-4 w-4 h-4 text-afri-text-muted" />
                         <input 
+                          id="input-deposit-amount"
                           type="number" 
                           required
                           min="1000"
                           value={amount} 
                           onChange={(e) => setAmount(e.target.value)}
                           placeholder="Ex: 25000" 
-                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
+                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
                         />
                       </div>
                     </div>
                   </div>
 
                   <button
+                    id="btn-deposit-submit"
                     type="submit"
                     disabled={processing || !amount || !phoneNumber}
-                    className="w-full py-3.5 bg-[#D4AF37] hover:bg-[#b8982e] text-black font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98"
+                    className="w-full py-4 min-h-[52px] bg-[#D4AF37] hover:bg-[#b8982e] text-black font-black uppercase font-mono text-xs tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98 flex items-center justify-center"
                   >
                     {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Générer l'ordre de rechargement"}
                   </button>
@@ -1100,10 +1113,11 @@ export default function AfrigomboWalletDashboard({
               <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
 
               <button 
+                id="btn-close-withdraw-modal"
                 onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text p-1 rounded-full bg-afri-bg-sec border border-afri-border"
+                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text w-12 h-12 flex items-center justify-center rounded-full bg-afri-bg-sec border border-afri-border cursor-pointer transition-colors active:scale-95"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
 
               {withdrawSubmitted ? (
@@ -1129,9 +1143,10 @@ export default function AfrigomboWalletDashboard({
 
                   <div className="space-y-2 pt-2">
                     <button
+                      id="btn-withdraw-success-close"
                       type="button"
                       onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
-                      className="w-full py-2.5 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-[10px] tracking-widest rounded-xl transition-colors cursor-pointer"
+                      className="w-full py-3.5 min-h-[48px] bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-xs tracking-widest rounded-xl transition-colors cursor-pointer flex items-center justify-center"
                     >
                       Fermer le guichet
                     </button>
@@ -1139,7 +1154,7 @@ export default function AfrigomboWalletDashboard({
                 </div>
               ) : (
                 <form onSubmit={(e) => { e.preventDefault(); handleWithdrawRequest(e); }} className="space-y-5">
-                  <div className="text-center space-y-1.5">
+                  <div className="text-center space-y-1.5 pt-4">
                     <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mx-auto">
                       <ArrowDownLeft className="w-6 h-6 stroke-[2.5]" />
                     </div>
@@ -1153,7 +1168,7 @@ export default function AfrigomboWalletDashboard({
 
                   {/* Operator Choice */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
+                    <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
                       Opérateur de destination
                     </label>
                     <div className="grid grid-cols-4 gap-2">
@@ -1165,9 +1180,10 @@ export default function AfrigomboWalletDashboard({
                       ].map(op => (
                         <button
                           key={op.id}
+                          id={`btn-withdraw-op-${op.id}`}
                           type="button"
                           onClick={() => { setOperator(op.id as any); playSound("click"); }}
-                          className={`py-2 text-[10px] font-black uppercase rounded-xl border text-center transition-all cursor-pointer ${
+                          className={`py-3 min-h-[48px] text-xs font-black uppercase rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center ${
                             operator === op.id 
                               ? `${op.color} bg-afri-bg font-black scale-102` 
                               : "border-afri-border text-afri-text-muted hover:border-afri-text-sec"
@@ -1183,7 +1199,7 @@ export default function AfrigomboWalletDashboard({
                   <div className="space-y-3">
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest">
+                        <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest font-bold">
                           Montant à retirer (FCFA)
                         </label>
                         <span className="text-[9px] font-mono text-amber-400 font-bold">
@@ -1191,8 +1207,9 @@ export default function AfrigomboWalletDashboard({
                         </span>
                       </div>
                       <div className="relative">
-                        <Coins className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
+                        <Coins className="absolute left-4 top-4 w-4 h-4 text-afri-text-muted" />
                         <input 
+                          id="input-withdraw-amount"
                           type="number" 
                           required
                           min="500"
@@ -1200,33 +1217,35 @@ export default function AfrigomboWalletDashboard({
                           value={amount} 
                           onChange={(e) => setAmount(e.target.value)}
                           placeholder="Ex: 25000" 
-                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
+                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
+                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
                         Numéro Mobile Money du bénéficiaire (+225)
                       </label>
                       <div className="relative">
-                        <Phone className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
+                        <Phone className="absolute left-4 top-4 w-4 h-4 text-afri-text-muted" />
                         <input 
+                          id="input-withdraw-phone"
                           type="tel" 
                           required
                           value={phoneNumber} 
                           onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
                           placeholder="0707070707" 
-                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
+                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
                         />
                       </div>
                     </div>
                   </div>
 
                   <button
+                    id="btn-withdraw-submit"
                     type="submit"
                     disabled={processing || !amount || Number(amount) > wallet.soldeDisponible || !phoneNumber}
-                    className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98"
+                    className="w-full py-4 min-h-[52px] bg-amber-500 hover:bg-amber-600 text-black font-black uppercase font-mono text-xs tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98 flex items-center justify-center"
                   >
                     {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Soumettre la demande de retrait"}
                   </button>
@@ -1256,13 +1275,14 @@ export default function AfrigomboWalletDashboard({
               <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
 
               <button 
+                id="btn-close-scanner-modal"
                 onClick={() => { setShowScannerModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text p-1 rounded-full bg-afri-bg-sec border border-afri-border"
+                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text w-12 h-12 flex items-center justify-center rounded-full bg-afri-bg-sec border border-afri-border cursor-pointer transition-colors active:scale-95"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
 
-              <div className="text-center space-y-1.5">
+              <div className="text-center space-y-1.5 pt-4">
                 <div className="w-12 h-12 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 mx-auto">
                   <QrCode className="w-6 h-6" />
                 </div>
@@ -1287,8 +1307,9 @@ export default function AfrigomboWalletDashboard({
                     <p className="text-afri-text-sec text-xs font-mono">Destinataire : {scanRecipient}</p>
                   </div>
                   <button
+                    id="btn-scanner-success-close"
                     onClick={() => { setShowScannerModal(false); playSound("click"); }}
-                    className="w-full py-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-[10px] tracking-widest rounded-xl transition-colors cursor-pointer"
+                    className="w-full py-3.5 min-h-[48px] bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-xs tracking-widest rounded-xl transition-colors cursor-pointer flex items-center justify-center"
                   >
                     Terminer
                   </button>
@@ -1308,22 +1329,23 @@ export default function AfrigomboWalletDashboard({
 
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
+                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
                         Destinataire (Gombo ID / Téléphone / Email)
                       </label>
                       <input 
+                        id="input-transfer-recipient"
                         type="text" 
                         required
                         value={scanRecipient} 
                         onChange={(e) => setScanRecipient(e.target.value)}
                         placeholder="Ex: GOMBO-7782 ou 0707070707" 
-                        className="w-full bg-afri-bg border border-afri-border rounded-xl px-4 py-3 text-afri-text font-mono text-xs focus:outline-none focus:border-purple-500"
+                        className="w-full bg-afri-bg border border-afri-border rounded-xl px-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-purple-500"
                       />
                     </div>
 
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest">
+                        <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest font-bold">
                           Montant à transférer (FCFA)
                         </label>
                         <span className="text-[9px] font-mono text-purple-400 font-bold">
@@ -1331,6 +1353,7 @@ export default function AfrigomboWalletDashboard({
                         </span>
                       </div>
                       <input 
+                        id="input-transfer-amount"
                         type="number" 
                         required
                         min="100"
@@ -1338,15 +1361,16 @@ export default function AfrigomboWalletDashboard({
                         value={scanAmount} 
                         onChange={(e) => setScanAmount(e.target.value)}
                         placeholder="Ex: 5000" 
-                        className="w-full bg-afri-bg border border-afri-border rounded-xl px-4 py-3 text-afri-text font-mono text-xs focus:outline-none focus:border-purple-500"
+                        className="w-full bg-afri-bg border border-afri-border rounded-xl px-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-purple-500"
                       />
                     </div>
                   </div>
 
                   <button
+                    id="btn-transfer-submit"
                     type="submit"
                     disabled={processing || !scanRecipient || !scanAmount || Number(scanAmount) > wallet.soldeDisponible}
-                    className="w-full py-3.5 bg-purple-600 hover:bg-purple-700 text-afri-text font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98 flex items-center justify-center gap-2"
+                    className="w-full py-4 min-h-[52px] bg-purple-600 hover:bg-purple-700 text-afri-text font-black uppercase font-mono text-xs tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98 flex items-center justify-center gap-2"
                   >
                     {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <>
                       <Send className="w-4 h-4" />

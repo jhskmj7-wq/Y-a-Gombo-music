@@ -102,7 +102,7 @@ export default function GlobalNotificationBanner() {
               {activeNotif.type}
             </span>
           </h4>
-          <p className="text-xs mt-1 opacity-90 max-w-3xl line-clamp-2">{activeNotif.description}</p>
+          <p className="text-xs mt-1 opacity-90 max-w-3xl break-words w-full">{activeNotif.description}</p>
           {activeNotif.lien && (
             <a href={activeNotif.lien} target="_blank" rel="noopener noreferrer" className="text-xs font-bold underline mt-1 block hover:opacity-80">
               En savoir plus

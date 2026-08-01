@@ -81,17 +81,17 @@ export default function AdminGomboID({
                   </div>
                 </div>
 
-                <div className="flex gap-2 w-full md:w-auto">
+                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                   <button
                     onClick={() => handleReject(u.id)}
-                    className="flex-1 md:flex-none px-4 py-2 bg-red-950/20 hover:bg-red-900/30 border border-red-900/30 text-red-400 font-mono font-bold text-[10px] uppercase rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="flex-1 px-4 py-2 bg-red-950/20 hover:bg-red-900/30 border border-red-900/30 text-red-400 font-mono font-bold text-[10px] uppercase rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <XCircle className="w-3.5 h-3.5" />
                     Rejeter
                   </button>
                   <button
                     onClick={() => handleApprove(u.id)}
-                    className="flex-1 md:flex-none px-4 py-2 bg-emerald-950/20 hover:bg-emerald-900/30 border border-emerald-900/30 text-emerald-400 font-mono font-bold text-[10px] uppercase rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="flex-1 px-4 py-2 bg-emerald-950/20 hover:bg-emerald-900/30 border border-emerald-900/30 text-emerald-400 font-mono font-bold text-[10px] uppercase rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     Approuver

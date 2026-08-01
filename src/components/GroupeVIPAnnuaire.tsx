@@ -292,7 +292,9 @@ export default function GroupeVIPAnnuaire({
   const handleAcceptInvitation = async (invId: string) => {
     try {
       await gomboDB.updateInvitation(invId, { status: "accepte" });
+      setMyReceivedInvitations(prev => prev.filter(inv => inv.id !== invId));
       onRefreshProfile();
+      alert("✅ Invitation de Showbiz acceptée avec succès !");
     } catch (err) {
       console.error(err);
     }
@@ -301,7 +303,9 @@ export default function GroupeVIPAnnuaire({
   const handleDeclineInvitation = async (invId: string) => {
     try {
       await gomboDB.updateInvitation(invId, { status: "refuse" });
+      setMyReceivedInvitations(prev => prev.filter(inv => inv.id !== invId));
       onRefreshProfile();
+      alert("❌ Invitation refusée.");
     } catch (err) {
       console.error(err);
     }
@@ -320,6 +324,36 @@ export default function GroupeVIPAnnuaire({
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGroup) return;
+
+    if (inviteMethod === "registered") {
+      if (!selectedUserIdToInvite) {
+        alert("Veuillez choisir un artiste à inviter.");
+        return;
+      }
+      try {
+        await gomboDB.createGroupInvitation({
+          groupId: selectedGroup.id,
+          groupName: selectedGroup.name,
+          userId: selectedUserIdToInvite,
+          receiverId: selectedUserIdToInvite,
+          role: newMemberRole,
+          instrument: newMemberInstrument,
+          status: "pending",
+          senderId: currentUserProfile?.uid || "",
+          senderName: currentUserProfile?.artisticName || currentUserProfile?.name || "Fondateur"
+        });
+        alert("📡 Invitation officielle Gombo VIP transmise avec succès !");
+        setSelectedUserIdToInvite("");
+        setShowMemberForm(false);
+        // Refresh active group invitations
+        const invs = await gomboDB.getGroupInvitations(selectedGroup.id);
+        setActiveGroupInvitations(invs);
+      } catch (err) {
+        console.error("Failed to send official invitation:", err);
+      }
+      return;
+    }
+
     const newMember: GroupMember = {
       id: "mem_" + Math.random().toString(36).substr(2, 9),
       name: newMemberName,
@@ -479,7 +513,7 @@ export default function GroupeVIPAnnuaire({
             </div>
 
             {/* Showbiz Received Invitations Notification Banner */}
-            {currentUserProfile && myReceivedInvitations.filter(x => x.status === "en_attente").length > 0 && (
+            {currentUserProfile && myReceivedInvitations.filter(x => x.status === "en_attente" || x.status === "pending").length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -493,7 +527,7 @@ export default function GroupeVIPAnnuaire({
                 </div>
                 
                 <div className="space-y-3">
-                  {myReceivedInvitations.filter(x => x.status === "en_attente").map((inv) => {
+                  {myReceivedInvitations.filter(x => x.status === "en_attente" || x.status === "pending").map((inv) => {
                     const group = groups.find(g => g.id === inv.groupId);
                     return (
                       <div key={inv.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-purple-950/20 rounded-2xl border border-purple-500/10 text-xs text-afri-text">
@@ -1134,22 +1168,24 @@ export default function GroupeVIPAnnuaire({
                       {activeGroupInvitations.length > 0 && (
                         <div className="border-t border-purple-500/15 pt-3 mt-2">
                           <h5 className="text-[10px] uppercase font-black tracking-widest text-[#7C3AED] dark:text-[#A78BFA] pb-2">
-                            📨 Invitations de Showbiz Envoyées ({activeGroupInvitations.filter(x => x.status === "en_attente").length} en attente)
+                            📨 Invitations de Showbiz Envoyées ({activeGroupInvitations.filter(x => x.status === "en_attente" || x.status === "pending").length} en attente)
                           </h5>
                           <div className="space-y-1.5 max-h-36 overflow-y-auto">
                             {activeGroupInvitations.map((inv) => {
                               const recUser = allUsers.find(u => u.uid === inv.receiverId);
+                              const isPendingStatus = inv.status === "en_attente" || inv.status === "pending";
+                              const isAcceptedStatus = inv.status === "accepte" || inv.status === "acceptee" || inv.status === "accepted";
                               return (
                                 <div key={inv.id} className="flex items-center justify-between text-[11px] bg-white dark:bg-purple-950/20 p-2 rounded-xl border border-afri-border dark:border-purple-950/40">
                                   <span className="font-bold">
                                     👤 {recUser ? `${recUser.firstName} ${recUser.lastName}` : "Artiste"} &rarr; <span className="text-purple-600 dark:text-purple-300">{inv.role} ({inv.instrument})</span>
                                   </span>
                                   <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
-                                    inv.status === "en_attente" ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" :
-                                    inv.status === "acceptee" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" :
+                                    isPendingStatus ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" :
+                                    isAcceptedStatus ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" :
                                     "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
                                   }`}>
-                                    {inv.status === "en_attente" ? "⏳ En attente" : inv.status === "acceptee" ? "✅ Acceptée" : "❌ Refusée"}
+                                    {isPendingStatus ? "⏳ En attente" : isAcceptedStatus ? "✅ Acceptée" : "❌ Refusée"}
                                   </span>
                                 </div>
                               );

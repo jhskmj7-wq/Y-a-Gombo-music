@@ -178,8 +178,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full max-w-full space-y-6 pb-24 overflow-y-auto overscroll-contain px-3 xs:px-4"
-      style={{ WebkitOverflowScrolling: 'touch' }}
+      className="w-full max-w-full space-y-6 pb-24 px-3 xs:px-4"
     >
       <div className="pt-3 pb-16 sm:pb-20 space-y-6 w-full max-w-full">
         
@@ -345,9 +344,9 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     onChange={e => setCommune(e.target.value)} 
                     className="afri-card-inset w-full p-3.5 text-sm font-black text-afri-text appearance-none bg-transparent outline-none pr-10 cursor-pointer focus:border-[#D4AF37]/40"
                   >
-                    <option value="" className="bg-[#121212] text-afri-text">Choisir une commune</option>
+                    <option value="" className="bg-afri-bg-sec text-afri-text">Choisir une commune</option>
                     {COMMUNES.map(c => (
-                      <option key={c} value={c} className="bg-[#121212] text-afri-text">
+                      <option key={c} value={c} className="bg-afri-bg-sec text-afri-text">
                         {c}
                       </option>
                     ))}
