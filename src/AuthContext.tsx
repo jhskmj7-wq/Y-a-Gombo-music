@@ -25,6 +25,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  console.log("AuthProvider mounted");
   const [currentUser, setCurrentUser] = useState<any | null>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -295,6 +296,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
+  console.log("useAuth context:", context);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }

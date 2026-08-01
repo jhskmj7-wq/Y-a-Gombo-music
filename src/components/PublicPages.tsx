@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
+import { BackButton } from "./common/BackButton";
 import { 
   Shield, FileText, Trash2, ArrowLeft, Mail, Flame, Lock, CheckCircle, 
   Smartphone, AlertTriangle, MessageSquare, Info, Star, HelpCircle, 
@@ -179,13 +180,7 @@ export function AboutPage({ onBack }: PublicPageProps) {
     <div className="min-h-screen bg-afri-bg text-afri-text py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
       <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
         <div className="flex items-center justify-between pb-6 border-b border-afri-border">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-afri-text-sec hover:text-[#D4AF37] bg-afri-bg-sec border border-afri-border rounded-xl transition-all cursor-pointer shadow-xs"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Retour</span>
-          </button>
+          <BackButton onClick={onBack} label="Retour" />
           
           <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37]">
             <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
@@ -297,13 +292,7 @@ export function SupportPage({ onBack }: PublicPageProps) {
     <div className="min-h-screen bg-afri-bg text-afri-text py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
       <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
         <div className="flex items-center justify-between pb-6 border-b border-afri-border">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-afri-text-sec hover:text-[#D4AF37] bg-afri-bg-sec border border-afri-border rounded-xl transition-all cursor-pointer shadow-xs"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Retour</span>
-          </button>
+          <BackButton onClick={onBack} label="Retour" />
           
           <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37]">
             <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
@@ -450,13 +439,7 @@ export function CachetsPage({ onBack }: PublicPageProps) {
     <div className="min-h-screen bg-afri-bg text-afri-text py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
       <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
         <div className="flex items-center justify-between pb-6 border-b border-afri-border">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-afri-text-sec hover:text-[#D4AF37] bg-afri-bg-sec border border-afri-border rounded-xl transition-all cursor-pointer shadow-xs"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Retour</span>
-          </button>
+          <BackButton onClick={onBack} label="Retour" />
           
           <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37]">
             <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
