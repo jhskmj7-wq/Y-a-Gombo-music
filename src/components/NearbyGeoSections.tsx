@@ -119,7 +119,7 @@ export const NearbyArtistsSection: React.FC<NearbyArtistsSectionProps> = ({ arti
         <Music className="w-4 h-4 text-emerald-500" />
         🎼 Artistes disponibles autour
       </h3>
-      <div className="flex gap-3 overflow-x-auto pb-2 px-1 scrollbar-hide">
+      <div className="flex gap-3 overflow-x-auto pb-2 px-1 afri-no-scrollbar">
         {artists.slice(0, 10).map((artist: any) => (
           <div 
             key={artist.uid}

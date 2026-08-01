@@ -1362,7 +1362,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             <h3 className="text-[11px] font-black tracking-[0.2em] text-afri-text uppercase flex items-center gap-2 px-1">
               🔍 Artistes correspondants ({UsersToRender.length})
             </h3>
-            <div className="flex gap-3 overflow-x-auto pb-2 px-1 scrollbar-hide">
+            <div className="flex gap-3 overflow-x-auto pb-2 px-1 afri-no-scrollbar">
               {UsersToRender.map((artist: any) => (
                 <div 
                   key={artist.uid}

@@ -39,7 +39,7 @@ export const GeoRadarSection: React.FC<GeoRadarSectionProps> = ({
         </span>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 px-1 scrollbar-hide">
+      <div className="flex gap-3 overflow-x-auto pb-2 px-1 afri-no-scrollbar">
         {allItems.slice(0, 15).map((item: any, idx) => {
           const travel = estimateTravelTimes(item.distance);
           return (

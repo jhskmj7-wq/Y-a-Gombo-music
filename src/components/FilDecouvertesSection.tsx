@@ -210,7 +210,7 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={() => setIsPaused(true)}
         onTouchEnd={() => setIsPaused(false)}
-        className="flex gap-3.5 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none scroll-smooth"
+        className="flex gap-3.5 overflow-x-auto pb-2 snap-x snap-mandatory afri-no-scrollbar scroll-smooth"
       >
         {rankedItems.map((item, idx) => {
           const isMarket = item.type === "market";

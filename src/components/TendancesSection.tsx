@@ -656,7 +656,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
             <span className="text-[10px] font-mono text-afri-text-sec">← Balayer sur mobile →</span>
           </div>
 
-          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-3 touch-pan-x [-webkit-overflow-scrolling:touch]">
+          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory afri-no-scrollbar pb-3 touch-pan-x [-webkit-overflow-scrolling:touch]">
             {carouselItems.map((item, index) => (
               <motion.div
                 key={`carousel_${item.id}_${index}`}

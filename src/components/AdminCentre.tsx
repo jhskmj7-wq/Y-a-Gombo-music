@@ -3010,11 +3010,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             </header>
           ) : (
             activeMenu === "user_terrain" ? (
-              <header className="flex flex-col afri-container py-2 sm:py-3 border-b border-afri-gold/30 bg-afri-bg shrink-0 gap-2 sm:gap-3.5 w-full animate-fadeIn select-none shadow-[0_10px_35px_rgba(0,0,0,0.85)] rounded-b-[24px] sm:rounded-b-[40px] z-[40] relative">
+              <header className="flex flex-col afri-container pt-3 pb-2 sm:py-3 border-b border-afri-gold/30 bg-afri-bg shrink-0 gap-2 sm:gap-3.5 w-full animate-fadeIn select-none shadow-[0_10px_35px_rgba(0,0,0,0.85)] rounded-b-[24px] sm:rounded-b-[40px] z-[40] relative">
                 {/* TOP ROW */}
-                <div className="flex items-center justify-between w-full gap-2 sm:gap-4 px-1 sm:px-4">
+                <div className="flex items-center justify-between w-full gap-1.5 xs:gap-2 sm:gap-4 px-1 sm:px-4">
                   {/* Left: Menu & Logo Group */}
-                  <div className="flex items-center gap-2.5 sm:gap-5">
+                  <div className="flex items-center gap-1.5 xs:gap-2.5 sm:gap-5">
                     <button
                       id="hamburger-trigger"
                       onClick={() => setIsSidebarOpen(true)}
@@ -3026,30 +3026,30 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     {activeMenu !== "user_terrain" && (
                       <button
                         onClick={goBackMenu}
-                        className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-afri-gold/10 hover:bg-afri-gold/20 border border-afri-gold/40 text-afri-gold transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer font-bold text-[9px] sm:text-[11px] uppercase tracking-tight shrink-0"
+                        className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-afri-gold/10 hover:bg-afri-gold/20 border border-afri-gold/40 text-afri-gold transition-all active:scale-95 flex items-center gap-1 cursor-pointer font-bold text-[9px] sm:text-[11px] uppercase tracking-tight shrink-0"
                       >
                         <span>← Retour</span>
                       </button>
                     )}
 
-                    <div className="flex items-center gap-2.5 sm:gap-4">
+                    <div className="flex items-center gap-1.5 xs:gap-2.5 sm:gap-4">
                       {logoUrl ? (
                         <img 
                           src={logoUrl} 
                           alt="AFRIGOMBO LOGO" 
-                          className="w-10 h-10 sm:w-16 sm:h-16 object-contain rounded-2xl shrink-0"
+                          className="w-8 h-8 xs:w-10 xs:h-10 sm:w-16 sm:h-16 object-contain rounded-2xl shrink-0"
                         />
                       ) : (
-                        <AfriGomboLogo className="w-10 h-10 sm:w-16 sm:h-16 shrink-0" />
+                        <AfriGomboLogo className="w-8 h-8 xs:w-10 xs:h-10 sm:w-16 sm:h-16 shrink-0" />
                       )}
                       <div className="flex flex-col justify-center">
-                        <h1 className="text-2xl sm:text-5xl font-black tracking-tighter text-afri-gold leading-none font-display antialiased subpixel-antialiased" 
+                        <h1 className="text-xl xs:text-2xl sm:text-5xl font-black tracking-tighter text-afri-gold leading-none font-display antialiased subpixel-antialiased" 
                             style={{ 
                               textShadow: "1px 1px 0px #B48F17"
                             }}>
                           AFRIGOMBO
                         </h1>
-                        <span className="text-[10px] sm:text-[13px] text-afri-text font-black tracking-wide mt-1 sm:mt-1.5 font-sans antialiased whitespace-nowrap">
+                        <span className="hidden xs:block text-[9.5px] sm:text-[13px] text-afri-text font-black tracking-wide mt-1 sm:mt-1.5 font-sans antialiased whitespace-nowrap">
                           Le Temple du Gombo Musical
                         </span>
                       </div>
@@ -3057,7 +3057,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   </div>
 
                   {/* Right: Actions */}
-                  <div className="flex items-center gap-2 sm:gap-5 shrink-0">
+                  <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-5 shrink-0">
                      {/* Notification with Badge */}
                      <button 
                        onClick={() => {
@@ -3106,7 +3106,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                 {/* BOTTOM ROW: STATS BAR */}
                 <div className="w-full flex justify-center mt-0.5 px-3">
-                  <div className="flex items-center justify-center gap-3.5 sm:gap-8 px-4 sm:px-8 py-1.5 sm:py-2.5 rounded-full bg-afri-bg-sec border border-afri-border/90 shadow-2xl overflow-x-auto scrollbar-none max-w-full">
+                  <div className="flex items-center justify-center gap-2 xs:gap-3.5 sm:gap-8 px-2.5 xs:px-4 sm:px-8 py-1.5 sm:py-2.5 rounded-full bg-afri-bg-sec border border-afri-border/90 shadow-2xl overflow-x-auto afri-no-scrollbar max-w-full">
                      <div className="flex items-center gap-1.5 shrink-0">
                        <Users className="w-3 h-3 sm:w-4 sm:h-4 text-afri-gold stroke-[2.5]" />
                        <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-afri-text-sec uppercase tracking-wider">
@@ -8398,7 +8398,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 try { if (navigator?.vibrate) navigator.vibrate(8); } catch(_) {}
                 setIsNavCollapsed(true);
               }}
-              className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-afri-bg-sec border border-afri-gold/60 text-afri-gold shadow-md flex items-center justify-center cursor-pointer hover:bg-afri-gold hover:text-black transition-all z-50 min-w-[32px] min-h-[32px]"
+              className="absolute left-1 sm:-left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-afri-bg-sec border border-afri-gold/60 text-afri-gold shadow-md flex items-center justify-center cursor-pointer hover:bg-afri-gold hover:text-black transition-all z-50 min-w-[32px] min-h-[32px]"
               title="Replier la barre vers la gauche"
             >
               <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
