@@ -19,7 +19,25 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       const path = pathMatch ? pathMatch[1] : "Unknown path";
       const actualModuleName = moduleName || path.split('/').pop() || "Unknown module";
 
-      // Return a safe fallback component
+      // If chunk loading failed, attempt an automatic recovery reload once
+      const pageHasBeenRefreshed = window.sessionStorage.getItem("afrigombo_chunk_retry");
+      if (!pageHasBeenRefreshed) {
+        window.sessionStorage.setItem("afrigombo_chunk_retry", "true");
+        if ('serviceWorker' in navigator) {
+          try {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) await r.unregister();
+          } catch (_) {}
+        }
+        if ('caches' in window) {
+          try {
+            const keys = await caches.keys();
+            for (const k of keys) await caches.delete(k);
+          } catch (_) {}
+        }
+        window.location.reload();
+        return new Promise(() => {}); // Pause until reload
+      }
       return {
         default: (() => createElement('div', {
           className: "p-6 text-left text-red-500 font-mono bg-afri-bg-sec border border-red-500/30 rounded-2xl m-4 w-full max-w-4xl shadow-xl flex flex-col items-start overflow-auto"

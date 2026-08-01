@@ -31,16 +31,13 @@ export default function PWAHandler() {
     },
   });
 
-  // Smart Update Logic
+  // Smart Update Logic: Automatically update SW when a new version is published
   useEffect(() => {
     if (needRefresh) {
-      if (import.meta.env.DEV) {
-        console.log("🚀 [AFRIGOMBO] DEV mode detected. Auto-update & auto-cache purge disabled.");
-      } else {
-        console.log("🔔 [AFRIGOMBO] Update available for Production / Beta User.");
-      }
+      console.log("🔔 [AFRIGOMBO PWA] Auto-updating ServiceWorker with new build bundle...");
+      updateServiceWorker(true);
     }
-  }, [needRefresh]);
+  }, [needRefresh, updateServiceWorker]);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {

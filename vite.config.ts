@@ -10,15 +10,15 @@ export default defineConfig({
     react(), 
     tailwindcss(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       injectRegister: 'auto',
       includeAssets: ['logo.png', 'sounds/*.mp3'],
       manifest: {
         name: 'AFRIGOMBO',
         short_name: 'AFRIGOMBO',
         description: "AFRIGOMBO - Y'A GOMBO MUSIC. Le Temple du Gombo : Vos opportunités musicales certifiées, vos cachets sécurisés.",
-        theme_color: '#000000',
-        background_color: '#000000',
+        theme_color: '#050505',
+        background_color: '#050505',
         display: 'standalone',
         scope: '/',
         start_url: '/',
@@ -40,16 +40,17 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3}'],
-        cleanupOutdatedCaches: false,
-        skipWaiting: false,
-        clientsClaim: false,
-        navigateFallback: 'index.html',
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
+        navigateFallback: '/index.html',
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.mode === 'navigate',
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'pages',
+              cacheName: 'pages-v2',
+              networkTimeoutSeconds: 3,
               expiration: {
                 maxEntries: 10,
               },
@@ -71,9 +72,10 @@ export default defineConfig({
           },
           {
             urlPattern: /\.(?:js|css|html|ico|png|svg|mp3)$/,
-            handler: 'StaleWhileRevalidate',
+            handler: 'NetworkFirst',
             options: {
-              cacheName: 'static-assets',
+              cacheName: 'static-assets-v2',
+              networkTimeoutSeconds: 3,
             },
           },
         ]
