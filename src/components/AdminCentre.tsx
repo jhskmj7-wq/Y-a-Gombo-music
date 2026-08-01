@@ -8385,14 +8385,20 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             </button>
           )}
 
-          {/* MAIN FLOATING BOTTOM NAVIGATION BAR */}
-          <div className={`fixed bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 w-[94%] xs:w-[92%] max-w-[425px] h-14 sm:h-16 bg-afri-bg-sec/95 backdrop-blur-xl border border-afri-border py-1.5 px-3 flex justify-between items-center z-40 rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none transition-transform duration-300 ease-in-out ${
-            isNavCollapsed ? "-translate-x-[150%] opacity-0 pointer-events-none" : "translate-x-[-50%] opacity-100"
-          }`}>
+          {/* MAIN FLOATING BOTTOM NAVIGATION BAR (ANDROID MATERIAL DESIGN 3) */}
+          <nav
+            className={`fixed bottom-0 left-0 right-0 w-full sm:w-[94%] sm:max-w-[440px] sm:left-1/2 sm:-translate-x-1/2 h-16 sm:h-16 bg-afri-bg-sec/98 backdrop-blur-2xl border-t sm:border border-afri-border/80 px-2 sm:px-3 flex justify-between items-center z-40 sm:rounded-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.3)] sm:shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none transition-all duration-300 ease-in-out box-border touch-manipulation ${
+              isNavCollapsed ? "-translate-x-[150%] sm:-translate-x-[150%] opacity-0 pointer-events-none" : "translate-x-0 sm:-translate-x-1/2 opacity-100"
+            }`}
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 6px)' }}
+          >
             {/* TOGGLE COLLAPSE BUTTON ON THE SIDE (Left edge) */}
             <button
-              onClick={() => setIsNavCollapsed(true)}
-              className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-afri-bg-sec border border-afri-gold text-afri-gold shadow-md flex items-center justify-center cursor-pointer hover:bg-afri-gold hover:text-black transition-all z-50"
+              onClick={() => {
+                try { if (navigator?.vibrate) navigator.vibrate(8); } catch(_) {}
+                setIsNavCollapsed(true);
+              }}
+              className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-afri-bg-sec border border-afri-gold/60 text-afri-gold shadow-md flex items-center justify-center cursor-pointer hover:bg-afri-gold hover:text-black transition-all z-50 min-w-[32px] min-h-[32px]"
               title="Replier la barre vers la gauche"
             >
               <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
@@ -8402,74 +8408,105 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             <button
               id="user-nav-terrain"
               onClick={() => {
+                try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
                 setActiveMenu("user_terrain");
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               }}
-              className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-                activeMenu === "user_terrain" ? "text-afri-gold scale-102" : "text-afri-text-sec hover:text-zinc-350"
-              }`}
+              className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
             >
-              <Home className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-              <span className={`text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider ${activeMenu === "user_terrain" ? "text-afri-gold" : "text-afri-text"}`}>Accueil</span>
+              <div className="relative px-3 py-0.5 rounded-full flex items-center justify-center overflow-hidden">
+                {activeMenu === "user_terrain" && (
+                  <motion.div
+                    layoutId="userActiveNavPill"
+                    className="absolute inset-0 bg-[#D4AF37]/20 rounded-full border border-[#D4AF37]/30"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <Home className={`w-4 h-4 sm:w-4.5 sm:h-4.5 relative z-10 transition-colors ${activeMenu === "user_terrain" ? "text-afri-gold stroke-[2.5]" : "text-afri-text-sec stroke-[1.8]"}`} />
+              </div>
+              <span className={`text-[7.5px] xs:text-[8px] tracking-wider uppercase truncate max-w-full mt-0.5 whitespace-nowrap transition-colors ${activeMenu === "user_terrain" ? "font-black text-afri-gold" : "font-semibold text-afri-text-sec"}`}>
+                Accueil
+              </span>
             </button>
-
 
             {/* 2. VIBES */}
             <button
               id="user-nav-vibes"
               onClick={() => {
+                try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
                 requireAuthThen(() => {
                   setActiveMenu("user_vibes");
                   try { audioSynth.playValidationSuccess(); } catch (err) {}
                 });
               }}
-              className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-                activeMenu === "user_vibes" ? "text-afri-gold scale-102" : "text-afri-text-sec hover:text-zinc-350"
-              }`}
+              className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
             >
-              <Music className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-              <span className={`text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider ${activeMenu === "user_vibes" ? "text-afri-gold" : "text-afri-text"}`}>Vibes</span>
+              <div className="relative px-3 py-0.5 rounded-full flex items-center justify-center overflow-hidden">
+                {activeMenu === "user_vibes" && (
+                  <motion.div
+                    layoutId="userActiveNavPill"
+                    className="absolute inset-0 bg-[#D4AF37]/20 rounded-full border border-[#D4AF37]/30"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <Music className={`w-4 h-4 sm:w-4.5 sm:h-4.5 relative z-10 transition-colors ${activeMenu === "user_vibes" ? "text-afri-gold stroke-[2.5]" : "text-afri-text-sec stroke-[1.8]"}`} />
+              </div>
+              <span className={`text-[7.5px] xs:text-[8px] tracking-wider uppercase truncate max-w-full mt-0.5 whitespace-nowrap transition-colors ${activeMenu === "user_vibes" ? "font-black text-afri-gold" : "font-semibold text-afri-text-sec"}`}>
+                Vibes
+              </span>
             </button>
 
             {/* 3. PUBLIER */}
             <button
               id="user-nav-publish"
               onClick={() => {
+                try { if (navigator?.vibrate) navigator.vibrate(12); } catch(_) {}
                 requireAuthThen(() => {
                   setIsPlusMenuOpen(true);
                   try { audioSynth.playValidationSuccess(); } catch (err) {}
                 });
               }}
-              className="flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-1.5 xs:px-2 select-none shrink-0"
-              title="Publier"
+              className="relative -top-2 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-1 select-none shrink-0 min-w-[48px] min-h-[48px] touch-manipulation"
+              aria-label="Publier"
             >
-              <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center bg-gradient-to-tr from-afri-gold to-[#F1C40F] text-black rounded-full shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition-all">
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3.5]" />
+              <div className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center bg-gradient-to-tr from-afri-gold to-[#F1C40F] text-black rounded-full shadow-[0_4px_16px_rgba(212,175,55,0.4)] border-2 border-afri-bg hover:scale-105 active:scale-90 transition-transform">
+                <Plus className="w-5 h-5 stroke-[3.5]" />
               </div>
-              <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-afri-text mt-0.5">Publier</span>
+              <span className="text-[7.5px] xs:text-[8px] font-black uppercase tracking-wider text-afri-text mt-0.5">Publier</span>
             </button>
 
             {/* 4. MES GOMBOS */}
             <button
               id="user-nav-mes-gombos"
               onClick={() => {
+                try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
                 requireAuthThen(() => {
                   setActiveMenu("user_mes_gombos");
                   try { audioSynth.playValidationSuccess(); } catch (err) {}
                 });
               }}
-              className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-                activeMenu === "user_mes_gombos" ? "text-afri-gold scale-102" : "text-afri-text-sec hover:text-zinc-350"
-              }`}
+              className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
             >
-              <Megaphone className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-              <span className={`text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider ${activeMenu === "user_mes_gombos" ? "text-afri-gold" : "text-afri-text"}`}>Gombos</span>
+              <div className="relative px-3 py-0.5 rounded-full flex items-center justify-center overflow-hidden">
+                {activeMenu === "user_mes_gombos" && (
+                  <motion.div
+                    layoutId="userActiveNavPill"
+                    className="absolute inset-0 bg-[#D4AF37]/20 rounded-full border border-[#D4AF37]/30"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <Megaphone className={`w-4 h-4 sm:w-4.5 sm:h-4.5 relative z-10 transition-colors ${activeMenu === "user_mes_gombos" ? "text-afri-gold stroke-[2.5]" : "text-afri-text-sec stroke-[1.8]"}`} />
+              </div>
+              <span className={`text-[7.5px] xs:text-[8px] tracking-wider uppercase truncate max-w-full mt-0.5 whitespace-nowrap transition-colors ${activeMenu === "user_mes_gombos" ? "font-black text-afri-gold" : "font-semibold text-afri-text-sec"}`}>
+                Gombos
+              </span>
             </button>
 
-            {/* 6. MON HÉRITAGE */}
+            {/* 5. MON HÉRITAGE */}
             <button
               id="user-nav-heritage"
               onClick={() => {
+                try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
                 if (!currentUser) {
                   setShowHeritageLoginRequired(true);
                 } else {
@@ -8478,24 +8515,23 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   try { audioSynth.playValidationSuccess(); } catch (err) {}
                 }
               }}
-              className={`flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-                activeMenu === "user_heritage" ? "scale-105" : "text-afri-text-sec hover:text-zinc-350"
-              }`}
+              className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
             >
-              {activeMenu === "user_heritage" ? (
-                <div className="w-10 h-10 rounded-full bg-afri-gold text-black flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.55)] border border-afri-bg transition-all duration-300 -mt-2">
-                  <UserIcon className="w-5 h-5 text-black stroke-[2.5]" />
-                </div>
-              ) : (
-                <UserIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-afri-text-sec hover:text-zinc-350 transition-colors" />
-              )}
-              <span className={`text-[6.5px] xs:text-[7px] font-mono font-black uppercase tracking-widest mt-1 ${
-                activeMenu === "user_heritage" ? "text-afri-gold" : "text-afri-text"
-              }`}>
-                MON HÉRITAGE
+              <div className="relative px-3 py-0.5 rounded-full flex items-center justify-center overflow-hidden">
+                {activeMenu === "user_heritage" && (
+                  <motion.div
+                    layoutId="userActiveNavPill"
+                    className="absolute inset-0 bg-[#D4AF37]/20 rounded-full border border-[#D4AF37]/30"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <UserIcon className={`w-4 h-4 sm:w-4.5 sm:h-4.5 relative z-10 transition-colors ${activeMenu === "user_heritage" ? "text-afri-gold stroke-[2.5]" : "text-afri-text-sec stroke-[1.8]"}`} />
+              </div>
+              <span className={`text-[7.5px] xs:text-[8px] tracking-wider uppercase truncate max-w-full mt-0.5 whitespace-nowrap transition-colors ${activeMenu === "user_heritage" ? "font-black text-afri-gold" : "font-semibold text-afri-text-sec"}`}>
+                Héritage
               </span>
             </button>
-          </div>
+          </nav>
         </>
       )}
 

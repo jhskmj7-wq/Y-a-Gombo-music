@@ -156,13 +156,27 @@ export const AndroidTopBar: React.FC<AndroidTopBarProps> = ({
   actions,
   className = '',
 }) => {
+  const triggerHaptic = () => {
+    try {
+      if (typeof window !== 'undefined' && navigator?.vibrate) {
+        navigator.vibrate(8);
+      }
+    } catch (_) {}
+  };
+
   return (
-    <div className={`sticky top-0 z-30 w-full bg-afri-bg/95 backdrop-blur-md border-b border-afri-border/60 px-3.5 py-2.5 flex items-center justify-between min-h-[56px] box-border ${className}`}>
+    <div
+      className={`sticky top-0 z-30 w-full bg-afri-bg/95 backdrop-blur-md border-b border-afri-border/60 px-3 py-2 flex items-center justify-between min-h-[56px] box-border transition-colors select-none ${className}`}
+      style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 8px)' }}
+    >
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         {onBack && (
           <button
-            onClick={onBack}
-            className="w-10 h-10 rounded-full bg-afri-bg-sec border border-afri-border flex items-center justify-center text-afri-text hover:text-[#D4AF37] active:scale-95 transition-transform shrink-0 cursor-pointer touch-manipulation"
+            onClick={() => {
+              triggerHaptic();
+              onBack();
+            }}
+            className="w-10 h-10 rounded-full bg-afri-bg-sec border border-afri-border/80 flex items-center justify-center text-afri-text hover:text-[#D4AF37] active:scale-95 transition-transform shrink-0 cursor-pointer touch-manipulation min-w-[44px] min-h-[44px]"
             aria-label="Retour"
           >
             <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
@@ -173,7 +187,7 @@ export const AndroidTopBar: React.FC<AndroidTopBarProps> = ({
             {title}
           </h1>
           {subtitle && (
-            <p className="text-[10px] sm:text-xs text-afri-text-sec truncate font-mono">
+            <p className="text-[10px] sm:text-xs text-afri-text-sec truncate font-mono mt-0.5">
               {subtitle}
             </p>
           )}
