@@ -3,11 +3,11 @@ import {
   ShoppingBag, Search, Tag, Filter, Plus, ShieldCheck, CheckCircle2, 
   AlertTriangle, Crown, Sparkles, MapPin, Phone, MessageCircle, ArrowLeft, 
   Trash2, ExternalLink, RefreshCcw, DollarSign, Eye, Star, ChevronRight,
-  Store, Package, ShoppingCart, Check, X, Info, TrendingUp
+  Store, Package, ShoppingCart, Check, X, Info, TrendingUp, Heart, RotateCcw
 } from "lucide-react";
 import { UserProfile } from "../types";
 import { supportConfig } from "../supportConfig";
-import { AfriModal } from "./common/AfriModal";
+import { AfriModal, AndroidBottomSheet } from "./common/AfriModal";
 import { db, gomboDB } from "../firebase";
 import { recordWalletTransaction } from "../lib/financial";
 import { doc, setDoc, getDoc } from "firebase/firestore";
@@ -148,6 +148,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
   const [onlyCertifiedSellers, setOnlyCertifiedSellers] = useState<boolean>(false);
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
+  const [isFilterBottomSheetOpen, setIsFilterBottomSheetOpen] = useState<boolean>(false);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("afrigombo_market_favs") || "[]"); } catch { return []; }
   });
@@ -432,10 +433,10 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-afri-border/60 pb-3">
             {/* TABS */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1 max-w-full">
               <button
                 onClick={() => setActiveTab("catalog")}
-                className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                className={`px-3.5 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   activeTab === "catalog"
                     ? "bg-[#D4AF37] text-black shadow-md font-black"
                     : "bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text"
@@ -443,14 +444,14 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               >
                 <Package className="w-4 h-4" />
                 <span>Catalogue</span>
-                <span className="px-1.5 py-0.2 bg-afri-bg/20 text-[10px] rounded-full font-mono font-bold">
+                <span className="px-1.5 py-0.2 bg-black/10 text-[10px] rounded-full font-mono font-bold">
                   {items.length}
                 </span>
               </button>
 
               <button
                 onClick={() => setActiveTab("my_listings")}
-                className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                className={`px-3.5 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   activeTab === "my_listings"
                     ? "bg-[#D4AF37] text-black shadow-md font-black"
                     : "bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text"
@@ -458,14 +459,14 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               >
                 <Tag className="w-4 h-4" />
                 <span>Mes Annonces</span>
-                <span className="px-1.5 py-0.2 bg-afri-bg/20 text-[10px] rounded-full font-mono font-bold">
+                <span className="px-1.5 py-0.2 bg-black/10 text-[10px] rounded-full font-mono font-bold">
                   {myItems.length}
                 </span>
               </button>
 
               <button
                 onClick={() => setActiveTab("seller_dashboard")}
-                className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                className={`px-3.5 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   activeTab === "seller_dashboard"
                     ? "bg-[#D4AF37] text-black shadow-md font-black"
                     : "bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text"
@@ -476,108 +477,64 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               </button>
             </div>
 
-            {/* SEARCH BAR */}
-            <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 text-afri-text-sec absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher un équipement..."
-                className="w-full bg-afri-bg-sec border border-afri-border rounded-xl pl-9 pr-3 py-2 text-xs text-afri-text focus:border-[#D4AF37] focus:outline-none"
-              />
+            {/* SEARCH & FILTER BUTTON */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-64">
+                <Search className="w-4 h-4 text-afri-text-sec absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Rechercher un équipement..."
+                  className="w-full bg-afri-bg-sec border border-afri-border rounded-xl pl-9 pr-3 py-2 text-xs text-afri-text focus:border-[#D4AF37] focus:outline-none"
+                />
+              </div>
+
+              {activeTab === "catalog" && (
+                <button
+                  onClick={() => setIsFilterBottomSheetOpen(true)}
+                  className={`px-3.5 py-2 rounded-xl border font-bold text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer shrink-0 transition-all ${
+                    (cityFilter !== "all" || conditionFilter !== "all" || onlyCertifiedSellers || minPrice || maxPrice || selectedCategory !== "all")
+                      ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md font-black"
+                      : "bg-afri-bg-sec border-afri-border text-afri-text hover:border-[#D4AF37]"
+                  }`}
+                >
+                  <Filter className="w-4 h-4" />
+                  <span>Filtrer</span>
+                  {(cityFilter !== "all" || conditionFilter !== "all" || onlyCertifiedSellers || minPrice || maxPrice || selectedCategory !== "all") && (
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                  )}
+                </button>
+              )}
             </div>
           </div>
 
-          {/* ADVANCED FILTERS BAR */}
+          {/* CATEGORY QUICK SCROLL BAR */}
           {activeTab === "catalog" && (
-            <div className="space-y-2">
-              <div className="flex overflow-x-auto scrollbar-hide gap-1.5 sm:gap-2 pt-1 pb-2 whitespace-nowrap text-xs w-full max-w-full select-none">
-                {[
-                  { id: "all", label: "Tous les produits" },
-                  { id: "instruments", label: "🎵 Instruments" },
-                  { id: "studio", label: "🎙 Studios" },
-                  { id: "sonorisation", label: "🎧 Matériel Audio" },
-                  { id: "accessoires", label: "👕 Mode & Accessoires" },
-                  { id: "beats", label: "📀 Beats" },
-                  { id: "services", label: "🎼 Services" },
-                  { id: "location", label: "🏠 Locations" },
-                  { id: "prestations", label: "💼 Prestations" },
-                ].map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
-                      selectedCategory === cat.id
-                        ? "bg-afri-bg-ter border-[#D4AF37] text-[#D4AF37] shadow-xs"
-                        : "bg-afri-bg border-afri-border text-afri-text-sec hover:text-afri-text"
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* SECONDARY FILTER CONTROLS */}
-              <div className="p-2.5 bg-afri-bg-sec border border-afri-border/60 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-mono font-bold text-afri-text-sec uppercase">Filtres:</span>
-                  
-                  <select
-                    value={cityFilter}
-                    onChange={(e) => setCityFilter(e.target.value)}
-                    className="bg-afri-bg border border-afri-border rounded-lg px-2 py-1 text-[11px] text-afri-text focus:border-[#D4AF37] outline-none"
-                  >
-                    <option value="all">Toutes les villes</option>
-                    <option value="Abidjan">Abidjan</option>
-                    <option value="Bouaké">Bouaké</option>
-                    <option value="Yamoussoukro">Yamoussoukro</option>
-                    <option value="San Pedro">San Pédro</option>
-                  </select>
-
-                  <select
-                    value={conditionFilter}
-                    onChange={(e) => setConditionFilter(e.target.value)}
-                    className="bg-afri-bg border border-afri-border rounded-lg px-2 py-1 text-[11px] text-afri-text focus:border-[#D4AF37] outline-none"
-                  >
-                    <option value="all">Tous les états</option>
-                    <option value="Neuf">Neuf</option>
-                    <option value="Excellent état">Excellent état</option>
-                    <option value="Bon état">Bon état</option>
-                    <option value="Occasion">Occasion</option>
-                  </select>
-
-                  <button
-                    onClick={() => setOnlyCertifiedSellers(!onlyCertifiedSellers)}
-                    className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase flex items-center gap-1 cursor-pointer transition-all ${
-                      onlyCertifiedSellers
-                        ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
-                        : "bg-afri-bg border-afri-border text-afri-text-sec"
-                    }`}
-                  >
-                    <ShieldCheck className="w-3 h-3" />
-                    <span>Vendeurs certifiés uniquement</span>
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    placeholder="Min FCFA"
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    className="w-20 bg-afri-bg border border-afri-border rounded-lg px-2 py-1 text-[10px] font-mono text-afri-text outline-none"
-                  />
-                  <span className="text-afri-text-sec text-[10px]">-</span>
-                  <input
-                    type="number"
-                    placeholder="Max FCFA"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    className="w-20 bg-afri-bg border border-afri-border rounded-lg px-2 py-1 text-[10px] font-mono text-afri-text outline-none"
-                  />
-                </div>
-              </div>
+            <div className="flex overflow-x-auto scrollbar-hide gap-1.5 sm:gap-2 py-1 whitespace-nowrap text-xs w-full max-w-full select-none">
+              {[
+                { id: "all", label: "Tous les produits" },
+                { id: "instruments", label: "🎵 Instruments" },
+                { id: "studio", label: "🎙 Studios" },
+                { id: "sonorisation", label: "🎧 Matériel Audio" },
+                { id: "accessoires", label: "👕 Mode & Accessoires" },
+                { id: "beats", label: "📀 Beats" },
+                { id: "services", label: "🎼 Services" },
+                { id: "location", label: "🏠 Locations" },
+                { id: "prestations", label: "💼 Prestations" },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                    selectedCategory === cat.id
+                      ? "bg-afri-bg-ter border-[#D4AF37] text-[#D4AF37] shadow-xs"
+                      : "bg-afri-bg border-afri-border text-afri-text-sec hover:text-afri-text"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
             </div>
           )}
         </div>
@@ -594,85 +551,121 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               <Package className="w-10 h-10 text-afri-text-sec mx-auto opacity-40" />
               <p className="text-sm font-bold text-afri-text uppercase">Aucun article trouvé</p>
               <p className="text-xs text-afri-text-sec">Essayez une autre recherche ou modifiez vos filtres.</p>
+              <button
+                onClick={() => {
+                  setSelectedCategory("all");
+                  setCityFilter("all");
+                  setConditionFilter("all");
+                  setOnlyCertifiedSellers(false);
+                  setMinPrice("");
+                  setMaxPrice("");
+                  setSearchQuery("");
+                }}
+                className="mt-2 px-4 py-2 bg-afri-bg-ter border border-afri-border text-afri-gold text-xs font-bold uppercase rounded-xl"
+              >
+                Réinitialiser les filtres
+              </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full pt-2">
-              {filteredItems.map((item) => (
-                <div
-                key={item.id}
-                className="bg-afri-bg-sec border border-afri-border/80 hover:border-[#D4AF37]/60 rounded-2xl overflow-hidden shadow-md transition-all group flex flex-col justify-between"
-              >
-                <div>
-                  {/* IMAGE PREVIEW */}
-                  <div className="relative h-36 sm:h-44 w-full bg-afri-bg overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-2 left-2 px-2.5 py-1 bg-afri-bg/80 backdrop-blur-md rounded-lg border border-afri-border text-[10px] font-bold font-mono text-[#D4AF37] uppercase truncate">
-                      {item.condition}
-                    </div>
-                    <div className="absolute top-2 right-2 px-2.5 py-1 bg-[#D4AF37] text-black rounded-lg text-xs font-black font-mono shadow-md truncate">
-                      {item.price.toLocaleString()} FCFA
-                    </div>
-                  </div>
-
-                  {/* ITEM DETAILS */}
-                  <div className="p-3 sm:p-4 space-y-2">
-                    <h3 className="text-xs sm:text-sm font-black text-afri-text truncate group-hover:text-[#D4AF37] transition-colors">
-                      {item.title}
-                    </h3>
-                    <p className="text-[10px] sm:text-xs text-afri-text-sec truncate leading-relaxed">
-                      {item.description}
-                    </p>
-
-                    <div className="flex items-center gap-1.5 text-[10px] text-afri-text-sec font-mono pt-1 border-t border-afri-border/40">
-                      <MapPin className="w-3 h-3 text-[#D4AF37]" />
-                      <span className="truncate">{item.location}</span>
-                    </div>
-
-                    {/* SELLER BADGE */}
-                    <div className="flex items-center justify-between pt-1">
-                      <div className="flex items-center gap-2">
-                        <img
-                          src={item.sellerAvatar}
-                          alt={item.sellerName}
-                          className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-[#D4AF37]/40"
-                        />
-                        <span className="text-[10px] sm:text-[11px] font-bold text-afri-text truncate max-w-[80px] sm:max-w-[110px]">
-                          {item.sellerName}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-1.5 sm:px-2 py-0.5 rounded border border-emerald-500/20">
-                        <ShieldCheck className="w-3 h-3" />
-                        <span>{item.sellerTrustScore}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* CARD FOOTER */}
-                <div className="p-2 sm:p-3 bg-afri-bg border-t border-afri-border/60 flex items-center gap-2">
-                  <button
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-4 w-full pt-2">
+              {filteredItems.map((item) => {
+                const isFav = favoriteIds.includes(item.id);
+                return (
+                  <div
+                    key={item.id}
                     onClick={() => setSelectedItem(item)}
-                    className="flex-1 py-1.5 sm:py-2 bg-afri-bg-ter hover:bg-[#D4AF37] hover:text-black text-[#D4AF37] text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center"
+                    className="bg-afri-bg-sec border border-afri-border/80 hover:border-[#D4AF37]/60 rounded-2xl overflow-hidden shadow-md transition-all group flex flex-col justify-between cursor-pointer"
                   >
-                    Voir
-                  </button>
-                  <button
-                    onClick={() => handleBuyItem(item)}
-                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-black border border-emerald-500/40 rounded-xl transition-all cursor-pointer font-black text-[10px] sm:text-xs uppercase"
-                    title="Acheter directement"
-                  >
-                    Acheter
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )
-      ) : activeTab === "my_listings" ? (
+                    <div>
+                      {/* IMAGE PREVIEW WITH ASPECT RATIO PRESERVATION */}
+                      <div className="relative aspect-[4/3] w-full bg-afri-bg overflow-hidden shrink-0">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                        {/* CONDITION BADGE */}
+                        <div className="absolute top-1.5 left-1.5 px-2 py-0.5 bg-black/80 backdrop-blur-md rounded-md border border-white/10 text-[9px] font-bold font-mono text-[#D4AF37] uppercase truncate max-w-[65%]">
+                          {item.condition}
+                        </div>
+                        {/* FAVORITE BUTTON */}
+                        <button
+                          onClick={(e) => toggleFavorite(item.id, e)}
+                          className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/70 border border-white/20 flex items-center justify-center text-white hover:text-rose-400 transition-colors cursor-pointer"
+                          title="Ajouter aux favoris"
+                        >
+                          <Heart className={`w-3.5 h-3.5 ${isFav ? "fill-rose-500 text-rose-500" : ""}`} />
+                        </button>
+                      </div>
+
+                      {/* ITEM DETAILS */}
+                      <div className="p-2.5 sm:p-3 space-y-1.5">
+                        {/* PRICE */}
+                        <div className="text-xs sm:text-sm font-black font-mono text-[#D4AF37] tracking-tight truncate">
+                          {item.price.toLocaleString('fr-FR')} FCFA
+                        </div>
+
+                        {/* TITLE (MAX 2 LINES WITH ELLIPSIS) */}
+                        <h3 className="text-xs font-bold text-afri-text line-clamp-2 leading-snug group-hover:text-[#D4AF37] transition-colors min-h-[2rem]">
+                          {item.title}
+                        </h3>
+
+                        {/* VILLE / LOCATION */}
+                        <div className="flex items-center gap-1 text-[10px] text-afri-text-sec truncate font-mono pt-0.5">
+                          <MapPin className="w-3 h-3 text-[#D4AF37] shrink-0" />
+                          <span className="truncate">{item.location}</span>
+                        </div>
+
+                        {/* SELLER BADGE */}
+                        <div className="flex items-center justify-between pt-1 border-t border-afri-border/40">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <img
+                              src={item.sellerAvatar}
+                              alt={item.sellerName}
+                              className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover border border-[#D4AF37]/40 shrink-0"
+                            />
+                            <span className="text-[10px] font-medium text-afri-text-sec truncate">
+                              {item.sellerName}
+                            </span>
+                          </div>
+                          {item.sellerCertified && (
+                            <span title="Vendeur Certifié">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CARD FOOTER BUTTONS */}
+                    <div className="p-2 bg-afri-bg/60 border-t border-afri-border/60 flex items-center gap-1.5 mt-auto">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedItem(item);
+                        }}
+                        className="flex-1 py-1.5 bg-afri-bg-ter hover:bg-[#D4AF37] hover:text-black text-[#D4AF37] text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center"
+                      >
+                        Détails
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBuyItem(item);
+                        }}
+                        className="px-2 py-1.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-black border border-emerald-500/40 rounded-xl transition-all cursor-pointer font-black text-[10px] uppercase shrink-0"
+                        title="Acheter directement"
+                      >
+                        Acheter
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
+        ) : activeTab === "my_listings" ? (
         /* MES ANNONCES TAB */
         myItems.length === 0 ? (
           <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-12 text-center space-y-4">
@@ -1202,6 +1195,150 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
           </div>
         </AfriModal>
       )}
+
+      {/* FILTER BOTTOM SHEET */}
+      <AndroidBottomSheet
+        isOpen={isFilterBottomSheetOpen}
+        onClose={() => setIsFilterBottomSheetOpen(false)}
+        title="Filtres du Grand Marché"
+      >
+        <div className="space-y-4 py-2">
+          {/* CATEGORY */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-afri-text uppercase tracking-wider block">Catégorie</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full bg-afri-bg border border-afri-border rounded-xl px-3 py-2.5 text-xs text-afri-text focus:border-[#D4AF37] outline-none"
+            >
+              <option value="all">Toutes les catégories</option>
+              <option value="instruments">🎵 Instruments de musique</option>
+              <option value="studio">🎙 Équipements Studio</option>
+              <option value="sonorisation">🎧 Sonorisation & Audio</option>
+              <option value="accessoires">👕 Mode & Accessoires</option>
+              <option value="beats">📀 Beats & Instrumental</option>
+              <option value="services">🎼 Services Musicaux</option>
+              <option value="location">🏠 Location d'Espace & Matériel</option>
+              <option value="prestations">💼 Prestations Certifiées</option>
+            </select>
+          </div>
+
+          {/* VILLE */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-afri-text uppercase tracking-wider block">Ville</label>
+            <div className="grid grid-cols-3 gap-2">
+              {["all", "Abidjan", "Bouaké", "Yamoussoukro", "San Pédro", "Korhogo"].map((city) => (
+                <button
+                  key={city}
+                  type="button"
+                  onClick={() => setCityFilter(city === "all" ? "all" : city)}
+                  className={`py-2 px-2 rounded-xl border text-[11px] font-bold text-center transition-all ${
+                    (city === "all" && cityFilter === "all") || cityFilter.toLowerCase() === city.toLowerCase()
+                      ? "bg-[#D4AF37] text-black border-[#D4AF37]"
+                      : "bg-afri-bg border-afri-border text-afri-text-sec"
+                  }`}
+                >
+                  {city === "all" ? "Toutes" : city}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ÉTAT DU PRODUIT */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-afri-text uppercase tracking-wider block">État de l'article</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {["all", "Neuf", "Excellent état", "Bon état", "Occasion"].map((cond) => (
+                <button
+                  key={cond}
+                  type="button"
+                  onClick={() => setConditionFilter(cond)}
+                  className={`py-2 px-2 rounded-xl border text-[10px] font-bold text-center transition-all ${
+                    conditionFilter === cond
+                      ? "bg-[#D4AF37] text-black border-[#D4AF37]"
+                      : "bg-afri-bg border-afri-border text-afri-text-sec"
+                  }`}
+                >
+                  {cond === "all" ? "Tous" : cond}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* FOURCHETTE DE PRIX */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-afri-text uppercase tracking-wider block">Fourchette de Prix (FCFA)</label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <input
+                  type="number"
+                  placeholder="Prix Min FCFA"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="w-full bg-afri-bg border border-afri-border rounded-xl px-3 py-2 text-xs font-mono text-afri-text focus:border-[#D4AF37] outline-none"
+                />
+              </div>
+              <div>
+                <input
+                  type="number"
+                  placeholder="Prix Max FCFA"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="w-full bg-afri-bg border border-afri-border rounded-xl px-3 py-2 text-xs font-mono text-afri-text focus:border-[#D4AF37] outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* CERTIFICATION VENDEURS */}
+          <div className="pt-2 border-t border-afri-border/60">
+            <button
+              type="button"
+              onClick={() => setOnlyCertifiedSellers(!onlyCertifiedSellers)}
+              className={`w-full p-3 rounded-xl border flex items-center justify-between text-xs font-bold transition-all ${
+                onlyCertifiedSellers
+                  ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
+                  : "bg-afri-bg border-afri-border text-afri-text-sec"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Vendeurs certifiés Afri-Trust uniquement</span>
+              </div>
+              <div className={`w-5 h-5 rounded-md border flex items-center justify-center ${onlyCertifiedSellers ? "bg-emerald-500 border-emerald-500 text-black" : "border-afri-border"}`}>
+                {onlyCertifiedSellers && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+              </div>
+            </button>
+          </div>
+
+          {/* BOTTOM SHEET ACTIONS */}
+          <div className="flex gap-2 pt-3 border-t border-afri-border/60">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory("all");
+                setCityFilter("all");
+                setConditionFilter("all");
+                setOnlyCertifiedSellers(false);
+                setMinPrice("");
+                setMaxPrice("");
+                setSearchQuery("");
+              }}
+              className="flex-1 py-3 bg-afri-bg border border-afri-border hover:bg-afri-bg-sec text-afri-text-sec text-xs font-bold uppercase rounded-xl transition-all flex items-center justify-center gap-1.5"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Réinitialiser</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsFilterBottomSheetOpen(false)}
+              className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black text-xs font-black uppercase rounded-xl shadow-lg transition-all"
+            >
+              Appliquer
+            </button>
+          </div>
+        </div>
+      </AndroidBottomSheet>
 
       {/* PENDING RESUME MODAL */}
       {pendingResumeItem && (

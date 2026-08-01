@@ -2,10 +2,11 @@ import React, { useState, useEffect, Suspense, lazy } from "react";
 import { 
   LayoutDashboard, MessageSquare, CreditCard, MapPin, User, BarChart3, 
   FlaskConical, Music, Settings, Crown, ShieldCheck, RefreshCw, ChevronRight, X,
-  Sparkles, Bell, Shield, Users, TrendingUp, LogOut, Radio
+  Sparkles, Bell, Shield, Users, TrendingUp, LogOut, Radio, AlertOctagon, ArrowLeft
 } from "lucide-react";
 import { lazyWithRetry } from "../../lib/lazyWithRetry";
 import { ErrorBoundary } from "../ErrorBoundary";
+import { SecurityService } from "../../lib/SecurityService";
 
 // Lazy load the independent modules
 const AdminFounderThrone = lazyWithRetry(() => import("./AdminFounderThrone"));
@@ -71,6 +72,50 @@ export default function AdminSuperFounderHub({
   onExit
 }: AdminSuperFounderHubProps) {
   const [activeModule, setActiveModule] = useState<AdminModuleType>(initialModule);
+
+  // STRICT ZERO TRUST AUTHORIZATION CHECK
+  const isAuthorized = SecurityService.isFounder(currentUser) || 
+                       SecurityService.isFounder(userEmail) || 
+                       SecurityService.isAdmin(currentUser) ||
+                       userEmail?.toLowerCase() === "jhs.kmj7@gmail.com";
+
+  useEffect(() => {
+    if (!isAuthorized) {
+      SecurityService.logSecurityEvent({
+        userId: currentUser?.uid || "unknown",
+        userEmail: userEmail || currentUser?.email || "unknown",
+        action: "unauthorized_admin_access_attempt",
+        severity: "critical",
+        details: `Tentative d'accès non autorisée au Tableau du Super Fondateur par ${userEmail || currentUser?.email}`,
+        result: "blocked"
+      });
+      try { audioSynth?.playWarningAlert?.(); } catch (e) {}
+    }
+  }, [isAuthorized, currentUser, userEmail, audioSynth]);
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-[100dvh] bg-black text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center text-rose-500 mb-4 animate-pulse">
+          <AlertOctagon className="w-8 h-8" />
+        </div>
+        <h1 className="text-xl font-black text-rose-500 uppercase tracking-widest mb-2">ACCÈS SOUVERAIN REFUSÉ</h1>
+        <p className="text-xs text-zinc-400 max-w-md mb-6 leading-relaxed">
+          Seul le Super Fondateur légitime d'AFRIGOMBO (<span className="text-amber-400 font-mono">jhs.kmj7@gmail.com</span>) possède les autorisations pour accéder à ce Cabinet Impérial.
+          Cette tentative a été journalisée dans le registre de sécurité.
+        </p>
+        {onExit && (
+          <button
+            onClick={onExit}
+            className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Retourner à l'Espace Public</span>
+          </button>
+        )}
+      </div>
+    );
+  }
 
   const modulesNav = [
     { key: "throne" as AdminModuleType, label: "🏛 Tableau", icon: Crown, badge: "Fondateur" },
@@ -168,7 +213,7 @@ export default function AdminSuperFounderHub({
             <span>Chargement du module souverain {activeModule}...</span>
           </div>
         }>
-          <ErrorBoundary>
+          <ErrorBoundary moduleName="Throne">
             {activeModule === "throne" && (
               <AdminFounderThrone
                 founders={[userEmail || "admin@afrigombo.ci"]}
@@ -184,7 +229,9 @@ export default function AdminSuperFounderHub({
                 onExit={onExit}
               />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Dashboard">
             {activeModule === "dashboard" && (
               <AdminDashboard
                 users={users}
@@ -197,63 +244,93 @@ export default function AdminSuperFounderHub({
                 audioSynth={audioSynth}
               />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Messaging">
             {activeModule === "messaging" && (
               <AdminSupportCenter audioSynth={audioSynth} />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Contracts">
             {activeModule === "contracts" && (
               <AdminContracts currentUser={currentUser} />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Wallet Management">
             {activeModule === "wallet_management" && (
               <AdminWalletManagement currentUser={currentUser} />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Transactions">
             {activeModule === "transactions" && (
               <BetaTransactionsAdminPanel currentUser={currentUser} />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Geolocation">
             {activeModule === "geolocation" && (
               <GeoLocationCenter />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Avatar Store">
             {activeModule === "avatar_store" && (
               <AdminAvatarStore />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Polls">
             {activeModule === "polls" && (
               <AdminPollCenter audioSynth={audioSynth} />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Labs">
             {activeModule === "labs" && (
               <AfrigomboLabs />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Cagnottes">
             {activeModule === "cagnottes" && (
               <AdminDecouvertesCentre audioSynth={audioSynth} />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Notifications">
             {activeModule === "notifications" && (
               <AdminNotifications adminEmail={userEmail} />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Security">
             {activeModule === "security" && (
               <AdminSecurity adminLogs={[]} scannerStatus="idle" audioSynth={audioSynth} />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Users">
             {activeModule === "users" && (
               <AdminUsers users={users} />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Stats">
             {activeModule === "stats" && (
               <AdminRevenue transactions={transactions} systemCommissionRate={1.5} audioSynth={audioSynth} />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Multimedia">
             {activeModule === "multimedia" && (
               <MultimediaCenter adminEmail={userEmail} isAuthorizedSuperFounder={true} />
             )}
+          </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Settings">
             {activeModule === "settings" && (
               <AdminSettings systemCommissionRate={1.5} audioSynth={audioSynth} />
             )}

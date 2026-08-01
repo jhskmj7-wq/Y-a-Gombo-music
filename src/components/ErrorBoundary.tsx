@@ -4,6 +4,7 @@ import { logBugReport } from "../lib/bugReportLogger";
 interface Props {
   children?: ReactNode;
   fallback?: ReactNode;
+  moduleName?: string;
 }
 
 interface State {
@@ -24,10 +25,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
+    console.error(`Uncaught error in ${this.props.moduleName || 'module'}:`, error, errorInfo);
     this.setState({ error, errorInfo });
     logBugReport({
-      module: "ReactErrorBoundary",
+      module: this.props.moduleName || "ReactErrorBoundary",
       ecran: window.location.pathname,
       message: error.message || String(error),
       stack: errorInfo.componentStack || error.stack
@@ -40,15 +41,15 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
       return (
-        <div className="p-6 bg-zinc-950 border border-amber-500/30 rounded-2xl text-amber-400 font-mono text-xs shadow-2xl max-w-lg mx-auto my-8 text-center space-y-4">
+        <div className="p-6 bg-afri-bg border border-amber-500/30 rounded-2xl text-amber-400 font-mono text-xs shadow-2xl max-w-lg mx-auto my-8 text-center space-y-4">
           <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/40 flex items-center justify-center mx-auto text-xl">
             ⚠️
           </div>
           <h2 className="font-black text-sm uppercase tracking-wider text-amber-400">
-            Impossible de charger ce module
+            Impossible de charger le module : {this.props.moduleName || 'Inconnu'}
           </h2>
-          <p className="text-[11px] text-zinc-400 font-sans">
-            Une anomalie a été enregistrée dans le journal du Temple.
+          <p className="text-[11px] text-afri-text-sec font-sans">
+            Une anomalie a été enregistrée dans le journal du Temple : {this.state.error?.message}
           </p>
           <div className="flex justify-center gap-3 pt-2">
             <button
@@ -59,7 +60,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </button>
             <button
               onClick={() => { window.location.href = '/'; }}
-              className="px-4 py-2 bg-zinc-800 text-white border border-zinc-700 font-bold uppercase text-[11px] rounded-xl hover:bg-zinc-700 transition"
+              className="px-4 py-2 bg-afri-bg-ter text-white border border-afri-border font-bold uppercase text-[11px] rounded-xl hover:bg-zinc-700 transition"
             >
               Retour Accueil
             </button>

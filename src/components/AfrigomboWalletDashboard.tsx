@@ -33,6 +33,8 @@ import { supportConfig } from "../supportConfig";
 import { recordWalletTransaction } from "../lib/financial";
 import { SupportService } from "../services/SupportService";
 
+import { SecurityService } from "../lib/SecurityService";
+
 interface AfrigomboWalletDashboardProps {
   currentUserProfile: any;
   addToTerminal: (msg: string) => void;
@@ -275,6 +277,20 @@ export default function AfrigomboWalletDashboard({
 
   // MOBILE MONEY DEPOSIT HANDLER (UPDATED FOR BÊTA)
   const handleDepositRequest = async () => {
+    // 0. Security Maintenance Check
+    const maintCheck = await SecurityService.checkMaintenanceMode("wallet");
+    if (maintCheck.isMaintenance) {
+      alert(`⚠️ [SÉCURITÉ] ${maintCheck.message}`);
+      return;
+    }
+
+    // Rate Limiting Check
+    const rateCheck = SecurityService.enforceRateLimit(uid, "deposit_request", 5, 60000);
+    if (!rateCheck.allowed) {
+      alert(`⚠️ Trop de tentatives de dépôt. Veuillez attendre ${rateCheck.retryAfterSec} secondes.`);
+      return;
+    }
+
     const depositAmount = Number(amount);
     if (!depositAmount || depositAmount < 1000) {
       alert("Le montant minimum est de 1 000 FCFA.");

@@ -111,16 +111,32 @@ service cloud.firestore {
 
     // WALLETS / TRANSACTIONS / PAYMENTS
     match /transactions/{id} {
-      allow read: if isOwner(resource.data.userId) || isFounder();
-      allow write: if isFounder();
+      allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
+      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid);
+      allow update, delete: if isFounder();
+    }
+    match /walletTransactions/{id} {
+      allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
+      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid);
+      allow update, delete: if isFounder();
+    }
+    match /walletDepositRequests/{id} {
+      allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
+      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid);
+      allow update, delete: if isFounder();
+    }
+    match /walletRequests/{id} {
+      allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
+      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid);
+      allow update, delete: if isFounder();
     }
     match /payments/{id} {
-      allow read: if isOwner(resource.data.userId) || isFounder();
+      allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
       allow write: if isFounder();
     }
     match /withdrawals/{id} {
-      allow read: if isOwner(resource.data.userId) || isFounder();
-      allow create: if isEmailVerified() && incoming().userId == request.auth.uid && incoming().status == 'pending';
+      allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid && incoming().status == 'pending';
       allow update, delete: if isFounder();
     }
 
