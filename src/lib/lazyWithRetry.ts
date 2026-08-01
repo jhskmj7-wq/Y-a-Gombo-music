@@ -35,8 +35,9 @@ export function lazyWithRetry<T extends ComponentType<any>>(
             for (const k of keys) await caches.delete(k);
           } catch (_) {}
         }
-        window.location.reload();
-        return new Promise(() => {}); // Pause until reload
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       }
       return {
         default: (() => createElement('div', {

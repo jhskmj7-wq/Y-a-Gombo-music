@@ -49,7 +49,7 @@ export default defineConfig({
             urlPattern: ({ request }) => request.mode === 'navigate',
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'pages-v2',
+              cacheName: 'pages-v3',
               networkTimeoutSeconds: 3,
               expiration: {
                 maxEntries: 10,
@@ -68,14 +68,6 @@ export default defineConfig({
               cacheableResponse: {
                 statuses: [0, 200],
               },
-            },
-          },
-          {
-            urlPattern: /\.(?:js|css|html|ico|png|svg|mp3)$/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'static-assets-v2',
-              networkTimeoutSeconds: 3,
             },
           },
         ]

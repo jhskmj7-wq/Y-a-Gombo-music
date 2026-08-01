@@ -88,11 +88,17 @@
         }
       };
 
-      // Catch global errors (script / chunk load failures)
+      // Catch global errors (script / chunk load failures / SyntaxErrors on 404 js)
       window.onerror = function(msg, url, lineNo, columnNo, error) {
         console.error('GLOBAL ERROR:', msg, url, lineNo, columnNo, error);
         const strMsg = String(msg || '').toLowerCase();
-        if (strMsg.includes('loading chunk') || strMsg.includes('failed to fetch dynamically imported module') || strMsg.includes('script error')) {
+        if (
+          strMsg.includes('loading chunk') || 
+          strMsg.includes('failed to fetch dynamically imported module') || 
+          strMsg.includes('script error') ||
+          strMsg.includes('unexpected token') ||
+          strMsg.includes('syntaxerror')
+        ) {
           recoverFromChunkError(msg);
         }
         return false;

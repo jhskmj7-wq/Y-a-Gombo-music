@@ -31,11 +31,15 @@ export default function PWAHandler() {
     },
   });
 
-  // Smart Update Logic: Automatically update SW when a new version is published
+  // Smart Update Logic: Handle SW updates cleanly without infinite reload loops
   useEffect(() => {
     if (needRefresh) {
-      console.log("🔔 [AFRIGOMBO PWA] Auto-updating ServiceWorker with new build bundle...");
-      updateServiceWorker(true);
+      const alreadyUpdated = sessionStorage.getItem("afrigombo_sw_updated_session");
+      if (!alreadyUpdated) {
+        sessionStorage.setItem("afrigombo_sw_updated_session", "true");
+        console.log("🔔 [AFRIGOMBO PWA] Updating ServiceWorker with new build bundle...");
+        updateServiceWorker(true);
+      }
     }
   }, [needRefresh, updateServiceWorker]);
 
