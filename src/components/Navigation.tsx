@@ -17,14 +17,14 @@ export default function Navigation() {
   ];
 
   return (
-    <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[460px] bg-afri-bg-sec/95 backdrop-blur-xl border border-afri-border rounded-[28px] px-4 py-2 flex justify-between items-center z-40 shadow-[0_12px_32px_rgba(0,0,0,0.1)] h-[72px]">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-afri-bg-sec/95 backdrop-blur-2xl border-t border-afri-border px-2 pt-2 pb-safe flex justify-around items-center h-[64px] box-border touch-manipulation select-none">
       {navItems.map((item) => {
         const Icon = item.icon;
         const active = location.pathname === item.path;
 
         if (item.name === 'PUBLIER') {
           return (
-            <div key={item.name} className="relative -top-5 flex flex-col items-center">
+            <div key={item.name} className="relative -top-4 flex flex-col items-center">
               <button
                 id="nav-btn-publier"
                 onClick={() => {
@@ -32,11 +32,12 @@ export default function Navigation() {
                     navigate(item.path);
                   });
                 }}
-                className="w-14 h-14 rounded-full bg-afri-gold border-4 border-afri-bg flex items-center justify-center text-black cursor-pointer shadow-[0_6px_20px_rgba(212,175,55,0.35)] hover:scale-105 active:scale-95 transition-all"
+                className="w-13 h-13 rounded-full bg-gradient-to-r from-[#E5C158] to-[#D4AF37] border-4 border-afri-bg flex items-center justify-center text-black cursor-pointer shadow-[0_6px_20px_rgba(212,175,55,0.4)] active:scale-90 transition-all touch-manipulation min-h-[52px] min-w-[52px]"
+                aria-label="Publier un nouveau Gombo"
               >
                 <span className="text-3xl font-light leading-none">+</span>
               </button>
-              <span className="text-[8.5px] font-bold text-afri-text mt-1 tracking-wider uppercase">PUBLIER</span>
+              <span className="text-[9px] font-black text-afri-text mt-0.5 tracking-wider uppercase">PUBLIER</span>
             </div>
           );
         }
@@ -54,14 +55,18 @@ export default function Navigation() {
                 navigate(item.path);
               }
             }}
-            className={`flex flex-col items-center justify-center cursor-pointer transition-all w-16 ${
+            className={`flex flex-col items-center justify-center cursor-pointer transition-all min-w-[56px] min-h-[48px] px-1 py-1 rounded-2xl touch-manipulation active:scale-95 ${
               active 
-                ? 'text-afri-gold scale-105 font-bold' 
-                : 'text-afri-text-muted hover:text-afri-text'
+                ? 'text-[#D4AF37]' 
+                : 'text-afri-text-sec'
             }`}
           >
-            {Icon && <Icon size={20} className={active ? 'stroke-[2.5px]' : 'stroke-[1.8px]'} />}
-            <span className="text-[8px] font-bold mt-1 tracking-wider uppercase truncate max-w-full">{item.name}</span>
+            <div className={`px-3 py-1 rounded-full transition-colors ${active ? 'bg-[#D4AF37]/15' : 'bg-transparent'}`}>
+              {Icon && <Icon size={20} className={active ? 'stroke-[2.5px]' : 'stroke-[1.8px]'} />}
+            </div>
+            <span className={`text-[8.5px] tracking-wider uppercase truncate max-w-full mt-0.5 ${active ? 'font-black text-[#D4AF37]' : 'font-semibold text-afri-text-sec'}`}>
+              {item.name}
+            </span>
           </button>
         );
       })}
