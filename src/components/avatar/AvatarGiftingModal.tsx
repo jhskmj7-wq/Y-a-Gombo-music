@@ -5,6 +5,7 @@ import { collection, getDocs, query, limit } from 'firebase/firestore';
 import { AvatarItem } from '../../types/avatar';
 import { AvatarEngine } from '../../lib/avatarEngine';
 import { useAuth } from '../../AuthContext';
+import { AndroidBottomSheet } from '../common/AfriModal';
 
 interface AvatarGiftingModalProps {
   item: AvatarItem;
@@ -91,28 +92,13 @@ export default function AvatarGiftingModal({ item, onClose, onGiftSent }: Avatar
   };
 
   return (
-    <div className="fixed inset-0 z-[160] flex items-center justify-center p-3 sm:p-4 bg-afri-bg/80 backdrop-blur-md animate-fadeIn text-left font-sans">
-      <div className="w-full max-w-lg bg-afri-bg-sec border border-afri-border rounded-3xl overflow-hidden shadow-2xl relative">
-        
-        {/* Header */}
-        <div className="p-5 border-b border-afri-border bg-afri-bg flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
-              <Gift className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-afri-text uppercase tracking-wider">
-                OFFRIR UN CADEAU AVATAR
-              </h3>
-              <p className="text-xs text-afri-text-sec">
-                Offrir {item.name} ({item.price} Gombo Coins)
-              </p>
-            </div>
-          </div>
-          <button onClick={onClose} className="w-9 h-9 rounded-xl bg-afri-bg-sec border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-afri-text">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <AndroidBottomSheet
+      isOpen={true}
+      onClose={onClose}
+      title="OFFRIR UN CADEAU AVATAR"
+      subtitle={`Offrir ${item.name} (${item.price} Gombo Coins)`}
+    >
+      <div className="space-y-5 text-left font-sans py-1">
 
         <div className="p-5 space-y-4">
           {errorMsg && (
@@ -214,6 +200,6 @@ export default function AvatarGiftingModal({ item, onClose, onGiftSent }: Avatar
           )}
         </div>
       </div>
-    </div>
+    </AndroidBottomSheet>
   );
 }

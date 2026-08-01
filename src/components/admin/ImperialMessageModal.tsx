@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { X, Send, Radio } from "lucide-react";
+import { Send, Radio, X } from "lucide-react";
 import { db } from "../../lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
+import { AndroidBottomSheet } from "../common/AfriModal";
 
 interface ImperialMessageModalProps {
   isOpen: boolean;
@@ -45,19 +45,13 @@ export function ImperialMessageModal({ isOpen, onClose, title }: ImperialMessage
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-sm"
-      >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className="bg-afri-bg w-full max-w-md rounded-2xl border border-[#D4AF37]/50 shadow-[0_0_40px_rgba(212,175,55,0.15)] overflow-hidden"
-        >
+    <AndroidBottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title || "COMMUNIQUÉ IMPÉRIAL"}
+      subtitle="Diffusion Générale à tous les Citoyens"
+    >
+      <div className="space-y-4 font-sans text-left py-1">
           <div className="flex justify-between items-center p-4 border-b border-[#D4AF37]/20 bg-afri-bg-sec/10">
             <h3 className="text-sm font-display font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-2">
               <Radio className="w-4 h-4" />
@@ -104,8 +98,7 @@ export function ImperialMessageModal({ isOpen, onClose, title }: ImperialMessage
               </>
             )}
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+      </div>
+    </AndroidBottomSheet>
   );
 }

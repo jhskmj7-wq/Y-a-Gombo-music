@@ -11,6 +11,7 @@ import { db } from "../lib/firebase";
 import { gomboDB } from "../firebase";
 import { UserProfile, Post, Gombo, GomboSafeContract } from "../types";
 import { useAudio } from "../context/AudioContext";
+import { AndroidBottomSheet, AfriModal } from "./common/AfriModal";
 
 interface PublicProfileModalProps {
   isOpen: boolean;
@@ -214,41 +215,69 @@ export function PublicProfileModal({
     }
   });
 
-  if (!isOpen || !targetUserId) return null;
-
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-2 xs:p-3 sm:p-5 bg-afri-bg/80 backdrop-blur-md overflow-y-auto">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          transition={{ type: "spring", stiffness: 350, damping: 28 }}
-          className="relative w-full max-w-2xl bg-afri-bg-sec border border-afri-gold/30 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden my-auto max-h-[92vh] flex flex-col font-sans text-afri-text"
-        >
-          {/* Header Bar */}
-          <div className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 py-3.5 bg-afri-bg-sec/90 backdrop-blur-md border-b border-afri-border/60">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-black text-afri-gold tracking-wider uppercase">
-                FICHE PUBLIQUE • CV MUSICAL
-              </span>
-              {isKycApproved && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[9px] font-black text-emerald-400 uppercase">
-                  <ShieldCheck className="w-3 h-3" /> VÉRIFIÉ
-                </span>
-              )}
-            </div>
+    <AndroidBottomSheet
+      isOpen={Boolean(isOpen && targetUserId)}
+      onClose={onClose}
+      title={showReportDialog ? "SIGNALER CE MEMBRE" : "FICHE PUBLIQUE • CV MUSICAL"}
+    >
+      {showReportDialog ? (
+        <div className="space-y-4 font-sans text-afri-text py-1">
+            {reportSubmitted ? (
+              <div className="py-6 text-center text-xs font-bold text-emerald-400 space-y-2">
+                <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
+                <p>Signalement transmis aux Administrateurs AFRIGOMBO.</p>
+              </div>
+            ) : (
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-[10px] font-mono text-afri-text-sec uppercase mb-1">
+                    Motif du signalement :
+                  </label>
+                  <select
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-afri-text focus:outline-none focus:border-afri-gold"
+                  >
+                    <option value="Inapproprié">Contenu ou propos inappropriés</option>
+                    <option value="Usurpation">Faux profil / Usurpation d&apos;identité</option>
+                    <option value="Spam">Spam ou sollicitation non autorisée</option>
+                    <option value="Arnaque">Comportement suspect ou tentative d&apos;escroquerie</option>
+                  </select>
+                </div>
 
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-afri-bg-sec border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-afri-text hover:bg-red-500/20 hover:border-red-500/40 transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+                <div>
+                  <label className="block text-[10px] font-mono text-afri-text-sec uppercase mb-1">
+                    Détails complémentaires (optionnel) :
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={reportDetails}
+                    onChange={(e) => setReportDetails(e.target.value)}
+                    placeholder="Expliquez brièvement le problème..."
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-afri-text focus:outline-none focus:border-afri-gold"
+                  />
+                </div>
 
-          {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+                <div className="flex items-center gap-2 pt-2">
+                  <button
+                    onClick={() => setShowReportDialog(false)}
+                    className="flex-1 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl font-bold uppercase cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={handleSendReport}
+                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-afri-text rounded-xl font-black uppercase tracking-wider cursor-pointer shadow-md"
+                  >
+                    Envoyer
+                  </button>
+                </div>
+              </div>
+            )}
+        </div>
+      ) : (
+        <div className="space-y-6 font-sans text-afri-text py-1">
             {loading ? (
               <div className="py-20 text-center space-y-3">
                 <div className="w-12 h-12 rounded-full border-2 border-afri-gold border-t-transparent animate-spin mx-auto" />
@@ -702,80 +731,7 @@ export function PublicProfileModal({
               </>
             )}
           </div>
-        </motion.div>
-      </div>
-
-      {/* REPORT DIALOG MODAL */}
-      {showReportDialog && (
-        <div className="fixed inset-0 z-[10005] flex items-center justify-center p-4 bg-afri-bg/85 backdrop-blur-md">
-          <div className="w-full max-w-md bg-afri-bg-sec border border-red-500/40 rounded-2xl p-5 space-y-4 shadow-2xl font-sans text-afri-text">
-            <div className="flex items-center justify-between border-b border-afri-border/60 pb-3">
-              <h3 className="text-sm font-black text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4" /> Signaler ce membre
-              </h3>
-              <button
-                onClick={() => setShowReportDialog(false)}
-                className="text-afri-text-sec hover:text-afri-text cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {reportSubmitted ? (
-              <div className="py-6 text-center text-xs font-bold text-emerald-400 space-y-2">
-                <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
-                <p>Signalement transmis aux Administrateurs AFRIGOMBO.</p>
-              </div>
-            ) : (
-              <div className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-[10px] font-mono text-afri-text-sec uppercase mb-1">
-                    Motif du signalement :
-                  </label>
-                  <select
-                    value={reportReason}
-                    onChange={(e) => setReportReason(e.target.value)}
-                    className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-afri-text focus:outline-none focus:border-afri-gold"
-                  >
-                    <option value="Inapproprié">Contenu ou propos inappropriés</option>
-                    <option value="Usurpation">Faux profil / Usurpation d&apos;identité</option>
-                    <option value="Spam">Spam ou sollicitation non autorisée</option>
-                    <option value="Arnaque">Comportement suspect ou tentative d&apos;escroquerie</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-mono text-afri-text-sec uppercase mb-1">
-                    Détails complémentaires (optionnel) :
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={reportDetails}
-                    onChange={(e) => setReportDetails(e.target.value)}
-                    placeholder="Expliquez brièvement le problème..."
-                    className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-afri-text focus:outline-none focus:border-afri-gold"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 pt-2">
-                  <button
-                    onClick={() => setShowReportDialog(false)}
-                    className="flex-1 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl font-bold uppercase cursor-pointer"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={handleSendReport}
-                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-afri-text rounded-xl font-black uppercase tracking-wider cursor-pointer shadow-md"
-                  >
-                    Envoyer
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
       )}
-    </AnimatePresence>
+    </AndroidBottomSheet>
   );
 }

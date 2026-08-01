@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
 import { X, ShieldCheck, Zap, MessageSquare, AlertCircle, Check } from "lucide-react";
 import { UserProfile } from "../types";
 import { supportConfig } from "../supportConfig";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 import { audioSynth } from "../lib/audio";
+import { AndroidBottomSheet } from "./common/AfriModal";
 
 interface PendingPaymentModalProps {
   isOpen: boolean;
@@ -69,40 +69,27 @@ export const PendingPaymentModal: React.FC<PendingPaymentModalProps> = ({
   };
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-sm">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative w-full max-w-md bg-afri-bg dark:bg-afri-bg-sec border border-[#D4AF37]/40 rounded-3xl p-5 sm:p-6 text-afri-text shadow-[0_0_40px_rgba(212,175,55,0.2)] overflow-hidden"
-        >
-          {/* Top Gold Bar */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#D4AF37] via-amber-400 to-[#D4AF37]" />
-
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-1 rounded-full bg-afri-bg-ter text-afri-text-sec hover:text-afri-text transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          {/* Header */}
-          <div className="text-center space-y-2 pt-2">
-            <div className="w-12 h-12 mx-auto bg-amber-500/10 border border-[#D4AF37] rounded-2xl flex items-center justify-center text-2xl shadow-md shadow-[#D4AF37]/20">
-              🛡️
-            </div>
-            <span className="inline-block text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
-              🟡 EN ATTENTE DE PAIEMENT
-            </span>
-            <h3 className="text-lg font-black uppercase text-afri-text tracking-tight">
-              Publication de gombo en attente de paiement
-            </h3>
-            <p className="text-xs text-afri-text-sec">
-              Finalisez votre paiement pour rendre ce gombo immédiatement visible sur Le Terrain.
-            </p>
+    <AndroidBottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title="PAIEMENT EN ATTENTE"
+      subtitle="Finalisez pour publier sur Le Terrain"
+    >
+      <div className="space-y-4 font-sans text-left py-1">
+        <div className="text-center space-y-2 pt-1">
+          <div className="w-12 h-12 mx-auto bg-amber-500/10 border border-[#D4AF37] rounded-2xl flex items-center justify-center text-2xl shadow-md shadow-[#D4AF37]/20">
+            🛡️
           </div>
+          <span className="inline-block text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
+            🟡 EN ATTENTE DE PAIEMENT
+          </span>
+          <h3 className="text-base font-black uppercase text-afri-text tracking-tight">
+            Publication de gombo en attente de paiement
+          </h3>
+          <p className="text-xs text-afri-text-sec">
+            Finalisez votre paiement pour rendre ce gombo immédiatement visible sur Le Terrain.
+          </p>
+        </div>
 
           {/* Details Card */}
           <div className="mt-4 bg-afri-bg/80 border border-afri-border rounded-xl p-3.5 space-y-2 text-left">
@@ -179,8 +166,7 @@ export const PendingPaymentModal: React.FC<PendingPaymentModalProps> = ({
               </button>
             </form>
           </div>
-        </motion.div>
       </div>
-    </AnimatePresence>
+    </AndroidBottomSheet>
   );
 };

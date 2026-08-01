@@ -4,6 +4,7 @@ import { Coins, Wallet, CreditCard, ShieldCheck, Check, X, Sparkles, PhoneCall }
 import { CoinPackage } from '../../types/avatar';
 import { COIN_PACKAGES, AvatarEngine } from '../../lib/avatarEngine';
 import { useAuth } from '../../AuthContext';
+import { AndroidBottomSheet } from '../common/AfriModal';
 
 interface CoinPurchaseModalProps {
   onClose: () => void;
@@ -60,41 +61,19 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-4 bg-afri-bg/80 backdrop-blur-md animate-fadeIn text-left font-sans">
-      <div className="w-full max-w-2xl bg-afri-bg-sec border border-afri-border rounded-3xl overflow-hidden shadow-2xl relative max-h-[92vh] flex flex-col">
-        
-        {/* Header */}
-        <div className="p-6 border-b border-afri-border bg-afri-bg flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
-              <Coins className="w-6 h-6 animate-pulse" />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
-                RECHARGER GOMBO COINS
-              </h3>
-              <p className="text-xs text-afri-text-sec">
-                Achetez des Gombo Coins pour débloquer vêtements, couronnes et boubous royaux
-              </p>
-            </div>
+    <AndroidBottomSheet
+      isOpen={true}
+      onClose={onClose}
+      title="RECHARGER GOMBO COINS"
+      subtitle="Achetez des Gombo Coins pour débloquer vêtements & couronnes"
+    >
+      <div className="space-y-5 text-left font-sans py-1">
+        {/* Alerts */}
+        {errorMsg && (
+          <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold rounded-2xl">
+            {errorMsg}
           </div>
-          <button 
-            onClick={onClose}
-            className="w-10 h-10 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-afri-text transition cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Content Body */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1 scrollbar-none">
-          
-          {/* Alerts */}
-          {errorMsg && (
-            <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold rounded-2xl">
-              {errorMsg}
-            </div>
-          )}
+        )}
 
           {successMsg && (
             <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-2xl flex items-center gap-3">
@@ -219,7 +198,6 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
             Confirmer le rechargement
           </button>
         </div>
-      </div>
-    </div>
+    </AndroidBottomSheet>
   );
 }

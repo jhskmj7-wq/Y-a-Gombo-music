@@ -27,7 +27,7 @@ export default function Navigation() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 bg-afri-bg-sec/95 backdrop-blur-2xl border-t border-afri-border/80 px-1 pt-1.5 flex justify-around items-center box-border touch-manipulation select-none"
+      className="fixed bottom-3 sm:bottom-4 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 w-[calc(100%-1.5rem)] sm:max-w-[440px] z-40 bg-afri-bg-sec/98 backdrop-blur-2xl border border-afri-border/80 rounded-2xl px-2 pt-1.5 flex justify-around items-center box-border touch-manipulation select-none shadow-[0_12px_32px_rgba(0,0,0,0.4)]"
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 6px)' }}
     >
       {navItems.map((item) => {

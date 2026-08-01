@@ -111,13 +111,11 @@ export const AfriModal: React.FC<AfriModalProps> = ({
     }
   };
 
-  const isBottomSheet = type === "bottom_sheet";
-
   return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div 
-          className={`fixed inset-0 z-[99999] flex ${isBottomSheet ? 'flex-col justify-end' : 'items-center justify-center p-4'} pointer-events-auto select-none`}
+          className="fixed inset-0 z-[99999] flex flex-col justify-end pointer-events-auto select-none overflow-hidden"
           style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh" }}
         >
           {/* Backdrop Overlay */}
@@ -125,110 +123,80 @@ export const AfriModal: React.FC<AfriModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: 0.2 }}
             onClick={handleOutsideClick}
-            className="absolute inset-0 bg-afri-bg/70 backdrop-blur-md cursor-pointer"
+            className="absolute inset-0 bg-afri-bg/75 backdrop-blur-md cursor-pointer"
           />
 
-          {/* Modal Container */}
-          {isBottomSheet ? (
-              <motion.div
-                initial={{ y: "100%" }}
-                animate={{ y: "0%" }}
-                exit={{ y: "100%" }}
-                transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-                drag="y"
-                dragConstraints={{ top: 0 }}
-                dragElastic={0.2}
-                onDragEnd={(_, info) => {
-                  if (info.offset.y > 100 || info.velocity.y > 300) {
-                    onClose();
-                  }
-                }}
-                className={`relative w-full max-w-[560px] mx-auto bg-afri-bg-sec border-t border-x border-[#D4AF37]/30 rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.85)] overflow-hidden z-10 max-h-[88vh] flex flex-col ${className}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Drag Handle */}
-                <div className="pt-3 pb-2 flex justify-center items-center shrink-0 cursor-grab active:cursor-grabbing">
-                  <div className="w-12 h-1.5 bg-gray-600/60 rounded-full mx-auto mb-1 transition-colors" />
-                </div>
+          {/* Android Material Design 3 Bottom Sheet Container */}
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: "0%" }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 28, stiffness: 320 }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={0.15}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 100 || info.velocity.y > 300) {
+                onClose();
+              }
+            }}
+            className={`relative w-full max-w-[560px] mx-auto bg-afri-bg-sec border-t border-x border-[#D4AF37]/35 rounded-t-[28px] sm:rounded-t-[32px] shadow-[0_-12px_48px_rgba(0,0,0,0.9)] overflow-hidden z-10 max-h-[92vh] flex flex-col ${className}`}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)'
+            }}
+          >
+            {/* Drag Handle */}
+            <div className="pt-3 pb-2.5 flex justify-center items-center shrink-0 cursor-grab active:cursor-grabbing w-full touch-none select-none">
+              <div className="w-12 h-1.5 bg-zinc-600/70 hover:bg-zinc-500 rounded-full mx-auto transition-colors" />
+            </div>
 
-              {/* Header */}
-              {(title || showCloseButton) && (
-                <div className="px-5 pb-3 border-b border-afri-border/60 flex items-center justify-between shrink-0">
-                  <div className="flex-1 pr-2">
-                    {title && <div className="text-sm sm:text-base font-black uppercase text-afri-text tracking-wide flex items-center gap-2">{title}</div>}
-                    {subtitle && <div className="text-[10px] text-afri-text-sec uppercase tracking-wider font-mono mt-0.5">{subtitle}</div>}
-                  </div>
-                  {showCloseButton && (
-                    <button
-                      onClick={onClose}
-                      className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text flex items-center justify-center cursor-pointer shrink-0"
-                      aria-label="Fermer"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+            {/* Header */}
+            {(title || showCloseButton) && (
+              <div className="px-5 pb-3 border-b border-afri-border/60 flex items-center justify-between shrink-0">
+                <div className="flex-1 pr-2 min-w-0">
+                  {title && (
+                    <div className="text-sm sm:text-base font-black uppercase text-afri-text tracking-wide flex items-center gap-2 truncate">
+                      {title}
+                    </div>
+                  )}
+                  {subtitle && (
+                    <div className="text-[10px] text-afri-text-sec uppercase tracking-wider font-mono mt-0.5 truncate">
+                      {subtitle}
+                    </div>
                   )}
                 </div>
-              )}
-
-              {/* Body */}
-              <div className={`overflow-y-auto overscroll-contain flex-1 custom-scrollbar ${isBottomSheet ? 'p-4 sm:p-6 pb-8' : 'p-5'}`}>
-                {renderModalBody(type, children, {
-                  icon,
-                  onConfirm,
-                  onCancel,
-                  onClose,
-                  confirmText,
-                  cancelText,
-                  isConfirming,
-                  items
-                })}
+                {showCloseButton && (
+                  <button
+                    onClick={() => {
+                      try { if (navigator?.vibrate) navigator.vibrate(8); } catch(_) {}
+                      onClose();
+                    }}
+                    className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text flex items-center justify-center cursor-pointer shrink-0 active:scale-95 transition-transform"
+                    aria-label="Fermer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className={`relative w-full max-w-[560px] mx-auto bg-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.95)] overflow-hidden z-10 max-h-[88vh] my-auto flex flex-col ${className}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              {(title || showCloseButton) && (
-                <div className="pb-3 mb-3 border-b border-afri-border/60 flex items-center justify-between shrink-0">
-                  <div className="flex-1 pr-2">
-                    {title && <div className="text-sm sm:text-base font-black uppercase text-afri-text tracking-wide flex items-center gap-2">{title}</div>}
-                    {subtitle && <div className="text-[10px] text-afri-text-sec uppercase tracking-wider font-mono mt-0.5">{subtitle}</div>}
-                  </div>
-                  {showCloseButton && (
-                    <button
-                      onClick={onClose}
-                      className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text flex items-center justify-center cursor-pointer shrink-0"
-                      aria-label="Fermer"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              )}
+            )}
 
-              {/* Body */}
-              <div className="overflow-y-auto overscroll-contain flex-1 custom-scrollbar">
-                {renderModalBody(type, children, {
-                  icon,
-                  onConfirm,
-                  onCancel,
-                  onClose,
-                  confirmText,
-                  cancelText,
-                  isConfirming,
-                  items
-                })}
-              </div>
-            </motion.div>
-          )}
+            {/* Scrollable Content Body */}
+            <div className="overflow-y-auto overscroll-contain flex-1 p-4 sm:p-5 custom-scrollbar max-w-full">
+              {renderModalBody(type, children, {
+                icon,
+                onConfirm,
+                onCancel,
+                onClose,
+                confirmText,
+                cancelText,
+                isConfirming,
+                items
+              })}
+            </div>
+          </motion.div>
         </div>
       )}
     </AnimatePresence>,

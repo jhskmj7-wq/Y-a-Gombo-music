@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Gift, Coins, Zap, Calendar, CheckCircle2, Sparkles, X, Trophy } from 'lucide-react';
 import { AvatarEngine, DAILY_REWARD_SCHEDULE } from '../../lib/avatarEngine';
 import { useAuth } from '../../AuthContext';
+import { AndroidBottomSheet } from '../common/AfriModal';
 
 interface DailyRewardModalProps {
   onClose: () => void;
@@ -42,38 +43,13 @@ export default function DailyRewardModal({ onClose, onRewardClaimed }: DailyRewa
   };
 
   return (
-    <div className="fixed inset-0 z-[140] flex items-center justify-center p-3 sm:p-4 bg-afri-bg/80 backdrop-blur-md animate-fadeIn text-left font-sans">
-      <div className="w-full max-w-xl bg-afri-bg-sec border border-afri-border rounded-3xl overflow-hidden shadow-2xl relative">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/10 blur-3xl rounded-full pointer-events-none" />
-
-        {/* Header */}
-        <div className="p-6 border-b border-afri-border bg-afri-bg flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
-              <Gift className="w-6 h-6 animate-bounce" />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
-                BONUS QUOTIDIEN
-                <span className="px-2 py-0.5 bg-[#D4AF37] text-black text-[9px] font-mono font-black rounded-full">
-                  7 JOURS
-                </span>
-              </h3>
-              <p className="text-xs text-afri-text-sec">
-                Connectez-vous chaque jour pour cumuler des Gombo Coins et monter de niveau !
-              </p>
-            </div>
-          </div>
-          <button 
-            onClick={onClose}
-            className="w-10 h-10 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-afri-text transition cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Main Content */}
-        <div className="p-6 space-y-6 relative z-10">
+    <AndroidBottomSheet
+      isOpen={true}
+      onClose={onClose}
+      title="BONUS QUOTIDIEN"
+      subtitle="Fidélité 7 Jours • Gombo Coins & XP"
+    >
+      <div className="space-y-6 text-left font-sans py-1 relative z-10">
           {errorMsg && (
             <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold rounded-2xl">
               {errorMsg}
@@ -169,7 +145,6 @@ export default function DailyRewardModal({ onClose, onRewardClaimed }: DailyRewa
             </button>
           )}
         </div>
-      </div>
-    </div>
+    </AndroidBottomSheet>
   );
 }

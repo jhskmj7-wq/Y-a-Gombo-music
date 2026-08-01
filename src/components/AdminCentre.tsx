@@ -8387,7 +8387,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
           {/* MAIN FLOATING BOTTOM NAVIGATION BAR (ANDROID MATERIAL DESIGN 3) */}
           <nav
-            className={`fixed bottom-0 left-0 right-0 w-full sm:w-[94%] sm:max-w-[440px] sm:left-1/2 sm:-translate-x-1/2 h-16 sm:h-16 bg-afri-bg-sec/98 backdrop-blur-2xl border-t sm:border border-afri-border/80 px-2 sm:px-3 flex justify-between items-center z-40 sm:rounded-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.3)] sm:shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none transition-all duration-300 ease-in-out box-border touch-manipulation ${
+            className={`fixed bottom-3 sm:bottom-4 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 w-[calc(100%-1.5rem)] sm:max-w-[440px] h-16 sm:h-16 bg-afri-bg-sec/98 backdrop-blur-2xl border border-afri-border/80 px-2 sm:px-3 flex justify-between items-center z-40 rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.4)] select-none transition-all duration-300 ease-in-out box-border touch-manipulation ${
               isNavCollapsed ? "-translate-x-[150%] sm:-translate-x-[150%] opacity-0 pointer-events-none" : "translate-x-0 sm:-translate-x-1/2 opacity-100"
             }`}
             style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 6px)' }}

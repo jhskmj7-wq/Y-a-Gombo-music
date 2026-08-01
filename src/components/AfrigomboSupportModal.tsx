@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { X, Send, HelpCircle, ShieldCheck, MessageSquare, CheckCircle, Clock, Info } from "lucide-react";
+import { Send, HelpCircle, ShieldCheck, MessageSquare, CheckCircle, Clock, Info, X } from "lucide-react";
 import { collection, onSnapshot, query, where, orderBy } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { SupportService, SUPPORT_PROFILE } from "../services/SupportService";
+import { AndroidBottomSheet } from "./common/AfriModal";
 
 interface AfrigomboSupportModalProps {
   isOpen: boolean;
@@ -106,8 +106,13 @@ export const AfrigomboSupportModal: React.FC<AfrigomboSupportModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-afri-bg/75 backdrop-blur-md flex items-center justify-center p-4 z-[99999] animate-fadeIn">
-      <div className="bg-afri-bg-sec border border-afri-gold/40 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col h-[80vh] max-h-[700px]">
+    <AndroidBottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title={SUPPORT_PROFILE.name}
+      subtitle="Support Officiel AFRIGOMBO 24/7"
+    >
+      <div className="flex flex-col h-[70vh] space-y-3 font-sans text-left py-1">
         {/* Header - Official Support Profile Card */}
         <div className="p-4 bg-afri-bg-sec border-b border-afri-border flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -236,6 +241,6 @@ export const AfrigomboSupportModal: React.FC<AfrigomboSupportModalProps> = ({
           </button>
         </form>
       </div>
-    </div>
+    </AndroidBottomSheet>
   );
 };
