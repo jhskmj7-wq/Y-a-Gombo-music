@@ -550,7 +550,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                   </div>
 
                   {/* Actions buttons for user */}
-                  <div className="pt-2 border-t border-zinc-800/60 grid grid-cols-4 gap-1.5">
+                  <div className="pt-2 border-t border-zinc-800/60 grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <button
                       onClick={() => { setSelectedUser(usr); setActionType("credit"); setAmountInput(""); setReasonInput(""); }}
                       className="py-1.5 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-lg text-[9px] font-mono font-bold uppercase transition text-center cursor-pointer flex items-center justify-center gap-1"

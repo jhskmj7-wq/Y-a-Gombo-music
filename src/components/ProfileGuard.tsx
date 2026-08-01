@@ -16,7 +16,7 @@ export function ProfileGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Allow passing if the profile exists and is complete or skipped
-  if (profile && (profile.isProfileComplete !== false || profile.profileSkipped || profile.skippedProfile)) {
+  if (profile && (profile.isProfileComplete === true || profile.profileSkipped || profile.skippedProfile)) {
     return <>{children}</>;
   }
 

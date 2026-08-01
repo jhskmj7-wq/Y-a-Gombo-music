@@ -199,7 +199,7 @@ export default function AdminSecurity({
             {activities.length === 0 ? (
               <div className="text-center p-8 text-afri-text-sec text-xs font-mono">Aucun journal.</div>
             ) : (
-              <table className="w-full text-left border-collapse">
+              <div className="overflow-x-auto w-full"><table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="border-b border-afri-border text-[10px] uppercase font-mono text-afri-text-sec tracking-wider">
                     <th className="pb-3 pr-4 font-normal">Date</th>
@@ -229,7 +229,7 @@ export default function AdminSecurity({
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </div>
         )}

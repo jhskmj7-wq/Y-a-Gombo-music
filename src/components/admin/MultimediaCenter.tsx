@@ -998,11 +998,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               )}
 
               {asset ? (
-                <div className="space-y-3 pt-3 border-t border-zinc-950">
+                <div className="space-y-3 pt-3 border-t border-afri-border">
                   {/* Preview Display Based on Asset Type */}
                   {sectionName === "audio" || sectionName === "sounds" ? (
                     <>
-                    <div className="flex items-center justify-between bg-afri-bg/40 p-2.5 rounded-lg border border-zinc-950">
+                    <div className="flex items-center justify-between bg-afri-bg/40 p-2.5 rounded-lg border border-afri-border">
                       <span className="text-[10px] font-mono text-afri-text-sec truncate max-w-[70%]" title={asset.title}>
                         🎵 {asset.title}
                       </span>
@@ -1174,7 +1174,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                           </span>
                           <div className="max-h-16 overflow-y-auto space-y-1 scrollbar-thin">
                             {asset.history.slice(0, 3).map((hist, idx) => (
-                              <div key={idx} className="flex justify-between items-center text-[8.5px] bg-afri-bg/40 p-1 rounded border border-zinc-950">
+                              <div key={idx} className="flex justify-between items-center text-[8.5px] bg-afri-bg/40 p-1 rounded border border-afri-border">
                                 <span className="truncate max-w-[50%] text-afri-text-sec" title={hist.title}>{hist.title}</span>
                                 <button
                                   onClick={() => handleRollback(spot.id, idx)}
@@ -1189,7 +1189,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                       )}
 
                       {/* Management actions (Super Founder exclusive) */}
-                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-zinc-950">
+                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-afri-border">
                         {isAuthorizedSuperFounder ? (
                           <>
                             <button
@@ -1551,21 +1551,21 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               </div>
               
               <div className="grid grid-cols-3 gap-2">
-                <div className="p-2 bg-afri-bg/40 rounded-lg border border-zinc-950 text-center">
+                <div className="p-2 bg-afri-bg/40 rounded-lg border border-afri-border text-center">
                   <span className="text-[8px] text-blue-400 font-bold uppercase block">Firebase</span>
                   <span className="text-xs font-black text-afri-text">{Object.values(mediaAssets).filter(m => m.sourceType === "FIREBASE").length}</span>
                 </div>
-                <div className="p-2 bg-afri-bg/40 rounded-lg border border-zinc-950 text-center">
+                <div className="p-2 bg-afri-bg/40 rounded-lg border border-afri-border text-center">
                   <span className="text-[8px] text-purple-400 font-bold uppercase block">GitHub</span>
                   <span className="text-xs font-black text-afri-text">{Object.values(mediaAssets).filter(m => m.sourceType === "GITHUB").length}</span>
                 </div>
-                <div className="p-2 bg-afri-bg/40 rounded-lg border border-zinc-950 text-center">
+                <div className="p-2 bg-afri-bg/40 rounded-lg border border-afri-border text-center">
                   <span className="text-[8px] text-amber-400 font-bold uppercase block">URL</span>
                   <span className="text-xs font-black text-afri-text">{Object.values(mediaAssets).filter(m => m.sourceType === "URL").length}</span>
                 </div>
               </div>
 
-              <div className="flex justify-between items-center text-[9px] font-mono border-t border-zinc-950 pt-2">
+              <div className="flex justify-between items-center text-[9px] font-mono border-t border-afri-border pt-2">
                 <div className="flex gap-3">
                   <span className="text-emerald-500">Active: {activeMediaCount}</span>
                   <span className="text-afri-text-sec">Désactivée: {totalAssets - activeMediaCount}</span>
@@ -1600,7 +1600,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                     <span className="text-[9px] font-mono text-zinc-550">{lastUploadItem.fileSize || "Taille inconnue"}</span>
                   </div>
 
-                  <div className="text-[9.5px] text-afri-text-sec border-t border-zinc-950 pt-2 space-y-1.5 font-sans leading-relaxed">
+                  <div className="text-[9.5px] text-afri-text-sec border-t border-afri-border pt-2 space-y-1.5 font-sans leading-relaxed">
                     <div className="flex items-center gap-1 text-emerald-400 font-bold">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                       Optimisations de streaming et de cache impériaux actives :
@@ -1609,7 +1609,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                     <div>• <strong>Streaming progressif</strong> : téléchargement dynamique à la demande sans surcharge de bande passante.</div>
                   </div>
 
-                  <div className="flex justify-between items-center text-[9.5px] font-mono text-zinc-650 pt-2 border-t border-zinc-950">
+                  <div className="flex justify-between items-center text-[9.5px] font-mono text-zinc-650 pt-2 border-t border-afri-border">
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {new Date(lastUploadItem.updatedAt).toLocaleString()}</span>
                     <span>Par {lastUploadItem.updatedBy}</span>
                   </div>
@@ -1632,7 +1632,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
               <div className="space-y-2.5 max-h-[170px] overflow-y-auto pr-1">
                 {auditLogs.slice(0, 3).map((log) => (
-                  <div key={log.id} className="p-2.5 bg-afri-bg/40 border border-zinc-950 rounded-lg text-[10.5px] font-mono space-y-1">
+                  <div key={log.id} className="p-2.5 bg-afri-bg/40 border border-afri-border rounded-lg text-[10.5px] font-mono space-y-1">
                     <div className="flex justify-between">
                       <span className="text-afri-text font-bold">{log.action}</span>
                       <span className="text-afri-text-sec text-[9px]">{new Date(log.timestamp).toLocaleTimeString()}</span>
@@ -1683,7 +1683,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Left: Old Image */}
-                  <div className="p-4 bg-afri-bg/40 border border-zinc-950 rounded-xl space-y-2 text-center">
+                  <div className="p-4 bg-afri-bg/40 border border-afri-border rounded-xl space-y-2 text-center">
                     <span className="text-[9px] font-mono text-afri-text-sec uppercase block">Version Active Actuelle</span>
                     <div className="h-44 w-full bg-afri-bg rounded-lg overflow-hidden flex items-center justify-center border border-afri-border relative">
                       <img
@@ -1697,7 +1697,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                   </div>
 
                   {/* Right: New uploaded candidate or dragzone */}
-                  <div className="p-4 bg-afri-bg/40 border border-zinc-950 rounded-xl space-y-2 text-center flex flex-col justify-between">
+                  <div className="p-4 bg-afri-bg/40 border border-afri-border rounded-xl space-y-2 text-center flex flex-col justify-between">
                     <span className="text-[9px] font-mono text-amber-500 uppercase block">Nouvelle Image Candidate</span>
                     {newComparePreview ? (
                       <div className="h-44 w-full bg-afri-bg rounded-lg overflow-hidden flex items-center justify-center border border-afri-border">
@@ -1851,7 +1851,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-zinc-950 flex gap-2">
+                  <div className="pt-3 border-t border-afri-border flex gap-2">
                     <button
                       onClick={() => triggerAnimationTest(spot.id)}
                       className="flex-1 py-2 bg-gradient-to-r from-amber-600 to-[#D4AF37] hover:opacity-90 text-black font-black text-[10px] uppercase rounded-xl tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-lg"
@@ -2040,7 +2040,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                   </div>
 
                   {isAuthorizedSuperFounder ? (
-                    <div className="flex gap-2 pt-3 border-t border-zinc-950">
+                    <div className="flex gap-2 pt-3 border-t border-afri-border">
                       <button
                         onClick={handleSaveEdit}
                         className="flex-1 py-2 bg-afri-bg-sec text-black font-black text-[10px] uppercase rounded-xl tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
@@ -2055,7 +2055,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                       </button>
                     </div>
                   ) : (
-                    <div className="w-full text-center py-2 text-[9px] font-mono text-zinc-650 uppercase border-t border-zinc-950">
+                    <div className="w-full text-center py-2 text-[9px] font-mono text-zinc-650 uppercase border-t border-afri-border">
                       🔒 Édition réservée au Super Fondateur
                     </div>
                   )}
@@ -2096,7 +2096,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
           <div className="bg-afri-bg-sec border border-afri-border rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-[10.5px] font-mono text-left">
+              <div className="overflow-x-auto w-full"><table className="w-full text-[10.5px] font-mono text-left min-w-[800px]">
                 <thead className="bg-afri-bg-sec border-b border-afri-border text-afri-text-sec uppercase tracking-widest text-[9px]">
                   <tr>
                     <th className="p-3">Date & Heure</th>
@@ -2132,7 +2132,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                     </tr>
                   )}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           </div>
         </div>

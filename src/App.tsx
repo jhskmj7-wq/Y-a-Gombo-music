@@ -16,8 +16,11 @@ import AfrigomboCinematicIntro from "./components/AfrigomboCinematicIntro";
 import PremiumLoader from "./components/PremiumLoader";
 import PWAHandler from "./components/PWAHandler";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
-import { gomboDB } from "./firebase";
+import { gomboDB, db } from "./firebase";
 import { app } from "./lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import MaintenanceScreen from "./components/MaintenanceScreen";
+import { SecurityService } from "./lib/SecurityService";
 import { AfriGomboLogo } from "./components/AfriGomboLogo";
 import ScrollToTop from "./components/ScrollToTop";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
@@ -83,10 +86,19 @@ function CompleteProfileView() {
 }
 
 function App() {
-  const { loading: authLoading } = useAuth();
+  const { loading: authLoading, currentUser } = useAuth();
+  const [isMaintenance, setIsMaintenance] = useState(false);
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, "settings", "platform"), (snap) => {
+      setIsMaintenance(snap.data()?.status === "maintenance");
+    });
+    return () => unsub();
+  }, []);
   const { theme } = useTheme();
   const location = useLocation();
   
+  // ... (inside the component)
+
   useEffect(() => {
     bootManager.runDiagnostics().then(res => console.log("Boot diagnostics finished", res));
   }, []);
@@ -174,6 +186,11 @@ function App() {
       clearTimeout(safetyTimeout);
     };
   }, [authLoading, showSplash]);
+
+  const isSuperUser = SecurityService.isFounder(currentUser) || SecurityService.isAdmin(currentUser);
+  if (isMaintenance && !isSuperUser) {
+    return <MaintenanceScreen message="L'application est actuellement en maintenance. Veuillez patienter." />;
+  }
 
   if (showCinematicIntro) {
     return (

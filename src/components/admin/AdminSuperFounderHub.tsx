@@ -2,7 +2,7 @@ import React, { useState, useEffect, Suspense, lazy } from "react";
 import { 
   LayoutDashboard, MessageSquare, CreditCard, MapPin, User, BarChart3, 
   FlaskConical, Music, Settings, Crown, ShieldCheck, RefreshCw, ChevronRight, X,
-  Sparkles, Bell, Shield, Users, TrendingUp, LogOut, Radio, AlertOctagon, ArrowLeft
+  Sparkles, Bell, Shield, Users, TrendingUp, LogOut, Radio, AlertOctagon, ArrowLeft, Rocket
 } from "lucide-react";
 import { lazyWithRetry } from "../../lib/lazyWithRetry";
 import { ErrorBoundary } from "../ErrorBoundary";
@@ -18,6 +18,7 @@ const AdminAvatarStore = lazyWithRetry(() => import("./AdminAvatarStore"));
 const AdminPollCenter = lazyWithRetry(() => import("./AdminPollCenter"));
 const AfrigomboLabs = lazyWithRetry(() => import("./AfrigomboLabs"));
 const AdminDecouvertesCentre = lazyWithRetry(() => import("./AdminDecouvertesCentre"));
+const AdminCagnottes = lazyWithRetry(() => import("./AdminCagnottes"));
 const AdminNotifications = lazyWithRetry(() => import("./AdminNotifications"));
 const AdminSecurity = lazyWithRetry(() => import("./AdminSecurity"));
 const AdminUsers = lazyWithRetry(() => import("./AdminUsers"));
@@ -26,6 +27,7 @@ const AdminSettings = lazyWithRetry(() => import("./AdminSettings"));
 const MultimediaCenter = lazyWithRetry(() => import("./MultimediaCenter"));
 const AdminWalletManagement = lazyWithRetry(() => import("./AdminWalletManagement"));
 const AdminContracts = lazyWithRetry(() => import("./AdminContracts"));
+const AdminDeploymentCenter = lazyWithRetry(() => import("./AdminDeploymentCenter"));
 
 export type AdminModuleType = 
   | "throne"
@@ -44,7 +46,8 @@ export type AdminModuleType =
   | "users"
   | "stats"
   | "settings"
-  | "multimedia";
+  | "multimedia"
+  | "deployment";
 
 interface AdminSuperFounderHubProps {
   initialModule?: AdminModuleType;
@@ -95,12 +98,12 @@ export default function AdminSuperFounderHub({
 
   if (!isAuthorized) {
     return (
-      <div className="min-h-[100dvh] bg-black text-white flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-[100dvh] bg-afri-bg text-white flex flex-col items-center justify-center p-6 text-center">
         <div className="w-16 h-16 rounded-full bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center text-rose-500 mb-4 animate-pulse">
           <AlertOctagon className="w-8 h-8" />
         </div>
         <h1 className="text-xl font-black text-rose-500 uppercase tracking-widest mb-2">ACCÈS SOUVERAIN REFUSÉ</h1>
-        <p className="text-xs text-zinc-400 max-w-md mb-6 leading-relaxed">
+        <p className="text-xs text-afri-text-sec max-w-md mb-6 leading-relaxed">
           Seul le Super Fondateur légitime d'AFRIGOMBO (<span className="text-amber-400 font-mono">jhs.kmj7@gmail.com</span>) possède les autorisations pour accéder à ce Cabinet Impérial.
           Cette tentative a été journalisée dans le registre de sécurité.
         </p>
@@ -135,6 +138,7 @@ export default function AdminSuperFounderHub({
     { key: "stats" as AdminModuleType, label: "📈 Statistiques", icon: TrendingUp, badge: undefined },
     { key: "settings" as AdminModuleType, label: "⚙ Paramètres", icon: Settings, badge: undefined },
     { key: "multimedia" as AdminModuleType, label: "🎵 Multimédia", icon: Music, badge: undefined },
+    { key: "deployment" as AdminModuleType, label: "🚀 Déploiement", icon: Rocket, badge: "Android" },
   ];
 
   const handleSelectModule = (modKey: AdminModuleType) => {
@@ -296,7 +300,7 @@ export default function AdminSuperFounderHub({
 
           <ErrorBoundary moduleName="Cagnottes">
             {activeModule === "cagnottes" && (
-              <AdminDecouvertesCentre audioSynth={audioSynth} />
+              <AdminCagnottes audioSynth={audioSynth} />
             )}
           </ErrorBoundary>
 
@@ -327,6 +331,12 @@ export default function AdminSuperFounderHub({
           <ErrorBoundary moduleName="Multimedia">
             {activeModule === "multimedia" && (
               <MultimediaCenter adminEmail={userEmail} isAuthorizedSuperFounder={true} />
+            )}
+          </ErrorBoundary>
+
+          <ErrorBoundary moduleName="Deployment">
+            {activeModule === "deployment" && (
+              <AdminDeploymentCenter />
             )}
           </ErrorBoundary>
 

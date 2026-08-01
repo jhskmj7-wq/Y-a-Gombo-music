@@ -11,12 +11,18 @@ export class SecurityService {
    * FOUNDER ZERO TRUST IDENTIFIER
    */
   static readonly FOUNDER_EMAIL = "jhs.kmj7@gmail.com";
+  static readonly FOUNDER_UID = "YOUR_FOUNDER_UID_HERE"; // NEED TO GET THIS UID
 
   /**
    * Verify if a user is the legitimate Founder (Zero-Trust Check)
    */
   static isFounder(user: any): boolean {
     if (!user) return false;
+    
+    // Check by UID if available
+    if (user.uid === this.FOUNDER_UID) return true;
+
+    // Check by email as fallback
     const email = typeof user === "string" ? user : user.email;
     return email?.toLowerCase() === this.FOUNDER_EMAIL;
   }

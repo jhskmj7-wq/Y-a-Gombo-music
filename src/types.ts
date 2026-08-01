@@ -956,3 +956,20 @@ export interface IdeaHistory {
   action: string;
   createdAt: string;
 }
+
+export interface Feature {
+  id: string;
+  name: string;
+  description: string;
+  state: "development" | "beta_founder" | "public";
+  version: string;
+  updatedAt: string;
+}
+
+export interface DeploymentVersion {
+  id: string;
+  name: string;
+  description: string;
+  state: "prepared" | "deployed";
+  createdAt: string;
+}

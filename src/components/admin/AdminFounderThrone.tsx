@@ -100,12 +100,15 @@ export default function AdminFounderThrone({
   }, []);
 
   const handleUpdatePlatformStatus = async (newStatus: string) => {
+    console.log("Updating status:", newStatus);
     try {
       await setDoc(doc(db, "settings", "platform"), { status: newStatus }, { merge: true });
+      console.log("Status updated successfully.");
       setSuccessMsg(`Souveraineté : Statut de service mis à jour vers [${newStatus.toUpperCase()}]`);
       setTimeout(() => setSuccessMsg(""), 4000);
       try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
     } catch (err: any) {
+      console.error("Error updating status:", err);
       setErrorMsg("Erreur statut de service: " + err.message);
       setTimeout(() => setErrorMsg(""), 4000);
     }
