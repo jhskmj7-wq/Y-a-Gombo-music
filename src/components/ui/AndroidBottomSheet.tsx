@@ -81,7 +81,7 @@ export const AndroidBottomSheet: React.FC<AndroidBottomSheetProps> = ({
                 onClose();
               }
             }}
-            className={`relative w-full max-w-[600px] mx-auto bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-[28px] sm:rounded-t-[32px] shadow-[0_-12px_48px_rgba(0,0,0,0.9)] overflow-hidden z-10 flex flex-col ${className}`}
+            className={`relative w-full bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-[28px] sm:rounded-t-[32px] shadow-[0_-12px_48px_rgba(0,0,0,0.9)] overflow-hidden z-10 flex flex-col ${className}`}
             style={{ 
               maxHeight,
               paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)"

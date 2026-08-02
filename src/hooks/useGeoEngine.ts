@@ -27,15 +27,21 @@ export function useGeoEngine(profile: UserProfile | null) {
   const [nearbyGombos, setNearbyGombos] = useState<Gombo[]>([]);
   const [nearbyArtists, setNearbyArtists] = useState<User[]>([]);
 
-  // 1. Check Permission Status
+  // 1. Check Permission Status safely
   useEffect(() => {
-    if ("permissions" in navigator) {
-      navigator.permissions.query({ name: "geolocation" as any }).then((result) => {
-        setGeoState(prev => ({ ...prev, permissionStatus: result.state }));
-        result.onchange = () => {
+    if ("permissions" in navigator && navigator.permissions?.query) {
+      try {
+        navigator.permissions.query({ name: "geolocation" as any }).then((result) => {
           setGeoState(prev => ({ ...prev, permissionStatus: result.state }));
-        };
-      });
+          result.onchange = () => {
+            setGeoState(prev => ({ ...prev, permissionStatus: result.state }));
+          };
+        }).catch(() => {
+          setGeoState(prev => ({ ...prev, permissionStatus: "prompt" }));
+        });
+      } catch (e) {
+        setGeoState(prev => ({ ...prev, permissionStatus: "prompt" }));
+      }
     }
   }, []);
 

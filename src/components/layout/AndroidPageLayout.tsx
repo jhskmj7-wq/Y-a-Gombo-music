@@ -21,7 +21,7 @@ export function AndroidPageLayout({
   onBack,
 }: AndroidPageLayoutProps) {
   const headerContent = header || (title || onBack ? (
-    <header className="flex-none bg-afri-bg/95 backdrop-blur-md border-b border-afri-border/60 px-3 py-2.5 flex items-center justify-between gap-2 z-30 shrink-0 safe-area-pt">
+    <header className="flex-none bg-afri-bg/95 backdrop-blur-md border-b border-afri-border/60 px-3 py-2.5 flex items-center justify-between gap-2 z-35 shrink-0" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))', paddingLeft: 'max(12px, env(safe-area-inset-left))', paddingRight: 'max(12px, env(safe-area-inset-right))' }}>
       <div className="flex items-center gap-2.5 min-w-0">
         {onBack && <BackButton onClick={onBack} />}
         {title && (
@@ -34,12 +34,19 @@ export function AndroidPageLayout({
   ) : null);
 
   return (
-    <div className={`w-full h-[100dvh] flex flex-col bg-afri-bg text-afri-text font-sans select-none overflow-hidden touch-pan-y ${className}`}>
+    <div 
+      className={`w-full min-h-[100dvh] flex flex-col bg-afri-bg text-afri-text font-sans select-none overflow-x-hidden ${scrollable ? "overflow-y-auto" : "overflow-hidden"} ${className}`}
+      style={{
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+        paddingBottom: 'env(safe-area-inset-bottom)'
+      }}
+    >
       {headerContent}
-      <main className={`flex-1 w-full max-w-none box-border overflow-x-hidden ${scrollable ? "overflow-y-auto overscroll-contain" : "overflow-hidden"} px-[12px] pt-[12px] pb-[120px]`}>
+      <main className={`flex-1 w-full box-border overflow-x-hidden ${scrollable ? "overflow-y-auto overscroll-contain" : "overflow-hidden"} p-3 pb-28`}>
         {children}
       </main>
-      {footer && <footer className="flex-none safe-area-pb">{footer}</footer>}
+      {footer && <footer className="flex-none" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>{footer}</footer>}
     </div>
   );
 }

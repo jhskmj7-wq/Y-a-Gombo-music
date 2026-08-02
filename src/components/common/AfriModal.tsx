@@ -142,7 +142,7 @@ export const AfriModal: React.FC<AfriModalProps> = ({
                 onClose();
               }
             }}
-            className={`relative w-full max-w-[560px] mx-auto bg-afri-bg-sec border-t border-x border-[#D4AF37]/35 rounded-t-[28px] sm:rounded-t-[32px] shadow-[0_-12px_48px_rgba(0,0,0,0.9)] overflow-hidden z-10 max-h-[92vh] flex flex-col ${className}`}
+            className={`relative w-full bg-afri-bg-sec border-t border-x border-[#D4AF37]/35 rounded-t-[28px] sm:rounded-t-[32px] shadow-[0_-12px_48px_rgba(0,0,0,0.9)] overflow-hidden z-10 max-h-[92vh] flex flex-col ${className}`}
             onClick={(e) => e.stopPropagation()}
             style={{
               paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)'
