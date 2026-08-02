@@ -10,7 +10,7 @@ export default defineConfig({
     react(), 
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       injectRegister: 'auto',
       includeAssets: ['logo.png', 'logo-192.png', 'logo-512.png', 'maskable-icon.png', 'apple-touch-icon.png', 'favicon.png', 'logo.svg', 'sounds/*.mp3'],
       manifest: {
@@ -53,8 +53,6 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3}'],
         cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
         navigateFallback: '/index.html',
         runtimeCaching: [
           {

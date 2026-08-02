@@ -87,32 +87,34 @@ export default function PWAHandler() {
   return (
     <div className="fixed bottom-20 left-0 w-full z-[10000] px-4 pointer-events-none flex flex-col items-center gap-3">
       <AnimatePresence>
-        {/* New Version Available */}
+        {/* New Version Available Android Snackbar */}
         {needRefresh && (
           <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="pointer-events-auto w-full max-w-sm bg-afri-bg-sec text-black p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4 border border-amber-300/50"
+            className="pointer-events-auto w-full max-w-md bg-[#12100C] border border-[#D4AF37]/50 text-afri-text p-4 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex flex-col sm:flex-row items-center justify-between gap-3 backdrop-blur-xl"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-afri-bg/10 flex items-center justify-center">
-                <RefreshCw className="w-5 h-5 animate-spin" />
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center shrink-0">
+                <RefreshCw className="w-4 h-4 text-[#D4AF37] animate-spin" />
               </div>
-              <div>
-                <p className="text-sm font-black uppercase tracking-tight">Mise à jour disponible</p>
-                <p className="text-[10px] opacity-80 font-medium">Une nouvelle version d'AFRIGOMBO est prête.</p>
-              </div>
+              <p className="text-xs sm:text-sm font-medium text-afri-text leading-snug">
+                Une nouvelle version d'AFRIGOMBO est disponible.
+              </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end pt-1 sm:pt-0 border-t sm:border-t-0 border-white/5">
+              <button
+                onClick={closeNeedRefresh}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold text-afri-text-sec bg-afri-bg/60 border border-afri-border hover:text-afri-text transition-colors cursor-pointer"
+              >
+                Plus tard
+              </button>
               <button
                 onClick={() => updateServiceWorker(true)}
-                className="bg-afri-bg text-afri-text px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-afri-bg-sec transition-colors"
+                className="px-4 py-2 rounded-xl text-xs font-black text-black bg-gradient-to-r from-amber-500 to-[#D4AF37] hover:opacity-90 transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)] uppercase tracking-wider cursor-pointer"
               >
                 Actualiser
-              </button>
-              <button onClick={closeNeedRefresh} className="p-1 hover:bg-afri-bg/10 rounded-lg">
-                <X className="w-4 h-4" />
               </button>
             </div>
           </motion.div>
