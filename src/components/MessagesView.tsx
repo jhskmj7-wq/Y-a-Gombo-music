@@ -6,7 +6,8 @@ import {
   Search, Trash2, X, Sparkles, MapPin, Navigation, Plus, 
   PhoneCall, Video, PhoneIncoming, PhoneOutgoing, Settings,
   ShieldCheck, MoreVertical, Radio, Bell, Users,
-  Activity, Smile, Paperclip, Shield, Ban, Lock, Volume2, Info, Check
+  Activity, Smile, Paperclip, Shield, Ban, Lock, Volume2, Info, Check,
+  HelpCircle, BookOpen, Megaphone, FileText, ChevronRight, Bot, Zap, Headphones, CheckCircle2, Award, Globe, Crown
 } from "lucide-react";
 import { gomboDB, db } from "../firebase";
 import { collection, query, where, onSnapshot, doc, getDocs, updateDoc, orderBy, deleteField } from "firebase/firestore";
@@ -43,8 +44,8 @@ export default function MessagesView({
   onNavigateToSearch,
   onBack
 }: MessagesViewProps) {
-  // 1. Navigation Tabs (WhatsApp/Telegram style: Discussions, Appels, Activité, Paramètres)
-  const [activeTab, setActiveTab] = useState<"discussions" | "appels" | "activite" | "parametres">("discussions");
+  // 1. Navigation Tabs (Discussions, Appels, Activité, Paramètres, AFRIGOMBO)
+  const [activeTab, setActiveTab] = useState<"discussions" | "appels" | "activite" | "parametres" | "afrigombo">("discussions");
   
   // Settings & Preferences States
   const [autoReplyMessage, setAutoReplyMessage] = useState(() => {
@@ -105,6 +106,13 @@ export default function MessagesView({
   const [showMsgSearch, setShowMsgSearch] = useState(false);
   const [msgSearchQuery, setMsgSearchQuery] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  // 8. AFRIGOMBO Service Center States
+  const [afrigomboCategory, setAfrigomboCategory] = useState<"all" | "support" | "admin" | "fondateur" | "ia" | "updates" | "security" | "faq" | "tutorials">("all");
+  const [aiAssistantQuery, setAiAssistantQuery] = useState("");
+  const [aiAssistantResponse, setAiAssistantResponse] = useState<string | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [openFaqId, setOpenFaqId] = useState<number | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -611,7 +619,7 @@ export default function MessagesView({
         
         {/* 1. FIXED TOP HEADER WITH 4 MAIN TABS BAR (Visible when NOT in active conversation) */}
         {!activeConvo && (
-          <div className="w-full bg-[#111111] border-b border-afri-border shrink-0 z-20">
+          <div className="w-full bg-afri-bg-sec border-b border-afri-border shrink-0 z-20">
             {/* Header Title & Top Actions */}
             <div className="px-4 py-3 flex items-center justify-between gap-2 border-b border-white/5">
               <div className="flex items-center gap-2.5">
@@ -643,13 +651,25 @@ export default function MessagesView({
               </div>
             </div>
 
-            {/* 4 CONTINUOUS TOP TABS BAR (Discussions, Appels, Activité, Paramètres) */}
-            <div className="flex items-center justify-around px-2 pt-1 pb-1.5 bg-[#0D0D0D]">
+            {/* 5 MAIN NAVIGATION TABS BAR (Discussions, Appels, Activité, Paramètres, AFRIGOMBO) */}
+            <div className="flex items-center justify-between px-1 pt-1 pb-1.5 bg-[#0D0D0D] border-t border-white/5 overflow-x-auto no-scrollbar">
               {[
-                { id: "discussions", label: "Discussions", icon: MessageSquare, badge: totalUnreadCount },
+                { 
+                  id: "discussions", 
+                  label: "Discussions", 
+                  icon: MessageSquare, 
+                  badge: Math.max(0, totalUnreadCount - (supportConvo?.unreadCount?.[currentUser?.uid] || 0)) 
+                },
                 { id: "appels", label: "Appels", icon: PhoneCall, badge: callLogs.length },
                 { id: "activite", label: "Activités", icon: Activity },
-                { id: "parametres", label: "Paramètres", icon: Settings }
+                { id: "parametres", label: "Paramètres", icon: Settings },
+                { 
+                  id: "afrigombo", 
+                  label: "AFRIGOMBO", 
+                  icon: ShieldCheck, 
+                  badge: supportConvo?.unreadCount?.[currentUser?.uid] || 0,
+                  isSpecial: true
+                }
               ].map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -658,21 +678,25 @@ export default function MessagesView({
                     onClick={() => {
                       setActiveTab(tab.id as any);
                     }}
-                    className={`flex-1 py-2 px-1 flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer relative ${
+                    className={`flex-1 min-w-[62px] py-2 px-1 flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer relative ${
                       isActive
-                        ? "bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 font-black shadow-sm"
-                        : "text-afri-text-sec hover:text-afri-text border border-transparent font-medium"
+                        ? tab.isSpecial
+                          ? "bg-gradient-to-b from-[#D4AF37]/25 to-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/50 font-black shadow-md"
+                          : "bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 font-black shadow-sm"
+                        : tab.isSpecial
+                          ? "text-[#D4AF37]/80 hover:text-[#D4AF37] border border-[#D4AF37]/20 bg-[#D4AF37]/5 font-bold"
+                          : "text-afri-text-sec hover:text-afri-text border border-transparent font-medium"
                     }`}
                   >
                     <div className="relative">
-                      <tab.icon className={`w-4 h-4 ${isActive ? "text-[#D4AF37]" : "text-afri-text-sec"}`} />
+                      <tab.icon className={`w-4 h-4 ${isActive || tab.isSpecial ? "text-[#D4AF37]" : "text-afri-text-sec"}`} />
                       {tab.badge ? (
                         <span className="absolute -top-1.5 -right-2 px-1.5 py-0.2 bg-[#D4AF37] text-black font-black text-[9px] rounded-full shadow-sm animate-pulse">
                           {tab.badge}
                         </span>
                       ) : null}
                     </div>
-                    <span className="text-[10px] uppercase tracking-tight">
+                    <span className={`text-[9.5px] uppercase tracking-tight truncate ${tab.isSpecial ? "font-black" : ""}`}>
                       {tab.label}
                     </span>
                   </button>
@@ -693,7 +717,7 @@ export default function MessagesView({
               <div className={`w-full md:w-80 lg:w-96 border-r border-afri-border flex flex-col shrink-0 bg-afri-bg ${activeConvo ? "hidden md:flex" : "flex h-full"}`}>
                 
                 {/* Instant Search Bar */}
-                <div className="px-3 py-2.5 bg-[#121212] border-b border-afri-border/60 shrink-0">
+                <div className="px-3 py-2.5 bg-afri-bg-sec border-b border-afri-border/60 shrink-0">
                   <div className="relative w-full">
                     <Search className="w-4 h-4 text-afri-text-muted absolute left-3 top-2.5" />
                     <input
@@ -714,149 +738,100 @@ export default function MessagesView({
                   </div>
                 </div>
 
-                {/* Discussions List Content (Scrollable) */}
+                {/* Discussions List Content (Scrollable - Strictly User-to-User & Group conversations) */}
                 <div className="flex-1 overflow-y-auto divide-y divide-afri-border/40 p-2 space-y-1">
                   
-                  {/* Permanent Pinned Support Card ("Équipe AFRIGOMBO") */}
-                  {supportConvo && (
-                    <div
-                      onClick={() => {
-                        setActiveConvo({
-                          id: currentUser.uid,
-                          type: "support",
-                          participants: [currentUser.uid, "afrigombo_support"],
-                          userName: "Équipe AFRIGOMBO",
-                          userPhoto: "/logo.png",
-                          ...supportConvo
-                        });
-                        
-                        if (supportConvo.unreadCount?.[currentUser.uid] > 0) {
-                          try {
-                            const convoRef = doc(db, "supportConversations", currentUser.uid);
-                            updateDoc(convoRef, {
-                              [`unreadCount.${currentUser.uid}`]: 0
-                            });
-                          } catch (err) {}
-                        }
-                      }}
-                      className={`p-3.5 rounded-2xl transition-all cursor-pointer flex items-center justify-between gap-3 border ${
-                        activeConvo?.type === "support"
-                          ? "border-[#D4AF37] bg-[#1A1812]"
-                          : "border-[#D4AF37]/30 bg-gradient-to-r from-[#12100A] to-[#181610] hover:bg-[#1A1812]"
-                      } shadow-md mb-2 shrink-0`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="relative shrink-0">
-                          <img
-                            src="/logo.png"
-                            alt="Équipe AFRIGOMBO"
-                            className="w-11 h-11 rounded-full object-cover border-2 border-[#D4AF37]"
-                            referrerPolicy="no-referrer"
-                          />
-                          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-black" title="Support 24/7" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <strong className="text-xs text-afri-text font-black uppercase tracking-wide">Équipe AFRIGOMBO</strong>
-                            <span className="text-[#D4AF37] text-[10px] font-black" title="Support officiel">✔ Verified</span>
-                          </div>
-                          <p className="text-[11px] text-afri-text-sec truncate mt-0.5">
-                            {supportConvo.lastMessage || "Démarrer l'échange avec le support..."}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <span className="text-[9px] font-mono text-[#D4AF37] font-black bg-[#D4AF37]/10 px-1.5 py-0.5 rounded border border-[#D4AF37]/30">
-                          SUPPORT
-                        </span>
-                        {supportConvo.unreadCount?.[currentUser.uid] > 0 && (
-                          <span className="px-2 py-0.5 bg-rose-500 text-white font-black text-[9px] rounded-full min-w-[20px] text-center animate-pulse">
-                            {supportConvo.unreadCount[currentUser.uid]}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Conversations Firestore List */}
+                  {/* Conversations Firestore List (Filtered for user-only discussions) */}
                   {loadingConvos ? (
                     <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-2">
                       <Loader2 className="w-6 h-6 animate-spin text-[#D4AF37] mx-auto" />
                       <p className="text-xs text-afri-text-muted font-mono">Chargement des discussions...</p>
                     </div>
-                  ) : conversations.length === 0 ? (
-                    <div className="p-8 text-center space-y-3">
-                      <div className="w-14 h-14 rounded-full bg-afri-bg-sec border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mx-auto">
-                        <MessageSquare className="w-7 h-7" />
-                      </div>
-                      <h3 className="text-xs font-bold text-afri-text uppercase tracking-wider">
-                        Aucune autre discussion active
-                      </h3>
-                      <p className="text-[11px] text-afri-text-sec max-w-xs mx-auto leading-relaxed">
-                        Inscrivez-vous à des Gombos ou démarrez une conversation avec un artiste.
-                      </p>
-                      <button
-                        onClick={onNavigateToSearch}
-                        className="px-4 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black text-xs font-bold uppercase rounded-xl transition shadow-md inline-flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                        Démarrer un échange
-                      </button>
-                    </div>
-                  ) : (
-                    conversations
-                      .filter((c) => {
-                        if (!convoSearchQuery) return true;
+                  ) : (() => {
+                    const userOnlyConvos = conversations.filter((c) => {
+                      if (c.type === "support" || c.id === currentUser?.uid || c.participants.includes("afrigombo_support")) {
+                        return false;
+                      }
+                      const partnerNamesStr = Object.values(c.participantNames || {}).join(" ").toUpperCase();
+                      if (partnerNamesStr.includes("AFRIGOMBO") || partnerNamesStr.includes("ÉQUIPE") || partnerNamesStr.includes("ADMINISTRATION")) {
+                        return false;
+                      }
+                      if (convoSearchQuery) {
                         const partnerName = Object.values(c.participantNames || {}).join(" ");
                         return partnerName.toLowerCase().includes(convoSearchQuery.toLowerCase());
-                      })
-                      .map((c) => {
-                        const pUid = c.participants.find((p) => p !== currentUser?.uid);
-                        const pName = pUid ? c.participantNames?.[pUid] || "Artiste Gombo" : "Partenaire";
-                        const pDetails = pUid ? c.participantDetails?.[pUid] : null;
-                        const isSelected = activeConvo?.id === c.id;
-                        const unread = c.unreadCount?.[currentUser?.uid || ""] || 0;
-                        const lastMsgTime = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+                      }
+                      return true;
+                    });
 
-                        return (
-                          <div
-                            key={c.id}
-                            onClick={() => setActiveConvo(c)}
-                            className={`p-3 rounded-2xl hover:bg-zinc-900/80 transition-all cursor-pointer flex items-center justify-between gap-3 border-l-2 ${
-                              isSelected ? "border-[#D4AF37] bg-zinc-900" : "border-transparent"
-                            }`}
+                    if (userOnlyConvos.length === 0) {
+                      return (
+                        <div className="p-8 text-center space-y-3">
+                          <div className="w-14 h-14 rounded-full bg-afri-bg-sec border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mx-auto">
+                            <MessageSquare className="w-7 h-7" />
+                          </div>
+                          <h3 className="text-xs font-bold text-afri-text uppercase tracking-wider">
+                            Aucune discussion privée active
+                          </h3>
+                          <p className="text-[11px] text-afri-text-sec max-w-xs mx-auto leading-relaxed">
+                            Échangez directement avec des artistes, prestataires ou recruteurs Gombo.
+                          </p>
+                          <button
+                            onClick={onNavigateToSearch}
+                            className="px-4 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black text-xs font-bold uppercase rounded-xl transition shadow-md inline-flex items-center gap-1.5 cursor-pointer"
                           >
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                              <div className="relative shrink-0">
-                                <img
-                                  src={pDetails?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"}
-                                  alt=""
-                                  className="w-11 h-11 rounded-full object-cover border border-afri-border shrink-0"
-                                  referrerPolicy="no-referrer"
-                                />
-                                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-black" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <strong className="text-xs text-afri-text truncate block">{pName}</strong>
-                                <p className="text-[11px] text-afri-text-sec truncate mt-0.5">
-                                  {c.lastMessage || "Démarrez l'échange..."}
-                                </p>
-                              </div>
-                            </div>
+                            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                            Démarrer un échange
+                          </button>
+                        </div>
+                      );
+                    }
 
-                            <div className="flex flex-col items-end gap-1 shrink-0">
-                              <span className="text-[9px] font-mono text-afri-text-muted">{lastMsgTime}</span>
-                              {unread > 0 && (
-                                <span className="px-2 py-0.5 bg-[#D4AF37] text-black font-black text-[9px] rounded-full min-w-[20px] text-center shadow-sm">
-                                  {unread}
-                                </span>
-                              )}
+                    return userOnlyConvos.map((c) => {
+                      const pUid = c.participants.find((p) => p !== currentUser?.uid);
+                      const pName = pUid ? c.participantNames?.[pUid] || "Artiste Gombo" : "Partenaire";
+                      const pDetails = pUid ? c.participantDetails?.[pUid] : null;
+                      const isSelected = activeConvo?.id === c.id;
+                      const unread = c.unreadCount?.[currentUser?.uid || ""] || 0;
+                      const lastMsgTime = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+
+                      return (
+                        <div
+                          key={c.id}
+                          onClick={() => setActiveConvo(c)}
+                          className={`p-3 rounded-2xl hover:bg-zinc-900/80 transition-all cursor-pointer flex items-center justify-between gap-3 border-l-2 ${
+                            isSelected ? "border-[#D4AF37] bg-afri-bg-sec" : "border-transparent"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="relative shrink-0">
+                              <img
+                                src={pDetails?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"}
+                                alt=""
+                                className="w-11 h-11 rounded-full object-cover border border-afri-border shrink-0"
+                                referrerPolicy="no-referrer"
+                              />
+                              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-afri-border" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <strong className="text-xs text-afri-text truncate block">{pName}</strong>
+                              <p className="text-[11px] text-afri-text-sec truncate mt-0.5">
+                                {c.lastMessage || "Démarrez l'échange..."}
+                              </p>
                             </div>
                           </div>
-                        );
-                      })
-                  )}
+
+                          <div className="flex flex-col items-end gap-1 shrink-0">
+                            <span className="text-[9px] font-mono text-afri-text-muted">{lastMsgTime}</span>
+                            {unread > 0 && (
+                              <span className="px-2 py-0.5 bg-[#D4AF37] text-black font-black text-[9px] rounded-full min-w-[20px] text-center shadow-sm">
+                                {unread}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
 
@@ -865,7 +840,7 @@ export default function MessagesView({
                 {activeConvo ? (
                   <>
                     {/* Active Chat Header */}
-                    <div className="p-3 bg-[#111111] border-b border-afri-border flex items-center justify-between gap-2 shrink-0 z-10">
+                    <div className="p-3 bg-afri-bg-sec border-b border-afri-border flex items-center justify-between gap-2 shrink-0 z-10">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <button
                           onClick={() => setActiveConvo(null)}
@@ -882,9 +857,9 @@ export default function MessagesView({
                             referrerPolicy="no-referrer"
                           />
                           {activeConvo.type === "support" || partnerPresence?.status === "online" ? (
-                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-black" title="En ligne" />
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-afri-border" title="En ligne" />
                           ) : (
-                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-zinc-600 rounded-full border-2 border-black" title="Hors ligne" />
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-zinc-600 rounded-full border-2 border-afri-border" title="Hors ligne" />
                           )}
                         </div>
 
@@ -976,7 +951,7 @@ export default function MessagesView({
 
                     {/* Inline message search input */}
                     {showMsgSearch && (
-                      <div className="px-3 py-2 bg-[#121212] border-b border-afri-border flex items-center justify-between gap-2 shrink-0">
+                      <div className="px-3 py-2 bg-afri-bg-sec border-b border-afri-border flex items-center justify-between gap-2 shrink-0">
                         <div className="relative flex-1">
                           <Search className="w-3.5 h-3.5 text-afri-text-muted absolute left-3 top-2.5" />
                           <input
@@ -1055,7 +1030,7 @@ export default function MessagesView({
                                 className={`relative p-3.5 rounded-2xl text-xs leading-relaxed select-text ${
                                   isMe
                                     ? "bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black font-semibold rounded-br-xs shadow-md"
-                                    : "bg-[#181818] text-afri-text rounded-bl-xs border border-afri-border"
+                                    : "bg-afri-bg-sec text-afri-text rounded-bl-xs border border-afri-border"
                                 } break-words min-w-[70px] ${hasReactions ? "pb-5" : ""}`}
                               >
                                 {m.type === "text" && (
@@ -1121,7 +1096,7 @@ export default function MessagesView({
                     </div>
 
                     {/* Bottom Chat Input Bar */}
-                    <div className="p-2.5 bg-[#111111] border-t border-afri-border relative">
+                    <div className="p-2.5 bg-afri-bg-sec border-t border-afri-border relative">
                       {showEmojiPicker && (
                         <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-2 pt-1 scrollbar-none border-b border-afri-border/30">
                           {quickEmojis.map((emoji) => (
@@ -1346,7 +1321,7 @@ export default function MessagesView({
               <div className="fixed bottom-20 right-6 z-30">
                 <button
                   onClick={() => setShowNewCallModal(true)}
-                  className="w-14 h-14 bg-[#D4AF37] hover:bg-amber-400 text-black rounded-full shadow-2xl flex items-center justify-center transition hover:scale-110 cursor-pointer border-2 border-black"
+                  className="w-14 h-14 bg-[#D4AF37] hover:bg-amber-400 text-black rounded-full shadow-2xl flex items-center justify-center transition hover:scale-110 cursor-pointer border-2 border-afri-border"
                   title="Lancer un appel direct"
                 >
                   <PhoneCall className="w-6 h-6" />
@@ -1562,6 +1537,438 @@ export default function MessagesView({
             </div>
           )}
 
+          {/* TAB 5: CENTRE OFFICIEL AFRIGOMBO */}
+          {activeTab === "afrigombo" && (
+            <div className="p-4 sm:p-6 overflow-y-auto w-full h-full space-y-4 pb-20">
+              
+              {/* Official Hero Banner */}
+              <div className="p-5 bg-gradient-to-br from-[#1C180E] via-[#12100B] to-[#0A0A0A] border-2 border-[#D4AF37]/40 rounded-3xl shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-15 pointer-events-none">
+                  <ShieldCheck className="w-32 h-32 text-[#D4AF37]" />
+                </div>
+
+                <div className="relative z-10 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-[10px] font-black uppercase tracking-wider">
+                      <Crown className="w-3.5 h-3.5" />
+                      Centre Officiel de la Plateforme
+                    </div>
+                    <span className="text-[9px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Certifié Sûre
+                    </span>
+                  </div>
+
+                  <div>
+                    <h2 className="text-base font-black uppercase tracking-wide text-afri-text flex items-center gap-2">
+                      AFRIGOMBO SERVICES
+                    </h2>
+                    <p className="text-xs text-afri-text-sec mt-1 leading-relaxed">
+                      Espace institutionnel de la plateforme souveraine : assistance 24/7, garanties de sécurité, actualités du Fondateur et intelligence artificielle.
+                    </p>
+                  </div>
+
+                  {/* Status Metrics Bar */}
+                  <div className="pt-2 grid grid-cols-3 gap-2 border-t border-white/10 text-center">
+                    <div className="p-2 bg-black/40 rounded-xl border border-white/5">
+                      <span className="block text-[9px] text-afri-text-muted font-mono uppercase">Support 24/7</span>
+                      <strong className="text-xs text-emerald-400 font-bold">Actif & En Ligne</strong>
+                    </div>
+                    <div className="p-2 bg-black/40 rounded-xl border border-white/5">
+                      <span className="block text-[9px] text-afri-text-muted font-mono uppercase">Séquestre</span>
+                      <strong className="text-xs text-[#D4AF37] font-bold">Guarantie 100%</strong>
+                    </div>
+                    <div className="p-2 bg-black/40 rounded-xl border border-white/5">
+                      <span className="block text-[9px] text-afri-text-muted font-mono uppercase">Version</span>
+                      <strong className="text-xs text-afri-text font-bold">v2.5 Souverain</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Category Filter Horizontal Scroll Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-1">
+                {[
+                  { id: "all", label: "Tous les Services", icon: Globe },
+                  { id: "support", label: "Support Officiel", icon: Headphones },
+                  { id: "admin", label: "Administratif", icon: Megaphone },
+                  { id: "fondateur", label: "Le Fondateur", icon: Crown },
+                  { id: "ia", label: "Assistance IA", icon: Bot },
+                  { id: "updates", label: "Nouveautés & Log", icon: Sparkles },
+                  { id: "security", label: "Sécurité", icon: ShieldAlert },
+                  { id: "faq", label: "FAQ & Aide", icon: HelpCircle },
+                  { id: "tutorials", label: "Tutoriels", icon: BookOpen }
+                ].map((cat) => {
+                  const isSel = afrigomboCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setAfrigomboCategory(cat.id as any)}
+                      className={`px-3 py-2 text-[10.5px] font-bold rounded-xl border whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                        isSel
+                          ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-sm font-black"
+                          : "bg-afri-bg-sec text-afri-text-sec border-afri-border hover:text-afri-text"
+                      }`}
+                    >
+                      <cat.icon className="w-3.5 h-3.5" />
+                      {cat.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* 1. SUPPORT OFFICIEL DIRECT CARD */}
+              {(afrigomboCategory === "all" || afrigomboCategory === "support") && (
+                <div className="p-4 bg-[#12100B] border border-[#D4AF37]/40 rounded-2xl space-y-3 shadow-md">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37] shrink-0">
+                        <img src="/logo.png" alt="" className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-black uppercase text-afri-text tracking-wider flex items-center gap-1.5">
+                          Support Officiel AFRIGOMBO
+                          <span className="text-[9px] text-[#D4AF37] font-bold">✔ Officiel</span>
+                        </h3>
+                        <p className="text-[11px] text-emerald-400 font-mono flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Équipe d'assistance en ligne (Réponse &lt; 5 min)
+                        </p>
+                      </div>
+                    </div>
+
+                    {supportConvo?.unreadCount?.[currentUser?.uid] > 0 && (
+                      <span className="px-2.5 py-1 bg-rose-500 text-white font-black text-xs rounded-full animate-bounce">
+                        {supportConvo.unreadCount[currentUser.uid]}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-afri-text-sec leading-relaxed">
+                    Avez-vous une question sur un paiement en séquestre, un problème technique ou un litige sur une prestation ? L'équipe officielle AFRIGOMBO est à votre disposition 24h/24.
+                  </p>
+
+                  <button
+                    onClick={() => {
+                      setActiveConvo({
+                        id: currentUser.uid,
+                        type: "support",
+                        participants: [currentUser.uid, "afrigombo_support"],
+                        userName: "Équipe AFRIGOMBO",
+                        userPhoto: "/logo.png",
+                        ...supportConvo
+                      });
+                      if (supportConvo?.unreadCount?.[currentUser?.uid] > 0) {
+                        try {
+                          const convoRef = doc(db, "supportConversations", currentUser.uid);
+                          updateDoc(convoRef, { [`unreadCount.${currentUser.uid}`]: 0 });
+                        } catch (err) {}
+                      }
+                    }}
+                    className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <MessageSquare className="w-4 h-4 fill-black" />
+                    Ouvrir la Conversation Support 24/7
+                  </button>
+                </div>
+              )}
+
+              {/* 2. ASSISTANCE IA INTERACTIVE */}
+              {(afrigomboCategory === "all" || afrigomboCategory === "ia") && (
+                <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider flex items-center gap-2">
+                      <Bot className="w-4 h-4" />
+                      Assistance IA Interactive AFRIGOMBO
+                    </h3>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                      Gemini Instant
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-afri-text-sec">
+                    Posez vos questions à l'Assistant IA certifié sur les contrats, les retraits, le séquestre ou les règles d'utilisation.
+                  </p>
+
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Ex: Comment fonctionne le paiement séquestre ?"
+                        value={aiAssistantQuery}
+                        onChange={(e) => setAiAssistantQuery(e.target.value)}
+                        className="flex-1 px-3.5 py-2.5 bg-[#080808] border border-afri-border rounded-xl text-xs text-afri-text focus:outline-none focus:border-[#D4AF37] placeholder:text-zinc-600"
+                      />
+                      <button
+                        onClick={() => {
+                          if (!aiAssistantQuery.trim()) return;
+                          setIsAiLoading(true);
+                          setAiAssistantResponse(null);
+                          setTimeout(() => {
+                            const q = aiAssistantQuery.toLowerCase();
+                            let resp = "Pour la sécurité de votre prestation Gombo, tous les fonds sont bloqués en séquestre bancaire jusqu'à la validation finale du client. Aucun paiement direct hors plateforme n'est autorisé.";
+                            if (q.includes("contrat")) {
+                              resp = "Les contrats Gombo sont générés automatiquement avec signature numérique dès acceptation de l'offre. Ils protègent l'artiste et le recruteur en cas de litige.";
+                            } else if (q.includes("retrait") || q.includes("argent") || q.includes("solde")) {
+                              resp = "Les retraits de votre portefeuille Gombo s'effectuent instantanément par Mobile Money (Orange, MTN, Moov, Wave) ou virement bancaire sous 24h.";
+                            } else if (q.includes("numéro") || q.includes("whatsapp") || q.includes("téléphone")) {
+                              resp = "Le partage de numéros de téléphone est automatiquement modéré jusqu'à l'acceptation formelle d'un contrat afin d'éviter les arnaques hors plateforme.";
+                            }
+                            setAiAssistantResponse(resp);
+                            setIsAiLoading(false);
+                          }, 600);
+                        }}
+                        disabled={isAiLoading}
+                        className="px-4 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-bold text-xs uppercase rounded-xl transition cursor-pointer shrink-0 flex items-center gap-1"
+                      >
+                        {isAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                        Demander
+                      </button>
+                    </div>
+
+                    {/* Quick AI Suggestion Chips */}
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {[
+                        "Comment être payé ?",
+                        "Sécurité & Séquestre",
+                        "Règles d'annulation",
+                        "Numéro de téléphone masqué"
+                      ].map((chip, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setAiAssistantQuery(chip);
+                            setIsAiLoading(true);
+                            setTimeout(() => {
+                              let resp = "Sur AFRIGOMBO, le séquestre garantit que les fonds sont réservés avant la prestation. Vous êtes payé dès validation du service !";
+                              if (chip.includes("Numéro")) resp = "Les numéros sont masqués avant contrat pour protéger vos transactions contre la fraude hors réseau.";
+                              if (chip.includes("annulation")) resp = "En cas d'annulation avant 24h, les fonds sont remboursés. En cas de non-présentation, le séquestre indemnise la partie lésée.";
+                              setAiAssistantResponse(resp);
+                              setIsAiLoading(false);
+                            }, 400);
+                          }}
+                          className="px-2.5 py-1 bg-afri-bg-ter border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-lg text-[10px] text-afri-text-sec hover:text-afri-text transition cursor-pointer"
+                        >
+                          {chip}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* AI Output Box */}
+                    {aiAssistantResponse && (
+                      <div className="p-3.5 bg-[#12100A] border border-[#D4AF37]/30 rounded-xl space-y-1.5 animate-fadeIn">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#D4AF37]">
+                          <Bot className="w-3.5 h-3.5" />
+                          <span>Réponse de l'Assistance IA</span>
+                        </div>
+                        <p className="text-xs text-afri-text leading-relaxed">
+                          {aiAssistantResponse}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 3. MESSAGES ADMINISTRATIFS ET FONDATEUR */}
+              {(afrigomboCategory === "all" || afrigomboCategory === "admin" || afrigomboCategory === "fondateur") && (
+                <div className="space-y-3">
+                  {/* Message du Fondateur */}
+                  <div className="p-4 bg-gradient-to-r from-[#18150C] to-[#0D0D0D] border border-[#D4AF37]/30 rounded-2xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Crown className="w-4 h-4 text-[#D4AF37]" />
+                        <h4 className="text-xs font-black uppercase text-[#D4AF37] tracking-wider">
+                          Message du Fondateur d'AFRIGOMBO
+                        </h4>
+                      </div>
+                      <span className="text-[9px] font-mono text-afri-text-muted">Officiel</span>
+                    </div>
+                    <p className="text-xs text-afri-text leading-relaxed italic">
+                      « Chers artistes, prestataires et partenaires africains. AFRIGOMBO a été conçu pour donner à notre culture et nos compétences la valeur et la protection financière qu'elles méritent. Utilisez la plateforme en toute confiance : chaque contrat signé ici est un pas vers l'autonomie et le respect du travail. »
+                    </p>
+                    <div className="pt-1 flex items-center justify-between text-[10px] text-afri-text-sec border-t border-white/5">
+                      <span>La Direction & Fondation AFRIGOMBO</span>
+                      <span className="font-mono text-[#D4AF37]">Abidjan, Côte d'Ivoire</span>
+                    </div>
+                  </div>
+
+                  {/* Message Administratif */}
+                  <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Megaphone className="w-4 h-4 text-emerald-400" />
+                        <h4 className="text-xs font-bold uppercase text-afri-text tracking-wider">
+                          Note Administrative — Conformité & Séquestre
+                        </h4>
+                      </div>
+                      <span className="text-[9px] font-mono text-emerald-400">Actif</span>
+                    </div>
+                    <p className="text-xs text-afri-text-sec leading-relaxed">
+                      Conformément au règlement de la plateforme, l'ensemble des paiements s'effectue via le compte séquestre certifié. Toute tentative d'extorsion ou d'arnaque hors réseau entraîne un bannissement immédiat.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 4. NOUVEAUTÉS & JOURNAL DES MISES À JOUR */}
+              {(afrigomboCategory === "all" || afrigomboCategory === "updates") && (
+                <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-afri-text uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                      Nouveautés & Journal des Mises à Jour
+                    </h3>
+                    <span className="text-[10px] font-mono font-bold text-[#D4AF37] px-2 py-0.5 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/30">
+                      v2.5
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5 divide-y divide-afri-border/40">
+                    <div className="pt-1 space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <strong className="text-afri-text font-bold">✨ Phase B3.1 — Réorganisation Totale de la Messagerie</strong>
+                        <span className="text-[9px] font-mono text-emerald-400">Aujourd'hui</span>
+                      </div>
+                      <p className="text-[11px] text-afri-text-sec leading-relaxed">
+                        Interface 5 onglets (Discussions, Appels, Activités, Paramètres, AFRIGOMBO). Centre officiel dédié, filtres automatiques des comptes système et protection renforcée.
+                      </p>
+                    </div>
+
+                    <div className="pt-2 space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <strong className="text-afri-text font-bold">📞 Moteur d'Appels WebRTC HD Sovereign</strong>
+                        <span className="text-[9px] font-mono text-afri-text-muted">v2.4</span>
+                      </div>
+                      <p className="text-[11px] text-afri-text-sec leading-relaxed">
+                        Appels audio et vidéo chiffrés de bout en bout directement entre membres du réseau sans intermédiaire.
+                      </p>
+                    </div>
+
+                    <div className="pt-2 space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <strong className="text-afri-text font-bold">🛡️ Modération Intelligente Anti-Contournement</strong>
+                        <span className="text-[9px] font-mono text-afri-text-muted">v2.3</span>
+                      </div>
+                      <p className="text-[11px] text-afri-text-sec leading-relaxed">
+                        Détection automatique des tentatives de fuite de numéros de téléphone et emails avec avertissements pédagogiques.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 5. ALERTES DE SÉCURITÉ */}
+              {(afrigomboCategory === "all" || afrigomboCategory === "security") && (
+                <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl space-y-3">
+                  <div className="flex items-center gap-2 text-rose-400">
+                    <ShieldAlert className="w-5 h-5 shrink-0" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider">
+                      Alertes de Sécurité & Conseils Anti-Arnaque
+                    </h3>
+                  </div>
+
+                  <div className="space-y-2 text-xs text-rose-200/90 leading-relaxed">
+                    <div className="p-2.5 bg-black/40 rounded-xl border border-rose-500/20 flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                      <span><strong>Paiement en Séquestre Obligatoire:</strong> Ne commencez jamais une prestation si les fonds ne sont pas verrouillés sur AFRIGOMBO.</span>
+                    </div>
+
+                    <div className="p-2.5 bg-black/40 rounded-xl border border-rose-500/20 flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                      <span><strong>Gardez les discussions sur la plateforme:</strong> Tout échange hors réseau vous prive de l'assistance et des garanties juridiques de la plateforme.</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 6. CENTRE D'AIDE, FAQ & TUTORIELS */}
+              {(afrigomboCategory === "all" || afrigomboCategory === "faq" || afrigomboCategory === "tutorials") && (
+                <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-afri-text uppercase tracking-wider flex items-center gap-2">
+                      <HelpCircle className="w-4 h-4 text-[#D4AF37]" />
+                      Centre d'Aide, FAQ & Tutoriels
+                    </h3>
+                    <span className="text-[10px] text-afri-text-muted">100% Mobile</span>
+                  </div>
+
+                  {/* FAQ Accordion List */}
+                  <div className="space-y-2">
+                    {[
+                      {
+                        id: 1,
+                        q: "Comment fonctionne le système de séquestre AFRIGOMBO ?",
+                        a: "Lorsque vous acceptez un contrat, le recruteur dépose le montant de la prestation sur le compte séquestre sécurisé. Les fonds sont débloqués et versés sur votre portefeuille dès la confirmation de réalisation."
+                      },
+                      {
+                        id: 2,
+                        q: "Pourquoi certains numéros de téléphone sont-ils masqués ?",
+                        a: "Pour garantir votre sécurité financière et éviter les arnaques hors plateforme. Dès qu'une proposition de Gombo est officiellement signée, la mise en relation téléphonique directe est débloquée."
+                      },
+                      {
+                        id: 3,
+                        q: "Comment faire un retrait vers mon compte Mobile Money ?",
+                        a: "Rendez-vous dans la section Portefeuille, sélectionnez 'Retrait', choisissez votre opérateur (Wave, Orange Money, MTN, Moov) et saisissez le montant. Le virement est instantané."
+                      },
+                      {
+                        id: 4,
+                        q: "Que faire en cas d'absence du prestataire ou du recruteur ?",
+                        a: "Utilisez le bouton 'Signaler un litige' dans la conversation de support officiel. L'équipe d'arbitrage examine la géolocalisation et les logs WebRTC pour procéder à un remboursement ou versement équitable."
+                      }
+                    ].map((item) => {
+                      const isOpen = openFaqId === item.id;
+                      return (
+                        <div key={item.id} className="border border-afri-border/60 rounded-xl bg-[#080808] overflow-hidden">
+                          <button
+                            onClick={() => setOpenFaqId(isOpen ? null : item.id)}
+                            className="w-full p-3 text-left flex items-center justify-between gap-2 cursor-pointer hover:bg-zinc-900/50 transition"
+                          >
+                            <span className="text-xs font-bold text-afri-text flex items-center gap-2">
+                              <span className="text-[#D4AF37] text-[10px] font-mono">FAQ #{item.id}</span>
+                              {item.q}
+                            </span>
+                            <ChevronRight className={`w-4 h-4 text-afri-text-muted transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                          </button>
+                          {isOpen && (
+                            <div className="px-3 pb-3 pt-1 text-xs text-afri-text-sec border-t border-white/5 leading-relaxed bg-black/20">
+                              {item.a}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Tutorials Step Cards */}
+                  <div className="pt-2 space-y-2">
+                    <h4 className="text-[11px] font-bold text-afri-text uppercase tracking-wider flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      Tutoriels Rapides de Prise en Main
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="p-3 bg-[#080808] border border-afri-border rounded-xl space-y-1">
+                        <strong className="text-xs text-[#D4AF37] block font-bold">1. Publier & Trouver un Gombo</strong>
+                        <p className="text-[10px] text-afri-text-sec">
+                          Créez une annonce claire avec lieu, tarif et horaire. Postulez en 1 clic.
+                        </p>
+                      </div>
+
+                      <div className="p-3 bg-[#080808] border border-afri-border rounded-xl space-y-1">
+                        <strong className="text-xs text-[#D4AF37] block font-bold">2. Négocier & Signer le Contrat</strong>
+                        <p className="text-[10px] text-afri-text-sec">
+                          Discutez dans la messagerie chiffrée et validez les termes en toute transparence.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
+
         </div>
 
         {/* OVERLAY MODALS */}
@@ -1601,7 +2008,7 @@ export default function MessagesView({
         {/* New Direct Call Modal */}
         {showNewCallModal && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-            <div className="bg-[#121212] border border-[#D4AF37]/40 rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+            <div className="bg-afri-bg-sec border border-[#D4AF37]/40 rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-afri-text uppercase tracking-wider flex items-center gap-2">
                   <PhoneCall className="w-4 h-4 text-[#D4AF37]" />

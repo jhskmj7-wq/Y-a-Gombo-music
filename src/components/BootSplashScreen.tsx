@@ -7,60 +7,78 @@ interface BootSplashScreenProps {
 }
 
 export default function BootSplashScreen({ onComplete }: BootSplashScreenProps) {
-  const [progress, setProgress] = useState(20);
-  const [statusText, setStatusText] = useState("Vérification du Temple...");
+  const [progress, setProgress] = useState(0);
+  const [statusText, setStatusText] = useState("Connexion au Temple...");
   const [isFinished, setIsFinished] = useState(false);
-  const hasRun = useRef(false);
+  const completedRef = useRef(false);
 
   useEffect(() => {
-    if (hasRun.current) return;
-    hasRun.current = true;
-
     let isMounted = true;
 
-    async function runBootSequence() {
-      if (!isMounted) return;
-      setProgress(40);
-
-      try {
-        await bootManager.runDiagnostics((taskName) => {
-          if (!isMounted) return;
-          if (taskName.includes("Firebase")) setStatusText("Connexion au Temple...");
-          else if (taskName.includes("Sync")) setStatusText("Synchronisation des opportunités...");
-          else setStatusText("Préparation de votre expérience...");
-        });
-      } catch (e) {
-        console.warn("[BOOT] Non-blocking notice during diagnostics:", e);
-      }
-
+    const finish = () => {
+      if (completedRef.current) return;
+      completedRef.current = true;
       if (isMounted) {
-        setProgress(80);
-        
+        setProgress(100);
+        setStatusText("Bienvenue dans le Temple");
+        setIsFinished(true);
         setTimeout(() => {
-          if (!isMounted) return;
-          setProgress(100);
-          setStatusText("Bienvenue dans le Temple");
-          setIsFinished(true);
-
-          setTimeout(() => {
-            if (isMounted) {
-              onComplete();
-            }
-          }, 350);
-        }, 400);
+          onComplete();
+        }, 300);
+      } else {
+        onComplete();
       }
-    }
+    };
 
-    runBootSequence();
+    // 1. Run background diagnostics in non-blocking background task
+    bootManager.runDiagnostics().catch((e) => {
+      console.warn("[BOOT] Non-blocking background diagnostics notice:", e);
+    });
+
+    // 2. Automatic visual progress steps (0% -> 25% -> 55% -> 80% -> 100%)
+    const t1 = setTimeout(() => {
+      if (isMounted && !completedRef.current) {
+        setProgress(25);
+        setStatusText("Connexion au Temple...");
+      }
+    }, 300);
+
+    const t2 = setTimeout(() => {
+      if (isMounted && !completedRef.current) {
+        setProgress(55);
+        setStatusText("Synchronisation des opportunités...");
+      }
+    }, 700);
+
+    const t3 = setTimeout(() => {
+      if (isMounted && !completedRef.current) {
+        setProgress(80);
+        setStatusText("Préparation du Temple...");
+      }
+    }, 1200);
+
+    const t4 = setTimeout(() => {
+      finish();
+    }, 1600);
+
+    // 3. Absolute safety fallback timeout (max 2 seconds)
+    const maxSafetyTimeout = setTimeout(() => {
+      finish();
+    }, 2000);
 
     return () => {
       isMounted = false;
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+      clearTimeout(maxSafetyTimeout);
     };
   }, [onComplete]);
 
   return (
     <div className="fixed inset-0 z-[99999] bg-[#050505] text-afri-text flex flex-col items-center justify-center p-6 select-none font-mono">
-      <div className="max-w-sm w-full bg-[#111111] border border-[#D4AF37]/30 rounded-3xl p-8 backdrop-blur-xl shadow-2xl flex flex-col items-center text-center space-y-6 relative overflow-hidden">
+      <div className="max-w-sm w-full bg-afri-bg-sec border border-[#D4AF37]/30 rounded-3xl p-8 backdrop-blur-xl shadow-2xl flex flex-col items-center text-center space-y-6 relative overflow-hidden">
         
         {/* Ambient Gold Glow */}
         <div className="absolute w-48 h-48 rounded-full bg-[#D4AF37]/10 blur-3xl pointer-events-none" />

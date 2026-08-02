@@ -60,16 +60,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null;
   });
 
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(() => {
+    // If user profile is already cached in localStorage, start with authLoading = false
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("afrigombo_user_session");
+        if (stored) return false;
+      } catch (e) {}
+    }
+    return true;
+  });
   const [showAuthPopup, setShowAuthPopup] = useState(false);
 
   useEffect(() => {
     let profileUnsub: (() => void) | null = null;
 
-    // Safety timeout to prevent white screens if Firebase Auth hangs on mobile
+    // Safety timeout to prevent blocking if Firebase Auth hangs or network is slow
     const safetyTimer = setTimeout(() => {
       setAuthLoading(false);
-    }, 3500);
+    }, 1500);
 
     // Handle Google redirect sign-in result when returning to the application
     const checkRedirect = async () => {
