@@ -336,7 +336,7 @@ export default function AdminSuperFounderHub({
 
           <ErrorBoundary moduleName="Deployment">
             {activeModule === "deployment" && (
-              <AdminDeploymentCenter />
+              <AdminDeploymentCenter currentUser={currentUser} userEmail={userEmail} />
             )}
           </ErrorBoundary>
 

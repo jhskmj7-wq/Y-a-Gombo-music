@@ -678,45 +678,9 @@ export default function MessagesView({
   }
 
   return (
-    <AndroidPageLayout title="Messagerie" onBack={activeConvo ? () => setActiveConvo(null) : onBack} scrollable={false}>
+    <AndroidPageLayout scrollable={false}>
       <div className="w-full h-full flex flex-col bg-afri-bg text-afri-text select-none overflow-hidden relative">
         
-        {/* 1. FIXED TOP HEADER WITH 4 MAIN TABS BAR (Visible when NOT in active conversation) */}
-        {!activeConvo && (
-          <div className="w-full bg-afri-bg-sec border-b border-afri-border shrink-0 z-20">
-            {/* Header Title & Top Actions */}
-            <div className="px-4 py-3 flex items-center justify-between gap-2 border-b border-afri-border/40">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
-                  <MessageSquare className="w-4 h-4" />
-                </div>
-                <div>
-                  <h1 className="text-sm font-black uppercase tracking-wider text-afri-text flex items-center gap-1.5">
-                    AFRIGOMBO CHAT
-                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] font-mono border border-[#D4AF37]/30">
-                      v2.5
-                    </span>
-                  </h1>
-                  <p className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Chiffrement bout en bout actif
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onNavigateToSearch}
-                  className="p-2 rounded-xl bg-afri-bg-ter border border-afri-border text-afri-text-sec hover:text-[#D4AF37] transition cursor-pointer"
-                  title="Nouvelle discussion"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* 2. MAIN CONTAINER TAB PANELS */}
         <div className="flex-1 overflow-hidden relative flex w-full h-full">
 
