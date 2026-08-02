@@ -924,6 +924,21 @@ export const gomboDB = {
     return await this.createSocialPost(post);
   },
 
+  async createAudioPublication(payload: any) {
+    if (db) {
+      const ref = await addDoc(collection(db, "audio_publications"), {
+        ...payload,
+        likes: payload.likes || 0,
+        lectures: payload.lectures || 0,
+        partages: payload.partages || 0,
+        commentaires: payload.commentaires || [],
+        createdAt: payload.createdAt || new Date().toISOString(),
+        updatedAt: payload.updatedAt || new Date().toISOString()
+      });
+      return ref.id;
+    }
+  },
+
   async createSocialPost(post: Partial<SocialPost>) {
     if (db) {
       const ref = await addDoc(collection(db, "social_posts"), {

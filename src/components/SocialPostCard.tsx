@@ -7,6 +7,19 @@ import {
 import { SocialPost, PostComment, UserProfile } from "../types";
 import { gomboDB } from "../firebase";
 
+const calculateDistanceKm = (lat1?: number, lon1?: number, lat2?: number, lon2?: number) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Number((R * c).toFixed(1));
+};
+
 interface SocialPostCardProps {
   key?: string;
   post: SocialPost;
@@ -438,6 +451,13 @@ export default function SocialPostCard({
     await gomboDB.updateSocialPost(post.id, {
       sharesCount: (post.sharesCount || 0) + 1
     });
+  };
+
+  const handleOpenItinerary = () => {
+    const lat = post.latitude || 5.3600;
+    const lng = post.longitude || -4.0083;
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    window.open(url, "_blank");
   };
 
   const getCategoryBadge = (category?: string) => {
