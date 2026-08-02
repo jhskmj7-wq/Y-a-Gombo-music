@@ -1,13 +1,12 @@
 import React from "react";
 import { BackButton } from "../common/BackButton";
 
-interface AndroidPageLayoutProps {
+export interface AndroidPageLayoutProps {
   children: React.ReactNode;
   header?: React.ReactNode;
   footer?: React.ReactNode;
   scrollable?: boolean;
   className?: string;
-  // Kept for backward compatibility
   title?: string;
   onBack?: () => void;
 }
@@ -22,19 +21,28 @@ export function AndroidPageLayout({
   onBack,
 }: AndroidPageLayoutProps) {
   const headerContent = header || (title || onBack ? (
-    <div className="flex-none bg-afri-bg/95 backdrop-blur-md border-b border-afri-border px-3 py-2 flex items-center gap-2">
-      {onBack && <BackButton onClick={onBack} />}
-      {title && <h1 className="text-sm font-black uppercase tracking-wider text-afri-text flex-1 truncate">{title}</h1>}
-    </div>
+    <header className="flex-none bg-afri-bg/95 backdrop-blur-md border-b border-afri-border/60 px-3 py-2.5 flex items-center justify-between gap-2 z-30 shrink-0 safe-area-pt">
+      <div className="flex items-center gap-2.5 min-w-0">
+        {onBack && <BackButton onClick={onBack} />}
+        {title && (
+          <h1 className="text-sm sm:text-base font-black uppercase tracking-wider text-afri-text truncate font-display">
+            {title}
+          </h1>
+        )}
+      </div>
+    </header>
   ) : null);
 
   return (
-    <div className={`w-full h-full flex flex-col bg-afri-bg text-afri-text font-sans select-none overflow-hidden touch-pan-y ${className}`}>
+    <div className={`w-full h-[100dvh] flex flex-col bg-afri-bg text-afri-text font-sans select-none overflow-hidden touch-pan-y ${className}`}>
       {headerContent}
-      <div className={`flex-1 ${scrollable ? "overflow-y-auto overscroll-contain" : "overflow-hidden"} px-2 sm:px-3 py-3 safe-area-pb`}>
+      <main className={`flex-1 w-full max-w-none box-border overflow-x-hidden ${scrollable ? "overflow-y-auto overscroll-contain" : "overflow-hidden"} px-[12px] pt-[12px] pb-[120px]`}>
         {children}
-      </div>
-      {footer && <div className="flex-none safe-area-pb">{footer}</div>}
+      </main>
+      {footer && <footer className="flex-none safe-area-pb">{footer}</footer>}
     </div>
   );
 }
+
+export default AndroidPageLayout;
+

@@ -3009,7 +3009,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
             </header>
           ) : (
-            ["user_terrain", "user_wallet", "user_notifications", "user_settings", "user_heritage", "user_edit_profile", "nearby"].includes(activeMenu) ? null : (
+            ["user_terrain", "user_wallet", "user_messages", "user_notifications", "user_settings", "user_heritage", "user_edit_profile", "nearby"].includes(activeMenu) ? null : (
               <header className="flex items-center justify-between px-4 py-3 bg-afri-bg border-b border-afri-border/50 z-[40] relative shrink-0 shadow-md">
                 <div className="flex items-center gap-3">
           {!["user_terrain", "user_wallet", "user_vibes", "user_mes_gombos", "user_heritage", "user_publish", "dashboard", "users", "notifications", "contracts", "reports", "revenue"].includes(activeMenu) && (
@@ -3117,8 +3117,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
           {/* 1.1. NEARBY PAGE VIEW */}
           <div 
-            className={activeMenu === "nearby" ? "h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container afri-section scrollbar-none animate-fadeIn text-left [-webkit-overflow-scrolling:touch] touch-pan-y" : "hidden"}
-            style={{ overscrollBehaviorY: "contain" }}
+            className={activeMenu === "nearby" ? "h-full w-full overflow-hidden animate-fadeIn text-left" : "hidden"}
           >
             <NearbyPageView
               gombos={gombos}
@@ -5951,7 +5950,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {/* 7b. PORTESECURE / AFRIGOMBO WALLET (USER) */}
               {activeMenu === "user_wallet" && (
-                <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
+                <div className="w-full h-full animate-fadeIn text-left">
                   <AfrigomboWalletDashboard 
                     currentUserProfile={profile || (currentUser as any)} 
                     addToTerminal={addToTerminal}
@@ -6029,7 +6028,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {activeMenu === "user_heritage" && (
-                <div className="afri-container h-full overflow-y-auto scrollbar-none animate-fadeIn">
+                <div className="w-full h-full animate-fadeIn">
                   <HeritagePage 
                     onNavigateView={(view, tab) => {
                       if (view === "heritage") setActiveMenu("user_heritage");
@@ -6666,7 +6665,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-afri-text-sec">Aucun artiste disponible.</p>;
                 return (
-                  <div className="space-y-6 animate-fadeIn text-left">
+                  <div className="w-full h-full animate-fadeIn text-left">
                     <NotificationCenter 
                       currentUserProfile={profile || currentArtist} 
                       notifications={allNotifications}
@@ -6785,27 +6784,25 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
 
               {activeMenu === "user_edit_profile" && (
-                <div className="fixed inset-0 z-[100] bg-afri-bg/90 backdrop-blur-md overflow-y-auto overscroll-contain flex items-center justify-center p-4">
-                  <div className="w-full max-w-2xl bg-afri-bg rounded-2xl border border-afri-gold/20 p-6 shadow-2xl relative my-auto">
-                    {profile ? (
-                      <HeritagePage 
-                        onNavigateView={(view) => {
-                          setActiveMenu("user_heritage"); // Always return to heritage after edit
-                        }}
-                        initialPanelView="edit"
-                      />
-                    ) : (
-                      <div className="p-12 text-center space-y-4">
-                        <p className="text-afri-text-sec font-mono">Profil non chargé...</p>
-                        <button 
-                          onClick={() => setActiveMenu("user_heritage")}
-                          className="px-6 py-2 bg-afri-gold text-black font-black uppercase rounded-xl"
-                        >
-                          Retour
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                <div className="w-full h-full animate-fadeIn">
+                  {profile ? (
+                    <HeritagePage 
+                      onNavigateView={(view) => {
+                        setActiveMenu("user_heritage"); // Always return to heritage after edit
+                      }}
+                      initialPanelView="edit"
+                    />
+                  ) : (
+                    <div className="p-12 text-center space-y-4">
+                      <p className="text-afri-text-sec font-mono">Profil non chargé...</p>
+                      <button 
+                        onClick={() => setActiveMenu("user_heritage")}
+                        className="px-6 py-2 bg-afri-gold text-black font-black uppercase rounded-xl"
+                      >
+                        Retour
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

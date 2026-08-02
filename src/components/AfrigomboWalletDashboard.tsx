@@ -69,8 +69,10 @@ export default function AfrigomboWalletDashboard({
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // History tab filter
+  // History tab filter & details modal states
   const [activeTab, setActiveTab] = useState<"all" | "flows" | "contracts" | "commissions" | "disputes">("all");
+  const [showAllHistory, setShowAllHistory] = useState(false);
+  const [selectedTxDetails, setSelectedTxDetails] = useState<any | null>(null);
   
   // Dialog states
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -774,108 +776,171 @@ export default function AfrigomboWalletDashboard({
           </div>
         </div>
 
-        {/* List of chronological transactions */}
+        {/* List of chronological transactions (Wave Style: 1 line + click for BottomSheet) */}
         {filteredTxs.length === 0 ? (
           <div className="text-center py-12 text-afri-text-muted font-mono text-xs">
             📭 Aucune transaction enregistrée dans cet historique.
           </div>
         ) : (
-          <div className="divide-y divide-afri-border/60">
-            {filteredTxs.map((tx) => {
+          <div className="space-y-1">
+            {(showAllHistory ? filteredTxs : filteredTxs.slice(0, 10)).map((tx) => {
               const isFlowIn = tx.type === "deposit" || tx.type === "depot" || tx.type === "recharge_wallet" || tx.type === "release" || tx.type === "deblocage_cachet" || tx.type === "refund" || tx.type === "remboursement" || tx.type === "prime_bonus";
               const typeLabel = 
-                tx.type === "depot" || tx.type === "deposit" || tx.type === "recharge_wallet" ? "Recharge" :
-                tx.type === "debit_publication" ? "Paiement" :
-                tx.type === "commission_plateforme" || tx.type === "commission" ? "Commission" :
-                tx.type === "fonds_bloques" ? "Séquestre" :
-                tx.type === "deblocage_cachet" || tx.type === "release" ? "Déblocage" :
+                tx.type === "depot" || tx.type === "deposit" || tx.type === "recharge_wallet" ? "Dépôt Mobile Money" :
+                tx.type === "withdrawal" || tx.type === "retrait" ? "Retrait Mobile Money" :
+                tx.type === "debit_publication" ? "Paiement Annonce" :
+                tx.type === "commission_plateforme" || tx.type === "commission" ? "Commission Plateforme" :
+                tx.type === "fonds_bloques" ? "Séquestre Gombo" :
+                tx.type === "deblocage_cachet" || tx.type === "release" ? "Déblocage Cachet" :
                 tx.type === "remboursement" || tx.type === "refund" ? "Remboursement" :
                 tx.type === "prime_bonus" ? "Prime" :
-                tx.type === "abonnement_premium" ? "Premium" :
-                tx.type || "Opération";
+                tx.type === "abonnement_premium" ? "Abonnement Premium" :
+                tx.description || "Opération financière";
 
-              const formattedDate = tx.date || (tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("fr-FR") : "Récent");
-              const formattedHeure = tx.heure || (tx.createdAt ? new Date(tx.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "");
+              const formattedDate = tx.date || (tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }) : "Aujourd'hui");
+              const formattedHeure = tx.heure || (tx.createdAt ? new Date(tx.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "Récemment");
               const txAmount = Math.abs(Number(tx.amount || tx.montant || 0));
 
+              const isValidated = tx.status === "validated" || tx.status === "PAID" || tx.status === "success" || tx.statut === "success" || tx.status === "valide" || tx.status === "fonds_liberes";
+              const isRefused = tx.status === "refused" || tx.status === "refuse" || tx.status === "REFUSED";
+
               return (
-                <div key={tx.id || tx.reference} className="py-2.5 flex items-center justify-between gap-2 text-left hover:bg-afri-bg/30 px-1.5 rounded-xl transition-colors">
-                  
-                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 pr-1.5">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border shrink-0 ${
-                      isFlowIn ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" :
-                      tx.type === "commission_plateforme" || tx.type === "commission" ? "bg-amber-500/10 border-amber-500/30 text-amber-400" :
-                      tx.type === "fonds_bloques" ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-400" :
-                      "bg-afri-bg border-afri-border text-afri-text-sec"
+                <div 
+                  key={tx.id || tx.reference} 
+                  onClick={() => { setSelectedTxDetails(tx); playSound("click"); }}
+                  className="py-3 px-2 flex items-center justify-between gap-3 text-left hover:bg-afri-bg/50 active:bg-afri-bg/80 rounded-xl transition-all cursor-pointer border-b border-afri-border/40 last:border-0"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center border shrink-0 ${
+                      isFlowIn ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400" :
+                      tx.type === "withdrawal" || tx.type === "retrait" ? "bg-amber-500/15 border-amber-500/30 text-amber-400" :
+                      "bg-afri-bg-sec border-afri-border text-afri-text-sec"
                     }`}>
-                      {isFlowIn ? <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" /> :
-                       tx.type === "withdrawal" || tx.type === "retrait" ? <ArrowDownLeft className="w-3.5 h-3.5 stroke-[2.5]" /> :
-                       tx.type === "fonds_bloques" || tx.type === "debit_publication" ? <Lock className="w-3.5 h-3.5" /> :
-                       <ShieldCheck className="w-3.5 h-3.5" />}
+                      {isFlowIn ? <ArrowUpRight className="w-4 h-4 stroke-[2.5]" /> : <ArrowDownLeft className="w-4 h-4 stroke-[2.5]" />}
                     </div>
 
-                    <div className="space-y-0.5 min-w-0 flex-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 flex-wrap">
-                        <span className="text-[7.5px] font-mono font-black uppercase px-1.5 py-0.5 bg-afri-bg border border-afri-border text-[#D4AF37] rounded w-fit">
-                          {typeLabel}
-                        </span>
-                        <p className="text-[11px] font-bold text-afri-text break-words">
-                          {tx.description || "Opération financière"}
-                        </p>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[8.5px] font-mono text-afri-text-muted">
-                        <span className="break-words">Réf: {tx.reference || tx.id}</span>
-                        <span>•</span>
-                        <span className="whitespace-nowrap">{formattedDate} {formattedHeure}</span>
-                        {tx.userConcerned && (
-                          <>
-                            <span>•</span>
-                            <span className="text-afri-text-sec break-words">{tx.userConcerned}</span>
-                          </>
-                        )}
-                      </div>
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <p className="text-xs font-bold text-afri-text truncate">
+                        {typeLabel}
+                      </p>
+                      <p className="text-[10px] font-mono text-afri-text-muted">
+                        {formattedDate} • {formattedHeure}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="text-right space-y-0.5 shrink-0 min-w-[95px] sm:min-w-[115px]">
-                    <span className={`text-xs font-mono font-black block ${isFlowIn ? "text-emerald-400" : "text-amber-500"}`}>
+                  <div className="text-right shrink-0 space-y-0.5">
+                    <span className={`text-xs font-mono font-black block ${isFlowIn ? "text-emerald-400" : "text-amber-400"}`}>
                       {isFlowIn ? "+" : "-"}{txAmount.toLocaleString('fr-FR')} FCFA
                     </span>
-                    <span className={`inline-block text-[7.5px] font-mono py-0.5 px-1.5 rounded border uppercase font-bold ${
-                      tx.status === "validated" || tx.status === "PAID" || tx.status === "success" || tx.statut === "success" || tx.status === "valide" || tx.status === "fonds_liberes" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25" :
-                      tx.status === "refused" || tx.status === "refuse" || tx.status === "REFUSED" ? "bg-rose-500/10 text-rose-400 border-rose-500/25" :
-                      tx.status === "fonds_bloques" ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/25" :
-                      "bg-amber-500/10 text-amber-400 border-amber-500/25"
+                    <span className={`inline-block text-[8px] font-mono font-extrabold uppercase px-1.5 py-0.5 rounded ${
+                      isValidated ? "bg-emerald-500/10 text-emerald-400" :
+                      isRefused ? "bg-rose-500/10 text-rose-400" :
+                      "bg-amber-500/10 text-amber-400"
                     }`}>
-                      {tx.status === "validated" || tx.status === "PAID" || tx.status === "success" || tx.statut === "success" || tx.status === "valide" || tx.status === "fonds_liberes" ? "🟢 Validé" :
-                       tx.status === "refused" || tx.status === "refuse" || tx.status === "REFUSED" ? "🔴 Refusé" :
-                       tx.status === "fonds_bloques" ? "Séquestre" :
-                       "🟡 En attente"}
+                      {isValidated ? "VALIDÉ" : isRefused ? "REFUSÉ" : "EN ATTENTE"}
                     </span>
                   </div>
-
                 </div>
               );
             })}
+
+            {filteredTxs.length > 10 && !showAllHistory && (
+              <button
+                onClick={() => setShowAllHistory(true)}
+                className="w-full py-3 mt-2 text-center text-xs font-black uppercase font-mono text-[#D4AF37] bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 rounded-xl transition-all cursor-pointer"
+              >
+                Voir tout ({filteredTxs.length} transactions)
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {/* DETAIL TRANSACTION BOTTOM SHEET */}
+      <AnimatePresence>
+        {selectedTxDetails && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col justify-end">
+            <div 
+              className="absolute inset-0"
+              onClick={() => setSelectedTxDetails(null)}
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 26, stiffness: 300 }}
+              className="relative z-10 bg-afri-bg border-t border-[#D4AF37]/50 rounded-t-[28px] p-5 space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl"
+            >
+              <div className="w-12 h-1.5 bg-zinc-600 rounded-full mx-auto -mt-1" />
+              <div className="flex justify-between items-center border-b border-afri-border pb-3">
+                <h3 className="text-sm font-black font-display uppercase tracking-wider text-afri-text">Détails de la transaction</h3>
+                <button 
+                  onClick={() => setSelectedTxDetails(null)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="text-center py-2 space-y-1">
+                <p className="text-2xl font-black font-mono text-[#D4AF37]">
+                  {selectedTxDetails.amount || selectedTxDetails.montant ? `${Math.abs(Number(selectedTxDetails.amount || selectedTxDetails.montant)).toLocaleString('fr-FR')} FCFA` : "0 FCFA"}
+                </p>
+                <p className="text-xs font-bold text-afri-text">{selectedTxDetails.description || "Opération financière"}</p>
+              </div>
+
+              <div className="bg-afri-bg-sec/60 border border-afri-border rounded-2xl p-4 space-y-2.5 text-xs font-mono">
+                <div className="flex justify-between">
+                  <span className="text-afri-text-muted">Référence :</span>
+                  <span className="font-bold text-afri-text select-all">{selectedTxDetails.reference || selectedTxDetails.id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-afri-text-muted">Date & Heure :</span>
+                  <span className="font-bold text-afri-text">{selectedTxDetails.date || selectedTxDetails.createdAt ? new Date(selectedTxDetails.createdAt || Date.now()).toLocaleString("fr-FR") : "N/A"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-afri-text-muted">Statut :</span>
+                  <span className="font-bold text-[#D4AF37] uppercase">{selectedTxDetails.status || selectedTxDetails.statut || "N/A"}</span>
+                </div>
+                {selectedTxDetails.userConcerned && (
+                  <div className="flex justify-between">
+                    <span className="text-afri-text-muted">Partie concernée :</span>
+                    <span className="font-bold text-afri-text">{selectedTxDetails.userConcerned}</span>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => {
+                  const ref = selectedTxDetails.reference || selectedTxDetails.id;
+                  setSelectedTxDetails(null);
+                  supportConfig.openSupport(`Assistance pour la transaction #${ref}`);
+                }}
+                className="w-full py-3.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text font-black text-xs uppercase font-mono rounded-xl flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+              >
+                <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
+                <span>Besoin d'aide sur cette transaction</span>
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       
-      {/* MODAL 1: RECHARGER / DÉPÔT MOBILE MONEY (MOBILE MODAL) */}
+      {/* MODAL 1: RECHARGER / DÉPÔT MOBILE MONEY (MOBILE BOTTOM SHEET) */}
       <AnimatePresence>
         {showDepositModal && (
-          <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex flex-col justify-end z-50 p-0 sm:p-4">
             <div 
               className="absolute inset-0"
               onClick={() => { setShowDepositModal(false); playSound("click"); }}
             />
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="bg-[#0A0A0A] border border-[#D4AF37]/40 rounded-3xl p-5 sm:p-6 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 26, stiffness: 300 }}
+              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-[28px] p-5 sm:p-6 w-full max-w-none max-h-[88vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
             >
               {/* Drag Handle */}
               <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
@@ -1062,20 +1127,20 @@ export default function AfrigomboWalletDashboard({
         )}
       </AnimatePresence>
 
-      {/* MODAL 2: RETIRER / RETRAIT MOBILE MONEY (MOBILE MODAL) */}
+      {/* MODAL 2: RETIRER / RETRAIT MOBILE MONEY (MOBILE BOTTOM SHEET) */}
       <AnimatePresence>
         {showWithdrawModal && (
-          <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex flex-col justify-end z-50 p-0 sm:p-4">
             <div 
               className="absolute inset-0"
               onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
             />
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="bg-[#0A0A0A] border border-[#D4AF37]/40 rounded-3xl p-5 sm:p-6 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 26, stiffness: 300 }}
+              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-[28px] p-5 sm:p-6 w-full max-w-none max-h-[88vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
             >
               {/* Drag Handle */}
               <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />

@@ -587,9 +587,10 @@ export default function MessagesView({
   }
 
   return (
-    <div className={`w-full flex-1 flex flex-col justify-between p-0 m-0 border-none rounded-none bg-afri-bg text-afri-text select-none overflow-hidden relative ${
-      activeConvo ? "pb-0 md:pb-[88px]" : "pb-[88px]"
-    }`}>
+    <AndroidPageLayout title="Messagerie" onBack={activeConvo ? () => setActiveConvo(null) : onBack} scrollable={false}>
+      <div className={`w-full flex-1 flex flex-col justify-between p-0 m-0 border-none rounded-none bg-afri-bg text-afri-text select-none overflow-hidden relative ${
+        activeConvo ? "pb-0 md:pb-[88px]" : "pb-[88px]"
+      }`}>
       {/* HAUT (Barre de recherche) : Une barre de recherche rapide avec icône loupe (w-full px-4 py-3 bg-neutral-900/50) */}
       <div className="w-full px-4 py-3 bg-neutral-900/50 border-b border-afri-border shrink-0">
         <div className="relative w-full">
@@ -1463,5 +1464,6 @@ export default function MessagesView({
         })}
       </div>
     </div>
+  </AndroidPageLayout>
   );
 }
