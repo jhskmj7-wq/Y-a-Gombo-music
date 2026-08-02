@@ -8,6 +8,7 @@ import {
 import { UserProfile } from "../types";
 import { audioSynth } from "../lib/audio";
 import { AndroidCenteredDialog } from "./common/GlobalPortalModal";
+import { AndroidBottomSheet } from "./ui/AndroidBottomSheet";
 import { useTheme } from "../context/ThemeContext";
 
 interface GomboProfileMainViewProps {
@@ -119,7 +120,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="w-full max-w-full space-y-6 pt-2 text-left pb-12 px-3 xs:px-4"
+      className="w-full space-y-4 pt-2 text-left pb-12"
     >
       
       {/* FOUNDER COMMAND CENTER CARD */}
@@ -127,7 +128,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className={`relative overflow-hidden rounded-2xl border p-6 shadow-sm space-y-4 ${
+          className={`w-full relative overflow-hidden rounded-[18px] border p-4 shadow-sm space-y-3.5 ${
             isLight 
               ? "bg-[#FDFBF7] border-emerald-500/40 text-gray-900" 
               : "bg-afri-bg-sec border-emerald-500/20 text-afri-text"
@@ -161,10 +162,10 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         </motion.div>
       )}
 
-      {/* 👑 AFRIGOMBO PREMIUM BANNER / CARD - CONDITIONNEL (Requirement #3) */}
+      {/* 👑 AFRIGOMBO PREMIUM BANNER / CARD - CONDITIONNEL */}
       {isSubscribed ? (
         /* S'IL EST DÉJÀ ABONNÉ: Carte discrète MEMBRE PREMIUM ACTIF */
-        <div className={`flex items-center justify-between px-5 py-3.5 rounded-2xl border shadow-sm ${
+        <div className={`w-full flex items-center justify-between p-4 rounded-[18px] border shadow-sm ${
           isLight 
             ? "bg-[#FDFBF7] border-[#D4AF37]/60 text-gray-900" 
             : "bg-afri-bg-sec border-amber-500/20 text-afri-text"
@@ -191,21 +192,21 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className={`relative overflow-hidden rounded-2xl border p-6 shadow-sm space-y-4 ${
+          className={`w-full relative overflow-hidden rounded-[18px] border p-4 shadow-sm space-y-3.5 ${
             isLight 
               ? "bg-[#FDFBF7] border-[#D4AF37]/60 text-gray-900" 
               : "bg-afri-bg-sec border-amber-300/40 dark:border-amber-500/20 text-afri-text"
           }`}
         >
           <div className="flex items-center gap-4 relative z-10">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
-              <span className="text-3xl">👑</span>
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
+              <span className="text-2xl">👑</span>
             </div>
             <div className="space-y-0.5">
               <span className={`text-[10px] font-mono font-black uppercase tracking-[0.2em] ${
                 isLight ? "text-amber-800" : "text-amber-400"
               }`}>Abonnement</span>
-              <h3 className={`text-lg font-sans font-black uppercase tracking-tight ${
+              <h3 className={`text-base font-sans font-black uppercase tracking-tight ${
                 isLight ? "text-gray-950" : "text-afri-text"
               }`}>AFRIGOMBO PREMIUM</h3>
             </div>
@@ -217,10 +218,10 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             Passez au niveau supérieur. Multipliez vos gombos, démarquez-vous des autres virtuoses et débloquez les fonctionnalités exclusives de l'élite.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-3 mt-4 relative z-10">
+          <div className="flex flex-col sm:flex-row gap-2.5 pt-1 relative z-10">
             <button 
               onClick={() => onNavigateView("user_gombo_plus")}
-              className="flex-1 py-3.5 min-h-[48px] bg-[#D4AF37] hover:bg-amber-400 text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="flex-1 py-3 min-h-[44px] bg-[#D4AF37] hover:bg-amber-400 text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <span>✨ Découvrir Premium</span>
             </button>
@@ -231,7 +232,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                   window.dispatchEvent(new CustomEvent("gombo_trigger_profile_boost"));
                 }
               }}
-              className={`flex-1 py-3.5 min-h-[48px] border font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              className={`flex-1 py-3 min-h-[44px] border font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 ${
                 isLight 
                   ? "bg-amber-50 border-amber-400/50 text-amber-800 hover:bg-amber-100" 
                   : "bg-amber-950/20 border-amber-400/40 text-amber-400 hover:bg-amber-950/40"
@@ -242,7 +243,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
             <button 
               onClick={() => onNavigateView("user_mes_gombos")}
-              className={`flex-1 py-3.5 min-h-[48px] border font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              className={`flex-1 py-3 min-h-[44px] border font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 ${
                 isLight 
                   ? "bg-[#FDFBF7] border-[#D4AF37]/40 text-amber-800 hover:bg-[#D4AF37]/10" 
                   : "bg-afri-bg-sec border-amber-400/40 text-amber-400 hover:bg-amber-500/10"
@@ -254,8 +255,8 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         </motion.div>
       )}
 
-      {/* 1. GRANDE CARTE PROFIL PREMIUM (CLEAN LIGHT/DARK BACKGROUND, NO GPU BLUR) */}
-      <div className={`relative overflow-hidden rounded-2xl border shadow-sm p-3.5 xs:p-4 sm:p-5 ${
+      {/* 1. GRANDE CARTE PROFIL PREMIUM */}
+      <div className={`w-full relative overflow-hidden rounded-[18px] border shadow-sm p-4 ${
         isLight 
           ? "bg-[#FDFBF7] border-[#D4AF37]/60" 
           : "border-amber-500/20 bg-afri-bg-sec"
@@ -866,191 +867,130 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       </div>
 
       {/* Interactive QR Code Modal */}
-      <AnimatePresence>
-        {showQrModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-afri-bg/90 backdrop-blur-md z-[99999] flex items-center justify-center p-4"
+      <AndroidBottomSheet
+        isOpen={showQrModal}
+        onClose={() => {
+          setShowQrModal(false);
+          try { audioSynth.playKoraNote(392.00, 0, 0.1, 0.4); } catch (_) {}
+        }}
+        title="QR CODE GOMBO ID"
+        subtitle="Scanner & Recruter"
+      >
+        <div className="text-center space-y-5">
+          {/* Vector Golden Simulated High-Tech QR Code */}
+          <div className="w-48 h-48 mx-auto bg-afri-bg border border-afri-gold/20 rounded-2xl p-4 flex items-center justify-center relative shadow-inner">
+            <div className="absolute inset-4 rounded-full bg-afri-gold/5 blur-xl pointer-events-none" />
+            <svg viewBox="0 0 100 100" className="w-full h-full text-afri-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]">
+              {/* Outer Frame Corners */}
+              <rect x="5" y="5" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="3" rx="2" />
+              <rect x="10" y="10" width="15" height="15" fill="currentColor" rx="1" />
+              
+              <rect x="70" y="5" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="3" rx="2" />
+              <rect x="75" y="10" width="15" height="15" fill="currentColor" rx="1" />
+              
+              <rect x="5" y="70" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="3" rx="2" />
+              <rect x="10" y="75" width="15" height="15" fill="currentColor" rx="1" />
+
+              {/* Aesthetic Golden Abstract Pixels */}
+              <g fill="currentColor" opacity="0.95">
+                <rect x="38" y="10" width="4" height="4" />
+                <rect x="44" y="6" width="8" height="4" />
+                <rect x="56" y="12" width="4" height="8" />
+                <rect x="42" y="24" width="12" height="4" />
+
+                <rect x="10" y="38" width="8" height="4" />
+                <rect x="6" y="46" width="4" height="12" />
+                <rect x="18" y="50" width="12" height="4" />
+                <rect x="22" y="58" width="4" height="8" />
+
+                <rect x="38" y="38" width="24" height="24" rx="4" fill="none" stroke="currentColor" strokeWidth="2.5" />
+                <circle cx="50" cy="50" r="4" />
+
+                <rect x="72" y="38" width="12" height="4" />
+                <rect x="80" y="46" width="14" height="6" />
+                <rect x="70" y="58" width="6" height="12" />
+
+                <rect x="38" y="72" width="16" height="4" />
+                <rect x="42" y="80" width="8" height="8" />
+                <rect x="56" y="84" width="12" height="4" />
+
+                <rect x="72" y="72" width="22" height="4" />
+                <rect x="76" y="80" width="8" height="12" />
+              </g>
+            </svg>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-sm font-sans font-black text-afri-text">{currentUserProfile.artisticName}</p>
+            <span className="text-xs font-mono font-bold text-afri-gold uppercase tracking-wider">{gomboId}</span>
+          </div>
+
+          <button 
+            onClick={() => {
+              handleCopyId();
+              setShowQrModal(false);
+            }}
+            className="w-full py-3 px-4 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text font-mono text-xs uppercase rounded-xl border border-afri-border/80 active:scale-98 transition-all cursor-pointer"
           >
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="w-full max-w-sm rounded-[32px] border border-afri-gold/30 bg-afri-bg p-6 text-center space-y-6 relative shadow-2xl"
-            >
-              <button 
-                onClick={() => {
-                  setShowQrModal(false);
-                  try { audioSynth.playKoraNote(392.00, 0, 0.1, 0.4); } catch (_) {}
-                }}
-                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text bg-afri-bg-sec/60 p-1.5 rounded-full border border-afri-border transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="space-y-1 pt-2">
-                <span className="text-afri-gold text-[10px] font-mono uppercase tracking-[0.2em] block">Scanner & Recruter</span>
-                <h4 className="text-lg font-sans font-black text-afri-text uppercase">QR CODE GOMBO ID</h4>
-              </div>
-
-              {/* Vector Golden Simulated High-Tech QR Code */}
-              <div className="w-52 h-52 mx-auto bg-afri-bg border border-afri-gold/20 rounded-2xl p-4 flex items-center justify-center relative shadow-inner">
-                <div className="absolute inset-4 rounded-full bg-afri-gold/5 blur-xl pointer-events-none" />
-                <svg viewBox="0 0 100 100" className="w-full h-full text-afri-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]">
-                  {/* Outer Frame Corners */}
-                  <rect x="5" y="5" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="3" rx="2" />
-                  <rect x="10" y="10" width="15" height="15" fill="currentColor" rx="1" />
-                  
-                  <rect x="70" y="5" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="3" rx="2" />
-                  <rect x="75" y="10" width="15" height="15" fill="currentColor" rx="1" />
-                  
-                  <rect x="5" y="70" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="3" rx="2" />
-                  <rect x="10" y="75" width="15" height="15" fill="currentColor" rx="1" />
-
-                  {/* Aesthetic Golden Abstract Pixels (High Tech Matrix look) */}
-                  <g fill="currentColor" opacity="0.95">
-                    <rect x="38" y="10" width="4" height="4" />
-                    <rect x="44" y="6" width="8" height="4" />
-                    <rect x="56" y="12" width="4" height="8" />
-                    <rect x="42" y="24" width="12" height="4" />
-
-                    <rect x="10" y="38" width="8" height="4" />
-                    <rect x="6" y="46" width="4" height="12" />
-                    <rect x="18" y="50" width="12" height="4" />
-                    <rect x="22" y="58" width="4" height="8" />
-
-                    {/* Central anchor and complex cells */}
-                    <rect x="38" y="38" width="24" height="24" rx="4" fill="none" stroke="currentColor" strokeWidth="2.5" />
-                    <circle cx="50" cy="50" r="4" />
-
-                    <rect x="72" y="38" width="12" height="4" />
-                    <rect x="80" y="46" width="14" height="6" />
-                    <rect x="70" y="58" width="6" height="12" />
-
-                    <rect x="38" y="72" width="16" height="4" />
-                    <rect x="42" y="80" width="8" height="8" />
-                    <rect x="56" y="84" width="12" height="4" />
-
-                    <rect x="72" y="72" width="22" height="4" />
-                    <rect x="76" y="80" width="8" height="12" />
-                  </g>
-                </svg>
-              </div>
-
-              <div className="space-y-1.5">
-                <p className="text-sm font-sans font-black text-afri-text">{currentUserProfile.artisticName}</p>
-                <span className="text-xs font-mono font-bold text-afri-gold uppercase tracking-wider">{gomboId}</span>
-              </div>
-
-              <button 
-                onClick={() => {
-                  handleCopyId();
-                  setShowQrModal(false);
-                }}
-                className="w-full py-2.5 px-4 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text font-mono text-xs uppercase rounded-xl border border-afri-border/80 active:scale-98 transition-all"
-              >
-                Copier GOMBO ID & Fermer
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            Copier GOMBO ID & Fermer
+          </button>
+        </div>
+      </AndroidBottomSheet>
 
       {/* Interactive Certificate Modal */}
-      <AnimatePresence>
-        {showCertModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-afri-bg/95 backdrop-blur-md z-[99999] flex items-start sm:items-center justify-center p-4 overflow-y-auto"
-          >
-            <motion.div 
-              initial={{ scale: 0.9, y: 30 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 30 }}
-              className="w-full max-w-lg rounded-[36px] border-2 border-afri-gold bg-gradient-to-b from-afri-bg-sec to-afri-bg p-6 sm:p-8 text-center relative shadow-2xl overflow-hidden my-8"
+      <AndroidBottomSheet
+        isOpen={showCertModal}
+        onClose={() => {
+          setShowCertModal(false);
+          try { audioSynth.playKoraNote(392.00, 0, 0.1, 0.4); } catch (_) {}
+        }}
+        title="CERTIFICAT D'EXCELLENCE"
+        subtitle="Temple de la Souveraineté"
+      >
+        <div className="space-y-4">
+          <div className="border border-afri-gold/30 rounded-2xl p-4 sm:p-6 space-y-4 relative bg-afri-bg/40 text-left">
+            <div className="space-y-1 text-center">
+              <div className="flex justify-center gap-1 text-afri-gold mb-1">
+                <Star className="w-3.5 h-3.5 fill-afri-gold" />
+                <Star className="w-3.5 h-3.5 fill-afri-gold" />
+                <Star className="w-3.5 h-3.5 fill-afri-gold" />
+              </div>
+              <span className="text-afri-gold text-[9px] font-mono uppercase tracking-[0.2em] block leading-none">TEMPLE DE LA SOUVERAINETÉ</span>
+              <h3 className="text-base sm:text-lg font-serif font-black italic tracking-wider text-afri-text uppercase leading-tight">CERTIFICAT D'EXCELLENCE</h3>
+            </div>
+
+            <div className="py-2 border-y border-afri-border/80 text-center">
+              <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-widest block">IDENTIFIANT ATTRIBUÉ</span>
+              <span className="text-xl font-serif font-black text-afri-gold tracking-widest block uppercase italic select-all">{gomboId}</span>
+            </div>
+
+            <p className="text-[10px] text-afri-text-sec font-sans leading-relaxed max-w-[320px] mx-auto italic text-center">
+              « Par ce présent certificat, l'équipe artistique et le comité de souveraineté d'AFRIGOMBO certifient l'artiste ci-dessous comme membre agréé de l'élite musicale ivoirienne. »
+            </p>
+
+            <div className="space-y-1 text-center">
+              <p className="text-afri-text-sec text-[9px] font-mono uppercase tracking-widest">ARTISTE TITULAIRE</p>
+              <p className="text-base font-sans font-black text-afri-text uppercase tracking-wider">{currentUserProfile.artisticName || `${currentUserProfile.firstName || "Artiste"} ${currentUserProfile.lastName || ""}`.trim()}</p>
+              <p className="text-xs font-mono font-bold text-afri-text-sec uppercase">{currentUserProfile.commune || "Cocody"}, Abidjan</p>
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-center">
+            <button 
+              onClick={handleCopyId}
+              className="flex-1 py-3 px-4 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text font-mono text-xs uppercase rounded-xl border border-afri-border cursor-pointer transition-all active:scale-98"
             >
-              {/* Background watermark style elements */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.04)_0%,transparent_70%)] pointer-events-none" />
-              
-              <button 
-                onClick={() => {
-                  setShowCertModal(false);
-                  try { audioSynth.playKoraNote(392.00, 0, 0.1, 0.4); } catch (_) {}
-                }}
-                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text bg-afri-bg-sec/60 p-1.5 rounded-full border border-afri-border transition-colors cursor-pointer z-10"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {/* Holographic Security Border and Header */}
-              <div className="border border-afri-gold/30 rounded-2xl p-6 sm:p-8 space-y-6 relative bg-afri-bg/40 text-left">
-                {/* Vintage gold stamp */}
-                <div className="absolute top-3 right-4 w-12 h-12 rounded-full border border-afri-gold/25 flex items-center justify-center rotate-12 opacity-85 pointer-events-none select-none">
-                  <span className="text-[7.5px] font-mono font-black text-afri-gold/80 text-center leading-none">AFRIGOMBO<br/>OFFICIAL<br/>SEAL</span>
-                </div>
-
-                <div className="space-y-1 text-center">
-                  <div className="flex justify-center gap-1 text-afri-gold mb-2">
-                    <Star className="w-4 h-4 fill-afri-gold" />
-                    <Star className="w-4 h-4 fill-afri-gold" />
-                    <Star className="w-4 h-4 fill-afri-gold" />
-                  </div>
-                  <span className="text-afri-gold text-[10px] font-mono uppercase tracking-[0.25em] block leading-none">TEMPLE DE LA SOUVERAINETÉ</span>
-                  <h3 className="text-xl sm:text-2xl font-serif font-black italic tracking-wider text-afri-text uppercase leading-tight">CERTIFICAT D'EXCELLENCE</h3>
-                  <span className="text-afri-text-sec text-[8px] font-mono uppercase tracking-[0.15em] block pt-1">NUMÉRO D'ENREGISTREMENT UNIQUE</span>
-                </div>
-
-                <div className="py-2 border-y border-afri-border/80 my-4 space-y-1 text-center">
-                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">IDENTIFIANT ATTRIBUÉ</span>
-                  <span className="text-2xl font-serif font-black text-afri-gold tracking-widest block uppercase italic select-all">{gomboId}</span>
-                </div>
-
-                <div className="space-y-4">
-                  <p className="text-[11px] text-afri-text-sec font-sans leading-relaxed max-w-[340px] mx-auto italic text-center">
-                    « Par ce présent certificat, l'équipe artistique et le comité de souveraineté d'AFRIGOMBO certifient l'artiste ci-dessous comme membre agréé de l'élite musicale ivoirienne. »
-                  </p>
-
-                  <div className="space-y-1.5 text-center">
-                    <p className="text-afri-text-sec text-[10px] font-mono uppercase tracking-widest">ARTISTE TITULAIRE</p>
-                    <p className="text-lg font-sans font-black text-afri-text uppercase tracking-wider">{currentUserProfile.artisticName || `${currentUserProfile.firstName || "Artiste"} ${currentUserProfile.lastName || ""}`.trim()}</p>
-                    <p className="text-xs font-mono font-bold text-afri-text-sec uppercase">{currentUserProfile.commune || "Cocody"}, Abidjan</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-afri-border/60 text-left text-[9px] font-mono text-afri-text-sec">
-                  <div>
-                    <span className="block text-[8px] text-afri-text-sec uppercase tracking-wider">Date d'approbation</span>
-                    <span className="text-afri-gold font-black uppercase">{currentUserProfile.kycApprovedDate || currentUserProfile.verificationDate || new Date().toLocaleDateString("fr-FR")}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="block text-[8px] text-afri-text-sec uppercase tracking-wider">Signé par</span>
-                    <span className="text-afri-text font-black uppercase">Le Grand Conseil Artistique</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 flex flex-col xs:flex-row gap-2 justify-center">
-                <button 
-                  onClick={handleCopyId}
-                  className="py-2 px-4 bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text font-mono text-xs uppercase rounded-xl border border-afri-border cursor-pointer transition-all active:scale-98"
-                >
-                  Copier GOMBO ID
-                </button>
-                <button 
-                  onClick={() => setShowCertModal(false)}
-                  className="py-2 px-4 bg-afri-gold text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl cursor-pointer hover:brightness-110 transition-all active:scale-98"
-                >
-                  Fermer
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              Copier GOMBO ID
+            </button>
+            <button 
+              onClick={() => setShowCertModal(false)}
+              className="flex-1 py-3 px-4 bg-afri-gold text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl cursor-pointer hover:brightness-110 transition-all active:scale-98"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      </AndroidBottomSheet>
 
       {/* 👑 MON STATUT DIALOG */}
       <AndroidCenteredDialog

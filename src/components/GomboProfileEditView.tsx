@@ -178,9 +178,9 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full max-w-full space-y-6 pb-24 px-3 xs:px-4"
+      className="w-full space-y-4 pb-24"
     >
-      <div className="pt-3 pb-16 sm:pb-20 space-y-6 w-full max-w-full">
+      <div className="pt-2 pb-16 space-y-4 w-full">
         
         {/* HEADER */}
         <div className="flex items-center justify-between gap-4">
@@ -213,10 +213,10 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           )}
         </AnimatePresence>
 
-        <form onSubmit={onSubmit} className="space-y-6">
+        <form onSubmit={onSubmit} className="space-y-4">
           
           {/* 1. MÉDIAS (AVATAR & COVER) ANDROID FIRST */}
-          <div className="afri-card p-4 sm:p-6 space-y-6 overflow-hidden">
+          <div className="afri-card w-full p-4 rounded-[18px] space-y-4 overflow-hidden">
             <div className="space-y-4">
               <p className="afri-text-tiny uppercase tracking-widest text-[#D4AF37]">Couverture & Identité Visuelle</p>
               
@@ -289,7 +289,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           </div>
 
           {/* 2. INFOS PERSONNELLES */}
-          <div className="afri-card p-4 sm:p-6 space-y-6">
+          <div className="afri-card w-full p-4 rounded-[18px] space-y-4">
             <p className="afri-text-tiny uppercase tracking-widest text-[#D4AF37]">Informations d'Artiste</p>
             
             <div className="space-y-4">
@@ -328,7 +328,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           </div>
 
           {/* 3. LOCALISATION */}
-          <div className="afri-card p-4 sm:p-6 space-y-4">
+          <div className="afri-card w-full p-4 rounded-[18px] space-y-4">
             <p className="afri-text-tiny uppercase tracking-widest text-[#D4AF37]">Zone d'Activité</p>
             <div className="grid grid-cols-1 xs:grid-cols-2 gap-3.5 sm:gap-4">
               <div className="space-y-1.5">
@@ -362,10 +362,10 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           </div>
 
           {/* 4. MUSIQUE & TALENTS */}
-          <div className="afri-card p-4 sm:p-6 space-y-6">
+          <div className="afri-card w-full p-4 rounded-[18px] space-y-4">
             <p className="afri-text-tiny uppercase tracking-widest text-[#D4AF37]">Identité Musicale & Profil Showbiz</p>
             
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Spécialités */}
               <div className="space-y-2">
                 <label className="afri-text-tiny text-afri-text-sec">Spécialités</label>
@@ -507,7 +507,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           </div>
 
           {/* 5. VÉRIFICATION (KYC) */}
-          <div className="afri-card p-4 sm:p-6 space-y-4">
+          <div className="afri-card w-full p-4 rounded-[18px] space-y-4">
             <div className="flex items-center justify-between">
               <p className="afri-text-tiny uppercase tracking-widest text-[#D4AF37]">Sécurité Afritrust</p>
               {kycStatus === "approved" && <div className="afri-badge afri-badge-gold">Vérifié</div>}
