@@ -12,7 +12,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['logo.png', 'sounds/*.mp3'],
+      includeAssets: ['logo.png', 'logo-192.png', 'logo-512.png', 'maskable-icon.png', 'apple-touch-icon.png', 'favicon.png', 'logo.svg', 'sounds/*.mp3'],
       manifest: {
         name: 'AFRIGOMBO',
         short_name: 'AFRIGOMBO',
@@ -25,15 +25,27 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: 'logo.png',
+            src: 'logo-192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'logo-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'maskable-icon.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           },
           {
             src: 'logo.png',
             sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
+            type: 'image/png'
           }
         ]
       },

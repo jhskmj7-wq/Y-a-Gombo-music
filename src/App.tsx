@@ -1,8 +1,7 @@
-import React, { useState, useEffect, Suspense, lazy, useRef } from "react";
+import React, { useState, useEffect, useCallback, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { audioSynth } from "./lib/audio";
-import { Music, Award, ShieldCheck, Sparkles } from "lucide-react";
 import { BackgroundMusic } from "./components/BackgroundMusic";
 import { FloatingAudioPlayer } from "./components/FloatingAudioPlayer";
 import { LivingInteractions } from "./components/LivingInteractions";
@@ -12,21 +11,16 @@ import { ProfileGuard } from "./components/ProfileGuard";
 import CompleteProfile from "./components/CompleteProfile";
 import AuthPage from "./components/AuthPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import AfrigomboCinematicIntro from "./components/AfrigomboCinematicIntro";
 import PremiumLoader from "./components/PremiumLoader";
 import PWAHandler from "./components/PWAHandler";
-import { ThemeProvider, useTheme } from "./context/ThemeContext";
-import { gomboDB, db } from "./firebase";
-import { app } from "./lib/firebase";
+import { useTheme } from "./context/ThemeContext";
+import { db } from "./firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 import MaintenanceScreen from "./components/MaintenanceScreen";
 import { SecurityService } from "./lib/SecurityService";
-import { AfriGomboLogo } from "./components/AfriGomboLogo";
 import ScrollToTop from "./components/ScrollToTop";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
-import { syncManager } from "./lib/SyncManager";
 import GlobalNotificationBanner from "./components/GlobalNotificationBanner";
-import { bootManager } from "./lib/BootManager";
 import BootSplashScreen from "./components/BootSplashScreen";
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
@@ -86,22 +80,17 @@ function CompleteProfileView() {
 }
 
 function App() {
-  const { loading: authLoading, currentUser } = useAuth();
+  const { currentUser } = useAuth();
   const [isMaintenance, setIsMaintenance] = useState(false);
+
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "settings", "platform"), (snap) => {
       setIsMaintenance(snap.data()?.status === "maintenance");
     });
     return () => unsub();
   }, []);
-  const { theme } = useTheme();
-  const location = useLocation();
-  
-  // ... (inside the component)
 
-  useEffect(() => {
-    bootManager.runDiagnostics().then(res => console.log("Boot diagnostics finished", res));
-  }, []);
+  const location = useLocation();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -114,95 +103,29 @@ function App() {
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window !== "undefined") {
       const search = window.location.search;
-      return !search.includes("transferId") && !search.includes("auth_transfer");
+      if (search.includes("transferId") || search.includes("auth_transfer")) {
+        return false;
+      }
+      if (sessionStorage.getItem("afrigombo_splash_dismissed") === "true") {
+        return false;
+      }
     }
     return true;
   });
-  const [showCinematicIntro, setShowCinematicIntro] = useState(() => {
-    if (typeof window !== "undefined") {
-      return safeGetItem("gombo_cinematic_intro_done") !== "true";
+
+  const handleSplashComplete = useCallback(() => {
+    try {
+      sessionStorage.setItem("afrigombo_splash_dismissed", "true");
+      audioSynth.playKoraNote(523.25, 0, 0.12, 0.6);
+    } catch (err) {
+      // ignore
     }
-    return false;
-  });
-  const isInitialized = useRef(false);
-  const [progress, setProgress] = useState(0);
-  const [logoUrl, setLogoUrl] = useState<string>(() => safeGetItem("custom_app_logo") || "/logo_afrigombo.png");
-  const [isLogoLoaded, setIsLogoLoaded] = useState(false);
-  const [isLogoFailed, setIsLogoFailed] = useState(false);
-
-  useEffect(() => {
-    if (isInitialized.current) return;
-    isInitialized.current = true;
-    
-    setIsLogoLoaded(false);
-    setIsLogoFailed(false);
-    const img = new Image();
-    img.src = logoUrl;
-    img.onload = () => setIsLogoLoaded(true);
-    img.onerror = () => setIsLogoFailed(true);
-  }, [logoUrl]);
-
-  useEffect(() => {
-    const handleLogoUpdate = () => {
-      setLogoUrl(safeGetItem("custom_app_logo") || "/logo_afrigombo.png");
-    };
-    window.addEventListener("custom-logo-updated", handleLogoUpdate);
-    return () => window.removeEventListener("custom-logo-updated", handleLogoUpdate);
+    setShowSplash(false);
   }, []);
-
-  useEffect(() => {
-    if (!showSplash) return;
-    
-    // Safety timeout: Hide splash after 12 seconds regardless of state
-    const safetyTimeout = setTimeout(() => {
-      console.warn("⚠️ [AFRIGOMBO] Splash safety timeout triggered. Forcing entry.");
-      setShowSplash(false);
-    }, 12000);
-    
-    let startTimestamp = Date.now();
-    const duration = 1500; // 1.5 seconds fast boot
-
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTimestamp;
-      const calculatedProgress = Math.min((elapsed / duration) * 100, 100);
-
-      setProgress(calculatedProgress);
-
-      if (calculatedProgress >= 100) {
-        clearInterval(interval);
-        clearTimeout(safetyTimeout);
-        // Play success kora sound
-        try {
-          audioSynth.playKoraNote(523.25, 0, 0.12, 0.6);
-        } catch (err) {
-          console.warn("Audio Context startup play blocked or unsupported:", err);
-        }
-        setShowSplash(false);
-      }
-    }, 30);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(safetyTimeout);
-    };
-  }, [authLoading, showSplash]);
 
   const isSuperUser = SecurityService.isFounder(currentUser) || SecurityService.isAdmin(currentUser);
   if (isMaintenance && !isSuperUser) {
     return <MaintenanceScreen message="L'application est actuellement en maintenance. Veuillez patienter." />;
-  }
-
-  if (showCinematicIntro) {
-    return (
-      <ErrorBoundary>
-        <AfrigomboCinematicIntro
-          onComplete={() => {
-            safeSetItem("gombo_cinematic_intro_done", "true");
-            setShowCinematicIntro(false);
-          }}
-        />
-      </ErrorBoundary>
-    );
   }
 
   return (
@@ -240,22 +163,23 @@ function App() {
         <AnimatePresence>
           {showSplash && (
             <motion.div
+              key="splash-screen"
               initial={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
             >
-              <BootSplashScreen onComplete={() => setShowSplash(false)} />
+              <BootSplashScreen onComplete={handleSplashComplete} />
             </motion.div>
           )}
         </AnimatePresence>
 
-      {/* 3. PERSISTENT BACKGROUND MUSIC */}
-      <BackgroundMusic />
-      <FloatingAudioPlayer />
-      <PWAHandler />
+        {/* 2. PERSISTENT BACKGROUND MUSIC & PWA */}
+        <BackgroundMusic />
+        <FloatingAudioPlayer />
+        <PWAHandler />
       </div>
     </ErrorBoundary>
-);
+  );
 }
 
 export default App;

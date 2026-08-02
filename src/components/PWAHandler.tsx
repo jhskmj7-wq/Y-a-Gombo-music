@@ -31,17 +31,12 @@ export default function PWAHandler() {
     },
   });
 
-  // Smart Update Logic: Handle SW updates cleanly without infinite reload loops
+  // Smart Update Logic: Let the UI banner notify the user instead of force-reloading on boot
   useEffect(() => {
     if (needRefresh) {
-      const alreadyUpdated = sessionStorage.getItem("afrigombo_sw_updated_session");
-      if (!alreadyUpdated) {
-        sessionStorage.setItem("afrigombo_sw_updated_session", "true");
-        console.log("🔔 [AFRIGOMBO PWA] Updating ServiceWorker with new build bundle...");
-        updateServiceWorker(true);
-      }
+      console.log("🔔 [AFRIGOMBO PWA] New build bundle available. User banner displayed.");
     }
-  }, [needRefresh, updateServiceWorker]);
+  }, [needRefresh]);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
