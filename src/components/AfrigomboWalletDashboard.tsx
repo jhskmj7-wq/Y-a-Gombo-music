@@ -28,6 +28,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { AndroidPageLayout } from "./layout/AndroidPageLayout";
 import { AndroidCard } from "./layout/AndroidCard";
+import { AndroidBottomSheet } from "./common/AndroidBottomSheet";
 import { db, gomboDB } from "../firebase";
 import { collection, query, where, getDocs, addDoc, onSnapshot, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
@@ -858,564 +859,455 @@ export default function AfrigomboWalletDashboard({
       </div>
 
       {/* DETAIL TRANSACTION BOTTOM SHEET */}
-      <AnimatePresence>
+      <AndroidBottomSheet
+        isOpen={!!selectedTxDetails}
+        onClose={() => setSelectedTxDetails(null)}
+        title="Détails de la transaction"
+      >
         {selectedTxDetails && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col justify-end">
-            <div 
-              className="absolute inset-0"
-              onClick={() => setSelectedTxDetails(null)}
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 26, stiffness: 300 }}
-              className="relative z-10 bg-afri-bg border-t border-[#D4AF37]/50 rounded-t-[28px] p-5 space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl"
+          <div className="space-y-4">
+            <div className="text-center py-2 space-y-1">
+              <p className="text-2xl font-black font-mono text-[#D4AF37]">
+                {selectedTxDetails.amount || selectedTxDetails.montant ? `${Math.abs(Number(selectedTxDetails.amount || selectedTxDetails.montant)).toLocaleString('fr-FR')} FCFA` : "0 FCFA"}
+              </p>
+              <p className="text-xs font-bold text-afri-text">{selectedTxDetails.description || "Opération financière"}</p>
+            </div>
+
+            <div className="bg-afri-bg-sec/60 border border-afri-border rounded-2xl p-4 space-y-2.5 text-xs font-mono">
+              <div className="flex justify-between">
+                <span className="text-afri-text-muted">Référence :</span>
+                <span className="font-bold text-afri-text select-all">{selectedTxDetails.reference || selectedTxDetails.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-afri-text-muted">Date & Heure :</span>
+                <span className="font-bold text-afri-text">{selectedTxDetails.date || selectedTxDetails.createdAt ? new Date(selectedTxDetails.createdAt || Date.now()).toLocaleString("fr-FR") : "N/A"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-afri-text-muted">Statut :</span>
+                <span className="font-bold text-[#D4AF37] uppercase">{selectedTxDetails.status || selectedTxDetails.statut || "N/A"}</span>
+              </div>
+              {selectedTxDetails.userConcerned && (
+                <div className="flex justify-between">
+                  <span className="text-afri-text-muted">Partie concernée :</span>
+                  <span className="font-bold text-afri-text">{selectedTxDetails.userConcerned}</span>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                const ref = selectedTxDetails.reference || selectedTxDetails.id;
+                setSelectedTxDetails(null);
+                supportConfig.openSupport(`Assistance pour la transaction #${ref}`);
+              }}
+              className="w-full py-3.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text font-black text-xs uppercase font-mono rounded-xl flex items-center justify-center gap-2 cursor-pointer active:scale-98"
             >
-              <div className="w-12 h-1.5 bg-zinc-600 rounded-full mx-auto -mt-1" />
-              <div className="flex justify-between items-center border-b border-afri-border pb-3">
-                <h3 className="text-sm font-black font-display uppercase tracking-wider text-afri-text">Détails de la transaction</h3>
-                <button 
-                  onClick={() => setSelectedTxDetails(null)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="text-center py-2 space-y-1">
-                <p className="text-2xl font-black font-mono text-[#D4AF37]">
-                  {selectedTxDetails.amount || selectedTxDetails.montant ? `${Math.abs(Number(selectedTxDetails.amount || selectedTxDetails.montant)).toLocaleString('fr-FR')} FCFA` : "0 FCFA"}
-                </p>
-                <p className="text-xs font-bold text-afri-text">{selectedTxDetails.description || "Opération financière"}</p>
-              </div>
-
-              <div className="bg-afri-bg-sec/60 border border-afri-border rounded-2xl p-4 space-y-2.5 text-xs font-mono">
-                <div className="flex justify-between">
-                  <span className="text-afri-text-muted">Référence :</span>
-                  <span className="font-bold text-afri-text select-all">{selectedTxDetails.reference || selectedTxDetails.id}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-afri-text-muted">Date & Heure :</span>
-                  <span className="font-bold text-afri-text">{selectedTxDetails.date || selectedTxDetails.createdAt ? new Date(selectedTxDetails.createdAt || Date.now()).toLocaleString("fr-FR") : "N/A"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-afri-text-muted">Statut :</span>
-                  <span className="font-bold text-[#D4AF37] uppercase">{selectedTxDetails.status || selectedTxDetails.statut || "N/A"}</span>
-                </div>
-                {selectedTxDetails.userConcerned && (
-                  <div className="flex justify-between">
-                    <span className="text-afri-text-muted">Partie concernée :</span>
-                    <span className="font-bold text-afri-text">{selectedTxDetails.userConcerned}</span>
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={() => {
-                  const ref = selectedTxDetails.reference || selectedTxDetails.id;
-                  setSelectedTxDetails(null);
-                  supportConfig.openSupport(`Assistance pour la transaction #${ref}`);
-                }}
-                className="w-full py-3.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text font-black text-xs uppercase font-mono rounded-xl flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-              >
-                <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
-                <span>Besoin d'aide sur cette transaction</span>
-              </button>
-            </motion.div>
+              <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
+              <span>Besoin d'aide sur cette transaction</span>
+            </button>
           </div>
         )}
-      </AnimatePresence>
+      </AndroidBottomSheet>
       
       {/* MODAL 1: RECHARGER / DÉPÔT MOBILE MONEY (MOBILE BOTTOM SHEET) */}
-      <AnimatePresence>
-        {showDepositModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex flex-col justify-end z-50 p-0 sm:p-4">
-            <div 
-              className="absolute inset-0"
-              onClick={() => { setShowDepositModal(false); playSound("click"); }}
-            />
-            <motion.div 
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 26, stiffness: 300 }}
-              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-[28px] p-5 sm:p-6 w-full max-w-none max-h-[88vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
-            >
-              {/* Drag Handle */}
-              <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
+      <AndroidBottomSheet
+        isOpen={showDepositModal}
+        onClose={() => { setShowDepositModal(false); playSound("click"); }}
+        title="RECHARGER LE WALLET"
+        subtitle="Dépôt Mobile Money direct via Wave, Orange, MTN, Moov"
+      >
+        {step === "form" && (
+          <form onSubmit={(e) => { e.preventDefault(); handleDepositRequest(); }} className="space-y-5">
+            <div className="text-center space-y-1.5 pt-2">
+              <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mx-auto">
+                <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
+              </div>
+            </div>
 
-              <button 
-                id="btn-close-deposit-modal"
-                onClick={() => { setShowDepositModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text w-12 h-12 flex items-center justify-center rounded-full bg-afri-bg-sec border border-afri-border cursor-pointer transition-colors active:scale-95"
-              >
-                <X className="w-6 h-6" />
-              </button>
-
-              {step === "form" && (
-                <form onSubmit={(e) => { e.preventDefault(); handleDepositRequest(); }} className="space-y-5">
-                  <div className="text-center space-y-1.5 pt-4">
-                    <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mx-auto">
-                      <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
-                    </div>
-                    <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-sans">
-                      RECHARGER LE WALLET
-                    </h3>
-                    <p className="text-[11px] text-afri-text-sec font-mono">
-                      Dépôt Mobile Money direct via Wave, Orange, MTN, Moov
-                    </p>
-                  </div>
-
-                  {/* Operator Choice */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
-                      Opérateur Mobile Money
-                    </label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[
-                        { id: "wave", name: "Wave", color: "border-blue-500 text-blue-400" },
-                        { id: "orange", name: "Orange", color: "border-orange-500 text-orange-400" },
-                        { id: "mtn", name: "MTN", color: "border-yellow-500 text-yellow-500" },
-                        { id: "moov", name: "Moov", color: "border-emerald-500 text-emerald-400" }
-                      ].map(op => (
-                        <button
-                          key={op.id}
-                          id={`btn-deposit-op-${op.id}`}
-                          type="button"
-                          onClick={() => { setOperator(op.id as any); playSound("click"); }}
-                          className={`py-3 min-h-[48px] text-xs font-black uppercase rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center ${
-                            operator === op.id 
-                              ? `${op.color} bg-afri-bg font-black scale-102` 
-                              : "border-afri-border text-afri-text-muted hover:border-afri-text-sec"
-                          }`}
-                        >
-                          {op.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Fields */}
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
-                        Numéro Mobile Money (+225)
-                      </label>
-                      <div className="relative">
-                        <Phone className="absolute left-4 top-4 w-4 h-4 text-afri-text-muted" />
-                        <input 
-                          id="input-deposit-phone"
-                          type="tel" 
-                          required
-                          value={phoneNumber} 
-                          onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-                          placeholder="0707070707" 
-                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest font-bold">
-                          Montant du rechargement (FCFA)
-                        </label>
-                        <span className="text-[9px] font-mono text-[#D4AF37] font-bold">Min: 1 000 FCFA</span>
-                      </div>
-                      <div className="relative">
-                        <Coins className="absolute left-4 top-4 w-4 h-4 text-afri-text-muted" />
-                        <input 
-                          id="input-deposit-amount"
-                          type="number" 
-                          required
-                          min="1000"
-                          value={amount} 
-                          onChange={(e) => setAmount(e.target.value)}
-                          placeholder="Ex: 25000" 
-                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
+            {/* Operator Choice */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
+                Opérateur Mobile Money
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { id: "wave", name: "Wave", color: "border-blue-500 text-blue-400" },
+                  { id: "orange", name: "Orange", color: "border-orange-500 text-orange-400" },
+                  { id: "mtn", name: "MTN", color: "border-yellow-500 text-yellow-500" },
+                  { id: "moov", name: "Moov", color: "border-emerald-500 text-emerald-400" }
+                ].map(op => (
                   <button
-                    id="btn-deposit-submit"
-                    type="submit"
-                    disabled={processing || !amount || !phoneNumber}
-                    className="w-full py-4 min-h-[52px] bg-[#D4AF37] hover:bg-[#b8982e] text-black font-black uppercase font-mono text-xs tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98 flex items-center justify-center"
+                    key={op.id}
+                    id={`btn-deposit-op-${op.id}`}
+                    type="button"
+                    onClick={() => { setOperator(op.id as any); playSound("click"); }}
+                    className={`py-3 min-h-[48px] text-xs font-black uppercase rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center ${
+                      operator === op.id 
+                        ? `${op.color} bg-afri-bg font-black scale-102` 
+                        : "border-afri-border text-afri-text-muted hover:border-afri-text-sec"
+                    }`}
                   >
-                    {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Générer l'ordre de rechargement"}
+                    {op.name}
                   </button>
-                </form>
-              )}
+                ))}
+              </div>
+            </div>
 
-              {step === "success" && (
-                <div className="space-y-5 text-center py-2">
-                  <div className="w-14 h-14 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mx-auto shadow-lg">
-                    <ShieldCheck className="w-8 h-8" />
-                  </div>
-                  
-                  <div className="space-y-1.5">
-                    <span className="inline-block text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
-                      RECHARGEMENT ENREGISTRÉ
-                    </span>
-                    <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-sans">
-                      ORDRE TRANSMIS AU GUICHET
-                    </h3>
-                    <p className="text-[#D4AF37] font-mono text-xl font-black">
-                      +{Number(amount).toLocaleString('fr-FR')} FCFA
-                    </p>
-                    <p className="text-afri-text-sec text-xs max-w-sm mx-auto font-mono">
-                      Numéro : {phoneNumber} ({operator.toUpperCase()})
-                    </p>
-                  </div>
-
-                  <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 space-y-2 text-left text-xs font-mono">
-                    <div className="flex justify-between items-center">
-                      <span className="text-afri-text-sec">Numéro de Référence :</span>
-                      <strong className="text-[#D4AF37]">{createdDepositRef}</strong>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-afri-text-sec">Montant du Dépôt :</span>
-                      <strong className="text-emerald-400">+{Number(amount).toLocaleString('fr-FR')} FCFA</strong>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-afri-text-sec">Statut du Dépôt :</span>
-                      <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[10px]">
-                        🟡 En attente de validation
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowDepositModal(false);
-                        const prefilledText = `Bonjour.\nJe souhaite effectuer un dépôt de :\n${Number(amount).toLocaleString('fr-FR')} FCFA.\nMerci de m'indiquer la procédure.\nTransaction :\n#${createdTxId || "id_attente"}`;
-                        supportConfig.openSupport(prefilledText);
-                      }}
-                      className="w-full py-3.5 bg-[#D4AF37] hover:bg-[#b8982e] text-black font-black text-xs uppercase font-mono tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-md"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                      <span>Contacter le Service Client (Arbre à Palabres)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        supportConfig.openSupport(`Bonjour 👋\n\nMa demande de rechargement Wallet de ${Number(amount).toLocaleString('fr-FR')} FCFA via ${operator.toUpperCase()} (${phoneNumber}) est enregistrée (Réf: ${createdDepositRef}). Je souhaite transmettre ma preuve.`);
-                      }}
-                      className="w-full py-2.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] font-bold text-xs uppercase font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
-                    >
-                      <span>Valider via WhatsApp</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => { setShowDepositModal(false); playSound("click"); }}
-                      className="w-full py-2 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text-sec text-[10px] font-mono uppercase rounded-xl transition-colors cursor-pointer"
-                    >
-                      Fermer la fenêtre
-                    </button>
-                  </div>
+            {/* Fields */}
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
+                  Numéro Mobile Money (+225)
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-4 w-4 h-4 text-afri-text-muted" />
+                  <input 
+                    id="input-deposit-phone"
+                    type="tel" 
+                    required
+                    value={phoneNumber} 
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
+                    placeholder="0707070707" 
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
+                  />
                 </div>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* MODAL 2: RETIRER / RETRAIT MOBILE MONEY (MOBILE BOTTOM SHEET) */}
-      <AnimatePresence>
-        {showWithdrawModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex flex-col justify-end z-50 p-0 sm:p-4">
-            <div 
-              className="absolute inset-0"
-              onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
-            />
-            <motion.div 
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 26, stiffness: 300 }}
-              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-[28px] p-5 sm:p-6 w-full max-w-none max-h-[88vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
-            >
-              {/* Drag Handle */}
-              <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
-
-              <button 
-                id="btn-close-withdraw-modal"
-                onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text w-12 h-12 flex items-center justify-center rounded-full bg-afri-bg-sec border border-afri-border cursor-pointer transition-colors active:scale-95"
-              >
-                <X className="w-6 h-6" />
-              </button>
-
-              {withdrawSubmitted ? (
-                <div className="space-y-5 text-center py-2">
-                  <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto shadow-lg">
-                    <CheckCircle2 className="w-8 h-8" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <span className="inline-block text-[10px] font-mono font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
-                      VOTRE DEMANDE DE RETRAIT A ÉTÉ ENVOYÉE
-                    </span>
-                    <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-sans">
-                      RETRAIT EN COURS DE TRAITEMENT
-                    </h3>
-                    <p className="text-emerald-400 font-mono text-xl font-black">
-                      -{Number(amount).toLocaleString('fr-FR')} FCFA
-                    </p>
-                    <p className="text-afri-text-sec text-xs max-w-sm mx-auto font-mono">
-                      Destination : {phoneNumber} ({operator.toUpperCase()})
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 pt-2">
-                    <button
-                      id="btn-withdraw-success-close"
-                      type="button"
-                      onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
-                      className="w-full py-3.5 min-h-[48px] bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-xs tracking-widest rounded-xl transition-colors cursor-pointer flex items-center justify-center"
-                    >
-                      Fermer le guichet
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={(e) => { e.preventDefault(); handleWithdrawRequest(e); }} className="space-y-5">
-                  <div className="text-center space-y-1.5 pt-4">
-                    <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mx-auto">
-                      <ArrowDownLeft className="w-6 h-6 stroke-[2.5]" />
-                    </div>
-                    <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-sans">
-                      RETIRER VOS FONDS
-                    </h3>
-                    <p className="text-[11px] text-afri-text-sec font-mono">
-                      Transfert direct de votre solde vers Mobile Money
-                    </p>
-                  </div>
-
-                  {/* Operator Choice */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
-                      Opérateur de destination
-                    </label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[
-                        { id: "wave", name: "Wave", color: "border-blue-500 text-blue-400" },
-                        { id: "orange", name: "Orange", color: "border-orange-500 text-orange-400" },
-                        { id: "mtn", name: "MTN", color: "border-yellow-500 text-yellow-500" },
-                        { id: "moov", name: "Moov", color: "border-emerald-500 text-emerald-400" }
-                      ].map(op => (
-                        <button
-                          key={op.id}
-                          id={`btn-withdraw-op-${op.id}`}
-                          type="button"
-                          onClick={() => { setOperator(op.id as any); playSound("click"); }}
-                          className={`py-3 min-h-[48px] text-xs font-black uppercase rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center ${
-                            operator === op.id 
-                              ? `${op.color} bg-afri-bg font-black scale-102` 
-                              : "border-afri-border text-afri-text-muted hover:border-afri-text-sec"
-                          }`}
-                        >
-                          {op.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Fields */}
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest font-bold">
-                          Montant à retirer (FCFA)
-                        </label>
-                        <span className="text-[9px] font-mono text-amber-400 font-bold">
-                          Max : {wallet.soldeDisponible.toLocaleString('fr-FR')} FCFA
-                        </span>
-                      </div>
-                      <div className="relative">
-                        <Coins className="absolute left-4 top-4 w-4 h-4 text-afri-text-muted" />
-                        <input 
-                          id="input-withdraw-amount"
-                          type="number" 
-                          required
-                          min="500"
-                          max={wallet.soldeDisponible}
-                          value={amount} 
-                          onChange={(e) => setAmount(e.target.value)}
-                          placeholder="Ex: 25000" 
-                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
-                        Numéro Mobile Money du bénéficiaire (+225)
-                      </label>
-                      <div className="relative">
-                        <Phone className="absolute left-4 top-4 w-4 h-4 text-afri-text-muted" />
-                        <input 
-                          id="input-withdraw-phone"
-                          type="tel" 
-                          required
-                          value={phoneNumber} 
-                          onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-                          placeholder="0707070707" 
-                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    id="btn-withdraw-submit"
-                    type="submit"
-                    disabled={processing || !amount || Number(amount) > wallet.soldeDisponible || !phoneNumber}
-                    className="w-full py-4 min-h-[52px] bg-amber-500 hover:bg-amber-600 text-black font-black uppercase font-mono text-xs tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98 flex items-center justify-center"
-                  >
-                    {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Soumettre la demande de retrait"}
-                  </button>
-                </form>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* MODAL 3: SCANNER / P2P TRANSFER (ANDROID BOTTOM SHEET) */}
-      <AnimatePresence>
-        {showScannerModal && (
-          <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md flex items-end justify-center z-50 p-0 sm:p-4">
-            <div 
-              className="absolute inset-0"
-              onClick={() => { setShowScannerModal(false); playSound("click"); }}
-            />
-            <motion.div 
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="bg-[#0A0A0A] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-3xl p-5 sm:p-6 w-full max-w-none max-h-[90vh] overflow-y-auto space-y-5 relative text-left shadow-2xl z-10"
-            >
-              {/* Drag Handle */}
-              <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto -mt-1 mb-1" />
-
-              <button 
-                id="btn-close-scanner-modal"
-                onClick={() => { setShowScannerModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text w-12 h-12 flex items-center justify-center rounded-full bg-afri-bg-sec border border-afri-border cursor-pointer transition-colors active:scale-95"
-              >
-                <X className="w-6 h-6" />
-              </button>
-
-              <div className="text-center space-y-1.5 pt-4">
-                <div className="w-12 h-12 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 mx-auto">
-                  <QrCode className="w-6 h-6" />
-                </div>
-                <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-sans">
-                  SCANNER & TRANSFERT P2P
-                </h3>
-                <p className="text-[11px] text-afri-text-sec font-mono">
-                  Scannez un QR Code ou saisissez le Gombo ID du destinataire
-                </p>
               </div>
 
-              {scanSuccess ? (
-                <div className="space-y-4 text-center py-2">
-                  <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto">
-                    <CheckCircle2 className="w-8 h-8" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-black text-afri-text uppercase">Transfert Instantané Réussi</h4>
-                    <p className="text-emerald-400 font-mono text-lg font-black">
-                      {Number(scanAmount).toLocaleString('fr-FR')} FCFA
-                    </p>
-                    <p className="text-afri-text-sec text-xs font-mono">Destinataire : {scanRecipient}</p>
-                  </div>
-                  <button
-                    id="btn-scanner-success-close"
-                    onClick={() => { setShowScannerModal(false); playSound("click"); }}
-                    className="w-full py-3.5 min-h-[48px] bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-xs tracking-widest rounded-xl transition-colors cursor-pointer flex items-center justify-center"
-                  >
-                    Terminer
-                  </button>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest font-bold">
+                    Montant du rechargement (FCFA)
+                  </label>
+                  <span className="text-[9px] font-mono text-[#D4AF37] font-bold">Min: 1 000 FCFA</span>
                 </div>
-              ) : (
-                <form onSubmit={handleTransferSubmit} className="space-y-4">
-                  {/* Visual QR Code Scanner Simulation */}
-                  <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 text-center space-y-2 relative overflow-hidden group">
-                    <div className="w-28 h-28 border-2 border-dashed border-purple-500/50 rounded-xl mx-auto flex items-center justify-center text-purple-400 bg-purple-500/5 relative">
-                      <Scan className="w-10 h-10 animate-pulse" />
-                      <div className="absolute inset-0 bg-purple-500/10 animate-ping rounded-xl opacity-20"></div>
-                    </div>
-                    <span className="text-[10px] font-mono text-purple-400 block font-bold">
-                      Caméra active — Pointez vers un Pass QR
-                    </span>
-                  </div>
+                <div className="relative">
+                  <Coins className="absolute left-4 top-4 w-4 h-4 text-afri-text-muted" />
+                  <input 
+                    id="input-deposit-amount"
+                    type="number" 
+                    required
+                    min="1000"
+                    value={amount} 
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="Ex: 25000" 
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
+                  />
+                </div>
+              </div>
+            </div>
 
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
-                        Destinataire (Gombo ID / Téléphone / Email)
-                      </label>
-                      <input 
-                        id="input-transfer-recipient"
-                        type="text" 
-                        required
-                        value={scanRecipient} 
-                        onChange={(e) => setScanRecipient(e.target.value)}
-                        placeholder="Ex: GOMBO-7782 ou 0707070707" 
-                        className="w-full bg-afri-bg border border-afri-border rounded-xl px-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-purple-500"
-                      />
-                    </div>
+            <button
+              id="btn-deposit-submit"
+              type="submit"
+              disabled={processing || !amount || !phoneNumber}
+              className="w-full py-4 min-h-[52px] bg-[#D4AF37] hover:bg-[#b8982e] text-black font-black uppercase font-mono text-xs tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98 flex items-center justify-center"
+            >
+              {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Générer l'ordre de rechargement"}
+            </button>
+          </form>
+        )}
 
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest font-bold">
-                          Montant à transférer (FCFA)
-                        </label>
-                        <span className="text-[9px] font-mono text-purple-400 font-bold">
-                          Solde : {wallet.soldeDisponible.toLocaleString('fr-FR')} FCFA
-                        </span>
-                      </div>
-                      <input 
-                        id="input-transfer-amount"
-                        type="number" 
-                        required
-                        min="100"
-                        max={wallet.soldeDisponible}
-                        value={scanAmount} 
-                        onChange={(e) => setScanAmount(e.target.value)}
-                        placeholder="Ex: 5000" 
-                        className="w-full bg-afri-bg border border-afri-border rounded-xl px-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-purple-500"
-                      />
-                    </div>
-                  </div>
+        {step === "success" && (
+          <div className="space-y-5 text-center py-2">
+            <div className="w-14 h-14 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mx-auto shadow-lg">
+              <ShieldCheck className="w-8 h-8" />
+            </div>
+            
+            <div className="space-y-1.5">
+              <span className="inline-block text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
+                RECHARGEMENT ENREGISTRÉ
+              </span>
+              <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-sans">
+                ORDRE TRANSMIS AU GUICHET
+              </h3>
+              <p className="text-[#D4AF37] font-mono text-xl font-black">
+                +{Number(amount).toLocaleString('fr-FR')} FCFA
+              </p>
+              <p className="text-afri-text-sec text-xs max-w-sm mx-auto font-mono">
+                Numéro : {phoneNumber} ({operator.toUpperCase()})
+              </p>
+            </div>
 
-                  <button
-                    id="btn-transfer-submit"
-                    type="submit"
-                    disabled={processing || !scanRecipient || !scanAmount || Number(scanAmount) > wallet.soldeDisponible}
-                    className="w-full py-4 min-h-[52px] bg-purple-600 hover:bg-purple-700 text-afri-text font-black uppercase font-mono text-xs tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98 flex items-center justify-center gap-2"
-                  >
-                    {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <>
-                      <Send className="w-4 h-4" />
-                      <span>Confirmer le transfert instantané</span>
-                    </>}
-                  </button>
-                </form>
-              )}
-            </motion.div>
+            <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 space-y-2 text-left text-xs font-mono">
+              <div className="flex justify-between items-center">
+                <span className="text-afri-text-sec">Numéro de Référence :</span>
+                <strong className="text-[#D4AF37]">{createdDepositRef}</strong>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-afri-text-sec">Montant du Dépôt :</span>
+                <strong className="text-emerald-400">+{Number(amount).toLocaleString('fr-FR')} FCFA</strong>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-afri-text-sec">Statut du Dépôt :</span>
+                <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[10px]">
+                  🟡 En attente de validation
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDepositModal(false);
+                  const prefilledText = `Bonjour.\nJe souhaite effectuer un dépôt de :\n${Number(amount).toLocaleString('fr-FR')} FCFA.\nMerci de m'indiquer la procédure.\nTransaction :\n#${createdTxId || "id_attente"}`;
+                  supportConfig.openSupport(prefilledText);
+                }}
+                className="w-full py-3.5 bg-[#D4AF37] hover:bg-[#b8982e] text-black font-black text-xs uppercase font-mono tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-md"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Contacter le Service Client (Arbre à Palabres)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  supportConfig.openSupport(`Bonjour 👋\n\nMa demande de rechargement Wallet de ${Number(amount).toLocaleString('fr-FR')} FCFA via ${operator.toUpperCase()} (${phoneNumber}) est enregistrée (Réf: ${createdDepositRef}). Je souhaite transmettre ma preuve.`);
+                }}
+                className="w-full py-2.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] font-bold text-xs uppercase font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+              >
+                <span>Valider via WhatsApp</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setShowDepositModal(false); playSound("click"); }}
+                className="w-full py-2 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text-sec text-[10px] font-mono uppercase rounded-xl transition-colors cursor-pointer"
+              >
+                Fermer la fenêtre
+              </button>
+            </div>
           </div>
         )}
-      </AnimatePresence>
+      </AndroidBottomSheet>
+
+      {/* MODAL 2: RETIRER / RETRAIT MOBILE MONEY (MOBILE BOTTOM SHEET) */}
+      <AndroidBottomSheet
+        isOpen={showWithdrawModal}
+        onClose={() => { setShowWithdrawModal(false); playSound("click"); }}
+        title="RETIRER VOS FONDS"
+        subtitle="Transfert direct de votre solde vers Mobile Money"
+      >
+        {withdrawSubmitted ? (
+          <div className="space-y-5 text-center py-2">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto shadow-lg">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="inline-block text-[10px] font-mono font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
+                VOTRE DEMANDE DE RETRAIT A ÉTÉ ENVOYÉE
+              </span>
+              <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-sans">
+                RETRAIT EN COURS DE TRAITEMENT
+              </h3>
+              <p className="text-emerald-400 font-mono text-xl font-black">
+                -{Number(amount).toLocaleString('fr-FR')} FCFA
+              </p>
+              <p className="text-afri-text-sec text-xs max-w-sm mx-auto font-mono">
+                Destination : {phoneNumber} ({operator.toUpperCase()})
+              </p>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <button
+                id="btn-withdraw-success-close"
+                type="button"
+                onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
+                className="w-full py-3.5 min-h-[48px] bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-xs tracking-widest rounded-xl transition-colors cursor-pointer flex items-center justify-center"
+              >
+                Fermer le guichet
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={(e) => { e.preventDefault(); handleWithdrawRequest(e); }} className="space-y-5">
+            <div className="text-center space-y-1.5 pt-2">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mx-auto">
+                <ArrowDownLeft className="w-6 h-6 stroke-[2.5]" />
+              </div>
+            </div>
+
+            {/* Operator Choice */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
+                Opérateur de destination
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { id: "wave", name: "Wave", color: "border-blue-500 text-blue-400" },
+                  { id: "orange", name: "Orange", color: "border-orange-500 text-orange-400" },
+                  { id: "mtn", name: "MTN", color: "border-yellow-500 text-yellow-500" },
+                  { id: "moov", name: "Moov", color: "border-emerald-500 text-emerald-400" }
+                ].map(op => (
+                  <button
+                    key={op.id}
+                    id={`btn-withdraw-op-${op.id}`}
+                    type="button"
+                    onClick={() => { setOperator(op.id as any); playSound("click"); }}
+                    className={`py-3 min-h-[48px] text-xs font-black uppercase rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center ${
+                      operator === op.id 
+                        ? `${op.color} bg-afri-bg font-black scale-102` 
+                        : "border-afri-border text-afri-text-muted hover:border-afri-text-sec"
+                    }`}
+                  >
+                    {op.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Fields */}
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest font-bold">
+                    Montant à retirer (FCFA)
+                  </label>
+                  <span className="text-[9px] font-mono text-amber-400 font-bold">
+                    Max : {wallet.soldeDisponible.toLocaleString('fr-FR')} FCFA
+                  </span>
+                </div>
+                <div className="relative">
+                  <Coins className="absolute left-4 top-4 w-4 h-4 text-afri-text-muted" />
+                  <input 
+                    id="input-withdraw-amount"
+                    type="number" 
+                    required
+                    min="500"
+                    max={wallet.soldeDisponible}
+                    value={amount} 
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="Ex: 25000" 
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
+                  Numéro Mobile Money du bénéficiaire (+225)
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-4 w-4 h-4 text-afri-text-muted" />
+                  <input 
+                    id="input-withdraw-phone"
+                    type="tel" 
+                    required
+                    value={phoneNumber} 
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
+                    placeholder="0707070707" 
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              id="btn-withdraw-submit"
+              type="submit"
+              disabled={processing || !amount || Number(amount) > wallet.soldeDisponible || !phoneNumber}
+              className="w-full py-4 min-h-[52px] bg-amber-500 hover:bg-amber-600 text-black font-black uppercase font-mono text-xs tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98 flex items-center justify-center"
+            >
+              {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Soumettre la demande de retrait"}
+            </button>
+          </form>
+        )}
+      </AndroidBottomSheet>
+
+      {/* MODAL 3: SCANNER / P2P TRANSFER (ANDROID BOTTOM SHEET) */}
+      <AndroidBottomSheet
+        isOpen={showScannerModal}
+        onClose={() => { setShowScannerModal(false); playSound("click"); }}
+        title="SCANNER & TRANSFERT P2P"
+        subtitle="Scannez un QR Code ou saisissez le Gombo ID du destinataire"
+      >
+        {scanSuccess ? (
+          <div className="space-y-4 text-center py-2">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-black text-afri-text uppercase">Transfert Instantané Réussi</h4>
+              <p className="text-emerald-400 font-mono text-lg font-black">
+                {Number(scanAmount).toLocaleString('fr-FR')} FCFA
+              </p>
+              <p className="text-afri-text-sec text-xs font-mono">Destinataire : {scanRecipient}</p>
+            </div>
+            <button
+              id="btn-scanner-success-close"
+              onClick={() => { setShowScannerModal(false); playSound("click"); }}
+              className="w-full py-3.5 min-h-[48px] bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-xs tracking-widest rounded-xl transition-colors cursor-pointer flex items-center justify-center"
+            >
+              Terminer
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleTransferSubmit} className="space-y-4">
+            {/* Visual QR Code Scanner Simulation */}
+            <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 text-center space-y-2 relative overflow-hidden group">
+              <div className="w-28 h-28 border-2 border-dashed border-purple-500/50 rounded-xl mx-auto flex items-center justify-center text-purple-400 bg-purple-500/5 relative">
+                <Scan className="w-10 h-10 animate-pulse" />
+                <div className="absolute inset-0 bg-purple-500/10 animate-ping rounded-xl opacity-20"></div>
+              </div>
+              <span className="text-[10px] font-mono text-purple-400 block font-bold">
+                Caméra active — Pointez vers un Pass QR
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block font-bold">
+                  Destinataire (Gombo ID / Téléphone / Email)
+                </label>
+                <input 
+                  id="input-transfer-recipient"
+                  type="text" 
+                  required
+                  value={scanRecipient} 
+                  onChange={(e) => setScanRecipient(e.target.value)}
+                  placeholder="Ex: GOMBO-7782 ou 0707070707" 
+                  className="w-full bg-afri-bg border border-afri-border rounded-xl px-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest font-bold">
+                    Montant à transférer (FCFA)
+                  </label>
+                  <span className="text-[9px] font-mono text-purple-400 font-bold">
+                    Solde : {wallet.soldeDisponible.toLocaleString('fr-FR')} FCFA
+                  </span>
+                </div>
+                <input 
+                  id="input-transfer-amount"
+                  type="number" 
+                  required
+                  min="100"
+                  max={wallet.soldeDisponible}
+                  value={scanAmount} 
+                  onChange={(e) => setScanAmount(e.target.value)}
+                  placeholder="Ex: 5000" 
+                  className="w-full bg-afri-bg border border-afri-border rounded-xl px-4 py-3.5 text-afri-text font-mono text-sm focus:outline-none focus:border-purple-500"
+                />
+              </div>
+            </div>
+
+            <button
+              id="btn-transfer-submit"
+              type="submit"
+              disabled={processing || !scanRecipient || !scanAmount || Number(scanAmount) > wallet.soldeDisponible}
+              className="w-full py-4 min-h-[52px] bg-purple-600 hover:bg-purple-700 text-afri-text font-black uppercase font-mono text-xs tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98 flex items-center justify-center gap-2"
+            >
+              {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <>
+                <Send className="w-4 h-4" />
+                <span>Confirmer le transfert instantané</span>
+              </>}
+            </button>
+          </form>
+        )}
+      </AndroidBottomSheet>
     </div>
   </AndroidPageLayout>
   );
