@@ -569,14 +569,14 @@ export default function AfrigomboWalletDashboard({
 
   return (
     <AndroidPageLayout title="Mon Wallet Souverain" onBack={onBack} scrollable={true} className="pb-safe">
-      <div className="space-y-5 text-left animate-fadeIn">
+      <div className="w-full space-y-4 text-left animate-fadeIn">
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           1. 💰 SOLDE DISPONIBLE (EN TRÈS GRAND)
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <AndroidCard className="relative overflow-hidden shadow-2xl group border-[#D4AF37]/30">
+      <AndroidCard className="w-full relative overflow-hidden shadow-2xl group border-[#D4AF37]/30 p-4 rounded-[18px]">
         <div className="absolute top-0 right-0 w-72 h-72 bg-[#D4AF37]/5 rounded-full blur-[90px] -mr-24 -mt-24 pointer-events-none"></div>
         
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-[0.2em] font-black flex items-center gap-1.5">
@@ -595,7 +595,7 @@ export default function AfrigomboWalletDashboard({
               </span>
             </div>
 
-            <div className="pt-1 flex items-center gap-2.5 flex-wrap">
+            <div className="pt-1 flex items-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-afri-bg/60 border border-afri-border text-[10px] font-mono text-amber-400 font-bold">
                 <Lock className="w-3 h-3 text-[#D4AF37]" />
                 Séquestre : {wallet.soldeBloque.toLocaleString('fr-FR')} FCFA
@@ -608,7 +608,7 @@ export default function AfrigomboWalletDashboard({
           </div>
 
           {/* Quick Level Badge */}
-          <div className="sm:text-right flex flex-col sm:items-end justify-center border-t sm:border-t-0 sm:border-l border-afri-border/60 pt-4 sm:pt-0 sm:pl-6 space-y-1 shrink-0">
+          <div className="sm:text-right flex flex-col sm:items-end justify-center border-t sm:border-t-0 sm:border-l border-afri-border/60 pt-3 sm:pt-0 sm:pl-5 space-y-1 shrink-0">
             <span className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest font-black">NIVEAU COMPTE</span>
             <span className="px-3 py-1 bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/35 rounded-xl text-xs font-black uppercase font-mono tracking-wider inline-block">
               👑 {wallet.niveauWallet || "SOUVERAIN"}
@@ -620,7 +620,7 @@ export default function AfrigomboWalletDashboard({
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           2. ACTIONS RAPIDES (RECHARGER / RETIRER / HISTORIQUE / SCANNER)
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="space-y-2">
+      <div className="w-full space-y-1.5">
         <span className="text-[10px] font-mono text-afri-text-muted uppercase tracking-widest font-black px-1 block">
           ⚡ Actions Rapides
         </span>
@@ -630,7 +630,7 @@ export default function AfrigomboWalletDashboard({
           <button
             id="btn-wallet-recharger"
             onClick={openDeposit}
-            className="p-4 min-h-[110px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-2xl flex flex-col items-center justify-center text-center gap-2 hover:bg-[#D4AF37]/10 transition-all group cursor-pointer shadow-md active:scale-98"
+            className="w-full p-4 min-h-[100px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-[18px] flex flex-col items-center justify-center text-center gap-2 hover:bg-[#D4AF37]/10 transition-all group cursor-pointer shadow-md active:scale-98"
           >
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
               <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
@@ -646,7 +646,7 @@ export default function AfrigomboWalletDashboard({
             id="btn-wallet-retirer"
             onClick={openWithdraw}
             disabled={wallet.soldeDisponible <= 0}
-            className="p-4 min-h-[110px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-2xl flex flex-col items-center justify-center text-center gap-2 hover:bg-amber-500/10 transition-all group cursor-pointer shadow-md disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
+            className="w-full p-4 min-h-[100px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-[18px] flex flex-col items-center justify-center text-center gap-2 hover:bg-amber-500/10 transition-all group cursor-pointer shadow-md disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
           >
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
               <ArrowDownLeft className="w-5 h-5 stroke-[2.5]" />
@@ -661,7 +661,7 @@ export default function AfrigomboWalletDashboard({
           <button
             id="btn-wallet-historique"
             onClick={scrollToHistory}
-            className="p-4 min-h-[110px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-2xl flex flex-col items-center justify-center text-center gap-2 hover:bg-sky-500/10 transition-all group cursor-pointer shadow-md active:scale-98"
+            className="w-full p-4 min-h-[100px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-[18px] flex flex-col items-center justify-center text-center gap-2 hover:bg-sky-500/10 transition-all group cursor-pointer shadow-md active:scale-98"
           >
             <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 group-hover:scale-110 transition-transform">
               <History className="w-5 h-5 stroke-[2.5]" />
@@ -676,7 +676,7 @@ export default function AfrigomboWalletDashboard({
           <button
             id="btn-wallet-scanner"
             onClick={openScanner}
-            className="p-4 min-h-[110px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-2xl flex flex-col items-center justify-center text-center gap-2 hover:bg-purple-500/10 transition-all group cursor-pointer shadow-md active:scale-98"
+            className="w-full p-4 min-h-[100px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-[18px] flex flex-col items-center justify-center text-center gap-2 hover:bg-purple-500/10 transition-all group cursor-pointer shadow-md active:scale-98"
           >
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
               <QrCode className="w-5 h-5 stroke-[2.5]" />
@@ -693,14 +693,14 @@ export default function AfrigomboWalletDashboard({
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           3. RÉSUMÉ (ARGENT REÇU / DÉPENSÉ / COMMISSIONS / SOLDE)
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="space-y-2">
+      <div className="w-full space-y-1.5">
         <span className="text-[10px] font-mono text-afri-text-muted uppercase tracking-widest font-black px-1 block">
           📊 Résumé Financier
         </span>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           
           {/* • Argent reçu */}
-          <div className="bg-afri-bg border border-afri-border rounded-2xl p-3.5 space-y-1 flex flex-col justify-center min-h-[72px]">
+          <div className="w-full bg-afri-bg border border-afri-border rounded-[18px] p-4 space-y-1 flex flex-col justify-center min-h-[72px]">
             <span className="text-[9px] font-mono text-afri-text-sec block uppercase tracking-wider">
               📥 Argent reçu
             </span>
@@ -710,7 +710,7 @@ export default function AfrigomboWalletDashboard({
           </div>
 
           {/* • Argent dépensé */}
-          <div className="bg-afri-bg border border-afri-border rounded-2xl p-3.5 space-y-1 flex flex-col justify-center min-h-[72px]">
+          <div className="w-full bg-afri-bg border border-afri-border rounded-[18px] p-4 space-y-1 flex flex-col justify-center min-h-[72px]">
             <span className="text-[9px] font-mono text-afri-text-sec block uppercase tracking-wider">
               📤 Argent dépensé
             </span>
@@ -720,7 +720,7 @@ export default function AfrigomboWalletDashboard({
           </div>
 
           {/* • Commissions */}
-          <div className="bg-afri-bg border border-afri-border rounded-2xl p-3.5 space-y-1 flex flex-col justify-center min-h-[72px]">
+          <div className="w-full bg-afri-bg border border-afri-border rounded-[18px] p-4 space-y-1 flex flex-col justify-center min-h-[72px]">
             <span className="text-[9px] font-mono text-afri-text-sec block uppercase tracking-wider">
               🛡️ Commissions
             </span>
@@ -730,7 +730,7 @@ export default function AfrigomboWalletDashboard({
           </div>
 
           {/* • Solde disponible */}
-          <div className="bg-afri-bg border border-[#D4AF37]/30 rounded-2xl p-3.5 space-y-1 bg-[#D4AF37]/5 flex flex-col justify-center min-h-[72px]">
+          <div className="w-full bg-afri-bg border border-[#D4AF37]/30 rounded-[18px] p-4 space-y-1 bg-[#D4AF37]/5 flex flex-col justify-center min-h-[72px]">
             <span className="text-[9px] font-mono text-[#D4AF37] block uppercase tracking-wider font-bold">
               💰 Solde disponible
             </span>
@@ -745,10 +745,10 @@ export default function AfrigomboWalletDashboard({
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           4. HISTORIQUE (LISTE CHRONOLOGIQUE)
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div ref={historyRef} className="bg-afri-bg-sec border border-afri-border rounded-3xl p-3 sm:p-5 space-y-4">
+      <div ref={historyRef} className="w-full bg-afri-bg-sec border border-afri-border rounded-[18px] p-4 space-y-4">
         
         {/* Header & Filter tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-afri-border/80 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-afri-border/80 pb-3">
           <div className="flex items-center gap-2">
             <History className="w-5 h-5 text-[#D4AF37]" />
             <h3 className="text-sm font-black font-sans text-afri-text uppercase tracking-wide">
@@ -768,7 +768,7 @@ export default function AfrigomboWalletDashboard({
                 key={tab.id}
                 id={`btn-history-tab-${tab.id}`}
                 onClick={() => { setActiveTab(tab.id as any); playSound("click"); }}
-                className="py-2 px-3.5 min-h-[40px] rounded-full text-[10px] font-mono font-black uppercase transition-all cursor-pointer bg-afri-bg text-afri-text-sec hover:text-afri-text border border-afri-border flex items-center justify-center whitespace-nowrap"
+                className="py-1.5 px-3 min-h-[36px] rounded-full text-[10px] font-mono font-black uppercase transition-all cursor-pointer bg-afri-bg text-afri-text-sec hover:text-afri-text border border-afri-border flex items-center justify-center whitespace-nowrap"
                 style={activeTab === tab.id ? { backgroundColor: '#D4AF37', color: "var(--afri-text)", fontWeight: '900' } : undefined}
               >
                 {tab.label}
@@ -777,25 +777,35 @@ export default function AfrigomboWalletDashboard({
           </div>
         </div>
 
-        {/* List of chronological transactions (Wave Style: 1 line + click for BottomSheet) */}
+        {/* List of chronological transactions (Single line compact Android layout) */}
         {filteredTxs.length === 0 ? (
-          <div className="text-center py-12 text-afri-text-muted font-mono text-xs">
+          <div className="text-center py-8 text-afri-text-muted font-mono text-xs">
             📭 Aucune transaction enregistrée dans cet historique.
           </div>
         ) : (
           <div className="space-y-1">
-            {(showAllHistory ? filteredTxs : filteredTxs.slice(0, 10)).map((tx) => {
-              const isFlowIn = tx.type === "deposit" || tx.type === "depot" || tx.type === "recharge_wallet" || tx.type === "release" || tx.type === "deblocage_cachet" || tx.type === "refund" || tx.type === "remboursement" || tx.type === "prime_bonus";
+            {(showAllHistory ? filteredTxs : filteredTxs.slice(0, 6)).map((tx) => {
+              const txTypeClean = (tx.type || "").toLowerCase();
+              const isFlowIn = 
+                txTypeClean === "deposit" || 
+                txTypeClean === "depot" || 
+                txTypeClean === "recharge_wallet" || 
+                txTypeClean === "release" || 
+                txTypeClean === "deblocage_cachet" || 
+                txTypeClean === "refund" || 
+                txTypeClean === "remboursement" || 
+                txTypeClean === "prime_bonus";
+
               const typeLabel = 
-                tx.type === "depot" || tx.type === "deposit" || tx.type === "recharge_wallet" ? "Dépôt Mobile Money" :
-                tx.type === "withdrawal" || tx.type === "retrait" ? "Retrait Mobile Money" :
-                tx.type === "debit_publication" ? "Paiement Annonce" :
-                tx.type === "commission_plateforme" || tx.type === "commission" ? "Commission Plateforme" :
-                tx.type === "fonds_bloques" ? "Séquestre Gombo" :
-                tx.type === "deblocage_cachet" || tx.type === "release" ? "Déblocage Cachet" :
-                tx.type === "remboursement" || tx.type === "refund" ? "Remboursement" :
-                tx.type === "prime_bonus" ? "Prime" :
-                tx.type === "abonnement_premium" ? "Abonnement Premium" :
+                txTypeClean === "depot" || txTypeClean === "deposit" || txTypeClean === "recharge_wallet" ? "Dépôt Mobile Money" :
+                txTypeClean === "withdrawal" || txTypeClean === "retrait" || txTypeClean === "withdraw" ? "Retrait Mobile Money" :
+                txTypeClean === "debit_publication" ? "Paiement Annonce" :
+                txTypeClean === "commission_plateforme" || txTypeClean === "commission" ? "Commission Plateforme" :
+                txTypeClean === "fonds_bloques" || txTypeClean === "deposit_escrow" ? "Séquestre Gombo" :
+                txTypeClean === "deblocage_cachet" || txTypeClean === "release" ? "Déblocage Cachet" :
+                txTypeClean === "remboursement" || txTypeClean === "refund" ? "Remboursement" :
+                txTypeClean === "prime_bonus" ? "Prime" :
+                txTypeClean === "abonnement_premium" ? "Abonnement Premium" :
                 tx.description || "Opération financière";
 
               const formattedDate = tx.date || (tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }) : "Aujourd'hui");
@@ -809,13 +819,13 @@ export default function AfrigomboWalletDashboard({
                 <div 
                   key={tx.id || tx.reference} 
                   onClick={() => { setSelectedTxDetails(tx); playSound("click"); }}
-                  className="py-3 px-2 flex items-center justify-between gap-3 text-left hover:bg-afri-bg/50 active:bg-afri-bg/80 rounded-xl transition-all cursor-pointer border-b border-afri-border/40 last:border-0"
+                  className="py-2.5 px-2 flex items-center justify-between gap-3 text-left hover:bg-afri-bg/50 active:bg-afri-bg/80 rounded-xl transition-all cursor-pointer border-b border-afri-border/40 last:border-0"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center border shrink-0 ${
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border shrink-0 ${
                       isFlowIn ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400" :
-                      tx.type === "withdrawal" || tx.type === "retrait" ? "bg-amber-500/15 border-amber-500/30 text-amber-400" :
-                      "bg-afri-bg-sec border-afri-border text-afri-text-sec"
+                      txTypeClean === "withdrawal" || txTypeClean === "retrait" || txTypeClean === "withdraw" ? "bg-amber-500/15 border-amber-500/30 text-amber-400" :
+                      "bg-rose-500/15 border-rose-500/30 text-rose-400"
                     }`}>
                       {isFlowIn ? <ArrowUpRight className="w-4 h-4 stroke-[2.5]" /> : <ArrowDownLeft className="w-4 h-4 stroke-[2.5]" />}
                     </div>
@@ -846,12 +856,13 @@ export default function AfrigomboWalletDashboard({
               );
             })}
 
-            {filteredTxs.length > 10 && !showAllHistory && (
+            {filteredTxs.length > 6 && (
               <button
-                onClick={() => setShowAllHistory(true)}
-                className="w-full py-3 mt-2 text-center text-xs font-black uppercase font-mono text-[#D4AF37] bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 rounded-xl transition-all cursor-pointer"
+                id="btn-wallet-history-toggle"
+                onClick={() => setShowAllHistory(!showAllHistory)}
+                className="w-full py-2.5 mt-2 text-center text-xs font-black uppercase font-mono text-[#D4AF37] bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 rounded-xl transition-all cursor-pointer"
               >
-                Voir tout ({filteredTxs.length} transactions)
+                {showAllHistory ? "Voir moins" : `Voir tout (${filteredTxs.length} transactions)`}
               </button>
             )}
           </div>
