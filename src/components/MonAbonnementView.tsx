@@ -101,22 +101,12 @@ export const MonAbonnementView: React.FC<Props> = ({
   return (
     <div className="afri-container space-y-5 animate-fadeIn text-left py-2 xs:py-4 max-w-2xl mx-auto">
       
-      {/* HEADER WITH BACK BUTTON */}
-      <div className="flex items-center justify-between border-b border-afri-border/60 pb-3">
-        {onBack && (
-          <button 
-            onClick={onBack}
-            className="px-3 py-1.5 rounded-xl bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Retour</span>
-          </button>
-        )}
-        <h2 className="text-lg xs:text-xl font-black text-afri-text uppercase tracking-tight flex items-center gap-2">
+      {/* HEADER WITHOUT BACK BUTTON */}
+      <div className="flex items-center justify-center border-b border-afri-border/60 pb-3">
+        <h2 className="text-lg xs:text-xl font-black text-afri-text uppercase tracking-tight flex items-center gap-2 text-center">
           <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
           <span>Gestion de l'Abonnement</span>
         </h2>
-        <div className="w-12" /> {/* Spacer */}
       </div>
 
       {/* 1. FORMULE ACTUELLE ET STATUT */}
