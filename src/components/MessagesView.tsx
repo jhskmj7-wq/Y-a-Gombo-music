@@ -607,7 +607,12 @@ export default function MessagesView({
     setRemoteStream(null);
   };
 
-  const handleOpenSupport = () => {
+  const handleOpenSupport = async () => {
+    try {
+      await SupportService.getOrCreateSupportConversation(currentUser.uid, currentProfile);
+    } catch (e) {
+      console.warn("Could not ensure support conversation:", e);
+    }
     setActiveConvo({
       id: currentUser.uid,
       type: "support",
@@ -678,7 +683,7 @@ export default function MessagesView({
   }
 
   return (
-    <AndroidPageLayout scrollable={false}>
+    
       <div className="w-full h-full flex flex-col bg-afri-bg text-afri-text select-none overflow-hidden relative">
         
         {/* 2. MAIN CONTAINER TAB PANELS */}
@@ -1118,6 +1123,7 @@ export default function MessagesView({
                 currentUser={currentUser}
                 supportConvo={supportConvo}
                 setActiveConvo={setActiveConvo}
+                onOpenSupport={handleOpenSupport}
               />
             </div>
           )}
@@ -1223,6 +1229,6 @@ export default function MessagesView({
         )}
 
       </div>
-    </AndroidPageLayout>
+    
   );
 }

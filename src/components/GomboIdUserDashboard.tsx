@@ -21,6 +21,23 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../lib/firebase";
 import { User } from "../types";
 import { motion, AnimatePresence } from "motion/react";
+import { ErrorBoundary } from "./ErrorBoundary";
+
+function AndroidErrorState() {
+  return (
+    <div className="p-6 bg-afri-bg border border-amber-500/30 rounded-2xl text-amber-400 font-mono text-xs shadow-2xl max-w-lg mx-auto my-8 text-center space-y-4">
+      <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/40 flex items-center justify-center mx-auto text-xl">
+        ⚠️
+      </div>
+      <h2 className="font-black text-sm uppercase tracking-wider text-amber-400">
+        Erreur GOMBO ID
+      </h2>
+      <p className="text-[11px] text-afri-text-sec font-sans">
+        Une anomalie s'est produite lors de l'affichage du tableau de bord Gombo ID.
+      </p>
+    </div>
+  );
+}
 
 interface GomboIdUserDashboardProps {
   currentUser: User;
@@ -30,7 +47,7 @@ interface GomboIdUserDashboardProps {
   onBack?: () => void;
 }
 
-export default function GomboIdUserDashboard({
+function GomboIdUserDashboardInner({
   currentUser,
   onUpdateUser,
   onCreateTransaction,
@@ -38,6 +55,11 @@ export default function GomboIdUserDashboard({
   onBack
 }: GomboIdUserDashboardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const avatarLetter =
+    currentUser?.artisticName?.trim()?.charAt(0)
+    || currentUser?.firstName?.trim()?.charAt(0)
+    || currentUser?.lastName?.trim()?.charAt(0)
+    || "A";
   const [step, setStep] = useState<"intro" | "conditions" | "upload" | "checkout" | "submitted">("intro");
   
   // kyc state
@@ -85,9 +107,9 @@ export default function GomboIdUserDashboard({
 
   // Status mapping helper
   const getStatusDisplay = () => {
-    const status = currentUser.kycStatus;
-    const type = currentUser.kycType;
-    const level = currentUser.gomboId?.niveau || 1;
+    const status = currentUser?.kycStatus ?? "none";
+    const type = currentUser?.kycType ?? "standard";
+    const level = currentUser?.gomboId?.niveau || 1;
 
     if (status === "approved") {
       return {
@@ -107,7 +129,7 @@ export default function GomboIdUserDashboard({
       return {
         label: "🟡 Informations complémentaires requises",
         color: "text-amber-400 bg-amber-500/10 border-amber-500/30",
-        desc: currentUser.kycComplementaryInfo || "L'administration requiert d'autres détails concernant votre activité."
+        desc: currentUser?.kycComplementaryInfo || "L'administration requiert d'autres détails concernant votre activité."
       };
     }
     if (status === "pending") {
@@ -188,7 +210,7 @@ export default function GomboIdUserDashboard({
         if (file) {
           try {
             setUploadProgress(`Téléversement de : ${file.name}...`);
-            const storagePath = `kyc/${currentUser.id}/${key}_${Date.now()}_${file.name}`;
+            const storagePath = `kyc/${currentUser?.id ?? "unknown"}/${key}_${Date.now()}_${file.name}`;
             const fileRef = ref(storage, storagePath);
             const snapshot = await uploadBytes(fileRef, file);
             const downloadUrl = await getDownloadURL(snapshot.ref);
@@ -220,11 +242,11 @@ export default function GomboIdUserDashboard({
         await onCreateTransaction(
           500,
           "cert_express",
-          `⚡ Certification Express GOMBO ID (24-72h) - ${currentUser.artisticName}`
+          `⚡ Certification Express GOMBO ID (24-72h) - ${currentUser?.artisticName ?? ""}`
         );
-        addToTerminal(`[COMPTA] Encaissement 500 FCFA Gombo ID Express pour ${currentUser.artisticName}`);
+        addToTerminal(`[COMPTA] Encaissement 500 FCFA Gombo ID Express pour ${currentUser?.artisticName ?? ""}`);
       } else {
-        addToTerminal(`[GOMBO ID] Demande de vérification Standard soumise par ${currentUser.artisticName}`);
+        addToTerminal(`[GOMBO ID] Demande de vérification Standard soumise par ${currentUser?.artisticName ?? ""}`);
       }
 
       setStep("submitted");
@@ -271,7 +293,7 @@ export default function GomboIdUserDashboard({
               RÉPUBLIQUE DU SHOWBIZ • GOMBO TRUST ID
             </span>
           </div>
-          {currentUser.kycStatus === "approved" ? (
+          {currentUser?.kycStatus === "approved" ? (
             <span className="text-[9px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
               AUTHENTIFIÉ ✓
             </span>
@@ -289,13 +311,13 @@ export default function GomboIdUserDashboard({
             {/* Avatar section of Gombo ID card */}
             <div className="relative shrink-0">
               <div className="w-16 h-16 xs:w-20 xs:h-20 rounded-full border-2 border-[#D4AF37] bg-afri-bg-sec flex items-center justify-center font-bold text-2xl xs:text-3xl text-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.25)] overflow-hidden">
-                {currentUser.avatarUrl ? (
+                {currentUser?.avatarUrl ? (
                   <img src={currentUser.avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
-                  currentUser.artisticName.charAt(0)
+                  avatarLetter
                 )}
               </div>
-              {currentUser.kycStatus === "approved" && (
+              {currentUser?.kycStatus === "approved" && (
                 <div className="absolute bottom-0 right-0 w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-afri-bg-sec border-2 border-[#121214] flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.6)]">
                   <Award className="w-3 xs:w-3.5 h-3 xs:h-3.5 text-black stroke-[3]" />
                 </div>
@@ -305,21 +327,21 @@ export default function GomboIdUserDashboard({
             <div className="space-y-0.5 xs:space-y-1">
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                 <h3 className="text-lg xs:text-xl font-display font-black text-afri-text tracking-tight uppercase truncate max-w-[150px] xs:max-w-[200px]">
-                  {currentUser.artisticName}
+                  {currentUser?.artisticName ?? ""}
                 </h3>
-                {currentUser.kycStatus === "approved" && (
+                {currentUser?.kycStatus === "approved" && (
                   <span className="inline-flex items-center gap-1 text-[8px] xs:text-[9px] bg-afri-bg-sec text-black px-1.5 xs:px-2 py-0.5 rounded font-black uppercase tracking-wider shadow w-fit">
                     ★ CERTIFIÉ
                   </span>
                 )}
               </div>
-              <p className="afri-text-tiny text-afri-text/60 font-medium">Nom : {currentUser.name}</p>
+              <p className="afri-text-tiny text-afri-text/60 font-medium">Nom : {currentUser?.name ?? ""}</p>
               
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1">
                 <span className="text-[9px] xs:text-[10px] uppercase font-mono bg-white/5 border border-afri-border text-afri-text/50 px-1.5 xs:px-2 py-0.5 rounded">
-                  {currentUser.gomboIdNumber || "ID_PENDING"}
+                  {currentUser?.gomboIdNumber || "ID_PENDING"}
                 </span>
-                <span className="text-[#D4AF37] font-mono text-[9px] xs:text-[10px]">📍 {currentUser.commune}</span>
+                <span className="text-[#D4AF37] font-mono text-[9px] xs:text-[10px]">📍 {currentUser?.commune ?? ""}</span>
               </div>
             </div>
           </div>
@@ -336,12 +358,12 @@ export default function GomboIdUserDashboard({
             <div className="text-left md:text-right border-t md:border-t-0 sm:border-l md:border-l-0 border-afri-border pt-2 sm:pt-0 md:pt-2 sm:pl-3 md:pl-0 flex flex-col items-start sm:items-end">
               <span className="afri-text-tiny text-afri-text-sec block">NIVEAU GOMBO ID :</span>
               <strong className="text-base xs:text-lg font-sans font-black text-[#D4AF37] block mt-0.5">
-                NIVEAU {currentUser.gomboId?.niveau || 1}
+                NIVEAU {currentUser?.gomboId?.niveau || 1}
               </strong>
               <div className="mt-2 flex flex-col items-start sm:items-end">
                 <span className="afri-text-tiny text-afri-text-sec block uppercase font-bold">SCORE CONFIANCE :</span>
                 <strong className="text-xs xs:text-sm font-sans font-black text-emerald-400 block mt-0.5">
-                  {currentUser.gomboId?.scoreConfiance ?? currentUser.trustScore ?? 96} / 100
+                  {currentUser?.gomboId?.scoreConfiance ?? currentUser?.trustScore ?? 96} / 100
                 </strong>
               </div>
             </div>
@@ -361,11 +383,11 @@ export default function GomboIdUserDashboard({
           >
             <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-[#0B0B0B] stroke-[2.5]" />
             <span className="text-[11px] xs:text-xs sm:text-base tracking-widest">
-              {currentUser.kycStatus === "none" ? "ACTIVER MON GOMBO ID 🛡️" : ""}
-              {currentUser.kycStatus === "pending" ? "DOSSIER TRANSMIS ⏳" : ""}
-              {currentUser.kycStatus === "approved" ? "GOMBO ID CERTIFIÉ ★" : ""}
-              {currentUser.kycStatus === "rejected" ? "REJETÉ • RETENTER 🚫" : ""}
-              {currentUser.kycStatus === "info_required" ? "ACTION REQUISE 🟡" : ""}
+              {(currentUser?.kycStatus ?? "none") === "none" ? "ACTIVER MON GOMBO ID 🛡️" : ""}
+              {currentUser?.kycStatus === "pending" ? "DOSSIER TRANSMIS ⏳" : ""}
+              {currentUser?.kycStatus === "approved" ? "GOMBO ID CERTIFIÉ ★" : ""}
+              {currentUser?.kycStatus === "rejected" ? "REJETÉ • RETENTER 🚫" : ""}
+              {currentUser?.kycStatus === "info_required" ? "ACTION REQUISE 🟡" : ""}
             </span>
           </motion.button>
           
@@ -416,14 +438,14 @@ export default function GomboIdUserDashboard({
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 
                 {/* Status Alert if not None */}
-                {currentUser.kycStatus !== "none" && (
+                {(currentUser?.kycStatus ?? "none") !== "none" && (
                   <div className={`p-4 rounded-xl border flex gap-3.5 ${statusInfo.color}`}>
                     <AlertCircle className="w-5 h-5 shrink-0" />
                     <div>
                       <h5 className="font-mono font-bold text-xs uppercase text-afri-text">Statut actuel : {statusInfo.label}</h5>
                       <p className="text-xs text-afri-text/80 mt-1">{statusInfo.desc}</p>
                       
-                      {currentUser.kycStatus === "rejected" && (
+                      {currentUser?.kycStatus === "rejected" && (
                         <button
                           onClick={handleResetKyc}
                           className="mt-3 bg-afri-bg-sec text-afri-text text-[10px] uppercase font-bold px-3 py-1.5 rounded-lg hover:bg-red-600 transition-all flex items-center gap-1.5"
@@ -436,7 +458,7 @@ export default function GomboIdUserDashboard({
                 )}
 
                 {/* STEP CONTROLLER */}
-                {currentUser.kycStatus === "none" && (
+                {(currentUser?.kycStatus ?? "none") === "none" && (
                   <>
                     {/* Welcome Screen */}
                     {step === "intro" && (
@@ -842,13 +864,13 @@ export default function GomboIdUserDashboard({
                           <div className="flex justify-between text-xs border-b border-afri-border pb-2">
                             <span className="text-afri-text/40">Mode choisi :</span>
                             <span className="font-bold uppercase font-mono text-afri-text">
-                              {currentUser.kycType === "express" ? "⚡ Express (Dossier Prioritaire)" : "⏳ Standard"}
+                              {currentUser?.kycType === "express" ? "⚡ Express (Dossier Prioritaire)" : "⏳ Standard"}
                             </span>
                           </div>
                           <div className="flex justify-between text-xs border-b border-afri-border pb-2">
                             <span className="text-afri-text/40">Délais d'évaluation :</span>
                             <span className="font-bold text-afri-text font-mono">
-                              {currentUser.kycType === "express" ? "24 à 72 heures" : "7 à 14 jours"}
+                              {currentUser?.kycType === "express" ? "24 à 72 heures" : "7 à 14 jours"}
                             </span>
                           </div>
                           <div className="flex justify-between text-xs">
@@ -871,7 +893,7 @@ export default function GomboIdUserDashboard({
                 )}
 
                 {/* If already submitted (not none) */}
-                {currentUser.kycStatus !== "none" && (
+                {(currentUser?.kycStatus ?? "none") !== "none" && (
                   <div className="space-y-6">
                     {/* Review of submitted credentials */}
                     <div className="space-y-3 p-5 rounded-2xl bg-afri-bg border border-afri-border">
@@ -883,7 +905,7 @@ export default function GomboIdUserDashboard({
                         <div className="p-3 bg-white/5 border border-afri-border rounded-xl space-y-2">
                           <span className="text-[9px] uppercase font-mono text-afri-text/40 block">PI Carte d'identité</span>
                           <div className="relative h-20 bg-afri-bg rounded overflow-hidden border border-afri-border">
-                            {currentUser.kycDocs?.identityCardUrl ? (
+                            {currentUser?.kycDocs?.identityCardUrl ? (
                               <img src={currentUser.kycDocs.identityCardUrl} alt="ID Document" className="w-full h-full object-cover" />
                             ) : (
                               <div className="flex items-center justify-center h-full text-[10px] text-afri-text/30">Lien non disponible</div>
@@ -894,7 +916,7 @@ export default function GomboIdUserDashboard({
                         <div className="p-3 bg-white/5 border border-afri-border rounded-xl space-y-2">
                           <span className="text-[9px] uppercase font-mono text-afri-text/40 block">Selfie facial</span>
                           <div className="relative h-20 bg-afri-bg rounded overflow-hidden border border-afri-border">
-                            {currentUser.kycDocs?.selfieUrl ? (
+                            {currentUser?.kycDocs?.selfieUrl ? (
                               <img src={currentUser.kycDocs.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
                             ) : (
                               <div className="flex items-center justify-center h-full text-[10px] text-afri-text/30">Lien non disponible</div>
@@ -905,10 +927,10 @@ export default function GomboIdUserDashboard({
                         <div className="p-3 bg-white/5 border border-afri-border rounded-xl space-y-2">
                           <span className="text-[9px] uppercase font-mono text-afri-text/40 block">Preuve d'activité</span>
                           <div className="relative h-20 bg-afri-bg rounded overflow-hidden border border-afri-border">
-                            {currentUser.kycDocs?.activityUrl ? (
+                            {currentUser?.kycDocs?.activityUrl ? (
                               <img src={currentUser.kycDocs.activityUrl} alt="Activity" className="w-full h-full object-cover" />
                             ) : (
-                              <div className="flex items-center justify-center h-full text-[10px] text-afri-text/30 font-mono truncate">{currentUser.kycDocUrl || "Enregistrée"}</div>
+                              <div className="flex items-center justify-center h-full text-[10px] text-afri-text/30 font-mono truncate">{currentUser?.kycDocUrl || "Enregistrée"}</div>
                             )}
                           </div>
                         </div>
@@ -938,4 +960,17 @@ export default function GomboIdUserDashboard({
       </AnimatePresence>
     </div>
   );
+}
+
+export default function GomboIdUserDashboard(props: GomboIdUserDashboardProps) {
+  try {
+    return (
+      <ErrorBoundary moduleName="GomboIdUserDashboard" fallback={<AndroidErrorState />}>
+        <GomboIdUserDashboardInner {...props} />
+      </ErrorBoundary>
+    );
+  } catch (e) {
+    console.error("GomboIdUserDashboard render exception", e);
+    return <AndroidErrorState />;
+  }
 }

@@ -11,12 +11,14 @@ interface AfrigomboTabProps {
   currentUser: any;
   supportConvo: any;
   setActiveConvo: (convo: any) => void;
+  onOpenSupport: () => void;
 }
 
 export default function AfrigomboTab({
   currentUser,
   supportConvo,
-  setActiveConvo
+  setActiveConvo,
+  onOpenSupport
 }: AfrigomboTabProps) {
   const [afrigomboCategory, setAfrigomboCategory] = useState<string>("all");
   
@@ -171,20 +173,7 @@ export default function AfrigomboTab({
 
           <button
             onClick={() => {
-              setActiveConvo({
-                id: currentUser.uid,
-                type: "support",
-                participants: [currentUser.uid, "afrigombo_support"],
-                userName: "Équipe AFRIGOMBO",
-                userPhoto: "/logo.png",
-                ...supportConvo
-              });
-              if (supportConvo?.unreadCount?.[currentUser?.uid] > 0) {
-                try {
-                  const convoRef = doc(db, "supportConversations", currentUser.uid);
-                  updateDoc(convoRef, { [`unreadCount.${currentUser.uid}`]: 0 });
-                } catch (err) {}
-              }
+              onOpenSupport();
             }}
             className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shadow-lg"
           >

@@ -180,9 +180,16 @@ export default function GomboProfile({
       
       if (typeof window !== 'undefined') {
         try {
+          const seen = new WeakSet();
           localStorage.setItem("gombo_active_profile", JSON.stringify({
             ...currentUserProfile,
             ...minimalProfile
+          }, (key, value) => {
+            if (typeof value === "object" && value !== null) {
+              if (seen.has(value)) return;
+              seen.add(value);
+            }
+            return value;
           }));
         } catch (e) {
           console.warn("Could not serialize gombo_active_profile due to cyclic object value:", e);

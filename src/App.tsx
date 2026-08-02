@@ -130,7 +130,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className="h-full h-[100dvh] w-full overflow-hidden font-sans antialiased transition-colors duration-300 bg-afri-bg text-afri-text flex flex-col">
+      <div className="h-full h-[100dvh] w-full overflow-x-hidden font-sans antialiased transition-colors duration-300 bg-afri-bg text-afri-text flex flex-col">
         <ScrollToTop />
         
         {/* Main application layer, rendered cleanly */}

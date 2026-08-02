@@ -12,7 +12,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({ children, classNam
   return (
     <div 
       id={id}
-      className={`w-full max-w-full min-h-[100dvh] h-[100dvh] flex flex-col overflow-hidden bg-afri-bg text-afri-text font-sans antialiased box-border select-none ${className}`}
+      className={`flex flex-col w-full h-full bg-afri-bg text-afri-text font-sans antialiased box-border select-none ${className}`}
       style={{
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
@@ -24,10 +24,9 @@ export const PageContainer: React.FC<PageContainerProps> = ({ children, classNam
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className={`flex-1 overflow-y-auto overflow-x-hidden overscroll-contain w-full max-w-full box-border ${
+        className={`flex flex-col flex-1 w-full max-w-full box-border ${
           noPadding ? 'p-0' : 'p-3 sm:p-5 lg:p-6 pb-20 sm:pb-24'
         }`}
-        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {children}
       </motion.div>

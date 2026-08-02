@@ -298,7 +298,14 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
           updatedAt: new Date().toISOString()
         };
         try {
-          localStorage.setItem("gombo_active_profile", JSON.stringify(updatedProfile));
+          const seen = new WeakSet();
+          localStorage.setItem("gombo_active_profile", JSON.stringify(updatedProfile, (key, value) => {
+            if (typeof value === "object" && value !== null) {
+              if (seen.has(value)) return;
+              seen.add(value);
+            }
+            return value;
+          }));
         } catch (e) {
           console.warn("Could not serialize gombo_active_profile in CompleteProfile due to cyclic object value:", e);
         }
