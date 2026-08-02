@@ -3009,131 +3009,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
             </header>
           ) : (
-            activeMenu === "user_terrain" ? (
-              <header className="flex flex-col afri-container pt-3 pb-2 sm:py-3 border-b border-afri-gold/30 bg-afri-bg shrink-0 gap-2 sm:gap-3.5 w-full animate-fadeIn select-none shadow-[0_10px_35px_rgba(0,0,0,0.85)] rounded-b-[24px] sm:rounded-b-[40px] z-[40] relative">
-                {/* TOP ROW */}
-                <div className="flex items-center justify-between w-full gap-1.5 xs:gap-2 sm:gap-4 px-1 sm:px-4">
-                  {/* Left: Menu & Logo Group */}
-                  <div className="flex items-center gap-1.5 xs:gap-2.5 sm:gap-5">
-                    <button
-                      id="hamburger-trigger"
-                      onClick={() => setIsSidebarOpen(true)}
-                      className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-afri-bg-sec/40 border border-afri-border/80 text-afri-gold hover:bg-afri-gold/10 transition-all active:scale-95 shrink-0"
-                    >
-                      <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
-                    </button>
-
-                    {activeMenu !== "user_terrain" && (
-                      <button
-                        onClick={goBackMenu}
-                        className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-afri-gold/10 hover:bg-afri-gold/20 border border-afri-gold/40 text-afri-gold transition-all active:scale-95 flex items-center gap-1 cursor-pointer font-bold text-[9px] sm:text-[11px] uppercase tracking-tight shrink-0"
-                      >
-                        <span>← Retour</span>
-                      </button>
-                    )}
-
-                    <div className="flex items-center gap-1.5 xs:gap-2.5 sm:gap-4">
-                      {logoUrl ? (
-                        <img 
-                          src={logoUrl} 
-                          alt="AFRIGOMBO LOGO" 
-                          className="w-8 h-8 xs:w-10 xs:h-10 sm:w-16 sm:h-16 object-contain rounded-2xl shrink-0"
-                        />
-                      ) : (
-                        <AfriGomboLogo className="w-8 h-8 xs:w-10 xs:h-10 sm:w-16 sm:h-16 shrink-0" />
-                      )}
-                      <div className="flex flex-col justify-center">
-                        <h1 className="text-xl xs:text-2xl sm:text-5xl font-black tracking-tighter text-afri-gold leading-none font-display antialiased subpixel-antialiased" 
-                            style={{ 
-                              textShadow: "1px 1px 0px #B48F17"
-                            }}>
-                          AFRIGOMBO
-                        </h1>
-                        <span className="hidden xs:block text-[9.5px] sm:text-[13px] text-afri-text font-black tracking-wide mt-1 sm:mt-1.5 font-sans antialiased whitespace-nowrap">
-                          Le Temple du Gombo Musical
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right: Actions */}
-                  <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-5 shrink-0">
-                     {/* Notification with Badge */}
-                     <button 
-                       onClick={() => {
-                          setActiveMenu("user_notifications");
-                          addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
-                       }} 
-                       className="relative p-1.5 sm:p-2 text-afri-gold hover:scale-110 transition-transform cursor-pointer shrink-0"
-                       title="Notifications"
-                       aria-label={`Notifications (${unreadNotifsCount} non lue${unreadNotifsCount > 1 ? 's' : ''})`}
-                     >
-                       <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-                       {unreadNotifsCount > 0 && (
-                         <span className="absolute -top-1 -right-1 sm:-top-0.5 sm:-right-0.5 bg-red-600 text-afri-text font-mono font-black text-[9px] sm:text-[10px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center border-2 border-afri-border shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse">
-                           {unreadNotifsCount > 99 ? "99+" : unreadNotifsCount}
-                         </span>
-                       )}
-                     </button>
-
-                     {/* Profile Avatar */}
-                     <div 
-                       onClick={() => { 
-                          if (!currentUser) {
-                            setShowHeritageLoginRequired(true);
-                          } else {
-                            setActiveMenu("user_edit_profile");
-                            setViewingGomboIdDetail(false); 
-                          }
-                       }}
-                       className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-afri-gold overflow-hidden bg-afri-bg-sec cursor-pointer hover:scale-105 transition-transform shadow-[0_0_12px_rgba(212,175,55,0.2)] relative shrink-0"
-                     >
-                       {profile?.avatarUrl || currentUser?.photoURL ? (
-                          <img src={profile?.avatarUrl || currentUser?.photoURL || ""} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                       ) : (
-                          <div className="w-full h-full flex items-center justify-center text-afri-gold font-black text-xs sm:text-base">
-                            {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
-                          </div>
-                       )}
-                       {(profile?.isCertified || profile?.gomboIdNumber) && (
-                          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-afri-gold rounded-full border border-afri-border flex items-center justify-center">
-                            <CheckCircle2 className="w-1.5 sm:w-2 h-1.5 sm:h-2 text-black stroke-[4]" />
-                          </div>
-                       )}
-                     </div>
-                  </div>
-                </div>
-
-                {/* BOTTOM ROW: STATS BAR */}
-                <div className="w-full flex justify-center mt-0.5 px-3">
-                  <div className="flex items-center justify-center gap-2 xs:gap-3.5 sm:gap-8 px-2.5 xs:px-4 sm:px-8 py-1.5 sm:py-2.5 rounded-full bg-afri-bg-sec border border-afri-border/90 shadow-2xl overflow-x-auto afri-no-scrollbar max-w-full">
-                     <div className="flex items-center gap-1.5 shrink-0">
-                       <Users className="w-3 h-3 sm:w-4 sm:h-4 text-afri-gold stroke-[2.5]" />
-                       <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-afri-text-sec uppercase tracking-wider">
-                         <strong className="text-afri-text font-mono font-black">{users.filter(u => u.status === 'active').length}</strong> dispos
-                       </span>
-                     </div>
-                     <div className="w-[0.5px] h-2.5 sm:h-4 bg-afri-bg-ter/40 shrink-0" />
-                     <div className="flex items-center gap-1.5 shrink-0">
-                       <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-afri-gold stroke-[2.5]" />
-                       <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-afri-text-sec uppercase tracking-wider">
-                         <strong className="text-afri-text font-mono font-black">{renforts.filter(r => r.status === 'active').length}</strong> renforts
-                       </span>
-                     </div>
-                     <div className="w-[0.5px] h-2.5 sm:h-4 bg-afri-bg-ter/40 shrink-0" />
-                     <div className="flex items-center gap-1.5 shrink-0">
-                       <Handshake className="w-3 h-3 sm:w-4 sm:h-4 text-afri-gold stroke-[2.5]" />
-                       <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-afri-text-sec uppercase tracking-wider">
-                         <strong className="text-afri-text font-mono font-black">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats
-                       </span>
-                     </div>
-                  </div>
-                </div>
-              </header>
-            ) : (
+            ["user_terrain", "user_wallet", "user_notifications", "user_settings", "user_heritage", "user_edit_profile", "nearby"].includes(activeMenu) ? null : (
               <header className="flex items-center justify-between px-4 py-3 bg-afri-bg border-b border-afri-border/50 z-[40] relative shrink-0 shadow-md">
                 <div className="flex items-center gap-3">
-                  {!["user_terrain", "user_vibes", "user_mes_gombos", "user_heritage", "user_publish", "dashboard", "users", "notifications", "contracts", "reports", "revenue"].includes(activeMenu) && (
+          {!["user_terrain", "user_wallet", "user_vibes", "user_mes_gombos", "user_heritage", "user_publish", "dashboard", "users", "notifications", "contracts", "reports", "revenue"].includes(activeMenu) && (
                     <button 
                       onClick={goBackMenu} 
                       className="p-1.5 sm:p-2 bg-afri-bg-sec/40 rounded-xl text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-ter transition-colors border border-afri-border/80 active:scale-95 shrink-0"
@@ -3301,6 +3180,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               addToTerminal={addToTerminal}
               onValidateFilters={applyGombosFilters}
               renforts={renforts}
+              profile={profile}
+              currentUser={currentUser}
+              logoUrl={logoUrl}
+              unreadNotifsCount={unreadNotifsCount}
+              setIsSidebarOpen={setIsSidebarOpen}
+              setShowHeritageLoginRequired={setShowHeritageLoginRequired}
+              setViewingGomboIdDetail={setViewingGomboIdDetail}
+              contracts={contracts}
             />
           </div>
 
@@ -8398,7 +8285,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 try { if (navigator?.vibrate) navigator.vibrate(8); } catch(_) {}
                 setIsNavCollapsed(true);
               }}
-              className="absolute left-1 sm:-left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-afri-bg-sec border border-afri-gold/60 text-afri-gold shadow-md flex items-center justify-center cursor-pointer hover:bg-afri-gold hover:text-black transition-all z-50 min-w-[32px] min-h-[32px]"
+              className="absolute -left-1 sm:-left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-afri-bg-sec border border-afri-gold/60 text-afri-gold shadow-md flex items-center justify-center cursor-pointer hover:bg-afri-gold hover:text-black transition-all z-50 min-w-[32px] min-h-[32px]"
               title="Replier la barre vers la gauche"
             >
               <ChevronLeft className="w-4 h-4 stroke-[2.5]" />

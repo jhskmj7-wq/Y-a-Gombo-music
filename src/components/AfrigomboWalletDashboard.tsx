@@ -26,6 +26,8 @@ import {
   Check
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { AndroidPageLayout } from "./layout/AndroidPageLayout";
+import { AndroidCard } from "./layout/AndroidCard";
 import { db, gomboDB } from "../firebase";
 import { collection, query, where, getDocs, addDoc, onSnapshot, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
@@ -563,45 +565,12 @@ export default function AfrigomboWalletDashboard({
   });
 
   return (
-    <div className="w-full max-w-none px-3 xs:px-4 sm:px-6 py-3 space-y-5 text-left animate-fadeIn">
-      
-      {/* COMPACT TOP HEADER */}
-      <div className="flex items-center justify-between border-b border-afri-border/80 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-afri-bg-sec border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37]">
-            <Wallet className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-base font-black text-afri-text tracking-wide uppercase font-sans flex items-center gap-2">
-              MON WALLET SOUVERAIN
-            </h2>
-            <p className="text-[10px] text-afri-text-muted font-mono leading-none">
-              Portefeuille sécurisé & compte séquestre AFRIGOMBO
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="py-1 px-2.5 bg-emerald-500/10 text-emerald-400 text-[9px] font-mono font-black uppercase tracking-widest rounded-lg border border-emerald-500/25 flex items-center gap-1.5">
-            <ShieldCheck className="w-3 h-3" />
-            <span className="hidden sm:inline">SÉCURISÉ</span> BÊTA
-          </span>
-          {onBack && (
-            <button 
-              id="btn-wallet-back"
-              onClick={onBack}
-              className="text-xs font-mono px-4 py-2.5 min-h-[48px] inline-flex items-center justify-center bg-afri-bg-sec border border-afri-border rounded-xl text-afri-text-sec hover:text-afri-gold transition-colors font-bold cursor-pointer"
-            >
-              &larr; Retour
-            </button>
-          )}
-        </div>
-      </div>
-
+    <AndroidPageLayout title="Mon Wallet Souverain" onBack={onBack} scrollable={true} className="pb-safe">
+      <div className="space-y-5 text-left animate-fadeIn">
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           1. 💰 SOLDE DISPONIBLE (EN TRÈS GRAND)
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="bg-afri-bg-sec border border-[#D4AF37]/30 rounded-3xl p-4 xs:p-5 sm:p-8 relative overflow-hidden shadow-2xl group">
+      <AndroidCard className="relative overflow-hidden shadow-2xl group border-[#D4AF37]/30">
         <div className="absolute top-0 right-0 w-72 h-72 bg-[#D4AF37]/5 rounded-full blur-[90px] -mr-24 -mt-24 pointer-events-none"></div>
         
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
@@ -643,7 +612,7 @@ export default function AfrigomboWalletDashboard({
             </span>
           </div>
         </div>
-      </div>
+      </AndroidCard>
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           2. ACTIONS RAPIDES (RECHARGER / RETIRER / HISTORIQUE / SCANNER)
@@ -891,9 +860,8 @@ export default function AfrigomboWalletDashboard({
             })}
           </div>
         )}
-
       </div>
-
+      
       {/* MODAL 1: RECHARGER / DÉPÔT MOBILE MONEY (MOBILE MODAL) */}
       <AnimatePresence>
         {showDepositModal && (
@@ -1383,7 +1351,7 @@ export default function AfrigomboWalletDashboard({
           </div>
         )}
       </AnimatePresence>
-
     </div>
+  </AndroidPageLayout>
   );
 }

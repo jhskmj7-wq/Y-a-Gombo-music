@@ -18,6 +18,8 @@ import { globalAudioManager, AudioState } from "../lib/audioManager";
 import { supportConfig } from "../supportConfig";
 import { useTheme } from "../context/ThemeContext";
 import { useAppSettings, ThemeMode } from "../context/AppSettingsContext";
+import { AndroidPageLayout } from "./layout/AndroidPageLayout";
+import { AndroidCard } from "./layout/AndroidCard";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -287,33 +289,23 @@ export default function SettingsModal({
   };
 
   return (
-    <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-afri-bg text-afri-text font-sans pt-4 px-4 sm:px-6 pb-16 relative select-none">
-      
-      {/* OVERLAY FOR SECONDARY ASSISTANCE VIEWS */}
-      {activeSupportPage !== "none" && (
-        <div className="fixed inset-0 z-[60] bg-afri-bg p-5 flex flex-col h-full overflow-y-auto text-left">
-          <div className="max-w-xl mx-auto w-full flex-1 flex flex-col space-y-6 pt-4">
-            <div className="flex justify-between items-center border-b border-afri-border pb-4">
-              <h2 className="text-sm font-black text-afri-text uppercase flex items-center gap-2">
-                <span className="text-afri-gold">●</span>
-                {activeSupportPage === "help" && "Centre d'aide d'Abidjan"}
-                {activeSupportPage === "issue" && "Signaler un problème technique"}
-                {activeSupportPage === "terms" && "Conditions d'utilisation (CGU)"}
-                {activeSupportPage === "privacy_policy" && "Politique de confidentialité"}
-                {activeSupportPage === "about" && "À propos d'AFRIGOMBO"}
-              </h2>
-              <button 
-                onClick={() => {
-                  setActiveSupportPage("none");
-                  setIssueSent(false);
-                }}
-                className="px-3.5 py-1.5 bg-afri-bg-sec border border-afri-border hover:border-afri-gold rounded-xl text-xs font-bold text-afri-text hover:text-afri-gold cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto pr-1 text-xs space-y-4 text-afri-text-sec leading-relaxed pb-20">
+    <AndroidPageLayout
+      title={activeSupportPage === "none" ? (mt("title") || "Paramètres") : (
+        activeSupportPage === "help" ? "Centre d'aide" :
+        activeSupportPage === "issue" ? "Signaler un problème" :
+        activeSupportPage === "terms" ? "Conditions d'utilisation" :
+        activeSupportPage === "privacy_policy" ? "Confidentialité" :
+        activeSupportPage === "about" ? "À propos" : "Assistance"
+      )}
+      onBack={activeSupportPage === "none" ? onClose : () => setActiveSupportPage("none")}
+      scrollable={true}
+    >
+      <div className="w-full space-y-6 pb-20">
+        
+        {/* OVERLAY FOR SECONDARY ASSISTANCE VIEWS - Now integrated into main flow if needed, or kept as separate if it feels better */}
+        {activeSupportPage !== "none" && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="flex-1 text-xs space-y-4 text-afri-text-sec leading-relaxed">
               {activeSupportPage === "help" && (
                 <AfrigomboHelpCenter onClose={() => setActiveSupportPage("none")} />
               )}
@@ -369,8 +361,7 @@ export default function SettingsModal({
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* ACCOUNT DELETION CONFIRM OVERLAY */}
       {showDeleteConfirm && (
@@ -1099,5 +1090,6 @@ export default function SettingsModal({
 
       </div>
     </div>
+  </AndroidPageLayout>
   );
 }

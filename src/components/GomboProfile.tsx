@@ -18,6 +18,7 @@ import { MediaGalleryManager } from "./MediaGalleryManager";
 import { GomboProfileMainView } from "./GomboProfileMainView";
 import { GomboProfileEditView } from "./GomboProfileEditView";
 import { GomboCertificationFlow } from "./GomboCertificationFlow";
+import { AndroidPageLayout } from "./layout/AndroidPageLayout";
 import SettingsModal from "./SettingsModal";
 import { supportConfig } from "../supportConfig";
 
@@ -1093,179 +1094,188 @@ export default function GomboProfile({
 
   if (!currentUserProfile) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 text-center min-h-[300px]">
-        <div className="w-8 h-8 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin mb-3" />
-        <p className="text-xs font-mono tracking-widest text-[#D4AF37]/80 uppercase">Chargement du profil...</p>
-      </div>
+      <AndroidPageLayout title="Mon Héritage">
+        <div className="flex flex-col items-center justify-center p-12 text-center min-h-[300px]">
+          <div className="w-8 h-8 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin mb-3" />
+          <p className="text-xs font-mono tracking-widest text-[#D4AF37]/80 uppercase">Chargement du profil...</p>
+        </div>
+      </AndroidPageLayout>
     );
   }
 
-  if (panelView === "main") {
-    return (
-      <GomboProfileMainView
-        currentUserProfile={currentUserProfile}
-        onRefreshProfile={onRefreshProfile}
-        onNavigateView={onNavigateView}
-        setPanelView={(panel) => setPanelView(panel as any)}
-        availabilityStatus={availabilityStatus}
-        handleUpdateAvailabilityStatus={handleUpdateAvailabilityStatus}
-        updatingAvailability={updatingAvailability}
-        dynamicGroupsCount={dynamicGroupsCount}
-        dynamicFavsCount={dynamicFavsCount}
-        dynamicAppsCount={dynamicAppsCount}
-        myPosts={myPosts}
-        mediaGallery={mediaGallery}
-        setMediaGallery={setMediaGallery}
-        verifyingIdentity={verifyingIdentity}
-        kycProgress={kycProgress}
-        handleIdentityVerifyUpload={handleIdentityVerifyUpload}
-        onViewPublicPortfolio={onViewPublicPortfolio}
-      />
-    );
-  }
+  const getPageTitle = () => {
+    switch (panelView) {
+      case "edit": return "Modifier Profil";
+      case "certification": return "Certification Gombo";
+      case "settings": return "Paramètres";
+      case "support": return "Support Assistance";
+      default: return "Mon Héritage";
+    }
+  };
 
-  if (panelView === "certification") {
-    return (
-      <div className="afri-scroll-safe afri-container">
+  const handleBack = () => {
+    if (panelView === "main") {
+      onNavigateView("back");
+    } else {
+      setPanelView("main");
+    }
+  };
+
+  return (
+    <AndroidPageLayout 
+      title={getPageTitle()} 
+      onBack={handleBack}
+      scrollable={true}
+    >
+      {panelView === "main" && (
+        <GomboProfileMainView
+          currentUserProfile={syncedProfile}
+          onRefreshProfile={onRefreshProfile}
+          onNavigateView={onNavigateView}
+          setPanelView={(panel) => setPanelView(panel as any)}
+          availabilityStatus={availabilityStatus}
+          handleUpdateAvailabilityStatus={handleUpdateAvailabilityStatus}
+          updatingAvailability={updatingAvailability}
+          dynamicGroupsCount={dynamicGroupsCount}
+          dynamicFavsCount={dynamicFavsCount}
+          dynamicAppsCount={dynamicAppsCount}
+          myPosts={myPosts}
+          mediaGallery={mediaGallery}
+          setMediaGallery={setMediaGallery}
+          verifyingIdentity={verifyingIdentity}
+          kycProgress={kycProgress}
+          handleIdentityVerifyUpload={handleIdentityVerifyUpload}
+          onViewPublicPortfolio={onViewPublicPortfolio}
+        />
+      )}
+
+      {panelView === "certification" && (
         <GomboCertificationFlow
-          currentUserProfile={currentUserProfile}
+          currentUserProfile={syncedProfile}
           onRefreshProfile={onRefreshProfile}
           onBack={() => setPanelView("main")}
         />
-      </div>
-    );
-  }
+      )}
 
-  if (panelView === "edit") {
-    return (
-      <GomboProfileEditView
-        firstName={firstName}
-        setFirstName={setFirstName}
-        lastName={lastName}
-        setLastName={setLastName}
-        artistName={artistName}
-        setArtistName={setArtistName}
-        phone={phone}
-        setPhone={setPhone}
-        whatsapp={whatsapp}
-        setWhatsapp={setWhatsapp}
-        gender={gender}
-        setGender={setGender}
-        birthDate={birthDate}
-        setBirthDate={setBirthDate}
-        commune={commune}
-        setCommune={setCommune}
-        ville={ville}
-        setVille={setVille}
-        quartier={quartier}
-        setQuartier={setQuartier}
-        accountRole={accountRole}
-        setAccountRole={(val) => setAccountRole(val as any)}
-        bio={bio}
-        setBio={setBio}
-        specialties={specialties}
-        setSpecialties={setSpecialties}
-        musicGenres={musicGenres}
-        setMusicGenres={setMusicGenres}
-        experience={experience}
-        setExperience={setExperience}
-        availabilities={availabilities}
-        setAvailabilities={setAvailabilities}
-        instruments={instruments}
-        setInstruments={setInstruments}
-        languages={languages}
-        setLanguages={setLanguages}
-        musicGenreCustom={musicGenreCustom}
-        setMusicGenreCustom={setMusicGenreCustom}
-        instrumentCustom={instrumentCustom}
-        setInstrumentCustom={setInstrumentCustom}
-        specialtyCustom={specialtyCustom}
-        setSpecialtyCustom={setSpecialtyCustom}
-        languageCustom={languageCustom}
-        setLanguageCustom={setLanguageCustom}
-        waveNumber={waveNumber}
-        setWaveNumber={setWaveNumber}
-        orangeMoneyNumber={orangeMoneyNumber}
-        setOrangeMoneyNumber={setOrangeMoneyNumber}
-        editLoading={editLoading}
-        editError={editError}
-        editSuccess={editSuccess}
-        onSubmit={handleEditProfileSubmit}
-        autoSaveStatus={autoSaveStatus}
-        onCancel={() => {
-          if (initialPanelView === "edit") {
-            onNavigateView("back");
-          } else {
-            setPanelView("main");
-          }
-        }}
-        onSkip={handleSkipUpdate}
-        avatarUrl={avatarUrl}
-        setAvatarUrl={setAvatarUrl}
-        cameraActive={cameraActive}
-        setCameraActive={setCameraActive}
-        uploading={uploading}
-        uploadProgress={uploadProgress}
-        capturePhoto={capturePhoto}
-        stopCamera={stopCamera}
-        startCamera={startCamera}
-        handleFileUpload={handleFileUpload}
-        coverUrl={coverUrl}
-        setCoverUrl={setCoverUrl}
-        handleCoverUpload={handleCoverUpload}
-        coverUploading={coverUploading}
-        coverUploadProgress={coverUploadProgress}
-        onIdentityUpload={handleIdentityVerifyUpload}
-        verifyingIdentity={verifyingIdentity}
-        kycProgress={kycProgress}
-        kycStatus={currentUserProfile.kycStatus}
-      />
-    );
-  }
+      {panelView === "edit" && (
+        <GomboProfileEditView
+          firstName={firstName}
+          setFirstName={setFirstName}
+          lastName={lastName}
+          setLastName={setLastName}
+          artistName={artistName}
+          setArtistName={setArtistName}
+          phone={phone}
+          setPhone={setPhone}
+          whatsapp={whatsapp}
+          setWhatsapp={setWhatsapp}
+          gender={gender}
+          setGender={setGender}
+          birthDate={birthDate}
+          setBirthDate={setBirthDate}
+          commune={commune}
+          setCommune={setCommune}
+          ville={ville}
+          setVille={setVille}
+          quartier={quartier}
+          setQuartier={setQuartier}
+          accountRole={accountRole}
+          setAccountRole={(val) => setAccountRole(val as any)}
+          bio={bio}
+          setBio={setBio}
+          specialties={specialties}
+          setSpecialties={setSpecialties}
+          musicGenres={musicGenres}
+          setMusicGenres={setMusicGenres}
+          experience={experience}
+          setExperience={setExperience}
+          availabilities={availabilities}
+          setAvailabilities={setAvailabilities}
+          instruments={instruments}
+          setInstruments={setInstruments}
+          languages={languages}
+          setLanguages={setLanguages}
+          musicGenreCustom={musicGenreCustom}
+          setMusicGenreCustom={setMusicGenreCustom}
+          instrumentCustom={instrumentCustom}
+          setInstrumentCustom={setInstrumentCustom}
+          specialtyCustom={specialtyCustom}
+          setSpecialtyCustom={setSpecialtyCustom}
+          languageCustom={languageCustom}
+          setLanguageCustom={setLanguageCustom}
+          waveNumber={waveNumber}
+          setWaveNumber={setWaveNumber}
+          orangeMoneyNumber={orangeMoneyNumber}
+          setOrangeMoneyNumber={setOrangeMoneyNumber}
+          editLoading={editLoading}
+          editError={editError}
+          editSuccess={editSuccess}
+          onSubmit={handleEditProfileSubmit}
+          autoSaveStatus={autoSaveStatus}
+          onCancel={() => {
+            if (initialPanelView === "edit") {
+              onNavigateView("back");
+            } else {
+              setPanelView("main");
+            }
+          }}
+          onSkip={handleSkipUpdate}
+          avatarUrl={avatarUrl}
+          setAvatarUrl={setAvatarUrl}
+          cameraActive={cameraActive}
+          setCameraActive={setCameraActive}
+          uploading={uploading}
+          uploadProgress={uploadProgress}
+          capturePhoto={capturePhoto}
+          stopCamera={stopCamera}
+          startCamera={startCamera}
+          handleFileUpload={handleFileUpload}
+          coverUrl={coverUrl}
+          setCoverUrl={setCoverUrl}
+          handleCoverUpload={handleCoverUpload}
+          coverUploading={coverUploading}
+          coverUploadProgress={coverUploadProgress}
+          onIdentityUpload={handleIdentityVerifyUpload}
+          verifyingIdentity={verifyingIdentity}
+          kycProgress={kycProgress}
+          kycStatus={syncedProfile.kycStatus}
+        />
+      )}
 
-  if (panelView === "settings") {
-    return (
-      <SettingsModal 
-        isOpen={true} 
-        onClose={() => setPanelView("main")} 
-        onLogout={onLogout}
-        onNavigateToFounder={() => onNavigateView("admin")}
-      />
-    );
-  }
+      {panelView === "settings" && (
+        <SettingsModal 
+          isOpen={true} 
+          onClose={() => setPanelView("main")} 
+          onLogout={onLogout}
+          onNavigateToFounder={() => onNavigateView("admin")}
+        />
+      )}
 
-  return (
-    <div className="afri-scroll-safe afri-container">
-      <div className="afri-section">
-        <div className="flex items-center gap-4 mb-4">
-          <button onClick={() => setPanelView("main")} className="afri-btn-ghost p-2">
-            <ArrowLeft className="w-5 h-5 text-afri-text" />
-          </button>
-          <h3 className="afri-title-md">Support Assistance Gombo</h3>
-        </div>
-        
-        <div className="afri-card p-6 space-y-6">
-          <div className="text-center space-y-2">
-            <div className="inline-flex p-3 bg-orange-100 dark:bg-orange-950 text-[#D4AF37] rounded-full">
-              <HelpCircle className="w-10 h-10" />
+      {panelView === "support" && (
+        <div className="afri-section">
+          <div className="afri-card p-6 space-y-6">
+            <div className="text-center space-y-2">
+              <div className="inline-flex p-3 bg-orange-100 dark:bg-orange-950 text-[#D4AF37] rounded-full">
+                <HelpCircle className="w-10 h-10" />
+              </div>
+              <h2 className="afri-title-lg text-afri-text text-center font-display font-black uppercase">SUPPORT ASSISTANCE GOMBO</h2>
+              <p className="afri-text-body text-afri-text-sec text-center">Besoin d'aide pour une transaction Wave suspendue ou une annulation de gombo de dernière minute ? Le support d'AFRIGOMBO est disponible 24/7.</p>
             </div>
-            <h2 className="afri-title-lg text-afri-text text-center">SUPPORT ASSISTANCE GOMBO</h2>
-            <p className="afri-text-body text-afri-text-sec text-center">Besoin d'aide pour une transaction Wave suspendue ou une annulation de gombo de dernière minute ? Le support d'AFRIGOMBO est disponible 24/7.</p>
-          </div>
-          
-          <div className="space-y-3">
-            <button 
-              onClick={() => supportConfig.openSupport("Aide générale")} 
-              className="afri-btn-primary py-4 text-center bg-afri-bg-sec border-[#25D366] flex items-center justify-center gap-2 cursor-pointer w-full"
-            >
-              <MessageSquare className="w-4 h-4" /> Contacter le Support AFRIGOMBO
-            </button>
-            <div className="text-center pt-2">
-              <p className="text-[10px] text-[#B9B9B9] font-mono">Assistance AFRIGOMBO 24h/7</p>
+            
+            <div className="space-y-3">
+              <button 
+                onClick={() => supportConfig.openSupport("Aide générale")} 
+                className="afri-btn-primary py-4 text-center bg-afri-bg-sec border-[#25D366] flex items-center justify-center gap-2 cursor-pointer w-full font-black uppercase"
+              >
+                <MessageSquare className="w-4 h-4" /> Contacter le Support AFRIGOMBO
+              </button>
+              <div className="text-center pt-2">
+                <p className="text-[10px] text-[#B9B9B9] font-mono font-bold uppercase">Assistance AFRIGOMBO 24h/7</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </AndroidPageLayout>
   );
 }

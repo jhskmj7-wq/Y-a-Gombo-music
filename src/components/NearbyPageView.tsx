@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import { BackButton } from "./common/BackButton";
+import { AndroidPageLayout } from "./layout/AndroidPageLayout";
+import { AndroidCard } from "./layout/AndroidCard";
 import { ArrowLeft, MapPin, Radar, Navigation, Filter, Zap, Music, Star, ShieldCheck, Compass } from "lucide-react";
 import { Gombo, User } from "../types";
 import { AfrigoRadarMap } from "./AfrigoRadarMap";
@@ -76,17 +78,17 @@ export const NearbyPageView: React.FC<NearbyPageViewProps> = ({
           <div className="text-center text-afri-text-muted text-xs py-10">Aucun Gombo trouvé.</div>
         ) : (
           filteredGombos.map((gombo: any) => (
-            <div
+            <AndroidCard
               key={gombo.id}
               onClick={() => onSelectGombo(gombo)}
-              className="bg-afri-bg-sec/20 border border-afri-border rounded-xl p-3 flex justify-between items-center"
+              className="flex justify-between items-center"
             >
               <div>
                 <p className="font-bold text-sm">{gombo.title}</p>
                 <p className="text-xs text-afri-text-sec">{gombo.location}</p>
               </div>
               <span className="text-emerald-400 font-black text-xs">{Number(gombo.budget || 0).toLocaleString()} FCFA</span>
-            </div>
+            </AndroidCard>
           ))
         )}
       </div>

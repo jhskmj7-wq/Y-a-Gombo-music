@@ -14,6 +14,7 @@ import { SupportService } from "../services/SupportService";
 import { WebRTCCallService, CallSession } from "../lib/webrtcCallEngine";
 import { setUserPresence, listenUserPresence, setTypingState, listenPartnerTyping, UserPresence } from "../lib/presenceEngine";
 import { sanitizeMessageContent, logBypassAttempt } from "../lib/chatModerationEngine";
+import { AndroidPageLayout } from "./layout/AndroidPageLayout";
 import { WebRTCCallModal } from "./WebRTCCallModal";
 import GomboItineraryModal from "./GomboItineraryModal";
 import { ChatModerationModal } from "./ChatModerationModal";
@@ -876,7 +877,7 @@ export default function MessagesView({
 
                   {/* Inline message search input */}
                   {showMsgSearch && (
-                    <div className="px-4 py-2 bg-zinc-900 border-b border-afri-border flex items-center justify-between gap-2 shrink-0">
+                    <div className="px-4 py-2 bg-afri-bg-sec border-b border-afri-border flex items-center justify-between gap-2 shrink-0">
                       <div className="relative flex-1">
                         <Search className="w-3.5 h-3.5 text-afri-text-muted absolute left-3 top-2.5" />
                         <input
@@ -932,7 +933,7 @@ export default function MessagesView({
                                   key={emoji}
                                   type="button"
                                   onClick={() => handleToggleReaction(m.id || "", emoji, myReaction)}
-                                  className={`w-7 h-7 flex items-center justify-center text-sm rounded-full hover:bg-zinc-800 transition active:scale-125 ${
+                                  className={`w-7 h-7 flex items-center justify-center text-sm rounded-full hover:bg-afri-bg-ter transition active:scale-125 ${
                                     myReaction === emoji ? "bg-[#D4AF37]/20 border border-[#D4AF37]/40" : ""
                                   }`}
                                 >
@@ -942,7 +943,7 @@ export default function MessagesView({
                               <button
                                 type="button"
                                 onClick={() => setActiveReactionMenuMsgId(null)}
-                                className="w-5 h-5 flex items-center justify-center text-xs text-afri-text-muted hover:text-afri-text hover:bg-zinc-800 rounded-full ml-1"
+                                className="w-5 h-5 flex items-center justify-center text-xs text-afri-text-muted hover:text-afri-text hover:bg-afri-bg-ter rounded-full ml-1"
                               >
                                 <X className="w-3 h-3" />
                               </button>
@@ -976,7 +977,7 @@ export default function MessagesView({
 
                               {/* Reactions Overlapping on Bubble Corner */}
                               {hasReactions && (
-                                <div className={`absolute -bottom-2 ${isMe ? "right-3" : "left-3"} flex items-center gap-0.5 bg-zinc-950 border border-afri-border/60 px-1.5 py-0.5 rounded-full shadow-md text-[10px] z-10 select-none`}>
+                                <div className={`absolute -bottom-2 ${isMe ? "right-3" : "left-3"} flex items-center gap-0.5 bg-afri-bg border border-afri-border/60 px-1.5 py-0.5 rounded-full shadow-md text-[10px] z-10 select-none`}>
                                   {Object.entries(m.reactions as Record<string, string>).map(([uid, rEmoji]) => {
                                     if (!rEmoji) return null;
                                     return (

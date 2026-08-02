@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { AndroidPageLayout } from "./layout/AndroidPageLayout";
 import { 
   Bell, Check, Trash2, ShieldAlert, 
   Clock, Briefcase, Music, UserCheck, MessageSquare,
@@ -398,47 +399,52 @@ export default function NotificationCenter({
   const hasAnyNotif = filteredNotifications.length > 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-6 text-afri-text pb-12">
-      {/* MOBILE ANDROID BACK BUTTON & NAVIGATION BAR */}
-      <div className="flex items-center justify-between gap-3 bg-afri-bg/90 border border-afri-border/80 p-2.5 sm:p-3 rounded-2xl backdrop-blur-md shadow-lg sticky top-2 z-20">
-        <button
-          onClick={() => {
-            if (onBack) onBack();
-            else onNavigateHome();
-          }}
-          className="p-2 sm:px-3.5 sm:py-2 rounded-xl bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text hover:text-[#D4AF37] transition-all cursor-pointer flex items-center gap-2 active:scale-95"
-          title="Retour"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-xs font-bold uppercase font-mono hidden xs:inline">Retour</span>
-        </button>
+    <AndroidPageLayout
+      header={
+        <div className="flex items-center justify-between gap-3 bg-afri-bg/90 border border-afri-border/80 p-2.5 sm:p-3 rounded-2xl backdrop-blur-md shadow-lg">
+          <button
+            onClick={() => {
+              if (onBack) onBack();
+              else onNavigateHome();
+            }}
+            className="p-2 sm:px-3.5 sm:py-2 rounded-xl bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text hover:text-[#D4AF37] transition-all cursor-pointer flex items-center gap-2 active:scale-95"
+            title="Retour"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-xs font-bold uppercase font-mono hidden xs:inline">Retour</span>
+          </button>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-black uppercase tracking-wider text-[#D4AF37]">
-            Notifications
-          </span>
-          {unreadCount > 0 ? (
-            <span className="px-2 py-0.5 bg-red-600 text-white font-mono font-black text-[10px] rounded-full shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse">
-              {unreadCount}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black uppercase tracking-wider text-[#D4AF37]">
+              Notifications
             </span>
-          ) : (
-            <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold text-[9px] rounded-full">
-              À jour
-            </span>
+            {unreadCount > 0 ? (
+              <span className="px-2 py-0.5 bg-red-600 text-white font-mono font-black text-[10px] rounded-full shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse">
+                {unreadCount}
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold text-[9px] rounded-full">
+                À jour
+              </span>
+            )}
+          </div>
+
+          {unreadCount > 0 && (
+            <button
+              onClick={handleMarkAllRead}
+              className="px-3 py-1.5 bg-[#D4AF37] text-black font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition shadow-md active:scale-95 flex items-center gap-1 cursor-pointer"
+              title="Tout marquer comme lu"
+            >
+              <CheckCheck className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Tout marquer</span>
+            </button>
           )}
         </div>
-
-        {unreadCount > 0 && (
-          <button
-            onClick={handleMarkAllRead}
-            className="px-3 py-1.5 bg-[#D4AF37] text-black font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition shadow-md active:scale-95 flex items-center gap-1 cursor-pointer"
-            title="Tout marquer comme lu"
-          >
-            <CheckCheck className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Tout marquer</span>
-          </button>
-        )}
-      </div>
+      }
+      scrollable={true}
+      className="pb-safe"
+    >
+      <div className="max-w-4xl mx-auto space-y-6">
 
       {/* IMPERIAL HEADER */}
       <motion.div 
@@ -609,6 +615,7 @@ export default function NotificationCenter({
         </p>
       </div>
     </div>
+  </AndroidPageLayout>
   );
 }
 
