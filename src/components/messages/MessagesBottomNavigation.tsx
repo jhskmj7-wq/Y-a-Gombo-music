@@ -22,7 +22,7 @@ export default function MessagesBottomNavigation({
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 h-[72px] bg-afri-bg-sec border-t border-afri-border z-[999] flex justify-around items-center px-2 select-none shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.6)]"
+      className="absolute bottom-0 left-0 right-0 h-[72px] bg-afri-bg-sec border-t border-afri-border z-[999] flex justify-around items-center px-2 select-none shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.6)]"
       style={{
         paddingBottom: "env(safe-area-inset-bottom, 0px)"
       }}
