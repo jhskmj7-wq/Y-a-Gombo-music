@@ -277,9 +277,24 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
               <span>Chargement de la Boutique Économique...</span>
             </div>
           ) : filteredItems.length === 0 ? (
-            <div className="text-center py-20 bg-afri-bg border border-afri-border rounded-3xl space-y-3">
-              <ShoppingBag className="w-10 h-10 text-zinc-600 mx-auto" />
-              <p className="text-afri-text-sec font-bold text-xs">Aucun article disponible dans cette catégorie.</p>
+            <div className="flex flex-col items-center justify-center py-16 px-6 bg-afri-bg/90 border border-afri-border rounded-3xl text-center space-y-4 max-w-md mx-auto my-8 shadow-inner">
+              <div className="w-16 h-16 rounded-3xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-lg">
+                <ShoppingBag className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-black text-afri-text uppercase tracking-wider font-display">
+                  Aucun article disponible
+                </h3>
+                <p className="text-xs text-afri-text-sec font-mono max-w-xs mx-auto">
+                  Aucun article n'a été trouvé dans cette catégorie pour le moment. Revenez bientôt ou tentez de filtrer autrement.
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveCategory('all')}
+                className="px-5 py-2.5 bg-afri-bg-sec border border-[#D4AF37]/50 hover:bg-[#D4AF37]/20 text-[#D4AF37] rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
+              >
+                Voir tous les articles
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">

@@ -686,6 +686,47 @@ export default function MessagesView({
     
       <div className="w-full h-full flex flex-col bg-afri-bg text-afri-text select-none overflow-hidden relative">
         
+        {/* TOP MESSAGING HEADER BAR WITH RETOUR BUTTON */}
+        <div className="bg-afri-bg-sec border-b border-afri-border px-3.5 py-2.5 flex items-center justify-between shrink-0 z-30 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => {
+                if (activeConvo) {
+                  setActiveConvo(null);
+                } else if (onBack) {
+                  onBack();
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-afri-bg text-afri-text-sec hover:text-white border border-afri-border hover:border-[#D4AF37]/50 text-xs font-black uppercase tracking-wider transition cursor-pointer active:scale-95 shadow-sm"
+              title="Retourner à la page précédente"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#D4AF37]" />
+              <span>Retour</span>
+            </button>
+
+            <div className="h-4 w-px bg-afri-border mx-0.5 hidden sm:block" />
+
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
+              <h2 className="text-xs font-black uppercase tracking-wider text-afri-text">
+                {activeTab === "discussions" && (activeConvo ? "Discussion Directe" : "Messagerie Instantanée")}
+                {activeTab === "appels" && "Centre d'Appels WebRTC"}
+                {activeTab === "activite" && "Activités & Directs"}
+                {activeTab === "parametres" && "Paramètres Messagerie"}
+                {activeTab === "afrigombo" && "Espace AFRIGOMBO"}
+              </h2>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {totalUnreadCount > 0 && (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black font-mono bg-[#D4AF37] text-black shadow-sm">
+                {totalUnreadCount} non lus
+              </span>
+            )}
+          </div>
+        </div>
+
         {/* 2. MAIN CONTAINER TAB PANELS */}
         <div className="flex-1 overflow-hidden relative flex w-full h-full">
 

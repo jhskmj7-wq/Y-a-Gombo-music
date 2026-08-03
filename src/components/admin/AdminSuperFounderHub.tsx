@@ -7,6 +7,7 @@ import {
 import { lazyWithRetry } from "../../lib/lazyWithRetry";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { SecurityService } from "../../lib/SecurityService";
+import StrategicDecisionsManager from "./StrategicDecisionsManager";
 
 // Lazy load the independent modules
 const AdminFounderThrone = lazyWithRetry(() => import("./AdminFounderThrone"));
@@ -47,7 +48,8 @@ export type AdminModuleType =
   | "stats"
   | "settings"
   | "multimedia"
-  | "deployment";
+  | "deployment"
+  | "strategic_decisions";
 
 interface AdminSuperFounderHubProps {
   initialModule?: AdminModuleType;
@@ -122,6 +124,7 @@ export default function AdminSuperFounderHub({
 
   const modulesNav = [
     { key: "throne" as AdminModuleType, label: "🏛 Tableau", icon: Crown, badge: "Fondateur" },
+    { key: "strategic_decisions" as AdminModuleType, label: "📋 Décisions Stratégiques", icon: ShieldCheck, badge: "Gouvernance" },
     { key: "dashboard" as AdminModuleType, label: "🛰 Supervision", icon: LayoutDashboard, badge: "Live" },
     { key: "contracts" as AdminModuleType, label: "📜 Contrats (Escrow)", icon: ShieldCheck, badge: "Séquestre" },
     { key: "wallet_management" as AdminModuleType, label: "💰 Gestion Wallet", icon: ShieldCheck, badge: "Souverain" },
@@ -247,6 +250,12 @@ export default function AdminSuperFounderHub({
                 userEmail={userEmail}
                 audioSynth={audioSynth}
               />
+            )}
+          </ErrorBoundary>
+
+          <ErrorBoundary moduleName="Strategic Decisions">
+            {activeModule === "strategic_decisions" && (
+              <StrategicDecisionsManager />
             )}
           </ErrorBoundary>
 

@@ -949,7 +949,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     >
       <div 
         ref={containerRef}
-        className="w-full space-y-6 text-left animate-fadeIn font-sans"
+        className="w-full max-w-4xl mx-auto px-3 sm:px-6 space-y-6 text-left animate-fadeIn font-sans"
       >
       {/* ==========================================
           1. BARRE DE RECHERCHE UNIVERSELLE & MENU AUDIO

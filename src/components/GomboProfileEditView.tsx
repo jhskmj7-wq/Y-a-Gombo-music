@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   User, Check, Plus, Search, ChevronDown, Camera, Upload, 
-  ShieldCheck, ArrowLeft, Save, X
+  ShieldCheck, ArrowLeft, Save, X, Trash2, Image as ImageIcon
 } from "lucide-react";
 
 interface GomboProfileEditViewProps {
@@ -155,7 +155,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
   orangeMoneyNumber, setOrangeMoneyNumber,
   editLoading, editError, editSuccess,
   onSubmit, onCancel,
-  avatarUrl,
+  avatarUrl, setAvatarUrl,
   cameraActive,
   uploading, uploadProgress,
   capturePhoto, stopCamera, startCamera,
@@ -169,6 +169,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 }) => {
   const [communeSearch, setCommuneSearch] = useState("");
   const [showCommuneDropdown, setShowCommuneDropdown] = useState(false);
+  const [isAvatarSheetOpen, setIsAvatarSheetOpen] = useState(false);
 
   const filteredCommunes = COMMUNES.filter(c => 
     c.toLowerCase().includes(communeSearch.toLowerCase())
@@ -243,19 +244,32 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 
               {/* Avatar Jumbo Android Optimized */}
               <div className="flex flex-col items-center gap-4 -mt-16 sm:-mt-18 relative z-10">
-                <div className="relative">
-                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-[2.5rem]  border-4 border-[#080808] bg-afri-bg-sec shadow-2xl">
+                <div 
+                  onClick={() => setIsAvatarSheetOpen(true)}
+                  className="relative cursor-pointer group active:scale-95 transition-transform"
+                >
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-[2.5rem] border-4 border-[#080808] bg-afri-bg-sec shadow-2xl overflow-hidden relative">
                     {cameraActive ? (
-                      <video id="webcam-preview" autoPlay playsInline className="w-full  object-cover scale-x-[-1]" />
+                      <video id="webcam-preview" autoPlay playsInline className="w-full h-full object-cover scale-x-[-1]" />
                     ) : (
-                      <img src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200"} alt="Avatar" className="w-full  object-cover" />
+                      <img src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200"} alt="Avatar" className="w-full h-full object-cover" />
                     )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Camera className="w-8 h-8 text-[#D4AF37]" />
+                    </div>
                   </div>
                   {uploading && (
                     <div className="absolute inset-0 bg-afri-bg/75 flex items-center justify-center rounded-[2.5rem]">
                       <span className="text-xs font-black text-[#D4AF37]">{uploadProgress}%</span>
                     </div>
                   )}
+                  <button 
+                    type="button" 
+                    onClick={(e) => { e.stopPropagation(); setIsAvatarSheetOpen(true); }}
+                    className="absolute bottom-0 right-0 p-2.5 bg-[#D4AF37] text-black rounded-full border-2 border-black shadow-lg cursor-pointer"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </button>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center gap-2.5 w-full">
@@ -269,24 +283,98 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                       </button>
                     </>
                   ) : (
-                    <>
-                      <label id="btn-upload-album" className="afri-btn-secondary py-3 px-6 text-xs font-bold min-h-[48px] flex items-center gap-2 cursor-pointer shadow-md rounded-xl">
-                        <Upload className="w-4 h-4" />
-                        <span>Album</span>
-                        <input id="input-upload-album" type="file" accept="image/*" className="hidden" onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleFileUpload(file);
-                        }} />
-                      </label>
-                      <button id="btn-start-camera" type="button" onClick={startCamera} className="afri-btn-primary py-3 px-6 text-xs font-bold min-h-[48px] flex items-center gap-2 shadow-md rounded-xl">
-                        <Camera className="w-4 h-4" /> Caméra
-                      </button>
-                    </>
+                    <button 
+                      type="button" 
+                      onClick={() => setIsAvatarSheetOpen(true)} 
+                      className="afri-btn-secondary py-3 px-6 text-xs font-bold min-h-[48px] flex items-center gap-2 cursor-pointer shadow-md rounded-xl"
+                    >
+                      <Camera className="w-4 h-4 text-[#D4AF37]" />
+                      <span>Modifier Avatar</span>
+                    </button>
                   )}
                 </div>
               </div>
             </div>
           </div>
+
+          {/* ANDROID NATIVE AVATAR BOTTOM SHEET */}
+          <AnimatePresence>
+            {isAvatarSheetOpen && (
+              <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex flex-col justify-end items-center overscroll-none animate-fadeIn">
+                <div className="absolute inset-0" onClick={() => setIsAvatarSheetOpen(false)} />
+
+                <motion.div
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className="w-full max-w-md bg-afri-bg-sec border-t border-x border-[#D4AF37]/40 rounded-t-3xl p-6 space-y-4 shadow-2xl relative z-10 max-h-[85vh] overflow-y-auto"
+                  style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}
+                >
+                  <div className="w-12 h-1.5 bg-zinc-600 rounded-full mx-auto" />
+
+                  <div className="text-center space-y-1">
+                    <h3 className="text-sm font-black text-afri-text uppercase tracking-wider font-display">
+                      Modifier la photo de profil
+                    </h3>
+                    <p className="text-[10px] text-afri-text-sec font-mono">Options photo Android Native</p>
+                  </div>
+
+                  <div className="space-y-3 pt-2">
+                    <label className="min-h-[52px] w-full bg-afri-bg border border-afri-border hover:border-[#D4AF37] rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-afri-text active:scale-[0.98] cursor-pointer shadow-sm transition-all">
+                      <ImageIcon className="w-5 h-5 text-[#D4AF37]" />
+                      <span>Choisir une photo (Album)</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleFileUpload(file);
+                            setIsAvatarSheetOpen(false);
+                          }
+                        }} 
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAvatarSheetOpen(false);
+                        startCamera();
+                      }}
+                      className="min-h-[52px] w-full bg-afri-bg border border-afri-border hover:border-[#D4AF37] rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-afri-text active:scale-[0.98] cursor-pointer shadow-sm transition-all"
+                    >
+                      <Camera className="w-5 h-5 text-[#D4AF37]" />
+                      <span>Prendre une photo (Appareil photo)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAvatarUrl("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200");
+                        setIsAvatarSheetOpen(false);
+                      }}
+                      className="min-h-[52px] w-full bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-rose-400 active:scale-[0.98] cursor-pointer transition-all"
+                    >
+                      <Trash2 className="w-5 h-5 text-rose-400" />
+                      <span>Supprimer la photo</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsAvatarSheetOpen(false)}
+                      className="min-h-[52px] w-full bg-afri-bg-ter border border-afri-border rounded-2xl flex items-center justify-center gap-2 text-xs font-bold text-afri-text-sec active:scale-[0.98] cursor-pointer transition-all mt-2"
+                    >
+                      <X className="w-5 h-5" />
+                      <span>Annuler</span>
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
 
           {/* 2. INFOS PERSONNELLES */}
           <div className="afri-card w-full p-4 rounded-[18px] space-y-4">

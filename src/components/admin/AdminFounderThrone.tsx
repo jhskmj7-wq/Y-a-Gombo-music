@@ -18,6 +18,7 @@ import { AdminDecouvertesCentre } from "./AdminDecouvertesCentre";
 import { AdminCommunicationCenter } from "./AdminCommunicationCenter";
 import AdminSupportCenter from "./AdminSupportCenter";
 import AdminPollCenter from "./AdminPollCenter";
+import AdminFounderNotebook from "./AdminFounderNotebook";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
@@ -3907,108 +3908,15 @@ export default function AdminFounderThrone({
             )}
 
             {/* =========================================================
-                 DETAILED VIEW: 📜 Journal Impérial
+                 DETAILED VIEW: 📜 Journal Impérial & Cahier Numérique
                  ========================================================= */}
             {selectedSection === "journal" && (
               <div className="space-y-6">
-                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
-                  <Scroll className="w-8 h-8 text-amber-500 shrink-0 mt-0.5 animate-pulse" />
-                  <div className="text-xs text-afri-text leading-relaxed font-mono">
-                    <strong>📜 ANNALES DE GOUVERNANCE ET JOURNAL IMPÉRIAL :</strong> Rédigez le journal d'apprentissage et de stratégie du Fondateur, signez de nouveaux décrets impériaux et diffusez de grands messages mégaphoniques.
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  
-                  {/* Journal and Decisions field textareas */}
-                  <div className="space-y-6">
-                    {/* Journal */}
-                    <div className="p-5 bg-afri-bg border border-afri-border rounded-3xl space-y-2 relative">
-                      <div className="flex items-center gap-2 text-[#D4AF37]">
-                        <BookOpen className="w-4.5 h-4.5" />
-                        <span className="text-[9px] font-mono uppercase tracking-widest font-black">Journal Intime du Fondateur</span>
-                      </div>
-                      <textarea
-                        value={govData.journal}
-                        onChange={(e) => {
-                          setGovData({ ...govData, journal: e.target.value });
-                          handleSaveGovField("journal", e.target.value);
-                        }}
-                        className="w-full h-28 bg-afri-bg border border-afri-border rounded-xl p-3 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37] font-mono leading-relaxed resize-none focus:ring-1 focus:ring-[#D4AF37]/30"
-                        placeholder="Notes d'observation de terrain..."
-                      />
-                      <span className="absolute bottom-4 right-10 text-[7px] font-mono text-zinc-650">FIRESTORE SYNC</span>
-                    </div>
-
-                    {/* Strategic Decisions */}
-                    <div className="p-5 bg-afri-bg border border-afri-border rounded-3xl space-y-2 relative">
-                      <div className="flex items-center gap-2 text-emerald-400">
-                        <Scroll className="w-4.5 h-4.5" />
-                        <span className="text-[9px] font-mono uppercase tracking-widest font-black">Decisions Strategiques de Souche</span>
-                      </div>
-                      <textarea
-                        value={govData.decisions}
-                        onChange={(e) => {
-                          setGovData({ ...govData, decisions: e.target.value });
-                          handleSaveGovField("decisions", e.target.value);
-                        }}
-                        className="w-full h-28 bg-afri-bg border border-afri-border rounded-xl p-3 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37] font-mono leading-relaxed resize-none focus:ring-1 focus:ring-[#D4AF37]/30"
-                        placeholder="Écrivez les décrets signés aujourd'hui..."
-                      />
-                      <span className="absolute bottom-4 right-10 text-[7px] font-mono text-zinc-650">FIRESTORE SYNC</span>
-                    </div>
-                  </div>
-
-                  {/* Broadcast Form */}
-                  <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4">
-                    <h4 className="text-xs font-mono uppercase font-black text-afri-text border-b border-afri-border pb-2 flex items-center gap-2">
-                      <Send className="w-4.5 h-4.5 text-sky-400" />
-                      Signer & Diffuser un Décret Mégaphonique
-                    </h4>
-
-                    <form onSubmit={handleSendNotice} className="space-y-3 font-mono text-xs">
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase text-afri-text-sec block font-bold">Catégorie du Décret</label>
-                        <select
-                          value={noticeCategory}
-                          onChange={(e) => setNoticeCategory(e.target.value)}
-                          className="w-full bg-afri-bg border border-afri-border rounded-xl p-2 text-afri-text focus:outline-none focus:border-[#D4AF37]"
-                        >
-                          <option value="MESSAGE SPECIAL">👑 DECRET SPECIAL DU SOUVERAIN</option>
-                          <option value="MAINTENANCE">🛡️ ALERTE DE PROTECTION SYSTÈME</option>
-                          <option value="INFO GOMBO">🔥 OFFRES & GOMBO NEWS</option>
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase text-afri-text-sec block font-bold">Titre Impérial</label>
-                        <input
-                          type="text"
-                          placeholder="ex: LANÇEMENT DES CERTIFICATIONS ACTIVES"
-                          value={noticeTitle}
-                          onChange={(e) => setNoticeTitle(e.target.value)}
-                          className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-afri-text focus:outline-none focus:border-[#D4AF37]"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase text-afri-text-sec block font-bold">Corps du Message</label>
-                        <textarea
-                          rows={4}
-                          placeholder="Écrivez le message de décret..."
-                          value={noticeBody}
-                          onChange={(e) => setNoticeBody(e.target.value)}
-                          className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-afri-text focus:outline-none focus:border-[#D4AF37] leading-relaxed resize-none"
-                        />
-                      </div>
-
-                      <button type="submit" className="w-full py-2.5 bg-afri-bg-sec text-afri-text font-black uppercase text-[10px] tracking-wider hover:opacity-90 transition-all rounded-xl cursor-pointer">
-                        Diffuser maintenant
-                      </button>
-                    </form>
-                  </div>
-
-                </div>
+                <AdminFounderNotebook
+                  userEmail={adminEmail}
+                  currentUser={currentUser}
+                  audioSynth={audioSynth}
+                />
               </div>
             )}
 

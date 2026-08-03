@@ -2708,15 +2708,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               setActiveMenu("user_academie");
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20 uppercase font-black">COURS</span>)}
-                            {renderMenuItem("menu_builders_1", "Soutenir AFRIGOMBO ❤️", "❤️", () => {
-                              requireAuthThen(() => {
-                                setPerspective("user");
-                                setActiveMenu("user_builders");
-                                try { audioSynth.playValidationSuccess(); } catch (_) {}
-                              });
-                            }, false)}
-                            
-
                             {renderMenuItem("menu_gombo_id", "GOMBO ID", "🆔", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
@@ -2841,6 +2832,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               setPerspective("user");
                               setActiveMenu("user_help_center");
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
+                            }, false)}
+
+                            {renderMenuItem("menu_builders_1", "❤️ Soutenir AFRIGOMBO", "❤️", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_builders");
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
                             }, false)}
                             
                             {currentUser && renderMenuItem("menu_logout", "Déconnexion", "🚪", async () => {
@@ -3199,7 +3198,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
                 className={`h-full w-full ${
-                  ["user_settings", "user_wallet", "user_notifications", "user_heritage", "user_messages", "user_reels"].includes(activeMenu)
+                  ["user_settings", "user_notifications", "user_heritage", "user_messages", "user_reels"].includes(activeMenu)
                     ? "overflow-hidden"
                     : "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
                 } ${
@@ -5638,17 +5637,39 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {/* 6c. HISTORIQUE SECTION */}
               {activeMenu === "user_history" && (() => {
-                const myContracts = transactions || [];
+                const uid = profile?.uid || (currentUser as any)?.uid || (currentUser as any)?.id;
+                const myTxs = (transactions || []).filter((t: any) => t.userId === uid || t.senderId === uid || t.receiverId === uid);
                 
-                const activities = [
-                  { id: "h1", type: "connections", date: "Aujourd'hui, 09:42", label: "Connexion souveraine établie", detail: "Session authentifiée avec succès depuis Abidjan (Mobile Android)", status: "Succès" },
-                  { id: "h2", type: "transactions", date: "Hier, 18:15", label: "Cachet en Séquestre reçu", detail: "Dépôt de 150.000 FCFA bloqué en garantie pour Concert Marcory", status: "Crédit" },
-                  { id: "h3", type: "applications", date: "24/07/2026, 14:00", label: "Candidature transmise", detail: "Postulation au Gombo : Guitariste Solo pour Session Studio", status: "En cours" },
-                  { id: "h4", type: "connections", date: "22/07/2026, 11:30", label: "Audit de sécurité Gombo ID", detail: "Empreinte numérique et badge vérifiés avec succès", status: "Validé" },
-                  { id: "h5", type: "transactions", date: "20/07/2026, 16:45", label: "Retrait Mobile Money", detail: "Transfert de 75.000 FCFA vers votre compte Wave", status: "Débit" }
-                ];
+                const realActivities: any[] = [];
 
-                const filteredHistory = activities.filter(a => {
+                // 1. Connection activity
+                if (currentUser) {
+                  const lastLogin = (currentUser as any)?.metadata?.lastSignInTime 
+                    ? new Date((currentUser as any).metadata.lastSignInTime).toLocaleString("fr-FR") 
+                    : "Aujourd'hui";
+                  realActivities.push({
+                    id: "conn_1",
+                    type: "connections",
+                    date: lastLogin,
+                    label: "Connexion authentifiée",
+                    detail: `Session active (${currentUser.email || "Utilisateur"})`,
+                    status: "Souverain"
+                  });
+                }
+
+                // 2. Real transactions
+                myTxs.forEach((t: any, idx: number) => {
+                  realActivities.push({
+                    id: t.id || `tx_${idx}`,
+                    type: "transactions",
+                    date: t.date || (t.createdAt?.toDate ? t.createdAt.toDate().toLocaleString("fr-FR") : "Date récente"),
+                    label: t.title || t.type || "Transaction Wallet",
+                    detail: `${t.amount || t.montant || 0} FCFA - ${t.description || "Opération financière"}`,
+                    status: t.status || "Effectué"
+                  });
+                });
+
+                const filteredHistory = realActivities.filter(a => {
                   if (historyFilter === "all") return true;
                   return a.type === historyFilter;
                 });
@@ -5697,27 +5718,39 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                     {/* Timeline list */}
                     <div className="space-y-3">
-                      {filteredHistory.map((act) => (
-                        <div key={act.id} className="p-4 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm transition-all">
-                          <div className="flex items-start gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-afri-bg-sec border border-[#D4AF37]/30 flex items-center justify-center shrink-0 text-base">
-                              {act.type === "connections" ? "🔐" : act.type === "transactions" ? "💳" : "📝"}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="text-xs sm:text-sm font-bold text-afri-text">{act.label}</h4>
-                                <span className="px-1.5 py-0.2 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 text-[8.5px] font-mono font-bold uppercase rounded">
-                                  {act.status}
-                                </span>
-                              </div>
-                              <p className="text-xs text-afri-text-sec mt-0.5">{act.detail}</p>
-                            </div>
+                      {filteredHistory.length === 0 ? (
+                        <div className="p-8 text-center bg-afri-bg border border-afri-border rounded-3xl space-y-3">
+                          <div className="w-12 h-12 mx-auto rounded-full bg-afri-bg-sec border border-afri-border flex items-center justify-center text-xl">
+                            📂
                           </div>
-                          <span className="text-[10px] font-mono text-afri-text-muted self-end sm:self-auto shrink-0">
-                            {act.date}
-                          </span>
+                          <h4 className="text-sm font-bold text-afri-text uppercase tracking-wider">Aucun enregistrement disponible</h4>
+                          <p className="text-xs text-afri-text-sec max-w-sm mx-auto">
+                            Aucune donnée disponible dans cette catégorie pour le moment. Vos futurs enregistrements apparaîtront automatiquement ici.
+                          </p>
                         </div>
-                      ))}
+                      ) : (
+                        filteredHistory.map((act) => (
+                          <div key={act.id} className="p-4 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm transition-all">
+                            <div className="flex items-start gap-3">
+                              <div className="w-9 h-9 rounded-xl bg-afri-bg-sec border border-[#D4AF37]/30 flex items-center justify-center shrink-0 text-base">
+                                {act.type === "connections" ? "🔐" : act.type === "transactions" ? "💳" : "📝"}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="text-xs sm:text-sm font-bold text-afri-text">{act.label}</h4>
+                                  <span className="px-1.5 py-0.2 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 text-[8.5px] font-mono font-bold uppercase rounded">
+                                    {act.status}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-afri-text-sec mt-0.5">{act.detail}</p>
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-mono text-afri-text-muted self-end sm:self-auto shrink-0">
+                              {act.date}
+                            </span>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 );

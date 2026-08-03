@@ -10,6 +10,7 @@ import {
 } from "recharts";
 
 import { supportConfig } from "../supportConfig";
+import StrategicDecisionsManager from "./admin/StrategicDecisionsManager";
 
 interface FounderThroneProps {
   adminEmail: string;
@@ -32,8 +33,9 @@ interface FounderThroneProps {
 }
 
 export default function FounderThrone({
-  users,
-  transactions,
+  users = [],
+  gombos = [],
+  transactions = [],
   alerts = [],
   setAlerts,
   addToTerminal,
@@ -44,6 +46,11 @@ export default function FounderThrone({
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const realTotalRevenue = transactions.reduce((acc, t) => acc + (Number(t.montant || t.amount || 0)), 0);
+  const totalUsers = users.length;
+  const totalGombos = gombos.length;
+  const totalAlerts = alerts.length;
 
   // PWA Version Controls
   const handlePurgeCache = async () => {
@@ -148,6 +155,7 @@ export default function FounderThrone({
         <nav className="flex-1 px-4 2xl:px-6 py-6 space-y-2 overflow-y-auto scrollbar-none">
           {[
             { id: "dashboard", label: "TABLEAU DE BORD", icon: Home },
+            { id: "decisions_strategiques", label: "DÉCISIONS STRATÉGIQUES", icon: FileText, badge: true },
             { id: "utilisateurs", label: "UTILISATEURS", icon: Users },
             { id: "finances", label: "FINANCES", icon: Wallet },
             { id: "statistiques", label: "STATISTIQUES", icon: BarChart2 },
@@ -244,7 +252,12 @@ export default function FounderThrone({
         {/* LOCKED MAIN REGION (SCALES DOWN ON SMALLER WINDOWS) */}
         <main className="flex-1 w-full flex bg-transparent p-4 pb-0 items-start justify-center relative overflow-y-auto custom-scrollbar">
           
-          <div className="w-full xl:max-w-[1500px] 2xl:max-w-[1800px] mx-auto flex flex-col xl:flex-row gap-5">
+          {activeMenu === "decisions_strategiques" ? (
+            <div className="w-full xl:max-w-[1500px] 2xl:max-w-[1800px] mx-auto pb-10">
+              <StrategicDecisionsManager />
+            </div>
+          ) : (
+            <div className="w-full xl:max-w-[1500px] 2xl:max-w-[1800px] mx-auto flex flex-col xl:flex-row gap-5">
             
             {/* LEFT COLUMN (WIDER) */}
             <div className="flex flex-col gap-5 w-full xl:w-[60%] 2xl:w-[65%] min-h-0">
@@ -302,14 +315,10 @@ export default function FounderThrone({
                {/* GLOBAL STATS GRID */}
                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 shrink-0">
                  {[
-                   { label: "UTILISATEURS TOTAUX", val: "1,250,459", trend: "+15.8%", icon: Users },
-                   { label: "UTILISATEURS ACTIFS AUJOURD'HUI", val: "245,789", trend: "+18.6%", icon: UserCheck },
-                   { label: "PUBLICATIONS TOTALES", val: "3,456,789", trend: "+21.4%", icon: FileText },
-                   { label: "LIVES EN COURS", val: "342", trend: "+5.2%", icon: Radio },
-                   { label: "SIGNALEMENTS", val: "1,245", trend: "-8.4%", icon: ShieldCheck, trendDown: true },
-                   { label: "REVENUS PLATEFORME", val: "185,750,000", trend: "+12.4%", icon: Wallet },
-                   { label: "PAYS ACTIFS", val: "46", trend: "+3", icon: Globe },
-                   { label: "COMMUNAUTÉS", val: "789", trend: "+11.1%", icon: Users },
+                   { label: "UTILISATEURS ENREGISTRÉS", val: totalUsers > 0 ? totalUsers.toLocaleString() : "Aucun enregistrement", trend: "Firebase Sync", icon: Users },
+                   { label: "PUBLICATIONS & GOMBOS", val: totalGombos > 0 ? totalGombos.toLocaleString() : "Aucun enregistrement", trend: "Base Firestore", icon: FileText },
+                   { label: "SIGNALEMENTS & BUGS", val: totalAlerts > 0 ? totalAlerts.toLocaleString() : "Aucune alerte", trend: "Support réel", icon: ShieldCheck, trendDown: totalAlerts === 0 },
+                   { label: "TRANSACTIONS TOTALES", val: realTotalRevenue > 0 ? `${realTotalRevenue.toLocaleString()} FCFA` : "0 FCFA", trend: "Ledger Réel", icon: Wallet },
                  ].map((stat, i) => {
                    const Icon = stat.icon;
                    return (
@@ -444,22 +453,22 @@ export default function FounderThrone({
                         <span className="font-mono font-black text-xl">💰</span>
                       </div>
                       <span className="text-3xl sm:text-4xl 2xl:text-5xl font-sans font-black text-afri-text tracking-tight leading-none drop-shadow-md">
-                         {balanceVisible ? "12,450,000" : "••••••••"}
+                         {balanceVisible ? `${realTotalRevenue.toLocaleString()} FCFA` : "••••••••"}
                       </span>
-                      <span className="text-afri-text-sec font-mono text-[11px] font-black self-end mb-1 tracking-widest">GAWA</span>
+                      <span className="text-afri-text-sec font-mono text-[11px] font-black self-end mb-1 tracking-widest">FCFA</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-6 pt-6 border-t border-afri-border/80">
                     <div>
-                      <span className="text-[9px] sm:text-[10px] text-afri-text-sec tracking-[0.15em] uppercase font-mono font-bold block mb-2">REVENUS MENSUELS</span>
-                      <span className="text-xl sm:text-2xl font-black font-sans text-afri-text block leading-tight">185,750,000</span>
-                      <span className="text-[11px] font-mono font-black text-emerald-400 flex items-center gap-1 mt-1.5 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]"><ArrowUpRight className="w-3 h-3"/> +12.4% <ArrowUpRight className="w-3 h-3 text-emerald-600 ml-1 opacity-50"/></span>
+                      <span className="text-[9px] sm:text-[10px] text-afri-text-sec tracking-[0.15em] uppercase font-mono font-bold block mb-2">REVENUS CUMULÉS (LEDGER)</span>
+                      <span className="text-xl sm:text-2xl font-black font-sans text-afri-text block leading-tight">{realTotalRevenue.toLocaleString()} FCFA</span>
+                      <span className="text-[11px] font-mono font-black text-emerald-400 flex items-center gap-1 mt-1.5 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]"><ArrowUpRight className="w-3 h-3"/> Données réelles</span>
                     </div>
                     <div>
-                      <span className="text-[9px] sm:text-[10px] text-afri-text-sec tracking-[0.15em] uppercase font-mono font-bold block mb-2">REVENUS ANNUELS</span>
-                      <span className="text-xl sm:text-2xl font-black font-sans text-afri-text block leading-tight">1,982,450,000</span>
-                      <span className="text-[11px] font-mono font-black text-emerald-400 flex items-center gap-1 mt-1.5 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]"><ArrowUpRight className="w-3 h-3"/> +28.7% <ArrowUpRight className="w-3 h-3 text-emerald-600 ml-1 opacity-50"/></span>
+                      <span className="text-[9px] sm:text-[10px] text-afri-text-sec tracking-[0.15em] uppercase font-mono font-bold block mb-2">TRANSACTIONS ENREGISTRÉES</span>
+                      <span className="text-xl sm:text-2xl font-black font-sans text-afri-text block leading-tight">{transactions.length}</span>
+                      <span className="text-[11px] font-mono font-black text-emerald-400 flex items-center gap-1 mt-1.5 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]"><ArrowUpRight className="w-3 h-3"/> Firestore Sync</span>
                     </div>
                   </div>
 
@@ -893,6 +902,7 @@ export default function FounderThrone({
 
             </div>
           </div>
+          )}
         </main>
       </div>
       </div>
