@@ -1,14 +1,19 @@
 import re
 
-with open("src/components/AdminCentre.tsx", "r") as f:
-    content = f.read()
+def fix_file(filename):
+    with open(filename, 'r') as f:
+        content = f.read()
 
-target = '      <div className="absolute top-0 left-0 w-full z-[100]"><GlobalNotificationBanner /></div>'
-replacement = '      <div className="fixed top-0 left-0 w-full z-[9999]"><GlobalNotificationBanner /></div>'
-if target in content:
-    content = content.replace(target, replacement)
-else:
-    print("Not found")
+    # We replace common full-height and overflow wrappers that the components themselves or AdminCentre wrappers have.
+    content = content.replace('"w-full h-full animate-fadeIn text-left"', '"w-full animate-fadeIn text-left"')
+    
+    # Also "h-full w-full animate-fadeIn text-left"
+    content = content.replace('"h-full w-full animate-fadeIn text-left"', '"w-full animate-fadeIn text-left"')
+    
+    # "h-full w-full afri-container afri-section animate-fadeIn text-left"
+    content = content.replace('"h-full w-full afri-container afri-section animate-fadeIn text-left"', '"w-full afri-container afri-section animate-fadeIn text-left"')
 
-with open("src/components/AdminCentre.tsx", "w") as f:
-    f.write(content)
+    with open(filename, 'w') as f:
+        f.write(content)
+
+fix_file('src/components/AdminCentre.tsx')

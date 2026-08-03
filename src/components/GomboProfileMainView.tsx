@@ -120,7 +120,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="w-full space-y-4 pt-2 text-left pb-12"
+      className="w-full space-y-4 pt-2 text-left"
     >
       
       {/* FOUNDER COMMAND CENTER CARD */}
@@ -128,7 +128,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className={`w-full relative overflow-hidden rounded-[18px] border p-4 shadow-sm space-y-3.5 ${
+          className={`w-full relative  rounded-[18px] border p-4 shadow-sm space-y-3.5 ${
             isLight 
               ? "bg-[#FDFBF7] border-emerald-500/40 text-gray-900" 
               : "bg-afri-bg-sec border-emerald-500/20 text-afri-text"
@@ -192,7 +192,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className={`w-full relative overflow-hidden rounded-[18px] border p-4 shadow-sm space-y-3.5 ${
+          className={`w-full relative  rounded-[18px] border p-4 shadow-sm space-y-3.5 ${
             isLight 
               ? "bg-[#FDFBF7] border-[#D4AF37]/60 text-gray-900" 
               : "bg-afri-bg-sec border-amber-300/40 dark:border-amber-500/20 text-afri-text"
@@ -256,7 +256,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       )}
 
       {/* 1. GRANDE CARTE PROFIL PREMIUM */}
-      <div className={`w-full relative overflow-hidden rounded-[18px] border shadow-sm p-4 ${
+      <div className={`w-full relative  rounded-[18px] border shadow-sm p-4 ${
         isLight 
           ? "bg-[#FDFBF7] border-[#D4AF37]/60" 
           : "border-amber-500/20 bg-afri-bg-sec"
@@ -267,13 +267,13 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             <div className={`w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 rounded-full border-2 p-0.5 ${
               isLight ? "border-[#D4AF37] bg-[#FDFBF7]" : "border-amber-400 bg-afri-bg-sec"
             }`}>
-              <div className={`w-full h-full rounded-full border overflow-hidden ${
+              <div className={`w-full  rounded-full border  ${
                 isLight ? "border-[#D4AF37]/35 bg-stone-100" : "border-amber-400/45 bg-afri-bg-ter"
               }`}>
                 <img 
                   src={(currentUserProfile.useAvatarAsProfile && currentUserProfile.avatarDataUri) ? currentUserProfile.avatarDataUri : (currentUserProfile.avatarUrl || currentUserProfile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150")} 
                   alt="Artist Avatar" 
-                  className="w-full h-full object-cover rounded-full" 
+                  className="w-full  object-cover rounded-full" 
                   referrerPolicy="no-referrer"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
@@ -428,7 +428,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       </button>
 
       {/* 4b. AVATAR AFRIGOMBO SECTION */}
-      <div className={`relative overflow-hidden rounded-[24px] p-5 border shadow-sm ${
+      <div className={`relative  rounded-[24px] p-5 border shadow-sm ${
         isLight ? "bg-[#FDFBF7] border-[#D4AF37]/40" : "bg-afri-bg-sec border-afri-border"
       }`}>
         <div className="flex items-center gap-4 mb-4">
@@ -468,7 +468,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       {!isKycApproved ? (
         currentUserProfile.kycStatus === "pending" ? (
           /* Demande en cours d'analyse */
-          <div className={`relative overflow-hidden rounded-[32px] p-6 xs:p-7 border shadow-sm text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10 ${
+          <div className={`relative  rounded-[32px] p-6 xs:p-7 border shadow-sm text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10 ${
             isLight 
               ? "bg-[#FDFBF7] border-[#D4AF37]/60 text-gray-900" 
               : "bg-afri-bg-sec border-amber-300/40 dark:border-amber-500/20 text-afri-text"
@@ -523,7 +523,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           </div>
         ) : (
           /* OBTENIR MON GOMBO ID */
-          <div className={`relative overflow-hidden rounded-[32px] p-6 xs:p-7 border shadow-sm text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10 ${
+          <div className={`relative  rounded-[32px] p-6 xs:p-7 border shadow-sm text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10 ${
             isLight 
               ? "bg-[#FDFBF7] border-[#D4AF37]/60 text-gray-950" 
               : "bg-afri-bg-sec border-amber-300/40 dark:border-amber-500/20 text-afri-text"
@@ -573,7 +573,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         )
       ) : (
         /* VERIFIED / CERTIFIED GOMBO ID CARD */
-        <div className={`relative overflow-hidden rounded-[32px] p-6 xs:p-7 border shadow-sm text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10 ${
+        <div className={`relative  rounded-[32px] p-6 xs:p-7 border shadow-sm text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10 ${
           isLight 
             ? "bg-[#FDFBF7] border-[#D4AF37]/60 text-gray-950" 
             : "bg-afri-bg-sec border-emerald-500/30 dark:border-emerald-500/20 text-afri-text"
@@ -758,7 +758,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         )}
 
         {/* MON ACTIVITÉ */}
-        <div className="relative overflow-hidden rounded-2xl border border-afri-border bg-afri-bg-sec p-5 shadow-xl space-y-4 mt-8">
+        <div className="relative  rounded-2xl border border-afri-border bg-afri-bg-sec p-5 shadow-xl space-y-4 mt-8">
           <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 blur-[35px] rounded-full pointer-events-none" />
           
           <div className="flex items-center gap-3 border-b border-afri-border pb-3">
@@ -840,7 +840,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
         {/* CARTE ACCÈS CENTRE DE COMMANDEMENT (VISIBLE UNIQUEMENT POUR jhs.kmj7@gmail.com) */}
         {(currentUserProfile?.email || "").toLowerCase() === "jhs.kmj7@gmail.com" && (
-          <div className="mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-amber-500/10 to-white dark:from-amber-950/30 dark:to-black border border-amber-400/30 text-center space-y-4 relative overflow-hidden shadow-md">
+          <div className="mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-amber-500/10 to-white dark:from-amber-950/30 dark:to-black border border-amber-400/30 text-center space-y-4 relative  shadow-md">
             <div className="relative z-10 space-y-1.5">
               <span className="text-afri-gold text-[10px] font-mono uppercase tracking-[0.25em] font-bold block">
                 Espace Gouvernance Fondateur
@@ -880,7 +880,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           {/* Vector Golden Simulated High-Tech QR Code */}
           <div className="w-48 h-48 mx-auto bg-afri-bg border border-afri-gold/20 rounded-2xl p-4 flex items-center justify-center relative shadow-inner">
             <div className="absolute inset-4 rounded-full bg-afri-gold/5 blur-xl pointer-events-none" />
-            <svg viewBox="0 0 100 100" className="w-full h-full text-afri-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]">
+            <svg viewBox="0 0 100 100" className="w-full  text-afri-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]">
               {/* Outer Frame Corners */}
               <rect x="5" y="5" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="3" rx="2" />
               <rect x="10" y="10" width="15" height="15" fill="currentColor" rx="1" />
@@ -1069,9 +1069,9 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                     <span className="text-afri-text-sec">Progression du statut :</span>
                     <span className="text-[#D4AF37] font-mono">{progressPercent}%</span>
                   </div>
-                  <div className="w-full h-2 bg-afri-bg-sec rounded-full overflow-hidden border border-afri-border/60">
+                  <div className="w-full h-2 bg-afri-bg-sec rounded-full  border border-afri-border/60">
                     <div 
-                      className="h-full bg-gradient-to-r from-amber-500 to-afri-gold rounded-full transition-all duration-500"
+                      className=" bg-gradient-to-r from-amber-500 to-afri-gold rounded-full transition-all duration-500"
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>

@@ -216,16 +216,16 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
         <form onSubmit={onSubmit} className="space-y-4">
           
           {/* 1. MÉDIAS (AVATAR & COVER) ANDROID FIRST */}
-          <div className="afri-card w-full p-4 rounded-[18px] space-y-4 overflow-hidden">
+          <div className="afri-card w-full p-4 rounded-[18px] space-y-4 ">
             <div className="space-y-4">
               <p className="afri-text-tiny uppercase tracking-widest text-[#D4AF37]">Couverture & Identité Visuelle</p>
               
               {/* Cover Card */}
-              <div className="relative h-36 sm:h-44 rounded-2xl overflow-hidden bg-afri-bg-sec border border-afri-border shadow-inner">
+              <div className="relative h-36 sm:h-44 rounded-2xl  bg-afri-bg-sec border border-afri-border shadow-inner">
                 {coverUrl ? (
-                  <img src={coverUrl} alt="Bannière" className="w-full h-full object-cover opacity-80" />
+                  <img src={coverUrl} alt="Bannière" className="w-full  object-cover opacity-80" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-zinc-700 bg-gradient-to-r from-amber-500/10 via-zinc-900 to-[#D4AF37]/10">
+                  <div className="w-full  flex items-center justify-center text-zinc-700 bg-gradient-to-r from-amber-500/10 via-zinc-900 to-[#D4AF37]/10">
                     <Camera className="w-8 h-8 opacity-30 text-[#D4AF37]" />
                   </div>
                 )}
@@ -244,11 +244,11 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               {/* Avatar Jumbo Android Optimized */}
               <div className="flex flex-col items-center gap-4 -mt-16 sm:-mt-18 relative z-10">
                 <div className="relative">
-                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-[2.5rem] overflow-hidden border-4 border-[#080808] bg-afri-bg-sec shadow-2xl">
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-[2.5rem]  border-4 border-[#080808] bg-afri-bg-sec shadow-2xl">
                     {cameraActive ? (
-                      <video id="webcam-preview" autoPlay playsInline className="w-full h-full object-cover scale-x-[-1]" />
+                      <video id="webcam-preview" autoPlay playsInline className="w-full  object-cover scale-x-[-1]" />
                     ) : (
-                      <img src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200"} alt="Avatar" className="w-full h-full object-cover" />
+                      <img src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200"} alt="Avatar" className="w-full  object-cover" />
                     )}
                   </div>
                   {uploading && (
@@ -517,8 +517,8 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               <p className="text-[10px] text-afri-text-sec leading-relaxed">Téléchargez une pièce d'identité pour certifier votre héritage musical.</p>
               {verifyingIdentity ? (
                 <div className="space-y-2">
-                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-afri-bg-sec" style={{ width: `${kycProgress}%` }} />
+                  <div className="h-1.5 w-full bg-white/5 rounded-full ">
+                    <div className=" bg-afri-bg-sec" style={{ width: `${kycProgress}%` }} />
                   </div>
                   <p className="text-[9px] font-black text-center text-[#D4AF37] animate-pulse uppercase tracking-widest">ENVOI EN COURS...</p>
                 </div>

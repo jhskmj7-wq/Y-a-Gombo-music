@@ -2440,7 +2440,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   // CompleteProfile route moved to App.tsx
 
   return (
-    <div className={`flex h-full h-[100dvh] w-full max-w-full box-border bg-afri-bg text-afri-text font-sans antialiased overflow-hidden uppercase-none`}>
+    <div className={`flex h-full h-[100dvh] w-full max-w-full box-border bg-afri-bg text-afri-text font-sans antialiased uppercase-none`}>
 
       
       {(activeMenu === "super_admin" || activeMenu === "dashboard") && (
@@ -2891,7 +2891,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                ZONE B : WORKSPACE CENTRAL (MIDDLE)
          ========================================================================= */}
       <main 
-        className="flex-1 min-w-0 min-h-0 w-full max-w-full bg-afri-bg flex flex-col overflow-hidden"
+        className="flex-1 min-w-0 min-h-0 w-full max-w-full bg-afri-bg flex flex-col"
       >
         
         {/* FLOATING ADMIN ANNOUNCEMENT TOAST BANNER */}
@@ -3117,7 +3117,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
           {/* 1.1. NEARBY PAGE VIEW */}
           <div 
-            className={activeMenu === "nearby" ? "h-full w-full animate-fadeIn text-left" : "hidden"}
+            className={activeMenu === "nearby" ? "w-full animate-fadeIn text-left" : "hidden"}
           >
             <NearbyPageView
               gombos={gombos}
@@ -3132,7 +3132,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
           {/* 1. LE TERRAIN - CENTRAL HUB FEED */}
           <div 
-            className={activeMenu === "user_terrain" ? "h-full w-full afri-container afri-section animate-fadeIn text-left" : "hidden"}
+            className={activeMenu === "user_terrain" ? "w-full afri-container afri-section animate-fadeIn text-left" : "hidden"}
             style={{ overscrollBehaviorY: "contain" }}
           >
             <UserTerrainLandingPage
@@ -4893,7 +4893,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 };
 
                 return (
-                  <div className="afri-container h-full w-full overflow-y-auto overflow-x-hidden pt-4 xs:pt-6 scrollbar-none">
+                  <div className="afri-container w-full pt-4 xs:pt-6">
                     <div className="max-w-2xl mx-auto space-y-4 xs:space-y-6 animate-fadeIn relative select-none">
                     
                     {/* Modal Solde Insuffisant */}
@@ -5950,7 +5950,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {/* 7b. PORTESECURE / AFRIGOMBO WALLET (USER) */}
               {activeMenu === "user_wallet" && (
-                <div className="w-full h-full animate-fadeIn text-left">
+                <div className="w-full animate-fadeIn text-left">
                   <AfrigomboWalletDashboard 
                     currentUserProfile={profile || (currentUser as any)} 
                     addToTerminal={addToTerminal}
@@ -6028,7 +6028,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {activeMenu === "user_heritage" && (
-                <div className="w-full h-full animate-fadeIn">
+                <div className="w-full animate-fadeIn">
                   <HeritagePage 
                     onNavigateView={(view, tab) => {
                       if (view === "heritage") setActiveMenu("user_heritage");
@@ -6665,7 +6665,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-afri-text-sec">Aucun artiste disponible.</p>;
                 return (
-                  <div className="w-full h-full animate-fadeIn text-left">
+                  <div className="w-full animate-fadeIn text-left">
                     <NotificationCenter 
                       currentUserProfile={profile || currentArtist} 
                       notifications={allNotifications}
@@ -6738,7 +6738,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {activeMenu === "user_messages" && (
-                <div className="w-full h-full min-h-screen flex flex-col justify-between p-0 m-0 border-none rounded-none bg-afri-bg animate-fadeIn text-left">
+                <div className="w-full flex flex-col justify-between p-0 m-0 border-none rounded-none bg-afri-bg animate-fadeIn text-left">
                   <MessagesView
                     currentUser={currentUser || { uid: activeArtistId }}
                     currentProfile={profile || (users.find(u => u.id === activeArtistId) || users[0])}
@@ -6784,7 +6784,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
 
               {activeMenu === "user_edit_profile" && (
-                <div className="w-full h-full animate-fadeIn">
+                <div className="w-full animate-fadeIn">
                   {profile ? (
                     <HeritagePage 
                       onNavigateView={(view) => {

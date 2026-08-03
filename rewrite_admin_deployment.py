@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import re
+
+content = """import React, { useState } from 'react';
 import { Rocket, ToggleRight, CheckCircle, History, Info, Clock, Check, X, ShieldAlert, ChevronRight, User } from 'lucide-react';
 
 export interface AdminDeploymentCenterProps {
@@ -146,7 +148,7 @@ export default function AdminDeploymentCenter({ currentUser, userEmail }: AdminD
             <div key={i} className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-black text-white bg-white/10 px-2 py-0.5 rounded-md">{item.v}</span>
-                <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full ${item.status === 'Déployé' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-afri-bg-ter text-afri-text-sec'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full ${item.status === 'Déployé' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-800 text-zinc-400'}`}>
                   {item.status}
                 </span>
               </div>
@@ -191,3 +193,7 @@ export default function AdminDeploymentCenter({ currentUser, userEmail }: AdminD
     </div>
   );
 }
+"""
+
+with open('src/components/admin/AdminDeploymentCenter.tsx', 'w') as f:
+    f.write(content)

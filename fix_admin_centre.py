@@ -1,25 +1,16 @@
 import re
 
-with open('src/components/AdminCentre.tsx', 'r') as f:
-    content = f.read()
+def fix_file(filename):
+    with open(filename, 'r') as f:
+        content = f.read()
 
-# Nearby
-content = content.replace(
-    'className={activeMenu === "nearby" ? "h-full w-full overflow-hidden animate-fadeIn text-left" : "hidden"}',
-    'className={activeMenu === "nearby" ? "h-full w-full animate-fadeIn text-left" : "hidden"}'
-)
-
-# User terrain
-content = content.replace(
-    'className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container afri-section scrollbar-none animate-fadeIn text-left [-webkit-overflow-scrolling:touch] touch-pan-y" : "hidden"}',
-    'className={activeMenu === "user_terrain" ? "h-full w-full afri-container afri-section animate-fadeIn text-left" : "hidden"}'
-)
-
-# Other tabs?
-content = content.replace(
-    'className={`h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden scrollbar-none [-webkit-overflow-scrolling:touch] ${',
-    'className={`h-full w-full ${'
-)
-
-with open('src/components/AdminCentre.tsx', 'w') as f:
-    f.write(content)
+    # Find elements with 'h-full', 'min-h-screen', 'overflow-y-auto', 'overflow-auto', 'overflow-hidden' on main views
+    # E.g.
+    # className="w-full h-full min-h-screen flex flex-col justify-between p-0 m-0 border-none rounded-none bg-afri-bg animate-fadeIn text-left"
+    # className="afri-container h-full w-full overflow-y-auto overflow-x-hidden pt-4 xs:pt-6 scrollbar-none"
+    
+    # We will replace them generally.
+    content = re.sub(r'overflow-y-auto', '', content)
+    
+    # Wait, some modals or textareas might need overflow-y-auto. Let's be careful.
+    

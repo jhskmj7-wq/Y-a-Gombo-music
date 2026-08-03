@@ -1,4 +1,10 @@
-import React from "react";
+import re
+
+def fix_file(filename):
+    with open(filename, 'r') as f:
+        content = f.read()
+
+    new_content = """import React from "react";
 import { BackButton } from "../common/BackButton";
 
 export interface AndroidPageLayoutProps {
@@ -60,3 +66,8 @@ export function AndroidPageLayout({
 }
 
 export default AndroidPageLayout;
+"""
+    with open(filename, 'w') as f:
+        f.write(new_content)
+
+fix_file('src/components/layout/AndroidPageLayout.tsx')
