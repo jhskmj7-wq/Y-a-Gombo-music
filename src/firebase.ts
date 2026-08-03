@@ -1356,23 +1356,7 @@ export const gomboDB = {
     }
   },
 
-  async submitSupportTicket(ticket: any) {
-    if (db) {
-      const payload = {
-        userId: ticket.userId || ticket.uid || "anonyme",
-        userName: ticket.userName || ticket.displayName || "Utilisateur",
-        userEmail: ticket.userEmail || ticket.email || "",
-        title: ticket.title || ticket.subject || "Demande de Support",
-        subject: ticket.subject || ticket.title || "Support",
-        message: ticket.message || ticket.details || "",
-        details: ticket.details || ticket.message || "",
-        status: "PENDING",
-        createdAt: new Date().toISOString()
-      };
-      await addDoc(collection(db, "tickets_support"), payload);
-      await addDoc(collection(db, "support_messages"), payload);
-    }
-  },
+  // submitSupportTicket & submitBugReport are implemented in full with founder notifications below
 
   async submitDispute(dispute: any) {
     if (db) {
@@ -1439,22 +1423,7 @@ export const gomboDB = {
     }
   },
 
-  async submitBugReport(bugData: any) {
-    if (db) {
-      const payload = {
-        userId: bugData.userId || bugData.uid || "anonyme",
-        userName: bugData.userName || bugData.displayName || "Utilisateur",
-        userEmail: bugData.userEmail || bugData.email || "",
-        title: bugData.title || `Rapport de Bug: ${bugData.category || bugData.type || "Général"}`,
-        subject: bugData.subject || bugData.category || bugData.type || "Bug",
-        message: bugData.message || bugData.details || bugData.description || "",
-        details: bugData.details || bugData.message || bugData.description || "",
-        status: "PENDING",
-        createdAt: new Date().toISOString()
-      };
-      await addDoc(collection(db, "bug_reports"), payload);
-    }
-  },
+
 
   async addStudioMarketReview(studioIdOrReview: any, optionalReview?: any) {
     if (db) {
@@ -2956,6 +2925,75 @@ export const gomboDB = {
           console.warn("Could not notify admin of recommendation:", errNotif);
         }
       }
+    }
+  },
+  async submitBugReport(report: any) {
+    if (db) {
+      const payload = {
+        userId: report.userId || report.uid || "anonyme",
+        userName: report.userName || report.displayName || "Utilisateur",
+        userEmail: report.userEmail || report.email || "",
+        afriId: report.afriId || report.afriID || "AFRI-2026-ELITE",
+        version: report.version || "1.0 — Elite Release",
+        device: report.device || "Android (Applet)",
+        browser: report.browser || (typeof navigator !== "undefined" ? navigator.userAgent : "Mobile WebView"),
+        title: report.title || report.subject || `Anomalie Technique: ${report.category || 'Interface'}`,
+        subject: report.subject || report.category || "Bug Technique",
+        message: report.message || report.details || report.description || "",
+        details: report.details || report.message || report.description || "",
+        priority: report.priority || "HAUTE",
+        status: "PENDING",
+        createdAt: new Date().toISOString()
+      };
+
+      await addDoc(collection(db, "bug_reports"), payload);
+      await addDoc(collection(db, "beta_feedback"), { ...payload, type: "bug" });
+
+      try {
+        await this.createFounderNotification({
+          type: "SIGNALEMENT_BUG",
+          category: "SYSTEME",
+          title: `Rapport Technique : ${payload.title}`,
+          message: `Rapport d'anomalie reçu de ${payload.userName} (${payload.afriId}). Message: "${payload.message.substring(0, 100)}"`,
+          senderUid: payload.userId,
+          priority: "HIGH",
+          source: "WEB_CLIENT",
+          data: payload
+        });
+      } catch (errNotif) {
+        console.warn("Could not notify founder of bug report:", errNotif);
+      }
+      return payload;
+    }
+  },
+  async submitSupportTicket(ticket: any) {
+    if (db) {
+      const payload = {
+        userId: ticket.userId || ticket.uid || "anonyme",
+        userName: ticket.userName || ticket.displayName || "Utilisateur",
+        userEmail: ticket.userEmail || ticket.email || "",
+        afriId: ticket.afriId || "AFRI-2026-ELITE",
+        version: ticket.version || "1.0 — Elite Release",
+        title: ticket.title || "Ticket d'Assistance",
+        category: ticket.category || "General",
+        message: ticket.message || ticket.description || "",
+        status: "PENDING",
+        createdAt: new Date().toISOString()
+      };
+      await addDoc(collection(db, "tickets_support"), payload);
+      try {
+        await this.createFounderNotification({
+          type: "TICKET_SUPPORT",
+          category: "SUPPORT",
+          title: `Nouveau Ticket Support: ${payload.title}`,
+          message: `Ticket reçu de ${payload.userName}. ${payload.message}`,
+          senderUid: payload.userId,
+          priority: "NORMAL",
+          source: "WEB_CLIENT",
+          data: payload
+        });
+      } catch (e) {}
+      return payload;
     }
   },
   async getPayments(userId?: string): Promise<any[]> {

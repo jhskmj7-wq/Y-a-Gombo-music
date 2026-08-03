@@ -67,7 +67,7 @@ function CompleteProfileView() {
   }
   
   return (
-    <div className="w-full h-full h-[100dvh] bg-afri-bg flex items-center justify-center py-6 overflow-y-auto overscroll-contain touch-pan-y px-4 font-sans select-none">
+    <div className="w-full h-full h-[100dvh] bg-afri-bg flex items-center justify-center overflow-hidden px-4 font-sans select-none">
       <CompleteProfile 
         currentUserProfile={profile} 
         onComplete={async () => {

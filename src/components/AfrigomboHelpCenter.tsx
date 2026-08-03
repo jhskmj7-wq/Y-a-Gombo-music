@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { HelpCircle, MessageSquare, AlertTriangle, FileText, Star, Lightbulb, ArrowRight, MessageCircle, X, CheckCircle, ChevronDown, ChevronUp, ShieldAlert, BookOpen } from "lucide-react";
+import { HelpCircle, MessageSquare, AlertTriangle, FileText, Star, Lightbulb, ArrowRight, MessageCircle, X, CheckCircle, ChevronDown, ChevronUp, ChevronRight, ShieldAlert, BookOpen } from "lucide-react";
 import { supportConfig } from "../supportConfig";
 import { gomboDB } from "../firebase";
 
@@ -311,6 +311,19 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
               <div>
                 <span className="text-xs font-bold text-afri-text uppercase block">Faire une suggestion</span>
                 <span className="text-[10px] text-afri-text-sec">Proposez des idées</span>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => setActiveModal("support_contribution" as any)}
+              className="col-span-1 sm:col-span-2 flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-afri-gold/25 to-amber-500/15 border border-afri-gold/60 hover:border-afri-gold transition-all text-left cursor-pointer group shadow-lg"
+            >
+              <div className="p-2.5 bg-afri-gold/20 rounded-xl text-afri-gold group-hover:scale-110 transition-transform">
+                <Star className="w-6 h-6 fill-current" />
+              </div>
+              <div className="flex-1">
+                <span className="text-xs font-black text-afri-gold uppercase block tracking-wider">❤️ Soutenir AFRIGOMBO</span>
+                <span className="text-[10px] text-afri-text-sec">Contribuer à l'autonomie et l'expansion du showbiz africain</span>
               </div>
             </button>
           </div>
@@ -686,6 +699,59 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 7. SUPPORT & CONTRIBUTION MODAL */}
+      {(activeModal as string) === "support_contribution" && (
+        <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-afri-bg border border-afri-gold/40 rounded-2xl p-6 w-full max-w-md shadow-2xl relative text-left space-y-5">
+            <button 
+              onClick={() => setActiveModal("none")}
+              className="absolute top-4 right-4 p-2 text-afri-text-sec hover:text-afri-text rounded-lg transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-afri-gold/20 flex items-center justify-center border border-afri-gold/40 text-afri-gold">
+                <Star className="w-5 h-5 fill-current" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black tracking-widest text-afri-gold uppercase">❤️ Soutenir AFRIGOMBO</h3>
+                <p className="text-[10px] text-afri-text-sec font-mono">Développement & Souveraineté Culturelle</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-afri-text-sec leading-relaxed">
+              AFRIGOMBO est conçu pour propulser les artistes, instrumentistes et organisateurs d'Afrique. Votre soutien permet de financer les infrastructures serveurs, la protection des contrats et le développement d'outils d'élite.
+            </p>
+
+            <div className="space-y-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  supportConfig.openSupport("Contribution Bâtisseur");
+                  setActiveModal("none");
+                }}
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500/20 via-afri-gold/30 to-amber-500/20 border border-afri-gold text-afri-gold font-black uppercase text-xs hover:bg-afri-gold/30 transition-all flex items-center justify-between"
+              >
+                <span>Faire une contribution Mobile Money</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  supportConfig.openSupport("Obtenir Badge Bâtisseur");
+                  setActiveModal("none");
+                }}
+                className="w-full py-3 px-4 rounded-xl bg-afri-bg-sec border border-afri-border hover:border-afri-gold/40 text-afri-text font-bold text-xs transition-all flex items-center justify-between"
+              >
+                <span>Obtenir le Badge Bâtisseur du Showbiz 👑</span>
+                <ChevronRight className="w-4 h-4 text-afri-gold" />
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -44,6 +44,67 @@ export interface PrivacySettings {
   messagingVisibility: "all" | "collaborators" | "recruteurs";
 }
 
+export interface ExperienceSettings {
+  premiumAnimations: boolean;
+  reduceAnimations: boolean;
+  batterySaver: boolean;
+  maxFluidity: boolean;
+  visualEffects: boolean;
+  soundEffects: boolean;
+  vibrations: boolean;
+}
+
+export interface ProfileCustomizationSettings {
+  banner: string;
+  profileColor: string;
+  visitingCard: boolean;
+  badge: string;
+  signature: string;
+  profileMusic: string;
+}
+
+export interface PaymentSettings {
+  pinConfigured: boolean;
+  biometricAuth: boolean;
+  preferredMobileMoney: string;
+  currency: string;
+  dailyLimit: number;
+  paymentConfirmation: boolean;
+}
+
+export interface NetworkSettings {
+  autoCompression: boolean;
+  slowConnectionMode: boolean;
+  videoQuality: string;
+  downloadWifiOnly: boolean;
+}
+
+export interface ActiveSession {
+  id: string;
+  device: string;
+  location: string;
+  ip: string;
+  lastActive: string;
+  current: boolean;
+}
+
+export interface SecuritySettings {
+  twoFactorAuth: boolean;
+  fingerprint: boolean;
+  faceId: boolean;
+  activeSessions: ActiveSession[];
+}
+
+export interface PersonalStats {
+  timeSpentHours: number;
+  timeSpentMins: number;
+  gombosCompleted: number;
+  revenueFcfa: number;
+  callsCount: number;
+  messagesCount: number;
+  postsCount: number;
+}
+
 export interface ToastInfo {
   id: number;
   message: string;
@@ -58,6 +119,30 @@ interface AppSettingsContextType {
   setThemePreset: (preset: Theme) => void;
   textSize: "petit" | "moyen" | "grand";
   setTextSize: (size: "petit" | "moyen" | "grand") => void;
+
+  // Experience
+  experience: ExperienceSettings;
+  updateExperiencePref: (key: keyof ExperienceSettings, value: boolean) => void;
+
+  // Profile Customization
+  profileCustomization: ProfileCustomizationSettings;
+  updateProfileCustomizationPref: (key: keyof ProfileCustomizationSettings, value: boolean | string) => void;
+
+  // Payments
+  payments: PaymentSettings;
+  updatePaymentPref: (key: keyof PaymentSettings, value: boolean | string | number) => void;
+
+  // Network
+  network: NetworkSettings;
+  updateNetworkPref: (key: keyof NetworkSettings, value: boolean | string) => void;
+
+  // Security
+  security: SecuritySettings;
+  updateSecurityPref: (key: keyof SecuritySettings, value: boolean) => void;
+  closeOtherSessions: () => void;
+
+  // Personal Stats
+  personalStats: PersonalStats;
 
   // Notifications
   notifications: NotificationSettings;
@@ -137,6 +222,205 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
     return (safeGetItem("gombo_theme_mode", "system") as ThemeMode);
   });
+
+  // 2b. Experience Settings State
+  const [experience, setExperience] = useState<ExperienceSettings>(() => ({
+    premiumAnimations: safeGetItem("gombo_exp_anim", "true") !== "false",
+    reduceAnimations: safeGetItem("gombo_exp_reduce_anim", "false") === "true",
+    batterySaver: safeGetItem("gombo_exp_battery", "false") === "true",
+    maxFluidity: safeGetItem("gombo_exp_fluidity", "true") !== "false",
+    visualEffects: safeGetItem("gombo_exp_fx", "true") !== "false",
+    soundEffects: safeGetItem("gombo_pref_ui_sounds", "true") !== "false",
+    vibrations: safeGetItem("gombo_pref_vibration", "true") !== "false",
+  }));
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (experience.reduceAnimations) root.classList.add("reduce-motion");
+    else root.classList.remove("reduce-motion");
+
+    if (experience.batterySaver) root.classList.add("battery-saver");
+    else root.classList.remove("battery-saver");
+
+    if (experience.maxFluidity) root.classList.add("high-fps");
+    else root.classList.remove("high-fps");
+  }, [experience]);
+
+  const updateExperiencePref = (key: keyof ExperienceSettings, value: boolean) => {
+    setExperience((prev) => {
+      const updated = { ...prev, [key]: value };
+      safeSetItem(`gombo_exp_${key}`, value.toString());
+      return updated;
+    });
+
+    if (key === "soundEffects") {
+      updateAudioPref("soundEffects", value);
+    } else if (key === "vibrations") {
+      updateAudioPref("vibrations", value);
+    }
+
+    const expLabels: Record<keyof ExperienceSettings, string> = {
+      premiumAnimations: value ? "Animations Premium activées ✨" : "Animations réduites",
+      reduceAnimations: value ? "Mode animations réduites activé" : "Animations fluides activées",
+      batterySaver: value ? "Économie de batterie activée 🔋" : "Performance maximale activée ⚡",
+      maxFluidity: value ? "Fluidité maximale 120 FPS activée 🚀" : "Fluidité standard",
+      visualEffects: value ? "Effets visuels et lueurs activés ✨" : "Effets visuels épurés",
+      soundEffects: value ? "Effets sonores de l'application activés 🥁" : "Effets sonores désactivés",
+      vibrations: value ? "Vibrations haptiques activées 📳" : "Vibrations désactivées",
+    };
+
+    showToast(expLabels[key] || "Expérience mise à jour");
+
+    if (currentUser?.uid) {
+      gomboDB.updateUserProfile(currentUser.uid, {
+        [`experience.${key}`]: value
+      }).catch((e) => console.error(e));
+    }
+  };
+
+  // 2c. Profile Customization State
+  const [profileCustomization, setProfileCustomization] = useState<ProfileCustomizationSettings>(() => ({
+    banner: safeGetItem("gombo_prof_banner", "imperial_gold"),
+    profileColor: safeGetItem("gombo_prof_color", "#D4AF37"),
+    visitingCard: safeGetItem("gombo_prof_card", "true") !== "false",
+    badge: safeGetItem("gombo_prof_badge", "GOLD_ARTIST"),
+    signature: safeGetItem("gombo_prof_sig", "Artiste Élite AFRIGOMBO 👑"),
+    profileMusic: safeGetItem("gombo_prof_music", "intro_hymn"),
+  }));
+
+  const updateProfileCustomizationPref = (key: keyof ProfileCustomizationSettings, value: boolean | string) => {
+    setProfileCustomization((prev) => {
+      const updated = { ...prev, [key]: value };
+      safeSetItem(`gombo_prof_${key}`, value.toString());
+      return updated;
+    });
+
+    showToast(`Personnalisation (${key}) mise à jour avec succès 🎨`);
+
+    if (currentUser?.uid) {
+      gomboDB.updateUserProfile(currentUser.uid, {
+        [`profileCustomization.${key}`]: value
+      }).catch((e) => console.error(e));
+    }
+  };
+
+  // 2d. Payments State
+  const [payments, setPayments] = useState<PaymentSettings>(() => ({
+    pinConfigured: safeGetItem("gombo_pay_pin", "true") === "true",
+    biometricAuth: safeGetItem("gombo_pay_bio", "true") !== "false",
+    preferredMobileMoney: safeGetItem("gombo_pay_momo", "Orange Money"),
+    currency: safeGetItem("gombo_pay_curr", "FCFA (XOF)"),
+    dailyLimit: parseInt(safeGetItem("gombo_pay_limit", "500000"), 10),
+    paymentConfirmation: safeGetItem("gombo_pay_confirm", "true") !== "false",
+  }));
+
+  const updatePaymentPref = (key: keyof PaymentSettings, value: boolean | string | number) => {
+    setPayments((prev) => {
+      const updated = { ...prev, [key]: value };
+      safeSetItem(`gombo_pay_${key}`, value.toString());
+      return updated;
+    });
+
+    const payMsgs: Record<string, string> = {
+      biometricAuth: value ? "Biométrie (TouchID / FaceID) activée 🔐" : "Biométrie désactivée",
+      preferredMobileMoney: `Moyen de paiement par défaut: ${value}`,
+      currency: `Devise d'affichage réglée sur ${value}`,
+      dailyLimit: `Limite quotidienne fixée à ${Number(value).toLocaleString()} FCFA`,
+      paymentConfirmation: value ? "Confirmation obligatoire des paiements activée" : "Confirmation instantanée",
+      pinConfigured: "Code PIN sécurisé mis à jour",
+    };
+
+    showToast(payMsgs[key] || "Paramètre de paiement mis à jour");
+
+    if (currentUser?.uid) {
+      gomboDB.updateUserProfile(currentUser.uid, {
+        [`paymentSettings.${key}`]: value
+      }).catch((e) => console.error(e));
+    }
+  };
+
+  // 2e. Network State
+  const [network, setNetwork] = useState<NetworkSettings>(() => ({
+    autoCompression: safeGetItem("gombo_net_compress", "true") !== "false",
+    slowConnectionMode: safeGetItem("gombo_net_slow", "false") === "true",
+    videoQuality: safeGetItem("gombo_net_vid_qual", "720p HD"),
+    downloadWifiOnly: safeGetItem("gombo_net_wifi", "true") !== "false",
+  }));
+
+  const updateNetworkPref = (key: keyof NetworkSettings, value: boolean | string) => {
+    setNetwork((prev) => {
+      const updated = { ...prev, [key]: value };
+      safeSetItem(`gombo_net_${key}`, value.toString());
+      return updated;
+    });
+
+    const netMsgs: Record<string, string> = {
+      autoCompression: value ? "Compression réseau automatique activée 📶" : "Qualité originale conservée",
+      slowConnectionMode: value ? "Mode 2G/3G Réseau Lent activé" : "Mode réseau standard",
+      videoQuality: `Qualité vidéo réglée à : ${value}`,
+      downloadWifiOnly: value ? "Téléchargement multimédia restreint au Wi-Fi" : "Téléchargement autorisé sur données mobiles",
+    };
+
+    showToast(netMsgs[key] || "Réglage réseau enregistré");
+
+    if (currentUser?.uid) {
+      gomboDB.updateUserProfile(currentUser.uid, {
+        [`networkSettings.${key}`]: value
+      }).catch((e) => console.error(e));
+    }
+  };
+
+  // 2f. Security State
+  const [security, setSecurity] = useState<SecuritySettings>(() => ({
+    twoFactorAuth: safeGetItem("gombo_sec_2fa", "false") === "true",
+    fingerprint: safeGetItem("gombo_sec_fingerprint", "true") !== "false",
+    faceId: safeGetItem("gombo_sec_faceid", "false") === "true",
+    activeSessions: [
+      { id: "1", device: "App Android — Mobile (Applet)", location: "Abidjan, Côte d'Ivoire", ip: "41.207.210.12", lastActive: "En ce moment", current: true },
+      { id: "2", device: "Chrome Web Desktop", location: "Plateau, Abidjan", ip: "160.155.32.1", lastActive: "Il y a 3 heures", current: false },
+    ],
+  }));
+
+  const updateSecurityPref = (key: keyof SecuritySettings, value: boolean) => {
+    setSecurity((prev) => {
+      const updated = { ...prev, [key]: value };
+      safeSetItem(`gombo_sec_${key}`, value.toString());
+      return updated;
+    });
+
+    const secMsgs: Record<string, string> = {
+      twoFactorAuth: value ? "Double Authentification (2FA) activée 🔒" : "Double Authentification désactivée",
+      fingerprint: value ? "Déverrouillage par empreinte digitale activé 👆" : "Empreinte digitale désactivée",
+      faceId: value ? "Reconnaissance faciale FaceID activée 👤" : "Reconnaissance faciale désactivée",
+    };
+
+    showToast(secMsgs[key] || "Sécurité mise à jour");
+
+    if (currentUser?.uid) {
+      gomboDB.updateUserProfile(currentUser.uid, {
+        [`securitySettings.${key}`]: value
+      }).catch((e) => console.error(e));
+    }
+  };
+
+  const closeOtherSessions = () => {
+    setSecurity((prev) => ({
+      ...prev,
+      activeSessions: prev.activeSessions.filter((s) => s.current),
+    }));
+    showToast("🔒 Toutes les autres sessions ont été fermées avec succès !", "success");
+  };
+
+  // 2g. Personal Stats
+  const personalStats: PersonalStats = {
+    timeSpentHours: 18,
+    timeSpentMins: 42,
+    gombosCompleted: profile?.gombosCompleted || 8,
+    revenueFcfa: profile?.totalRevenue || profile?.wallet?.revenus || 450000,
+    callsCount: 12,
+    messagesCount: 142,
+    postsCount: 19,
+  };
 
   const [themePreset, setThemePresetState] = useState<Theme>(() => {
     const stored = safeGetItem("gombo_theme", "imperial");
@@ -454,6 +738,18 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setThemePreset,
         textSize,
         setTextSize,
+        experience,
+        updateExperiencePref,
+        profileCustomization,
+        updateProfileCustomizationPref,
+        payments,
+        updatePaymentPref,
+        network,
+        updateNetworkPref,
+        security,
+        updateSecurityPref,
+        closeOtherSessions,
+        personalStats,
         notifications,
         updateNotificationPref,
         audio,

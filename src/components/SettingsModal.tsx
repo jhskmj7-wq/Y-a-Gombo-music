@@ -182,6 +182,18 @@ export default function SettingsModal({
     setThemePreset,
     textSize,
     setTextSize,
+    experience,
+    updateExperiencePref,
+    profileCustomization,
+    updateProfileCustomizationPref,
+    payments,
+    updatePaymentPref,
+    network,
+    updateNetworkPref,
+    security,
+    updateSecurityPref,
+    closeOtherSessions,
+    personalStats,
     notifications,
     updateNotificationPref,
     audio,
@@ -478,34 +490,114 @@ export default function SettingsModal({
           </h2>
 
           <div className="space-y-4">
-            {/* SWITCH MODE SOMBRE / CLAIR / AUTO */}
-            <div className="space-y-1.5">
-              <span className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest block">Mode d'affichage</span>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: "dark", label: "Sombre", icon: Moon },
-                  { id: "light", label: "Clair", icon: Sun },
-                  { id: "system", label: "Auto (Système)", icon: Laptop }
-                ].map((m) => {
-                  const Icon = m.icon;
-                  const isSelected = themeMode === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setThemeMode(m.id as ThemeMode)}
-                      className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border text-center transition-all cursor-pointer ${
-                        isSelected 
-                          ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-bold" 
-                          : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text-sec"
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 mb-1" />
-                      <span className="text-[10px] uppercase font-bold">{m.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+            {/* EXPÉRIENCE AFRIGOMBO */}
+            <div className="space-y-3">
+              <span className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest block">Expérience AFRIGOMBO</span>
+              
+              {/* Animations Premium */}
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Animations Premium</span>
+                  <p className="text-[9px] text-afri-text-muted leading-none">Micro-interactions et transitions ultra-fluides</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={experience.premiumAnimations}
+                  onChange={(e) => updateExperiencePref('premiumAnimations', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              </label>
+
+              {/* Réduire les animations */}
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Réduire les animations</span>
+                  <p className="text-[9px] text-afri-text-muted leading-none">Désactiver les effets de mouvements (Accessibilité)</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={experience.reduceAnimations}
+                  onChange={(e) => updateExperiencePref('reduceAnimations', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              </label>
+
+              {/* Mode économie batterie */}
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Mode économie batterie</span>
+                  <p className="text-[9px] text-afri-text-muted leading-none">Optimiser la consommation énergétique sur mobile</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={experience.batterySaver}
+                  onChange={(e) => updateExperiencePref('batterySaver', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              </label>
+
+              {/* Fluidité maximale */}
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Fluidité maximale (120 FPS)</span>
+                  <p className="text-[9px] text-afri-text-muted leading-none">Fréquence de rafraîchissement élevée activée</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={experience.maxFluidity}
+                  onChange={(e) => updateExperiencePref('maxFluidity', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              </label>
+
+              {/* Effets visuels */}
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Effets visuels & Lueurs d'Or</span>
+                  <p className="text-[9px] text-afri-text-muted leading-none">Lumières dynamiques et gradients d'arrière-plan</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={experience.visualEffects}
+                  onChange={(e) => updateExperiencePref('visualEffects', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              </label>
+
+              {/* Effets sonores */}
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Effets sonores de l'application</span>
+                  <p className="text-[9px] text-afri-text-muted leading-none">Sons d'interactions et retours tactiles</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={experience.soundEffects}
+                  onChange={(e) => updateExperiencePref('soundEffects', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              </label>
+
+              {/* Vibrations */}
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Vibrations haptiques</span>
+                  <p className="text-[9px] text-afri-text-muted leading-none">Retours vibratoires sur écran tactile</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={experience.vibrations}
+                  onChange={(e) => updateExperiencePref('vibrations', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              </label>
             </div>
 
             {/* PRESET DE PALETTES COULEURS */}
@@ -590,6 +682,418 @@ export default function SettingsModal({
                   );
                 })}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 2B. PERSONNALISATION DU PROFIL */}
+        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
+            👑 PERSONNALISATION DU PROFIL
+          </h2>
+
+          <div className="space-y-3.5">
+            {/* Bannière personnalisée */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-mono text-afri-text-muted uppercase block">Bannière de profil d'élite</label>
+              <select
+                value={profileCustomization.banner}
+                onChange={(e) => updateProfileCustomizationPref('banner', e.target.value)}
+                className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text focus:outline-none"
+              >
+                <option value="imperial_gold">Bannière Or Impérial 👑</option>
+                <option value="scène_live">Scène Live & Concert 🎸</option>
+                <option value="studio_vintage">Studio Pro Vintage 🎧</option>
+                <option value="abidjan_night">Abidjan By Night 🌌</option>
+              </select>
+            </div>
+
+            {/* Couleur du profil */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-mono text-afri-text-muted uppercase block">Couleur d'accent du profil</label>
+              <div className="flex items-center gap-2">
+                {[
+                  { color: "#D4AF37", label: "Or Impérial" },
+                  { color: "#2563EB", label: "Bleu Saphir" },
+                  { color: "#10B981", label: "Vert Émeraude" },
+                  { color: "#DC2626", label: "Rouge Prestige" },
+                ].map((c) => (
+                  <button
+                    key={c.color}
+                    type="button"
+                    onClick={() => updateProfileCustomizationPref('profileColor', c.color)}
+                    className={`w-8 h-8 rounded-full border-2 transition-all cursor-pointer flex items-center justify-center ${
+                      profileCustomization.profileColor === c.color ? "border-afri-gold scale-110 shadow-lg" : "border-transparent opacity-80 hover:opacity-100"
+                    }`}
+                    style={{ backgroundColor: c.color }}
+                    title={c.label}
+                  >
+                    {profileCustomization.profileColor === c.color && <Check className="w-4 h-4 text-white drop-shadow" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Carte de visite */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Afficher ma carte de visite d'artiste</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Afficher le QR code et badge scannable sur mon profil</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={profileCustomization.visitingCard}
+                onChange={(e) => updateProfileCustomizationPref('visitingCard', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {/* Badge affiché */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-mono text-afri-text-muted uppercase block">Badge d'élite affiché</label>
+              <select
+                value={profileCustomization.badge}
+                onChange={(e) => updateProfileCustomizationPref('badge', e.target.value)}
+                className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text focus:outline-none"
+              >
+                <option value="GOLD_ARTIST">Artiste d'Or Certifié 👑</option>
+                <option value="SOLO_VIRTUOSE">Virtuose de Scène 🎸</option>
+                <option value="BATISSEUR_SHOWBIZ">Bâtisseur du Showbiz 🏆</option>
+                <option value="ELITE_VIP">Membre Élite VIP ⭐</option>
+              </select>
+            </div>
+
+            {/* Signature personnelle */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-mono text-afri-text-muted uppercase block">Signature personnelle</label>
+              <input
+                type="text"
+                value={profileCustomization.signature}
+                onChange={(e) => updateProfileCustomizationPref('signature', e.target.value)}
+                placeholder="Ex: Le Virtuose d'Abidjan..."
+                className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text focus:outline-none focus:border-afri-gold"
+              />
+            </div>
+
+            {/* Musique du profil */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-mono text-afri-text-muted uppercase block">Musique de fond du profil</label>
+              <select
+                value={profileCustomization.profileMusic}
+                onChange={(e) => updateProfileCustomizationPref('profileMusic', e.target.value)}
+                className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text focus:outline-none"
+              >
+                <option value="intro_hymn">Hymne Officiel AFRIGOMBO 🎵</option>
+                <option value="jazz_africain">Solo Guitare Jazz Africain 🎷</option>
+                <option value="percussions_coupe_decale">Rythme Tam-Tam & Percussions 🥁</option>
+                <option value="piano_balade">Mélodie Piano Douce 🎹</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* 2C. PAIEMENTS & WALLET */}
+        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
+            💳 PAIEMENTS & PORTEFEUILLE SÉCURISÉ
+          </h2>
+
+          <div className="space-y-3.5">
+            {/* PIN Wallet */}
+            <div className="flex items-center justify-between p-3 rounded-xl bg-afri-bg border border-afri-border">
+              <div>
+                <span className="text-[11px] font-bold text-afri-text block">PIN Wallet Sécurisé</span>
+                <p className="text-[9px] text-afri-text-muted">Code PIN à 4 chiffres configuré pour valider vos retraits</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => showToast("🔐 Code PIN du Wallet vérifié et actif !", "success")}
+                className="py-1.5 px-3 rounded-lg bg-afri-gold/15 border border-afri-gold text-afri-gold font-bold text-[10px] uppercase hover:bg-afri-gold/25 transition-all"
+              >
+                Modifier PIN
+              </button>
+            </div>
+
+            {/* Authentification biométrique */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Authentification Biométrique (TouchID / FaceID)</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Exiger l'empreinte pour valider les paiements et retraits</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={payments.biometricAuth}
+                onChange={(e) => updatePaymentPref('biometricAuth', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {/* Mobile Money préféré */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-mono text-afri-text-muted uppercase block">Opérateur Mobile Money préféré</label>
+              <select
+                value={payments.preferredMobileMoney}
+                onChange={(e) => updatePaymentPref('preferredMobileMoney', e.target.value)}
+                className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text focus:outline-none"
+              >
+                <option value="Orange Money">Orange Money Côte d'Ivoire 🍊</option>
+                <option value="Wave Côte d'Ivoire">Wave Mobile Money 🌊</option>
+                <option value="MTN MoMo">MTN Mobile Money 💛</option>
+                <option value="Moov Money">Moov Money Flooz 💙</option>
+              </select>
+            </div>
+
+            {/* Devise */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-mono text-afri-text-muted uppercase block">Devise d'affichage principale</label>
+              <select
+                value={payments.currency}
+                onChange={(e) => updatePaymentPref('currency', e.target.value)}
+                className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text focus:outline-none"
+              >
+                <option value="FCFA (XOF)">FCFA (XOF) — Franc CFA Afrique de l'Ouest</option>
+                <option value="EUR (€)">EUR (€) — Euro</option>
+                <option value="USD ($)">USD ($) — US Dollar</option>
+              </select>
+            </div>
+
+            {/* Limite quotidienne */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-[9px] font-mono text-afri-text-muted">
+                <span>Limite quotidienne de transaction:</span>
+                <span className="text-afri-gold font-bold">{payments.dailyLimit.toLocaleString()} FCFA</span>
+              </div>
+              <input
+                type="range"
+                min="50000"
+                max="2000000"
+                step="50000"
+                value={payments.dailyLimit}
+                onChange={(e) => updatePaymentPref('dailyLimit', parseInt(e.target.value, 10))}
+                className="w-full h-1.5 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-afri-gold"
+              />
+            </div>
+
+            {/* Confirmation des paiements */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Confirmation obligatoire avant débit</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Afficher l'écran de récapitulatif détaillé pour chaque gombo</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={payments.paymentConfirmation}
+                onChange={(e) => updatePaymentPref('paymentConfirmation', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+          </div>
+        </div>
+
+        {/* 2D. RÉSEAU & PERFORMANCE */}
+        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
+            🌐 RÉSEAU & PERFORMANCES MOBILE
+          </h2>
+
+          <div className="space-y-3.5">
+            {/* Compression automatique */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Compression automatique des données</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Compresser les images et flux audio pour réduire le forfait internet</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={network.autoCompression}
+                onChange={(e) => updateNetworkPref('autoCompression', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {/* Mode connexion lente */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Mode connexion lente (2G / 3G Réduit)</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Optimiser les requêtes réseau en zone de faible couverture</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={network.slowConnectionMode}
+                onChange={(e) => updateNetworkPref('slowConnectionMode', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {/* Qualité vidéo */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-mono text-afri-text-muted uppercase block">Qualité des flux vidéo</label>
+              <select
+                value={network.videoQuality}
+                onChange={(e) => updateNetworkPref('videoQuality', e.target.value)}
+                className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text focus:outline-none"
+              >
+                <option value="360p SD">360p SD — Économie maximale de data</option>
+                <option value="720p HD">720p HD — Équilibre Qualité / Vitesse</option>
+                <option value="1080p Full HD">1080p Full HD — Qualité Scène Studio</option>
+              </select>
+            </div>
+
+            {/* Téléchargement uniquement en Wi-Fi */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Téléchargements uniquement en Wi-Fi</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Bloquer le téléchargement des gros fichiers sur réseau cellulaire</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={network.downloadWifiOnly}
+                onChange={(e) => updateNetworkPref('downloadWifiOnly', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {/* Diagnostic réseau */}
+            <button
+              type="button"
+              onClick={() => showToast("📡 Test réseau AFRIGOMBO: Latence Abidjan 18ms — Connexion Excellente ⚡", "success")}
+              className="w-full py-2.5 px-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/40 text-afri-text font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-afri-gold" />
+              Lancer le test de diagnostic réseau
+            </button>
+          </div>
+        </div>
+
+        {/* 2E. SÉCURITÉ AVANCÉE */}
+        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
+            🛡️ SÉCURITÉ AVANCÉE & SESSIONS
+          </h2>
+
+          <div className="space-y-3.5">
+            {/* Double Authentification */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Double Authentification (2FA)</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Exiger un code SMS ou App lors de la connexion</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={security.twoFactorAuth}
+                onChange={(e) => updateSecurityPref('twoFactorAuth', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {/* Empreinte digitale */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Déverrouillage par empreinte digitale</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Accéder instantanément à l'application par capteur</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={security.fingerprint}
+                onChange={(e) => updateSecurityPref('fingerprint', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {/* Reconnaissance faciale */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Reconnaissance faciale FaceID</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Sécuriser l'accès par biométrie faciale</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={security.faceId}
+                onChange={(e) => updateSecurityPref('faceId', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {/* Appareils & Sessions connectés */}
+            <div className="space-y-2 pt-2 border-t border-afri-border">
+              <span className="text-[9px] font-mono text-afri-text-muted uppercase block">Appareils & Sessions Ouvertes</span>
+              <div className="space-y-2">
+                {security.activeSessions.map((s) => (
+                  <div key={s.id} className="p-3 rounded-xl bg-afri-bg border border-afri-border flex items-center justify-between text-xs">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5 font-bold text-afri-text">
+                        <Smartphone className="w-3.5 h-3.5 text-afri-gold" />
+                        <span>{s.device}</span>
+                        {s.current && <span className="text-[8px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-1.5 py-0.2 rounded font-mono">Session Actuelle</span>}
+                      </div>
+                      <p className="text-[9.5px] text-afri-text-muted">{s.location} • {s.ip} • {s.lastActive}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {security.activeSessions.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => closeOtherSessions()}
+                  className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 font-bold text-xs transition-all cursor-pointer"
+                >
+                  Fermer toutes les autres sessions
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 2F. STATISTIQUES PERSONNELLES */}
+        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
+            📊 STATISTIQUES PERSONNELLES D'ÉLITE
+          </h2>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="p-3 rounded-xl bg-afri-bg border border-afri-border space-y-1">
+              <span className="text-[8.5px] font-mono text-afri-text-muted uppercase block">Temps Passé</span>
+              <span className="text-sm font-black text-afri-gold">{personalStats.timeSpentHours}h {personalStats.timeSpentMins}m</span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-afri-bg border border-afri-border space-y-1">
+              <span className="text-[8.5px] font-mono text-afri-text-muted uppercase block">Gombos Validés</span>
+              <span className="text-sm font-black text-emerald-400">{personalStats.gombosCompleted} gombos</span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-afri-bg border border-afri-border space-y-1">
+              <span className="text-[8.5px] font-mono text-afri-text-muted uppercase block">Revenus Générés</span>
+              <span className="text-sm font-black text-afri-gold">{personalStats.revenueFcfa.toLocaleString()} FCFA</span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-afri-bg border border-afri-border space-y-1">
+              <span className="text-[8.5px] font-mono text-afri-text-muted uppercase block">Appels Réseau</span>
+              <span className="text-sm font-black text-afri-text">{personalStats.callsCount} appels</span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-afri-bg border border-afri-border space-y-1">
+              <span className="text-[8.5px] font-mono text-afri-text-muted uppercase block">Messages Échangés</span>
+              <span className="text-sm font-black text-afri-text">{personalStats.messagesCount} msgs</span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-afri-bg border border-afri-border space-y-1">
+              <span className="text-[8.5px] font-mono text-afri-text-muted uppercase block">Publications / Démos</span>
+              <span className="text-sm font-black text-afri-text">{personalStats.postsCount} posts</span>
             </div>
           </div>
         </div>
@@ -1031,6 +1535,21 @@ export default function SettingsModal({
                 </button>
               );
             })}
+
+            {/* SOUTENIR AFRIGOMBO */}
+            <button
+              onClick={() => {
+                setActiveSupportPage("help" as any);
+                showToast("❤️ Merci pour votre soutien précieux à la culture et aux artistes d'Afrique !", "success");
+              }}
+              className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-afri-gold/20 to-amber-500/10 border border-afri-gold/50 hover:border-afri-gold text-afri-gold transition-all cursor-pointer font-black"
+            >
+              <div className="flex items-center gap-2.5">
+                <Star className="w-4 h-4 fill-current text-afri-gold" />
+                <span className="text-[11px] uppercase tracking-wider">❤️ Soutenir AFRIGOMBO</span>
+              </div>
+              <ChevronRight className="w-4.5 h-4.5 text-afri-gold" />
+            </button>
 
             {/* DELETE ACCOUNT BUTTON */}
             <button

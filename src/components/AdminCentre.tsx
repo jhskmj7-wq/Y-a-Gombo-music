@@ -1165,6 +1165,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         document.body.style.top = '';
         document.body.style.width = '';
         document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
         window.scrollTo(0, scrollY);
         window.removeEventListener("keydown", handleKeyDown);
         window.removeEventListener("popstate", handlePopState);
@@ -3109,7 +3110,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         )}
 
         {/* WORKSPACE VIEWS */}
-        <div className="flex-1 min-h-0 relative">
+        <div className="flex-1 min-h-0 relative w-full h-full overflow-hidden">
           
           {/* ===================================================
               PERSISTENT CORE VIEWS (SCROLL PRESERVATION ENGINE)
@@ -3117,7 +3118,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
           {/* 1.1. NEARBY PAGE VIEW */}
           <div 
-            className={activeMenu === "nearby" ? "w-full animate-fadeIn text-left" : "hidden"}
+            className={activeMenu === "nearby" ? "w-full h-full animate-fadeIn text-left overflow-hidden" : "hidden"}
           >
             <NearbyPageView
               gombos={gombos}
@@ -3132,8 +3133,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
           {/* 1. LE TERRAIN - CENTRAL HUB FEED */}
           <div 
-            className={activeMenu === "user_terrain" ? "w-full afri-container afri-section animate-fadeIn text-left" : "hidden"}
-            style={{ overscrollBehaviorY: "contain" }}
+            className={activeMenu === "user_terrain" ? "w-full h-full animate-fadeIn text-left overflow-hidden" : "hidden"}
           >
             <UserTerrainLandingPage
               gombos={gombos}
@@ -3191,7 +3191,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           </div>
 
           <AnimatePresence mode="wait">
-            {activeMenu !== "user_terrain" && (
+            {activeMenu !== "user_terrain" && activeMenu !== "nearby" && (
               <motion.div
                 key={activeMenu}
                 initial={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: 10 }}
@@ -3199,6 +3199,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
                 className={`h-full w-full ${
+                  ["user_settings", "user_wallet", "user_notifications", "user_heritage", "user_messages", "user_reels"].includes(activeMenu)
+                    ? "overflow-hidden"
+                    : "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
+                } ${
                   activeMenu === "super_admin" || activeMenu === "user_builders"
                     ? "px-4 xs:px-5 sm:px-8 max-w-5xl mx-auto w-full pt-0 pb-16 sm:pb-20 space-y-6"
                     : "afri-container afri-section"
