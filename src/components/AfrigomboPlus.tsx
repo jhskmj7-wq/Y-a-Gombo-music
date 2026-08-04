@@ -7,6 +7,7 @@ import { AndroidCenteredDialog } from "./common/GlobalPortalModal";
 import { db } from "../firebase";
 import { doc, getDoc, setDoc, addDoc, collection } from "firebase/firestore";
 import { recordWalletTransaction } from "../lib/financial";
+import { safeStringify } from "../lib/jsonUtils";
 
 interface AfrigomboPlusProps {
   onBack: () => void;
@@ -825,7 +826,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                         localStorage.setItem("afrigombo_suggested_deposit_amount", String(insufficientDetails.missing));
                         localStorage.setItem(
                           "afrigombo_pending_purchase",
-                          JSON.stringify({
+                          safeStringify({
                             type: "subscription_payment",
                             amount: insufficientDetails.required,
                             title: `Abonnement ${currentSelectedPlanObj.name}`

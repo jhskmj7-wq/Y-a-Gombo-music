@@ -22,6 +22,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
+import { safeStringify, getCircularReplacer } from "../lib/jsonUtils";
 import { useNavigate } from "react-router-dom";
 import { lazyWithRetry } from "../lib/lazyWithRetry";
 import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
@@ -978,6 +979,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           if (n.audience === "Organisateurs" && profile?.role === "client") return true;
           if (n.audience === "Administrateurs" && isAuthorizedAdmin) return true;
           if (n.audience === "Super Fondateur" && isAuthorizedSuperFounder) return true;
+          if ((n as any).receiverUid === "SUPER_FOUNDER" && isAuthorizedSuperFounder) return true;
           
           return false;
         });
@@ -4600,7 +4602,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     const saved = localStorage.getItem("gombo_publish_draft");
                     const current = saved ? JSON.parse(saved) : {};
                     const updated = { ...current, ...fields };
-                    localStorage.setItem("gombo_publish_draft", JSON.stringify(updated));
+                    localStorage.setItem("gombo_publish_draft", safeStringify(updated));
                   } catch (_) {}
                 };
 
@@ -4940,7 +4942,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 localStorage.setItem("afrigombo_suggested_deposit_amount", String(missing));
                                 localStorage.setItem(
                                   "afrigombo_pending_purchase",
-                                  JSON.stringify({
+                                  safeStringify({
                                     type: "gombo_publish",
                                     amount: insufficientFundsData.total,
                                     title: insufficientFundsData.title || "Publication de Gombo"
@@ -5616,7 +5618,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   onClick={() => {
                                     setFollowedArtists(prev => {
                                       const filtered = prev.filter(id => id !== user.id);
-                                      localStorage.setItem("gombo_followed_artists", JSON.stringify(filtered));
+                                      localStorage.setItem("gombo_followed_artists", safeStringify(filtered));
                                       return filtered;
                                     });
                                     try { audioSynth.playTamTam(false); } catch (_) {}
@@ -5940,7 +5942,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       if (data.likedGombos) setLikedGombos(data.likedGombos);
                       if (data.followedArtists) {
                         setFollowedArtists(data.followedArtists);
-                        localStorage.setItem("gombo_followed_artists", JSON.stringify(data.followedArtists));
+                        localStorage.setItem("gombo_followed_artists", safeStringify(data.followedArtists));
                       }
                       try { audioSynth.playValidationSuccess(); } catch (_) {}
                       alert("✓ Données d'artiste restaurées localement avec succès !");
@@ -9817,7 +9819,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         const isFollowing = followedArtists.includes(orgId);
                         const newList = isFollowing ? followedArtists.filter(id => id !== orgId) : [...followedArtists, orgId];
                         setFollowedArtists(newList);
-                        localStorage.setItem("gombo_followed_artists", JSON.stringify(newList));
+                        localStorage.setItem("gombo_followed_artists", safeStringify(newList));
                         try { audioSynth.playValidationSuccess(); } catch (_) {}
                         addToTerminal(`[👥 SUIVRE] ${isFollowing ? "Désabonnement" : "Abonnement"} à l'organisateur "${selectedGomboDetails.organizerName || "Admin"}".`);
                       });

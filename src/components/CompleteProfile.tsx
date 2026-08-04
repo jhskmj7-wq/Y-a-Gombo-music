@@ -8,6 +8,7 @@ import { UserProfile } from "../types";
 import { gomboDB, storage } from "../firebase";
 import { audioSynth } from "../lib/audio";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { safeStringify } from "../lib/jsonUtils";
 
 const CIV_CITIES = [
   "Abidjan", "Bouaké", "Yamoussoukro", "San-Pédro", "Korhogo", "Daloa", "Man", "Gagnoa", "Grand-Bassam", "Bingerville", "Autre"
@@ -298,14 +299,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
           updatedAt: new Date().toISOString()
         };
         try {
-          const seen = new WeakSet();
-          localStorage.setItem("gombo_active_profile", JSON.stringify(updatedProfile, (key, value) => {
-            if (typeof value === "object" && value !== null) {
-              if (seen.has(value)) return;
-              seen.add(value);
-            }
-            return value;
-          }));
+          localStorage.setItem("gombo_active_profile", safeStringify(updatedProfile));
         } catch (e) {
           console.warn("Could not serialize gombo_active_profile in CompleteProfile due to cyclic object value:", e);
         }

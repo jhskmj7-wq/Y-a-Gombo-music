@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { SocialPost, PostComment, UserProfile } from "../types";
 import { gomboDB } from "../firebase";
+import { safeStringify } from "../lib/jsonUtils";
 
 const calculateDistanceKm = (lat1?: number, lon1?: number, lat2?: number, lon2?: number) => {
   if (!lat1 || !lon1 || !lat2 || !lon2) return null;
@@ -329,7 +330,7 @@ export default function SocialPostCard({
     } else {
       newList = [...list, post.userId];
     }
-    localStorage.setItem("gombo_followed_artists", JSON.stringify(newList));
+    localStorage.setItem("gombo_followed_artists", safeStringify(newList));
     setFollowed(!followed);
   };
 

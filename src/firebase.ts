@@ -1174,6 +1174,7 @@ export const gomboDB = {
           senderUid: data.senderUid || "system",
           receiverUid: "SUPER_FOUNDER",
           userId: "SUPER_FOUNDER",
+          audience: "Super Fondateur",
           isRead: false,
           read: false,
           createdAt: new Date().toISOString(),

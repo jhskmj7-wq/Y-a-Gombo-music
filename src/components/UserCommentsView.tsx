@@ -6,6 +6,7 @@ import {
   Filter, Search, Clock, ThumbsUp, MessageCircle
 } from "lucide-react";
 import { UserProfile } from "../types";
+import { safeStringify } from "../lib/jsonUtils";
 
 interface CommentItem {
   id: string;
@@ -136,7 +137,7 @@ export default function UserCommentsView({
   // Save to localStorage whenever comments change
   useEffect(() => {
     try {
-      localStorage.setItem(storageKey, JSON.stringify(comments));
+      localStorage.setItem(storageKey, safeStringify(comments));
     } catch (e) {}
   }, [comments, storageKey]);
 

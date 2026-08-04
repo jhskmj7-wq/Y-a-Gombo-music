@@ -10,6 +10,7 @@ import { AfriModal } from "./common/AfriModal";
 import { db, gomboDB } from "../firebase";
 import { recordWalletTransaction } from "../lib/financial";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { safeStringify } from "../lib/jsonUtils";
 
 export interface AcademyCourse {
   id: string;
@@ -210,7 +211,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
   // Save courses & enrollments to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem("afrigombo_academy_courses", JSON.stringify(courses));
+      localStorage.setItem("afrigombo_academy_courses", safeStringify(courses));
     } catch (e) {
       console.warn("Could not save afrigombo_academy_courses:", e);
     }
@@ -225,7 +226,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
 
   useEffect(() => {
     try {
-      localStorage.setItem("afrigombo_enrolled_courses", JSON.stringify(enrolledCourseIds));
+      localStorage.setItem("afrigombo_enrolled_courses", safeStringify(enrolledCourseIds));
     } catch (e) {
       console.warn("Could not save afrigombo_enrolled_courses:", e);
     }

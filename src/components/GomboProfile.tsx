@@ -9,6 +9,7 @@ import {
   Copy, Plus, Play, Pause, ExternalLink, ArrowLeft
 } from "lucide-react";
 import { UserProfile, PaymentProvider } from "../types";
+import { safeStringify } from "../lib/jsonUtils";
 import { gomboDB, gomboAuth, db, isFirebaseMock } from "../firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { audioSynth } from "../lib/audio";
@@ -180,16 +181,9 @@ export default function GomboProfile({
       
       if (typeof window !== 'undefined') {
         try {
-          const seen = new WeakSet();
-          localStorage.setItem("gombo_active_profile", JSON.stringify({
+          localStorage.setItem("gombo_active_profile", safeStringify({
             ...currentUserProfile,
             ...minimalProfile
-          }, (key, value) => {
-            if (typeof value === "object" && value !== null) {
-              if (seen.has(value)) return;
-              seen.add(value);
-            }
-            return value;
           }));
         } catch (e) {
           console.warn("Could not serialize gombo_active_profile due to cyclic object value:", e);

@@ -12,6 +12,7 @@ import {
   collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, where, getDocs 
 } from "firebase/firestore";
 import { PaymentEngine } from "../../lib/paymentEngine";
+import { safeStringify } from "../../lib/jsonUtils";
 
 interface AdminWalletManagementProps {
   currentUser?: any;
@@ -265,7 +266,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
   // Export JSON
   const exportJSON = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(filteredTxs, null, 2));
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(safeStringify(filteredTxs, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
     downloadAnchor.setAttribute("download", `afrigombo_wallet_export_${new Date().toISOString().slice(0, 10)}.json`);

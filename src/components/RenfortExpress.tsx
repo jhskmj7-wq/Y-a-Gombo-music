@@ -6,6 +6,7 @@ import {
   ChevronDown, MessageCircle, AlertCircle, RefreshCw, Send, Trash2, Wallet
 } from "lucide-react";
 import { db, gomboDB } from "../firebase";
+import { safeStringify } from "../lib/jsonUtils";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { Renfort, RenfortApplication, UserProfile } from "../types";
 import { supportConfig } from "../supportConfig";
@@ -1295,7 +1296,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                     localStorage.setItem("afrigombo_suggested_deposit_amount", String(missing));
                     localStorage.setItem(
                       "afrigombo_pending_purchase",
-                      JSON.stringify({
+                      safeStringify({
                         type: "renfort_express",
                         amount: renfortInsufficientFundsDetails.total,
                         title: renfortInsufficientFundsDetails.title || "Renfort Express"

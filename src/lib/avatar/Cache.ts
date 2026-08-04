@@ -1,4 +1,6 @@
 
+import { safeStringify } from "../jsonUtils";
+
 /**
  * AFRIGOMBO ELITE - AVATAR CACHE SYSTEM
  * Optimizes performance by caching rendered SVGs and item data.
@@ -24,6 +26,6 @@ export const AvatarCache = {
   },
 
   generateKey(config: any): string {
-    return JSON.stringify(config);
+    return safeStringify(config);
   }
 };

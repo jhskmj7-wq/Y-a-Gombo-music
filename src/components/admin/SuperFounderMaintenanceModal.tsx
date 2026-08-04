@@ -148,7 +148,9 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
 
       // Atomic update across all 3 configuration collections to guarantee consistency
       try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
+      console.log("Saving maintenance payload:", payload);
       await setDoc(doc(db, "settings", "maintenance"), payload, { merge: true });
+      console.log("Maintenance payload saved successfully");
       setSuccessMsg("Mise à jour serveur enregistrée en temps réel !");
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
@@ -162,7 +164,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
   // Toggle Global Maintenance
   const handleToggleGlobal = async () => {
     const nextMode = !globalMode;
-    setGlobalMode(nextMode);
+    // Don't call setGlobalMode here, let onSnapshot handle it
     await saveMaintenanceSettings({ globalMode: nextMode });
   };
 

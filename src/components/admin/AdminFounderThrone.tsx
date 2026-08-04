@@ -28,6 +28,7 @@ import {
   collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, getDocs 
 } from "firebase/firestore";
 import { gomboDB } from "../../firebase";
+import { safeStringify, getCircularReplacer } from "../../lib/jsonUtils";
 
 interface AdminFounderThroneProps {
   theme?: string;
@@ -3949,7 +3950,7 @@ export default function AdminFounderThrone({
                         onClick={() => {
                           const reset = Object.keys(betaChecklist).reduce((acc, k) => ({ ...acc, [k]: false }), {});
                           setBetaChecklist(reset);
-                          localStorage.setItem("afrigombo_beta_checklist", JSON.stringify(reset));
+                          localStorage.setItem("afrigombo_beta_checklist", safeStringify(reset));
                           if (audioSynth) {
                             try { audioSynth.playValidationSuccess(); } catch (_) {}
                           }
@@ -5037,13 +5038,7 @@ export default function AdminFounderThrone({
                                             {(() => {
                                               try {
                                                 const seen = new WeakSet();
-                                                return JSON.stringify(val, (k, v) => {
-                                                  if (typeof v === "object" && v !== null) {
-                                                    if (seen.has(v)) return "[Circular]";
-                                                    seen.add(v);
-                                                  }
-                                                  return v;
-                                                });
+                                                return safeStringify(val);
                                               } catch (e) {
                                                 return "[Complex Object]";
                                               }

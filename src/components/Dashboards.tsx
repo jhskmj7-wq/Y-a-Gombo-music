@@ -6,6 +6,7 @@ import {
   Heart, MessageCircle, Activity, ChevronDown, PlusCircle, ArrowUpRight, Music
 } from "lucide-react";
 import { gomboDB } from "../firebase";
+import { safeStringify } from "../lib/jsonUtils";
 import { UserProfile, Gombo, Application, Reservation, Renfort, RenfortApplication, MusicGroup, ActivityFeedEntry } from "../types";
 import GriotIA from "./GriotIA";
 import MobileMoneyPayment from "./MobileMoneyPayment";
@@ -173,7 +174,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 }
                 return value;
               };
-              hasUid = JSON.stringify(act, replacer).includes(userUid);
+              hasUid = safeStringify(act).includes(userUid);
             } catch (_) {}
 
             return (
@@ -366,7 +367,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
       const savedFavs = localStorage.getItem("favorite_talents_list") || "[]";
       let favIds: string[] = JSON.parse(savedFavs);
       favIds = favIds.filter(id => id !== talentUid);
-      localStorage.setItem("favorite_talents_list", JSON.stringify(favIds));
+      localStorage.setItem("favorite_talents_list", safeStringify(favIds));
       setFavoriteTalents(favoriteTalents.filter(u => u.uid !== talentUid));
       // Dispatch profile sync to keep in step
       window.dispatchEvent(new Event("gomboUserProfileChange"));

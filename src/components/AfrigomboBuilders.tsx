@@ -8,6 +8,7 @@ import { db } from "../firebase";
 import { collection, onSnapshot, addDoc, doc, setDoc, getDoc } from "firebase/firestore";
 import { UserProfile } from "../types";
 import { recordWalletTransaction } from "../lib/financial";
+import { safeStringify } from "../lib/jsonUtils";
 
 interface AfrigomboBuildersProps {
   currentUser?: UserProfile | null;
@@ -563,7 +564,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
                     localStorage.setItem("afrigombo_suggested_deposit_amount", String(insufficientBalanceDetails.missing));
                     localStorage.setItem(
                       "afrigombo_pending_purchase",
-                      JSON.stringify({
+                      safeStringify({
                         type: "builder_contribution",
                         amount: insufficientBalanceDetails.required,
                         title: `Contribution Bâtisseurs`

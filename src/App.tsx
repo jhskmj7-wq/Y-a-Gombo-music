@@ -130,6 +130,7 @@ function App() {
 
     const unsubSecurity = onSnapshot(doc(db, "settings", "maintenance"), (snap) => {
       securityData = snap.exists() ? snap.data() : null;
+      console.log("Maintenance doc updated:", securityData);
       updateMaintenanceState();
     }, (err) => {
       console.warn("Error listening to security maintenance status:", err);

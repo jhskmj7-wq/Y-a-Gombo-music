@@ -4,6 +4,7 @@ import { ShieldCheck, RefreshCw, X, Copy, Check, Terminal, User, AlertCircle, Da
 import { useAuth } from "../AuthContext";
 import { auth, db } from "../lib/firebase";
 import { gomboAuth } from "../firebase";
+import { safeStringify } from "../lib/jsonUtils";
 
 interface AuthDiagnosticModalProps {
   isOpen: boolean;
@@ -70,19 +71,7 @@ export default function AuthDiagnosticModal({ isOpen, onClose }: AuthDiagnosticM
       userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "Inconnu"
     };
 
-    let reportStr = "{}";
-    try {
-      const seen = new WeakSet();
-      reportStr = JSON.stringify(report, (key, value) => {
-        if (typeof value === "object" && value !== null) {
-          if (seen.has(value)) return;
-          seen.add(value);
-        }
-        return value;
-      }, 2);
-    } catch (e) {
-      reportStr = "[Erreur de sérialisation du diagnostic]";
-    }
+    const reportStr = safeStringify(report, 2);
 
     navigator.clipboard.writeText(reportStr);
     setCopied(true);

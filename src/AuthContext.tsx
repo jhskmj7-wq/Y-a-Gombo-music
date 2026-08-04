@@ -6,6 +6,7 @@ import { serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { UserProfile } from "./types";
 import { PremiumEngine } from "./lib/premiumEngine";
+import { safeStringify } from "./lib/jsonUtils";
 
 interface AuthContextType {
   currentUser: any | null;       
@@ -177,21 +178,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             uProfile.isVip = true;
             uProfile.isPro = true;
           }
-
-          const safeStringify = (obj: any): string => {
-            try {
-              const seen = new WeakSet();
-              return JSON.stringify(obj, (key, value) => {
-                if (typeof value === "object" && value !== null) {
-                  if (seen.has(value)) return;
-                  seen.add(value);
-                }
-                return value;
-              });
-            } catch (e) {
-              return "{}";
-            }
-          };
 
           setProfile(uProfile);
           try {
