@@ -35,7 +35,7 @@ export function AndroidPageLayout({
 
   return (
     <div 
-      className={`flex flex-col h-full w-full min-h-0 overflow-hidden bg-afri-bg text-afri-text font-sans select-none ${className}`}
+      className={`flex flex-col ${scrollable ? "h-full overflow-hidden" : "h-auto"} w-full min-h-0 bg-afri-bg text-afri-text font-sans select-none ${className}`}
       style={{
         paddingLeft: 'env(safe-area-inset-left)',
         paddingRight: 'env(safe-area-inset-right)'

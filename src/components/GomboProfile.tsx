@@ -1101,7 +1101,7 @@ export default function GomboProfile({
 
   if (!currentUserProfile) {
     return (
-      <AndroidPageLayout title="Mon Héritage">
+      <AndroidPageLayout title="Mon Héritage" scrollable={false}>
         <div className="flex flex-col items-center justify-center p-12 text-center min-h-[300px]">
           <div className="w-8 h-8 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin mb-3" />
           <p className="text-xs font-mono tracking-widest text-[#D4AF37]/80 uppercase">Chargement du profil...</p>
@@ -1132,9 +1132,8 @@ export default function GomboProfile({
     <AndroidPageLayout 
       title={getPageTitle()} 
       onBack={panelView === "main" ? undefined : handleBack}
-      scrollable={true}
+      scrollable={false}
     >
-      <div className="afri-container afri-section">
         {panelView === "main" && (
         <GomboProfileMainView
           currentUserProfile={syncedProfile}
@@ -1284,7 +1283,6 @@ export default function GomboProfile({
           </div>
         </div>
       )}
-      </div>
     </AndroidPageLayout>
   );
 }
