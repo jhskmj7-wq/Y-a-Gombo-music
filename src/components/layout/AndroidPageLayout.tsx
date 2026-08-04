@@ -35,7 +35,7 @@ export function AndroidPageLayout({
 
   return (
     <div 
-      className={`flex flex-col h-full w-full overflow-hidden bg-afri-bg text-afri-text font-sans select-none ${className}`}
+      className={`flex flex-col h-full w-full min-h-0 overflow-hidden bg-afri-bg text-afri-text font-sans select-none ${className}`}
       style={{
         paddingLeft: 'env(safe-area-inset-left)',
         paddingRight: 'env(safe-area-inset-right)'
@@ -44,7 +44,7 @@ export function AndroidPageLayout({
       {headerContent}
       
       <main 
-        className={`flex-1 w-full box-border overflow-x-hidden ${scrollable ? "overflow-y-auto overscroll-contain" : "overflow-hidden"}`}
+        className={`flex-1 w-full min-h-0 box-border overflow-x-hidden ${scrollable ? "overflow-y-auto overscroll-contain" : "overflow-hidden"}`}
         style={{
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-y",
