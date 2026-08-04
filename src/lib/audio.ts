@@ -76,18 +76,20 @@ class AudioSynthesizer {
     } catch (e) {}
   }
 
-  public playKoraSuccess() {
+  public playKoraSuccess(force = false) {
+    if (!force) return;
     this.playKoraNote(523.25, 0, 1, 0.4);
     this.playKoraNote(659.25, 120, 1, 0.5);
     this.playKoraNote(783.99, 240, 1.2, 0.7);
   }
 
-  public playValidationSuccess() {
-    this.playKoraSuccess();
+  public playValidationSuccess(force = false) {
+    if (!force) return;
+    this.playKoraSuccess(true);
   }
 
-  public playTamTam(highPitch: boolean) {
-    if (!this.soundEnabled) return;
+  public playTamTam(highPitch: boolean, force = false) {
+    if (!this.soundEnabled || !force) return;
     try {
       const ctx = this.getContext();
       if (!ctx) return;

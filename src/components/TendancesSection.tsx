@@ -398,7 +398,9 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
         };
       });
 
-      try { audioSynth?.playTamTam?.(false); } catch (_) {}
+      try { 
+        // Silenced for ELITE
+      } catch (_) {}
       showToast("👍 'J'honore' enregistré ! +12 pts au Score AFRIGOMBO");
     });
   };
@@ -449,7 +451,9 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
       }).catch(() => {});
     }
 
-    try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
+    try { 
+      // Silenced for ELITE
+    } catch (_) {}
     showToast("📤 Publication partagée ! +10 pts au Score AFRIGOMBO");
   };
 
@@ -482,7 +486,9 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
         };
       });
 
-      try { audioSynth?.playTamTam?.(false); } catch (_) {}
+      try { 
+        // Silenced for ELITE
+      } catch (_) {}
       showToast("⭐ Favori mis à jour ! +5 pts au Score AFRIGOMBO");
     });
   };
@@ -747,7 +753,6 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
             onTouchMove={(e) => e.stopPropagation()}
             onClick={() => {
               setActiveTab(tab.id);
-              try { audioSynth?.playTamTam?.(false); } catch (_) {}
             }}
             className={`px-3.5 py-2 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap transition-all duration-200 cursor-pointer ${
               activeTab === tab.id

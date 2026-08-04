@@ -28,11 +28,22 @@ export const AvatarRenderer = {
     if (!equippedV2['corps']) {
       layers.push(`
         <g id="elite_character_base">
+          <!-- Shadow under the head -->
+          <ellipse cx="100" cy="142" rx="30" ry="8" fill="black" opacity="0.1" />
+          
           <!-- Torso & Shoulders: Anatomically curved for clothes to sit naturally -->
-          <path d="M40 210 C 40 160, 60 135, 100 135 C 140 135, 160 160, 160 210 L 160 220 L 40 220 Z" fill="${skinColor}" />
+          <path d="M30 215 C 30 160, 55 130, 100 130 C 145 130, 170 160, 170 215 L 170 230 L 30 230 Z" fill="${skinColor}" />
+          
           <!-- Neck: Defined with subtle shadow -->
-          <path d="M86 135 L114 135 L112 115 L88 115 Z" fill="${skinColor}" opacity="0.95" />
-          <path d="M86 135 Q100 142 114 135" stroke="black" stroke-width="0.5" opacity="0.1" fill="none" />
+          <path d="M84 130 L116 130 L114 105 L86 105 Z" fill="${skinColor}" />
+          <path d="M84 130 Q100 138 116 130" stroke="black" stroke-width="1.2" opacity="0.15" fill="none" />
+          
+          <!-- Clavicles & Traps definition -->
+          <path d="M55 145 Q80 148 95 142" stroke="black" stroke-width="0.8" opacity="0.1" fill="none" />
+          <path d="M145 145 Q120 148 105 142" stroke="black" stroke-width="0.8" opacity="0.1" fill="none" />
+          
+          <!-- Pectoral area shadow -->
+          <path d="M70 180 Q100 190 130 180" stroke="black" stroke-width="0.5" opacity="0.05" fill="none" />
         </g>
       `);
     }
@@ -40,13 +51,19 @@ export const AvatarRenderer = {
     if (!equippedV2['tete']) {
       layers.push(`
         <g id="elite_head_base">
-          <!-- Ears: Positioned for realism -->
-          <circle cx="61" cy="85" r="7.5" fill="${skinColor}" />
-          <circle cx="139" cy="85" r="7.5" fill="${skinColor}" />
-          <!-- Face Shape: Modern semi-realistic oval with chin definition -->
-          <path d="M68 80 C 68 35, 132 35, 132 80 C 132 125, 100 142, 100 142 C 100 142, 68 125, 68 80 Z" fill="${skinColor}" />
-          <!-- Subtle Face Definition -->
-          <path d="M100 138 Q100 142 100 142" stroke="black" stroke-width="1" opacity="0.1" fill="none" />
+          <!-- Ears: More detailed realistic ears -->
+          <path d="M54 95 Q50 88 54 81 Q58 73 66 78 L66 103 Q58 108 54 95" fill="${skinColor}" />
+          <path d="M146 95 Q150 88 146 81 Q142 73 134 78 L134 103 Q142 108 146 95" fill="${skinColor}" />
+          <!-- Inner ear detail -->
+          <path d="M58 85 Q56 88 58 92" stroke="black" stroke-width="0.5" opacity="0.1" fill="none" />
+          <path d="M142 85 Q144 88 142 92" stroke="black" stroke-width="0.5" opacity="0.1" fill="none" />
+
+          <!-- Face Shape: Refined oval with defined jaw and chin -->
+          <path d="M66 80 C 66 30, 134 30, 134 80 C 134 125, 115 145, 100 150 C 85 145, 66 125, 66 80 Z" fill="${skinColor}" />
+          
+          <!-- Jawline & Chin definition -->
+          <path d="M66 85 Q66 125 100 150 Q134 125 134 85" fill="none" stroke="black" stroke-width="0.8" opacity="0.1" />
+          <path d="M92 145 Q100 148 108 145" fill="none" stroke="black" stroke-width="0.5" opacity="0.1" />
         </g>
       `);
     }

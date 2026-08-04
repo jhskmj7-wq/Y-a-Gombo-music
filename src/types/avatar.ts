@@ -213,6 +213,10 @@ export interface AvatarConfig {
   arriere_plans?: string;
   sneakers?: string;
   sous_vetement?: string;
+  tatouages_corps?: string;
+  tatouages_visage?: string;
+  maquillage_yeux?: string;
+  maquillage_levres?: string;
 }
 
 export interface AvatarEngineConfigV2 {

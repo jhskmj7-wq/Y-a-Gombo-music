@@ -131,30 +131,21 @@ function playSynthFallback(soundName: string) {
   try {
     switch (soundName) {
       case "login":
-        // Petite montée kora/piano + percussion tam-tam
-        audioSynth.playTamTam(false);
-        setTimeout(() => {
-          audioSynth.playKoraNote(261.63, 0, 0.18 * multiplier, 0.4); // C4
-          audioSynth.playKoraNote(329.63, 80, 0.18 * multiplier, 0.4); // E4
-          audioSynth.playKoraNote(392.00, 160, 0.22 * multiplier, 0.6); // G4
-        }, 100);
+        // Silenced for ELITE
         break;
 
       case "publish":
-        // Notes montantes kora/piano douces
-        audioSynth.playKoraNote(329.63, 0, 0.15 * multiplier, 0.5); // E4
-        audioSynth.playKoraNote(392.00, 100, 0.18 * multiplier, 0.5); // G4
-        audioSynth.playKoraNote(523.25, 200, 0.22 * multiplier, 0.8); // C5
+        // Silenced for ELITE
         break;
 
       case "message":
         // Tambour léger
-        audioSynth.playTamTam(true);
+        audioSynth.playTamTam(true, true);
         break;
 
       case "collaboration":
         // Saxophone premium + mini djembe
-        audioSynth.playTamTam(false);
+        audioSynth.playTamTam(false, true);
         // Play soulful high notes on our synthesized saxophone
         setTimeout(() => {
           try {
@@ -172,7 +163,7 @@ function playSynthFallback(soundName: string) {
 
       case "success":
         // Petit jingle AFRIGOMBO céleste
-        audioSynth.playKoraSuccess();
+        audioSynth.playKoraSuccess(true);
         break;
 
       case "notification":
@@ -182,10 +173,10 @@ function playSynthFallback(soundName: string) {
 
       case "premium":
         // Rich celebratory kora suite + dual bongos
-        audioSynth.playTamTam(false);
+        audioSynth.playTamTam(false, true);
         if (!performanceState.areSoundsReduced) {
-          setTimeout(() => audioSynth.playTamTam(true), 120);
-          setTimeout(() => audioSynth.playKoraSuccess(), 200);
+          setTimeout(() => audioSynth.playTamTam(true, true), 120);
+          setTimeout(() => audioSynth.playKoraSuccess(true), 200);
         } else {
           setTimeout(() => audioSynth.playKoraNote(523.25, 0, 0.1 * multiplier, 0.3), 100);
         }
@@ -220,6 +211,12 @@ function playSynthFallback(soundName: string) {
 }
 
 export const playSound = (soundName: string) => {
+  // Navigation & UI feedback sounds are strictly silenced for ELITE professionalism
+  const allowedSounds = ["message", "notification", "collaboration", "premium"];
+  if (!allowedSounds.includes(soundName)) {
+    return;
+  }
+
   if (safeGetItem("gombo_pref_ui_sounds") === "false") {
     return;
   }

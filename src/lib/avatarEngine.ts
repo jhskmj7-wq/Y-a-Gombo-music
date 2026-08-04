@@ -35,6 +35,11 @@ import { recordWalletTransaction } from "./financial";
 import { AvatarRenderer } from "./avatar/Renderer";
 import { AvatarSynchronizer } from "./avatar/Synchronizer";
 import { AvatarState } from "./avatar/State";
+import { AvatarAnimation } from "./avatar/Animation";
+import { AvatarCache } from "./avatar/Cache";
+import { AvatarShop } from "./avatar/Shop";
+import { AvatarCreator } from "./avatar/Creator";
+import { AVATAR_RENDER_ORDER, CATEGORY_LABELS } from "./avatar/Layers";
 
 export const DAILY_REWARD_SCHEDULE = [
   { day: 1, coins: 20, xp: 10 },
@@ -181,6 +186,21 @@ const withTimeout = <T>(promise: Promise<T>, ms: number, errorMsg: string): Prom
 };
 
 export const AvatarEngine = {
+  /**
+   * ADMIN & CREATOR SUB-MODULES
+   */
+  Renderer: AvatarRenderer,
+  Synchronizer: AvatarSynchronizer,
+  State: AvatarState,
+  Animation: AvatarAnimation,
+  Cache: AvatarCache,
+  Shop: AvatarShop,
+  Creator: AvatarCreator,
+  Layers: {
+    order: AVATAR_RENDER_ORDER,
+    labels: CATEGORY_LABELS
+  },
+
   /**
    * Realtime Listener for Store Items
    */

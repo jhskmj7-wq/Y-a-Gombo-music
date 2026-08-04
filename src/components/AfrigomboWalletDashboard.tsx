@@ -182,11 +182,13 @@ export default function AfrigomboWalletDashboard({
 
   // Sound Synth Helper
   const playSound = (type: "success" | "click" | "error") => {
+    // Silence click sounds for professional UI as requested
+    if (type === "click") return;
+
     try {
       const AudioSynth = (window as any).audioSynth;
       if (AudioSynth) {
         if (type === "success") AudioSynth.playValidationSuccess();
-        else if (type === "click") AudioSynth.playTap();
       }
     } catch (_) {}
   };

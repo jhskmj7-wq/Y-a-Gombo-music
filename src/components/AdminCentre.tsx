@@ -499,14 +499,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const requireGoogleAuthThen = (action: () => void) => {
     if (!currentUser) {
       setIsAuthModalOpen(true);
-      try { audioSynth.playKoraSuccess(); } catch (err) {}
     } else {
       const hasGoogle = currentUser.providerData?.some(
         (p) => p.providerId === "google.com" || p.providerId.includes("google")
       ) ?? false;
       if (!hasGoogle) {
         setShowGoogleLoginRequiredModal(true);
-        try { audioSynth.playKoraSuccess(); } catch (err) {}
       } else {
         action();
       }
@@ -517,7 +515,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     if (!currentUser) {
       alert("🔒 Connectez-vous pour continuer");
       setIsAuthModalOpen(true);
-      try { audioSynth.playKoraSuccess(); } catch (err) {}
     } else {
       action();
     }
@@ -540,8 +537,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     const handlePopState = (e: PopStateEvent) => {
       setMenuHistory(prev => {
         if (prev.length > 1) {
-          // Play a soft click sound if available
-          try { audioSynth.playKoraNote(293.66, 0, 0.08, 0.3); } catch (_) {}
+          // Navigation sounds strictly silenced for ELITE
           return prev.slice(0, -1);
         }
         return prev;
@@ -592,7 +588,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   };
 
   const setActiveMenu = (menu: string) => {
-    try { audioSynth.playKoraNote(293.66, 0, 0.08, 0.3); } catch (_) {}
+    // Silence navigation sounds
     try {
       window.history.pushState({ menu }, "", "");
     } catch (_) {}
@@ -603,7 +599,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   };
 
   const goBackMenu = () => {
-    try { audioSynth.playKoraNote(293.66, 0, 0.08, 0.3); } catch (_) {}
+    // Silence navigation sounds
     setMenuHistory(prev => {
       if (prev.length > 1) {
         return prev.slice(0, -1);

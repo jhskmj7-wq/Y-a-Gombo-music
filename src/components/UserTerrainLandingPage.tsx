@@ -828,7 +828,6 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     setLikedGombos(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
-    try { audioSynth.playTamTam(false); } catch(_) {}
   };
 
   return (
@@ -965,7 +964,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 setGlobalSearchTerm(e.target.value);
                 setUniversalSearchTerm(e.target.value);
                 if (e.target.value.length > 0) {
-                  try { audioSynth.playTamTam(true); } catch (_) {}
+                  /* silenced */
                 }
               }}
               placeholder="Rechercher une opportunité, artiste..."
@@ -974,7 +973,6 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             <button
               onClick={() => {
                 setIsFiltersOpen(!isFiltersOpen);
-                try { audioSynth.playTamTam(false); } catch (_) {}
               }}
               className={`transition p-1 cursor-pointer ${isFiltersOpen ? "text-afri-text" : "text-[#D4AF37] hover:text-afri-text"}`}
               title="Filtres avancés"
@@ -1177,7 +1175,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 setFilterVerifiedOnly(false);
                 setFilterHasPhoto(false);
                 setFilterHasAudio(false);
-                try { audioSynth.playTamTam(false); } catch (_) {}
+                /* silenced */
               }}
               className="px-4 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text-sec hover:text-afri-text rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
             >
@@ -1189,7 +1187,6 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 type="button"
                 onClick={() => {
                   setIsFiltersOpen(false);
-                  try { audioSynth.playTamTam(false); } catch (_) {}
                 }}
                 className="px-4 py-2 bg-afri-bg border border-afri-border hover:bg-afri-bg-sec text-afri-text rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
               >
@@ -1199,7 +1196,6 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 type="button"
                 onClick={() => {
                   setIsFiltersOpen(false);
-                  try { audioSynth.playTamTam(true); } catch (_) {}
                 }}
                 className="px-5 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-black rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95 cursor-pointer shadow-md"
               >
@@ -1785,7 +1781,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             <button
               onClick={() => {
                 setActiveQuickActionModal(null);
-                try { audioSynth.playTamTam(false); } catch (_) {}
+                /* silenced */
               }}
               className="absolute top-4 right-4 w-8 h-8 rounded-full bg-afri-bg-sec hover:bg-afri-bg-ter text-[#D4AF37] hover:text-afri-text border border-afri-border flex items-center justify-center cursor-pointer transition focus:outline-none z-50"
             >
@@ -1855,7 +1851,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                             message: "ID non attribué. Aucun enregistrement d'or correspondant."
                           });
                         }
-                        try { audioSynth.playTamTam(true); } catch (_) {}
+                        /* silenced */
                       }}
                       className="bg-afri-bg-sec text-black px-4 text-xs font-bold rounded-xl"
                     >
@@ -1941,7 +1937,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                         setPosts(prev => [newNoticePost, ...prev]);
                         addToTerminal(`[DIFFUSION] Publication réussie sur le Terrain : ${newNoticeTitle}`);
                         setActiveQuickActionModal(null);
-                        try { audioSynth.playTamTam(true); } catch (_) {}
+                        /* silenced */
                       } else {
                         addToTerminal("[ERREUR] Veuillez remplir l'annonce souveraine.");
                       }

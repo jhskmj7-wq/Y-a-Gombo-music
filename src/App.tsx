@@ -172,7 +172,7 @@ function App() {
   const handleSplashComplete = useCallback(() => {
     try {
       sessionStorage.setItem("afrigombo_splash_dismissed", "true");
-      audioSynth.playKoraNote(523.25, 0, 0.12, 0.6);
+      // Silencing startup sound for professional Elite feel
     } catch (err) {
       // ignore
     }

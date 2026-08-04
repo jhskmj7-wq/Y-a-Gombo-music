@@ -84,10 +84,16 @@ const AvatarRenderer = memo(({ config, size = 120, className = "", storeItems = 
         zIndex: Z_INDEX_MAP['corps'],
         element: (
           <g key="base-body">
-            {/* Torso & Shoulders: anatomical curves */}
-            <path d="M40 210 C 40 160, 60 135, 100 135 C 140 135, 160 160, 160 210 L 160 220 L 40 220 Z" fill={skinColor} />
-            {/* Neck definition */}
-            <path d="M86 135 L114 135 L112 115 L88 115 Z" fill={skinColor} opacity="0.95" />
+            {/* Shadow under the head */}
+            <ellipse cx="100" cy="142" rx="30" ry="8" fill="black" opacity="0.1" />
+            {/* Torso & Shoulders */}
+            <path d="M30 215 C 30 160, 55 130, 100 130 C 145 130, 170 160, 170 215 L 170 230 L 30 230 Z" fill={skinColor} />
+            {/* Neck */}
+            <path d="M84 130 L116 130 L114 105 L86 105 Z" fill={skinColor} />
+            <path d="M84 130 Q100 138 116 130" stroke="black" strokeWidth="1.2" opacity="0.15" fill="none" />
+            {/* Clavicles */}
+            <path d="M55 145 Q80 148 95 142" stroke="black" strokeWidth="0.8" opacity="0.1" fill="none" />
+            <path d="M145 145 Q120 148 105 142" stroke="black" strokeWidth="0.8" opacity="0.1" fill="none" />
           </g>
         )
       });
@@ -98,11 +104,13 @@ const AvatarRenderer = memo(({ config, size = 120, className = "", storeItems = 
         zIndex: Z_INDEX_MAP['tete'],
         element: (
           <g key="base-head">
-            {/* Ears */}
-            <circle cx="61" cy="85" r="7.5" fill={skinColor} />
-            <circle cx="139" cy="85" r="7.5" fill={skinColor} />
-            {/* Professional Head Shape */}
-            <path d="M68 80 C 68 35, 132 35, 132 80 C 132 125, 100 142, 100 142 C 100 142, 68 125, 68 80 Z" fill={skinColor} />
+            {/* Detailed Ears */}
+            <path d="M54 95 Q50 88 54 81 Q58 73 66 78 L66 103 Q58 108 54 95" fill={skinColor} />
+            <path d="M146 95 Q150 88 146 81 Q142 73 134 78 L134 103 Q142 108 146 95" fill={skinColor} />
+            {/* Refined Face Shape */}
+            <path d="M66 80 C 66 30, 134 30, 134 80 C 134 125, 115 145, 100 150 C 85 145, 66 125, 66 80 Z" fill={skinColor} />
+            {/* Jaw definition */}
+            <path d="M66 85 Q66 125 100 150 Q134 125 134 85" fill="none" stroke="black" strokeWidth="0.8" opacity="0.1" />
           </g>
         )
       });
@@ -131,7 +139,7 @@ const AvatarRenderer = memo(({ config, size = 120, className = "", storeItems = 
     // Equiped Items
     sorted.forEach(item => {
       const zIndex = item.engineConfig?.zIndex ?? Z_INDEX_MAP[item.category] ?? 100;
-      const cfg = item.engineConfig || {};
+      const cfg = item.engineConfig || {} as any;
       
       let transform = "";
       if (cfg.anchorX || cfg.anchorY) transform += `translate(${cfg.anchorX || 0}px, ${cfg.anchorY || 0}px) `;
