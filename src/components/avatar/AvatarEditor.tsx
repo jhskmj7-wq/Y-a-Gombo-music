@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Camera, Save, ShoppingBag, X, UserCheck, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Save, ShoppingBag, UserCheck, ArrowLeft, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { AvatarConfig, UserAvatarData, AvatarItemCategory, AvatarItem, UserInventoryData } from '../../types/avatar';
 import { AvatarEngine } from '../../lib/avatarEngine';
 import { useAuth } from '../../AuthContext';
@@ -24,41 +23,104 @@ const DEFAULT_CONFIG: AvatarConfig = {
   couronnes: '',
   chaussures: '',
   sourcils: '',
-  visage: ''
+  visage: '',
+  nez: ''
 };
 
 const TABS = [
   { id: 'couleur_peau', label: 'Peau 🎨' },
+  { id: 'forme_visage', label: 'Forme 👤' },
   { id: 'coiffures', label: 'Coiffure 💇' },
-  { id: 'visage', label: 'Visage 🧔' },
-  { id: 'yeux', label: 'Yeux 👁️' },
+  { id: 'barbe', label: 'Barbe / Moustache 🧔' },
   { id: 'sourcils', label: 'Sourcils 🤨' },
+  { id: 'yeux', label: 'Yeux 👁️' },
+  { id: 'nez', label: 'Nez 👃' },
   { id: 'bouche', label: 'Bouche 👄' },
+  { id: 'piercings', label: 'Piercings 💍' },
+  { id: 'lunettes', label: 'Lunettes 🕶️' },
   { id: 'vêtements', label: 'Vêtements 👕' },
   { id: 'chaussures', label: 'Chaussures 👟' },
-  { id: 'accessoires', label: 'Accessoires 🕶️' },
-  { id: 'couronnes', label: 'Couronnes 👑' },
+  { id: 'accessoires', label: 'Accessoires 👑' },
+  { id: 'couronnes', label: 'Couronnes 🎩' },
   { id: 'instruments', label: 'Instruments 🪘' },
   { id: 'arriere-plans', label: 'Arrière-plan 🌅' }
 ];
 
 const FREE_DEFAULT_ITEMS: AvatarItem[] = [
+  // BARBE / MOUSTACHE (visage)
+  {
+    id: "visage_naturel",
+    name: "Sans Barbe",
+    category: "barbe",
+    price: 0,
+    isActive: true,
+    svgContent: `<g id="visage-naturel"></g>`
+  },
+  {
+    id: "visage_barbe",
+    name: "Barbe Courte",
+    category: "barbe",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M78 118 Q100 138 122 118 L116 130 Q100 146 84 130 Z" fill="#111111" />`
+  },
+  {
+    id: "visage_bouc",
+    name: "Bouc de Star",
+    category: "barbe",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M85 105 Q100 110 115 105 L112 125 Q100 135 88 125 Z" fill="#222" /><path d="M90 102 L110 102" stroke="#222" stroke-width="2" />`
+  },
+  {
+    id: "visage_barbe_longue",
+    name: "Barbe Impériale",
+    category: "barbe",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M70 105 Q100 160 130 105 Q100 135 70 105 Z" fill="#0f0f0f" />`
+  },
+  {
+    id: "visage_moustache",
+    name: "Moustache Fine",
+    category: "barbe",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M80 104 Q92 100 100 105 Q108 100 120 104 Q108 108 100 106 Q92 108 80 104 Z" fill="#111" />`
+  },
+  {
+    id: "visage_barbe_fournie",
+    name: "Barbe Fournie",
+    category: "barbe",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M68 95 Q100 150 132 95 L125 125 Q100 142 75 125 Z" fill="#181818" />`
+  },
+
   // COIFFURES
   {
     id: "hair_ras",
-    name: "Style Rasé",
+    name: "Rasé Court",
     category: "coiffures",
     price: 0,
     isActive: true,
-    svgContent: `<path d="M100 45" />` // Minimal empty indicator
+    svgContent: `<path d="M100 45" />`
   },
   {
     id: "hair_afro",
-    name: "Style Afro Court",
+    name: "Afro Court",
     category: "coiffures",
     price: 0,
     isActive: true,
     svgContent: `<path d="M50 85 Q100 20 150 85 Q100 45 50 85 Z" fill="#111" />`
+  },
+  {
+    id: "hair_afro_grand",
+    name: "Afro Grand Volume",
+    category: "coiffures",
+    price: 0,
+    isActive: true,
+    svgContent: `<circle cx="100" cy="70" r="48" fill="#111" />`
   },
   {
     id: "hair_nattes",
@@ -76,57 +138,37 @@ const FREE_DEFAULT_ITEMS: AvatarItem[] = [
     isActive: true,
     svgContent: `<g fill="#1A1A1A"><path d="M50 85 Q100 20 150 85" stroke="#1A1A1A" stroke-width="8" stroke-linecap="round" /><path d="M60 50 L40 100" stroke="#1A1A1A" stroke-width="6" stroke-linecap="round" /><path d="M140 50 L160 100" stroke="#1A1A1A" stroke-width="6" stroke-linecap="round" /></g>`
   },
-
-  // VISAGE
   {
-    id: "visage_naturel",
-    name: "Visage Pur",
-    category: "visage",
+    id: "hair_dreads_longues",
+    name: "Dreadlocks Longues",
+    category: "coiffures",
     price: 0,
     isActive: true,
-    svgContent: `<g id="visage-naturel"></g>`
+    svgContent: `<g fill="#111"><path d="M50 85 Q100 20 150 85" stroke="#111" stroke-width="8" stroke-linecap="round" /><path d="M55 50 L35 130 M65 50 L45 135 M135 50 L155 135 M145 50 L165 130" stroke="#111" stroke-width="6" stroke-linecap="round" /></g>`
   },
   {
-    id: "visage_barbe",
-    name: "Barbe Courte",
-    category: "visage",
+    id: "hair_twists",
+    name: "Twists Urbains",
+    category: "coiffures",
     price: 0,
     isActive: true,
-    svgContent: `<path d="M80 120 Q100 135 120 120 L115 130 Q100 145 85 130 Z" fill="#111111" />`
+    svgContent: `<g fill="#1a1a1a"><path d="M55 75 Q100 25 145 75" stroke="#1a1a1a" stroke-width="10" stroke-linecap="round" /><path d="M70 45 L70 90 M100 35 L100 90 M130 45 L130 90" stroke="#D4AF37" stroke-width="2" /></g>`
   },
   {
-    id: "visage_gombo_barbe",
-    name: "Bouc de Star",
-    category: "visage",
+    id: "hair_degrade",
+    name: "Dégradé Vague",
+    category: "coiffures",
     price: 0,
     isActive: true,
-    svgContent: `<path d="M85 105 Q100 110 115 105 L112 125 Q100 135 88 125 Z" fill="#222" /><path d="M90 102 L110 102" stroke="#222" stroke-width="2" />`
-  },
-
-  // YEUX
-  {
-    id: "eyes_standard",
-    name: "Regard Standard",
-    category: "yeux",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><circle cx="85" cy="80" r="4.5" fill="#111" /><circle cx="115" cy="80" r="4.5" fill="#111" /></g>`
+    svgContent: `<path d="M58 85 C58 50, 142 50, 142 85 C120 55, 80 55, 58 85 Z" fill="#111" />`
   },
   {
-    id: "eyes_scintillant",
-    name: "Regard Expressif",
-    category: "yeux",
+    id: "hair_attache",
+    name: "Coiffure Attachée",
+    category: "coiffures",
     price: 0,
     isActive: true,
-    svgContent: `<g><circle cx="85" cy="80" r="5" fill="#111" /><circle cx="115" cy="80" r="5" fill="#111" /><circle cx="83" cy="78" r="1.5" fill="#FFF" /><circle cx="113" cy="78" r="1.5" fill="#FFF" /></g>`
-  },
-  {
-    id: "eyes_star",
-    name: "Lunettes de Star",
-    category: "yeux",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><rect x="72" y="73" width="22" height="15" rx="4" fill="#111" stroke="#D4AF37" stroke-width="2" /><rect x="106" y="73" width="22" height="15" rx="4" fill="#111" stroke="#D4AF37" stroke-width="2" /><line x1="94" y1="80" x2="106" y2="80" stroke="#D4AF37" stroke-width="2.5" /></g>`
+    svgContent: `<g fill="#111"><circle cx="100" cy="35" r="20" /><path d="M60 85 Q100 40 140 85 Z" /></g>`
   },
 
   // SOURCILS
@@ -147,12 +189,80 @@ const FREE_DEFAULT_ITEMS: AvatarItem[] = [
     svgContent: `<g><path d="M71 73 Q85 65 94 72" stroke="#111" stroke-width="4.5" fill="none" stroke-linecap="round" /><path d="M106 72 Q115 65 129 73" stroke="#111" stroke-width="4.5" fill="none" stroke-linecap="round" /></g>`
   },
   {
-    id: "sourcils_styles",
-    name: "Sourcils Stylisés",
+    id: "sourcils_arques",
+    name: "Sourcils Arqués",
     category: "sourcils",
     price: 0,
     isActive: true,
-    svgContent: `<g><path d="M73 71 L92 71" stroke="#333" stroke-width="3" stroke-linecap="round" /><path d="M108 71 L127 71" stroke="#333" stroke-width="3" stroke-linecap="round" /></g>`
+    svgContent: `<g><path d="M70 75 Q82 64 94 71" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round" /><path d="M106 71 Q118 64 130 75" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round" /></g>`
+  },
+  {
+    id: "sourcils_droits",
+    name: "Sourcils Droits",
+    category: "sourcils",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><path d="M72 72 L93 72" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round" /><path d="M107 72 L128 72" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round" /></g>`
+  },
+
+  // YEUX
+  {
+    id: "eyes_standard",
+    name: "Regard Standard",
+    category: "yeux",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><circle cx="85" cy="80" r="4.5" fill="#111" /><circle cx="115" cy="80" r="4.5" fill="#111" /></g>`
+  },
+  {
+    id: "eyes_expressif",
+    name: "Regard Expressif",
+    category: "yeux",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><circle cx="85" cy="80" r="5" fill="#111" /><circle cx="115" cy="80" r="5" fill="#111" /><circle cx="83" cy="78" r="1.5" fill="#FFF" /><circle cx="113" cy="78" r="1.5" fill="#FFF" /></g>`
+  },
+  {
+    id: "eyes_marron",
+    name: "Yeux Marron Cacao",
+    category: "yeux",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><circle cx="85" cy="80" r="5.5" fill="#4E3629" /><circle cx="115" cy="80" r="5.5" fill="#4E3629" /><circle cx="85" cy="80" r="2.5" fill="#111" /><circle cx="115" cy="80" r="2.5" fill="#111" /></g>`
+  },
+  {
+    id: "eyes_dorés",
+    name: "Yeux Or Impérial",
+    category: "yeux",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><circle cx="85" cy="80" r="6" fill="#D4AF37" /><circle cx="115" cy="80" r="6" fill="#D4AF37" /><circle cx="85" cy="80" r="2.5" fill="#111" /><circle cx="115" cy="80" r="2.5" fill="#111" /><circle cx="83" cy="78" r="1" fill="#FFF" /><circle cx="113" cy="78" r="1" fill="#FFF" /></g>`
+  },
+
+  // NEZ
+  {
+    id: "nez_naturel",
+    name: "Nez Naturel",
+    category: "nez",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M100 82 L98 96 L104 96" stroke="#4A3018" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6" />`
+  },
+  {
+    id: "nez_sculpte",
+    name: "Nez Sculpté",
+    category: "nez",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M100 80 L96 95 Q100 100 104 95 L100 80" stroke="#3A2010" stroke-width="2" fill="none" stroke-linecap="round" />`
+  },
+  {
+    id: "nez_royal",
+    name: "Nez Impérial",
+    category: "nez",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M99 78 L95 96 L105 96 Z" fill="none" stroke="#4A3018" stroke-width="2" opacity="0.7" />`
   },
 
   // BOUCHE
@@ -180,6 +290,66 @@ const FREE_DEFAULT_ITEMS: AvatarItem[] = [
     isActive: true,
     svgContent: `<line x1="84" y1="112" x2="116" y2="112" stroke="#4A3018" stroke-width="3.5" stroke-linecap="round" />`
   },
+  {
+    id: "mouth_expressive",
+    name: "Sourire Expressif",
+    category: "bouche",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M80 108 Q100 130 120 108" stroke="#3A1D0E" stroke-width="4" fill="none" stroke-linecap="round" />`
+  },
+
+  // PIERCINGS
+  {
+    id: "acc_creoles",
+    name: "Boucles Créoles",
+    category: "piercings",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><circle cx="53" cy="98" r="5" fill="none" stroke="#D4AF37" stroke-width="2.5" /><circle cx="147" cy="98" r="5" fill="none" stroke="#D4AF37" stroke-width="2.5" /></g>`
+  },
+  {
+    id: "acc_piercing_nez",
+    name: "Anneau de Nez Or",
+    category: "piercings",
+    price: 0,
+    isActive: true,
+    svgContent: `<circle cx="94" cy="95" r="2.5" fill="none" stroke="#D4AF37" stroke-width="1.5" />`
+  },
+  {
+    id: "acc_piercing_arcade",
+    name: "Piercing Arcade",
+    category: "piercings",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><circle cx="71" cy="68" r="1.5" fill="#D4AF37" /><circle cx="75" cy="68" r="1.5" fill="#D4AF37" /></g>`
+  },
+
+  // LUNETTES
+  {
+    id: "eyes_star",
+    name: "Lunettes de Star VIP",
+    category: "lunettes",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><rect x="72" y="73" width="22" height="15" rx="4" fill="#111" stroke="#D4AF37" stroke-width="2" /><rect x="106" y="73" width="22" height="15" rx="4" fill="#111" stroke="#D4AF37" stroke-width="2" /><line x1="94" y1="80" x2="106" y2="80" stroke="#D4AF37" stroke-width="2.5" /></g>`
+  },
+  {
+    id: "acc_lunettes_rondes",
+    name: "Lunettes Rondes VIP",
+    category: "lunettes",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><circle cx="83" cy="80" r="12" fill="none" stroke="#D4AF37" stroke-width="2" /><circle cx="117" cy="80" r="12" fill="none" stroke="#D4AF37" stroke-width="2" /><line x1="95" y1="80" x2="105" y2="80" stroke="#D4AF37" stroke-width="2" /></g>`
+  },
+  {
+    id: "acc_lunettes_sport",
+    name: "Lunettes Sport Futuriste",
+    category: "lunettes",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M68 74 L132 74 L128 88 L72 88 Z" fill="#111" stroke="#E74C3C" stroke-width="2" opacity="0.9" />`
+  },
 
   // VÊTEMENTS
   {
@@ -205,6 +375,22 @@ const FREE_DEFAULT_ITEMS: AvatarItem[] = [
     price: 0,
     isActive: true,
     svgContent: `<path d="M50 200 L60 155 Q100 140 140 155 L150 200 Z" fill="#111111" />`
+  },
+  {
+    id: "clothes_boubou",
+    name: "Boubou Royal Impérial",
+    category: "vêtements",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M30 200 Q100 110 170 200 Z" fill="#112233" stroke="#D4AF37" stroke-width="3" /><path d="M85 140 L115 140 L100 170 Z" fill="#D4AF37" />`
+  },
+  {
+    id: "clothes_veste",
+    name: "Veste Sapeur Rouge",
+    category: "vêtements",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M38 200 L55 145 Q100 130 145 145 L162 200 Z" fill="#C0392B" /><path d="M85 145 L100 175 L115 145" fill="#FFF" />`
   },
 
   // CHAUSSURES
@@ -243,12 +429,12 @@ const FREE_DEFAULT_ITEMS: AvatarItem[] = [
     svgContent: `<path d="M72 130 Q100 155 128 130" stroke="#FFF" stroke-width="4" fill="none" stroke-dasharray="3 1" />`
   },
   {
-    id: "acc_creoles",
-    name: "Boucles Créoles",
+    id: "acc_chaine_or",
+    name: "Chaîne en Or VIP",
     category: "accessoires",
     price: 0,
     isActive: true,
-    svgContent: `<g><circle cx="53" cy="98" r="5" fill="none" stroke="#D4AF37" stroke-width="2.5" /><circle cx="147" cy="98" r="5" fill="none" stroke="#D4AF37" stroke-width="2.5" /></g>`
+    svgContent: `<path d="M60 135 Q100 165 140 135" stroke="#D4AF37" stroke-width="4" fill="none" />`
   },
 
   // COURONNES
@@ -267,6 +453,40 @@ const FREE_DEFAULT_ITEMS: AvatarItem[] = [
     price: 0,
     isActive: true,
     svgContent: `<path d="M60 70 C60 25, 140 25, 140 70 Z" fill="#E74C3C" /><path d="M62 65 Q100 28 138 65 Z" fill="#F1C40F" /><path d="M68 55 Q100 32 132 55 Z" fill="#2ECC71" />`
+  },
+  {
+    id: "crown_akan",
+    name: "Couronne Royale Akan",
+    category: "couronnes",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><path d="M65 55 L75 25 L88 45 L100 20 L112 45 L125 25 L135 55 Z" fill="#D4AF37" stroke="#996515" stroke-width="1.5" /><rect x="65" y="52" width="70" height="8" fill="#800" /></g>`
+  },
+
+  // INSTRUMENTS
+  {
+    id: "inst_djembe",
+    name: "Djembe Traditionnel",
+    category: "instruments",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><path d="M140 130 L165 130 L158 175 L147 175 Z" fill="#8B4513" stroke="#D4AF37" stroke-width="1" /><ellipse cx="152.5" cy="130" rx="12.5" ry="4" fill="#F5F5DC" /></g>`
+  },
+  {
+    id: "inst_guitare",
+    name: "Guitare Électrique",
+    category: "instruments",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><path d="M145 110 Q160 120 150 140 Q135 150 130 135 Z" fill="#E74C3C" stroke="#111" stroke-width="1.5" /><line x1="140" y1="125" x2="175" y2="90" stroke="#111" stroke-width="3" /></g>`
+  },
+  {
+    id: "inst_micro",
+    name: "Microphone Or",
+    category: "instruments",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><rect x="148" y="115" width="8" height="25" rx="3" fill="#333" /><circle cx="152" cy="112" r="7" fill="#D4AF37" /></g>`
   },
 
   // ARRIÈRE-PLANS
@@ -296,16 +516,41 @@ const FREE_DEFAULT_ITEMS: AvatarItem[] = [
   }
 ];
 
-// Helper to map DB categories to english config keys used by renderer and SVG generators
+// Helper to map UI category tabs to config keys
 export function mapCategoryToConfigKey(category: string): string {
   switch (category) {
-    case 'coiffures': return 'hair';
-    case 'yeux': return 'eyes';
-    case 'bouche': return 'mouth';
-    case 'vêtements': return 'clothes';
-    case 'accessoires': return 'accessories';
-    case 'arriere-plans': return 'background';
-    default: return category;
+    case 'coiffures':
+    case 'cheveux': 
+      return 'hair';
+    case 'visage':
+    case 'barbe': 
+      return 'visage';
+    case 'forme_visage': 
+      return 'faceShape';
+    case 'yeux': 
+      return 'eyes';
+    case 'sourcils': 
+      return 'sourcils';
+    case 'nez': 
+      return 'nez';
+    case 'bouche': 
+      return 'mouth';
+    case 'piercings':
+    case 'lunettes':
+    case 'accessoires': 
+      return 'accessories';
+    case 'vêtements': 
+      return 'clothes';
+    case 'chaussures': 
+      return 'chaussures';
+    case 'couronnes': 
+      return 'couronnes';
+    case 'instruments': 
+      return 'instruments';
+    case 'arriere-plans': 
+      return 'background';
+    default: 
+      return category;
   }
 }
 
@@ -336,23 +581,19 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
 
     setLoading(true);
 
-    // 1. Subscribe Store Items
     const unsubItems = AvatarEngine.subscribeStoreItems((items) => {
       setStoreItems(items);
       setLoading(false);
     });
 
-    // 2. Subscribe User Inventory
     const unsubInv = AvatarEngine.subscribeUserInventory(currentUser.uid, (inv) => {
       setInventory(inv);
     });
 
-    // 3. Subscribe User Avatar Config
     const unsubAvatar = AvatarEngine.subscribeUserAvatar(currentUser.uid, (data) => {
       if (data) {
         setAvatarData(data);
         if (data.config) {
-          // Normalize loaded configuration config keys
           const normalizedConfig = { ...DEFAULT_CONFIG };
           Object.keys(data.config).forEach((key) => {
             const normalizedKey = mapCategoryToConfigKey(key);
@@ -379,7 +620,6 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
     };
   }, [currentUser]);
 
-  // Cancel modification and restore the last saved configuration
   const handleCancel = () => {
     if (initialConfig) {
       setConfig(initialConfig);
@@ -387,23 +627,19 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
     onClose();
   };
 
-  // Handle Save Avatar & Sync Profile Photo
   const handleSave = async () => {
     if (!currentUser) return;
     setSaving(true);
     setSaveSuccess(null);
     try {
-      // 1. Build and validate configuration currently equipped
       const finalConfig = { ...config };
 
-      // 2. Save Avatar config
       await AvatarEngine.saveUserAvatar(currentUser.uid, {
         config: finalConfig,
         useAvatarAsProfile: useAsProfile,
         inventory: inventory.ownedItems
       }, storeItems);
 
-      // 3. Sync SVG Avatar URI to user profile if useAsProfile is active
       const mergedStoreAndFreeItems = [...FREE_DEFAULT_ITEMS, ...storeItems];
       const avatarUri = AvatarEngine.generateAvatarSvg(finalConfig, mergedStoreAndFreeItems);
       await AvatarEngine.setAvatarAsProfile(currentUser.uid, avatarUri, useAsProfile);
@@ -411,7 +647,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
       setSaveSuccess("Votre avatar Gombo a été sauvegardé avec succès ! 🎉");
       setTimeout(() => {
         onClose();
-      }, 1500);
+      }, 1200);
     } catch (e: any) {
       console.error("Failed to save avatar", e);
       setSaveSuccess(`Erreur lors de la sauvegarde : ${e.message || "Inconnue"}`);
@@ -420,13 +656,38 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
     }
   };
 
-  // Handle Equip item in editor
-  const handleEquip = async (itemId: string, category: AvatarItemCategory) => {
+  const handleSyncProfile = async () => {
+    if (!currentUser) return;
+    setSaving(true);
+    setSaveSuccess(null);
+    try {
+      const finalConfig = { ...config };
+      const mergedStoreAndFreeItems = [...FREE_DEFAULT_ITEMS, ...storeItems];
+      const avatarUri = AvatarEngine.generateAvatarSvg(finalConfig, mergedStoreAndFreeItems);
+
+      setUseAsProfile(true);
+
+      await AvatarEngine.saveUserAvatar(currentUser.uid, {
+        config: finalConfig,
+        useAvatarAsProfile: true,
+        inventory: inventory.ownedItems
+      }, storeItems);
+
+      await AvatarEngine.setAvatarAsProfile(currentUser.uid, avatarUri, true);
+      setSaveSuccess("Votre avatar est maintenant synchronisé avec votre profil public ! 🌟");
+    } catch (e: any) {
+      console.error("Sync failed", e);
+      setSaveSuccess(`Erreur de synchronisation : ${e.message || "Inconnue"}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEquip = async (itemId: string, category: AvatarItemCategory | string) => {
     if (!currentUser) return;
 
     const configKey = mapCategoryToConfigKey(category);
 
-    // Update local state for immediate responsiveness
     setConfig(prev => {
       const next = { ...prev };
       if (configKey === 'accessories' || configKey === 'instruments') {
@@ -437,13 +698,11 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
           next[configKey] = [...list, itemId];
         }
       } else {
-        // Single equip category
         (next as any)[configKey] = (next as any)[configKey] === itemId ? '' : itemId;
       }
       return next;
     });
 
-    // Also persist in Firestore userInventory
     const isCurrentlyEquipped = inventory.equippedItems.includes(itemId);
     try {
       await AvatarEngine.equipItem(currentUser.uid, itemId, !isCurrentlyEquipped, category);
@@ -461,14 +720,12 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
     );
   }
 
-  // Combine default free items and user owned store items
   const ownedStoreItems = storeItems.filter(item => inventory.ownedItems.includes(item.id));
   const itemsInActiveTab = [
     ...FREE_DEFAULT_ITEMS.filter(item => item.category === activeTab),
     ...ownedStoreItems.filter(item => item.category === activeTab)
   ];
 
-  // Render a smart preview inside the customization item card
   const renderItemPreview = (item: AvatarItem) => {
     if (item.imageUrl || item.previewImage || item.assetUrl) {
       return (
@@ -483,7 +740,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
       const isHair = item.category === 'coiffures' || item.category === 'couronnes';
       const isMouth = item.category === 'bouche';
       const isEyes = item.category === 'yeux' || item.category === 'sourcils';
-      const isVisage = item.category === 'visage';
+      const isVisage = item.category === 'visage' || item.category === 'barbe';
       const isClothes = item.category === 'vêtements';
       const isShoes = item.category === 'chaussures';
 
@@ -517,7 +774,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
     <div className="fixed inset-0 z-[110] bg-zinc-950 md:bg-black/80 md:backdrop-blur-md overflow-y-auto flex flex-col md:items-center md:justify-center p-0 md:p-4 font-sans text-left">
       <div className="w-full max-w-5xl min-h-screen md:min-h-0 md:h-[88vh] bg-zinc-900 border-0 md:border border-afri-border/30 md:rounded-3xl flex flex-col shadow-2xl relative overflow-hidden">
         
-        {/* Save Success / Error Toast Overlay */}
+        {/* Toast Notification */}
         {saveSuccess && (
           <div className="absolute inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
             <div className="bg-zinc-900 border border-[#D4AF37] p-6 rounded-3xl max-w-md text-center space-y-4 shadow-2xl animate-scaleUp">
@@ -534,7 +791,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
           </div>
         )}
         
-        {/* Sticky Header Bar for both Mobile & Desktop */}
+        {/* Top Bar */}
         <div className="sticky top-0 z-40 bg-zinc-950 border-b border-afri-border/30 px-4 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button onClick={handleCancel} className="md:hidden text-afri-text-sec hover:text-afri-text p-1">
@@ -570,11 +827,11 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
           </div>
         </div>
 
-        {/* Workspace Container */}
-        <div className="flex-1 flex flex-col md:flex-row md:overflow-hidden">
+        {/* Workspace */}
+        <div className="flex-1 flex flex-col md:flex-row md:overflow-hidden overflow-y-auto">
           
-          {/* Left Column: Avatar Preview & Profile Options */}
-          <div className="w-full md:w-[320px] bg-zinc-950 md:border-r border-afri-border/30 p-5 flex flex-col items-center justify-start gap-4 shrink-0 overflow-y-auto md:overflow-y-visible">
+          {/* Left Column: Preview & Profile Options */}
+          <div className="w-full md:w-[320px] bg-zinc-950 md:border-r border-afri-border/30 p-5 flex flex-col items-center justify-start gap-4 shrink-0">
             <div className="flex items-center justify-center w-full min-h-[220px] max-h-[280px]">
               <AvatarRenderer 
                 config={config} 
@@ -585,7 +842,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
             </div>
             
             <div className="w-full space-y-3">
-              {/* Define as Profile photo option */}
+              {/* Profile Sync Checkbox */}
               <label className="flex items-center gap-3 p-3.5 bg-zinc-900 rounded-2xl border border-afri-border/30 cursor-pointer hover:border-[#D4AF37]/50 transition">
                 <input 
                   type="checkbox" 
@@ -602,6 +859,16 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
                 </div>
               </label>
 
+              {/* Explicit Sync Button */}
+              <button 
+                onClick={handleSyncProfile}
+                disabled={saving}
+                className="w-full py-2.5 bg-[#D4AF37] hover:bg-white text-black font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-lg disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} />
+                Synchroniser avec mon profil
+              </button>
+
               {/* Boutique Avatar Link */}
               <button 
                 onClick={() => setShowStore(true)}
@@ -613,10 +880,10 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
             </div>
           </div>
 
-          {/* Right Column: Category navigation & Choices Grid */}
+          {/* Right Column: Category Tabs & Grid */}
           <div className="flex-1 flex flex-col bg-zinc-900/30 overflow-y-auto">
             
-            {/* Categories Tab Bar (Horizontal scrolling allowed) */}
+            {/* Horizontal Tabs */}
             <div className="flex overflow-x-auto p-3 gap-2 border-b border-afri-border/20 bg-zinc-950/80 scrollbar-none sticky top-0 z-30 touch-pan-x">
               {TABS.map((tab) => (
                 <button
@@ -633,13 +900,13 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
               ))}
             </div>
 
-            {/* Choices Area (Generous bottom padding for full vertical mobile scrolling) */}
+            {/* Choices Grid */}
             <div className="p-5 pb-40 md:pb-8 flex-1">
               {activeTab === 'couleur_peau' ? (
                 <div className="space-y-4">
                   <p className="text-xs text-afri-text-sec font-mono uppercase tracking-wider">Teinte de peau :</p>
                   <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
-                    {['#8D5524', '#C68642', '#E0AC69', '#F1C27D', '#FFDBAC', '#3D2314', '#2b170c'].map(color => (
+                    {['#8D5524', '#C68642', '#E0AC69', '#F1C27D', '#FFDBAC', '#5C3818', '#3D2314', '#221208'].map(color => (
                       <button
                         key={color}
                         onClick={() => setConfig({ ...config, skinColor: color })}
@@ -653,6 +920,38 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
                     ))}
                   </div>
                 </div>
+              ) : activeTab === 'forme_visage' ? (
+                <div className="space-y-4">
+                  <p className="text-xs text-afri-text-sec font-mono uppercase tracking-wider">Forme du visage :</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      { id: 'default', name: 'Standard' },
+                      { id: 'oval', name: 'Ovale' },
+                      { id: 'round', name: 'Rond' },
+                      { id: 'square', name: 'Carré' },
+                      { id: 'diamond', name: 'Losange' },
+                      { id: 'heart', name: 'Cœur' },
+                      { id: 'slim', name: 'Visage Fin' },
+                      { id: 'wide', name: 'Visage Large' },
+                    ].map(shape => (
+                      <button
+                        key={shape.id}
+                        onClick={() => setConfig(prev => ({ ...prev, faceShape: shape.id }))}
+                        className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition cursor-pointer ${
+                          config.faceShape === shape.id
+                            ? "bg-[#D4AF37]/10 border-[#D4AF37] text-afri-text shadow-lg"
+                            : "bg-zinc-950 border-afri-border/20 text-afri-text-sec hover:border-afri-border/50"
+                        }`}
+                      >
+                        <span className="text-2xl">👤</span>
+                        <span className="text-xs font-bold uppercase">{shape.name}</span>
+                        {config.faceShape === shape.id && (
+                          <span className="px-2 py-0.5 bg-[#D4AF37] text-black text-[9px] font-bold rounded-full">Sélectionné</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {itemsInActiveTab.length === 0 ? (
@@ -662,7 +961,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
                         Aucun article déverrouillé dans cette catégorie.
                       </p>
                       <button 
-                        onClick={() => setShowStore(true)} 
+                        onClick={() => setShowStore(false)} 
                         className="px-4 py-2 bg-[#D4AF37] text-black font-black text-xs uppercase tracking-wider rounded-xl hover:bg-white transition cursor-pointer"
                       >
                         Visiter la boutique
@@ -679,7 +978,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
                       return (
                         <button
                           key={item.id}
-                          onClick={() => handleEquip(item.id, item.category as AvatarItemCategory)}
+                          onClick={() => handleEquip(item.id, item.category)}
                           className={`aspect-square rounded-3xl border flex flex-col items-center justify-between p-3.5 relative transition cursor-pointer ${
                             isEquipped 
                               ? "bg-[#D4AF37]/10 border-[#D4AF37] shadow-lg shadow-[#D4AF37]/5" 
@@ -695,8 +994,8 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
                           </span>
 
                           {isEquipped && (
-                            <div className="absolute top-2 right-2 px-2 py-0.5 bg-[#D4AF37] text-black font-black text-[8px] uppercase rounded-full shadow">
-                              Équipé
+                            <div className="absolute top-2 right-2 px-2 py-0.5 bg-[#D4AF37] text-black font-black text-[8px] uppercase rounded-full shadow flex items-center gap-1">
+                              <CheckCircle2 className="w-2.5 h-2.5" /> Équipé
                             </div>
                           )}
                         </button>

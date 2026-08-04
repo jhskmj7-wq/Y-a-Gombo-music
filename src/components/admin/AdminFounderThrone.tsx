@@ -103,12 +103,27 @@ export default function AdminFounderThrone({
   const handleUpdatePlatformStatus = async (newStatus: string) => {
     console.log("Updating status:", newStatus);
     try {
-      await setDoc(doc(db, "settings", "platform"), { status: newStatus }, { merge: true });
+      const isM = newStatus === "maintenance";
+      const now = new Date().toISOString();
+
+      await setDoc(doc(db, "settings", "platform"), { 
+        status: newStatus,
+        updatedAt: now,
+        updatedBy: adminEmail || "jhs.kmj7@gmail.com"
+      }, { merge: true });
       
       // Synchronize across all three maintenance documents in Firestore
-      const isM = newStatus === "maintenance";
-      await setDoc(doc(db, "system_settings", "global"), { maintenanceMode: isM }, { merge: true });
-      await setDoc(doc(db, "settings", "maintenance"), { globalMode: isM }, { merge: true });
+      await setDoc(doc(db, "system_settings", "global"), { 
+        maintenanceMode: isM,
+        updatedAt: now,
+        updatedBy: adminEmail || "jhs.kmj7@gmail.com"
+      }, { merge: true });
+
+      await setDoc(doc(db, "settings", "maintenance"), { 
+        globalMode: isM,
+        updatedAt: now,
+        updatedBy: adminEmail || "jhs.kmj7@gmail.com"
+      }, { merge: true });
 
       console.log("Status updated successfully.");
       setSuccessMsg(`Souveraineté : Statut de service mis à jour vers [${newStatus.toUpperCase()}]`);

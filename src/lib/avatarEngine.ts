@@ -400,7 +400,7 @@ export const AvatarEngine = {
       }
 
       // Sync choice to main user document in users/{userId}
-      const userUpdates: any = {};
+      const userUpdates: any = { updatedAt: now };
       if (data.useAvatarAsProfile !== undefined) {
         userUpdates.useAvatarAsProfile = data.useAvatarAsProfile;
       }
@@ -409,13 +409,19 @@ export const AvatarEngine = {
         userUpdates.photoURLAvatar = avatarDataUri;
         userUpdates.avatarImage = avatarDataUri;
         userUpdates.avatarUpdatedAt = now;
+
+        // If defined as profile or enabled, set avatarUrl & photoURL
+        if (data.useAvatarAsProfile) {
+          userUpdates.avatarUrl = avatarDataUri;
+          userUpdates.photoURL = avatarDataUri;
+        }
       }
       if (data.config) {
         userUpdates.avatarConfig = data.config;
       }
 
       if (Object.keys(userUpdates).length > 0) {
-        await updateDoc(doc(db, "users", userId), userUpdates);
+        await setDoc(doc(db, "users", userId), userUpdates, { merge: true });
       }
     } catch (e) {
       console.error("Error saving user avatar:", e);
@@ -528,12 +534,17 @@ export const AvatarEngine = {
   async setAvatarAsProfile(userId: string, avatarDataUri: string, enable: boolean): Promise<void> {
     try {
       const userRef = doc(db, "users", userId);
-      await updateDoc(userRef, {
+      const updates: any = {
         useAvatarAsProfile: enable,
         photoURLAvatar: avatarDataUri,
         avatarDataUri: avatarDataUri,
         updatedAt: new Date().toISOString()
-      });
+      };
+      if (enable && avatarDataUri) {
+        updates.avatarUrl = avatarDataUri;
+        updates.photoURL = avatarDataUri;
+      }
+      await setDoc(userRef, updates, { merge: true });
 
       const payload = { useAvatarAsProfile: enable, updatedAt: new Date().toISOString() };
       await setDoc(doc(db, "userAvatars", userId), payload, { merge: true });
@@ -562,7 +573,11 @@ export const AvatarEngine = {
         ? '<path d="M65 110 Q100 135 135 110" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />' 
         : config.faceShape === 'square'
           ? '<path d="M60 110 L80 128 L120 128 L140 110" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />'
-          : '<path d="M60 105 Q100 125 140 105" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />')
+          : config.faceShape === 'round'
+            ? '<path d="M65 100 Q100 138 135 100" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />'
+            : config.faceShape === 'diamond'
+              ? '<path d="M65 100 L100 135 L135 100" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />'
+              : '<path d="M60 105 Q100 125 140 105" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />')
       : '';
 
     const svgString = `
@@ -574,8 +589,9 @@ export const AvatarEngine = {
         <circle cx="100" cy="90" r="45" fill="${skinColor}" />
         ${config?.visage ? getItemSvg(config.visage) : ''}
         ${faceShapePath}
-        ${getItemSvg(config?.sourcils, '<g><path d="M72 73 Q85 68 93 72" stroke="#1A1A1A" stroke-width="2" fill="transparent" stroke-linecap="round" /><path d="M107 72 Q115 68 128 73" stroke="#1A1A1A" stroke-width="2" fill="transparent" stroke-linecap="round" /></g>')}
-        ${getItemSvg(config?.mouth, '<path d="M85 110 Q100 120 115 110" stroke="#4A3018" stroke-width="3" fill="transparent" stroke-linecap="round" />')}
+        ${getItemSvg(config?.sourcils, '<g><path d="M72 73 Q85 68 93 72" stroke="#1A1A1A" stroke-width="2" fill="none" stroke-linecap="round" /><path d="M107 72 Q115 68 128 73" stroke="#1A1A1A" stroke-width="2" fill="none" stroke-linecap="round" /></g>')}
+        ${config?.nez ? getItemSvg(config.nez) : ''}
+        ${getItemSvg(config?.mouth, '<path d="M85 110 Q100 120 115 110" stroke="#4A3018" stroke-width="3" fill="none" stroke-linecap="round" />')}
         ${getItemSvg(config?.eyes, '<g><circle cx="85" cy="80" r="4" fill="#1A1A1A" /><circle cx="115" cy="80" r="4" fill="#1A1A1A" /></g>')}
         ${getItemSvg(config?.hair, '<path d="M55 90 Q100 30 145 90 Q100 50 55 90" fill="#1A1A1A" />')}
         ${config?.couronnes ? getItemSvg(config.couronnes) : ''}

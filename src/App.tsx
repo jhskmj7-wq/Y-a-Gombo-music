@@ -80,43 +80,87 @@ function CompleteProfileView() {
 }
 
 function App() {
-  const { currentUser } = useAuth();
+  const { currentUser, profile } = useAuth();
   const [isMaintenance, setIsMaintenance] = useState(false);
+  const [maintenanceMessage, setMaintenanceMessage] = useState("L'application est actuellement en maintenance. Veuillez patienter.");
+
+  // Clean up any stale obsolete maintenance cache key in localStorage/sessionStorage
+  useEffect(() => {
+    try {
+      localStorage.removeItem("afrigombo_maintenance_mode");
+      localStorage.removeItem("maintenance_override");
+      sessionStorage.removeItem("afrigombo_maintenance_mode");
+    } catch (e) {}
+  }, []);
 
   useEffect(() => {
-    let platMaint = false;
-    let globalMaint = false;
-    let securityMaint = false;
+    let platData: any = null;
+    let globalData: any = null;
+    let securityData: any = null;
+
+    const checkEffectiveMaintenance = (data: any) => {
+      if (!data) return false;
+      // 1. Direct manual toggle
+      if (data.status === "maintenance" || data.maintenanceMode === true || data.globalMode === true) {
+        return true;
+      }
+      // 2. Scheduled maintenance window check
+      if (data.scheduled === true && data.startAt && data.endAt) {
+        const now = Date.now();
+        const start = new Date(data.startAt).getTime();
+        const end = new Date(data.endAt).getTime();
+        if (!isNaN(start) && !isNaN(end) && now >= start && now < end) {
+          return true;
+        }
+      }
+      return false;
+    };
 
     const updateMaintenanceState = () => {
-      setIsMaintenance(platMaint || globalMaint || securityMaint);
+      const isM = checkEffectiveMaintenance(platData) || 
+                  checkEffectiveMaintenance(globalData) || 
+                  checkEffectiveMaintenance(securityData);
+      
+      setIsMaintenance(isM);
+
+      // Pick custom message if available
+      const customMsg = securityData?.globalMessage || globalData?.globalMessage || platData?.globalMessage;
+      if (customMsg) {
+        setMaintenanceMessage(customMsg);
+      }
     };
 
     const unsubPlatform = onSnapshot(doc(db, "settings", "platform"), (snap) => {
-      platMaint = snap.exists() && snap.data()?.status === "maintenance";
+      platData = snap.exists() ? snap.data() : null;
       updateMaintenanceState();
     }, (err) => {
       console.warn("Error listening to platform status:", err);
     });
 
     const unsubGlobal = onSnapshot(doc(db, "system_settings", "global"), (snap) => {
-      globalMaint = snap.exists() && snap.data()?.maintenanceMode === true;
+      globalData = snap.exists() ? snap.data() : null;
       updateMaintenanceState();
     }, (err) => {
       console.warn("Error listening to global system status:", err);
     });
 
     const unsubSecurity = onSnapshot(doc(db, "settings", "maintenance"), (snap) => {
-      securityMaint = snap.exists() && snap.data()?.globalMode === true;
+      securityData = snap.exists() ? snap.data() : null;
       updateMaintenanceState();
     }, (err) => {
       console.warn("Error listening to security maintenance status:", err);
     });
 
+    // 10-second interval check to auto-activate/deactivate scheduled maintenance window dynamically
+    const intervalId = setInterval(() => {
+      updateMaintenanceState();
+    }, 10000);
+
     return () => {
       unsubPlatform();
       unsubGlobal();
       unsubSecurity();
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -153,9 +197,16 @@ function App() {
     setShowSplash(false);
   }, []);
 
-  const isSuperUser = SecurityService.isFounder(currentUser) || SecurityService.isAdmin(currentUser);
+  const isSuperUser = SecurityService.isFounder(currentUser) || 
+                      SecurityService.isFounder(profile) || 
+                      SecurityService.isAdmin(currentUser) || 
+                      SecurityService.isAdmin(profile) ||
+                      profile?.isFounder === true ||
+                      currentUser?.email === "jhs.kmj7@gmail.com" ||
+                      profile?.email === "jhs.kmj7@gmail.com";
+
   if (isMaintenance && !isSuperUser) {
-    return <MaintenanceScreen message="L'application est actuellement en maintenance. Veuillez patienter." />;
+    return <MaintenanceScreen message={maintenanceMessage} />;
   }
 
   return (

@@ -271,10 +271,23 @@ service cloud.firestore {
       allow update, delete: if isFounder();
     }
 
-    // SETTINGS & ANALYTICS & KYC
+    // SETTINGS & SYSTEM SETTINGS & ANALYTICS & KYC & CAGNOTTES
     match /settings/{id} {
-      allow read: if isSignedIn();
-      allow write: if isFounder();
+      allow read: if true;
+      allow write: if isFounder() || isAdmin();
+    }
+    match /system_settings/{id} {
+      allow read: if true;
+      allow write: if isFounder() || isAdmin();
+    }
+    match /cagnottes/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /cagnottes/{id}/contributions/{contribId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
     }
     match /analytics/{id} {
       allow read, write: if isFounder();

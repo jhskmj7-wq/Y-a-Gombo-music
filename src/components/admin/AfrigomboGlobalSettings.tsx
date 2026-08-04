@@ -36,8 +36,30 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
       
       // Synchronize across all three maintenance documents in Firestore
       const mMode = !!config.maintenanceMode;
-      await setDoc(doc(db, "settings", "platform"), { status: mMode ? "maintenance" : "operational" }, { merge: true });
-      await setDoc(doc(db, "settings", "maintenance"), { globalMode: mMode }, { merge: true });
+      const scheduled = !!(config as any).scheduled;
+      const startAt = (config as any).startAt || "";
+      const endAt = (config as any).endAt || "";
+      const globalMessage = (config as any).globalMessage || "";
+
+      const maintPayload = {
+        globalMode: mMode,
+        scheduled: scheduled,
+        startAt: startAt,
+        endAt: endAt,
+        globalMessage: globalMessage,
+        updatedAt: new Date().toISOString(),
+        updatedBy: "jhs.kmj7@gmail.com"
+      };
+
+      await setDoc(doc(db, "settings", "platform"), { 
+        status: mMode ? "maintenance" : "operational",
+        scheduled,
+        startAt,
+        endAt,
+        globalMessage
+      }, { merge: true });
+
+      await setDoc(doc(db, "settings", "maintenance"), maintPayload, { merge: true });
 
       setSaved(true);
       if (audioSynth) {
@@ -45,7 +67,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
       }
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      console.error(err);
+      console.error("Error saving global settings:", err);
     } finally {
       setSaving(false);
     }
@@ -147,15 +169,65 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
               className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] text-afri-text p-2.5 rounded-xl text-xs font-mono"
             />
           </div>
-          <div className="flex items-center gap-3 bg-afri-bg p-4 rounded-xl border border-afri-border mt-2">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" checked={config.maintenanceMode} onChange={(e) => handleChange("maintenanceMode", e.target.checked)} />
-              <div className="w-11 h-6 bg-afri-bg-ter peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
-            </label>
-            <span className="text-xs font-mono font-bold text-afri-text flex items-center gap-2">
-              <AlertTriangle className={`w-4 h-4 ${config.maintenanceMode ? "text-red-500 animate-pulse" : "text-afri-text-sec"}`} />
-              MODE MAINTENANCE
-            </span>
+          <div className="col-span-1 md:col-span-2 bg-afri-bg/80 p-4 rounded-xl border border-afri-border space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" checked={!!config.maintenanceMode} onChange={(e) => handleChange("maintenanceMode", e.target.checked)} />
+                  <div className="w-11 h-6 bg-afri-bg-ter peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                </label>
+                <span className="text-xs font-mono font-bold text-afri-text flex items-center gap-2">
+                  <AlertTriangle className={`w-4 h-4 ${config.maintenanceMode ? "text-red-500 animate-pulse" : "text-afri-text-sec"}`} />
+                  MAINTENANCE IMMÉDIATE (FORCÉE)
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" checked={!!(config as any).scheduled} onChange={(e) => handleChange("scheduled", e.target.checked)} />
+                  <div className="w-9 h-5 bg-afri-bg-ter peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37]"></div>
+                </label>
+                <span className="text-[11px] font-mono text-[#D4AF37] font-bold">
+                  Maintenance Programmée
+                </span>
+              </div>
+            </div>
+
+            {/* Scheduled Maintenance Inputs */}
+            {!!(config as any).scheduled && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-afri-border/50">
+                <div className="space-y-1">
+                  <label className="text-[9.5px] font-mono text-afri-text-sec font-bold uppercase">Date & Heure de Début</label>
+                  <input 
+                    type="datetime-local" 
+                    value={(config as any).startAt || ""} 
+                    onChange={e => handleChange("startAt", e.target.value)} 
+                    className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] text-afri-text p-2 rounded-lg text-xs font-mono"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9.5px] font-mono text-afri-text-sec font-bold uppercase">Date & Heure de Fin</label>
+                  <input 
+                    type="datetime-local" 
+                    value={(config as any).endAt || ""} 
+                    onChange={e => handleChange("endAt", e.target.value)} 
+                    className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] text-afri-text p-2 rounded-lg text-xs font-mono"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Custom Maintenance Message */}
+            <div className="space-y-1 pt-2 border-t border-afri-border/50">
+              <label className="text-[9.5px] font-mono text-afri-text-sec font-bold uppercase">Message personnalisé pour les utilisateurs</label>
+              <input 
+                type="text"
+                placeholder="Ex: Maintenance de sécurité programmée pour mise à jour du système..."
+                value={(config as any).globalMessage || ""} 
+                onChange={e => handleChange("globalMessage", e.target.value)} 
+                className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] text-afri-text p-2 rounded-lg text-xs font-mono"
+              />
+            </div>
           </div>
         </div>
 

@@ -65,7 +65,11 @@ export default function AvatarRenderer({ config, size = 120, className = "", sto
               ? "M65 110 Q100 135 135 110" 
               : config.faceShape === 'square'
                 ? "M60 110 L80 128 L120 128 L140 110"
-                : "M60 105 Q100 125 140 105"} 
+                : config.faceShape === 'round'
+                  ? "M65 100 Q100 138 135 100"
+                  : config.faceShape === 'diamond'
+                    ? "M65 100 L100 135 L135 100"
+                    : "M60 105 Q100 125 140 105"} 
             stroke="#4A3018" 
             strokeWidth="1.5" 
             fill="none" 
@@ -76,14 +80,17 @@ export default function AvatarRenderer({ config, size = 120, className = "", sto
         {/* SOURCILS (Eyebrows) */}
         {renderItem(config.sourcils, (
           <g id="default-eyebrows">
-            <path d="M72 73 Q85 68 93 72" stroke="#1A1A1A" strokeWidth="2" fill="transparent" strokeLinecap="round" />
-            <path d="M107 72 Q115 68 128 73" stroke="#1A1A1A" strokeWidth="2" fill="transparent" strokeLinecap="round" />
+            <path d="M72 73 Q85 68 93 72" stroke="#1A1A1A" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M107 72 Q115 68 128 73" stroke="#1A1A1A" strokeWidth="2" fill="none" strokeLinecap="round" />
           </g>
         ))}
 
+        {/* NEZ (Nose) */}
+        {config.nez && renderItem(config.nez)}
+
         {/* MOUTH */}
         {renderItem(config.mouth, (
-          <path d="M85 110 Q100 120 115 110" stroke="#4A3018" strokeWidth="3" fill="transparent" strokeLinecap="round" />
+          <path d="M85 110 Q100 120 115 110" stroke="#4A3018" strokeWidth="3" fill="none" strokeLinecap="round" />
         ))}
 
         {/* EYES */}

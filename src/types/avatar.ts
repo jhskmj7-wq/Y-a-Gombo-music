@@ -122,6 +122,7 @@ export interface AvatarConfig {
   chaussures?: string;
   sourcils?: string;
   visage?: string;
+  nez?: string;
 }
 
 export interface UserAvatarData {

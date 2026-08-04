@@ -100,16 +100,33 @@ export class SecurityService {
   /**
    * Check if a sensitive system module is currently in Maintenance Mode
    */
-  static async checkMaintenanceMode(moduleKey: "wallet" | "payments" | "premium" | "publishing" | "contracts" | "global"): Promise<{ isMaintenance: boolean; message?: string }> {
+  static async checkMaintenanceMode(
+    moduleKey: "wallet" | "payments" | "premium" | "publishing" | "contracts" | "global",
+    user?: any
+  ): Promise<{ isMaintenance: boolean; message?: string }> {
+    if (user && (this.isFounder(user) || this.isAdmin(user))) {
+      return { isMaintenance: false };
+    }
     try {
       const snap = await getDoc(doc(db, "settings", "maintenance"));
       if (snap.exists()) {
         const data = snap.data();
-        if (data?.globalMode === true) {
-          return { isMaintenance: true, message: data?.globalMessage || "Système AFRIGOMBO en maintenance globale de sécurité." };
+        let isM = data?.globalMode === true || data?.[moduleKey] === true;
+
+        if (!isM && data?.scheduled === true && data?.startAt && data?.endAt) {
+          const now = Date.now();
+          const start = new Date(data.startAt).getTime();
+          const end = new Date(data.endAt).getTime();
+          if (!isNaN(start) && !isNaN(end) && now >= start && now < end) {
+            isM = true;
+          }
         }
-        if (data?.[moduleKey] === true) {
-          return { isMaintenance: true, message: data?.[`${moduleKey}Message`] || `Le module ${moduleKey} est temporairement en maintenance sécurisée.` };
+
+        if (isM) {
+          return { 
+            isMaintenance: true, 
+            message: data?.globalMessage || data?.[`${moduleKey}Message`] || `Le module ${moduleKey} est temporairement en maintenance sécurisée.` 
+          };
         }
       }
     } catch (err) {
