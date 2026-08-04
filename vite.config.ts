@@ -12,10 +12,33 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: 'auto',
-      includeAssets: ['logo.png', 'logo-192.png', 'logo-512.png', 'logo-384.png', 'logo-152.png', 'logo-144.png', 'logo-128.png', 'logo-96.png', 'logo-72.png', 'maskable-icon.png', 'apple-touch-icon.png', 'favicon.png', 'logo.svg', 'sounds/*.mp3'],
+      includeAssets: [
+        'favicon.ico',
+        'favicon.png',
+        'favicon-16x16.png',
+        'favicon-32x32.png',
+        'favicon-48x48.png',
+        'favicon-64x64.png',
+        'logo.png',
+        'logo-72.png',
+        'logo-96.png',
+        'logo-128.png',
+        'logo-144.png',
+        'logo-152.png',
+        'logo-192.png',
+        'pwa-192x192.png',
+        'logo-256.png',
+        'logo-384.png',
+        'logo-512.png',
+        'pwa-512x512.png',
+        'maskable-icon.png',
+        'apple-touch-icon.png',
+        'logo.svg',
+        'sounds/*.mp3'
+      ],
       manifest: {
         name: 'AFRIGOMBO ELITE',
-        short_name: 'AFRIGOMBO ELITE',
+        short_name: 'AFRIGOMBO',
         description: "AFRIGOMBO ELITE - Y'A GOMBO MUSIC. Le Temple du Gombo : Vos opportunités musicales certifiées, vos cachets sécurisés.",
         theme_color: '#050505',
         background_color: '#050505',
@@ -24,6 +47,26 @@ export default defineConfig({
         start_url: '/',
         orientation: 'portrait',
         icons: [
+          {
+            src: 'favicon-16x16.png',
+            sizes: '16x16',
+            type: 'image/png'
+          },
+          {
+            src: 'favicon-32x32.png',
+            sizes: '32x32',
+            type: 'image/png'
+          },
+          {
+            src: 'favicon-48x48.png',
+            sizes: '48x48',
+            type: 'image/png'
+          },
+          {
+            src: 'favicon-64x64.png',
+            sizes: '64x64',
+            type: 'image/png'
+          },
           {
             src: 'logo-72.png',
             sizes: '72x72',
@@ -56,6 +99,11 @@ export default defineConfig({
             purpose: 'any'
           },
           {
+            src: 'logo-256.png',
+            sizes: '256x256',
+            type: 'image/png'
+          },
+          {
             src: 'logo-384.png',
             sizes: '384x384',
             type: 'image/png'
@@ -78,7 +126,17 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3}'],
         cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: false, // Required for 'prompt' type to work correctly with updateServiceWorker
         navigateFallback: '/index.html',
+        navigateFallbackDenylist: [
+          /^\/api/, 
+          /firebase/, 
+          /firestore/, 
+          /identitytoolkit/, 
+          /securetoken/, 
+          /accounts\.google\.com/
+        ],
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.mode === 'navigate',

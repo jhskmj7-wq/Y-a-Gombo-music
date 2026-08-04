@@ -31,12 +31,41 @@ export default function PWAHandler() {
     },
   });
 
+  // Force reload when a new service worker takes control
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+
+    const handleControllerChange = () => {
+      console.log("♻️ [AFRIGOMBO ELITE PWA] New Service Worker active. Reloading for latest version...");
+      // Delay slightly to ensure everything is ready
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+    };
+  }, []);
+
   // Smart Update Logic: Let the UI banner notify the user instead of force-reloading on boot
   useEffect(() => {
     if (needRefresh) {
       console.log("🔔 [AFRIGOMBO ELITE PWA] New build bundle available. User banner displayed.");
     }
   }, [needRefresh]);
+
+  const handleRefresh = async () => {
+    console.log("🚀 [AFRIGOMBO ELITE PWA] User clicked Actualiser. Updating Service Worker...");
+    try {
+      await updateServiceWorker(true);
+    } catch (err) {
+      console.error("Failed to update Service Worker:", err);
+      // Fallback: simple reload if SW update fails
+      window.location.reload();
+    }
+  };
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -111,7 +140,7 @@ export default function PWAHandler() {
                 Plus tard
               </button>
               <button
-                onClick={() => updateServiceWorker(true)}
+                onClick={handleRefresh}
                 className="px-4 py-2 rounded-xl text-xs font-black text-black bg-gradient-to-r from-amber-500 to-[#D4AF37] hover:opacity-90 transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)] uppercase tracking-wider cursor-pointer"
               >
                 Actualiser
