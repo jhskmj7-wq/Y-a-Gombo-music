@@ -114,472 +114,107 @@ const TABS = [
 ];
 
 const FREE_DEFAULT_ITEMS: AvatarItem[] = [
-  // BARBE / MOUSTACHE (visage)
+  // CORPS & TÊTE (Elite Bases)
+  {
+    id: "corps_elite_standard",
+    name: "Silhouette Standard",
+    category: "corps",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M40 210 C 40 160, 60 135, 100 135 C 140 135, 160 160, 160 210 L 160 220 L 40 220 Z" />`
+  },
+  {
+    id: "tete_elite_standard",
+    name: "Visage Elite",
+    category: "tete",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M68 80 C 68 35, 132 35, 132 80 C 132 125, 100 142, 100 142 C 100 142, 68 125, 68 80 Z" />`
+  },
+  // BARBE / MOUSTACHE (Elite Style)
   {
     id: "visage_naturel",
-    name: "Sans Barbe",
+    name: "Rasé",
     category: "barbe",
     price: 0,
     isActive: true,
-    svgContent: `<g id="visage-naturel"></g>`
+    svgContent: `<g id="rasé"></g>`
   },
   {
-    id: "visage_barbe",
-    name: "Barbe Courte",
+    id: "visage_barbe_legere",
+    name: "Barbe de 3 Jours",
     category: "barbe",
     price: 0,
     isActive: true,
-    svgContent: `<path d="M78 118 Q100 138 122 118 L116 130 Q100 146 84 130 Z" fill="#111111" />`
+    svgContent: `<path d="M68 90 Q100 145 132 90 L128 110 Q100 130 72 110 Z" fill="#111" opacity="0.3" />`
   },
   {
-    id: "visage_bouc",
-    name: "Bouc de Star",
+    id: "visage_bouc_elite",
+    name: "Bouc Sculpté",
     category: "barbe",
     price: 0,
     isActive: true,
-    svgContent: `<path d="M85 105 Q100 110 115 105 L112 125 Q100 135 88 125 Z" fill="#222" /><path d="M90 102 L110 102" stroke="#222" stroke-width="2" />`
+    svgContent: `<path d="M90 115 Q100 135 110 115 L108 135 Q100 142 92 135 Z" fill="#222" />`
   },
+  // COIFFURES (Elite: following skull shape)
   {
-    id: "visage_barbe_longue",
-    name: "Barbe Impériale",
-    category: "barbe",
+    id: "hair_elite_afro_short",
+    name: "Afro Elite Court",
+    category: "cheveux",
     price: 0,
     isActive: true,
-    svgContent: `<path d="M70 105 Q100 160 130 105 Q100 135 70 105 Z" fill="#0f0f0f" />`
+    svgContent: `<path d="M55 80 C 55 25, 145 25, 145 80 Q100 35 55 80 Z" fill="#111" />`
   },
   {
-    id: "visage_moustache",
-    name: "Moustache Fine",
-    category: "barbe",
+    id: "hair_elite_degrade",
+    name: "Dégradé Pro",
+    category: "cheveux",
     price: 0,
     isActive: true,
-    svgContent: `<path d="M80 104 Q92 100 100 105 Q108 100 120 104 Q108 108 100 106 Q92 108 80 104 Z" fill="#111" />`
+    svgContent: `<path d="M68 80 C 68 40, 132 40, 132 80 Q100 50 68 80 Z" fill="#181818" />`
   },
   {
-    id: "visage_barbe_fournie",
-    name: "Barbe Fournie",
-    category: "barbe",
+    id: "hair_elite_nattes",
+    name: "Nattes Afro-Chic",
+    category: "cheveux",
     price: 0,
     isActive: true,
-    svgContent: `<path d="M68 95 Q100 150 132 95 L125 125 Q100 142 75 125 Z" fill="#181818" />`
+    svgContent: `<g fill="#1A1A1A"><path d="M68 80 C 68 40, 132 40, 132 80 Q100 45 68 80 Z" /><path d="M80 45 L80 80 M100 40 L100 80 M120 45 L120 80" stroke="#D4AF37" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/></g>`
   },
-
-  // COIFFURES
+  // YEUX (Elite: subtle gradient & reflections)
   {
-    id: "hair_ras",
-    name: "Rasé Court",
-    category: "coiffures",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M100 45" />`
-  },
-  {
-    id: "hair_afro",
-    name: "Afro Court",
-    category: "coiffures",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M50 85 Q100 20 150 85 Q100 45 50 85 Z" fill="#111" />`
-  },
-  {
-    id: "hair_afro_grand",
-    name: "Afro Grand Volume",
-    category: "coiffures",
-    price: 0,
-    isActive: true,
-    svgContent: `<circle cx="100" cy="70" r="48" fill="#111" />`
-  },
-  {
-    id: "hair_nattes",
-    name: "Nattes Dorées",
-    category: "coiffures",
-    price: 0,
-    isActive: true,
-    svgContent: `<g fill="#1A1A1A"><path d="M55 85 C55 40, 145 40, 145 85 Q100 45 55 85 Z" /><path d="M72 50 L72 85 M100 45 L100 85 M128 50 L128 85" stroke="#D4AF37" stroke-width="2.5" stroke-linecap="round" /></g>`
-  },
-  {
-    id: "hair_dreads",
-    name: "Dreadlocks",
-    category: "coiffures",
-    price: 0,
-    isActive: true,
-    svgContent: `<g fill="#1A1A1A"><path d="M50 85 Q100 20 150 85" stroke="#1A1A1A" stroke-width="8" stroke-linecap="round" /><path d="M60 50 L40 100" stroke="#1A1A1A" stroke-width="6" stroke-linecap="round" /><path d="M140 50 L160 100" stroke="#1A1A1A" stroke-width="6" stroke-linecap="round" /></g>`
-  },
-  {
-    id: "hair_dreads_longues",
-    name: "Dreadlocks Longues",
-    category: "coiffures",
-    price: 0,
-    isActive: true,
-    svgContent: `<g fill="#111"><path d="M50 85 Q100 20 150 85" stroke="#111" stroke-width="8" stroke-linecap="round" /><path d="M55 50 L35 130 M65 50 L45 135 M135 50 L155 135 M145 50 L165 130" stroke="#111" stroke-width="6" stroke-linecap="round" /></g>`
-  },
-  {
-    id: "hair_twists",
-    name: "Twists Urbains",
-    category: "coiffures",
-    price: 0,
-    isActive: true,
-    svgContent: `<g fill="#1a1a1a"><path d="M55 75 Q100 25 145 75" stroke="#1a1a1a" stroke-width="10" stroke-linecap="round" /><path d="M70 45 L70 90 M100 35 L100 90 M130 45 L130 90" stroke="#D4AF37" stroke-width="2" /></g>`
-  },
-  {
-    id: "hair_degrade",
-    name: "Dégradé Vague",
-    category: "coiffures",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M58 85 C58 50, 142 50, 142 85 C120 55, 80 55, 58 85 Z" fill="#111" />`
-  },
-  {
-    id: "hair_attache",
-    name: "Coiffure Attachée",
-    category: "coiffures",
-    price: 0,
-    isActive: true,
-    svgContent: `<g fill="#111"><circle cx="100" cy="35" r="20" /><path d="M60 85 Q100 40 140 85 Z" /></g>`
-  },
-
-  // SOURCILS
-  {
-    id: "sourcils_fins",
-    name: "Sourcils Classiques",
-    category: "sourcils",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><path d="M72 73 Q85 68 93 72" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round" /><path d="M107 72 Q115 68 128 73" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round" /></g>`
-  },
-  {
-    id: "sourcils_epais",
-    name: "Sourcils Épais",
-    category: "sourcils",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><path d="M71 73 Q85 65 94 72" stroke="#111" stroke-width="4.5" fill="none" stroke-linecap="round" /><path d="M106 72 Q115 65 129 73" stroke="#111" stroke-width="4.5" fill="none" stroke-linecap="round" /></g>`
-  },
-  {
-    id: "sourcils_arques",
-    name: "Sourcils Arqués",
-    category: "sourcils",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><path d="M70 75 Q82 64 94 71" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round" /><path d="M106 71 Q118 64 130 75" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round" /></g>`
-  },
-  {
-    id: "sourcils_droits",
-    name: "Sourcils Droits",
-    category: "sourcils",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><path d="M72 72 L93 72" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round" /><path d="M107 72 L128 72" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round" /></g>`
-  },
-
-  // YEUX
-  {
-    id: "eyes_standard",
-    name: "Regard Standard",
+    id: "eyes_elite_noir",
+    name: "Regard Intense",
     category: "yeux",
     price: 0,
     isActive: true,
-    svgContent: `<g><circle cx="85" cy="80" r="4.5" fill="#111" /><circle cx="115" cy="80" r="4.5" fill="#111" /></g>`
+    svgContent: `<g><circle cx="85" cy="80" r="5" fill="#111" /><circle cx="115" cy="80" r="5" fill="#111" /><circle cx="83.5" cy="78.5" r="1.5" fill="#FFF" opacity="0.6" /><circle cx="113.5" cy="78.5" r="1.5" fill="#FFF" opacity="0.6" /></g>`
   },
+  // BOUCHE (Elite: realistic shapes)
   {
-    id: "eyes_expressif",
-    name: "Regard Expressif",
-    category: "yeux",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><circle cx="85" cy="80" r="5" fill="#111" /><circle cx="115" cy="80" r="5" fill="#111" /><circle cx="83" cy="78" r="1.5" fill="#FFF" /><circle cx="113" cy="78" r="1.5" fill="#FFF" /></g>`
-  },
-  {
-    id: "eyes_marron",
-    name: "Yeux Marron Cacao",
-    category: "yeux",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><circle cx="85" cy="80" r="5.5" fill="#4E3629" /><circle cx="115" cy="80" r="5.5" fill="#4E3629" /><circle cx="85" cy="80" r="2.5" fill="#111" /><circle cx="115" cy="80" r="2.5" fill="#111" /></g>`
-  },
-  {
-    id: "eyes_dorés",
-    name: "Yeux Or Impérial",
-    category: "yeux",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><circle cx="85" cy="80" r="6" fill="#D4AF37" /><circle cx="115" cy="80" r="6" fill="#D4AF37" /><circle cx="85" cy="80" r="2.5" fill="#111" /><circle cx="115" cy="80" r="2.5" fill="#111" /><circle cx="83" cy="78" r="1" fill="#FFF" /><circle cx="113" cy="78" r="1" fill="#FFF" /></g>`
-  },
-
-  // NEZ
-  {
-    id: "nez_naturel",
-    name: "Nez Naturel",
-    category: "nez",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M100 82 L98 96 L104 96" stroke="#4A3018" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6" />`
-  },
-  {
-    id: "nez_sculpte",
-    name: "Nez Sculpté",
-    category: "nez",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M100 80 L96 95 Q100 100 104 95 L100 80" stroke="#3A2010" stroke-width="2" fill="none" stroke-linecap="round" />`
-  },
-  {
-    id: "nez_royal",
-    name: "Nez Impérial",
-    category: "nez",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M99 78 L95 96 L105 96 Z" fill="none" stroke="#4A3018" stroke-width="2" opacity="0.7" />`
-  },
-
-  // BOUCHE
-  {
-    id: "mouth_sourire",
-    name: "Sourire Amical",
+    id: "mouth_elite_sourire",
+    name: "Sourire Elite",
     category: "bouche",
     price: 0,
     isActive: true,
-    svgContent: `<path d="M82 108 Q100 124 118 108" stroke="#4A3018" stroke-width="3.5" fill="none" stroke-linecap="round" />`
+    svgContent: `<path d="M85 115 Q100 122 115 115" stroke="#4A3018" strokeWidth="2.5" fill="none" strokeLinecap="round" />`
   },
+  // VÊTEMENTS (Elite: sitting on shoulders)
   {
-    id: "mouth_rire",
-    name: "Rire Éclatant",
-    category: "bouche",
+    id: "clothes_elite_tshirt_blanc",
+    name: "T-Shirt Gombo Premium",
+    category: "tee-shirt",
     price: 0,
     isActive: true,
-    svgContent: `<path d="M82 108 Q100 135 118 108 Z" fill="#800" stroke="#4A3018" stroke-width="2" /><path d="M86 110 Q100 118 114 110" fill="#FFF" />`
+    svgContent: `<path d="M40 210 C 40 160, 60 135, 100 135 C 140 135, 160 160, 160 210 Z" fill="#FFFFFF" stroke="#EEE" stroke-width="1" />`
   },
   {
-    id: "mouth_neutre",
-    name: "Bouche Neutre",
-    category: "bouche",
+    id: "clothes_elite_boubou_short",
+    name: "Boubou Elite Or",
+    category: "chemise",
     price: 0,
     isActive: true,
-    svgContent: `<line x1="84" y1="112" x2="116" y2="112" stroke="#4A3018" stroke-width="3.5" stroke-linecap="round" />`
-  },
-  {
-    id: "mouth_expressive",
-    name: "Sourire Expressif",
-    category: "bouche",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M80 108 Q100 130 120 108" stroke="#3A1D0E" stroke-width="4" fill="none" stroke-linecap="round" />`
-  },
-
-  // PIERCINGS
-  {
-    id: "acc_creoles",
-    name: "Boucles Créoles",
-    category: "piercings",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><circle cx="53" cy="98" r="5" fill="none" stroke="#D4AF37" stroke-width="2.5" /><circle cx="147" cy="98" r="5" fill="none" stroke="#D4AF37" stroke-width="2.5" /></g>`
-  },
-  {
-    id: "acc_piercing_nez",
-    name: "Anneau de Nez Or",
-    category: "piercings",
-    price: 0,
-    isActive: true,
-    svgContent: `<circle cx="94" cy="95" r="2.5" fill="none" stroke="#D4AF37" stroke-width="1.5" />`
-  },
-  {
-    id: "acc_piercing_arcade",
-    name: "Piercing Arcade",
-    category: "piercings",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><circle cx="71" cy="68" r="1.5" fill="#D4AF37" /><circle cx="75" cy="68" r="1.5" fill="#D4AF37" /></g>`
-  },
-
-  // LUNETTES
-  {
-    id: "eyes_star",
-    name: "Lunettes de Star VIP",
-    category: "lunettes",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><rect x="72" y="73" width="22" height="15" rx="4" fill="#111" stroke="#D4AF37" stroke-width="2" /><rect x="106" y="73" width="22" height="15" rx="4" fill="#111" stroke="#D4AF37" stroke-width="2" /><line x1="94" y1="80" x2="106" y2="80" stroke="#D4AF37" stroke-width="2.5" /></g>`
-  },
-  {
-    id: "acc_lunettes_rondes",
-    name: "Lunettes Rondes VIP",
-    category: "lunettes",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><circle cx="83" cy="80" r="12" fill="none" stroke="#D4AF37" stroke-width="2" /><circle cx="117" cy="80" r="12" fill="none" stroke="#D4AF37" stroke-width="2" /><line x1="95" y1="80" x2="105" y2="80" stroke="#D4AF37" stroke-width="2" /></g>`
-  },
-  {
-    id: "acc_lunettes_sport",
-    name: "Lunettes Sport Futuriste",
-    category: "lunettes",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M68 74 L132 74 L128 88 L72 88 Z" fill="#111" stroke="#E74C3C" stroke-width="2" opacity="0.9" />`
-  },
-
-  // VÊTEMENTS
-  {
-    id: "clothes_tunique_blanche",
-    name: "Tunique Blanche",
-    category: "vêtements",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M40 200 Q100 130 160 200 Z" fill="#F9F9F9" stroke="#DDD" stroke-width="2" /><path d="M90 145 L110 145 L100 165 Z" fill="#D4AF37" />`
-  },
-  {
-    id: "clothes_wax_orange",
-    name: "Tunique Wax Orange",
-    category: "vêtements",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M40 200 Q100 130 160 200 Z" fill="#E67E22" stroke="#962D00" stroke-width="2" /><circle cx="100" cy="160" r="4" fill="#3498DB" /><circle cx="100" cy="180" r="4" fill="#3498DB" />`
-  },
-  {
-    id: "clothes_hiphop",
-    name: "Débardeur Noir",
-    category: "vêtements",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M50 200 L60 155 Q100 140 140 155 L150 200 Z" fill="#111111" />`
-  },
-  {
-    id: "clothes_boubou",
-    name: "Boubou Royal Impérial",
-    category: "vêtements",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M30 200 Q100 110 170 200 Z" fill="#112233" stroke="#D4AF37" stroke-width="3" /><path d="M85 140 L115 140 L100 170 Z" fill="#D4AF37" />`
-  },
-  {
-    id: "clothes_veste",
-    name: "Veste Sapeur Rouge",
-    category: "vêtements",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M38 200 L55 145 Q100 130 145 145 L162 200 Z" fill="#C0392B" /><path d="M85 145 L100 175 L115 145" fill="#FFF" />`
-  },
-
-  // CHAUSSURES
-  {
-    id: "shoes_ville",
-    name: "Souliers Marrons",
-    category: "chaussures",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><ellipse cx="70" cy="195" rx="15" ry="6" fill="#4E3629" /><ellipse cx="130" cy="195" rx="15" ry="6" fill="#4E3629" /></g>`
-  },
-  {
-    id: "shoes_baskets_or",
-    name: "Baskets Dorées",
-    category: "chaussures",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><ellipse cx="70" cy="195" rx="16" ry="7" fill="#D4AF37" stroke="#996515" stroke-width="1.5" /><ellipse cx="130" cy="195" rx="16" ry="7" fill="#D4AF37" stroke="#996515" stroke-width="1.5" /></g>`
-  },
-  {
-    id: "shoes_sandales",
-    name: "Léké Gombo",
-    category: "chaussures",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><rect x="52" y="192" width="30" height="6" rx="2" fill="#555" /><rect x="118" y="192" width="30" height="6" rx="2" fill="#555" /><path d="M67 192 L67 185" stroke="#111" stroke-width="3" /></g>`
-  },
-
-  // ACCESSOIRES
-  {
-    id: "acc_perles",
-    name: "Collier de Perles",
-    category: "accessoires",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M72 130 Q100 155 128 130" stroke="#FFF" stroke-width="4" fill="none" stroke-dasharray="3 1" />`
-  },
-  {
-    id: "acc_chaine_or",
-    name: "Chaîne en Or VIP",
-    category: "accessoires",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M60 135 Q100 165 140 135" stroke="#D4AF37" stroke-width="4" fill="none" />`
-  },
-
-  // COURONNES
-  {
-    id: "crown_paille",
-    name: "Chapeau de Sapeur",
-    category: "couronnes",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><ellipse cx="100" cy="52" rx="42" ry="14" fill="#C2B280" stroke="#8B7355" stroke-width="1.5" /><path d="M72 50 C72 25, 128 25, 128 50 Z" fill="#C2B280" /><rect x="74" y="44" width="52" height="6" fill="#8B0000" /></g>`
-  },
-  {
-    id: "crown_rasta",
-    name: "Bonnet Rasta",
-    category: "couronnes",
-    price: 0,
-    isActive: true,
-    svgContent: `<path d="M60 70 C60 25, 140 25, 140 70 Z" fill="#E74C3C" /><path d="M62 65 Q100 28 138 65 Z" fill="#F1C40F" /><path d="M68 55 Q100 32 132 55 Z" fill="#2ECC71" />`
-  },
-  {
-    id: "crown_akan",
-    name: "Couronne Royale Akan",
-    category: "couronnes",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><path d="M65 55 L75 25 L88 45 L100 20 L112 45 L125 25 L135 55 Z" fill="#D4AF37" stroke="#996515" stroke-width="1.5" /><rect x="65" y="52" width="70" height="8" fill="#800" /></g>`
-  },
-
-  // INSTRUMENTS
-  {
-    id: "inst_djembe",
-    name: "Djembe Traditionnel",
-    category: "instruments",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><path d="M140 130 L165 130 L158 175 L147 175 Z" fill="#8B4513" stroke="#D4AF37" stroke-width="1" /><ellipse cx="152.5" cy="130" rx="12.5" ry="4" fill="#F5F5DC" /></g>`
-  },
-  {
-    id: "inst_guitare",
-    name: "Guitare Électrique",
-    category: "instruments",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><path d="M145 110 Q160 120 150 140 Q135 150 130 135 Z" fill="#E74C3C" stroke="#111" stroke-width="1.5" /><line x1="140" y1="125" x2="175" y2="90" stroke="#111" stroke-width="3" /></g>`
-  },
-  {
-    id: "inst_micro",
-    name: "Microphone Or",
-    category: "instruments",
-    price: 0,
-    isActive: true,
-    svgContent: `<g><rect x="148" y="115" width="8" height="25" rx="3" fill="#333" /><circle cx="152" cy="112" r="7" fill="#D4AF37" /></g>`
-  },
-
-  // ARRIÈRE-PLANS
-  {
-    id: "bg_crepuscule",
-    name: "Gombo Crépuscule",
-    category: "arriere-plans",
-    price: 0,
-    isActive: true,
-    svgContent: `<rect width="200" height="200" fill="#111c24" /><circle cx="100" cy="100" r="80" fill="#E74C3C" opacity="0.15" />`
-  },
-  {
-    id: "bg_savane",
-    name: "Savane Orange",
-    category: "arriere-plans",
-    price: 0,
-    isActive: true,
-    svgContent: `<rect width="200" height="200" fill="#E5A65D" /><circle cx="100" cy="100" r="50" fill="#E74C3C" opacity="0.6" />`
-  },
-  {
-    id: "bg_studio",
-    name: "Studio Gombo Noir",
-    category: "arriere-plans",
-    price: 0,
-    isActive: true,
-    svgContent: `<rect width="200" height="200" fill="#18181b" /><circle cx="100" cy="100" r="75" fill="none" stroke="#D4AF37" stroke-width="1.5" stroke-dasharray="8 4" opacity="0.3" />`
+    svgContent: `<path d="M35 210 Q100 120 165 210 Z" fill="#1A1A2E" stroke="#D4AF37" stroke-width="2" /><path d="M90 135 L110 135 L100 160 Z" fill="#D4AF37" />`
   }
 ];
 
@@ -676,33 +311,30 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
     try {
       const finalConfig = { ...config };
       
-      // Build V2 config from flat config
+      // Build V2 config items mapping (clean & professional)
       const itemsV2: Record<string, string> = {};
+      
+      // Map all single-item categories
       Object.entries(finalConfig).forEach(([key, value]) => {
-        if (typeof value === 'string' && value && key !== 'skinColor' && key !== 'faceShape' && key !== 'background') {
+        if (typeof value === 'string' && value && !['skinColor', 'faceShape', 'background'].includes(key)) {
           itemsV2[key] = value;
         }
       });
       
-      // Special multi-items
-      if (Array.isArray(finalConfig.accessories)) {
-        finalConfig.accessories.forEach(id => { itemsV2['accessoires'] = id; }); // Limit to one for now or handle list
+      // Handle special fields
+      if (finalConfig.background && storeItems.some(i => i.id === finalConfig.background)) {
+        itemsV2['arriere_plans'] = finalConfig.background;
       }
 
-      const configV2 = { items: itemsV2 };
+      const configV2 = { items: itemsV2, skinColor: finalConfig.skinColor };
 
+      // Batch sync via the new Modular Synchronizer
       await AvatarEngine.saveUserAvatar(currentUser.uid, {
         config: finalConfig,
         configV2: configV2,
         useAvatarAsProfile: useAsProfile,
         inventory: inventory.ownedItems
-      }, storeItems);
-
-      const mergedStoreAndFreeItems = [...FREE_DEFAULT_ITEMS, ...storeItems];
-      const avatarUri = AvatarEngine.generateAvatarSvgV2(configV2, finalConfig, mergedStoreAndFreeItems);
-      
-      // Update local profile state if needed via AuthContext? 
-      // saveUserAvatar already updates the DB which profile listener should catch
+      }, [...FREE_DEFAULT_ITEMS, ...storeItems]);
 
       setSaveSuccess("Votre avatar Gombo Elite a été sauvegardé avec succès ! 🎉");
       setTimeout(() => {

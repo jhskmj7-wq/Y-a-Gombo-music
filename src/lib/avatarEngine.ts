@@ -32,6 +32,10 @@ import {
 } from "../types/avatar";
 import { recordWalletTransaction } from "./financial";
 
+import { AvatarRenderer } from "./avatar/Renderer";
+import { AvatarSynchronizer } from "./avatar/Synchronizer";
+import { AvatarState } from "./avatar/State";
+
 export const DAILY_REWARD_SCHEDULE = [
   { day: 1, coins: 20, xp: 10 },
   { day: 2, coins: 30, xp: 15 },
@@ -181,141 +185,21 @@ export const AvatarEngine = {
    * Realtime Listener for Store Items
    */
   subscribeStoreItems(callback: (items: AvatarItem[]) => void): () => void {
-    const q = query(collection(db, "avatarItems"));
-    
-    return onSnapshot(q, (snapshot) => {
-      if (snapshot.empty) {
-        // Seed default items asynchronously
-        this.seedDefaultStoreItems();
-        const fallbackItems = DEFAULT_SEED_ITEMS.map((item, idx) => ({
-          id: `seed_${idx}`,
-          ...item
-        } as AvatarItem));
-        callback(fallbackItems);
-        return;
-      }
-
-      const items = snapshot.docs.map(d => {
-        const data = d.data();
-        return {
-          id: d.id,
-          name: data.name || "Article Avatar",
-          description: data.description || "",
-          category: data.category || "vêtements",
-          price: typeof data.price === "number" ? data.price : 0,
-          isPremiumOnly: !!(data.isPremiumOnly || data.premiumOnly),
-          premiumOnly: !!(data.isPremiumOnly || data.premiumOnly),
-          previewImage: data.previewImage || data.imageUrl || data.assetUrl || "",
-          imageUrl: data.imageUrl || data.previewImage || data.assetUrl || "",
-          assetUrl: data.assetUrl || data.imageUrl || data.previewImage || "",
-          svgContent: data.svgContent || "",
-          rarity: data.rarity || "Commune",
-          animation: data.animation || "Fixe",
-          color: data.color || "#D4AF37",
-          isActive: data.isActive !== false,
-          createdAt: data.createdAt || new Date().toISOString(),
-          updatedAt: data.updatedAt || new Date().toISOString()
-        } as AvatarItem;
-      });
-
-      callback(items);
-    }, (err) => {
-      console.warn("Avatar items subscription warning:", err);
-      callback([]);
-    });
+    return AvatarState.subscribeStore(callback);
   },
 
   /**
    * Realtime Listener for User Inventory
    */
   subscribeUserInventory(userId: string, callback: (inv: UserInventoryData) => void): () => void {
-    if (!userId) {
-      callback({ uid: "", ownedItems: [], equippedItems: [], coinsSpent: 0, premiumItems: [] });
-      return () => {};
-    }
-
-    const docRef = doc(db, "userInventory", userId);
-    return onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        callback({
-          uid: userId,
-          ownedItems: Array.isArray(data.ownedItems) ? data.ownedItems : [],
-          equippedItems: Array.isArray(data.equippedItems) ? data.equippedItems : [],
-          coinsSpent: Number(data.coinsSpent) || 0,
-          premiumItems: Array.isArray(data.premiumItems) ? data.premiumItems : [],
-          updatedAt: data.updatedAt
-        });
-      } else {
-        // Fallback or empty inventory
-        callback({
-          uid: userId,
-          ownedItems: [],
-          equippedItems: [],
-          coinsSpent: 0,
-          premiumItems: []
-        });
-      }
-    }, (err) => {
-      console.warn("User inventory subscription warning:", err);
-      callback({ uid: userId, ownedItems: [], equippedItems: [], coinsSpent: 0, premiumItems: [] });
-    });
+    return AvatarState.subscribeInventory(userId, callback);
   },
 
   /**
    * Realtime Listener for User Avatar Config
    */
   subscribeUserAvatar(userId: string, callback: (avatar: UserAvatarData | null) => void): () => void {
-    if (!userId) {
-      callback(null);
-      return () => {};
-    }
-
-    const docRef = doc(db, "userAvatars", userId);
-    return onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const avatarData = snapshot.data() as UserAvatarData;
-        // Merge with users collection fallback if config is missing
-        if (!avatarData.config) {
-          getDoc(doc(db, "users", userId)).then((userSnap) => {
-            if (userSnap.exists() && userSnap.data()?.avatarConfig) {
-              callback({
-                ...avatarData,
-                config: userSnap.data().avatarConfig
-              });
-            } else {
-              callback(avatarData);
-            }
-          }).catch(() => callback(avatarData));
-        } else {
-          callback(avatarData);
-        }
-      } else {
-        // Fallback check on old 'avatars' doc or users doc
-        getDoc(doc(db, "users", userId)).then((userSnap) => {
-          if (userSnap.exists() && userSnap.data()?.avatarConfig) {
-            callback({
-              uid: userId,
-              config: userSnap.data().avatarConfig,
-              useAvatarAsProfile: !!userSnap.data().useAvatarAsProfile,
-              updatedAt: userSnap.data().avatarUpdatedAt || new Date().toISOString()
-            } as any);
-          } else {
-            // Check old avatars document
-            getDoc(doc(db, "avatars", userId)).then((fallbackSnap) => {
-              if (fallbackSnap.exists()) {
-                callback(fallbackSnap.data() as UserAvatarData);
-              } else {
-                callback(null);
-              }
-            }).catch(() => callback(null));
-          }
-        }).catch(() => callback(null));
-      }
-    }, (err) => {
-      console.warn("User avatar subscription warning:", err);
-      callback(null);
-    });
+    return AvatarState.subscribeConfig(userId, callback);
   },
 
   /**
@@ -394,53 +278,7 @@ export const AvatarEngine = {
     data: Partial<UserAvatarData>, 
     storeItems: AvatarItem[] = []
   ): Promise<void> {
-    try {
-      const now = new Date().toISOString();
-      const payload = { ...data, updatedAt: now, lastUpdated: now };
-
-      // Update both userAvatars and avatars collections for compatibility
-      await setDoc(doc(db, "userAvatars", userId), payload, { merge: true });
-      await setDoc(doc(db, "avatars", userId), payload, { merge: true });
-
-      // Generate SVG data URI if config is present (prefers V2)
-      let avatarDataUri = null;
-      if (data.configV2 || data.config) {
-        avatarDataUri = this.generateAvatarSvgV2(data.configV2 || { items: {} }, data.config || {}, storeItems);
-      }
-
-      // Sync choice to main user document in users/{userId}
-      const userUpdates: any = { updatedAt: now };
-      if (data.useAvatarAsProfile !== undefined) {
-        userUpdates.useAvatarAsProfile = data.useAvatarAsProfile;
-      }
-
-      if (avatarDataUri) {
-        userUpdates.avatarDataUri = avatarDataUri;
-        userUpdates.photoURLAvatar = avatarDataUri;
-        userUpdates.avatarImage = avatarDataUri;
-        userUpdates.avatarUpdatedAt = now;
-
-        // If defined as profile or enabled, set avatarUrl & photoURL
-        if (data.useAvatarAsProfile) {
-          userUpdates.avatarUrl = avatarDataUri;
-          userUpdates.photoURL = avatarDataUri;
-        }
-      }
-
-      if (data.config) {
-        userUpdates.avatarConfig = data.config;
-      }
-      if (data.configV2) {
-        userUpdates.avatarConfigV2 = data.configV2;
-      }
-
-      if (Object.keys(userUpdates).length > 0) {
-        await setDoc(doc(db, "users", userId), userUpdates, { merge: true });
-      }
-    } catch (e) {
-      console.error("Error saving user avatar:", e);
-      throw e;
-    }
+    return AvatarSynchronizer.sync(userId, data, storeItems);
   },
 
   /**
@@ -573,134 +411,14 @@ export const AvatarEngine = {
    * SVG Avatar Generator Helper
    */
   generateAvatarSvg(config: AvatarConfig, storeItems: AvatarItem[]): string {
-    return this.generateAvatarSvgV2({ items: {} }, config, storeItems);
+    return AvatarRenderer.render({ items: {} }, config, storeItems);
   },
 
   /**
    * Professional V2 SVG Generator for Avatars (Semi-realistic)
    */
   generateAvatarSvgV2(configV2: any, configV1: AvatarConfig, storeItems: AvatarItem[]): string {
-    const skinColor = configV1?.skinColor || "#8D5524";
-    const bgColor = configV1?.background || "#18181b";
-    
-    const getItem = (itemId: string) => storeItems.find(i => i.id === itemId);
-
-    // Precise Rendering Order (Layers)
-    const ORDER: string[] = [
-      'arriere_plans',
-      'corps',
-      'sous_vetement',
-      'tete',
-      'visage_base',
-      'cicatrices',
-      'maquillage',
-      'yeux',
-      'sourcils',
-      'nez',
-      'bouche',
-      'barbe',
-      'moustache',
-      'tee-shirt',
-      'chemise',
-      'pantalons',
-      'jeans',
-      'chaussures',
-      'sneakers',
-      'veste',
-      'manteau',
-      'robes',
-      'costumes',
-      'tenues_africaines',
-      'tenues_ivoiriennes',
-      'tenues_scene',
-      'lunettes',
-      'cheveux',
-      'casquettes',
-      'chapeaux',
-      'couronnes',
-      'ecouteurs',
-      'collier',
-      'chaines',
-      'montres',
-      'bracelets',
-      'bagues',
-      'sac',
-      'ailes',
-      'badges',
-      'effets_speciaux'
-    ];
-
-    const layers: string[] = [];
-    const equippedV2 = configV2?.items || {};
-
-    // 1. BACKGROUND
-    if (equippedV2['arriere_plans']) {
-      layers.push(getItem(equippedV2['arriere_plans'])?.svgContent || "");
-    }
-
-    // 2. BASE CHARACTER (Semi-Realistic)
-    // Only add default base if no custom body/head item is equipped
-    if (!equippedV2['corps']) {
-      layers.push(`
-        <g id="character_base">
-          <!-- Torso & Shoulders (Realistic curve) -->
-          <path d="M45 200 C 45 160, 60 140, 100 140 C 140 140, 155 160, 155 200 L 155 210 L 45 210 Z" fill="${skinColor}" />
-          <!-- Neck -->
-          <path d="M88 140 L112 140 L110 120 L90 120 Z" fill="${skinColor}" opacity="0.95" />
-        </g>
-      `);
-    }
-
-    if (!equippedV2['tete']) {
-      layers.push(`
-        <g id="head_base">
-          <!-- Ears -->
-          <circle cx="62" cy="90" r="7" fill="${skinColor}" />
-          <circle cx="138" cy="90" r="7" fill="${skinColor}" />
-          <!-- Face Shape (Semi-Oval/Realistic) -->
-          <path d="M68 85 C 68 40, 132 40, 132 85 C 132 130, 100 145, 100 145 C 100 145, 68 130, 68 85 Z" fill="${skinColor}" />
-        </g>
-      `);
-    }
-
-    // 3. EQUIPMENT LAYERING
-    ORDER.forEach(cat => {
-      if (cat === 'arriere_plans' || cat === 'corps' || cat === 'tete') return;
-      const itemId = equippedV2[cat];
-      if (itemId) {
-        const item = getItem(itemId);
-        if (item?.svgContent) {
-          const cfg = item.engineConfig || { anchorX: 0, anchorY: 0, scaleX: 1, scaleY: 1, rotation: 0, zIndex: 0 };
-          layers.push(`
-            <g transform="translate(${cfg.anchorX || 0}, ${cfg.anchorY || 0}) scale(${cfg.scaleX || 1}, ${cfg.scaleY || 1}) rotate(${cfg.rotation || 0}, 100, 100)">
-              ${item.svgContent}
-            </g>
-          `);
-        }
-      }
-    });
-
-    // 4. FALLBACKS FOR V1 (If V2 is empty)
-    if (Object.keys(equippedV2).length === 0) {
-      const getItemSvg = (id: string) => getItem(id)?.svgContent || "";
-      if (configV1.clothes) layers.push(getItemSvg(configV1.clothes));
-      if (configV1.visage) layers.push(getItemSvg(configV1.visage));
-      if (configV1.sourcils) layers.push(getItemSvg(configV1.sourcils));
-      if (configV1.nez) layers.push(getItemSvg(configV1.nez));
-      if (configV1.mouth) layers.push(getItemSvg(configV1.mouth));
-      if (configV1.eyes) layers.push(getItemSvg(configV1.eyes));
-      if (configV1.hair) layers.push(getItemSvg(configV1.hair));
-      if (configV1.couronnes) layers.push(getItemSvg(configV1.couronnes));
-      (configV1.accessories || []).forEach((id: string) => layers.push(getItemSvg(id)));
-    }
-
-    const svgString = `
-      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="background-color: ${bgColor}; width: 100%; height: 100%;">
-        ${layers.join('\n')}
-      </svg>
-    `;
-    
-    return `data:image/svg+xml;utf8,${encodeURIComponent(svgString.trim())}`;
+    return AvatarRenderer.render(configV2, configV1, storeItems);
   },
 
   /**
