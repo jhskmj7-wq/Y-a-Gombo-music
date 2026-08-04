@@ -280,6 +280,15 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isFounder() || isAdmin();
     }
+    match /locations/{id} {
+      allow read: if true;
+      allow write: if isFounder() || isAdmin();
+    }
+    match /location_proposals/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isFounder() || isAdmin();
+    }
     match /cagnottes/{id} {
       allow read: if true;
       allow write: if isAdmin();

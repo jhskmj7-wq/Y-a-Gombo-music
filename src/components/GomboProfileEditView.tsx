@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   User, Check, Plus, Search, ChevronDown, Camera, Upload, 
-  ShieldCheck, ArrowLeft, Save, X, Trash2, Image as ImageIcon
+  ShieldCheck, ArrowLeft, Save, X, Trash2, Image as ImageIcon, MapPin
 } from "lucide-react";
+import { useLocations } from "../hooks/useLocations";
+import UserLocationProposalModal from "./common/UserLocationProposalModal";
 
 interface GomboProfileEditViewProps {
   firstName: string;
@@ -80,6 +82,7 @@ interface GomboProfileEditViewProps {
   onIdentityUpload: (file: File) => void;
   verifyingIdentity: boolean;
   kycProgress: number;
+  currentUser?: any;
 }
 
 const COMMUNES = [
@@ -165,13 +168,17 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
   kycStatus = "none",
   onIdentityUpload,
   verifyingIdentity,
-  kycProgress
+  kycProgress,
+  currentUser = null
 }) => {
   const [communeSearch, setCommuneSearch] = useState("");
   const [showCommuneDropdown, setShowCommuneDropdown] = useState(false);
   const [isAvatarSheetOpen, setIsAvatarSheetOpen] = useState(false);
+  const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
 
-  const filteredCommunes = COMMUNES.filter(c => 
+  const { communeNames } = useLocations();
+
+  const filteredCommunes = communeNames.filter(c => 
     c.toLowerCase().includes(communeSearch.toLowerCase())
   );
 
@@ -424,7 +431,31 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                 <input id="input-ville" value={ville} onChange={e => setVille(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
               </div>
               <div className="space-y-1.5">
-                <label className="afri-text-tiny text-afri-text-sec">Commune</label>
+                <div className="flex justify-between items-center gap-1 flex-wrap">
+                  <label className="afri-text-tiny text-afri-text-sec">Commune</label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCommune("À compléter plus tard");
+                        setQuartier("À compléter");
+                      }}
+                      className="text-[10px] font-mono text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+                      title="Sauter la saisie du lieu pour l'instant"
+                    >
+                      <span>Je compléterai plus tard</span>
+                    </button>
+                    <span className="text-zinc-600 text-[10px]">•</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsProposalModalOpen(true)}
+                      className="text-[10px] font-mono text-[#D4AF37] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Proposer</span>
+                    </button>
+                  </div>
+                </div>
                 <div className="relative">
                   <select 
                     id="select-commune"
@@ -433,7 +464,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     className="afri-card-inset w-full p-3.5 text-sm font-black text-afri-text appearance-none bg-transparent outline-none pr-10 cursor-pointer focus:border-[#D4AF37]/40"
                   >
                     <option value="" className="bg-afri-bg-sec text-afri-text">Choisir une commune</option>
-                    {COMMUNES.map(c => (
+                    {communeNames.map(c => (
                       <option key={c} value={c} className="bg-afri-bg-sec text-afri-text">
                         {c}
                       </option>
@@ -442,6 +473,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   <ChevronDown className="w-4 h-4 text-[#D4AF37] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
+
             </div>
             <div className="space-y-1.5">
               <label className="afri-text-tiny text-afri-text-sec">Quartier</label>
@@ -638,6 +670,14 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 
         </form>
       </div>
+
+      <UserLocationProposalModal
+        isOpen={isProposalModalOpen}
+        onClose={() => setIsProposalModalOpen(false)}
+        currentUser={currentUser}
+        defaultType="Commune"
+      />
     </motion.div>
+
   );
 };

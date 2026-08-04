@@ -2,12 +2,15 @@ import React, { useState, useEffect, Suspense, lazy } from "react";
 import { 
   LayoutDashboard, MessageSquare, CreditCard, MapPin, User, BarChart3, 
   FlaskConical, Music, Settings, Crown, ShieldCheck, RefreshCw, ChevronRight, X,
-  Sparkles, Bell, Shield, Users, TrendingUp, LogOut, Radio, AlertOctagon, ArrowLeft, Rocket
+  Sparkles, Bell, Shield, Users, TrendingUp, LogOut, Radio, AlertOctagon, ArrowLeft, Rocket, Globe,
+  ShieldAlert, Wrench
 } from "lucide-react";
 import { lazyWithRetry } from "../../lib/lazyWithRetry";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { SecurityService } from "../../lib/SecurityService";
 import StrategicDecisionsManager from "./StrategicDecisionsManager";
+import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";
+import { useMaintenance } from "../../hooks/useMaintenance";
 
 // Lazy load the independent modules
 const AdminFounderThrone = lazyWithRetry(() => import("./AdminFounderThrone"));
@@ -15,6 +18,7 @@ const AdminDashboard = lazyWithRetry(() => import("./AdminDashboard"));
 const AdminSupportCenter = lazyWithRetry(() => import("./AdminSupportCenter"));
 const BetaTransactionsAdminPanel = lazyWithRetry(() => import("./BetaTransactionsAdminPanel"));
 const GeoLocationCenter = lazyWithRetry(() => import("./GeoLocationCenter"));
+const AdminLocationsCenter = lazyWithRetry(() => import("./AdminLocationsCenter"));
 const AdminAvatarStore = lazyWithRetry(() => import("./AdminAvatarStore"));
 const AdminPollCenter = lazyWithRetry(() => import("./AdminPollCenter"));
 const AfrigomboLabs = lazyWithRetry(() => import("./AfrigomboLabs"));
@@ -38,6 +42,7 @@ export type AdminModuleType =
   | "transactions"
   | "messaging"
   | "geolocation"
+  | "locations"
   | "avatar_store"
   | "labs"
   | "polls"
@@ -77,6 +82,10 @@ export default function AdminSuperFounderHub({
   onExit
 }: AdminSuperFounderHubProps) {
   const [activeModule, setActiveModule] = useState<AdminModuleType>(initialModule);
+  const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState<boolean>(false);
+  const { maintenance, isScheduledWindowActive } = useMaintenance();
+
+  const isMaintActive = !!maintenance.globalMode || maintenance.status === "maintenance" || isScheduledWindowActive;
 
   // STRICT ZERO TRUST AUTHORIZATION CHECK
   const isAuthorized = SecurityService.isFounder(currentUser) || 
@@ -135,6 +144,7 @@ export default function AdminSuperFounderHub({
     { key: "notifications" as AdminModuleType, label: "📣 Diffusions", icon: Bell, badge: undefined },
     { key: "cagnottes" as AdminModuleType, label: "💰 Cagnottes", icon: Sparkles, badge: undefined },
     { key: "geolocation" as AdminModuleType, label: "📍 Géolocalisation", icon: MapPin, badge: undefined },
+    { key: "locations" as AdminModuleType, label: "🌍 Lieux & Territoires", icon: Globe, badge: "Territoires" },
     { key: "stats" as AdminModuleType, label: "📈 Statistiques", icon: TrendingUp, badge: undefined },
     { key: "avatar_store" as AdminModuleType, label: "🎭 Avatar Store", icon: User, badge: "Économie" },
     { key: "labs" as AdminModuleType, label: "🧠 AFRIGOMBO Labs", icon: FlaskConical, badge: "Bêta" },
@@ -171,15 +181,38 @@ export default function AdminSuperFounderHub({
           </div>
         </div>
 
-        {onExit && (
+        <div className="flex flex-col items-end gap-1.5 shrink-0">
+          {/* Maintenance & Alertes Button stacked JUST ABOVE exit button */}
           <button
-            onClick={onExit}
-            className="px-3.5 py-1.5 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec hover:text-afri-text border border-afri-border hover:border-afri-border rounded-xl text-xs font-bold uppercase transition flex items-center gap-1.5 cursor-pointer"
+            type="button"
+            onClick={() => {
+              setIsMaintenanceModalOpen(true);
+              try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
+            }}
+            className={`px-3 py-1 rounded-xl text-[10px] font-mono font-black uppercase transition flex items-center gap-1.5 border cursor-pointer ${
+              isMaintActive
+                ? "bg-rose-500/20 text-rose-400 border-rose-500/50 animate-pulse shadow-md shadow-rose-500/20"
+                : maintenance?.scheduled
+                ? "bg-amber-500/20 text-amber-400 border-amber-500/50"
+                : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
+            }`}
+            title="Ouvrir le Centre Maintenance & Alertes"
           >
-            <LogOut className="w-3.5 h-3.5 text-rose-400" />
-            <span className="hidden sm:inline">Quitter la Console</span>
+            <ShieldAlert className={`w-3.5 h-3.5 ${isMaintActive ? "text-rose-400 animate-spin" : "text-[#D4AF37]"}`} />
+            <span>🛡️ Maintenance & Alertes</span>
+            <span className={`w-2 h-2 rounded-full ${isMaintActive ? "bg-rose-500" : maintenance?.scheduled ? "bg-amber-400" : "bg-emerald-400"}`} />
           </button>
-        )}
+
+          {onExit && (
+            <button
+              onClick={onExit}
+              className="px-3.5 py-1 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec hover:text-afri-text border border-afri-border hover:border-afri-border rounded-xl text-xs font-bold uppercase transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-400" />
+              <span className="hidden sm:inline">Quitter la Console</span>
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Premium Top Horizontal Scrollable Bar - NO SIDEBAR */}
@@ -289,6 +322,12 @@ export default function AdminSuperFounderHub({
             )}
           </ErrorBoundary>
 
+          <ErrorBoundary moduleName="Locations">
+            {activeModule === "locations" && (
+              <AdminLocationsCenter audioSynth={audioSynth} currentUser={currentUser} />
+            )}
+          </ErrorBoundary>
+
           <ErrorBoundary moduleName="Avatar Store">
             {activeModule === "avatar_store" && (
               <AdminAvatarStore />
@@ -356,6 +395,12 @@ export default function AdminSuperFounderHub({
           </ErrorBoundary>
         </Suspense>
       </main>
+
+      {/* Super Founder Maintenance & Alerts Central Modal */}
+      <SuperFounderMaintenanceModal
+        isOpen={isMaintenanceModalOpen}
+        onClose={() => setIsMaintenanceModalOpen(false)}
+      />
     </div>
   );
 }

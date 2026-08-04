@@ -11,6 +11,8 @@ import { AfriModal, AndroidBottomSheet } from "./common/AfriModal";
 import { db, gomboDB } from "../firebase";
 import { recordWalletTransaction } from "../lib/financial";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { useMaintenance } from "../hooks/useMaintenance";
+import ModuleMaintenanceNotice from "./common/ModuleMaintenanceNotice";
 
 interface MarketItem {
   id: string;
@@ -132,6 +134,20 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
   onNavigateView,
   onBack
 }) => {
+  const { isModuleUnderMaintenance, maintenance } = useMaintenance();
+
+  if (isModuleUnderMaintenance("marketplace")) {
+    return (
+      <div className="p-4">
+        <ModuleMaintenanceNotice
+          moduleName="Grand Marché"
+          message={maintenance.globalMessage}
+          onBack={onBack}
+        />
+      </div>
+    );
+  }
+
   const [items, setItems] = useState<MarketItem[]>(() => {
     const saved = localStorage.getItem("afrigombo_market_items");
     if (saved) {

@@ -973,3 +973,56 @@ export interface DeploymentVersion {
   state: "prepared" | "deployed";
   createdAt: string;
 }
+
+export type LocationType = 
+  | "Pays" 
+  | "Région" 
+  | "District" 
+  | "Ville" 
+  | "Commune" 
+  | "Village" 
+  | "Quartier" 
+  | "Localité" 
+  | "Zone";
+
+export interface AfriGomboLocation {
+  id: string;
+  name: string;
+  type: LocationType;
+  countryId?: string;
+  countryName?: string;
+  regionId?: string;
+  regionName?: string;
+  districtId?: string;
+  districtName?: string;
+  cityId?: string;
+  cityName?: string;
+  communeId?: string;
+  communeName?: string;
+  villageId?: string;
+  parentId?: string;
+  parentName?: string;
+  description?: string;
+  status: "ACTIF" | "INACTIF";
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+}
+
+export interface LocationProposal {
+  id: string;
+  name: string;
+  type: LocationType;
+  countryName?: string;
+  regionName?: string;
+  cityName?: string;
+  communeName?: string;
+  parentName?: string;
+  details?: string;
+  submittedByUid?: string;
+  submittedByName?: string;
+  submittedByEmail?: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  createdAt: string;
+  updatedAt?: string;
+}

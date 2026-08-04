@@ -13,6 +13,9 @@ import GomboSecureModal from "./GomboSecureModal";
 import { calculatePlatformFee, calculatePublicationFinancials, recordWalletTransaction, getEffectiveCommissionRate } from "../lib/financial";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 import { PremiumEngine } from "../lib/premiumEngine";
+import { useLocations } from "../hooks/useLocations";
+import UserLocationProposalModal from "./common/UserLocationProposalModal";
+import { Plus } from "lucide-react";
 
 const ABIDJAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", "Abobo", 
@@ -35,6 +38,8 @@ interface GomboPublishProps {
 }
 
 export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }: GomboPublishProps) {
+  const { communeNames } = useLocations();
+  const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const [selectedType, setSelectedType] = useState("opportunite");
   const [gomboCategory, setGomboCategory] = useState<"libre" | "securise">("libre");
   const [showSecureModal, setShowSecureModal] = useState(false);
@@ -607,9 +612,19 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           {/* 4. COMMUNE & QUARTIER */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-black text-afri-text-sec mb-1.5 uppercase tracking-widest">
-                Commune / Ville
-              </label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-[10px] font-black text-afri-text-sec uppercase tracking-widest">
+                  Commune / Ville
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsProposalModalOpen(true)}
+                  className="text-[10px] font-mono text-[#D4AF37] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Proposer un lieu</span>
+                </button>
+              </div>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-afri-text-sec">
                   <MapPin className="w-4 h-4 text-[#D4AF37]" />
@@ -619,7 +634,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   onChange={(e) => setCommune(e.target.value)}
                   className="w-full pl-9 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-black text-afri-text hover:bg-white/[0.08] focus:outline-none focus:ring-1 focus:ring-[#D4AF37] cursor-pointer"
                 >
-                  {ABIDJAN_COMMUNES.map((com) => (
+                  {Array.from(new Set([...ABIDJAN_COMMUNES, ...communeNames])).map((com) => (
                     <option key={com} value={com} className="bg-afri-bg text-afri-text">{com}</option>
                   ))}
                 </select>
@@ -1023,6 +1038,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       <GomboSecureModal 
         isOpen={showSecureModal} 
         onClose={() => setShowSecureModal(false)} 
+      />
+
+      <UserLocationProposalModal
+        isOpen={isProposalModalOpen}
+        onClose={() => setIsProposalModalOpen(false)}
+        currentUser={currentUserProfile}
+        defaultType="Commune"
       />
     </div>
   );

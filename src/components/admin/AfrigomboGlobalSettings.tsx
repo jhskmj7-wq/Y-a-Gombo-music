@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../firebase";
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
-import { Settings, Save, AlertTriangle, MessageSquare, Globe, Navigation } from "lucide-react";
+import { Settings, Save, AlertTriangle, MessageSquare, Globe, Navigation, ShieldAlert } from "lucide-react";
+import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";
 
 export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: any }) {
+  const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
   const [config, setConfig] = useState({
     appName: "AFRIGOMBO ELITE",
     version: "1.0.0",
@@ -170,6 +172,21 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
             />
           </div>
           <div className="col-span-1 md:col-span-2 bg-afri-bg/80 p-4 rounded-xl border border-afri-border space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-afri-border/40">
+              <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-[#D4AF37]" />
+                Système Central de Maintenance
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsMaintenanceModalOpen(true)}
+                className="px-3.5 py-1.5 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>🛡️ Ouvrir Centre Maintenance & Alertes</span>
+              </button>
+            </div>
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -489,6 +506,11 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
           </button>
         </div>
       </form>
+
+      <SuperFounderMaintenanceModal
+        isOpen={isMaintenanceModalOpen}
+        onClose={() => setIsMaintenanceModalOpen(false)}
+      />
     </div>
   );
 }

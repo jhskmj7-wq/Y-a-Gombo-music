@@ -10,6 +10,8 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { Renfort, RenfortApplication, UserProfile } from "../types";
 import { supportConfig } from "../supportConfig";
 import { calculatePublicationFinancials, recordWalletTransaction } from "../lib/financial";
+import { useLocations } from "../hooks/useLocations";
+import UserLocationProposalModal from "./common/UserLocationProposalModal";
 
 // Static Options
 const REQUEST_TYPES = [
@@ -58,6 +60,8 @@ interface RenfortExpressProps {
 }
 
 export default function RenfortExpress({ currentUserProfile, onShowAuth }: RenfortExpressProps) {
+  const { locations, communeNames } = useLocations();
+  const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   // DB States
   const [renforts, setRenforts] = useState<Renfort[]>([]);
   const [applications, setApplications] = useState<RenfortApplication[]>([]);
@@ -704,14 +708,24 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
 
                 {/* Location with other input options */}
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">Commune / Ville *</label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-black uppercase text-afri-text-sec dark:text-afri-text-sec">Commune / Ville *</label>
+                    <button
+                      type="button"
+                      onClick={() => setIsProposalModalOpen(true)}
+                      className="text-xs font-mono text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Proposer un lieu</span>
+                    </button>
+                  </div>
                   <select
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
                     className="w-full px-4 py-3 border border-afri-border dark:border-afri-border rounded-xl bg-afri-bg dark:bg-afri-bg-sec dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
                   >
-                    <optgroup label="Communes d'Abidjan">
-                      {COMMUNES_ABIDJAN.map(com => (
+                    <optgroup label="Communes d'Abidjan & Lieux Réseau">
+                      {Array.from(new Set([...COMMUNES_ABIDJAN, ...communeNames])).map(com => (
                         <option key={com} value={com}>{com}</option>
                       ))}
                     </optgroup>
@@ -1309,6 +1323,13 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
           </motion.div>
         )}
       </AnimatePresence>
+
+      <UserLocationProposalModal
+        isOpen={isProposalModalOpen}
+        onClose={() => setIsProposalModalOpen(false)}
+        currentUser={currentUserProfile}
+        defaultType="Commune"
+      />
     </div>
   );
 }

@@ -19,6 +19,8 @@ import { AdminCommunicationCenter } from "./AdminCommunicationCenter";
 import AdminSupportCenter from "./AdminSupportCenter";
 import AdminPollCenter from "./AdminPollCenter";
 import AdminFounderNotebook from "./AdminFounderNotebook";
+import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";
+import { useMaintenance } from "../../hooks/useMaintenance";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
@@ -86,6 +88,9 @@ export default function AdminFounderThrone({
 }: AdminFounderThroneProps) {
   const isDark = theme !== "light";
   const { currentUser, profile } = useAuth();
+  const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState<boolean>(false);
+  const { maintenance, isScheduledWindowActive } = useMaintenance();
+  const isMaintActive = !!maintenance.globalMode || maintenance.status === "maintenance" || isScheduledWindowActive;
   // ==========================================
   // CONSOLIDATED REACT HOOKS (STATES & EFFECTS)
   // ==========================================
@@ -5520,6 +5525,24 @@ export default function AdminFounderThrone({
           <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-wider whitespace-nowrap">Journal</span>
         </button>
 
+        {/* 7.5 MAINTENANCE & ALERTES */}
+        <button
+          type="button"
+          onClick={() => {
+            setIsMaintenanceModalOpen(true);
+            try { audioSynth?.playValidationSuccess(); } catch (_) {}
+          }}
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-2.5 sm:px-4 rounded-lg ${
+            isMaintActive
+              ? "text-rose-400 bg-rose-500/20 border border-rose-500/40 animate-pulse font-black"
+              : "text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+          }`}
+          title="Ouvrir le Centre Maintenance & Alertes"
+        >
+          <ShieldAlert className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${isMaintActive ? "animate-spin text-rose-400" : "text-[#D4AF37]"}`} />
+          <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-wider whitespace-nowrap">Maintenance</span>
+        </button>
+
         {/* 8. QUITTER */}
         <button
           type="button"
@@ -5534,6 +5557,10 @@ export default function AdminFounderThrone({
       </div>
 
       {/* MODALS */}
+      <SuperFounderMaintenanceModal
+        isOpen={isMaintenanceModalOpen}
+        onClose={() => setIsMaintenanceModalOpen(false)}
+      />
       <ImperialMessageModal 
         isOpen={quickNoticeModalOpen} 
         onClose={() => setQuickNoticeModalOpen(false)}

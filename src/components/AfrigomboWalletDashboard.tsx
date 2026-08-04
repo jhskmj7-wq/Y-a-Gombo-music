@@ -43,6 +43,8 @@ import { SupportService } from "../services/SupportService";
 import { useAppSettings } from "../context/AppSettingsContext";
 
 import { SecurityService } from "../lib/SecurityService";
+import { useMaintenance } from "../hooks/useMaintenance";
+import ModuleMaintenanceNotice from "./common/ModuleMaintenanceNotice";
 
 interface AfrigomboWalletDashboardProps {
   currentUserProfile: any;
@@ -57,6 +59,7 @@ export default function AfrigomboWalletDashboard({
   onBack,
   onNavigateToMessages
 }: AfrigomboWalletDashboardProps) {
+  const { isModuleUnderMaintenance, maintenance } = useMaintenance();
   const uid = currentUserProfile?.uid || currentUserProfile?.id;
   const historyRef = useRef<HTMLDivElement>(null);
   
@@ -1339,6 +1342,18 @@ export default function AfrigomboWalletDashboard({
       </button>
     </header>
   );
+
+  if (isModuleUnderMaintenance("wallet")) {
+    return (
+      <AndroidPageLayout header={customHeader} scrollable={true} className="pb-safe">
+        <ModuleMaintenanceNotice
+          moduleName="Wallet & Finances"
+          message={maintenance.globalMessage}
+          onBack={onBack}
+        />
+      </AndroidPageLayout>
+    );
+  }
 
   return (
     <AndroidPageLayout header={customHeader} scrollable={false} className="pb-safe">
