@@ -109,6 +109,7 @@ import { Carousel } from "./Carousel";
 import { useDynamicPlaceholder } from "../hooks/useDynamicPlaceholder";
 import { isSuperFounder } from "../shared/admin/constants";
 import WakandaTechBackground from "./WakandaTechBackground";
+import { useAppSettings } from "../context/AppSettingsContext";
 import {
   motion,
   AnimatePresence
@@ -445,6 +446,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     "Trouver un studio..."
   ]);
   const { currentUser, profile, logout, refreshProfile, setProfile, loginWithGoogle } = useAuth();
+  const { network, showToast: appShowToast } = useAppSettings();
   const geo = useGeoEngine(profile);
   const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
@@ -5760,7 +5762,27 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {/* 6d. DOWNLOADS SECTION */}
               {activeMenu === "user_downloads" && (() => {
-                const handleDownload = (filename: string, content: string, mime: string = "text/plain") => {
+                const handleDownload = (filename: string, content: string, sizeMb: number = 0.5, mime: string = "text/plain") => {
+                  const isSlow = network?.slowConnectionMode;
+                  const wifiOnly = network?.downloadWifiOnly;
+
+                  // Detect cellular simulation or real connection type
+                  const conn = typeof navigator !== 'undefined' ? (navigator as any).connection : null;
+                  const isCellularConn = conn && (conn.type === 'cellular' || ['slow-2g', '2g', '3g', '4g'].includes(conn.effectiveType));
+                  const isCellularActive = isSlow || isCellularConn;
+
+                  if (wifiOnly && isCellularActive) {
+                    const confirmDl = window.confirm(
+                      `Ce téléchargement est limité au Wi-Fi selon vos paramètres réseau (Taille : ${sizeMb} Mo).\n\nVoulez-vous le télécharger quand même ?`
+                    );
+                    if (!confirmDl) return;
+                  } else if (isCellularActive && sizeMb > 25.0) {
+                    const confirmHeavy = window.confirm(
+                      `Le fichier dépasse la limite autorisée sur réseau cellulaire (${sizeMb} Mo / Max 25 Mo).\n\nVeuillez vous connecter au Wi-Fi ou forcer le téléchargement.\n\nVoulez-vous forcer le téléchargement ?`
+                    );
+                    if (!confirmHeavy) return;
+                  }
+
                   const blob = new Blob([content], { type: `${mime};charset=utf-8` });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
@@ -5780,7 +5802,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     filename: `Contrat_Prestation_Afrigombo_${profile?.artisticName || "Artiste"}.txt`,
                     content: `=== CONTRAT DE PRESTATION MUSICALE AFRIGOMBO ===\n\nNom de l'Artiste : ${profile?.artisticName || "Artiste Certifié"}\nGombo ID : ${profile?.gomboIdNumber || "AG-CERTIFIED"}\nDate : ${new Date().toLocaleDateString()}\n\nCe document garantit l'engagement bilatéral et le blocage sécurisé du cachet en compte de séquestre.`,
                     icon: "📜",
-                    badge: "PDF / TXT"
+                    badge: "PDF / TXT",
+                    sizeMb: 0.2
                   },
                   {
                     id: "d2",
@@ -5790,17 +5813,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     filename: `Attestation_Gombo_ID_${profile?.artisticName || "Artiste"}.txt`,
                     content: `=== ATTESTATION OFFICIELLE GOMBO ID ===\n\nTitulaire : ${profile?.artisticName || "Artiste Certifié"}\nStatut : VÉRIFIÉ & CONFORME\nSecteur : Musiques & Spectacles Abidjan\nValide jusqu'en 2027.`,
                     icon: "🆔",
-                    badge: "ATTESTATION"
+                    badge: "ATTESTATION",
+                    sizeMb: 0.5
                   },
                   {
                     id: "d3",
                     category: "Audio & Maquette",
                     title: "Pack Demo Audio & Extrait Studio",
-                    description: "Pistes et ressources audio téléchargeables associées à vos projets et maquettes.",
+                    description: "Pistes et ressources audio de haute qualité associées à vos projets et maquettes.",
                     filename: "Pack_Audio_Demo_Afrigombo.txt",
-                    content: `=== RESSOURCES AUDIO AFRIGOMBO ===\n\nPistes audio associées à votre profil.\nFormat recommandé : MP3 320kbps / WAV 24-bit.\nContact Support pour tout besoin de mastering.`,
+                    content: `=== RESSOURCES AUDIO AFRIGOMBO ===\n\nPistes audio de démonstration haute fidélité (WAV 24-bit).\n\n[INFO] Fichier compressé contenant 4 maquettes instrumentales de percussion ivoirienne et djembe fola.\n\nRessources certifiées conformes aux normes d'écoute d'Abidjan.`,
                     icon: "🎵",
-                    badge: "AUDIO"
+                    badge: "AUDIO PACK (38 Mo)",
+                    sizeMb: 38.0
                   },
                   {
                     id: "d4",
@@ -5811,7 +5836,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     content: `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="#0D0D0D" rx="20"/><circle cx="100" cy="100" r="70" fill="none" stroke="#D4AF37" stroke-width="4"/><text x="100" y="105" fill="#D4AF37" font-family="sans-serif" font-weight="bold" font-size="16" text-anchor="middle">GOMBO ID</text></svg>`,
                     icon: "🖼️",
                     mime: "image/svg+xml",
-                    badge: "SVG / KIT"
+                    badge: "SVG / KIT",
+                    sizeMb: 1.2
                   }
                 ];
 
@@ -5843,9 +5869,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               <span className="text-[9px] font-mono font-black text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/10 px-2 py-0.5 rounded-md border border-[#D4AF37]/20">
                                 {item.category}
                               </span>
-                              <span className="text-[9px] font-mono font-bold text-afri-text-sec bg-afri-bg-sec px-2 py-0.5 rounded-md">
-                                {item.badge}
-                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[8px] font-mono text-afri-text-muted">({item.sizeMb} Mo)</span>
+                                <span className="text-[9px] font-mono font-bold text-afri-text-sec bg-afri-bg-sec px-2 py-0.5 rounded-md">
+                                  {item.badge}
+                                </span>
+                              </div>
                             </div>
                             <h4 className="text-xs sm:text-sm font-bold text-afri-text flex items-center gap-2">
                               <span>{item.icon}</span>
@@ -5858,7 +5887,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                           <button
                             type="button"
-                            onClick={() => handleDownload(item.filename, item.content, item.mime || "text/plain")}
+                            onClick={() => handleDownload(item.filename, item.content, item.sizeMb, item.mime || "text/plain")}
                             className="w-full py-2.5 bg-[#D4AF37]/15 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-extrabold text-xs uppercase tracking-wider rounded-xl border border-[#D4AF37]/40 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95"
                           >
                             <span>Télécharger le fichier</span>
@@ -6648,6 +6677,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     isOpen={true} 
                     onClose={() => goBackMenu()}
                     onNavigateToFounder={() => setActiveMenu("super_admin")}
+                    onSupportClick={() => setIsSupportModalOpen(true)}
                   />
                 );
               })()}

@@ -5,7 +5,7 @@ import {
   Sparkles, CheckCircle2, ShieldCheck, Shirt, Glasses, Music, Palette, UserCheck,
   Gift, Coins, Zap, Clock, PlusCircle, ArrowLeft
 } from 'lucide-react';
-import { AvatarItem, AvatarItemCategory, UserInventoryData } from '../../types/avatar';
+import { AvatarItem, AvatarItemCategory, UserInventoryData, AvatarConfig } from '../../types/avatar';
 import { AvatarEngine, getLevelFromXp } from '../../lib/avatarEngine';
 import { useAuth } from '../../AuthContext';
 import DailyRewardModal from './DailyRewardModal';
@@ -16,6 +16,18 @@ interface AvatarStoreProps {
   onClose: () => void;
   inventory?: string[]; // Optional initial inventory array fallback
 }
+
+const DEFAULT_CONFIG: AvatarConfig = {
+  skinColor: '#8D5524',
+  faceShape: 'default',
+  hair: '',
+  eyes: '',
+  mouth: '',
+  clothes: '',
+  accessories: [],
+  instruments: [],
+  background: ''
+};
 
 const CATEGORIES: { id: AvatarItemCategory | 'all' | 'limited'; label: string; icon: React.ReactNode }[] = [
   { id: 'all', label: 'Tous', icon: <ShoppingBag className="w-4 h-4" /> },
@@ -140,7 +152,31 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
     setErrorMsg(null);
 
     try {
+      // 1. Update userInventory
       await AvatarEngine.equipItem(currentUser.uid, item.id, !isCurrentlyEquipped, item.category);
+
+      // 2. Also update userAvatars configuration directly so it reflects on their character instantly!
+      const currentAvatar = await AvatarEngine.getUserAvatar(currentUser.uid);
+      const currentConfig: AvatarConfig = currentAvatar?.config || { ...DEFAULT_CONFIG };
+      
+      const category = item.category as any;
+      if (category === 'accessoires' || category === 'instruments') {
+        const list = Array.isArray(currentConfig[category]) ? currentConfig[category] : [];
+        if (!isCurrentlyEquipped) {
+          currentConfig[category] = [...list.filter((id: string) => id !== item.id), item.id];
+        } else {
+          currentConfig[category] = list.filter((id: string) => id !== item.id);
+        }
+      } else {
+        currentConfig[category] = !isCurrentlyEquipped ? item.id : '';
+      }
+
+      await AvatarEngine.saveUserAvatar(currentUser.uid, {
+        config: currentConfig,
+        useAvatarAsProfile: currentAvatar?.useAvatarAsProfile ?? false,
+        inventory: userInventory.ownedItems
+      }, items);
+
       setSuccessMsg(
         !isCurrentlyEquipped 
           ? `Article équipé : ${item.name}` 

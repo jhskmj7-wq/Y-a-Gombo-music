@@ -523,15 +523,28 @@ export const AvatarEngine = {
       return item?.svgContent || defaultSvg;
     };
 
+    const faceShapePath = config?.faceShape && config?.faceShape !== 'default'
+      ? (config.faceShape === 'oval' 
+        ? '<path d="M65 110 Q100 135 135 110" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />' 
+        : config.faceShape === 'square'
+          ? '<path d="M60 110 L80 128 L120 128 L140 110" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />'
+          : '<path d="M60 105 Q100 125 140 105" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />')
+      : '';
+
     const svgString = `
       <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="background-color: ${bgColor}; width: 100%; height: 100%;">
         ${getItemSvg(config?.background)}
+        ${config?.chaussures ? getItemSvg(config.chaussures) : ''}
         <path d="M40 200 Q100 120 160 200 Z" fill="${skinColor}" />
         ${config?.clothes ? getItemSvg(config.clothes) : '<path d="M40 200 Q100 130 160 200 Z" fill="#D4AF37" />'}
         <circle cx="100" cy="90" r="45" fill="${skinColor}" />
+        ${config?.visage ? getItemSvg(config.visage) : ''}
+        ${faceShapePath}
+        ${getItemSvg(config?.sourcils, '<g><path d="M72 73 Q85 68 93 72" stroke="#1A1A1A" stroke-width="2" fill="transparent" stroke-linecap="round" /><path d="M107 72 Q115 68 128 73" stroke="#1A1A1A" stroke-width="2" fill="transparent" stroke-linecap="round" /></g>')}
         ${getItemSvg(config?.mouth, '<path d="M85 110 Q100 120 115 110" stroke="#4A3018" stroke-width="3" fill="transparent" stroke-linecap="round" />')}
         ${getItemSvg(config?.eyes, '<g><circle cx="85" cy="80" r="4" fill="#1A1A1A" /><circle cx="115" cy="80" r="4" fill="#1A1A1A" /></g>')}
         ${getItemSvg(config?.hair, '<path d="M55 90 Q100 30 145 90 Q100 50 55 90" fill="#1A1A1A" />')}
+        ${config?.couronnes ? getItemSvg(config.couronnes) : ''}
         ${(config?.accessories || []).map((id: string) => getItemSvg(id)).join('')}
         ${(config?.instruments || []).map((id: string) => getItemSvg(id)).join('')}
       </svg>

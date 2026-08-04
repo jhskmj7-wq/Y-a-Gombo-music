@@ -21,6 +21,11 @@ async function startServer() {
 
   app.use(express.json({ limit: '10mb' }));
 
+  // API health-check for network latency diagnostic pings
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", timestamp: Date.now() });
+  });
+
   // API to analyze image for contact info
   app.post("/api/analyze-image", async (req, res) => {
     try {

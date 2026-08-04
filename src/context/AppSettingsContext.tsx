@@ -373,16 +373,174 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
+  // Helper to sniff device metadata dynamically
+  const getDeviceDetails = () => {
+    if (typeof navigator === "undefined") {
+      return { deviceType: "💻 Serveur", browser: "NodeJS", os: "Linux", screenSize: "1080x1920", touch: false };
+    }
+    const ua = navigator.userAgent;
+    const maxTouch = navigator.maxTouchPoints || 0;
+    
+    let deviceType = "💻 Ordinateur";
+    let os = "Système Inconnu";
+    
+    if (/Android/i.test(ua)) {
+      deviceType = "📱 Android";
+      os = "Android";
+    } else if (/iPhone|iPad|iPod/i.test(ua)) {
+      deviceType = "📱 iOS";
+      os = "iOS";
+    } else if (/Mac/i.test(ua)) {
+      deviceType = "💻 macOS";
+      os = "macOS";
+    } else if (/Win/i.test(ua)) {
+      deviceType = "💻 Windows";
+      os = "Windows";
+    } else if (/Linux/i.test(ua)) {
+      deviceType = "💻 Linux";
+      os = "Linux";
+    } else if (maxTouch > 0) {
+      deviceType = "📱 Mobile (Tactile)";
+    }
+    
+    let browser = "Navigateur";
+    if (ua.includes("Firefox")) {
+      browser = "Firefox";
+    } else if (ua.includes("SamsungBrowser")) {
+      browser = "Samsung Internet";
+    } else if (ua.includes("Opera") || ua.includes("OPR")) {
+      browser = "Opera";
+    } else if (ua.includes("Trident") || ua.includes("MSIE")) {
+      browser = "Internet Explorer";
+    } else if (ua.includes("Edge") || ua.includes("Edg")) {
+      browser = "Microsoft Edge";
+    } else if (ua.includes("Chrome")) {
+      browser = "Chrome";
+    } else if (ua.includes("Safari")) {
+      browser = "Safari";
+    }
+
+    const screenSize = typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : "1080x1920";
+    return { deviceType, browser, os, screenSize, touch: maxTouch > 0 };
+  };
+
   // 2f. Security State
   const [security, setSecurity] = useState<SecuritySettings>(() => ({
     twoFactorAuth: safeGetItem("gombo_sec_2fa", "false") === "true",
     fingerprint: safeGetItem("gombo_sec_fingerprint", "true") !== "false",
     faceId: safeGetItem("gombo_sec_faceid", "false") === "true",
     activeSessions: [
-      { id: "1", device: "App Android — Mobile (Applet)", location: "Abidjan, Côte d'Ivoire", ip: "41.207.210.12", lastActive: "En ce moment", current: true },
-      { id: "2", device: "Chrome Web Desktop", location: "Plateau, Abidjan", ip: "160.155.32.1", lastActive: "Il y a 3 heures", current: false },
+      { id: "current_session", device: "Appareil Actuel Sniffing...", location: "Localisation non disponible", ip: "Adresse IP : non disponible", lastActive: "À l'instant", current: true }
     ],
   }));
+
+  // Dynamic session sync effect
+  useEffect(() => {
+    const initSessions = async () => {
+      const dev = getDeviceDetails();
+      let sessionId = localStorage.getItem("gombo_session_id");
+      if (!sessionId) {
+        sessionId = "sess_" + Math.random().toString(36).substring(2, 11);
+        localStorage.setItem("gombo_session_id", sessionId);
+      }
+
+      let ip = "Adresse IP : non disponible";
+      let location = "Localisation non disponible";
+
+      try {
+        const res = await fetch("https://ipapi.co/json/");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.ip) ip = data.ip;
+          if (data.city && data.country_name) {
+            location = `${data.city}, ${data.country_name}`;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch IP location dynamically:", err);
+      }
+
+      const currentSess: ActiveSession = {
+        id: sessionId,
+        device: `${dev.deviceType} — ${dev.browser} (${dev.screenSize}, Tactile: ${dev.touch ? 'Oui' : 'Non'})`,
+        location,
+        ip,
+        lastActive: "À l'instant",
+        current: true
+      };
+
+      if (currentUser?.uid) {
+        try {
+          const userDoc = await gomboDB.getUserProfile(currentUser.uid);
+          let dbSessions: ActiveSession[] = userDoc?.activeSessions || [];
+          
+          // Remove previous entry of this session and append the updated one
+          dbSessions = dbSessions.filter(s => s.id !== sessionId);
+          dbSessions.push(currentSess);
+          
+          // Limit total stored sessions to 5
+          if (dbSessions.length > 5) {
+            dbSessions = dbSessions.slice(dbSessions.length - 5);
+          }
+
+          // Ensure exactly correct "current" flag and "lastActive" string
+          dbSessions = dbSessions.map(s => ({
+            ...s,
+            current: s.id === sessionId,
+            lastActive: s.id === sessionId ? "À l'instant" : s.lastActive || "Il y a quelques heures"
+          }));
+
+          await gomboDB.updateUserProfile(currentUser.uid, { activeSessions: dbSessions });
+          
+          setSecurity(prev => ({
+            ...prev,
+            activeSessions: dbSessions
+          }));
+        } catch (dbErr) {
+          console.error("Failed to sync active sessions with Firestore:", dbErr);
+          setSecurity(prev => ({
+            ...prev,
+            activeSessions: [currentSess]
+          }));
+        }
+      } else {
+        // Not logged in: show local current session
+        setSecurity(prev => ({
+          ...prev,
+          activeSessions: [currentSess]
+        }));
+      }
+    };
+
+    initSessions();
+  }, [currentUser]);
+
+  // Periodic check if session was terminated remotely
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    
+    const checkSessionValidity = async () => {
+      const sessionId = localStorage.getItem("gombo_session_id");
+      if (!sessionId) return;
+      
+      try {
+        const userDoc = await gomboDB.getUserProfile(currentUser.uid);
+        const dbSessions: ActiveSession[] = userDoc?.activeSessions || [];
+        
+        if (dbSessions.length > 0 && !dbSessions.some(s => s.id === sessionId)) {
+          // Terminal remote sign out
+          showToast("🚨 Votre session a été fermée à distance.", "warning");
+          // Firebase sign out
+          auth.signOut();
+        }
+      } catch (err) {
+        console.error("Error checking remote session status:", err);
+      }
+    };
+
+    const interval = setInterval(checkSessionValidity, 15000); // Check every 15s
+    return () => clearInterval(interval);
+  }, [currentUser]);
 
   const updateSecurityPref = (key: keyof SecuritySettings, value: boolean) => {
     setSecurity((prev) => {
@@ -406,11 +564,28 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
-  const closeOtherSessions = () => {
-    setSecurity((prev) => ({
-      ...prev,
-      activeSessions: prev.activeSessions.filter((s) => s.current),
-    }));
+  const closeOtherSessions = async () => {
+    const sessionId = localStorage.getItem("gombo_session_id");
+    if (!sessionId) return;
+
+    setSecurity((prev) => {
+      const remaining = prev.activeSessions.filter((s) => s.id === sessionId);
+      return {
+        ...prev,
+        activeSessions: remaining
+      };
+    });
+
+    if (currentUser?.uid) {
+      try {
+        const userDoc = await gomboDB.getUserProfile(currentUser.uid);
+        let dbSessions: ActiveSession[] = userDoc?.activeSessions || [];
+        dbSessions = dbSessions.filter(s => s.id === sessionId);
+        await gomboDB.updateUserProfile(currentUser.uid, { activeSessions: dbSessions });
+      } catch (err) {
+        console.error("Failed to clean up remote sessions:", err);
+      }
+    }
     showToast("🔒 Toutes les autres sessions ont été fermées avec succès !", "success");
   };
 

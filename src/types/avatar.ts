@@ -118,6 +118,10 @@ export interface AvatarConfig {
   accessories: string[];
   instruments: string[];
   background: string;
+  couronnes?: string;
+  chaussures?: string;
+  sourcils?: string;
+  visage?: string;
 }
 
 export interface UserAvatarData {

@@ -26,6 +26,7 @@ interface SettingsModalProps {
   onClose: () => void;
   onLogout?: () => void;
   onNavigateToFounder?: () => void;
+  onSupportClick?: () => void;
 }
 
 const modalTranslations: Record<string, Record<string, string>> = {
@@ -151,7 +152,8 @@ export default function SettingsModal({
   isOpen, 
   onClose, 
   onLogout,
-  onNavigateToFounder
+  onNavigateToFounder,
+  onSupportClick
 }: SettingsModalProps) {
   useEffect(() => {
     if (isOpen) {
@@ -216,6 +218,85 @@ export default function SettingsModal({
   // Account Level
   const accountLevel = profile?.isCertified || profile?.isVerified ? "⭐ ARTISTE CERTIFIÉ GOMBO" : "🎵 COMPTE CLASSIQUE";
   const isFounder = currentUser?.email === "jhs.kmj7@gmail.com";
+
+  // Real Network Diagnostic State
+  const [diagnosticState, setDiagnosticState] = useState<"idle" | "running" | "completed">("idle");
+  const [diagnosticResults, setDiagnosticResults] = useState<{
+    internet: string;
+    ping: string;
+    firebase: string;
+    connType: string;
+    quality: string;
+  } | null>(null);
+
+  const runDiagnostic = async () => {
+    setDiagnosticState("running");
+    try { audioSynth.playValidationSuccess(); } catch (_) {}
+    
+    // Step-by-step diagnostic latency
+    await new Promise((resolve) => setTimeout(resolve, 850));
+    
+    // 1. Internet Check
+    const internetOk = navigator.onLine ? "✓ En ligne (Connecté)" : "❌ Hors ligne";
+    
+    // 2. Measure latency to real /api/health endpoint
+    let pingStr = "Temps de réponse inconnu";
+    let pingVal = 0;
+    try {
+      const start = performance.now();
+      const res = await fetch(`/api/health?t=${Date.now()}`);
+      if (res.ok) {
+        const end = performance.now();
+        pingVal = Math.round(end - start);
+        pingStr = `${pingVal} ms`;
+      } else {
+        const startFallback = performance.now();
+        await fetch(`/?t=${Date.now()}`);
+        const endFallback = performance.now();
+        pingVal = Math.round(endFallback - startFallback);
+        pingStr = `${pingVal} ms`;
+      }
+    } catch (e) {
+      pingStr = "Erreur de connexion (Inaccessible)";
+    }
+    
+    // 3. Firebase Connection Check
+    let firebaseStatus = "Non connecté";
+    try {
+      if (gomboDB) {
+        firebaseStatus = "✓ Connecté (Base Firestore)";
+      }
+    } catch (e) {
+      firebaseStatus = "❌ Échec de liaison Firestore";
+    }
+    
+    // 4. Connection Type
+    let connType = "Inconnu (Sécurisé)";
+    if ((navigator as any).connection) {
+      connType = (navigator as any).connection.effectiveType || (navigator as any).connection.type || "Non disponible";
+    }
+    
+    // 5. Connection Quality
+    let quality = "Non déterminée";
+    if (pingVal > 0) {
+      if (pingVal < 80) quality = "⚡ Excellente (Fibre / 4G+ / 5G)";
+      else if (pingVal < 200) quality = "👍 Bonne (Réseau Stable)";
+      else if (pingVal < 500) quality = "⚠️ Moyenne (3G / Latence élevée)";
+      else quality = "🐌 Très lente / Signal Faible";
+    } else {
+      quality = "Hors ligne ou connexion restreinte";
+    }
+    
+    setDiagnosticResults({
+      internet: internetOk,
+      ping: pingStr,
+      firebase: firebaseStatus,
+      connType: connType,
+      quality: quality
+    });
+    setDiagnosticState("completed");
+    try { audioSynth.playValidationSuccess(); } catch (_) {}
+  };
   const isPremium = profile?.isPro || profile?.isVip || (profile?.balance !== undefined && profile.balance > 0) || isFounder;
   
   // Detect Auth Provider
@@ -787,14 +868,42 @@ export default function SettingsModal({
             </label>
 
             {/* Diagnostic réseau */}
-            <button
-              type="button"
-              onClick={() => showToast("📡 Test réseau AFRIGOMBO: Latence Abidjan 18ms — Connexion Excellente ⚡", "success")}
-              className="w-full py-2.5 px-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/40 text-afri-text font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-afri-gold" />
-              Lancer le test de diagnostic réseau
-            </button>
+            <div className="space-y-3 pt-2">
+              <button
+                type="button"
+                disabled={diagnosticState === "running"}
+                onClick={runDiagnostic}
+                className={`w-full py-2.5 px-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/40 text-afri-text font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${diagnosticState === "running" ? "opacity-60 cursor-not-allowed" : ""}`}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-afri-gold ${diagnosticState === "running" ? "animate-spin" : ""}`} />
+                {diagnosticState === "running" ? "Diagnostic en cours..." : "Lancer le test de diagnostic réseau"}
+              </button>
+
+              {diagnosticState === "completed" && diagnosticResults && (
+                <div className="p-3 bg-afri-bg border border-afri-border/70 rounded-xl space-y-2 text-[10.5px] font-mono animate-fadeIn">
+                  <div className="flex justify-between border-b border-afri-border/30 pb-1.5">
+                    <span className="text-afri-text-muted">Internet :</span>
+                    <span className="text-afri-text font-bold">{diagnosticResults.internet}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-afri-border/30 pb-1.5">
+                    <span className="text-afri-text-muted">Temps de réponse (Ping) :</span>
+                    <span className="text-emerald-400 font-bold">{diagnosticResults.ping}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-afri-border/30 pb-1.5">
+                    <span className="text-afri-text-muted">Liaison Firestore :</span>
+                    <span className="text-afri-text font-bold">{diagnosticResults.firebase}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-afri-border/30 pb-1.5">
+                    <span className="text-afri-text-muted">Type de connexion :</span>
+                    <span className="text-afri-gold font-bold uppercase">{diagnosticResults.connType}</span>
+                  </div>
+                  <div className="flex justify-between pt-0.5">
+                    <span className="text-afri-text-muted">Qualité de connexion :</span>
+                    <span className="text-afri-text font-black">{diagnosticResults.quality}</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -807,49 +916,57 @@ export default function SettingsModal({
 
           <div className="space-y-3.5">
             {/* Double Authentification */}
-            <label className="flex items-center justify-between cursor-pointer group">
+            <div className="flex items-center justify-between opacity-60">
               <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Double Authentification (2FA)</span>
-                <p className="text-[9px] text-afri-text-muted leading-none">Exiger un code SMS ou App lors de la connexion</p>
+                <span className="text-[11px] font-bold text-afri-text">Double Authentification (2FA)</span>
+                <p className="text-[8.5px] text-red-400/85 font-mono">⚠️ Non disponible sur cet appareil / nécessite configuration SMS</p>
               </div>
-              <input
-                type="checkbox"
-                checked={security.twoFactorAuth}
-                onChange={(e) => updateSecurityPref('twoFactorAuth', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
-            </label>
+              <div className="w-8 h-4.5 bg-zinc-800 rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-600 after:rounded-full after:h-2.5 after:w-2.5 after:transition-all border border-zinc-700"></div>
+            </div>
 
             {/* Empreinte digitale */}
-            <label className="flex items-center justify-between cursor-pointer group">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Déverrouillage par empreinte digitale</span>
-                <p className="text-[9px] text-afri-text-muted leading-none">Accéder instantanément à l'application par capteur</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={security.fingerprint}
-                onChange={(e) => updateSecurityPref('fingerprint', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
-            </label>
+            {(() => {
+              const isBiometricsSupported = typeof window !== "undefined" && !!window.PublicKeyCredential;
+              return (
+                <label className={`flex items-center justify-between cursor-pointer group ${!isBiometricsSupported ? "opacity-50" : ""}`}>
+                  <div className="space-y-0.5">
+                    <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Déverrouillage par empreinte digitale</span>
+                    <p className="text-[9px] text-afri-text-muted leading-none">Accéder instantanément à l'application par capteur</p>
+                    {!isBiometricsSupported && <p className="text-[8.5px] text-red-400/85 font-mono leading-none mt-1">⚠️ Biométrie non disponible sur cet appareil</p>}
+                  </div>
+                  <input
+                    type="checkbox"
+                    disabled={!isBiometricsSupported}
+                    checked={isBiometricsSupported && security.fingerprint}
+                    onChange={(e) => updateSecurityPref('fingerprint', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className={`w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border ${!isBiometricsSupported ? 'bg-zinc-800 border-zinc-700' : ''}`}></div>
+                </label>
+              );
+            })()}
 
             {/* Reconnaissance faciale */}
-            <label className="flex items-center justify-between cursor-pointer group">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Reconnaissance faciale FaceID</span>
-                <p className="text-[9px] text-afri-text-muted leading-none">Sécuriser l'accès par biométrie faciale</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={security.faceId}
-                onChange={(e) => updateSecurityPref('faceId', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
-            </label>
+            {(() => {
+              const isBiometricsSupported = typeof window !== "undefined" && !!window.PublicKeyCredential;
+              return (
+                <label className={`flex items-center justify-between cursor-pointer group ${!isBiometricsSupported ? "opacity-50" : ""}`}>
+                  <div className="space-y-0.5">
+                    <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Reconnaissance faciale FaceID</span>
+                    <p className="text-[9px] text-afri-text-muted leading-none">Sécuriser l'accès par biométrie faciale</p>
+                    {!isBiometricsSupported && <p className="text-[8.5px] text-red-400/85 font-mono leading-none mt-1">⚠️ Biométrie non disponible sur cet appareil</p>}
+                  </div>
+                  <input
+                    type="checkbox"
+                    disabled={!isBiometricsSupported}
+                    checked={isBiometricsSupported && security.faceId}
+                    onChange={(e) => updateSecurityPref('faceId', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className={`w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border ${!isBiometricsSupported ? 'bg-zinc-800 border-zinc-700' : ''}`}></div>
+                </label>
+              );
+            })()}
 
             {/* Appareils & Sessions connectés */}
             <div className="space-y-2 pt-2 border-t border-afri-border">
@@ -1363,7 +1480,11 @@ export default function SettingsModal({
             {/* SOUTENIR AFRIGOMBO */}
             <button
               onClick={() => {
-                setActiveSupportPage("help" as any);
+                if (onSupportClick) {
+                  onSupportClick();
+                } else {
+                  setActiveSupportPage("help" as any);
+                }
                 showToast("❤️ Merci pour votre soutien précieux à la culture et aux artistes d'Afrique !", "success");
               }}
               className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-afri-gold/20 to-amber-500/10 border border-afri-gold/50 hover:border-afri-gold text-afri-gold transition-all cursor-pointer font-black"

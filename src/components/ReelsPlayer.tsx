@@ -7,6 +7,7 @@ import {
 import { Post } from "../types";
 import { db } from "../firebase";
 import { doc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
+import { useAppSettings } from "../context/AppSettingsContext";
 
 export interface ReelItem {
   id: string;
@@ -85,6 +86,7 @@ const FALLBACK_REELS: ReelItem[] = [
 ];
 
 export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, currentUser, initialReelId }: ReelsPlayerProps) {
+  const { network } = useAppSettings();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [followedUsers, setFollowedUsers] = useState<string[]>([]);
@@ -350,16 +352,37 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
             >
               {/* VIDEO PLAYER LAYER (Render video tag only for active or next item for max performance) */}
               {isActive || isNext ? (
-                <video
-                  ref={isActive ? activeVideoRef : null}
-                  src={reel.mediaUrl}
-                  preload={isActive ? "auto" : "metadata"}
-                  className="w-full h-full object-cover"
-                  loop
-                  muted={isMuted}
-                  playsInline
-                  onClick={() => setIsMuted(!isMuted)}
-                />
+                <div className="relative w-full h-full">
+                  <video
+                    ref={isActive ? activeVideoRef : null}
+                    src={reel.mediaUrl}
+                    preload={isActive ? "auto" : "metadata"}
+                    className="w-full h-full object-cover"
+                    loop
+                    muted={isMuted}
+                    playsInline
+                    onClick={() => setIsMuted(!isMuted)}
+                  />
+                  {/* Dynamic bandwidth and video quality indicator badge */}
+                  {isActive && (
+                    <div className="absolute top-4 left-4 z-40 bg-black/60 border border-zinc-700/40 backdrop-blur-md text-[8.5px] font-mono font-bold text-white px-2 py-1 rounded-md flex items-center gap-1.5 shadow-md select-none">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      <span>{network?.videoQuality || "720p HD"}</span>
+                      {network?.autoCompression && (
+                        <>
+                          <span className="text-zinc-500">|</span>
+                          <span className="text-amber-400 font-extrabold text-[8px] uppercase">⚡ COMPRESSÉ AUTO</span>
+                        </>
+                      )}
+                      {network?.slowConnectionMode && (
+                        <>
+                          <span className="text-zinc-500">|</span>
+                          <span className="text-red-400 font-extrabold text-[8px] uppercase">📶 MODE LENT 2G/3G</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="w-full h-full bg-afri-bg-sec flex items-center justify-center relative">
                   <img src={reel.authorAvatar} alt="" className="w-full h-full object-cover opacity-30 blur-lg" />

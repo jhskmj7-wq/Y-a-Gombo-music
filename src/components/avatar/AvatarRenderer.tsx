@@ -41,6 +41,9 @@ export default function AvatarRenderer({ config, size = 120, className = "", sto
         {/* BACKGROUND ACCENTS (if any) */}
         {renderItem(config.background)}
 
+        {/* CHAUSSURES / BASE ACCENTS */}
+        {config.chaussures && renderItem(config.chaussures)}
+
         {/* BODY (Shoulders/Torso) */}
         <path d="M40 200 Q100 120 160 200 Z" fill={skinColor} />
         
@@ -53,6 +56,30 @@ export default function AvatarRenderer({ config, size = 120, className = "", sto
 
         {/* HEAD */}
         <circle cx="100" cy="90" r="45" fill={skinColor} />
+
+        {/* VISAGE / SHAPE OVERLAY */}
+        {config.visage && renderItem(config.visage)}
+        {config.faceShape && config.faceShape !== 'default' && (
+          <path 
+            d={config.faceShape === 'oval' 
+              ? "M65 110 Q100 135 135 110" 
+              : config.faceShape === 'square'
+                ? "M60 110 L80 128 L120 128 L140 110"
+                : "M60 105 Q100 125 140 105"} 
+            stroke="#4A3018" 
+            strokeWidth="1.5" 
+            fill="none" 
+            opacity="0.3" 
+          />
+        )}
+
+        {/* SOURCILS (Eyebrows) */}
+        {renderItem(config.sourcils, (
+          <g id="default-eyebrows">
+            <path d="M72 73 Q85 68 93 72" stroke="#1A1A1A" strokeWidth="2" fill="transparent" strokeLinecap="round" />
+            <path d="M107 72 Q115 68 128 73" stroke="#1A1A1A" strokeWidth="2" fill="transparent" strokeLinecap="round" />
+          </g>
+        ))}
 
         {/* MOUTH */}
         {renderItem(config.mouth, (
@@ -71,6 +98,9 @@ export default function AvatarRenderer({ config, size = 120, className = "", sto
         {renderItem(config.hair, (
           <path d="M55 90 Q100 30 145 90 Q100 50 55 90" fill="#1A1A1A" />
         ))}
+
+        {/* COURONNES */}
+        {config.couronnes && renderItem(config.couronnes)}
 
         {/* ACCESSORIES (Glasses, Earrings, etc.) */}
         {config.accessories?.map(accId => (
