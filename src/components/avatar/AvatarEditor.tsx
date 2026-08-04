@@ -296,8 +296,21 @@ const FREE_DEFAULT_ITEMS: AvatarItem[] = [
   }
 ];
 
+// Helper to map DB categories to english config keys used by renderer and SVG generators
+export function mapCategoryToConfigKey(category: string): string {
+  switch (category) {
+    case 'coiffures': return 'hair';
+    case 'yeux': return 'eyes';
+    case 'bouche': return 'mouth';
+    case 'vêtements': return 'clothes';
+    case 'accessoires': return 'accessories';
+    case 'arriere-plans': return 'background';
+    default: return category;
+  }
+}
+
 export default function AvatarEditor({ onClose }: AvatarEditorProps) {
-  const { currentUser } = useAuth();
+  const { currentUser, profile } = useAuth();
   const [avatarData, setAvatarData] = useState<UserAvatarData | null>(null);
   const [config, setConfig] = useState<AvatarConfig>(DEFAULT_CONFIG);
   const [initialConfig, setInitialConfig] = useState<AvatarConfig | null>(null);
@@ -312,6 +325,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
   const [storeItems, setStoreItems] = useState<AvatarItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [useAsProfile, setUseAsProfile] = useState(false);
   const [showStore, setShowStore] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('couleur_peau');
@@ -338,10 +352,23 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
       if (data) {
         setAvatarData(data);
         if (data.config) {
-          setConfig(data.config);
-          setInitialConfig(prev => prev || data.config);
+          // Normalize loaded configuration config keys
+          const normalizedConfig = { ...DEFAULT_CONFIG };
+          Object.keys(data.config).forEach((key) => {
+            const normalizedKey = mapCategoryToConfigKey(key);
+            (normalizedConfig as any)[normalizedKey] = (data.config as any)[key];
+          });
+          setConfig(normalizedConfig);
+          setInitialConfig(prev => prev || normalizedConfig);
+        } else if (profile?.avatarConfig) {
+          setConfig(profile.avatarConfig);
+          setInitialConfig(prev => prev || profile.avatarConfig);
         }
         setUseAsProfile(!!data.useAvatarAsProfile);
+      } else if (profile?.avatarConfig) {
+        setConfig(profile.avatarConfig);
+        setInitialConfig(prev => prev || profile.avatarConfig);
+        setUseAsProfile(!!profile?.useAvatarAsProfile);
       }
     });
 
@@ -364,22 +391,30 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
   const handleSave = async () => {
     if (!currentUser) return;
     setSaving(true);
+    setSaveSuccess(null);
     try {
-      // 1. Save Avatar config
+      // 1. Build and validate configuration currently equipped
+      const finalConfig = { ...config };
+
+      // 2. Save Avatar config
       await AvatarEngine.saveUserAvatar(currentUser.uid, {
-        config,
+        config: finalConfig,
         useAvatarAsProfile: useAsProfile,
         inventory: inventory.ownedItems
       }, storeItems);
 
-      // 2. Sync SVG Avatar URI to user profile if useAsProfile is active
+      // 3. Sync SVG Avatar URI to user profile if useAsProfile is active
       const mergedStoreAndFreeItems = [...FREE_DEFAULT_ITEMS, ...storeItems];
-      const avatarUri = AvatarEngine.generateAvatarSvg(config, mergedStoreAndFreeItems);
+      const avatarUri = AvatarEngine.generateAvatarSvg(finalConfig, mergedStoreAndFreeItems);
       await AvatarEngine.setAvatarAsProfile(currentUser.uid, avatarUri, useAsProfile);
 
-      onClose();
-    } catch (e) {
+      setSaveSuccess("Votre avatar Gombo a été sauvegardé avec succès ! 🎉");
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (e: any) {
       console.error("Failed to save avatar", e);
+      setSaveSuccess(`Erreur lors de la sauvegarde : ${e.message || "Inconnue"}`);
     } finally {
       setSaving(false);
     }
@@ -389,19 +424,21 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
   const handleEquip = async (itemId: string, category: AvatarItemCategory) => {
     if (!currentUser) return;
 
+    const configKey = mapCategoryToConfigKey(category);
+
     // Update local state for immediate responsiveness
     setConfig(prev => {
       const next = { ...prev };
-      if (category === 'accessoires' || category === 'instruments') {
-        const list = Array.isArray(next[category]) ? (next[category] as string[]) : [];
+      if (configKey === 'accessories' || configKey === 'instruments') {
+        const list = Array.isArray(next[configKey]) ? (next[configKey] as string[]) : [];
         if (list.includes(itemId)) {
-          next[category] = list.filter(i => i !== itemId);
+          next[configKey] = list.filter(i => i !== itemId);
         } else {
-          next[category] = [...list, itemId];
+          next[configKey] = [...list, itemId];
         }
       } else {
         // Single equip category
-        (next as any)[category] = (next as any)[category] === itemId ? '' : itemId;
+        (next as any)[configKey] = (next as any)[configKey] === itemId ? '' : itemId;
       }
       return next;
     });
@@ -479,6 +516,23 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
   return (
     <div className="fixed inset-0 z-[110] bg-zinc-950 md:bg-black/80 md:backdrop-blur-md overflow-y-auto flex flex-col md:items-center md:justify-center p-0 md:p-4 font-sans text-left">
       <div className="w-full max-w-5xl min-h-screen md:min-h-0 md:h-[88vh] bg-zinc-900 border-0 md:border border-afri-border/30 md:rounded-3xl flex flex-col shadow-2xl relative overflow-hidden">
+        
+        {/* Save Success / Error Toast Overlay */}
+        {saveSuccess && (
+          <div className="absolute inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+            <div className="bg-zinc-900 border border-[#D4AF37] p-6 rounded-3xl max-w-md text-center space-y-4 shadow-2xl animate-scaleUp">
+              <div className="w-16 h-16 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mx-auto text-3xl">
+                {saveSuccess.includes("Erreur") ? "❌" : "🎉"}
+              </div>
+              <h3 className="text-sm font-black uppercase text-afri-text tracking-wider">
+                {saveSuccess.includes("Erreur") ? "ERREUR" : "SAUVEGARDE RÉUSSIE"}
+              </h3>
+              <p className="text-xs text-afri-text-sec leading-relaxed">
+                {saveSuccess}
+              </p>
+            </div>
+          </div>
+        )}
         
         {/* Sticky Header Bar for both Mobile & Desktop */}
         <div className="sticky top-0 z-40 bg-zinc-950 border-b border-afri-border/30 px-4 py-3.5 flex items-center justify-between">
@@ -616,9 +670,10 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
                     </div>
                   ) : (
                     itemsInActiveTab.map(item => {
+                      const configKey = mapCategoryToConfigKey(item.category);
                       const isEquipped = 
-                        (config as any)[item.category] === item.id || 
-                        (Array.isArray((config as any)[item.category]) && (config as any)[item.category].includes(item.id)) ||
+                        (config as any)[configKey] === item.id || 
+                        (Array.isArray((config as any)[configKey]) && (config as any)[configKey].includes(item.id)) ||
                         inventory.equippedItems.includes(item.id);
 
                       return (

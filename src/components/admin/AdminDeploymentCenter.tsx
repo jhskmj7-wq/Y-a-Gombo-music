@@ -80,7 +80,7 @@ export default function AdminDeploymentCenter({
     setLoading(true);
 
     // Deployments stream
-    const deploysRef = collection(gomboDB || db, "deployment_history");
+    const deploysRef = collection(db, "deployment_history");
     const deploysQuery = query(deploysRef, orderBy("timestamp", "desc"));
     const unsubDeploys = onSnapshot(deploysQuery, (snap) => {
       const records: DeploymentRecord[] = [];
@@ -101,7 +101,7 @@ export default function AdminDeploymentCenter({
     }, (err) => console.error("Err deployment stream:", err));
 
     // Feature Flags stream
-    const flagsRef = doc(gomboDB || db, "settings", "feature_flags");
+    const flagsRef = doc(db, "settings", "feature_flags");
     const unsubFlags = onSnapshot(flagsRef, (docSnap) => {
       if (docSnap.exists() && docSnap.data().flags) {
         setFeatureFlags(docSnap.data().flags);
@@ -114,7 +114,7 @@ export default function AdminDeploymentCenter({
     });
 
     // Error logs / Bug reports stream
-    const bugsRef = collection(gomboDB || db, "bug_reports");
+    const bugsRef = collection(db, "bug_reports");
     const bugsQuery = query(bugsRef, orderBy("createdAt", "desc"), limit(10));
     const unsubBugs = onSnapshot(bugsQuery, (snap) => {
       const reports: any[] = [];
@@ -154,7 +154,7 @@ export default function AdminDeploymentCenter({
 
     setFeatureFlags(updatedFlags);
     try {
-      const flagsRef = doc(gomboDB || db, "settings", "feature_flags");
+      const flagsRef = doc(db, "settings", "feature_flags");
       await setDoc(flagsRef, {
         flags: updatedFlags,
         updatedAt: new Date().toISOString(),
@@ -182,11 +182,11 @@ export default function AdminDeploymentCenter({
     };
 
     try {
-      const deploysRef = collection(gomboDB || db, "deployment_history");
+      const deploysRef = collection(db, "deployment_history");
       await addDoc(deploysRef, newRecord);
 
       // Update system info
-      const platformRef = doc(gomboDB || db, "settings", "platform");
+      const platformRef = doc(db, "settings", "platform");
       await setDoc(platformRef, {
         lastDeploymentVersion: deployVersion.trim(),
         lastDeploymentDate: new Date().toISOString(),
@@ -390,7 +390,7 @@ export default function AdminDeploymentCenter({
               <span className="text-xs font-bold text-white uppercase flex items-center gap-2">
                 <Cloud className="w-4 h-4 text-purple-400" /> Vercel Deployment
               </span>
-              <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-zinc-800 text-zinc-400 border border-zinc-700">
+              <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-afri-bg-ter text-afri-text-sec border border-afri-border">
                 Pas encore disponible
               </span>
             </div>
@@ -401,9 +401,9 @@ export default function AdminDeploymentCenter({
           <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-white uppercase flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-zinc-300" /> GitHub Sync
+                <GitBranch className="w-4 h-4 text-afri-text-sec" /> GitHub Sync
               </span>
-              <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-zinc-800 text-zinc-400 border border-zinc-700">
+              <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-afri-bg-ter text-afri-text-sec border border-afri-border">
                 Pas encore disponible
               </span>
             </div>
@@ -431,12 +431,12 @@ export default function AdminDeploymentCenter({
                   <th className="p-3 text-right">Statut</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800">
+              <tbody className="divide-y divide-afri-border">
                 {envVarsList.map((env) => (
                   <tr key={env.name} className="hover:bg-zinc-800/40 transition">
                     <td className="p-3 font-bold text-white">{env.name}</td>
                     <td className="p-3 text-afri-text-sec">{env.value}</td>
-                    <td className="p-3 text-zinc-400">{env.scope}</td>
+                    <td className="p-3 text-afri-text-sec">{env.scope}</td>
                     <td className="p-3 text-right">
                       <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
                         env.status === "Active" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"
@@ -483,7 +483,7 @@ export default function AdminDeploymentCenter({
               className={`p-4 rounded-2xl border transition cursor-pointer flex flex-col justify-between space-y-3 ${
                 flag.enabled
                   ? "bg-afri-bg-sec border-[#D4AF37]/40 hover:border-[#D4AF37]"
-                  : "bg-afri-bg/50 border-afri-border hover:border-zinc-700 opacity-70"
+                  : "bg-afri-bg/50 border-afri-border hover:border-afri-border opacity-70"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -494,7 +494,7 @@ export default function AdminDeploymentCenter({
 
                 {/* Toggle switch visual */}
                 <div className={`w-9 h-5 rounded-full p-0.5 transition-colors shrink-0 ${flag.enabled ? "bg-[#D4AF37]" : "bg-zinc-700"}`}>
-                  <div className={`w-4 h-4 bg-black rounded-full transition-transform ${flag.enabled ? "translate-x-4" : "translate-x-0"}`} />
+                  <div className={`w-4 h-4 bg-afri-bg rounded-full transition-transform ${flag.enabled ? "translate-x-4" : "translate-x-0"}`} />
                 </div>
               </div>
 
@@ -502,16 +502,16 @@ export default function AdminDeploymentCenter({
                 {flag.description || "Fonctionnalité paramétrable du système"}
               </p>
 
-              <div className="flex items-center justify-between text-[9px] font-mono pt-2 border-t border-zinc-800">
+              <div className="flex items-center justify-between text-[9px] font-mono pt-2 border-t border-afri-border">
                 <span className={`px-2 py-0.5 rounded font-bold uppercase ${
                   flag.status === "validated" ? "bg-emerald-500/10 text-emerald-400" :
                   flag.status === "experimental" ? "bg-amber-500/10 text-amber-400" :
-                  flag.status === "pending" ? "bg-sky-500/10 text-sky-400" : "bg-zinc-800 text-zinc-500"
+                  flag.status === "pending" ? "bg-sky-500/10 text-sky-400" : "bg-afri-bg-ter text-afri-text-muted"
                 }`}>
                   {flag.status}
                 </span>
 
-                <span className="text-zinc-500">{flag.enabled ? "Actif" : "Inactif"}</span>
+                <span className="text-afri-text-muted">{flag.enabled ? "Actif" : "Inactif"}</span>
               </div>
             </div>
           ))}
@@ -533,7 +533,7 @@ export default function AdminDeploymentCenter({
                 <span className={`px-2 py-0.5 rounded text-[8px] font-mono font-bold uppercase ${
                   mod.status === "Publié" ? "bg-emerald-500/10 text-emerald-400" :
                   mod.status === "Terminé" ? "bg-sky-500/10 text-sky-400" :
-                  mod.status === "En développement" ? "bg-amber-500/10 text-amber-400" : "bg-zinc-800 text-zinc-500"
+                  mod.status === "En développement" ? "bg-amber-500/10 text-amber-400" : "bg-afri-bg-ter text-afri-text-muted"
                 }`}>
                   {mod.status}
                 </span>
@@ -553,9 +553,9 @@ export default function AdminDeploymentCenter({
         </h3>
 
         {deploymentHistory.length === 0 ? (
-          <div className="p-8 bg-afri-bg-sec border border-dashed border-zinc-800 rounded-2xl text-center space-y-2 font-mono text-xs">
+          <div className="p-8 bg-afri-bg-sec border border-dashed border-afri-border rounded-2xl text-center space-y-2 font-mono text-xs">
             <p className="text-afri-text-sec">Aucune donnée enregistrée dans l'historique des déploiements.</p>
-            <p className="text-[11px] text-zinc-500">
+            <p className="text-[11px] text-afri-text-muted">
               Cliquez sur "Enregistrer un Déploiement" ci-dessus pour acter votre première release.
             </p>
           </div>
@@ -565,7 +565,7 @@ export default function AdminDeploymentCenter({
               <div key={item.id} className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 space-y-2">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-black text-white bg-zinc-800 px-2.5 py-1 rounded-lg border border-zinc-700">
+                    <span className="text-xs font-mono font-black text-white bg-afri-bg-ter px-2.5 py-1 rounded-lg border border-afri-border">
                       {item.version}
                     </span>
                     <span className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded ${
@@ -582,7 +582,7 @@ export default function AdminDeploymentCenter({
 
                 <p className="text-xs text-afri-text-sec font-mono leading-relaxed">{item.note}</p>
 
-                <div className="flex justify-between items-center text-[10px] font-mono text-zinc-500 pt-1 border-t border-zinc-800">
+                <div className="flex justify-between items-center text-[10px] font-mono text-afri-text-muted pt-1 border-t border-afri-border">
                   <span>Auteur : {item.authorEmail}</span>
                   <span>{new Date(item.timestamp).toLocaleString("fr-FR")}</span>
                 </div>
@@ -612,7 +612,7 @@ export default function AdminDeploymentCenter({
                     <span className="text-rose-400">[{bug.type || bug.subject || "Bug"}]</span> {bug.title || "Rapport système"}
                   </div>
                   <p className="text-afri-text-sec text-[11px] leading-tight">{bug.message || bug.details}</p>
-                  <div className="text-[9px] text-zinc-500">Signaleur : {bug.userName || bug.userEmail}</div>
+                  <div className="text-[9px] text-afri-text-muted">Signaleur : {bug.userName || bug.userEmail}</div>
                 </div>
 
                 <span className="text-[9px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30 shrink-0">
@@ -628,11 +628,11 @@ export default function AdminDeploymentCenter({
       {showDeployModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-afri-bg-sec border border-rose-500/40 rounded-3xl w-full max-w-md p-6 space-y-4 shadow-2xl relative text-left font-mono">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <div className="flex items-center justify-between border-b border-afri-border pb-3">
               <h3 className="text-xs font-black uppercase text-white tracking-wider flex items-center gap-2">
                 <Rocket className="w-4 h-4 text-rose-400" /> Enregistrer un Déploiement
               </h3>
-              <button onClick={() => setShowDeployModal(false)} className="text-zinc-400 hover:text-white">
+              <button onClick={() => setShowDeployModal(false)} className="text-afri-text-sec hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -672,7 +672,7 @@ export default function AdminDeploymentCenter({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-afri-border">
               <button
                 onClick={() => setShowDeployModal(false)}
                 className="px-4 py-2 bg-afri-bg text-afri-text-sec hover:text-white rounded-xl text-xs font-bold uppercase"

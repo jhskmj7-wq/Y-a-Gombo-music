@@ -169,6 +169,13 @@ const DEFAULT_SEED_ITEMS: Omit<AvatarItem, "id">[] = [
   }
 ];
 
+const withTimeout = <T>(promise: Promise<T>, ms: number, errorMsg: string): Promise<T> => {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(errorMsg)), ms)
+  );
+  return Promise.race([promise, timeout]);
+};
+
 export const AvatarEngine = {
   /**
    * Realtime Listener for Store Items
@@ -267,14 +274,41 @@ export const AvatarEngine = {
     const docRef = doc(db, "userAvatars", userId);
     return onSnapshot(docRef, (snapshot) => {
       if (snapshot.exists()) {
-        callback(snapshot.data() as UserAvatarData);
+        const avatarData = snapshot.data() as UserAvatarData;
+        // Merge with users collection fallback if config is missing
+        if (!avatarData.config) {
+          getDoc(doc(db, "users", userId)).then((userSnap) => {
+            if (userSnap.exists() && userSnap.data()?.avatarConfig) {
+              callback({
+                ...avatarData,
+                config: userSnap.data().avatarConfig
+              });
+            } else {
+              callback(avatarData);
+            }
+          }).catch(() => callback(avatarData));
+        } else {
+          callback(avatarData);
+        }
       } else {
-        // Fallback check on old 'avatars' doc
-        getDoc(doc(db, "avatars", userId)).then((fallbackSnap) => {
-          if (fallbackSnap.exists()) {
-            callback(fallbackSnap.data() as UserAvatarData);
+        // Fallback check on old 'avatars' doc or users doc
+        getDoc(doc(db, "users", userId)).then((userSnap) => {
+          if (userSnap.exists() && userSnap.data()?.avatarConfig) {
+            callback({
+              uid: userId,
+              config: userSnap.data().avatarConfig,
+              useAvatarAsProfile: !!userSnap.data().useAvatarAsProfile,
+              updatedAt: userSnap.data().avatarUpdatedAt || new Date().toISOString()
+            } as any);
           } else {
-            callback(null);
+            // Check old avatars document
+            getDoc(doc(db, "avatars", userId)).then((fallbackSnap) => {
+              if (fallbackSnap.exists()) {
+                callback(fallbackSnap.data() as UserAvatarData);
+              } else {
+                callback(null);
+              }
+            }).catch(() => callback(null));
           }
         }).catch(() => callback(null));
       }
@@ -573,6 +607,7 @@ export const AvatarEngine = {
         avatarXp: newXp,
         avatarLevel: levelInfo.level,
         avatarLevelTitle: levelInfo.title,
+        "wallet.coins": newCoins,
         updatedAt: new Date().toISOString()
       });
 
@@ -586,6 +621,7 @@ export const AvatarEngine = {
       });
     } catch (e) {
       console.error("Error awarding coins:", e);
+      throw e;
     }
   },
 
@@ -694,38 +730,87 @@ export const AvatarEngine = {
   async buyCoinPackage(userId: string, pkg: CoinPackage, paymentMethod: string, userProfile: any): Promise<void> {
     if (!userId) throw new Error("Utilisateur non connecté");
 
+    // Fetch the absolute freshest profile from db to prevent stale wallet values with an 8-second timeout
+    const userRef = doc(db, "users", userId);
+    const userSnap = await withTimeout(
+      getDoc(userRef),
+      8000,
+      "Délai de connexion dépassé lors de la récupération du solde."
+    );
+    const freshProfile = userSnap.exists() ? userSnap.data() : userProfile;
+
     const totalCoins = pkg.coins + (pkg.bonusCoins || 0);
 
     // If payment via wallet balance
     if (paymentMethod === "wallet") {
-      const walletBalance = userProfile?.wallet?.soldeDisponible ?? userProfile?.walletBalance ?? 0;
+      const walletBalance = freshProfile?.wallet?.soldeDisponible ?? freshProfile?.walletBalance ?? 0;
       if (walletBalance < pkg.priceFcfa) {
         throw new Error(`Solde portefeuille insuffisant (${walletBalance.toLocaleString()} FCFA). Requis: ${pkg.priceFcfa.toLocaleString()} FCFA`);
       }
 
-      // Deduct FCFA from wallet
+      // Deduct FCFA from wallet with an 8-second timeout
       const newWalletBal = walletBalance - pkg.priceFcfa;
-      await updateDoc(doc(db, "users", userId), {
-        walletBalance: newWalletBal,
-        wallet: {
-          ...(userProfile?.wallet || {}),
-          soldeDisponible: newWalletBal
+      await withTimeout(
+        updateDoc(userRef, {
+          walletBalance: newWalletBal,
+          wallet: {
+            ...(freshProfile?.wallet || {}),
+            soldeDisponible: newWalletBal
+          }
+        }),
+        8000,
+        "Délai d'attente dépassé lors de la mise à jour de votre solde."
+      );
+
+      try {
+        // Record transaction
+        await withTimeout(
+          recordWalletTransaction({
+            userId,
+            userName: freshProfile?.artistName || freshProfile?.displayName || freshProfile?.name || "Membre Gombo",
+            type: "achat_avatar",
+            amount: pkg.priceFcfa,
+            status: "success",
+            description: `Recharge ${totalCoins} Gombo Coins (${pkg.badge || 'Pack'})`
+          }),
+          8000,
+          "Délai d'attente dépassé lors de l'enregistrement de la transaction."
+        );
+
+        // Credit Gombo Coins and XP to user
+        await withTimeout(
+          this.awardCoins(userId, totalCoins, Math.floor(pkg.priceFcfa / 10), `Achat Pack ${totalCoins} Gombo Coins via ${paymentMethod}`),
+          10000,
+          "Délai d'attente dépassé lors du crédit des Gombo Coins."
+        );
+      } catch (err: any) {
+        console.error("Error during coin credit. Attempting rollback of wallet debit...", err);
+        // Rollback Wallet Debit
+        try {
+          await withTimeout(
+            updateDoc(userRef, {
+              walletBalance: walletBalance,
+              wallet: {
+                ...(freshProfile?.wallet || {}),
+                soldeDisponible: walletBalance
+              }
+            }),
+            5000,
+            "Remboursement échoué"
+          );
+        } catch (rollbackErr) {
+          console.error("FATAL: Rollback of debit failed!", rollbackErr);
         }
-      });
-
-      // Record transaction
-      await recordWalletTransaction({
-        userId,
-        userName: userProfile?.artistName || userProfile?.displayName || userProfile?.name || "Membre Gombo",
-        type: "achat_avatar",
-        amount: pkg.priceFcfa,
-        status: "success",
-        description: `Recharge ${totalCoins} Gombo Coins (${pkg.badge || 'Pack'})`
-      });
+        throw new Error(`Transaction incomplète : le crédit de Gombo Coins a échoué. Le débit FCFA a été remboursé. (${err.message})`);
+      }
+    } else {
+      // Credit Gombo Coins and XP directly for other methods
+      await withTimeout(
+        this.awardCoins(userId, totalCoins, Math.floor(pkg.priceFcfa / 10), `Achat Pack ${totalCoins} Gombo Coins via ${paymentMethod}`),
+        10000,
+        "Délai de crédit dépassé."
+      );
     }
-
-    // Credit Gombo Coins and XP to user
-    await this.awardCoins(userId, totalCoins, Math.floor(pkg.priceFcfa / 10), `Achat Pack ${totalCoins} Gombo Coins via ${paymentMethod}`);
   },
 
   /**

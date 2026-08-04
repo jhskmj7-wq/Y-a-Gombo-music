@@ -128,7 +128,7 @@ export default function AdminFounderNotebook({
   useEffect(() => {
     setLoading(true);
     try {
-      const notesRef = collection(gomboDB || db, "founder_notebook_notes");
+      const notesRef = collection(db, "founder_notebook_notes");
       // Query notes for this founder or email
       const q = query(
         notesRef,
@@ -251,7 +251,7 @@ export default function AdminFounderNotebook({
         const existingHistory = editingNote.history || [];
         const updatedHistory = [historyEntry, ...existingHistory].slice(0, 15); // keep last 15 versions
 
-        const docRef = doc(gomboDB || db, "founder_notebook_notes", editingNote.id);
+        const docRef = doc(db, "founder_notebook_notes", editingNote.id);
         const payload = {
           title,
           content,
@@ -292,7 +292,7 @@ export default function AdminFounderNotebook({
           history: []
         };
 
-        const colRef = collection(gomboDB || db, "founder_notebook_notes");
+        const colRef = collection(db, "founder_notebook_notes");
         const docAdded = await addDoc(colRef, newPayload);
         setEditingNote({ id: docAdded.id, ...newPayload });
         setIsCreating(false);
@@ -310,7 +310,7 @@ export default function AdminFounderNotebook({
   const handleTogglePin = async (e: React.MouseEvent, note: FounderNote) => {
     e.stopPropagation();
     try {
-      const docRef = doc(gomboDB || db, "founder_notebook_notes", note.id);
+      const docRef = doc(db, "founder_notebook_notes", note.id);
       await updateDoc(docRef, {
         isPinned: !note.isPinned,
         updatedAt: new Date().toISOString()
@@ -324,7 +324,7 @@ export default function AdminFounderNotebook({
   const handleToggleFavorite = async (e: React.MouseEvent, note: FounderNote) => {
     e.stopPropagation();
     try {
-      const docRef = doc(gomboDB || db, "founder_notebook_notes", note.id);
+      const docRef = doc(db, "founder_notebook_notes", note.id);
       await updateDoc(docRef, {
         isFavorite: !note.isFavorite,
         updatedAt: new Date().toISOString()
@@ -338,7 +338,7 @@ export default function AdminFounderNotebook({
   const handleToggleArchive = async (e: React.MouseEvent, note: FounderNote) => {
     e.stopPropagation();
     try {
-      const docRef = doc(gomboDB || db, "founder_notebook_notes", note.id);
+      const docRef = doc(db, "founder_notebook_notes", note.id);
       await updateDoc(docRef, {
         isArchived: !note.isArchived,
         updatedAt: new Date().toISOString()
@@ -354,7 +354,7 @@ export default function AdminFounderNotebook({
       return;
     }
     try {
-      const docRef = doc(gomboDB || db, "founder_notebook_notes", noteId);
+      const docRef = doc(db, "founder_notebook_notes", noteId);
       await deleteDoc(docRef);
       if (editingNote?.id === noteId) {
         setEditingNote(null);
@@ -411,7 +411,7 @@ export default function AdminFounderNotebook({
       item.id === itemId ? { ...item, completed: !item.completed } : item
     );
     try {
-      const docRef = doc(gomboDB || db, "founder_notebook_notes", note.id);
+      const docRef = doc(db, "founder_notebook_notes", note.id);
       await updateDoc(docRef, {
         checklist: updatedChecklist,
         updatedAt: new Date().toISOString()
@@ -577,7 +577,7 @@ export default function AdminFounderNotebook({
             className={`p-3 rounded-2xl border text-left transition ${
               activeTab === "active" && selectedCategory === "Toutes"
                 ? "bg-[#D4AF37]/10 border-[#D4AF37] text-white"
-                : "bg-afri-bg/50 border-afri-border text-afri-text-sec hover:border-zinc-700"
+                : "bg-afri-bg/50 border-afri-border text-afri-text-sec hover:border-afri-border"
             }`}
           >
             <div className="text-[10px] uppercase font-mono tracking-wider text-afri-text-muted">Total Notes</div>
@@ -589,7 +589,7 @@ export default function AdminFounderNotebook({
             className={`p-3 rounded-2xl border text-left transition ${
               activeTab === "pinned"
                 ? "bg-amber-500/10 border-amber-500 text-amber-400"
-                : "bg-afri-bg/50 border-afri-border text-afri-text-sec hover:border-zinc-700"
+                : "bg-afri-bg/50 border-afri-border text-afri-text-sec hover:border-afri-border"
             }`}
           >
             <div className="text-[10px] uppercase font-mono tracking-wider text-afri-text-muted flex items-center gap-1">
@@ -603,7 +603,7 @@ export default function AdminFounderNotebook({
             className={`p-3 rounded-2xl border text-left transition ${
               activeTab === "favorites"
                 ? "bg-amber-400/10 border-amber-400 text-amber-300"
-                : "bg-afri-bg/50 border-afri-border text-afri-text-sec hover:border-zinc-700"
+                : "bg-afri-bg/50 border-afri-border text-afri-text-sec hover:border-afri-border"
             }`}
           >
             <div className="text-[10px] uppercase font-mono tracking-wider text-afri-text-muted flex items-center gap-1">
@@ -617,7 +617,7 @@ export default function AdminFounderNotebook({
             className={`p-3 rounded-2xl border text-left transition ${
               activeTab === "archive"
                 ? "bg-sky-500/10 border-sky-500 text-sky-400"
-                : "bg-afri-bg/50 border-afri-border text-afri-text-sec hover:border-zinc-700"
+                : "bg-afri-bg/50 border-afri-border text-afri-text-sec hover:border-afri-border"
             }`}
           >
             <div className="text-[10px] uppercase font-mono tracking-wider text-afri-text-muted flex items-center gap-1">
@@ -705,7 +705,7 @@ export default function AdminFounderNotebook({
               className={`px-3 py-1 rounded-xl text-[10px] font-mono font-bold uppercase transition whitespace-nowrap shrink-0 cursor-pointer ${
                 selectedCategory === cat
                   ? "bg-[#D4AF37] text-black shadow-md font-black"
-                  : "bg-afri-bg text-afri-text-sec border border-afri-border hover:border-zinc-700 hover:text-white"
+                  : "bg-afri-bg text-afri-text-sec border border-afri-border hover:border-afri-border hover:text-white"
               }`}
             >
               {cat}
@@ -721,7 +721,7 @@ export default function AdminFounderNotebook({
           <span>Chargement de votre cahier souverain depuis Firestore...</span>
         </div>
       ) : sortedNotes.length === 0 ? (
-        <div className="p-12 bg-afri-bg-sec border border-dashed border-zinc-800 rounded-3xl text-center space-y-4 max-w-lg mx-auto my-8">
+        <div className="p-12 bg-afri-bg-sec border border-dashed border-afri-border rounded-3xl text-center space-y-4 max-w-lg mx-auto my-8">
           <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center mx-auto">
             <BookOpen className="w-6 h-6" />
           </div>
@@ -776,7 +776,7 @@ export default function AdminFounderNotebook({
           {/* SECTION 2: REGULAR NOTES */}
           <div className="space-y-3">
             {activeTab !== "archive" && pinnedNotesList.length > 0 && unpinnedNotesList.length > 0 && (
-              <h3 className="text-xs font-black uppercase text-afri-text-sec tracking-widest flex items-center gap-2 font-mono border-b border-zinc-800 pb-2">
+              <h3 className="text-xs font-black uppercase text-afri-text-sec tracking-widest flex items-center gap-2 font-mono border-b border-afri-border pb-2">
                 AUTRES NOTES ({unpinnedNotesList.length})
               </h3>
             )}
@@ -813,7 +813,7 @@ export default function AdminFounderNotebook({
               className="bg-afri-bg-sec border border-[#D4AF37]/40 rounded-3xl w-full max-w-3xl my-auto p-5 sm:p-7 space-y-6 shadow-2xl relative overflow-hidden"
             >
               {/* Modal Top Bar */}
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+              <div className="flex items-center justify-between border-b border-afri-border pb-4">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center">
                     <Edit3 className="w-4 h-4" />
@@ -920,14 +920,14 @@ export default function AdminFounderNotebook({
                         {item.completed ? (
                           <CheckSquare className="w-4 h-4 text-emerald-400 shrink-0" />
                         ) : (
-                          <Square className="w-4 h-4 text-zinc-500 shrink-0" />
+                          <Square className="w-4 h-4 text-afri-text-muted shrink-0" />
                         )}
-                        <span className={item.completed ? "line-through text-zinc-500" : "text-white"}>{item.text}</span>
+                        <span className={item.completed ? "line-through text-afri-text-muted" : "text-white"}>{item.text}</span>
                       </button>
 
                       <button
                         onClick={() => handleRemoveChecklistInEditor(item.id)}
-                        className="text-zinc-500 hover:text-rose-400 p-1"
+                        className="text-afri-text-muted hover:text-rose-400 p-1"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -945,7 +945,7 @@ export default function AdminFounderNotebook({
                     />
                     <button
                       onClick={handleAddChecklistItem}
-                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold uppercase cursor-pointer"
+                      className="px-3 py-1.5 bg-afri-bg-ter hover:bg-zinc-700 text-white rounded-xl text-xs font-bold uppercase cursor-pointer"
                     >
                       Ajouter
                     </button>
@@ -965,7 +965,7 @@ export default function AdminFounderNotebook({
                       </a>
                       <button
                         onClick={() => { setFormLinks(formLinks.filter((l) => l.id !== lnk.id)); if (editingNote) triggerAutoSave(); }}
-                        className="text-zinc-500 hover:text-rose-400 p-1"
+                        className="text-afri-text-muted hover:text-rose-400 p-1"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -990,7 +990,7 @@ export default function AdminFounderNotebook({
                       />
                       <button
                         onClick={handleAddLink}
-                        className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold uppercase cursor-pointer"
+                        className="px-3 py-1.5 bg-afri-bg-ter hover:bg-zinc-700 text-white rounded-xl text-xs font-bold uppercase cursor-pointer"
                       >
                         + Lien
                       </button>
@@ -1007,7 +1007,7 @@ export default function AdminFounderNotebook({
                     </span>
                     <div className="flex gap-2 flex-wrap">
                       {formImages.map((img, idx) => (
-                        <div key={idx} className="relative group w-14 h-14 rounded-xl overflow-hidden border border-zinc-700">
+                        <div key={idx} className="relative group w-14 h-14 rounded-xl overflow-hidden border border-afri-border">
                           <img src={img} alt="" className="w-full h-full object-cover" />
                           <button
                             onClick={() => { setFormImages(formImages.filter((_, i) => i !== idx)); if (editingNote) triggerAutoSave(); }}
@@ -1026,7 +1026,7 @@ export default function AdminFounderNotebook({
                         onChange={(e) => setNewImageUrl(e.target.value)}
                         className="flex-1 px-3 py-1.5 bg-afri-bg border border-afri-border rounded-xl text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
                       />
-                      <button onClick={handleAddImage} className="px-3 py-1.5 bg-zinc-800 text-white rounded-xl text-xs font-bold">
+                      <button onClick={handleAddImage} className="px-3 py-1.5 bg-afri-bg-ter text-white rounded-xl text-xs font-bold">
                         + Image
                       </button>
                     </div>
@@ -1061,7 +1061,7 @@ export default function AdminFounderNotebook({
               </div>
 
               {/* Modal Bottom Actions */}
-              <div className="flex items-center justify-between border-t border-zinc-800 pt-4">
+              <div className="flex items-center justify-between border-t border-afri-border pt-4">
                 {editingNote ? (
                   <button
                     onClick={() => handleDeleteNote(editingNote.id)}
@@ -1075,7 +1075,7 @@ export default function AdminFounderNotebook({
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => { setIsCreating(false); setEditingNote(null); }}
-                    className="px-4 py-2 bg-afri-bg border border-afri-border hover:bg-zinc-800 text-afri-text-sec hover:text-white rounded-xl text-xs font-bold uppercase transition cursor-pointer"
+                    className="px-4 py-2 bg-afri-bg border border-afri-border hover:bg-afri-bg-ter text-afri-text-sec hover:text-white rounded-xl text-xs font-bold uppercase transition cursor-pointer"
                   >
                     Annuler
                   </button>
@@ -1104,7 +1104,7 @@ export default function AdminFounderNotebook({
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-afri-bg-sec border border-afri-border rounded-3xl w-full max-w-lg p-6 space-y-4 shadow-2xl relative"
             >
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center justify-between border-b border-afri-border pb-3">
                 <div className="flex items-center gap-2">
                   <History className="w-4 h-4 text-sky-400" />
                   <h3 className="text-xs font-black uppercase text-white tracking-wider">Historique des Modifications</h3>
@@ -1185,7 +1185,7 @@ function NoteCard({
           <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition">
             <button
               onClick={onTogglePin}
-              className={`p-1.5 rounded-lg transition ${note.isPinned ? "text-amber-400 bg-amber-500/10" : "text-zinc-500 hover:text-white"}`}
+              className={`p-1.5 rounded-lg transition ${note.isPinned ? "text-amber-400 bg-amber-500/10" : "text-afri-text-muted hover:text-white"}`}
               title={note.isPinned ? "Désépingler" : "Épingler"}
             >
               <Pin className="w-3.5 h-3.5" />
@@ -1193,7 +1193,7 @@ function NoteCard({
 
             <button
               onClick={onToggleFav}
-              className={`p-1.5 rounded-lg transition ${note.isFavorite ? "text-amber-300 bg-amber-400/10" : "text-zinc-500 hover:text-white"}`}
+              className={`p-1.5 rounded-lg transition ${note.isFavorite ? "text-amber-300 bg-amber-400/10" : "text-afri-text-muted hover:text-white"}`}
               title={note.isFavorite ? "Retirer favori" : "Marquer favori"}
             >
               <Star className="w-3.5 h-3.5" />
@@ -1201,7 +1201,7 @@ function NoteCard({
 
             <button
               onClick={onToggleArchive}
-              className={`p-1.5 rounded-lg transition ${note.isArchived ? "text-sky-400 bg-sky-500/10" : "text-zinc-500 hover:text-white"}`}
+              className={`p-1.5 rounded-lg transition ${note.isArchived ? "text-sky-400 bg-sky-500/10" : "text-afri-text-muted hover:text-white"}`}
               title={note.isArchived ? "Désarchiver" : "Archiver"}
             >
               <Archive className="w-3.5 h-3.5" />
@@ -1239,13 +1239,13 @@ function NoteCard({
                   {chk.completed ? (
                     <CheckSquare className="w-3 h-3 text-emerald-400 shrink-0" />
                   ) : (
-                    <Square className="w-3 h-3 text-zinc-500 shrink-0" />
+                    <Square className="w-3 h-3 text-afri-text-muted shrink-0" />
                   )}
-                  <span className={chk.completed ? "line-through text-zinc-500" : ""}>{chk.text}</span>
+                  <span className={chk.completed ? "line-through text-afri-text-muted" : ""}>{chk.text}</span>
                 </div>
               ))}
               {note.checklist.length > 3 && (
-                <span className="text-[9px] font-mono text-zinc-500">+{note.checklist.length - 3} autres tâches...</span>
+                <span className="text-[9px] font-mono text-afri-text-muted">+{note.checklist.length - 3} autres tâches...</span>
               )}
             </div>
           </div>
@@ -1255,7 +1255,7 @@ function NoteCard({
         {note.images && note.images.length > 0 && (
           <div className="flex items-center gap-1.5 pt-1 overflow-x-auto scrollbar-none">
             {note.images.slice(0, 3).map((img, i) => (
-              <img key={i} src={img} alt="" className="w-10 h-10 rounded-lg object-cover border border-zinc-700 shrink-0" />
+              <img key={i} src={img} alt="" className="w-10 h-10 rounded-lg object-cover border border-afri-border shrink-0" />
             ))}
           </div>
         )}
@@ -1264,7 +1264,7 @@ function NoteCard({
         {note.tags && note.tags.length > 0 && (
           <div className="flex items-center gap-1 flex-wrap pt-1">
             {note.tags.map((tag) => (
-              <span key={tag} className="px-2 py-0.5 rounded-md text-[8px] font-mono bg-zinc-800/80 text-zinc-400 border border-zinc-700">
+              <span key={tag} className="px-2 py-0.5 rounded-md text-[8px] font-mono bg-zinc-800/80 text-afri-text-sec border border-afri-border">
                 #{tag}
               </span>
             ))}
@@ -1277,7 +1277,7 @@ function NoteCard({
       <div className="pt-3 border-t border-zinc-800/60 mt-3 flex items-center justify-between text-[9px] font-mono text-afri-text-muted">
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1">
-            <Clock className="w-3 h-3 text-zinc-500" />
+            <Clock className="w-3 h-3 text-afri-text-muted" />
             {new Date(note.updatedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
           </span>
 
