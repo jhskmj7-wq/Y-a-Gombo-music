@@ -207,7 +207,6 @@ export default function SettingsModal({
     cacheSizeMo,
     mediaSizeMo,
     clearAppCache,
-    sendPasswordReset,
     showToast
   } = useAppSettings();
 
@@ -405,82 +404,6 @@ export default function SettingsModal({
 
       {/* MAIN CONTAINER CONFIG */}
       <div className="max-w-xl mx-auto space-y-6">
-
-        {/* 1. SECTION COMPTE & SÉCURITÉ MOT DE PASSE */}
-        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)] relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-afri-gold/5 to-transparent pointer-events-none rounded-bl-full"></div>
-          
-          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            {mt("compte_title")}
-          </h2>
-
-          <div className="flex items-center gap-3.5 bg-afri-bg border border-afri-border p-3 rounded-xl">
-            {profile?.avatarUrl || currentUser?.photoURL ? (
-              <img 
-                src={profile?.avatarUrl || currentUser?.photoURL || ""} 
-                alt="Profile" 
-                className="w-12 h-12 rounded-full object-cover border border-afri-gold/20 shrink-0"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center text-sm font-black text-afri-gold font-mono uppercase shrink-0">
-                {(profile?.artisticName || currentUser?.displayName || "A").charAt(0)}
-              </div>
-            )}
-            <div className="min-w-0 flex-1 space-y-0.5">
-              <h3 className="text-xs font-sans font-black text-afri-text truncate uppercase tracking-tight">
-                {profile?.artisticName || "Artiste Gombo"}
-              </h3>
-              <p className="text-[10px] font-mono text-afri-text-muted truncate">
-                {currentUser?.email || "non connecté"}
-              </p>
-              <div className="flex items-center gap-1.5 pt-1">
-                <span className="text-[8px] font-mono font-bold text-afri-gold bg-afri-gold/5 border border-afri-gold/20 px-1.5 py-0.5 rounded uppercase">
-                  {accountLevel}
-                </span>
-                <span className="text-[8px] font-mono text-afri-text-sec bg-afri-bg px-1.5 py-0.5 rounded uppercase border border-afri-border">
-                  🔗 {authProvider}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 pt-1">
-            <button 
-              id="btn-settings-edit"
-              onClick={() => onClose()}
-              className="py-3 px-4 min-h-[48px] rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-xs text-center transition-all cursor-pointer flex items-center justify-center"
-            >
-              {mt("modifier_profil")}
-            </button>
-            <button 
-              id="btn-settings-reset-pass"
-              onClick={() => sendPasswordReset()}
-              className="py-3 px-4 min-h-[48px] rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-xs text-center transition-all cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <Key className="w-4 h-4 text-afri-gold" />
-              Réinitialiser Pass
-            </button>
-            <button 
-              id="btn-settings-view-heritage"
-              onClick={() => onClose()}
-              className="py-3 px-4 min-h-[48px] rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-xs text-center transition-all cursor-pointer col-span-2 flex items-center justify-center"
-            >
-              {mt("voir_heritage")}
-            </button>
-          </div>
-
-          <button 
-            id="btn-settings-logout"
-            onClick={() => {
-              if (onLogout) onLogout();
-            }}
-            className="w-full py-3 px-4 min-h-[48px] rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 hover:text-red-300 font-bold text-xs transition-all cursor-pointer flex items-center justify-center"
-          >
-            {mt("deconnexion")}
-          </button>
-        </div>
 
         {/* 2. APPARENCE & THÈME */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
@@ -794,106 +717,7 @@ export default function SettingsModal({
           </div>
         </div>
 
-        {/* 2C. PAIEMENTS & WALLET */}
-        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
-          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            💳 PAIEMENTS & PORTEFEUILLE SÉCURISÉ
-          </h2>
 
-          <div className="space-y-3.5">
-            {/* PIN Wallet */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-afri-bg border border-afri-border">
-              <div>
-                <span className="text-[11px] font-bold text-afri-text block">PIN Wallet Sécurisé</span>
-                <p className="text-[9px] text-afri-text-muted">Code PIN à 4 chiffres configuré pour valider vos retraits</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => showToast("🔐 Code PIN du Wallet vérifié et actif !", "success")}
-                className="py-1.5 px-3 rounded-lg bg-afri-gold/15 border border-afri-gold text-afri-gold font-bold text-[10px] uppercase hover:bg-afri-gold/25 transition-all"
-              >
-                Modifier PIN
-              </button>
-            </div>
-
-            {/* Authentification biométrique */}
-            <label className="flex items-center justify-between cursor-pointer group">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Authentification Biométrique (TouchID / FaceID)</span>
-                <p className="text-[9px] text-afri-text-muted leading-none">Exiger l'empreinte pour valider les paiements et retraits</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={payments.biometricAuth}
-                onChange={(e) => updatePaymentPref('biometricAuth', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
-            </label>
-
-            {/* Mobile Money préféré */}
-            <div className="space-y-1">
-              <label className="text-[9px] font-mono text-afri-text-muted uppercase block">Opérateur Mobile Money préféré</label>
-              <select
-                value={payments.preferredMobileMoney}
-                onChange={(e) => updatePaymentPref('preferredMobileMoney', e.target.value)}
-                className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text focus:outline-none"
-              >
-                <option value="Orange Money">Orange Money Côte d'Ivoire 🍊</option>
-                <option value="Wave Côte d'Ivoire">Wave Mobile Money 🌊</option>
-                <option value="MTN MoMo">MTN Mobile Money 💛</option>
-                <option value="Moov Money">Moov Money Flooz 💙</option>
-              </select>
-            </div>
-
-            {/* Devise */}
-            <div className="space-y-1">
-              <label className="text-[9px] font-mono text-afri-text-muted uppercase block">Devise d'affichage principale</label>
-              <select
-                value={payments.currency}
-                onChange={(e) => updatePaymentPref('currency', e.target.value)}
-                className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text focus:outline-none"
-              >
-                <option value="FCFA (XOF)">FCFA (XOF) — Franc CFA Afrique de l'Ouest</option>
-                <option value="EUR (€)">EUR (€) — Euro</option>
-                <option value="USD ($)">USD ($) — US Dollar</option>
-              </select>
-            </div>
-
-            {/* Limite quotidienne */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[9px] font-mono text-afri-text-muted">
-                <span>Limite quotidienne de transaction:</span>
-                <span className="text-afri-gold font-bold">{payments.dailyLimit.toLocaleString()} FCFA</span>
-              </div>
-              <input
-                type="range"
-                min="50000"
-                max="2000000"
-                step="50000"
-                value={payments.dailyLimit}
-                onChange={(e) => updatePaymentPref('dailyLimit', parseInt(e.target.value, 10))}
-                className="w-full h-1.5 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-afri-gold"
-              />
-            </div>
-
-            {/* Confirmation des paiements */}
-            <label className="flex items-center justify-between cursor-pointer group">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Confirmation obligatoire avant débit</span>
-                <p className="text-[9px] text-afri-text-muted leading-none">Afficher l'écran de récapitulatif détaillé pour chaque gombo</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={payments.paymentConfirmation}
-                onChange={(e) => updatePaymentPref('paymentConfirmation', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
-            </label>
-          </div>
-        </div>
 
         {/* 2D. RÉSEAU & PERFORMANCE */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">

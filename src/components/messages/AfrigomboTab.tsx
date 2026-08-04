@@ -146,7 +146,7 @@ export default function AfrigomboTab({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37] shrink-0">
-                <img src="/logo.png" alt="" className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
+                <img src="/logo_afrigombo.png" alt="" className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
               </div>
               <div>
                 <h3 className="text-xs font-black uppercase text-afri-text tracking-wider flex items-center gap-1.5">
@@ -201,13 +201,13 @@ export default function AfrigomboTab({
           </p>
 
           <div className="space-y-2">
-            <div className="flex gap-2">
+            <div className="flex flex-col xs:flex-row gap-2">
               <input
                 type="text"
                 placeholder="Ex: Comment fonctionne le paiement séquestre ?"
                 value={aiAssistantQuery}
                 onChange={(e) => setAiAssistantQuery(e.target.value)}
-                className="flex-1 px-3.5 py-2.5 bg-afri-bg border border-afri-border rounded-xl text-xs text-afri-text focus:outline-none focus:border-[#D4AF37] placeholder:text-afri-text-muted"
+                className="flex-1 px-3.5 py-2.5 bg-afri-bg border border-afri-border rounded-xl text-xs text-afri-text focus:outline-none focus:border-[#D4AF37] placeholder:text-afri-text-muted min-w-0"
               />
               <button
                 onClick={() => {
@@ -229,7 +229,7 @@ export default function AfrigomboTab({
                   }, 600);
                 }}
                 disabled={isAiLoading}
-                className="px-4 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-bold text-xs uppercase rounded-xl transition cursor-pointer shrink-0 flex items-center gap-1"
+                className="px-4 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-bold text-xs uppercase rounded-xl transition cursor-pointer xs:shrink-0 flex items-center justify-center gap-1 w-full xs:w-auto"
               >
                 {isAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                 Demander

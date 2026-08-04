@@ -55,12 +55,12 @@ export default function AdminSupportCenter({ audioSynth }: { audioSynth?: any })
 
     const q = query(
       collection(db, "supportMessages"),
-      where("conversationId", "==", selectedConversation.id),
-      orderBy("createdAt", "asc")
+      where("conversationId", "==", selectedConversation.id)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      msgs.sort((a: any, b: any) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
       setMessages(msgs);
       
       // Clear unread count for support

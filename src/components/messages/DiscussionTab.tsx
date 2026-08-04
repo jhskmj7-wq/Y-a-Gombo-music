@@ -234,7 +234,7 @@ export default function DiscussionTab({
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-11 h-11 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37] overflow-hidden shrink-0">
-                <img src="/logo.png" alt="Support" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <img src="/logo_afrigombo.png" alt="Support" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-afri-bg-sec rounded-full" />
             </div>

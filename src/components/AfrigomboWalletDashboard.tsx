@@ -23,7 +23,12 @@ import {
   Scan,
   Send,
   Search,
-  Check
+  Check,
+  Settings,
+  Eye,
+  EyeOff,
+  Shield,
+  Fingerprint
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { AndroidPageLayout } from "./layout/AndroidPageLayout";
@@ -35,6 +40,7 @@ import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
 import { supportConfig } from "../supportConfig";
 import { recordWalletTransaction } from "../lib/financial";
 import { SupportService } from "../services/SupportService";
+import { useAppSettings } from "../context/AppSettingsContext";
 
 import { SecurityService } from "../lib/SecurityService";
 
@@ -117,6 +123,60 @@ export default function AfrigomboWalletDashboard({
   const [scanSuccess, setScanSuccess] = useState(false);
   const [scanCopied, setScanCopied] = useState(false);
 
+  // --- WALLET SETTINGS AND PIN SECURITY ---
+  const { payments, updatePaymentPref, showToast } = useAppSettings();
+  const [showWalletSettings, setShowWalletSettings] = useState(false);
+  const [walletPinSettings, setWalletPinSettings] = useState({
+    pinHash: "",
+    pinEnabled: false,
+    pinLength: 4
+  });
+
+  const [pinFlow, setPinFlow] = useState<{
+    mode: "idle" | "create_step1" | "create_step2" | "modify_old" | "modify_new" | "modify_confirm" | "disable_verify" | "enable_verify";
+    length: 4 | 6;
+    tempPin: string;
+    enteredPin: string;
+    errorMsg: string;
+  }>({
+    mode: "idle",
+    length: 4,
+    tempPin: "",
+    enteredPin: "",
+    errorMsg: ""
+  });
+
+  const [activePendingOperation, setActivePendingOperation] = useState<{
+    type: "withdraw" | "transfer";
+    amount: number;
+    recipient?: string;
+    details: string;
+    execute: () => Promise<void>;
+  } | null>(null);
+
+  const [recapConfirmed, setRecapConfirmed] = useState(false);
+
+  const [pinVerificationFlow, setPinVerificationFlow] = useState<{
+    active: boolean;
+    enteredPin: string;
+    errorMsg: string;
+    attempts: number;
+  }>({
+    active: false,
+    enteredPin: "",
+    errorMsg: "",
+    attempts: 0
+  });
+
+  // Secure PIN Hashing (SHA-256 with user UID salt)
+  const hashPIN = async (pin: string, salt: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pin + ":" + salt);
+    const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  };
+
   // Sound Synth Helper
   const playSound = (type: "success" | "click" | "error") => {
     try {
@@ -147,6 +207,11 @@ export default function AfrigomboWalletDashboard({
           revenusMois: uData.wallet?.revenusMois || 0,
           economiesPremium: uData.wallet?.economiesPremium || 0,
           niveauWallet: uData.wallet?.niveauWallet || "Standard"
+        });
+        setWalletPinSettings({
+          pinHash: uData.paymentSettings?.pinHash || "",
+          pinEnabled: uData.paymentSettings?.pinEnabled ?? false,
+          pinLength: uData.paymentSettings?.pinLength || 4,
         });
       }
     });
@@ -406,6 +471,41 @@ export default function AfrigomboWalletDashboard({
     }
   };
 
+  const startSensitiveOperation = (
+    type: "withdraw" | "transfer",
+    amountVal: number,
+    detailsText: string,
+    recipientText: string,
+    executeFn: () => Promise<void>
+  ) => {
+    const isPinActive = !!(walletPinSettings.pinEnabled && walletPinSettings.pinHash);
+    const isConfirmActive = payments.paymentConfirmation;
+
+    if (!isPinActive && !isConfirmActive) {
+      executeFn();
+      return;
+    }
+
+    // Set the active pending operation details
+    setActivePendingOperation({
+      type,
+      amount: amountVal,
+      recipient: recipientText,
+      details: detailsText,
+      execute: executeFn
+    });
+
+    setRecapConfirmed(false);
+
+    // Reset PIN verification state
+    setPinVerificationFlow({
+      active: !isConfirmActive && isPinActive, // Go straight to PIN if no recap but PIN is active
+      enteredPin: "",
+      errorMsg: "",
+      attempts: 0
+    });
+  };
+
   // MOBILE MONEY WITHDRAWAL HANDLER (UPDATED FOR BÊTA)
   const handleWithdrawRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -419,74 +519,85 @@ export default function AfrigomboWalletDashboard({
       return;
     }
 
-    setProcessing(true);
-    try {
-      const reference = "REF-RET-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-      const userName = currentUserProfile?.artisticName || currentUserProfile?.displayName || currentUserProfile?.name || "Membre Gombo";
-      const userPhoto = currentUserProfile?.avatarUrl || currentUserProfile?.photoURL || "";
-      const nowIso = new Date().toISOString();
-
-      // 1. Create transaction doc in `transactions` collection
-      const txData = {
-        userId: uid,
-        userName: userName,
-        userPhoto: userPhoto,
-        amount: withdrawAmount,
-        montant: withdrawAmount,
-        type: "retrait",
-        status: "en_attente",
-        statut: "en_attente",
-        reference: reference,
-        description: `Demande de retrait de ${withdrawAmount.toLocaleString('fr-FR')} FCFA vers ${operator.toUpperCase()} (${phoneNumber})`,
-        operator: operator,
-        phoneNumber: phoneNumber,
-        numero: phoneNumber,
-        createdAt: nowIso,
-        timestamp: serverTimestamp()
-      };
-
-      const txRef = await addDoc(collection(db, "transactions"), txData);
-
-      // 2. Create in `walletWithdrawalRequests` and `walletRequests` collection
-      const withdrawPayload = {
-        id: txRef.id,
-        userId: uid,
-        uid: uid,
-        userName: userName,
-        userPhoto: userPhoto,
-        operator: operator,
-        numero: phoneNumber,
-        phoneNumber: phoneNumber,
-        amount: withdrawAmount,
-        montant: withdrawAmount,
-        type: "withdraw",
-        reference: reference,
-        status: "pending_review",
-        statut: "en_attente",
-        createdAt: serverTimestamp(),
-        createdAtIso: nowIso
-      };
-
-      await setDoc(doc(db, "walletWithdrawalRequests", txRef.id), withdrawPayload);
-      await setDoc(doc(db, "walletRequests", txRef.id), withdrawPayload);
-
-      // Send automated support message for withdrawal request
+    const executeFn = async () => {
+      setProcessing(true);
       try {
-        const supportMessageText = `💸 NOUVELLE DEMANDE DE RETRAIT\n\n• Montant : ${withdrawAmount.toLocaleString('fr-FR')} FCFA\n• Date : ${new Date().toLocaleDateString('fr-FR')}\n• Référence : ${reference}\n• Statut : En attente\n• Moyen : ${operator.toUpperCase()} (${phoneNumber})`;
-        await SupportService.sendSystemSupportMessage(uid, currentUserProfile, supportMessageText, "Wallet");
-      } catch (supportErr) {
-        console.warn("Could not notify support of withdrawal:", supportErr);
-      }
+        const reference = "REF-RET-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+        const userName = currentUserProfile?.artisticName || currentUserProfile?.displayName || currentUserProfile?.name || "Membre Gombo";
+        const userPhoto = currentUserProfile?.avatarUrl || currentUserProfile?.photoURL || "";
+        const nowIso = new Date().toISOString();
 
-      setCreatedDepositRef(reference);
-      setWithdrawSubmitted(true);
-      addToTerminal(`[BÊTA RETRAIT] Demande ${reference} de ${withdrawAmount.toLocaleString('fr-FR')} FCFA transmise au Centre Fondateur.`);
-    } catch (err) {
-      console.error("Withdrawal error", err);
-      alert("Erreur lors de la création de la demande de retrait.");
-    } finally {
-      setProcessing(false);
-    }
+        // 1. Create transaction doc in `transactions` collection
+        const txData = {
+          userId: uid,
+          userName: userName,
+          userPhoto: userPhoto,
+          amount: withdrawAmount,
+          montant: withdrawAmount,
+          type: "retrait",
+          status: "en_attente",
+          statut: "en_attente",
+          reference: reference,
+          description: `Demande de retrait de ${withdrawAmount.toLocaleString('fr-FR')} FCFA vers ${operator.toUpperCase()} (${phoneNumber})`,
+          operator: operator,
+          phoneNumber: phoneNumber,
+          numero: phoneNumber,
+          createdAt: nowIso,
+          timestamp: serverTimestamp()
+        };
+
+        const txRef = await addDoc(collection(db, "transactions"), txData);
+
+        // 2. Create in `walletWithdrawalRequests` and `walletRequests` collection
+        const withdrawPayload = {
+          id: txRef.id,
+          userId: uid,
+          uid: uid,
+          userName: userName,
+          userPhoto: userPhoto,
+          operator: operator,
+          numero: phoneNumber,
+          phoneNumber: phoneNumber,
+          amount: withdrawAmount,
+          montant: withdrawAmount,
+          type: "withdraw",
+          reference: reference,
+          status: "pending_review",
+          statut: "en_attente",
+          createdAt: serverTimestamp(),
+          createdAtIso: nowIso
+        };
+
+        await setDoc(doc(db, "walletWithdrawalRequests", txRef.id), withdrawPayload);
+        await setDoc(doc(db, "walletRequests", txRef.id), withdrawPayload);
+
+        // Send automated support message for withdrawal request
+        try {
+          const supportMessageText = `💸 NOUVELLE DEMANDE DE RETRAIT\n\n• Montant : ${withdrawAmount.toLocaleString('fr-FR')} FCFA\n• Date : ${new Date().toLocaleDateString('fr-FR')}\n• Référence : ${reference}\n• Statut : En attente\n• Moyen : ${operator.toUpperCase()} (${phoneNumber})`;
+          await SupportService.sendSystemSupportMessage(uid, currentUserProfile, supportMessageText, "Wallet");
+        } catch (supportErr) {
+          console.warn("Could not notify support of withdrawal:", supportErr);
+        }
+
+        setCreatedDepositRef(reference);
+        setWithdrawSubmitted(true);
+        addToTerminal(`[BÊTA RETRAIT] Demande ${reference} de ${withdrawAmount.toLocaleString('fr-FR')} FCFA transmise au Centre Fondateur.`);
+      } catch (err) {
+        console.error("Withdrawal error", err);
+        alert("Erreur lors de la création de la demande de retrait.");
+      } finally {
+        setProcessing(false);
+      }
+    };
+
+    // Intercept with PIN / Confirmation
+    startSensitiveOperation(
+      "withdraw",
+      withdrawAmount,
+      `Demande de retrait vers ${operator.toUpperCase()} (${phoneNumber})`,
+      `${operator.toUpperCase()} (${phoneNumber})`,
+      executeFn
+    );
   };
 
   // P2P INSTANT TRANSFER / SCANNER HANDLER
@@ -495,38 +606,326 @@ export default function AfrigomboWalletDashboard({
     const sendAmt = Number(scanAmount);
     if (!sendAmt || sendAmt <= 0 || sendAmt > wallet.soldeDisponible || !scanRecipient || processing) return;
 
-    setProcessing(true);
+    const executeFn = async () => {
+      setProcessing(true);
+      playSound("click");
+
+      try {
+        // 1. Debit sender's wallet in Firestore `users/{uid}`
+        const newDisponible = wallet.soldeDisponible - sendAmt;
+        await setDoc(doc(db, "users", uid), {
+          wallet: {
+            soldeDisponible: newDisponible,
+            retraits: (wallet.retraits || 0) + sendAmt
+          }
+        }, { merge: true });
+
+        // 2. Record transaction for sender
+        await recordWalletTransaction({
+          userId: uid,
+          userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
+          type: "debit_publication",
+          amount: sendAmt,
+          status: "success",
+          description: `Transfert P2P / QR à ${scanRecipient}`,
+          userConcerned: scanRecipient
+        });
+
+        playSound("success");
+        setScanSuccess(true);
+        addToTerminal(`[WALLET] 💸 Transfert instantané de ${sendAmt.toLocaleString('fr-FR')} FCFA effectué vers ${scanRecipient}.`);
+      } catch (err) {
+        console.error("P2P transfer error", err);
+      } finally {
+        setProcessing(false);
+      }
+    };
+
+    // Intercept with PIN / Confirmation
+    startSensitiveOperation(
+      "transfer",
+      sendAmt,
+      `Transfert instantané P2P à ${scanRecipient}`,
+      scanRecipient,
+      executeFn
+    );
+  };
+
+  // PIN Key Press Handlers for Settings & Operations
+  const handlePinKeyPress = (num: string) => {
     playSound("click");
+    setPinFlow(prev => {
+      if (prev.enteredPin.length >= prev.length) return prev;
+      const nextPin = prev.enteredPin + num;
+      const nextState = { ...prev, enteredPin: nextPin, errorMsg: "" };
+      
+      if (nextPin.length === prev.length) {
+        setTimeout(() => handlePinSubmit(nextState), 200);
+      }
+      return nextState;
+    });
+  };
 
-    try {
-      // 1. Debit sender's wallet in Firestore `users/{uid}`
-      const newDisponible = wallet.soldeDisponible - sendAmt;
-      await setDoc(doc(db, "users", uid), {
-        wallet: {
-          soldeDisponible: newDisponible,
-          retraits: (wallet.retraits || 0) + sendAmt
-        }
-      }, { merge: true });
+  const handlePinDelete = () => {
+    playSound("click");
+    setPinFlow(prev => ({
+      ...prev,
+      enteredPin: prev.enteredPin.slice(0, -1),
+      errorMsg: ""
+    }));
+  };
 
-      // 2. Record transaction for sender
-      await recordWalletTransaction({
-        userId: uid,
-        userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
-        type: "debit_publication",
-        amount: sendAmt,
-        status: "success",
-        description: `Transfert P2P / QR à ${scanRecipient}`,
-        userConcerned: scanRecipient
+  const handlePinSubmit = async (currentState: typeof pinFlow) => {
+    const { mode, length, enteredPin, tempPin } = currentState;
+    
+    if (mode === "create_step1") {
+      setPinFlow({
+        mode: "create_step2",
+        length,
+        tempPin: enteredPin,
+        enteredPin: "",
+        errorMsg: ""
       });
-
-      playSound("success");
-      setScanSuccess(true);
-      addToTerminal(`[WALLET] 💸 Transfert instantané de ${sendAmt.toLocaleString('fr-FR')} FCFA effectué vers ${scanRecipient}.`);
-    } catch (err) {
-      console.error("P2P transfer error", err);
-    } finally {
-      setProcessing(false);
+      return;
     }
+    
+    if (mode === "create_step2") {
+      if (enteredPin !== tempPin) {
+        playSound("error");
+        setPinFlow({
+          mode: "create_step1",
+          length,
+          tempPin: "",
+          enteredPin: "",
+          errorMsg: "Les codes PIN ne correspondent pas. Recommencez."
+        });
+        return;
+      }
+      
+      setProcessing(true);
+      try {
+        const hash = await hashPIN(enteredPin, uid);
+        await setDoc(doc(db, "users", uid), {
+          paymentSettings: {
+            pinHash: hash,
+            pinEnabled: true,
+            pinLength: length
+          }
+        }, { merge: true });
+        
+        playSound("success");
+        setWalletPinSettings({
+          pinHash: hash,
+          pinEnabled: true,
+          pinLength: length
+        });
+        setPinFlow({ mode: "idle", length: 4, tempPin: "", enteredPin: "", errorMsg: "" });
+        showToast("🔐 Votre code PIN Wallet a été créé et activé !");
+      } catch (err) {
+        console.error(err);
+        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: "Erreur de stockage." }));
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+    
+    if (mode === "modify_old") {
+      const hashed = await hashPIN(enteredPin, uid);
+      if (hashed !== walletPinSettings.pinHash) {
+        playSound("error");
+        setPinFlow(prev => ({
+          ...prev,
+          enteredPin: "",
+          errorMsg: "Code PIN actuel incorrect."
+        }));
+        return;
+      }
+      
+      setPinFlow({
+        mode: "modify_new",
+        length,
+        tempPin: "",
+        enteredPin: "",
+        errorMsg: ""
+      });
+      return;
+    }
+    
+    if (mode === "modify_new") {
+      setPinFlow({
+        mode: "modify_confirm",
+        length,
+        tempPin: enteredPin,
+        enteredPin: "",
+        errorMsg: ""
+      });
+      return;
+    }
+    
+    if (mode === "modify_confirm") {
+      if (enteredPin !== tempPin) {
+        playSound("error");
+        setPinFlow({
+          mode: "modify_new",
+          length,
+          tempPin: "",
+          enteredPin: "",
+          errorMsg: "Les codes PIN ne correspondent pas. Recommencez."
+        });
+        return;
+      }
+      
+      setProcessing(true);
+      try {
+        const hash = await hashPIN(enteredPin, uid);
+        await setDoc(doc(db, "users", uid), {
+          paymentSettings: {
+            pinHash: hash,
+            pinLength: length
+          }
+        }, { merge: true });
+        
+        playSound("success");
+        setWalletPinSettings(prev => ({
+          ...prev,
+          pinHash: hash,
+          pinLength: length
+        }));
+        setPinFlow({ mode: "idle", length: 4, tempPin: "", enteredPin: "", errorMsg: "" });
+        showToast("🔐 Votre code PIN Wallet a été modifié avec succès !");
+      } catch (err) {
+        console.error(err);
+        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: "Erreur de stockage." }));
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+    
+    if (mode === "disable_verify") {
+      const hashed = await hashPIN(enteredPin, uid);
+      if (hashed !== walletPinSettings.pinHash) {
+        playSound("error");
+        setPinFlow(prev => ({
+          ...prev,
+          enteredPin: "",
+          errorMsg: "Code PIN incorrect."
+        }));
+        return;
+      }
+      
+      setProcessing(true);
+      try {
+        await setDoc(doc(db, "users", uid), {
+          paymentSettings: {
+            pinEnabled: false
+          }
+        }, { merge: true });
+        
+        playSound("success");
+        setWalletPinSettings(prev => ({
+          ...prev,
+          pinEnabled: false
+        }));
+        setPinFlow({ mode: "idle", length: 4, tempPin: "", enteredPin: "", errorMsg: "" });
+        showToast("🔓 Code PIN désactivé avec succès.");
+      } catch (err) {
+        console.error(err);
+        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: "Erreur lors de la désactivation." }));
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+
+    if (mode === "enable_verify") {
+      const hashed = await hashPIN(enteredPin, uid);
+      if (hashed !== walletPinSettings.pinHash) {
+        playSound("error");
+        setPinFlow(prev => ({
+          ...prev,
+          enteredPin: "",
+          errorMsg: "Code PIN incorrect."
+        }));
+        return;
+      }
+      
+      setProcessing(true);
+      try {
+        await setDoc(doc(db, "users", uid), {
+          paymentSettings: {
+            pinEnabled: true
+          }
+        }, { merge: true });
+        
+        playSound("success");
+        setWalletPinSettings(prev => ({
+          ...prev,
+          pinEnabled: true
+        }));
+        setPinFlow({ mode: "idle", length: 4, tempPin: "", enteredPin: "", errorMsg: "" });
+        showToast("🔐 Code PIN réactivé avec succès.");
+      } catch (err) {
+        console.error(err);
+        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: "Erreur lors de la réactivation." }));
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+  };
+
+  const handleVerifyPinKeyPress = async (num: string) => {
+    playSound("click");
+    if (pinVerificationFlow.enteredPin.length >= walletPinSettings.pinLength) return;
+    
+    const nextPin = pinVerificationFlow.enteredPin + num;
+    setPinVerificationFlow(prev => ({ ...prev, enteredPin: nextPin, errorMsg: "" }));
+
+    if (nextPin.length === walletPinSettings.pinLength) {
+      setProcessing(true);
+      try {
+        const hashed = await hashPIN(nextPin, uid);
+        if (hashed === walletPinSettings.pinHash) {
+          playSound("success");
+          if (activePendingOperation) {
+            await activePendingOperation.execute();
+          }
+          setActivePendingOperation(null);
+          setPinVerificationFlow({ active: false, enteredPin: "", errorMsg: "", attempts: 0 });
+        } else {
+          playSound("error");
+          const nextAttempts = pinVerificationFlow.attempts + 1;
+          if (nextAttempts >= 3) {
+            alert("🔒 Sécurité : 3 tentatives incorrectes. Opération annulée.");
+            setActivePendingOperation(null);
+            setPinVerificationFlow({ active: false, enteredPin: "", errorMsg: "", attempts: 0 });
+          } else {
+            setPinVerificationFlow({
+              active: true,
+              enteredPin: "",
+              errorMsg: `Code PIN incorrect. (${3 - nextAttempts} tentatives restantes)`,
+              attempts: nextAttempts
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Verification error", err);
+        setPinVerificationFlow(prev => ({ ...prev, enteredPin: "", errorMsg: "Erreur de vérification" }));
+      } finally {
+        setProcessing(false);
+      }
+    }
+  };
+
+  const handleVerifyPinDelete = () => {
+    playSound("click");
+    setPinVerificationFlow(prev => ({
+      ...prev,
+      enteredPin: prev.enteredPin.slice(0, -1),
+      errorMsg: ""
+    }));
   };
 
   const openDeposit = () => {
@@ -567,8 +966,382 @@ export default function AfrigomboWalletDashboard({
     return true;
   });
 
+  if (showWalletSettings) {
+    return (
+      <AndroidPageLayout
+        header={
+          <header className="flex-none bg-afri-bg/95 backdrop-blur-md border-b border-afri-border/60 px-3 py-2.5 flex items-center justify-between gap-2 z-35 shrink-0" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))', paddingLeft: 'max(12px, env(safe-area-inset-left))', paddingRight: 'max(12px, env(safe-area-inset-right))' }}>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <button
+                onClick={() => {
+                  playSound("click");
+                  setShowWalletSettings(false);
+                }}
+                className="p-2 text-zinc-400 hover:text-afri-gold transition-colors shrink-0 flex items-center justify-center bg-afri-bg-sec border border-afri-border rounded-xl w-9 h-9 active:scale-95"
+              >
+                <ChevronRight className="w-5 h-5 rotate-180" />
+              </button>
+              <h1 className="text-sm sm:text-base font-black uppercase tracking-wider text-afri-text truncate font-display">
+                Préférences du Wallet
+              </h1>
+            </div>
+          </header>
+        }
+        scrollable={true}
+        className="pb-safe bg-afri-bg"
+      >
+        <div className="max-w-xl mx-auto space-y-6 px-4 py-4 text-left animate-fadeIn">
+          {/* Section 1: Security */}
+          <div className="space-y-3">
+            <h2 className="text-[10px] font-mono font-black tracking-widest text-zinc-500 uppercase flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
+              🔐 SÉCURITÉ DU PORTEFEUILLE
+            </h2>
+
+            <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4">
+              {/* PIN Code Item */}
+              <div className="flex flex-col gap-3 p-3.5 rounded-xl bg-afri-bg border border-afri-border">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="space-y-0.5">
+                    <span className="text-[11px] font-bold text-afri-text block">PIN Wallet Sécurisé</span>
+                    <p className="text-[9px] text-zinc-400">Exiger un code secret pour valider vos transferts et retraits d'argent.</p>
+                  </div>
+                  <div>
+                    {walletPinSettings.pinHash ? (
+                      walletPinSettings.pinEnabled ? (
+                        <span className="px-2 py-0.5 text-[8px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded font-mono uppercase">
+                          ACTIVÉ ({walletPinSettings.pinLength}D)
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 text-[8px] font-bold bg-zinc-800 text-zinc-400 border border-zinc-700 rounded font-mono uppercase">
+                          DÉSACTIVÉ
+                        </span>
+                      )
+                    ) : (
+                      <span className="px-2 py-0.5 text-[8px] font-bold bg-amber-500/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded font-mono uppercase">
+                        NON CONFIGURÉ
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5 pt-1">
+                  {!walletPinSettings.pinHash ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playSound("click");
+                        setPinFlow({
+                          mode: "create_step1",
+                          length: 4,
+                          tempPin: "",
+                          enteredPin: "",
+                          errorMsg: ""
+                        });
+                      }}
+                      className="col-span-2 py-2.5 px-3 rounded-lg bg-gradient-to-r from-[#D4AF37] to-amber-600 hover:from-amber-500 hover:to-amber-600 text-black font-black text-[10px] uppercase transition-all shadow active:scale-98"
+                    >
+                      Créer un code PIN
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          playSound("click");
+                          setPinFlow({
+                            mode: "modify_old",
+                            length: walletPinSettings.pinLength as 4 | 6,
+                            tempPin: "",
+                            enteredPin: "",
+                            errorMsg: ""
+                          });
+                        }}
+                        className="py-2.5 px-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-afri-text font-bold text-[10px] uppercase transition-all active:scale-98"
+                      >
+                        Modifier le PIN
+                      </button>
+
+                      {walletPinSettings.pinEnabled ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            playSound("click");
+                            setPinFlow({
+                              mode: "disable_verify",
+                              length: walletPinSettings.pinLength as 4 | 6,
+                              tempPin: "",
+                              enteredPin: "",
+                              errorMsg: ""
+                            });
+                          }}
+                          className="py-2.5 px-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/15 font-bold text-[10px] uppercase transition-all active:scale-98"
+                        >
+                          Désactiver le PIN
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            playSound("click");
+                            setPinFlow({
+                              mode: "enable_verify",
+                              length: walletPinSettings.pinLength as 4 | 6,
+                              tempPin: "",
+                              enteredPin: "",
+                              errorMsg: ""
+                            });
+                          }}
+                          className="py-2.5 px-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/15 font-bold text-[10px] uppercase transition-all active:scale-98"
+                        >
+                          Réactiver le PIN
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Biometrics Toggle */}
+              <label className="flex items-center justify-between cursor-pointer group p-1.5">
+                <div className="space-y-0.5 flex-1 pr-4">
+                  <div className="flex items-center gap-1.5">
+                    <Fingerprint className="w-4 h-4 text-[#D4AF37]" />
+                    <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Authentification Biométrique</span>
+                  </div>
+                  <p className="text-[9px] text-zinc-400 leading-tight">Autoriser l'empreinte digitale pour déverrouiller et accélérer vos transactions.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={payments.biometricAuth}
+                  onChange={(e) => updatePaymentPref('biometricAuth', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border shrink-0"></div>
+              </label>
+            </div>
+          </div>
+
+          {/* Section 2: Preferences */}
+          <div className="space-y-3">
+            <h2 className="text-[10px] font-mono font-black tracking-widest text-zinc-500 uppercase flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
+              ⚙️ PRÉFÉRENCES DE PAIEMENT
+            </h2>
+
+            <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4">
+              {/* Preferred operator */}
+              <div className="space-y-1">
+                <label className="text-[9px] font-mono text-zinc-400 uppercase block font-bold">Opérateur Mobile Money préféré</label>
+                <select
+                  value={payments.preferredMobileMoney}
+                  onChange={(e) => updatePaymentPref('preferredMobileMoney', e.target.value)}
+                  className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-xs text-afri-text focus:outline-none focus:border-afri-gold font-sans"
+                >
+                  <option value="Orange Money">Orange Money Côte d'Ivoire 🍊</option>
+                  <option value="Wave Côte d'Ivoire">Wave Mobile Money 🌊</option>
+                  <option value="MTN MoMo">MTN Mobile Money 💛</option>
+                  <option value="Moov Money">Moov Money Flooz 💙</option>
+                </select>
+              </div>
+
+              {/* Currency */}
+              <div className="space-y-1">
+                <label className="text-[9px] font-mono text-zinc-400 uppercase block font-bold">Devise d'affichage principale</label>
+                <select
+                  value={payments.currency}
+                  onChange={(e) => updatePaymentPref('currency', e.target.value)}
+                  className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-xs text-afri-text focus:outline-none focus:border-afri-gold font-sans"
+                >
+                  <option value="FCFA (XOF)">FCFA (XOF) — Franc CFA Afrique de l'Ouest</option>
+                  <option value="EUR (€)">EUR (€) — Euro</option>
+                  <option value="USD ($)">USD ($) — US Dollar</option>
+                </select>
+              </div>
+
+              {/* Daily Limit */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[9px] font-mono text-zinc-400">
+                  <span className="font-bold uppercase">Limite quotidienne de transaction</span>
+                  <span className="text-afri-gold font-black">{payments.dailyLimit.toLocaleString()} FCFA</span>
+                </div>
+                <input
+                  type="range"
+                  min="50000"
+                  max="2000000"
+                  step="50000"
+                  value={payments.dailyLimit}
+                  onChange={(e) => updatePaymentPref('dailyLimit', parseInt(e.target.value, 10))}
+                  className="w-full h-1.5 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-afri-gold"
+                />
+              </div>
+
+              {/* Confirmation switch */}
+              <label className="flex items-center justify-between cursor-pointer group pt-2 border-t border-afri-border/60">
+                <div className="space-y-0.5 flex-1 pr-4">
+                  <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Confirmation obligatoire avant débit</span>
+                  <p className="text-[9px] text-zinc-400 leading-tight">Afficher un récapitulatif détaillé pour validation avant chaque retrait ou transfert.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={payments.paymentConfirmation}
+                  onChange={(e) => updatePaymentPref('paymentConfirmation', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border shrink-0"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Immersive PIN settings Flow modal overlay */}
+        <AnimatePresence>
+          {pinFlow.mode !== "idle" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/95 z-50 flex flex-col justify-center items-center px-6"
+            >
+              <div className="w-full max-w-sm space-y-8 text-center">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-16 h-16 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] animate-pulse">
+                    <Shield className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-black text-afri-text uppercase tracking-wider font-display">
+                    {pinFlow.mode === "create_step1" && "Créer votre code PIN"}
+                    {pinFlow.mode === "create_step2" && "Confirmer votre code PIN"}
+                    {pinFlow.mode === "modify_old" && "Ancien Code PIN"}
+                    {pinFlow.mode === "modify_new" && "Nouveau Code PIN"}
+                    {pinFlow.mode === "modify_confirm" && "Confirmer le nouveau PIN"}
+                    {pinFlow.mode === "disable_verify" && "Désactiver la protection PIN"}
+                    {pinFlow.mode === "enable_verify" && "Confirmer votre PIN"}
+                  </h3>
+                  <p className="text-xs text-zinc-400 max-w-xs">
+                    {pinFlow.mode === "create_step1" && "Choisissez un code de sécurité confidentiel."}
+                    {pinFlow.mode === "create_step2" && "Saisissez à nouveau le code PIN pour confirmer."}
+                    {pinFlow.mode === "modify_old" && "Saisissez votre code PIN Wallet actuel."}
+                    {pinFlow.mode === "modify_new" && "Choisissez un nouveau code confidentiel."}
+                    {pinFlow.mode === "modify_confirm" && "Saisissez le nouveau code pour confirmer."}
+                    {pinFlow.mode === "disable_verify" && "Confirmez votre code secret actuel pour désactiver."}
+                    {pinFlow.mode === "enable_verify" && "Saisissez votre code secret actuel pour activer."}
+                  </p>
+                </div>
+
+                {/* Length Choice Toggle - only shown on create step 1 */}
+                {pinFlow.mode === "create_step1" && (
+                  <div className="flex justify-center items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playSound("click");
+                        setPinFlow(p => ({ ...p, length: 4, enteredPin: "" }));
+                      }}
+                      className={`px-3 py-1.5 text-[9px] font-black uppercase font-mono tracking-wider rounded-lg border transition-all ${pinFlow.length === 4 ? "bg-[#D4AF37] text-black border-[#D4AF37]" : "bg-transparent text-zinc-400 border-zinc-800"}`}
+                    >
+                      4 chiffres
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playSound("click");
+                        setPinFlow(p => ({ ...p, length: 6, enteredPin: "" }));
+                      }}
+                      className={`px-3 py-1.5 text-[9px] font-black uppercase font-mono tracking-wider rounded-lg border transition-all ${pinFlow.length === 6 ? "bg-[#D4AF37] text-black border-[#D4AF37]" : "bg-transparent text-zinc-400 border-zinc-800"}`}
+                    >
+                      6 chiffres
+                    </button>
+                  </div>
+                )}
+
+                {/* Password Bullet dots indicators */}
+                <div className="flex justify-center items-center gap-4.5 py-4">
+                  {Array.from({ length: pinFlow.length }).map((_, idx) => {
+                    const isFilled = idx < pinFlow.enteredPin.length;
+                    return (
+                      <div
+                        key={idx}
+                        className={`w-4 h-4 rounded-full border-2 transition-all ${isFilled ? "bg-[#D4AF37] border-[#D4AF37] scale-110 shadow-[0_0_10px_rgba(212,175,55,0.4)]" : "bg-transparent border-zinc-700"}`}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Error message */}
+                {pinFlow.errorMsg && (
+                  <p className="text-xs font-bold text-red-400 font-sans animate-shake">
+                    ⚠️ {pinFlow.errorMsg}
+                  </p>
+                )}
+
+                {/* Virtual Keypad Pad */}
+                <div className="grid grid-cols-3 gap-y-4 gap-x-8 max-w-xs mx-auto pt-4">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => handlePinKeyPress(num.toString())}
+                      className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-xl font-bold font-mono text-afri-text flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+                    >
+                      {num}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playSound("click");
+                      setPinFlow({ mode: "idle", length: 4, tempPin: "", enteredPin: "", errorMsg: "" });
+                    }}
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-[10px] font-black text-zinc-500 hover:text-zinc-400 cursor-pointer uppercase tracking-wider"
+                  >
+                    Fermer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePinKeyPress("0")}
+                    className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-xl font-bold font-mono text-afri-text flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+                  >
+                    0
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePinDelete}
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-300 active:scale-95 cursor-pointer text-lg"
+                  >
+                    ⌫
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </AndroidPageLayout>
+    );
+  }
+
+  const customHeader = (
+    <header className="flex-none bg-afri-bg/95 backdrop-blur-md border-b border-afri-border/60 px-3 py-2.5 flex items-center justify-between gap-2 z-35 shrink-0" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))', paddingLeft: 'max(12px, env(safe-area-inset-left))', paddingRight: 'max(12px, env(safe-area-inset-right))' }}>
+      <div className="flex items-center gap-2.5 min-w-0">
+        {onBack && <button onClick={onBack} className="p-2 text-zinc-400 hover:text-afri-gold transition-colors shrink-0 flex items-center justify-center bg-afri-bg-sec border border-afri-border rounded-xl w-9 h-9 active:scale-95"><ChevronRight className="w-5 h-5 rotate-180" /></button>}
+        <h1 className="text-sm sm:text-base font-black uppercase tracking-wider text-afri-text truncate font-display">
+          Mon Wallet Souverain
+        </h1>
+      </div>
+      <button 
+        id="btn-wallet-settings-toggle"
+        onClick={() => {
+          playSound("click");
+          setShowWalletSettings(true);
+        }}
+        className="p-2 text-zinc-400 hover:text-afri-gold transition-colors shrink-0 flex items-center justify-center bg-afri-bg-sec border border-afri-border rounded-xl w-9 h-9 active:scale-95"
+      >
+        <Settings className="w-4 h-4" />
+      </button>
+    </header>
+  );
+
   return (
-    <AndroidPageLayout title="Mon Wallet Souverain" onBack={onBack} scrollable={false} className="pb-safe">
+    <AndroidPageLayout header={customHeader} scrollable={false} className="pb-safe">
       <div className="w-full space-y-4 text-left animate-fadeIn">
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           1. 💰 SOLDE DISPONIBLE (EN TRÈS GRAND)
@@ -1319,6 +2092,174 @@ export default function AfrigomboWalletDashboard({
           </form>
         )}
       </AndroidBottomSheet>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          SENSITIVE TRANSACTION INTERCEPTION OVERLAY
+          (RECAPITULATIF & VERIFICATION DU PIN)
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <AnimatePresence>
+        {activePendingOperation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/95 z-50 flex flex-col justify-center items-center px-6"
+          >
+            {/* Phase 1: Confirmation obligatoire (Recapitulatif) */}
+            {payments.paymentConfirmation && !recapConfirmed ? (
+              <div className="w-full max-w-sm bg-zinc-950 border border-zinc-800/80 rounded-[24px] p-6 space-y-6 text-center shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#D4AF37]/5 rounded-full blur-[60px] pointer-events-none"></div>
+                
+                <div className="space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#D4AF37] mx-auto">
+                    <AlertTriangle className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-display">
+                    Confirmer l'opération
+                  </h3>
+                  <p className="text-[11px] text-zinc-400">
+                    Veuillez vérifier les informations financières ci-dessous avant de procéder au débit.
+                  </p>
+                </div>
+
+                <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 text-left space-y-3 font-sans">
+                  <div className="flex justify-between items-baseline py-1 border-b border-zinc-800/60 font-mono">
+                    <span className="text-[10px] text-zinc-400 uppercase">Montant</span>
+                    <span className="text-lg font-black text-afri-gold">{activePendingOperation.amount.toLocaleString()} FCFA</span>
+                  </div>
+
+                  <div className="flex justify-between items-center py-1 border-b border-zinc-800/60">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase">Type</span>
+                    <span className="text-[11px] font-bold text-afri-text">
+                      {activePendingOperation.type === "withdraw" ? "Retrait Mobile Money" : "Transfert P2P / QR"}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center py-1 border-b border-zinc-800/60">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase">Bénéficiaire</span>
+                    <span className="text-[11px] font-bold text-afri-text truncate max-w-[180px]">{activePendingOperation.recipient || "N/A"}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center py-1 border-b border-zinc-800/60">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase">Frais Réseau</span>
+                    <span className="text-[11px] font-black text-emerald-400 font-mono">GRATUIT (0 FCFA)</span>
+                  </div>
+
+                  <div className="flex justify-between items-baseline pt-2">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase font-bold">Total Débit</span>
+                    <span className="text-base font-black text-afri-text font-mono">{activePendingOperation.amount.toLocaleString()} FCFA</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playSound("click");
+                      setActivePendingOperation(null);
+                    }}
+                    className="py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-300 font-bold text-xs uppercase tracking-wider transition-all active:scale-98 cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playSound("click");
+                      if (walletPinSettings.pinEnabled && walletPinSettings.pinHash) {
+                        setRecapConfirmed(true);
+                        setPinVerificationFlow(prev => ({ ...prev, active: true }));
+                      } else {
+                        // PIN is disabled, directly execute the action!
+                        playSound("success");
+                        activePendingOperation.execute();
+                        setActivePendingOperation(null);
+                      }
+                    }}
+                    className="py-3 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] to-amber-600 hover:from-amber-500 hover:to-amber-600 text-black font-black text-xs uppercase tracking-wider transition-all shadow-lg active:scale-98 cursor-pointer"
+                  >
+                    Confirmer
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Phase 2: Saisie du PIN obligatoire */
+              <div className="w-full max-w-sm space-y-8 text-center">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-16 h-16 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] animate-pulse">
+                    <Lock className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-lg font-black text-afri-text uppercase tracking-wider font-display">
+                    Saisie du PIN requis
+                  </h3>
+                  <p className="text-xs text-zinc-400">
+                    Veuillez saisir votre code secret du Wallet pour valider cette opération.
+                  </p>
+                </div>
+
+                {/* Password Bullet dots indicators */}
+                <div className="flex justify-center items-center gap-4.5 py-2">
+                  {Array.from({ length: walletPinSettings.pinLength }).map((_, idx) => {
+                    const isFilled = idx < pinVerificationFlow.enteredPin.length;
+                    return (
+                      <div
+                        key={idx}
+                        className={`w-4 h-4 rounded-full border-2 transition-all ${isFilled ? "bg-[#D4AF37] border-[#D4AF37] scale-110 shadow-[0_0_10px_rgba(212,175,55,0.4)]" : "bg-transparent border-zinc-700"}`}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Error message */}
+                {pinVerificationFlow.errorMsg && (
+                  <p className="text-xs font-bold text-red-400 font-sans animate-shake">
+                    ⚠️ {pinVerificationFlow.errorMsg}
+                  </p>
+                )}
+
+                {/* Virtual Keypad Pad */}
+                <div className="grid grid-cols-3 gap-y-4 gap-x-8 max-w-xs mx-auto pt-4">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => handleVerifyPinKeyPress(num.toString())}
+                      className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-xl font-bold font-mono text-afri-text flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+                    >
+                      {num}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playSound("click");
+                      setActivePendingOperation(null);
+                    }}
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-[10px] font-black text-zinc-500 hover:text-zinc-400 cursor-pointer uppercase tracking-wider"
+                  >
+                    Fermer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleVerifyPinKeyPress("0")}
+                    className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-xl font-bold font-mono text-afri-text flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+                  >
+                    0
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleVerifyPinDelete}
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-300 active:scale-95 cursor-pointer text-lg"
+                  >
+                    ⌫
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   </AndroidPageLayout>
   );

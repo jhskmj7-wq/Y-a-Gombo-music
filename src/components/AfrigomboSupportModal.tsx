@@ -62,12 +62,12 @@ export const AfrigomboSupportModal: React.FC<AfrigomboSupportModalProps> = ({
 
     const q = query(
       collection(db, "supportMessages"),
-      where("conversationId", "==", currentUser.uid),
-      orderBy("createdAt", "asc")
+      where("conversationId", "==", currentUser.uid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      msgs.sort((a, b) => new Date((a as any).createdAt || 0).getTime() - new Date((b as any).createdAt || 0).getTime());
       setMessages(msgs);
     }, (err) => {
       console.warn("Messages stream restricted:", err);

@@ -243,7 +243,7 @@ export default function MessagesView({
           id: currentUser.uid,
           isPlaceholder: true,
           userName: "Équipe AFRIGOMBO",
-          userPhoto: "/logo.png",
+          userPhoto: "/logo_afrigombo.png",
           lastMessage: "Bonjour 👋 Comment pouvons-nous vous aider aujourd'hui ?",
           lastMessageAt: new Date().toISOString(),
           unreadCount: { [currentUser.uid]: 0 }
@@ -261,7 +261,7 @@ export default function MessagesView({
         type: "support",
         participants: [currentUser.uid, "afrigombo_support"],
         userName: "Équipe AFRIGOMBO",
-        userPhoto: "/logo.png",
+        userPhoto: "/logo_afrigombo.png",
         ...supportConvo
       });
 
@@ -285,24 +285,15 @@ export default function MessagesView({
     if (activeConvo.type === "support") {
       const q = query(
         collection(db, "supportMessages"),
-        where("conversationId", "==", currentUser.uid),
-        orderBy("createdAt", "asc")
+        where("conversationId", "==", currentUser.uid)
       );
       const unsub = onSnapshot(q, (snapshot) => {
         const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Message));
+        msgs.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
         setMessages(msgs);
         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-      }, () => {
-        const qFallback = query(
-          collection(db, "supportMessages"),
-          where("conversationId", "==", currentUser.uid)
-        );
-        getDocs(qFallback).then(snap => {
-          const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Message));
-          msgs.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
-          setMessages(msgs);
-          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-        });
+      }, (err) => {
+        console.error("Error listening to support messages:", err);
       });
       return () => unsub();
     } else {
@@ -618,7 +609,7 @@ export default function MessagesView({
       type: "support",
       participants: [currentUser.uid, "afrigombo_support"],
       userName: "Équipe AFRIGOMBO",
-      userPhoto: "/logo.png",
+      userPhoto: "/logo_afrigombo.png",
       ...supportConvo
     });
     if (supportConvo?.unreadCount?.[currentUser?.uid] > 0) {
@@ -765,7 +756,7 @@ export default function MessagesView({
 
                         <div className="relative shrink-0">
                           <img
-                            src={activeConvo.type === "support" ? "/logo.png" : partnerDetails?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"}
+                            src={activeConvo.type === "support" ? "/logo_afrigombo.png" : partnerDetails?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"}
                             alt=""
                             className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]/40"
                             referrerPolicy="no-referrer"

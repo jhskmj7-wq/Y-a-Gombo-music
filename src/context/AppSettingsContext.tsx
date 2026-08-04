@@ -70,6 +70,9 @@ export interface PaymentSettings {
   currency: string;
   dailyLimit: number;
   paymentConfirmation: boolean;
+  pinEnabled?: boolean;
+  pinLength?: number;
+  pinHash?: string;
 }
 
 export interface NetworkSettings {
