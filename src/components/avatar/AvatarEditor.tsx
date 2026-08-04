@@ -342,7 +342,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
       
       // Map all single-item categories
       Object.entries(finalConfig).forEach(([key, value]) => {
-        if (typeof value === 'string' && value && !['skinColor', 'faceShape', 'background'].includes(key)) {
+        if (typeof value === 'string' && value && !(['skinColor', 'faceShape', 'background']?.includes(key))) {
           itemsV2[key] = value;
         }
       });
@@ -418,7 +418,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
       return next;
     });
 
-    const isCurrentlyEquipped = inventory.equippedItems.includes(itemId);
+    const isCurrentlyEquipped = inventory?.equippedItems?.includes(itemId) || false;
     try {
       await AvatarEngine.equipItem(currentUser.uid, itemId, !isCurrentlyEquipped, category);
     } catch (err) {
@@ -435,7 +435,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
     );
   }
 
-  const ownedStoreItems = storeItems.filter(item => inventory.ownedItems.includes(item.id));
+  const ownedStoreItems = storeItems.filter(item => inventory?.ownedItems?.includes(item.id) || false);
   const itemsInActiveSubCategory = [
     ...FREE_DEFAULT_ITEMS.filter(item => item.category === activeSubCategory),
     ...ownedStoreItems.filter(item => item.category === activeSubCategory)

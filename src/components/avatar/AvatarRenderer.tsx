@@ -46,7 +46,7 @@ const AvatarRenderer = memo(({ config, size = 120, className = "", storeItems = 
       } else {
         // V1 Fallback
         Object.keys(config).forEach(key => {
-          if (['skinColor', 'faceShape', 'background'].includes(key)) return;
+          if (Array.isArray(['skinColor', 'faceShape', 'background']) && ['skinColor', 'faceShape', 'background']?.includes(key)) return;
           const val = (config as any)[key];
           if (Array.isArray(val)) {
              val.forEach(itemId => {
