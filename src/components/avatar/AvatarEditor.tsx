@@ -482,7 +482,11 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
           {isClothes && <path d="M40 200 Q100 120 160 200 Z" fill={config.skinColor} />}
           {isShoes && <path d="M50 170 L150 170" stroke="#444" strokeWidth="2" />}
           
-          <g dangerouslySetInnerHTML={{ __html: item.svgContent }} />
+          {item.svgContent ? (
+            <g dangerouslySetInnerHTML={{ __html: item.svgContent }} />
+          ) : item.imageUrl ? (
+            <image href={item.imageUrl} x="40" y="40" width="120" height="120" preserveAspectRatio="xMidYMid slice" />
+          ) : null}
         </svg>
       );
     }

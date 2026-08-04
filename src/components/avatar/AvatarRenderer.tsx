@@ -148,13 +148,18 @@ const AvatarRenderer = memo(({ config, size = 120, className = "", storeItems = 
 
       result.push({
         zIndex,
-        element: (
+        element: item.svgContent ? (
           <g 
             key={item.id} 
             style={transform ? { transform, transformOrigin: 'center' } : undefined}
-            dangerouslySetInnerHTML={item.svgContent ? { __html: item.svgContent } : undefined}
+            dangerouslySetInnerHTML={{ __html: item.svgContent }}
+          />
+        ) : (
+          <g 
+            key={item.id} 
+            style={transform ? { transform, transformOrigin: 'center' } : undefined}
           >
-            {!item.svgContent && item.imageUrl && (
+            {item.imageUrl && (
                <image href={item.imageUrl} width="200" height="220" preserveAspectRatio="xMidYMid slice" />
             )}
           </g>
