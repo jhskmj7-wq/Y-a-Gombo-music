@@ -345,13 +345,22 @@ export const AvatarEngine = {
       const docRef = doc(db, "userAvatars", userId);
       const snap = await getDoc(docRef);
       if (snap.exists()) {
-        return snap.data() as UserAvatarData;
+        const data = snap.data() as UserAvatarData;
+        // Ensure configV2 structure exists if missing
+        if (!data.configV2 && data.config) {
+          data.configV2 = { items: {} };
+        }
+        return data;
       }
       // Fallback
       const fallbackRef = doc(db, "avatars", userId);
       const fallbackSnap = await getDoc(fallbackRef);
       if (fallbackSnap.exists()) {
-        return fallbackSnap.data() as UserAvatarData;
+        const data = fallbackSnap.data() as UserAvatarData;
+        if (!data.configV2 && data.config) {
+          data.configV2 = { items: {} };
+        }
+        return data;
       }
       return null;
     } catch (e) {
@@ -393,10 +402,10 @@ export const AvatarEngine = {
       await setDoc(doc(db, "userAvatars", userId), payload, { merge: true });
       await setDoc(doc(db, "avatars", userId), payload, { merge: true });
 
-      // Generate SVG data URI if config is present
+      // Generate SVG data URI if config is present (prefers V2)
       let avatarDataUri = null;
-      if (data.config) {
-        avatarDataUri = this.generateAvatarSvg(data.config, storeItems);
+      if (data.configV2 || data.config) {
+        avatarDataUri = this.generateAvatarSvgV2(data.configV2 || { items: {} }, data.config || {}, storeItems);
       }
 
       // Sync choice to main user document in users/{userId}
@@ -404,6 +413,7 @@ export const AvatarEngine = {
       if (data.useAvatarAsProfile !== undefined) {
         userUpdates.useAvatarAsProfile = data.useAvatarAsProfile;
       }
+
       if (avatarDataUri) {
         userUpdates.avatarDataUri = avatarDataUri;
         userUpdates.photoURLAvatar = avatarDataUri;
@@ -416,8 +426,12 @@ export const AvatarEngine = {
           userUpdates.photoURL = avatarDataUri;
         }
       }
+
       if (data.config) {
         userUpdates.avatarConfig = data.config;
+      }
+      if (data.configV2) {
+        userUpdates.avatarConfigV2 = data.configV2;
       }
 
       if (Object.keys(userUpdates).length > 0) {
@@ -559,44 +573,130 @@ export const AvatarEngine = {
    * SVG Avatar Generator Helper
    */
   generateAvatarSvg(config: AvatarConfig, storeItems: AvatarItem[]): string {
-    const skinColor = config?.skinColor || "#8D5524";
-    const bgColor = config?.background || "#18181b";
+    return this.generateAvatarSvgV2({ items: {} }, config, storeItems);
+  },
 
-    const getItemSvg = (itemId: string, defaultSvg: string = "") => {
-      if (!itemId) return defaultSvg;
-      const item = storeItems.find(i => i.id === itemId);
-      return item?.svgContent || defaultSvg;
-    };
+  /**
+   * Professional V2 SVG Generator for Avatars (Semi-realistic)
+   */
+  generateAvatarSvgV2(configV2: any, configV1: AvatarConfig, storeItems: AvatarItem[]): string {
+    const skinColor = configV1?.skinColor || "#8D5524";
+    const bgColor = configV1?.background || "#18181b";
+    
+    const getItem = (itemId: string) => storeItems.find(i => i.id === itemId);
 
-    const faceShapePath = config?.faceShape && config?.faceShape !== 'default'
-      ? (config.faceShape === 'oval' 
-        ? '<path d="M65 110 Q100 135 135 110" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />' 
-        : config.faceShape === 'square'
-          ? '<path d="M60 110 L80 128 L120 128 L140 110" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />'
-          : config.faceShape === 'round'
-            ? '<path d="M65 100 Q100 138 135 100" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />'
-            : config.faceShape === 'diamond'
-              ? '<path d="M65 100 L100 135 L135 100" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />'
-              : '<path d="M60 105 Q100 125 140 105" stroke="#4A3018" stroke-width="1.5" fill="none" opacity="0.3" />')
-      : '';
+    // Precise Rendering Order (Layers)
+    const ORDER: string[] = [
+      'arriere_plans',
+      'corps',
+      'sous_vetement',
+      'tete',
+      'visage_base',
+      'cicatrices',
+      'maquillage',
+      'yeux',
+      'sourcils',
+      'nez',
+      'bouche',
+      'barbe',
+      'moustache',
+      'tee-shirt',
+      'chemise',
+      'pantalons',
+      'jeans',
+      'chaussures',
+      'sneakers',
+      'veste',
+      'manteau',
+      'robes',
+      'costumes',
+      'tenues_africaines',
+      'tenues_ivoiriennes',
+      'tenues_scene',
+      'lunettes',
+      'cheveux',
+      'casquettes',
+      'chapeaux',
+      'couronnes',
+      'ecouteurs',
+      'collier',
+      'chaines',
+      'montres',
+      'bracelets',
+      'bagues',
+      'sac',
+      'ailes',
+      'badges',
+      'effets_speciaux'
+    ];
+
+    const layers: string[] = [];
+    const equippedV2 = configV2?.items || {};
+
+    // 1. BACKGROUND
+    if (equippedV2['arriere_plans']) {
+      layers.push(getItem(equippedV2['arriere_plans'])?.svgContent || "");
+    }
+
+    // 2. BASE CHARACTER (Semi-Realistic)
+    // Only add default base if no custom body/head item is equipped
+    if (!equippedV2['corps']) {
+      layers.push(`
+        <g id="character_base">
+          <!-- Torso & Shoulders (Realistic curve) -->
+          <path d="M45 200 C 45 160, 60 140, 100 140 C 140 140, 155 160, 155 200 L 155 210 L 45 210 Z" fill="${skinColor}" />
+          <!-- Neck -->
+          <path d="M88 140 L112 140 L110 120 L90 120 Z" fill="${skinColor}" opacity="0.95" />
+        </g>
+      `);
+    }
+
+    if (!equippedV2['tete']) {
+      layers.push(`
+        <g id="head_base">
+          <!-- Ears -->
+          <circle cx="62" cy="90" r="7" fill="${skinColor}" />
+          <circle cx="138" cy="90" r="7" fill="${skinColor}" />
+          <!-- Face Shape (Semi-Oval/Realistic) -->
+          <path d="M68 85 C 68 40, 132 40, 132 85 C 132 130, 100 145, 100 145 C 100 145, 68 130, 68 85 Z" fill="${skinColor}" />
+        </g>
+      `);
+    }
+
+    // 3. EQUIPMENT LAYERING
+    ORDER.forEach(cat => {
+      if (cat === 'arriere_plans' || cat === 'corps' || cat === 'tete') return;
+      const itemId = equippedV2[cat];
+      if (itemId) {
+        const item = getItem(itemId);
+        if (item?.svgContent) {
+          const cfg = item.engineConfig || { anchorX: 0, anchorY: 0, scaleX: 1, scaleY: 1, rotation: 0, zIndex: 0 };
+          layers.push(`
+            <g transform="translate(${cfg.anchorX || 0}, ${cfg.anchorY || 0}) scale(${cfg.scaleX || 1}, ${cfg.scaleY || 1}) rotate(${cfg.rotation || 0}, 100, 100)">
+              ${item.svgContent}
+            </g>
+          `);
+        }
+      }
+    });
+
+    // 4. FALLBACKS FOR V1 (If V2 is empty)
+    if (Object.keys(equippedV2).length === 0) {
+      const getItemSvg = (id: string) => getItem(id)?.svgContent || "";
+      if (configV1.clothes) layers.push(getItemSvg(configV1.clothes));
+      if (configV1.visage) layers.push(getItemSvg(configV1.visage));
+      if (configV1.sourcils) layers.push(getItemSvg(configV1.sourcils));
+      if (configV1.nez) layers.push(getItemSvg(configV1.nez));
+      if (configV1.mouth) layers.push(getItemSvg(configV1.mouth));
+      if (configV1.eyes) layers.push(getItemSvg(configV1.eyes));
+      if (configV1.hair) layers.push(getItemSvg(configV1.hair));
+      if (configV1.couronnes) layers.push(getItemSvg(configV1.couronnes));
+      (configV1.accessories || []).forEach((id: string) => layers.push(getItemSvg(id)));
+    }
 
     const svgString = `
       <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="background-color: ${bgColor}; width: 100%; height: 100%;">
-        ${getItemSvg(config?.background)}
-        ${config?.chaussures ? getItemSvg(config.chaussures) : ''}
-        <path d="M40 200 Q100 120 160 200 Z" fill="${skinColor}" />
-        ${config?.clothes ? getItemSvg(config.clothes) : '<path d="M40 200 Q100 130 160 200 Z" fill="#D4AF37" />'}
-        <circle cx="100" cy="90" r="45" fill="${skinColor}" />
-        ${config?.visage ? getItemSvg(config.visage) : ''}
-        ${faceShapePath}
-        ${getItemSvg(config?.sourcils, '<g><path d="M72 73 Q85 68 93 72" stroke="#1A1A1A" stroke-width="2" fill="none" stroke-linecap="round" /><path d="M107 72 Q115 68 128 73" stroke="#1A1A1A" stroke-width="2" fill="none" stroke-linecap="round" /></g>')}
-        ${config?.nez ? getItemSvg(config.nez) : ''}
-        ${getItemSvg(config?.mouth, '<path d="M85 110 Q100 120 115 110" stroke="#4A3018" stroke-width="3" fill="none" stroke-linecap="round" />')}
-        ${getItemSvg(config?.eyes, '<g><circle cx="85" cy="80" r="4" fill="#1A1A1A" /><circle cx="115" cy="80" r="4" fill="#1A1A1A" /></g>')}
-        ${getItemSvg(config?.hair, '<path d="M55 90 Q100 30 145 90 Q100 50 55 90" fill="#1A1A1A" />')}
-        ${config?.couronnes ? getItemSvg(config.couronnes) : ''}
-        ${(config?.accessories || []).map((id: string) => getItemSvg(id)).join('')}
-        ${(config?.instruments || []).map((id: string) => getItemSvg(id)).join('')}
+        ${layers.join('\n')}
       </svg>
     `;
     

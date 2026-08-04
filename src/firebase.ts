@@ -734,10 +734,83 @@ export const gomboDB = {
 
   async updateGombo(id: string, updates: Partial<Gombo>) {
     if (db) {
+      const importantFields = ["title", "date", "time", "location", "commune", "budget"];
+      const changedFields = Object.keys(updates).filter(k => importantFields.includes(k));
+
+      if (changedFields.length > 0) {
+        try {
+          const appsRef = collection(db, "applications");
+          const q = query(appsRef, where("gomboId", "==", id));
+          const snap = await getDocs(q);
+          const candidates = snap.docs.map(d => d.data());
+          
+          for (const app of candidates) {
+            await this.sendNotification({
+              userId: app.musicianId,
+              title: "Gombo modifié ⚠️",
+              message: `Le gombo "${updates.title || app.gomboTitle}" a été modifié (mise à jour : ${changedFields.join(", ")}).`,
+              type: "gombo_updated",
+              gomboId: id,
+              relatedId: id
+            });
+          }
+        } catch (e) {
+          console.warn("Could not notify candidates of gombo modification:", e);
+        }
+      }
       await updateDoc(doc(db, "gombos", id), updates);
     }
   },
 
+  async checkAndSendGomboReminders(userId: string) {
+    if (!db || !userId) return;
+    try {
+      const gombosRef = collection(db, "gombos");
+      const q = query(gombosRef, where("selectedTalentId", "==", userId));
+      const snap = await getDocs(q);
+      const now = new Date();
+
+      for (const d of snap.docs) {
+        const g = d.data();
+        if (g.status === "mission_terminee" || g.status === "mission_annulee") continue;
+        if (!g.date) continue;
+        
+        let gomboTimeStr = g.time || "00:00";
+        if (gomboTimeStr.toLowerCase().includes("h")) {
+          gomboTimeStr = gomboTimeStr.replace("h", ":").replace(" ", "");
+        }
+        
+        const gomboDateStr = `${g.date}T${gomboTimeStr}`;
+        const gomboDate = new Date(gomboDateStr);
+        if (isNaN(gomboDate.getTime())) continue;
+
+        const diffMinutes = Math.floor((gomboDate.getTime() - now.getTime()) / (1000 * 60));
+        
+        // Reminder thresholds
+        const reminders = [
+          { key: "reminded_24h", minutes: 24 * 60, title: "Rappel - J-1 ⏳" },
+          { key: "reminded_2h", minutes: 2 * 60, title: "Rappel - H-2 ⏰" },
+          { key: "reminded_30m", minutes: 30, title: "Rappel - H-30m 🚨" }
+        ];
+
+        for (const rem of reminders) {
+          if (diffMinutes > 0 && diffMinutes <= rem.minutes && !g[rem.key]) {
+            await this.sendNotification({
+              userId,
+              title: rem.title,
+              message: `Le gombo "${g.title}" commence dans moins de ${rem.minutes >= 60 ? Math.floor(rem.minutes / 60) + 'h' : rem.minutes + 'm'}. Soyez prêt !`,
+              type: "gombo_reminder",
+              gomboId: g.id,
+              relatedId: g.id
+            });
+            await updateDoc(doc(db, "gombos", g.id), { [rem.key]: true });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Could not check gombo reminders:", e);
+    }
+  },
   async updateGomboStatus(id: string, status: string, extra: any = {}) {
     if (db) {
       const ref = doc(db, "gombos", id);
@@ -2823,6 +2896,26 @@ export const gomboDB = {
   },
   async deleteGombo(id: string) {
     if (db) {
+      try {
+        const gomboSnap = await getDoc(doc(db, "gombos", id));
+        const gombo = gomboSnap.exists() ? gomboSnap.data() : null;
+        const appsRef = collection(db, "applications");
+        const q = query(appsRef, where("gomboId", "==", id));
+        const snap = await getDocs(q);
+        
+        for (const d of snap.docs) {
+          const app = d.data();
+          await this.sendNotification({
+            userId: app.musicianId,
+            title: "Gombo annulé ❌",
+            message: `Le gombo "${gombo?.title || app.gomboTitle || 'que vous suiviez'}" a été annulé par le promoteur.`,
+            type: "gombo_cancelled",
+            gomboId: id
+          });
+        }
+      } catch (e) {
+        console.warn("Could not notify candidates of gombo cancellation:", e);
+      }
       await deleteDoc(doc(db, "gombos", id));
     }
   },

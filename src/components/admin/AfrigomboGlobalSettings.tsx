@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../firebase";
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
-import { Settings, Save, AlertTriangle, MessageSquare, Globe, Navigation, ShieldAlert } from "lucide-react";
+import { Settings, Save, AlertTriangle, MessageSquare, Globe, Navigation, ShieldAlert, CheckCircle2, Wrench } from "lucide-react";
 import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";
+import { useMaintenance } from "../../hooks/useMaintenance";
+import { useAuth } from "../../AuthContext";
 
 export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: any }) {
+  const { currentUser, profile } = useAuth();
+  const { maintenance } = useMaintenance();
+  
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
   const [config, setConfig] = useState({
     appName: "AFRIGOMBO ELITE",
@@ -29,6 +34,25 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
     });
     return () => unsub();
   }, []);
+
+  const handleToggleMaintenance = async () => {
+    const nextMode = !maintenance.globalMode;
+    try {
+      const now = new Date().toISOString();
+      await setDoc(doc(db, "settings", "maintenance"), { 
+        globalMode: nextMode,
+        status: nextMode ? "maintenance" : "operational",
+        updatedAt: now,
+        updatedBy: currentUser?.email || profile?.email || "Super Fondateur"
+      }, { merge: true });
+      
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+      try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
+    } catch (err: any) {
+      console.error("Error toggling maintenance:", err);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,16 +211,19 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
               </button>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" checked={!!config.maintenanceMode} onChange={(e) => handleChange("maintenanceMode", e.target.checked)} />
-                  <div className="w-11 h-6 bg-afri-bg-ter peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
-                </label>
-                <span className="text-xs font-mono font-bold text-afri-text flex items-center gap-2">
-                  <AlertTriangle className={`w-4 h-4 ${config.maintenanceMode ? "text-red-500 animate-pulse" : "text-afri-text-sec"}`} />
-                  MAINTENANCE IMMÉDIATE (FORCÉE)
-                </span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleToggleMaintenance}
+                  className={`px-4 py-2 w-full sm:w-auto rounded-xl text-xs font-mono font-bold uppercase transition-all shadow-md active:scale-95 border cursor-pointer flex items-center justify-center gap-2 ${
+                    maintenance.globalMode
+                      ? "bg-rose-500/20 text-rose-400 border-rose-500/50 hover:bg-rose-500/30"
+                      : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
+                  }`}
+                >
+                  {maintenance.globalMode ? "❌ Désactiver la maintenance" : "✅ Activer la maintenance"}
+                </button>
               </div>
 
               <div className="flex items-center gap-2">

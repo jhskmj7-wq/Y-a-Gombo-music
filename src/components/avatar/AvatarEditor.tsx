@@ -24,26 +24,93 @@ const DEFAULT_CONFIG: AvatarConfig = {
   chaussures: '',
   sourcils: '',
   visage: '',
-  nez: ''
+  nez: '',
+  // Extra fields for V2 mapping in flat config
+  tete: '',
+  corps: '',
+  visage_base: '',
+  yeux: '',
+  bouche: '',
+  barbe: '',
+  moustache: '',
+  cicatrices: '',
+  maquillage: '',
+  cheveux: '',
+  'tee-shirt': '',
+  chemise: '',
+  veste: '',
+  manteau: '',
+  pantalons: '',
+  jeans: '',
+  robes: '',
+  costumes: '',
+  tenues_africaines: '',
+  tenues_ivoiriennes: '',
+  tenues_scene: '',
+  casquettes: '',
+  chapeaux: '',
+  ecouteurs: '',
+  collier: '',
+  chaines: '',
+  montres: '',
+  bagues: '',
+  bracelets: '',
+  sac: '',
+  ailes: '',
+  badges: '',
+  effets_speciaux: '',
+  arriere_plans: '',
+  sneakers: '',
+  sous_vetement: ''
 };
 
 const TABS = [
   { id: 'couleur_peau', label: 'Peau 🎨' },
   { id: 'forme_visage', label: 'Forme 👤' },
-  { id: 'coiffures', label: 'Coiffure 💇' },
-  { id: 'barbe', label: 'Barbe / Moustache 🧔' },
-  { id: 'sourcils', label: 'Sourcils 🤨' },
+  { id: 'cheveux', label: 'Cheveux 💇' },
+  { id: 'visage_base', label: 'Détails Visage 👤' },
   { id: 'yeux', label: 'Yeux 👁️' },
+  { id: 'sourcils', label: 'Sourcils 🤨' },
   { id: 'nez', label: 'Nez 👃' },
   { id: 'bouche', label: 'Bouche 👄' },
-  { id: 'piercings', label: 'Piercings 💍' },
+  { id: 'barbe', label: 'Barbe 🧔' },
+  { id: 'moustache', label: 'Moustache 🧔' },
+  { id: 'cicatrices', label: 'Cicatrices ⚔️' },
+  { id: 'maquillage', label: 'Maquillage 💄' },
   { id: 'lunettes', label: 'Lunettes 🕶️' },
-  { id: 'vêtements', label: 'Vêtements 👕' },
-  { id: 'chaussures', label: 'Chaussures 👟' },
-  { id: 'accessoires', label: 'Accessoires 👑' },
-  { id: 'couronnes', label: 'Couronnes 🎩' },
-  { id: 'instruments', label: 'Instruments 🪘' },
-  { id: 'arriere-plans', label: 'Arrière-plan 🌅' }
+  { id: 'tee-shirt', label: 'T-Shirt 👕' },
+  { id: 'chemise', label: 'Chemise 👔' },
+  { id: 'veste', label: 'Veste 🧥' },
+  { id: 'manteau', label: 'Manteau 🧥' },
+  { id: 'pantalons', label: 'Pantalons 👖' },
+  { id: 'jeans', label: 'Jeans 👖' },
+  { id: 'robes', label: 'Robes 👗' },
+  { id: 'costumes', label: 'Costumes 🕴️' },
+  { id: 'chaussures', label: 'Chaussures 👞' },
+  { id: 'sneakers', label: 'Sneakers 👟' },
+  { id: 'tenues_africaines', label: 'Tenues Afr 🌍' },
+  { id: 'tenues_ivoiriennes', label: 'Tenues Civ 🇨🇮' },
+  { id: 'tenues_scene', label: 'Tenues Scène 🎤' },
+  { id: 'casquettes', label: 'Casquettes 🧢' },
+  { id: 'chapeaux', label: 'Chapeaux 🎩' },
+  { id: 'couronnes', label: 'Couronnes 👑' },
+  { id: 'ecouteurs', label: 'Écouteurs 🎧' },
+  { id: 'collier', label: 'Colliers 📿' },
+  { id: 'chaines', label: 'Chaînes ⛓️' },
+  { id: 'montres', label: 'Montres ⌚' },
+  { id: 'bagues', label: 'Bagues 💍' },
+  { id: 'bracelets', label: 'Bracelets 📿' },
+  { id: 'sac', label: 'Sacs 👜' },
+  { id: 'ailes', label: 'Ailes 🦅' },
+  { id: 'badges', label: 'Badges 🎖️' },
+  { id: 'accessoires', label: 'Accessoires 💎' },
+  { id: 'effets_speciaux', label: 'Effets ✨' },
+  { id: 'arriere_plans', label: 'Fond 🌅' },
+  
+  // Legacy mappings for backwards compatibility (optional, but keep just in case for old items)
+  { id: 'coiffures', label: 'Coiffures (Ancien) 💇' },
+  { id: 'vêtements', label: 'Vêtements (Ancien) 👕' },
+  { id: 'instruments', label: 'Instruments (Ancien) 🪘' },
 ];
 
 const FREE_DEFAULT_ITEMS: AvatarItem[] = [
@@ -518,40 +585,15 @@ const FREE_DEFAULT_ITEMS: AvatarItem[] = [
 
 // Helper to map UI category tabs to config keys
 export function mapCategoryToConfigKey(category: string): string {
-  switch (category) {
-    case 'coiffures':
-    case 'cheveux': 
-      return 'hair';
-    case 'visage':
-    case 'barbe': 
-      return 'visage';
-    case 'forme_visage': 
-      return 'faceShape';
-    case 'yeux': 
-      return 'eyes';
-    case 'sourcils': 
-      return 'sourcils';
-    case 'nez': 
-      return 'nez';
-    case 'bouche': 
-      return 'mouth';
-    case 'piercings':
-    case 'lunettes':
-    case 'accessoires': 
-      return 'accessories';
-    case 'vêtements': 
-      return 'clothes';
-    case 'chaussures': 
-      return 'chaussures';
-    case 'couronnes': 
-      return 'couronnes';
-    case 'instruments': 
-      return 'instruments';
-    case 'arriere-plans': 
-      return 'background';
-    default: 
-      return category;
-  }
+  const legacyMap: Record<string, string> = {
+    'coiffures': 'hair', 'cheveux': 'cheveux', 'visage': 'visage_base', 'barbe': 'barbe',
+    'forme_visage': 'faceShape', 'yeux': 'yeux', 'sourcils': 'sourcils', 'nez': 'nez',
+    'bouche': 'bouche', 'piercings': 'accessoires', 'lunettes': 'lunettes',
+    'accessoires': 'accessoires', 'instruments': 'effets_speciaux', 'couronnes': 'couronnes',
+    'chaussures': 'chaussures', 'vêtements': 'chemise', 'arriere-plans': 'arriere_plans',
+    'arriere_plans': 'arriere_plans'
+  };
+  return legacyMap[category] || category;
 }
 
 export default function AvatarEditor({ onClose }: AvatarEditorProps) {
@@ -633,18 +675,36 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
     setSaveSuccess(null);
     try {
       const finalConfig = { ...config };
+      
+      // Build V2 config from flat config
+      const itemsV2: Record<string, string> = {};
+      Object.entries(finalConfig).forEach(([key, value]) => {
+        if (typeof value === 'string' && value && key !== 'skinColor' && key !== 'faceShape' && key !== 'background') {
+          itemsV2[key] = value;
+        }
+      });
+      
+      // Special multi-items
+      if (Array.isArray(finalConfig.accessories)) {
+        finalConfig.accessories.forEach(id => { itemsV2['accessoires'] = id; }); // Limit to one for now or handle list
+      }
+
+      const configV2 = { items: itemsV2 };
 
       await AvatarEngine.saveUserAvatar(currentUser.uid, {
         config: finalConfig,
+        configV2: configV2,
         useAvatarAsProfile: useAsProfile,
         inventory: inventory.ownedItems
       }, storeItems);
 
       const mergedStoreAndFreeItems = [...FREE_DEFAULT_ITEMS, ...storeItems];
-      const avatarUri = AvatarEngine.generateAvatarSvg(finalConfig, mergedStoreAndFreeItems);
-      await AvatarEngine.setAvatarAsProfile(currentUser.uid, avatarUri, useAsProfile);
+      const avatarUri = AvatarEngine.generateAvatarSvgV2(configV2, finalConfig, mergedStoreAndFreeItems);
+      
+      // Update local profile state if needed via AuthContext? 
+      // saveUserAvatar already updates the DB which profile listener should catch
 
-      setSaveSuccess("Votre avatar Gombo a été sauvegardé avec succès ! 🎉");
+      setSaveSuccess("Votre avatar Gombo Elite a été sauvegardé avec succès ! 🎉");
       setTimeout(() => {
         onClose();
       }, 1200);
@@ -662,19 +722,27 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
     setSaveSuccess(null);
     try {
       const finalConfig = { ...config };
+      const itemsV2: Record<string, string> = {};
+      Object.entries(finalConfig).forEach(([key, value]) => {
+        if (typeof value === 'string' && value && key !== 'skinColor' && key !== 'faceShape') {
+          itemsV2[key] = value;
+        }
+      });
+      const configV2 = { items: itemsV2 };
+      
       const mergedStoreAndFreeItems = [...FREE_DEFAULT_ITEMS, ...storeItems];
-      const avatarUri = AvatarEngine.generateAvatarSvg(finalConfig, mergedStoreAndFreeItems);
+      const avatarUri = AvatarEngine.generateAvatarSvgV2(configV2, finalConfig, mergedStoreAndFreeItems);
 
       setUseAsProfile(true);
 
       await AvatarEngine.saveUserAvatar(currentUser.uid, {
         config: finalConfig,
+        configV2: configV2,
         useAvatarAsProfile: true,
         inventory: inventory.ownedItems
       }, storeItems);
 
-      await AvatarEngine.setAvatarAsProfile(currentUser.uid, avatarUri, true);
-      setSaveSuccess("Votre avatar est maintenant synchronisé avec votre profil public ! 🌟");
+      setSaveSuccess("Votre avatar Elite est maintenant synchronisé avec votre profil public ! 🌟");
     } catch (e: any) {
       console.error("Sync failed", e);
       setSaveSuccess(`Erreur de synchronisation : ${e.message || "Inconnue"}`);

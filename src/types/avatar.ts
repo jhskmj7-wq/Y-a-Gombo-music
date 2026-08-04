@@ -1,23 +1,72 @@
 export type AvatarItemCategory = 
-  | 'vêtements' 
-  | 'chaussures'
-  | 'accessoires' 
+  // Nouveaux types (Moteur v2)
+  | 'corps'
+  | 'tete'
+  | 'visage_base'
+  | 'yeux'
+  | 'sourcils'
+  | 'nez'
+  | 'bouche'
+  | 'barbe'
+  | 'moustache'
+  | 'cicatrices'
+  | 'maquillage'
+  | 'lunettes'
+  | 'cheveux'
+  | 'tee-shirt'
+  | 'chemise'
+  | 'veste'
+  | 'manteau'
+  | 'collier'
+  | 'sac'
+  | 'casquettes'
+  | 'chapeaux'
   | 'couronnes'
-  | 'instruments' 
-  | 'afrique' 
+  | 'ecouteurs'
+  | 'chaines'
+  | 'montres'
+  | 'bagues'
+  | 'bracelets'
+  | 'chaussures'
+  | 'sneakers'
+  | 'pantalons'
+  | 'jeans'
+  | 'robes'
+  | 'costumes'
+  | 'tenues_africaines'
+  | 'tenues_ivoiriennes'
+  | 'tenues_scene'
+  | 'effets_speciaux'
+  | 'arriere_plans'
+  | 'ailes'
+  | 'badges'
+  | 'sous_vetement'
+  // Anciens types (Compatibilité)
+  | 'vêtements'
+  | 'accessoires'
+  | 'instruments'
+  | 'afrique'
   | 'coiffures'
   | 'animations'
-  | 'arriere-plans' 
-  | 'visage' 
-  | 'cheveux' 
-  | 'yeux' 
-  | 'bouche' 
+  | 'arriere-plans'
+  | 'visage'
   | 'couleur_peau'
-  | 'premium' 
-  | 'badges';
+  | 'premium'
+  | 'badges'
+  | string;
 
 export type AvatarRarity = "Commun" | "Rare" | "Épique" | "Légendaire" | "Mythique" | "Royale";
 export type AvatarLevelTitle = "Débutant" | "Talent" | "Artiste" | "Star" | "Icône" | "Légende";
+
+export interface AvatarEngineConfig {
+  anchorX: number;
+  anchorY: number;
+  scaleX: number;
+  scaleY: number;
+  rotation: number;
+  zIndex: number;
+  incompatibleWith?: string[]; // IDs d'articles ou catégories incompatibles
+}
 
 export interface AvatarItem {
   id: string;
@@ -45,6 +94,10 @@ export interface AvatarItem {
   createdAt?: string;
   updatedAt?: string;
   isActive: boolean;
+  engineConfig?: AvatarEngineConfig;
+  creatorId?: string;
+  creatorName?: string;
+  salesCount?: number;
 }
 
 export interface AvatarEvent {
@@ -123,10 +176,53 @@ export interface AvatarConfig {
   sourcils?: string;
   visage?: string;
   nez?: string;
+  // Professional V2 Categories
+  tete?: string;
+  corps?: string;
+  visage_base?: string;
+  yeux?: string;
+  bouche?: string;
+  barbe?: string;
+  moustache?: string;
+  cicatrices?: string;
+  maquillage?: string;
+  cheveux?: string;
+  'tee-shirt'?: string;
+  chemise?: string;
+  veste?: string;
+  manteau?: string;
+  pantalons?: string;
+  jeans?: string;
+  robes?: string;
+  costumes?: string;
+  tenues_africaines?: string;
+  tenues_ivoiriennes?: string;
+  tenues_scene?: string;
+  casquettes?: string;
+  chapeaux?: string;
+  ecouteurs?: string;
+  collier?: string;
+  chaines?: string;
+  montres?: string;
+  bagues?: string;
+  bracelets?: string;
+  sac?: string;
+  ailes?: string;
+  badges?: string;
+  effets_speciaux?: string;
+  arriere_plans?: string;
+  sneakers?: string;
+  sous_vetement?: string;
+}
+
+export interface AvatarEngineConfigV2 {
+  items: Record<string, string>; // category -> itemId
+  skinColor?: string;
 }
 
 export interface UserAvatarData {
   config: AvatarConfig;
+  configV2?: AvatarEngineConfigV2; // Nouveau format
   useAvatarAsProfile: boolean;
   inventory: string[]; // IDs of purchased AvatarItems
   lastUpdated?: string;

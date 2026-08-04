@@ -147,25 +147,8 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
       };
 
       // Atomic update across all 3 configuration collections to guarantee consistency
-      await setDoc(doc(db, "settings", "maintenance"), payload, { merge: true });
-      await setDoc(doc(db, "system_settings", "global"), {
-        maintenanceMode: payload.globalMode,
-        globalMessage: payload.globalMessage,
-        scheduled: payload.scheduled,
-        startAt: payload.startAt,
-        endAt: payload.endAt,
-        updatedAt: payload.updatedAt
-      }, { merge: true });
-      await setDoc(doc(db, "settings", "platform"), {
-        status: payload.globalMode ? "maintenance" : "operational",
-        globalMessage: payload.globalMessage,
-        scheduled: payload.scheduled,
-        startAt: payload.startAt,
-        endAt: payload.endAt
-      }, { merge: true });
-
       try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
-
+      await setDoc(doc(db, "settings", "maintenance"), payload, { merge: true });
       setSuccessMsg("Mise à jour serveur enregistrée en temps réel !");
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
@@ -366,13 +349,11 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
               <RefreshCw className="w-4 h-4 animate-spin" />
             ) : globalMode ? (
               <>
-                <CheckCircle2 className="w-4.5 h-4.5" />
-                <span>🟢 DÉSACTIVER LA MAINTENANCE (REMETTRE EN LIGNE)</span>
+                <span>❌ Désactiver la maintenance</span>
               </>
             ) : (
               <>
-                <Wrench className="w-4.5 h-4.5" />
-                <span>🔴 ACTIVER LA MAINTENANCE IMMÉDIATE</span>
+                <span>✅ Activer la maintenance</span>
               </>
             )}
           </button>

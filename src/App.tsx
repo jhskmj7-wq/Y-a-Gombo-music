@@ -94,14 +94,12 @@ function App() {
   }, []);
 
   useEffect(() => {
-    let platData: any = null;
-    let globalData: any = null;
     let securityData: any = null;
 
     const checkEffectiveMaintenance = (data: any) => {
       if (!data) return false;
       // 1. Direct manual toggle
-      if (data.status === "maintenance" || data.maintenanceMode === true || data.globalMode === true) {
+      if (data.globalMode === true || data.status === "maintenance") {
         return true;
       }
       // 2. Scheduled maintenance window check
@@ -117,32 +115,18 @@ function App() {
     };
 
     const updateMaintenanceState = () => {
-      const isM = checkEffectiveMaintenance(platData) || 
-                  checkEffectiveMaintenance(globalData) || 
-                  checkEffectiveMaintenance(securityData);
+      const isM = checkEffectiveMaintenance(securityData);
       
       setIsMaintenance(isM);
 
       // Pick custom message if available
-      const customMsg = securityData?.globalMessage || globalData?.globalMessage || platData?.globalMessage;
+      const customMsg = securityData?.globalMessage;
       if (customMsg) {
         setMaintenanceMessage(customMsg);
+      } else {
+        setMaintenanceMessage("L'application est actuellement en maintenance. Veuillez patienter.");
       }
     };
-
-    const unsubPlatform = onSnapshot(doc(db, "settings", "platform"), (snap) => {
-      platData = snap.exists() ? snap.data() : null;
-      updateMaintenanceState();
-    }, (err) => {
-      console.warn("Error listening to platform status:", err);
-    });
-
-    const unsubGlobal = onSnapshot(doc(db, "system_settings", "global"), (snap) => {
-      globalData = snap.exists() ? snap.data() : null;
-      updateMaintenanceState();
-    }, (err) => {
-      console.warn("Error listening to global system status:", err);
-    });
 
     const unsubSecurity = onSnapshot(doc(db, "settings", "maintenance"), (snap) => {
       securityData = snap.exists() ? snap.data() : null;
@@ -157,8 +141,6 @@ function App() {
     }, 10000);
 
     return () => {
-      unsubPlatform();
-      unsubGlobal();
       unsubSecurity();
       clearInterval(intervalId);
     };

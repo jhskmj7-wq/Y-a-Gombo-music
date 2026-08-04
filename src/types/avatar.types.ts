@@ -11,4 +11,13 @@ export interface AvatarStudioItemPayload {
   assetUrl?: string;
   animation?: string;
   isActive: boolean;
+  engineConfig?: {
+    anchorX: number;
+    anchorY: number;
+    scaleX: number;
+    scaleY: number;
+    rotation: number;
+    zIndex: number;
+    incompatibleWith?: string[];
+  };
 }

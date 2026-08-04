@@ -105,38 +105,23 @@ export default function AdminFounderThrone({
     return () => unsub();
   }, []);
 
-  const handleUpdatePlatformStatus = async (newStatus: string) => {
-    console.log("Updating status:", newStatus);
+  const handleToggleMaintenance = async () => {
+    const nextMode = !maintenance.globalMode;
     try {
-      const isM = newStatus === "maintenance";
       const now = new Date().toISOString();
-
-      await setDoc(doc(db, "settings", "platform"), { 
-        status: newStatus,
+      await setDoc(doc(db, "settings", "maintenance"), { 
+        globalMode: nextMode,
+        status: nextMode ? "maintenance" : "operational",
         updatedAt: now,
-        updatedBy: adminEmail || "jhs.kmj7@gmail.com"
+        updatedBy: currentUser?.email || profile?.email || "Super Fondateur"
       }, { merge: true });
       
-      // Synchronize across all three maintenance documents in Firestore
-      await setDoc(doc(db, "system_settings", "global"), { 
-        maintenanceMode: isM,
-        updatedAt: now,
-        updatedBy: adminEmail || "jhs.kmj7@gmail.com"
-      }, { merge: true });
-
-      await setDoc(doc(db, "settings", "maintenance"), { 
-        globalMode: isM,
-        updatedAt: now,
-        updatedBy: adminEmail || "jhs.kmj7@gmail.com"
-      }, { merge: true });
-
-      console.log("Status updated successfully.");
-      setSuccessMsg(`Souveraineté : Statut de service mis à jour vers [${newStatus.toUpperCase()}]`);
+      setSuccessMsg(`Maintenance ${nextMode ? "activée" : "désactivée"} avec succès.`);
       setTimeout(() => setSuccessMsg(""), 4000);
       try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
     } catch (err: any) {
-      console.error("Error updating status:", err);
-      setErrorMsg("Erreur statut de service: " + err.message);
+      console.error("Error toggling maintenance:", err);
+      setErrorMsg("Erreur: " + err.message);
       setTimeout(() => setErrorMsg(""), 4000);
     }
   };
@@ -1702,7 +1687,6 @@ export default function AdminFounderThrone({
                     {audioState.currentPlaying === 'hymne' && !audioState.isPaused ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                   </button>
                 </div>
-
               </div>
 
               {/* ROW 3: PLATFORM SERVICE STATUS CONTROLLER */}
@@ -1710,33 +1694,21 @@ export default function AdminFounderThrone({
                 <div className="flex items-center gap-2">
                   <Server className="w-4 h-4 text-[#D4AF37]" />
                   <div>
-                    <span className="text-[10px] font-mono font-black uppercase text-afri-text-sec block tracking-wider">Statut Général de la Plateforme</span>
-                    <span className="text-[9px] text-afri-text-muted font-mono">Modifiable par le fondateur en temps réel</span>
+                    <span className="text-[10px] font-mono font-black uppercase text-afri-text-sec block tracking-wider">Mode Maintenance Global</span>
+                    <span className="text-[9px] text-afri-text-muted font-mono">Désactive l'accès à l'application</span>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-3 gap-1 bg-afri-bg/60 p-1 rounded-2xl border border-[#D4AF37]/20 w-full sm:w-auto">
-                  {[
-                    { id: "operational", label: "🟢 Opérationnel", style: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
-                    { id: "maintenance", label: "🛠️ Maintenance", style: "text-rose-400 bg-rose-500/10 border-rose-500/20 animate-pulse" },
-                    { id: "congested", label: "⚡ Surchargé", style: "text-amber-400 bg-amber-500/10 border-amber-500/20" }
-                  ].map((st) => {
-                    const isActive = platformStatus === st.id;
-                    return (
-                      <button
-                        key={st.id}
-                        onClick={() => handleUpdatePlatformStatus(st.id)}
-                        className={`px-3 py-1 rounded-xl text-[9px] font-mono font-bold uppercase transition-all cursor-pointer border ${
-                          isActive
-                            ? st.style + " shadow-md"
-                            : "bg-transparent border-transparent text-afri-text-muted hover:text-afri-text-sec"
-                        }`}
-                      >
-                        {st.label}
-                      </button>
-                    );
-                  })}
-                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleMaintenance}
+                  className={`px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase transition-all shadow-md active:scale-95 border cursor-pointer flex items-center justify-center gap-2 ${
+                    maintenance.globalMode
+                      ? "bg-rose-500/20 text-rose-400 border-rose-500/50 hover:bg-rose-500/30"
+                      : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
+                  }`}
+                >
+                  {maintenance.globalMode ? "❌ Désactiver la maintenance" : "✅ Activer la maintenance"}
+                </button>
               </div>
             </motion.div>
           )}

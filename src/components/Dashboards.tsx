@@ -186,6 +186,9 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           setMyActivities(userActs);
         });
 
+        // 6. Check and dispatch gombo reminders automatically
+        gomboDB.checkAndSendGomboReminders(userUid);
+
         setLoading(false);
       } catch (err) {
         console.error("❌ [Dashboard Live Sync] Listener Error:", err);
@@ -230,8 +233,11 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
         await gomboDB.sendNotification({
           userId: app.musicianId,
           title: "Candidature Acceptée ! 🎉",
-          message: `Votre candidature pour le gombo "${app.gomboTitle}" a été acceptée par le client. Vous pouvez maintenant démarrer !`,
-          type: "application_accepted"
+          message: `Félicitations ! Vous avez été retenu pour le gombo « ${app.gomboTitle} ».`,
+          type: "application_accepted",
+          gomboTitle: app.gomboTitle,
+          gomboId: app.gomboId,
+          relatedId: app.gomboId
         });
       } catch (notifErr) {
         console.warn("⚠️ Notification could not be sent:", notifErr);
@@ -245,8 +251,11 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             await gomboDB.sendNotification({
               userId: otherApp.musicianId,
               title: "Candidature Refusée ❌",
-              message: `Désolé, votre candidature pour le gombo "${otherApp.gomboTitle}" n'a pas été retenue. Courage, de nouveaux plans arrivent !`,
-              type: "general"
+              message: `Votre candidature n'a pas été retenue pour cette mission.`,
+              type: "application_refused",
+              gomboTitle: otherApp.gomboTitle,
+              gomboId: otherApp.gomboId,
+              relatedId: otherApp.gomboId
             });
           } catch (notifErr) {
             console.warn("⚠️ Notification could not be sent:", notifErr);

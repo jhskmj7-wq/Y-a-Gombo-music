@@ -80,9 +80,15 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
       if (gombo.clientId) {
         await gomboDB.sendNotification({
           userId: gombo.clientId,
-          type: "general",
+          type: "new_application",
           title: "Nouvelle candidature ! 🔥",
-          message: `${applicantName} a postulé à votre gombo "${gombo.title}" ! Visitez votre dashboard pour étudier sa démo.`
+          message: `${applicantName} a postulé à votre gombo "${gombo.title}" ! Visitez votre dashboard pour étudier sa démo.`,
+          candidateName: applicantName,
+          candidatePhoto: currentUserProfile.avatarUrl || null,
+          gomboTitle: gombo.title,
+          gomboId: gombo.id,
+          candidateId: currentUserProfile.uid,
+          relatedId: gombo.id
         });
       }
 

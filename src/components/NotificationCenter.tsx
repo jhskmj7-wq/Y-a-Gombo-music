@@ -363,9 +363,25 @@ export default function NotificationCenter({
                           transition={{ duration: 0.2 }}
                           className="mt-3 pt-3 border-t border-afri-border/60 space-y-3"
                         >
-                          <div className="text-xs sm:text-sm text-afri-text leading-relaxed whitespace-pre-line font-sans bg-afri-bg-sec/50 p-3.5 rounded-xl border border-afri-border/50 shadow-inner">
-                            {notif.message}
-                          </div>
+                          {notif.type === "new_application" && (notif as any).candidateName ? (
+                            <div className="flex items-center gap-3 bg-afri-bg/50 p-3 rounded-xl border border-afri-border/50">
+                              {(notif as any).candidatePhoto ? (
+                                <img src={(notif as any).candidatePhoto} alt={(notif as any).candidateName} className="w-10 h-10 rounded-full object-cover" />
+                              ) : (
+                                <div className="w-10 h-10 rounded-full bg-afri-bg-sec flex items-center justify-center border border-afri-border">
+                                  <UserCheck className="w-5 h-5 text-afri-text-sec" />
+                                </div>
+                              )}
+                              <div className="flex-1">
+                                <p className="text-sm font-bold text-afri-text">{(notif as any).candidateName}</p>
+                                <p className="text-xs text-[#D4AF37] font-mono">{(notif as any).gomboTitle}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-xs sm:text-sm text-afri-text leading-relaxed whitespace-pre-line font-sans bg-afri-bg-sec/50 p-3.5 rounded-xl border border-afri-border/50 shadow-inner">
+                              {notif.message}
+                            </div>
+                          )}
 
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                             <span className="text-[9.5px] font-mono text-emerald-400 font-bold flex items-center gap-1 shrink-0">
@@ -379,7 +395,7 @@ export default function NotificationCenter({
                               }}
                               className="w-full sm:w-auto px-3.5 py-2 bg-gradient-to-r from-[#D4AF37] to-amber-600 hover:from-amber-400 hover:to-amber-600 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
                             >
-                              <span>{getDeepLinkLabel(notif.type || "")}</span>
+                              <span>{notif.type === "new_application" ? "Voir la candidature" : getDeepLinkLabel(notif.type || "")}</span>
                               <ExternalLink className="w-3.5 h-3.5" />
                             </button>
                           </div>

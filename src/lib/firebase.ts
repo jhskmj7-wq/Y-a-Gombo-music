@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence, indexedDBLocalPersistence } from "firebase/auth";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, memoryLocalCache, getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getMessaging, isSupported } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC3eJm2GfUMxGUNGu7uZeIP9-rtcLRljNk",
@@ -19,6 +20,18 @@ export const app = getApps().length
   : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
+
+// Initialize Firebase Cloud Messaging for Push Notifications Architecture
+let messagingInstance: any = null;
+if (typeof window !== "undefined") {
+  isSupported().then((supported) => {
+    if (supported) {
+      messagingInstance = getMessaging(app);
+      console.log("FCM (Firebase Cloud Messaging) Architecture Ready.");
+    }
+  }).catch((err) => console.log("FCM not supported in this environment.", err));
+}
+export const messaging = messagingInstance;
 
 // Explicitly set persistent authentication storage (IndexedDB -> LocalStorage)
 if (typeof window !== "undefined") {
