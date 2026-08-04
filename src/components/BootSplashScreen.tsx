@@ -90,7 +90,7 @@ export default function BootSplashScreen({ onComplete }: BootSplashScreenProps) 
 
         {/* Brand Header */}
         <div className="space-y-1">
-          <h1 className="text-2xl font-black text-[#D4AF37] tracking-[0.2em] uppercase font-sans">AFRIGOMBO</h1>
+          <h1 className="text-2xl font-black text-[#D4AF37] tracking-[0.2em] uppercase font-sans">AFRIGOMBO ELITE</h1>
           <p className="text-[11px] text-afri-text-sec uppercase tracking-widest font-sans font-medium">
             Le Temple du Gombo Musical
           </p>
