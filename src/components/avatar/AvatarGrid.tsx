@@ -13,8 +13,8 @@ export const AvatarGrid: React.FC<AvatarGridProps> = ({ items, ownedItems = [], 
   return (
     <div className="grid grid-cols-2 gap-3.5 w-full max-w-full box-border">
       {items.map(item => {
-        const isOwned = ownedItems.includes(item.id);
-        const isEquipped = equippedItems.includes(item.id);
+        const isOwned = ownedItems?.includes(item.id) || false;
+        const isEquipped = equippedItems?.includes(item.id) || false;
         return (
           <AvatarCard 
             key={item.id}

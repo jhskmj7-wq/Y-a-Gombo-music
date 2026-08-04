@@ -47,6 +47,8 @@ export default defineConfig({
         scope: '/',
         start_url: '/',
         orientation: 'portrait',
+        lang: 'fr',
+        dir: 'ltr',
         icons: [
           {
             src: 'favicon-16x16.png',

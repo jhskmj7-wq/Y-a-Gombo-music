@@ -353,8 +353,8 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {filteredItems.map(item => {
-                const isOwned = userInventory.ownedItems.includes(item.id) || initialInventory.includes(item.id);
-                const isEquipped = userInventory.equippedItems.includes(item.id);
+                const isOwned = userInventory?.ownedItems?.includes(item.id) || initialInventory?.includes(item.id) || false;
+                const isEquipped = userInventory?.equippedItems?.includes(item.id) || false;
                 const isPremiumItem = !!(item.isPremiumOnly || item.premiumOnly);
                 const isAffordable = avatarCoins >= item.price || walletBalance >= item.price;
                 const isLevelLocked = item.requiredLevel ? levelInfo.level < item.requiredLevel : false;
