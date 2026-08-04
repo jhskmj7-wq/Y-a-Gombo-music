@@ -44,7 +44,7 @@ interface WalletRequest {
   phoneNumber?: string;
   numero?: string; // Pour les retraits
   status: string;
-  type: "deposit" | "withdrawal";
+  type: string;
   preuveUrl?: string;
   notes?: string;
 }
@@ -88,6 +88,9 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
   // Action Confirmation State inside detail panel
   const [pendingAction, setPendingAction] = useState<"VALIDATE" | "REFUSE" | "PENDING" | "ADD_NOTE" | null>(null);
   const [actionComment, setActionComment] = useState("");
+
+  const selectedIsValidated = selectedRequest ? (selectedRequest.status === "validated" || selectedRequest.status === "paid" || selectedRequest.status === "success" || selectedRequest.status === "completed") : false;
+  const selectedIsRefused = selectedRequest ? (selectedRequest.status === "refused" || selectedRequest.status === "rejected" || selectedRequest.status === "refuse") : false;
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -224,15 +227,36 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
     return tB - tA;
   });
 
-  // Filters mapping helper
-  const matchesStatus = (reqStatus: string, filter: string) => {
+  const isDefinitiveStatus = (reqStatus: string) => {
     const status = (reqStatus || "").toLowerCase();
-    if (filter === "all") return true;
+    return status === "validated" || status === "paid" || status === "success" || status === "completed" || status === "refused" || status === "rejected" || status === "refuse";
+  };
+
+  // Filters mapping helper
+  const matchesStatus = (req: WalletRequest, filter: string) => {
+    const status = (req.status || "").toLowerCase();
+    const isDef = isDefinitiveStatus(status);
+
+    if (filter === "all" || filter === "tout") {
+      return !isDef; // TOUT = active queue only
+    }
+    if (filter === "deposits" || filter === "depots") {
+      return req.type === "deposit";
+    }
+    if (filter === "withdrawals" || filter === "retraits") {
+      return req.type === "withdrawal";
+    }
+    if (filter === "payments" || filter === "paiements") {
+      return req.type === "payment" || (req as any).module === "payment" || (req as any).module === "paiement";
+    }
+    if (filter === "treated" || filter === "traite") {
+      return isDef;
+    }
     if (filter === "pending") {
       return status === "pending" || status === "waiting_support" || status === "en_attente";
     }
     if (filter === "validated") {
-      return status === "validated" || status === "paid" || status === "success";
+      return status === "validated" || status === "paid" || status === "success" || status === "completed";
     }
     if (filter === "refused") {
       return status === "refused" || status === "rejected" || status === "refuse";
@@ -244,11 +268,27 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
   };
 
   // Exact counters for tabs
-  const countAll = requests.length;
-  const countPending = requests.filter(r => matchesStatus(r.status, "pending")).length;
-  const countValidated = requests.filter(r => matchesStatus(r.status, "validated")).length;
-  const countRefused = requests.filter(r => matchesStatus(r.status, "refused")).length;
-  const countProcessing = requests.filter(r => matchesStatus(r.status, "processing")).length;
+  const countAll = requests.filter(r => !isDefinitiveStatus(r.status)).length;
+  const countDeposits = requests.filter(r => r.type === "deposit").length;
+  const countWithdrawals = requests.filter(r => r.type === "withdrawal").length;
+  const countPayments = requests.filter(r => r.type === "payment" || (r as any).module === "payment").length;
+  const countTreated = requests.filter(r => isDefinitiveStatus(r.status)).length;
+  const countPending = requests.filter(r => {
+    const s = (r.status || "").toLowerCase();
+    return s === "pending" || s === "waiting_support" || s === "en_attente";
+  }).length;
+  const countValidated = requests.filter(r => {
+    const s = (r.status || "").toLowerCase();
+    return s === "validated" || s === "paid" || s === "success" || s === "completed";
+  }).length;
+  const countRefused = requests.filter(r => {
+    const s = (r.status || "").toLowerCase();
+    return s === "refused" || s === "rejected" || s === "refuse";
+  }).length;
+  const countProcessing = requests.filter(r => {
+    const s = (r.status || "").toLowerCase();
+    return s === "processing" || s === "in_progress" || s === "in-progress" || s === "validation_encours";
+  }).length;
 
   const filteredRequests = requests.filter((r) => {
     const term = (searchTerm || "").toLowerCase();
@@ -261,7 +301,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
       (r?.numero ?? "").toLowerCase().includes(term) ||
       (r?.uid ?? "").toLowerCase().includes(term);
 
-    return matchSearch && matchesStatus(r.status, selectedStatusFilter);
+    return matchSearch && matchesStatus(r, selectedStatusFilter);
   });
 
   // Action Dispatcher
@@ -873,7 +913,11 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
         {/* Onglets des filtres */}
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
           {[
-            { id: "all", label: "Toutes", count: countAll },
+            { id: "all", label: "TOUT", count: countAll },
+            { id: "deposits", label: "DÉPÔTS", count: countDeposits },
+            { id: "withdrawals", label: "RETRAITS", count: countWithdrawals },
+            { id: "payments", label: "PAIEMENTS", count: countPayments },
+            { id: "treated", label: "🎯 TRAITÉ", count: countTreated },
             { id: "pending", label: "⚡ En attente", count: countPending },
             { id: "validated", label: "✅ Validées", count: countValidated },
             { id: "refused", label: "❌ Refusées", count: countRefused },
@@ -971,12 +1015,12 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                     </span>
                     
                     <span className={`inline-block text-[8px] font-mono font-bold uppercase px-2 py-0.5 rounded border mt-0.5 ${
-                      isValidated ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
-                      isRefused ? "bg-rose-500/10 text-rose-400 border-rose-500/30" :
-                      isPending ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse" :
-                      "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                      isValidated ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/35" :
+                      isRefused ? "bg-rose-500/10 text-rose-400 border-rose-500/35" :
+                      isPending ? "bg-amber-500/10 text-amber-400 border-amber-500/35 animate-pulse" :
+                      "bg-blue-500/10 text-blue-400 border-blue-500/35"
                     }`}>
-                      {isValidated ? "Validé" : isRefused ? "Refusé" : isPending ? "En attente" : req.status}
+                      {isValidated ? "TRAITÉ (VALIDÉ)" : isRefused ? "TRAITÉ (REFUSÉ)" : isPending ? "EN ATTENTE" : req.status.toUpperCase()}
                     </span>
                   </div>
 
@@ -1310,49 +1354,69 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               {/* Actions Footer de la Fiche (Masqué si une confirmation d'action est en cours) */}
               {!pendingAction && (
                 <div className="p-4 sm:p-5 bg-afri-bg border-t border-neutral-900 grid grid-cols-2 xs:grid-cols-4 gap-2 shrink-0 z-10">
-                  <button
-                    onClick={() => {
-                      setPendingAction("VALIDATE");
-                      setActionComment("");
-                    }}
-                    className="py-3 bg-emerald-600 hover:bg-emerald-500 text-afri-text text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow flex items-center justify-center gap-1.5 active:scale-98"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Valider</span>
-                  </button>
+                  {selectedIsValidated || selectedIsRefused ? (
+                    <>
+                      <div className="col-span-3 p-3 bg-neutral-900 border border-neutral-800 rounded-xl text-center text-xs font-mono font-bold text-amber-400 flex items-center justify-center gap-2">
+                        <span>🔒 Déjà traitée ({selectedIsValidated ? "TRAITÉ / VALIDÉ" : "TRAITÉ / REFUSÉ"})</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setPendingAction("ADD_NOTE");
+                          setActionComment("");
+                        }}
+                        className="py-3 bg-afri-bg-sec hover:bg-neutral-850 border border-afri-border text-[#D4AF37] text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span>Note</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          setPendingAction("VALIDATE");
+                          setActionComment("");
+                        }}
+                        className="py-3 bg-emerald-600 hover:bg-emerald-500 text-afri-text text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow flex items-center justify-center gap-1.5 active:scale-98"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Valider</span>
+                      </button>
 
-                  <button
-                    onClick={() => {
-                      setPendingAction("REFUSE");
-                      setActionComment("");
-                    }}
-                    className="py-3 bg-rose-600 hover:bg-rose-500 text-afri-text text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow flex items-center justify-center gap-1.5 active:scale-98"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    <span>Refuser</span>
-                  </button>
+                      <button
+                        onClick={() => {
+                          setPendingAction("REFUSE");
+                          setActionComment("");
+                        }}
+                        className="py-3 bg-rose-600 hover:bg-rose-500 text-afri-text text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow flex items-center justify-center gap-1.5 active:scale-98"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        <span>Refuser</span>
+                      </button>
 
-                  <button
-                    onClick={() => {
-                      setPendingAction("PENDING");
-                      setActionComment("");
-                    }}
-                    className="py-3 bg-afri-bg-sec hover:bg-neutral-850 border border-afri-border text-afri-text-sec text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
-                  >
-                    <Clock className="w-4 h-4" />
-                    <span>Attente</span>
-                  </button>
+                      <button
+                        onClick={() => {
+                          setPendingAction("PENDING");
+                          setActionComment("");
+                        }}
+                        className="py-3 bg-afri-bg-sec hover:bg-neutral-850 border border-afri-border text-afri-text-sec text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
+                      >
+                        <Clock className="w-4 h-4" />
+                        <span>Attente</span>
+                      </button>
 
-                  <button
-                    onClick={() => {
-                      setPendingAction("ADD_NOTE");
-                      setActionComment("");
-                    }}
-                    className="py-3 bg-afri-bg-sec hover:bg-neutral-850 border border-afri-border text-[#D4AF37] text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
-                  >
-                    <FileText className="w-4 h-4" />
-                    <span>Note</span>
-                  </button>
+                      <button
+                        onClick={() => {
+                          setPendingAction("ADD_NOTE");
+                          setActionComment("");
+                        }}
+                        className="py-3 bg-afri-bg-sec hover:bg-neutral-850 border border-afri-border text-[#D4AF37] text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span>Note</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
 

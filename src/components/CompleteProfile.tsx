@@ -320,6 +320,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
         isProfileComplete: false,
         profileSkipped: true,
         skippedProfile: true,
+        hasEnteredApp: true,
         createdAt: currentUserProfile.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });

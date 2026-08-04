@@ -15,11 +15,22 @@ export function ProfileGuard({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Allow passing if the profile exists and is complete or skipped
-  if (profile && (profile.isProfileComplete === true || profile.profileSkipped || profile.skippedProfile)) {
+  // Allow passing if the profile exists and is complete, skipped, or has entered app
+  if (profile && (profile.isProfileComplete === true || profile.profileSkipped || profile.skippedProfile || profile.hasEnteredApp)) {
     return <>{children}</>;
   }
 
-  // Otherwise redirect to complete-profile
+  // Check if this is an existing user (account created prior to this session or returning user).
+  // An existing user must NEVER be considered a "new user" or forced to onboarding, even if their profile is incomplete.
+  const creationTime = currentUser.metadata?.creationTime ? new Date(currentUser.metadata.creationTime).getTime() : 0;
+  const lastSignInTime = currentUser.metadata?.lastSignInTime ? new Date(currentUser.metadata.lastSignInTime).getTime() : 0;
+  const isVeryRecentCreation = creationTime > 0 && Math.abs(lastSignInTime - creationTime) < 60000;
+
+  // If the profile exists in Firestore OR if it is not a brand new creation session, treat as existing user.
+  if (profile || !isVeryRecentCreation) {
+    return <>{children}</>;
+  }
+
+  // Otherwise redirect to complete-profile only for genuinely brand new users in their first session
   return <Navigate to="/complete-profile" replace />;
 }

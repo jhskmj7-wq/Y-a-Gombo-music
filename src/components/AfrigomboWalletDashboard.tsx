@@ -1578,11 +1578,20 @@ export default function AfrigomboWalletDashboard({
                 txTypeClean === "deposit" || 
                 txTypeClean === "depot" || 
                 txTypeClean === "recharge_wallet" || 
+                txTypeClean === "recharge" ||
                 txTypeClean === "release" || 
                 txTypeClean === "deblocage_cachet" || 
                 txTypeClean === "refund" || 
                 txTypeClean === "remboursement" || 
-                txTypeClean === "prime_bonus";
+                txTypeClean === "prime_bonus" ||
+                txTypeClean === "bonus" ||
+                txTypeClean === "reward" ||
+                txTypeClean === "recompense" ||
+                txTypeClean === "credit" ||
+                txTypeClean === "transfer_received" ||
+                txTypeClean === "transfert_recu" ||
+                txTypeClean === "gain" ||
+                txTypeClean === "revenu";
 
               const typeLabel = 
                 txTypeClean === "depot" || txTypeClean === "deposit" || txTypeClean === "recharge_wallet" ? "Dépôt Mobile Money" :

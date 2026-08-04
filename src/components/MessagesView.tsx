@@ -26,6 +26,7 @@ import CallsTab from "./messages/CallsTab";
 import ActivityTab from "./messages/ActivityTab";
 import SettingsTab from "./messages/SettingsTab";
 import AfrigomboTab from "./messages/AfrigomboTab";
+import { audioSynth } from "../lib/audio";
 
 interface MessagesViewProps {
   currentUser: any;
@@ -290,6 +291,15 @@ export default function MessagesView({
       const unsub = onSnapshot(q, (snapshot) => {
         const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Message));
         msgs.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+        
+        // Check if there is a new incoming message from support
+        if (msgs.length > messages.length && messages.length > 0) {
+          const latest = msgs[msgs.length - 1];
+          if (latest.senderUid !== currentUser.uid) {
+            try { audioSynth.playNotificationSound(); } catch (e) {}
+          }
+        }
+
         setMessages(msgs);
         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }, (err) => {
@@ -298,6 +308,14 @@ export default function MessagesView({
       return () => unsub();
     } else {
       const unsub = gomboDB.listenMessages(activeConvo.id, (msgs) => {
+        // Check if there is a new incoming message from partner
+        if (msgs.length > messages.length && messages.length > 0) {
+          const latest = msgs[msgs.length - 1];
+          if (latest.senderUid !== currentUser.uid) {
+            try { audioSynth.playNotificationSound(); } catch (e) {}
+          }
+        }
+
         setMessages(msgs);
         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       });
@@ -1163,18 +1181,20 @@ export default function MessagesView({
           {/* DELETED_TAB_5_MARKER */}
         </div>
 
-        <MessagesBottomNavigation
-          activeTab={activeTab === "activite" ? "activites" : activeTab}
-          onTabChange={(tab) => {
-            setActiveConvo(null);
-            if (tab === "activites") {
-              setActiveTab("activite");
-            } else {
-              setActiveTab(tab as any);
-            }
-          }}
-          unreadCount={Math.max(0, totalUnreadCount - (supportConvo?.unreadCount?.[currentUser?.uid] || 0))}
-        />
+        {!activeConvo && (
+          <MessagesBottomNavigation
+            activeTab={activeTab === "activite" ? "activites" : activeTab}
+            onTabChange={(tab) => {
+              setActiveConvo(null);
+              if (tab === "activites") {
+                setActiveTab("activite");
+              } else {
+                setActiveTab(tab as any);
+              }
+            }}
+            unreadCount={Math.max(0, totalUnreadCount - (supportConvo?.unreadCount?.[currentUser?.uid] || 0))}
+          />
+        )}
 
         {/* OVERLAY MODALS */}
         <WebRTCCallModal

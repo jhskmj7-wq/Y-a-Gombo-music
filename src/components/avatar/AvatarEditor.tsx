@@ -771,8 +771,8 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[110] bg-zinc-950 md:bg-black/80 md:backdrop-blur-md overflow-y-auto flex flex-col md:items-center md:justify-center p-0 md:p-4 font-sans text-left">
-      <div className="w-full max-w-5xl min-h-screen md:min-h-0 md:h-[88vh] bg-zinc-900 border-0 md:border border-afri-border/30 md:rounded-3xl flex flex-col shadow-2xl relative overflow-hidden">
+    <div className="fixed inset-0 z-[110] bg-zinc-950 md:bg-black/80 md:backdrop-blur-md flex flex-col items-center justify-center p-0 md:p-4 font-sans text-left overflow-hidden">
+      <div className="w-full max-w-5xl h-full md:h-[90vh] bg-zinc-900 border-0 md:border border-afri-border/30 md:rounded-3xl flex flex-col shadow-2xl relative overflow-hidden">
         
         {/* Toast Notification */}
         {saveSuccess && (
@@ -792,7 +792,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
         )}
         
         {/* Top Bar */}
-        <div className="sticky top-0 z-40 bg-zinc-950 border-b border-afri-border/30 px-4 py-3.5 flex items-center justify-between">
+        <div className="shrink-0 bg-zinc-950 border-b border-afri-border/30 px-4 py-3.5 flex items-center justify-between z-40">
           <div className="flex items-center gap-2">
             <button onClick={handleCancel} className="md:hidden text-afri-text-sec hover:text-afri-text p-1">
               <ArrowLeft className="w-5 h-5" />
@@ -828,14 +828,14 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
         </div>
 
         {/* Workspace */}
-        <div className="flex-1 flex flex-col md:flex-row md:overflow-hidden overflow-y-auto">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           
           {/* Left Column: Preview & Profile Options */}
-          <div className="w-full md:w-[320px] bg-zinc-950 md:border-r border-afri-border/30 p-5 flex flex-col items-center justify-start gap-4 shrink-0">
-            <div className="flex items-center justify-center w-full min-h-[220px] max-h-[280px]">
+          <div className="w-full md:w-[320px] bg-zinc-950 md:border-r border-afri-border/30 p-5 flex flex-col items-center justify-start gap-4 shrink-0 overflow-y-auto">
+            <div className="flex items-center justify-center w-full min-h-[200px] max-h-[260px]">
               <AvatarRenderer 
                 config={config} 
-                size={210} 
+                size={190} 
                 storeItems={[...FREE_DEFAULT_ITEMS, ...storeItems]} 
                 className="shadow-2xl rounded-3xl overflow-hidden border border-afri-border/40" 
               />
@@ -881,10 +881,10 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
           </div>
 
           {/* Right Column: Category Tabs & Grid */}
-          <div className="flex-1 flex flex-col bg-zinc-900/30 overflow-y-auto">
+          <div className="flex-1 flex flex-col bg-zinc-900/30 overflow-hidden">
             
             {/* Horizontal Tabs */}
-            <div className="flex overflow-x-auto p-3 gap-2 border-b border-afri-border/20 bg-zinc-950/80 scrollbar-none sticky top-0 z-30 touch-pan-x">
+            <div className="sticky top-0 z-30 flex overflow-x-auto p-3 gap-2 border-b border-afri-border/20 bg-zinc-950/95 backdrop-blur-md scrollbar-none touch-pan-x shrink-0">
               {TABS.map((tab) => (
                 <button
                   key={tab.id}
@@ -901,7 +901,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
             </div>
 
             {/* Choices Grid */}
-            <div className="p-5 pb-40 md:pb-8 flex-1">
+            <div className="flex-1 overflow-y-auto p-5 pb-24 md:pb-8">
               {activeTab === 'couleur_peau' ? (
                 <div className="space-y-4">
                   <p className="text-xs text-afri-text-sec font-mono uppercase tracking-wider">Teinte de peau :</p>
