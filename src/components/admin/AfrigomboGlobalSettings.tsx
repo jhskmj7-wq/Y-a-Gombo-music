@@ -33,6 +33,12 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
     setSaving(true);
     try {
       await setDoc(doc(db, "system_settings", "global"), config, { merge: true });
+      
+      // Synchronize across all three maintenance documents in Firestore
+      const mMode = !!config.maintenanceMode;
+      await setDoc(doc(db, "settings", "platform"), { status: mMode ? "maintenance" : "operational" }, { merge: true });
+      await setDoc(doc(db, "settings", "maintenance"), { globalMode: mMode }, { merge: true });
+
       setSaved(true);
       if (audioSynth) {
         audioSynth.playValidationSuccess();

@@ -728,7 +728,7 @@ export default function MessagesView({
         </div>
 
         {/* 2. MAIN CONTAINER TAB PANELS */}
-        <div className="flex-1 overflow-hidden relative flex w-full h-full">
+        <div className="flex-1 overflow-hidden relative flex w-full h-full pb-[72px]">
 
           {/* TAB 1: DISCUSSIONS */}
           {activeTab === "discussions" && (
@@ -1172,19 +1172,18 @@ export default function MessagesView({
           {/* DELETED_TAB_5_MARKER */}
         </div>
 
-        {!activeConvo && (
-          <MessagesBottomNavigation
-            activeTab={activeTab === "activite" ? "activites" : activeTab}
-            onTabChange={(tab) => {
-              if (tab === "activites") {
-                setActiveTab("activite");
-              } else {
-                setActiveTab(tab as any);
-              }
-            }}
-            unreadCount={Math.max(0, totalUnreadCount - (supportConvo?.unreadCount?.[currentUser?.uid] || 0))}
-          />
-        )}
+        <MessagesBottomNavigation
+          activeTab={activeTab === "activite" ? "activites" : activeTab}
+          onTabChange={(tab) => {
+            setActiveConvo(null);
+            if (tab === "activites") {
+              setActiveTab("activite");
+            } else {
+              setActiveTab(tab as any);
+            }
+          }}
+          unreadCount={Math.max(0, totalUnreadCount - (supportConvo?.unreadCount?.[currentUser?.uid] || 0))}
+        />
 
         {/* OVERLAY MODALS */}
         <WebRTCCallModal

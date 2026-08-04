@@ -6775,7 +6775,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {activeMenu === "user_messages" && (
-                <div className="w-full flex flex-col justify-between p-0 m-0 border-none rounded-none bg-afri-bg animate-fadeIn text-left">
+                <div className="w-full h-full flex flex-col justify-between p-0 m-0 border-none rounded-none bg-afri-bg animate-fadeIn text-left min-h-0">
                   <MessagesView
                     currentUser={currentUser || { uid: activeArtistId }}
                     currentProfile={profile || (users.find(u => u.id === activeArtistId) || users[0])}

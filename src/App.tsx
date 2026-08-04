@@ -84,10 +84,40 @@ function App() {
   const [isMaintenance, setIsMaintenance] = useState(false);
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, "settings", "platform"), (snap) => {
-      setIsMaintenance(snap.data()?.status === "maintenance");
+    let platMaint = false;
+    let globalMaint = false;
+    let securityMaint = false;
+
+    const updateMaintenanceState = () => {
+      setIsMaintenance(platMaint || globalMaint || securityMaint);
+    };
+
+    const unsubPlatform = onSnapshot(doc(db, "settings", "platform"), (snap) => {
+      platMaint = snap.exists() && snap.data()?.status === "maintenance";
+      updateMaintenanceState();
+    }, (err) => {
+      console.warn("Error listening to platform status:", err);
     });
-    return () => unsub();
+
+    const unsubGlobal = onSnapshot(doc(db, "system_settings", "global"), (snap) => {
+      globalMaint = snap.exists() && snap.data()?.maintenanceMode === true;
+      updateMaintenanceState();
+    }, (err) => {
+      console.warn("Error listening to global system status:", err);
+    });
+
+    const unsubSecurity = onSnapshot(doc(db, "settings", "maintenance"), (snap) => {
+      securityMaint = snap.exists() && snap.data()?.globalMode === true;
+      updateMaintenanceState();
+    }, (err) => {
+      console.warn("Error listening to security maintenance status:", err);
+    });
+
+    return () => {
+      unsubPlatform();
+      unsubGlobal();
+      unsubSecurity();
+    };
   }, []);
 
   const location = useLocation();
