@@ -43,6 +43,7 @@ export default defineConfig({
         theme_color: '#050505',
         background_color: '#050505',
         display: 'standalone',
+        display_override: ['standalone', 'fullscreen'],
         scope: '/',
         start_url: '/',
         orientation: 'portrait',

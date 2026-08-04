@@ -593,7 +593,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
           </div>
 
           {/* Right Column: Category Tabs & Grid */}
-          <div className="flex-1 flex flex-col bg-zinc-900/30 overflow-hidden">
+          <div className="flex-1 flex flex-col bg-zinc-900/30 overflow-hidden min-h-0">
             
             {/* Main Tabs */}
             <div className="flex bg-zinc-950 px-6 pt-4 gap-6 overflow-x-auto no-scrollbar border-b border-afri-border/20">

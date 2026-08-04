@@ -88,8 +88,8 @@ const AvatarRenderer = memo(({ config, size = 120, className = "", storeItems = 
             <ellipse cx="100" cy="142" rx="30" ry="8" fill="black" opacity="0.1" />
             {/* Torso & Shoulders */}
             <path d="M30 215 C 30 160, 55 130, 100 130 C 145 130, 170 160, 170 215 L 170 230 L 30 230 Z" fill={skinColor} />
-            {/* Neck */}
-            <path d="M84 130 L116 130 L114 105 L86 105 Z" fill={skinColor} />
+            {/* Neck (refined connection) */}
+            <path d="M 88 130 L 112 130 L 110 110 L 90 110 Z" fill={skinColor} />
             <path d="M84 130 Q100 138 116 130" stroke="black" strokeWidth="1.2" opacity="0.15" fill="none" />
             {/* Clavicles */}
             <path d="M55 145 Q80 148 95 142" stroke="black" strokeWidth="0.8" opacity="0.1" fill="none" />
@@ -104,11 +104,11 @@ const AvatarRenderer = memo(({ config, size = 120, className = "", storeItems = 
         zIndex: Z_INDEX_MAP['tete'],
         element: (
           <g key="base-head">
-            {/* Detailed Ears */}
-            <path d="M54 95 Q50 88 54 81 Q58 73 66 78 L66 103 Q58 108 54 95" fill={skinColor} />
-            <path d="M146 95 Q150 88 146 81 Q142 73 134 78 L134 103 Q142 108 146 95" fill={skinColor} />
-            {/* Refined Face Shape */}
-            <path d="M66 80 C 66 30, 134 30, 134 80 C 134 125, 115 145, 100 150 C 85 145, 66 125, 66 80 Z" fill={skinColor} />
+            {/* Detailed Ears (smaller) */}
+            <path d="M60 90 Q56 85 60 78 Q64 73 70 78 L70 98 Q64 103 60 90" fill={skinColor} />
+            <path d="M140 90 Q144 85 140 78 Q136 73 130 78 L130 98 Q136 103 140 90" fill={skinColor} />
+            {/* Refined Face Shape (smaller, more oval) */}
+            <path d="M75 70 C 75 30, 125 30, 125 70 C 125 115, 110 135, 100 140 C 90 135, 75 115, 75 70 Z" fill={skinColor} />
             {/* Jaw definition */}
             <path d="M66 85 Q66 125 100 150 Q134 125 134 85" fill="none" stroke="black" strokeWidth="0.8" opacity="0.1" />
           </g>
