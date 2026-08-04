@@ -1134,7 +1134,8 @@ export default function GomboProfile({
       onBack={panelView === "main" ? undefined : handleBack}
       scrollable={true}
     >
-      {panelView === "main" && (
+      <div className="afri-container afri-section">
+        {panelView === "main" && (
         <GomboProfileMainView
           currentUserProfile={syncedProfile}
           onRefreshProfile={onRefreshProfile}
@@ -1283,6 +1284,7 @@ export default function GomboProfile({
           </div>
         </div>
       )}
+      </div>
     </AndroidPageLayout>
   );
 }

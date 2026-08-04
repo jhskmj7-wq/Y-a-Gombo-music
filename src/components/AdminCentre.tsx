@@ -3198,13 +3198,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
                 className={`h-full w-full flex flex-col ${
-                  activeMenu.startsWith("user_")
+                  ["user_heritage", "user_wallet", "user_settings", "user_notifications", "user_messages", "user_reels"].includes(activeMenu)
                     ? "overflow-hidden"
                     : "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
                 } ${
                   activeMenu === "super_admin" || activeMenu === "user_builders"
                     ? "px-4 xs:px-5 sm:px-8 max-w-5xl mx-auto w-full pt-0 pb-16 sm:pb-20 space-y-6"
-                    : activeMenu.startsWith("user_")
+                    : ["user_heritage", "user_wallet", "user_settings", "user_notifications", "user_messages", "user_reels"].includes(activeMenu)
                     ? "p-0"
                     : "afri-container afri-section"
                 }`}

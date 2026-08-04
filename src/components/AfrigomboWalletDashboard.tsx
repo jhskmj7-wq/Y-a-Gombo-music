@@ -569,7 +569,7 @@ export default function AfrigomboWalletDashboard({
 
   return (
     <AndroidPageLayout title="Mon Wallet Souverain" onBack={onBack} scrollable={true} className="pb-safe">
-      <div className="w-full space-y-4 text-left animate-fadeIn">
+      <div className="afri-container afri-section text-left animate-fadeIn">
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           1. 💰 SOLDE DISPONIBLE (EN TRÈS GRAND)
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
