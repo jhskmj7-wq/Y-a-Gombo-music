@@ -1,4 +1,4 @@
-# AFRIGOMBO Security Specification
+# AFRIGOMBO ELITE Security Specification
 
 ## Data Invariants
 - **I1: Identity Match**: Users can only modify their own profile data.

@@ -1,5 +1,5 @@
 /**
- * Helper function to open the universal AFRIGOMBO Public Profile (Fiche Publique / CV Musical)
+ * Helper function to open the universal AFRIGOMBO ELITE Public Profile (Fiche Publique / CV Musical)
  * from anywhere in the application.
  */
 export function openPublicProfile(userId?: string | null) {

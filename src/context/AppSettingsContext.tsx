@@ -287,7 +287,7 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     profileColor: safeGetItem("gombo_prof_color", "#D4AF37"),
     visitingCard: safeGetItem("gombo_prof_card", "true") !== "false",
     badge: safeGetItem("gombo_prof_badge", "GOLD_ARTIST"),
-    signature: safeGetItem("gombo_prof_sig", "Artiste Élite AFRIGOMBO 👑"),
+    signature: safeGetItem("gombo_prof_sig", "Artiste Élite AFRIGOMBO ELITE 👑"),
     profileMusic: safeGetItem("gombo_prof_music", "intro_hymn"),
   }));
 

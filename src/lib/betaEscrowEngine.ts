@@ -63,7 +63,7 @@ export async function createBetaTransaction(payload: {
     gomboId: payload.gomboId || "",
     gomboTitle: payload.gomboTitle || "Dépôt de Cachet Bêta",
     promoterId: payload.promoterId,
-    promoterName: payload.promoterName || "Promoteur AFRIGOMBO",
+    promoterName: payload.promoterName || "Promoteur AFRIGOMBO ELITE",
     artistId: payload.artistId,
     artistName: payload.artistName || "Artiste Virtuose",
     amount: payload.amount,
@@ -116,7 +116,7 @@ export async function proceedToSupportAssistance(
   await updateDoc(txRef, {
     status: "en_attente_validation",
     updatedAt: now,
-    notes: "Paiement en cours d'accompagnement par l'équipe AFRIGOMBO"
+    notes: "Paiement en cours d'accompagnement par l'équipe AFRIGOMBO ELITE"
   });
 
   // Log in support_messages for official team visibility
@@ -175,7 +175,7 @@ export async function validateBetaDeposit(
     validatedBy: adminName,
     validatedAt: now,
     updatedAt: now,
-    notes: "Fonds bloqués et sécurisés dans le coffre-fort AFRIGOMBO (Bêta)."
+    notes: "Fonds bloqués et sécurisés dans le coffre-fort AFRIGOMBO ELITE (Bêta)."
   });
 
   // 2. If contractId or gomboId exists, update contract, escrow, social_posts & gombos status to "published"
@@ -278,7 +278,7 @@ export async function validateBetaDeposit(
     {
       userId: txData.artistId,
       title: "🎉 Cachet Sécurisé dans le Coffre !",
-      body: `Le promoteur ${txData.promoterName} a consigné votre cachet de ${txData.amount.toLocaleString()} FCFA sur AFRIGOMBO. Vous pouvez effectuer la prestation en toute sérénité.`,
+      body: `Le promoteur ${txData.promoterName} a consigné votre cachet de ${txData.amount.toLocaleString()} FCFA sur AFRIGOMBO ELITE. Vous pouvez effectuer la prestation en toute sérénité.`,
       type: "escrow_locked",
       transactionId,
       read: false,
@@ -369,7 +369,7 @@ export async function requestBetaVerification(
     await addDoc(collection(db, "notifications"), {
       userId: txData.promoterId,
       title: "🔍 Vérification Requise pour votre Dépôt",
-      body: `L'équipe AFRIGOMBO demande une vérification complémentaire : ${note}`,
+      body: `L'équipe AFRIGOMBO ELITE demande une vérification complémentaire : ${note}`,
       type: "escrow_verification",
       transactionId,
       read: false,
@@ -438,7 +438,7 @@ export async function releaseBetaCachet(
     {
       userId: txData.artistId,
       title: "💰 Cachet Libéré sur votre Solde !",
-      body: `Le montant de ${txData.amount.toLocaleString()} FCFA a été libéré sur votre Solde Disponible AFRIGOMBO.`,
+      body: `Le montant de ${txData.amount.toLocaleString()} FCFA a été libéré sur votre Solde Disponible AFRIGOMBO ELITE.`,
       type: "escrow_released",
       transactionId,
       read: false,
@@ -504,7 +504,7 @@ export async function openBetaDispute(
     {
       userId: txData.promoterId,
       title: "⚠️ Litige Ouvert sur le Dépôt",
-      body: `Un litige a été ouvert concernant la transaction de ${txData.amount.toLocaleString()} FCFA. L'équipe médiation AFRIGOMBO vous contacte.`,
+      body: `Un litige a été ouvert concernant la transaction de ${txData.amount.toLocaleString()} FCFA. L'équipe médiation AFRIGOMBO ELITE vous contacte.`,
       type: "escrow_dispute",
       transactionId,
       read: false,

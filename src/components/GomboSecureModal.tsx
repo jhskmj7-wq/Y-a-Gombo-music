@@ -68,7 +68,7 @@ export default function GomboSecureModal({ isOpen, onClose }: GomboSecureModalPr
                   </div>
                   <div className="space-y-3">
                     <h2 className="text-3xl font-black font-mono uppercase tracking-tighter text-afri-text">C'EST ENREGISTRÉ !</h2>
-                    <p className="text-afri-text-sec text-sm font-medium">Vous êtes sur la liste prioritaire. Vous serez parmi les premiers à sécuriser vos cachets via AFRIGOMBO.</p>
+                    <p className="text-afri-text-sec text-sm font-medium">Vous êtes sur la liste prioritaire. Vous serez parmi les premiers à sécuriser vos cachets via AFRIGOMBO ELITE.</p>
                   </div>
                   <button
                     onClick={onClose}
@@ -86,7 +86,7 @@ export default function GomboSecureModal({ isOpen, onClose }: GomboSecureModalPr
                     </div>
                     <div className="space-y-2">
                       <h2 className="text-3xl font-black font-mono uppercase tracking-tighter leading-none text-afri-text">
-                        🛡️ GOMBO SÉCURISÉ <span className="text-[#D4AF37]">AFRIGOMBO</span>
+                        🛡️ GOMBO SÉCURISÉ <span className="text-[#D4AF37]">AFRIGOMBO ELITE</span>
                       </h2>
                       <p className="text-afri-text-muted text-xs font-bold uppercase tracking-widest">Le Standard de Confiance Absolue</p>
                     </div>
@@ -103,7 +103,7 @@ export default function GomboSecureModal({ isOpen, onClose }: GomboSecureModalPr
                       </div>
                       <div className="space-y-1">
                         <p className="text-[11px] font-black uppercase text-afri-text">Séquestre Automatique</p>
-                        <p className="text-[9px] text-afri-text-muted font-medium">L'argent est bloqué par AFRIGOMBO dès la signature.</p>
+                        <p className="text-[9px] text-afri-text-muted font-medium">L'argent est bloqué par AFRIGOMBO ELITE dès la signature.</p>
                       </div>
                     </div>
                     <div className="bg-afri-bg border border-afri-border p-4 rounded-2xl flex items-start gap-3">

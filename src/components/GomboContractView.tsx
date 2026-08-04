@@ -154,7 +154,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
       }
 
       try { audioSynth.playValidationSuccess(); } catch(_) {}
-      alert("✅ Dépôt Sécurisé Effectué avec Succès ! Le cachet est bloqué dans le séquestre AFRIGOMBO jusqu'à réalisation de la mission.");
+      alert("✅ Dépôt Sécurisé Effectué avec Succès ! Le cachet est bloqué dans le séquestre AFRIGOMBO ELITE jusqu'à réalisation de la mission.");
 
       if (onUpdate) onUpdate();
     } catch (e: any) {
@@ -649,7 +649,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
           {["payment_held", "arrived", "in_progress", "completed_artist", "completed", "disputed"].includes(contract.status) && (
             <div className="space-y-6 border-t border-afri-border pt-8">
               <h3 className="text-afri-text-sec text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">
-                PROTOCOLE DE SÉCURITÉ AFRIGOMBO (TIERS DE CONFIANCE)
+                PROTOCOLE DE SÉCURITÉ AFRIGOMBO ELITE (TIERS DE CONFIANCE)
               </h3>
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -924,11 +924,11 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   </div>
                 </div>
 
-                {/* Total AFRIGOMBO commission */}
+                {/* Total AFRIGOMBO ELITE commission */}
                 <div className="flex items-center justify-between border-t border-afri-border pt-4 px-1">
                   <div className="flex flex-col">
                     <span className="text-[9px] font-mono uppercase text-afri-text-sec tracking-wider">Service de confiance sécurisé</span>
-                    <span className="text-afri-text-sec text-xs">Commission totale AFRIGOMBO</span>
+                    <span className="text-afri-text-sec text-xs">Commission totale AFRIGOMBO ELITE</span>
                   </div>
                   <span className="text-afri-text font-mono font-bold">
                     {(contract.commissionClient + contract.commissionArtist).toLocaleString()} FCFA 
@@ -964,7 +964,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   <div className="flex items-start gap-3">
                     <Lock className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-afri-text font-bold">Paiement Sécurisé par AFRIGOMBO</p>
+                      <p className="text-afri-text font-bold">Paiement Sécurisé par AFRIGOMBO ELITE</p>
                       <p className="text-afri-text-sec text-[10px] leading-relaxed">
                         Les fonds sont bloqués dès le dépôt et ne sont libérés qu'après validation mutuelle de la prestation.
                       </p>
@@ -975,7 +975,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                     <div>
                       <p className="text-afri-text font-bold">Garantie de Prestation</p>
                       <p className="text-afri-text-sec text-[10px] leading-relaxed">
-                        Le contrat fait foi en cas de litige. AFRIGOMBO intervient comme tiers de confiance souverain.
+                        Le contrat fait foi en cas de litige. AFRIGOMBO ELITE intervient comme tiers de confiance souverain.
                       </p>
                     </div>
                   </div>
@@ -1079,7 +1079,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   <ShieldCheck className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
                   <h4 className="text-emerald-400 font-black uppercase tracking-widest text-sm">Fonds Financés & Sécurisés</h4>
                   <p className="text-afri-text-sec text-xs max-w-md mx-auto">
-                    Le promoteur a déposé le cachet sur le compte de séquestre AFRIGOMBO. Veuillez accepter ou refuser cette prestation.
+                    Le promoteur a déposé le cachet sur le compte de séquestre AFRIGOMBO ELITE. Veuillez accepter ou refuser cette prestation.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1183,13 +1183,13 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
               </div>
             ) : null}
 
-            {/* Section Annulation de Contrat - Règles de Séquestre AFRIGOMBO */}
+            {/* Section Annulation de Contrat - Règles de Séquestre AFRIGOMBO ELITE */}
             {contract.status !== "completed" && contract.status !== "cancelled" && (
               <div className="mt-8 pt-6 border-t border-afri-border/60 flex flex-col items-center gap-2">
                 <button
                   onClick={async () => {
                     const confirmMsg = contract.clientSigned && contract.artistSigned
-                      ? "Attention: Les deux parties ont signé ce contrat. Conformément aux règles d'annulation d'AFRIGOMBO, une pénalité de 10% du cachet sera retenue et reversée à l'artiste à titre de dédommagement si le séquestre a été déposé. Voulez-vous continuer ?"
+                      ? "Attention: Les deux parties ont signé ce contrat. Conformément aux règles d'annulation d'AFRIGOMBO ELITE, une pénalité de 10% du cachet sera retenue et reversée à l'artiste à titre de dédommagement si le séquestre a été déposé. Voulez-vous continuer ?"
                       : "Êtes-vous sûr de vouloir annuler ce contrat ? Comme les deux parties n'ont pas encore signé, le remboursement sera intégral.";
                     if (window.confirm(confirmMsg)) {
                       setProcessing(true);
@@ -1310,7 +1310,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                         BADGE DE QUALITÉ :
                       </span>
                       <strong className="text-[#D4AF37] text-base font-black uppercase tracking-widest font-sans block mt-1 drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]">
-                        {partnerProfile?.badge === "Référence AFRIGOMBO" && "👑 Référence AFRIGOMBO"}
+                        {partnerProfile?.badge === "Référence AFRIGOMBO ELITE" && "👑 Référence AFRIGOMBO ELITE"}
                         {partnerProfile?.badge === "Artiste Premium" && "🏆 Artiste Premium"}
                         {partnerProfile?.badge === "Excellence" && "🥇 Excellence"}
                         {partnerProfile?.badge === "Très fiable" && "🥈 Très fiable"}
@@ -1334,7 +1334,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                       <strong className="text-xl text-emerald-400 font-sans font-black drop-shadow-[0_0_8px_rgba(52,211,153,0.2)]">
                         {partnerProfile?.trustScore !== undefined ? partnerProfile.trustScore : "100"} %
                       </strong>
-                      <span className="text-[8px] text-afri-text-sec font-mono mt-1">AFRIGOMBO SECURE</span>
+                      <span className="text-[8px] text-afri-text-sec font-mono mt-1">AFRIGOMBO ELITE SECURE</span>
                     </div>
 
                     <div className="bg-afri-bg/60 border border-afri-border rounded-2xl p-4 flex flex-col items-center justify-center text-center">
@@ -1371,7 +1371,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                       <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
                       <h5 className="text-afri-text font-black text-xs uppercase font-sans">ÉVALUATION ENREGISTRÉE AVEC SUCCÈS</h5>
                       <p className="text-afri-text-sec text-xs">
-                        Vous avez déjà évalué cette prestation d'excellence. Merci de contribuer à la sécurité et à la qualité d'AFRIGOMBO !
+                        Vous avez déjà évalué cette prestation d'excellence. Merci de contribuer à la sécurité et à la qualité d'AFRIGOMBO ELITE !
                       </p>
                     </div>
                   ) : (
@@ -1492,7 +1492,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                               contractId: contract.id,
                               reviewerId,
                               revieweeId,
-                              reviewerName: currentUser.displayName || currentUser.name || "Abonné AFRIGOMBO",
+                              reviewerName: currentUser.displayName || currentUser.name || "Abonné AFRIGOMBO ELITE",
                               rating: evalRating,
                               punctuality: evalPunctuality,
                               professionalism: evalProfessionalism,
@@ -1542,7 +1542,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
             <div className="text-center space-y-2">
               <AlertTriangle className="w-12 h-12 text-red-500 mx-auto" />
               <h3 className="text-xl font-black text-afri-text uppercase tracking-tighter">OUVERTURE DE LITIGE</h3>
-              <p className="text-afri-text-sec text-xs">Veuillez expliquer précisément la raison du litige. Le centre de commandement AFRIGOMBO analysera votre dossier.</p>
+              <p className="text-afri-text-sec text-xs">Veuillez expliquer précisément la raison du litige. Le centre de commandement AFRIGOMBO ELITE analysera votre dossier.</p>
             </div>
             
             <textarea 

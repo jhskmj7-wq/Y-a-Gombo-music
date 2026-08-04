@@ -199,7 +199,7 @@ export default function AudioPublishForm({
               Publier un Morceau Audio
             </h2>
             <p className="text-xs text-afri-text-sec">
-              Diffusion et catalogue indépendant AFRIGOMBO AUDIO (Collection exclusive)
+              Diffusion et catalogue indépendant AFRIGOMBO ELITE AUDIO (Collection exclusive)
             </p>
           </div>
         </div>
@@ -651,7 +651,7 @@ export default function AudioPublishForm({
                 <Square className="w-5 h-5 text-afri-text-muted shrink-0 mt-0.5" />
               )}
               <span className="leading-relaxed">
-                <strong>Droits d'auteur :</strong> Je confirme être propriétaire ou autorisé à publier ce contenu musical sur la plateforme souveraine AFRIGOMBO.
+                <strong>Droits d'auteur :</strong> Je confirme être propriétaire ou autorisé à publier ce contenu musical sur la plateforme souveraine AFRIGOMBO ELITE.
               </span>
             </label>
           </div>

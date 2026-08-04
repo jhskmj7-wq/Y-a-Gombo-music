@@ -205,7 +205,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
     if (navigator.share) {
       navigator.share({ title: item.title, text: item.description, url: shareUrl }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(`${item.title} - ${item.price.toLocaleString()} FCFA sur AFRIGOMBO: ${shareUrl}`);
+      navigator.clipboard.writeText(`${item.title} - ${item.price.toLocaleString()} FCFA sur AFRIGOMBO ELITE: ${shareUrl}`);
       alert("Lien de l'annonce copié dans le presse-papier !");
     }
   };
@@ -688,7 +688,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
             <Store className="w-10 h-10 text-[#D4AF37] mx-auto opacity-60" />
             <h3 className="text-sm font-black text-afri-text uppercase">Vous n'avez aucune annonce en ligne</h3>
             <p className="text-xs text-afri-text-sec max-w-md mx-auto">
-              Publiez votre matériel musical ou proposez vos services studio sur le Grand Marché d'AFRIGOMBO.
+              Publiez votre matériel musical ou proposez vos services studio sur le Grand Marché d'AFRIGOMBO ELITE.
             </p>
             <button
               onClick={() => setIsPublishModalOpen(true)}
@@ -858,7 +858,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               {selectedItem.phone && (
                 <button
                   onClick={() => {
-                    supportConfig.openSupport(`Bonjour, je suis intéressé par votre annonce sur le Grand Marché AFRIGOMBO : ${selectedItem.title}`);
+                    supportConfig.openSupport(`Bonjour, je suis intéressé par votre annonce sur le Grand Marché AFRIGOMBO ELITE : ${selectedItem.title}`);
                   }}
                   className="px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 rounded-xl text-xs font-bold uppercase flex items-center gap-1 cursor-pointer"
                 >
@@ -902,7 +902,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               <span>1. Séquestre AfriTrust & Commission 5%</span>
             </div>
             <p className="text-xs text-afri-text-sec leading-relaxed">
-              Pour chaque transaction sur Le Grand Marché (achat, vente ou location d'équipement musical), AFRIGOMBO sécurise les fonds via son compte séquestre <strong>AfriTrust</strong>. Les fonds sont débloqués au vendeur dès la confirmation de livraison par l'acheteur. Une commission de <strong>5%</strong> est automatiquement prélevée pour l'assurance matériel et la gestion des litiges.
+              Pour chaque transaction sur Le Grand Marché (achat, vente ou location d'équipement musical), AFRIGOMBO ELITE sécurise les fonds via son compte séquestre <strong>AfriTrust</strong>. Les fonds sont débloqués au vendeur dès la confirmation de livraison par l'acheteur. Une commission de <strong>5%</strong> est automatiquement prélevée pour l'assurance matériel et la gestion des litiges.
             </p>
           </div>
 

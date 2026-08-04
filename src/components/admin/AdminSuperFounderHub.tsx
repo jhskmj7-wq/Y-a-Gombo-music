@@ -115,7 +115,7 @@ export default function AdminSuperFounderHub({
         </div>
         <h1 className="text-xl font-black text-rose-500 uppercase tracking-widest mb-2">ACCÈS SOUVERAIN REFUSÉ</h1>
         <p className="text-xs text-afri-text-sec max-w-md mb-6 leading-relaxed">
-          Seul le Super Fondateur légitime d'AFRIGOMBO (<span className="text-amber-400 font-mono">jhs.kmj7@gmail.com</span>) possède les autorisations pour accéder à ce Cabinet Impérial.
+          Seul le Super Fondateur légitime d'AFRIGOMBO ELITE (<span className="text-amber-400 font-mono">jhs.kmj7@gmail.com</span>) possède les autorisations pour accéder à ce Cabinet Impérial.
           Cette tentative a été journalisée dans le registre de sécurité.
         </p>
         {onExit && (
@@ -147,7 +147,7 @@ export default function AdminSuperFounderHub({
     { key: "locations" as AdminModuleType, label: "🌍 Lieux & Territoires", icon: Globe, badge: "Territoires" },
     { key: "stats" as AdminModuleType, label: "📈 Statistiques", icon: TrendingUp, badge: undefined },
     { key: "avatar_store" as AdminModuleType, label: "🎭 Avatar Store", icon: User, badge: "Économie" },
-    { key: "labs" as AdminModuleType, label: "🧠 AFRIGOMBO Labs", icon: FlaskConical, badge: "Bêta" },
+    { key: "labs" as AdminModuleType, label: "🧠 AFRIGOMBO ELITE Labs", icon: FlaskConical, badge: "Bêta" },
     { key: "polls" as AdminModuleType, label: "📊 Sondages", icon: BarChart3, badge: undefined },
     { key: "multimedia" as AdminModuleType, label: "🎵 Multimédia", icon: Music, badge: undefined },
     { key: "settings" as AdminModuleType, label: "⚙ Paramètres", icon: Settings, badge: undefined },

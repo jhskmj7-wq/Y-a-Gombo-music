@@ -83,11 +83,11 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
   };
 
   const handleShareProfile = () => {
-    const text = `Découvrez mon profil artistique certifié sur AFRIGOMBO, Le Temple du Gombo Musical.\n🎼 Mon GOMBO ID : ${gomboId}\nRejoignez l'élite musicale !`;
+    const text = `Découvrez mon profil artistique certifié sur AFRIGOMBO ELITE, Le Temple du Gombo Musical.\n🎼 Mon GOMBO ID : ${gomboId}\nRejoignez l'élite musicale !`;
     try {
       if (navigator.share) {
         navigator.share({
-          title: `Profil de ${currentUserProfile.artisticName || "Artiste AFRIGOMBO"}`,
+          title: `Profil de ${currentUserProfile.artisticName || "Artiste AFRIGOMBO ELITE"}`,
           text: text,
           url: window.location.origin
         }).catch(console.warn);
@@ -149,7 +149,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           <p className={`text-xs leading-relaxed font-sans text-left ${
             isLight ? "text-gray-800" : "text-afri-text"
           }`}>
-            Piloter l'ensemble de l'écosystème AFRIGOMBO. Accès exclusif aux serveurs, statistiques globales et modération de haut niveau.
+            Piloter l'ensemble de l'écosystème AFRIGOMBO ELITE. Accès exclusif aux serveurs, statistiques globales et modération de haut niveau.
           </p>
           
           <button 
@@ -162,7 +162,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         </motion.div>
       )}
 
-      {/* 👑 AFRIGOMBO PREMIUM BANNER / CARD - CONDITIONNEL */}
+      {/* 👑 AFRIGOMBO ELITE PREMIUM BANNER / CARD - CONDITIONNEL */}
       {isSubscribed ? (
         /* S'IL EST DÉJÀ ABONNÉ: Carte discrète MEMBRE PREMIUM ACTIF */
         <div className={`w-full flex items-center justify-between p-4 rounded-[18px] border shadow-sm ${
@@ -208,7 +208,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               }`}>Abonnement</span>
               <h3 className={`text-base font-sans font-black uppercase tracking-tight ${
                 isLight ? "text-gray-950" : "text-afri-text"
-              }`}>AFRIGOMBO PREMIUM</h3>
+              }`}>AFRIGOMBO ELITE PREMIUM</h3>
             </div>
           </div>
           
@@ -299,7 +299,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               {currentUserProfile.role === "founder" && (
                 <div className="w-full mt-0.5">
                   <span className="afri-badge afri-badge-gold px-2.5 py-0.5 rounded-full shadow-sm inline-flex items-center gap-1">
-                    👑 Fondateur AFRIGOMBO
+                    👑 Fondateur AFRIGOMBO ELITE
                   </span>
                 </div>
               )}
@@ -413,7 +413,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       {/* 3. CENTERED SUBTITLE TEXT */}
       <div className="text-center py-1">
         <p className="text-afri-text-sec font-sans text-xs italic">
-          Membre Elite de la famille AFRIGOMBO
+          Membre Elite de la famille AFRIGOMBO ELITE
         </p>
       </div>
 
@@ -427,7 +427,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         <ChevronRight className="w-3.5 h-3.5 text-afri-gold stroke-[3.5]" />
       </button>
 
-      {/* 4b. AVATAR AFRIGOMBO SECTION */}
+      {/* 4b. AVATAR AFRIGOMBO ELITE SECTION */}
       <div className={`relative  rounded-[24px] p-5 border shadow-sm ${
         isLight ? "bg-[#FDFBF7] border-[#D4AF37]/40" : "bg-afri-bg-sec border-afri-border"
       }`}>
@@ -490,7 +490,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             <p className={`text-[10px] xs:text-[11px] max-w-[320px] mx-auto leading-relaxed font-sans ${
               isLight ? "text-gray-800" : "text-afri-text"
             }`}>
-              Votre demande est en cours d'évaluation par le comité artistique AFRIGOMBO. Notre équipe procède à la vérification de vos pièces.
+              Votre demande est en cours d'évaluation par le comité artistique AFRIGOMBO ELITE. Notre équipe procède à la vérification de vos pièces.
             </p>
             <div className="pt-2">
               <button 
@@ -849,7 +849,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 👑 CENTRE DE COMMANDEMENT
               </h3>
               <p className="text-xs text-afri-text-sec dark:text-afri-text-sec font-mono max-w-md mx-auto leading-relaxed">
-                Accédez au panneau d'administration central et de pilotage stratégique d'AFRIGOMBO.
+                Accédez au panneau d'administration central et de pilotage stratégique d'AFRIGOMBO ELITE.
               </p>
             </div>
             <button
@@ -965,7 +965,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </div>
 
             <p className="text-[10px] text-afri-text-sec font-sans leading-relaxed max-w-[320px] mx-auto italic text-center">
-              « Par ce présent certificat, l'équipe artistique et le comité de souveraineté d'AFRIGOMBO certifient l'artiste ci-dessous comme membre agréé de l'élite musicale ivoirienne. »
+              « Par ce présent certificat, l'équipe artistique et le comité de souveraineté d'AFRIGOMBO ELITE certifient l'artiste ci-dessous comme membre agréé de l'élite musicale ivoirienne. »
             </p>
 
             <div className="space-y-1 text-center">
@@ -999,7 +999,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         title={
           <div className="flex items-center gap-2">
             <span className="text-xl">👑</span>
-            <span>Mon Statut AFRIGOMBO</span>
+            <span>Mon Statut AFRIGOMBO ELITE</span>
           </div>
         }
         subtitle="Votre positionnement & avantages au sein de l'Alliance"

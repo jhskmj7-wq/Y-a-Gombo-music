@@ -65,7 +65,7 @@
 
       // Automatic recovery if PWA encounters a chunk load error or stale cache error
       const recoverFromChunkError = async (reason) => {
-        console.warn('⚠️ [AFRIGOMBO PWA RECOVERY] Triggered by:', reason);
+        console.warn('⚠️ [AFRIGOMBO ELITE PWA RECOVERY] Triggered by:', reason);
         const lastRecovery = sessionStorage.getItem('afrigombo_last_pwa_recovery');
         const now = Date.now();
         // Prevent infinite reload loops (limit to once every 10s)

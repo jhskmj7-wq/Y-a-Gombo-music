@@ -43,7 +43,7 @@ export const SmartUniverseCarousel: React.FC<SmartUniverseCarouselProps> = ({ it
       <div className="flex items-center gap-2 px-1">
         <Globe className="w-4 h-4 text-indigo-400" />
         <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
-          UNIVERS AFRIGOMBO
+          UNIVERS AFRIGOMBO ELITE
         </h3>
         <div className="h-px flex-1 bg-gradient-to-r from-indigo-400/30 to-transparent ml-2" />
       </div>

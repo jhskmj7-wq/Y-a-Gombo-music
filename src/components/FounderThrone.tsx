@@ -147,7 +147,7 @@ export default function FounderThrone({
              <Globe className="w-6 h-6 2xl:w-10 2xl:h-10 text-[#D4AF37]" strokeWidth={1} />
           </div>
           <h1 className="text-[10px] 2xl:text-base font-black font-display text-[#D4AF37] tracking-widest uppercase text-center leading-tight drop-shadow-[0_0_20px_rgba(212,175,55,0.8)]">
-            AFRIGOMBO<br/>
+            AFRIGOMBO ELITE<br/>
             <span className="text-[8px] 2xl:text-xs text-afri-text font-sans tracking-wide">Y'A GOMBO MUSIC</span>
           </h1>
         </div>
@@ -291,7 +291,7 @@ export default function FounderThrone({
                      SUPER FONDATEUR
                    </span>
                    <p className="text-afri-text text-xs sm:text-sm mb-3 flex items-center justify-center md:justify-start gap-2 max-w-full">
-                     Niveau : <span className="text-[#D4AF37] font-black uppercase tracking-wider drop-shadow-[0_0_5px_rgba(212,175,55,0.8)]">LÉGENDE AFRIGOMBO</span>
+                     Niveau : <span className="text-[#D4AF37] font-black uppercase tracking-wider drop-shadow-[0_0_5px_rgba(212,175,55,0.8)]">LÉGENDE AFRIGOMBO ELITE</span>
                    </p>
                    
                    <div className="flex text-[#D4AF37] mb-4 gap-2 drop-shadow-[0_0_5px_rgba(212,175,55,0.6)]">
@@ -414,7 +414,7 @@ export default function FounderThrone({
                  
                  <div className="relative z-20 p-6 sm:p-10 pl-10 flex flex-col justify-center h-full max-w-2xl">
                     <h2 className="text-4xl 2xl:text-5xl font-black font-sans text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-amber-200 tracking-tight leading-none mb-2 drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">
-                      AFRIGOMBO
+                      AFRIGOMBO ELITE
                     </h2>
                     <p className="text-xs 2xl:text-sm font-bold text-afri-text uppercase tracking-[0.2em] opacity-90 leading-tight">
                       LE TERRAIN D'ACTION<br/>DE L'AFRIQUE CRÉATIVE.
@@ -438,7 +438,7 @@ export default function FounderThrone({
               {/* MONETIZATION CARD */}
               <div className="bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/40 rounded-2xl p-6 sm:p-8 relative overflow-hidden shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-afri-bg-sec/10 blur-3xl rounded-full pointer-events-none"></div>
-                <h3 className="text-[11px] sm:text-xs font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans mb-6 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">MONÉTISATION AFRIGOMBO</h3>
+                <h3 className="text-[11px] sm:text-xs font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans mb-6 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">MONÉTISATION AFRIGOMBO ELITE</h3>
                 
                 <div className="space-y-6 relative z-10">
                   <div>
@@ -535,7 +535,7 @@ export default function FounderThrone({
                   </h4>
                   <div className="grid grid-cols-2 gap-1.5">
                     {[
-                      { name: "Référence AFRIGOMBO", color: "bg-afri-bg-sec text-black", count: users.filter(u => u.badge === "Référence AFRIGOMBO").length },
+                      { name: "Référence AFRIGOMBO ELITE", color: "bg-afri-bg-sec text-black", count: users.filter(u => u.badge === "Référence AFRIGOMBO ELITE").length },
                       { name: "Artiste Premium", color: "bg-amber-600 text-afri-text", count: users.filter(u => u.badge === "Artiste Premium").length },
                       { name: "Excellence", color: "bg-emerald-600 text-afri-text", count: users.filter(u => u.badge === "Excellence").length },
                       { name: "Très fiable", color: "bg-blue-600 text-afri-text", count: users.filter(u => u.badge === "Très fiable").length },
@@ -579,7 +579,7 @@ export default function FounderThrone({
                         Qualité de la Communauté au Sommet
                       </span>
                       <p className="text-[8px] text-afri-text-sec mt-1 max-w-xs leading-relaxed">
-                        L'algorithme heuristique d'AFRIGOMBO n'a détecté aucune anomalie récente d'auto-évaluation ou de manipulation de score.
+                        L'algorithme heuristique d'AFRIGOMBO ELITE n'a détecté aucune anomalie récente d'auto-évaluation ou de manipulation de score.
                       </p>
                     </div>
                   ) : (
@@ -876,11 +876,11 @@ export default function FounderThrone({
                  </div>
               </div>
 
-              {/* IA AFRIGOMBO DEDICATED CARD */}
+              {/* IA AFRIGOMBO ELITE DEDICATED CARD */}
               <div className="bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/30 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-auto relative overflow-hidden group">
                  <div className="absolute top-0 right-0 w-32 h-32 bg-afri-bg-sec/10 blur-2xl rounded-full pointer-events-none group-hover:bg-afri-bg-sec/20 transition-all"></div>
                  <h3 className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans mb-3 drop-shadow-[0_0_5px_rgba(212,175,55,0.3)] flex items-center gap-2">
-                   <Sparkles className="w-4 h-4 text-[#D4AF37]" /> IA AFRIGOMBO
+                   <Sparkles className="w-4 h-4 text-[#D4AF37]" /> IA AFRIGOMBO ELITE
                  </h3>
                  
                  <div className="grid grid-cols-2 gap-2 mb-3 relative z-10">

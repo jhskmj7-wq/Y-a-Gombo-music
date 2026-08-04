@@ -149,7 +149,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
         category: (firestoreDoc?.category as any) || category,
         commune: extractCommuneString(firestoreDoc?.commune || g.commune || g.location),
         authorUid: g.userId || g.clientId,
-        authorName: firestoreDoc?.authorName || g.clientName || g.organizerName || author?.artisticName || author?.displayName || "Organisateur AFRIGOMBO",
+        authorName: firestoreDoc?.authorName || g.clientName || g.organizerName || author?.artisticName || author?.displayName || "Organisateur AFRIGOMBO ELITE",
         authorAvatar: (author?.useAvatarAsProfile && author?.avatarDataUri) ? author.avatarDataUri : (firestoreDoc?.authorAvatar || g.organizerAvatar || author?.photoURL || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150"),
         isGomboIdVerified: isVerified,
         isPremium,
@@ -234,7 +234,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
         items.push({
           id: artistId,
           type: "post",
-          title: firestoreDoc?.title || u.artisticName || u.displayName || "Artiste d'Élite AFRIGOMBO",
+          title: firestoreDoc?.title || u.artisticName || u.displayName || "Artiste d'Élite AFRIGOMBO ELITE",
           description: firestoreDoc?.description || `${u.instrument || u.role || "Musicien Professionnel"} • ${u.commune || "Abidjan"}`,
           category: "artiste" as any,
           commune: extractCommuneString(u.commune || u.location),
@@ -401,7 +401,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
       try { 
         // Silenced for ELITE
       } catch (_) {}
-      showToast("👍 'J'honore' enregistré ! +12 pts au Score AFRIGOMBO");
+      showToast("👍 'J'honore' enregistré ! +12 pts au Score AFRIGOMBO ELITE");
     });
   };
 
@@ -446,7 +446,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
     if (navigator.share) {
       navigator.share({
         title: item.title,
-        text: `${item.title} sur AFRIGOMBO (${item.commune})`,
+        text: `${item.title} sur AFRIGOMBO ELITE (${item.commune})`,
         url: window.location.href
       }).catch(() => {});
     }
@@ -454,7 +454,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
     try { 
       // Silenced for ELITE
     } catch (_) {}
-    showToast("📤 Publication partagée ! +10 pts au Score AFRIGOMBO");
+    showToast("📤 Publication partagée ! +10 pts au Score AFRIGOMBO ELITE");
   };
 
   // Handle Favorite action
@@ -489,7 +489,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
       try { 
         // Silenced for ELITE
       } catch (_) {}
-      showToast("⭐ Favori mis à jour ! +5 pts au Score AFRIGOMBO");
+      showToast("⭐ Favori mis à jour ! +5 pts au Score AFRIGOMBO ELITE");
     });
   };
 
@@ -523,7 +523,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
       </AnimatePresence>
 
       {/* ========================================================
-          🔥 GRAND CADRE PREMIUM : CENTRE DES TENDANCES AFRIGOMBO
+          🔥 GRAND CADRE PREMIUM : CENTRE DES TENDANCES AFRIGOMBO ELITE
          ======================================================== */}
       <div className="p-4 sm:p-6 rounded-3xl bg-gradient-to-br from-[#14120C] via-[#0B0A08] to-[#17140E] border-2 border-[#D4AF37]/50 shadow-[0_12px_45px_rgba(212,175,55,0.2)] relative overflow-hidden space-y-6">
         {/* Background ambient lighting */}
@@ -538,7 +538,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
             </div>
             <div>
               <h2 className="text-sm sm:text-lg font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
-                <span>🔥 TENDANCES AFRIGOMBO</span>
+                <span>🔥 TENDANCES AFRIGOMBO ELITE</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 uppercase font-bold">
                   Vitrine Officielle
                 </span>
@@ -895,10 +895,10 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                     <button
                       onClick={() => setSelectedScoreExplainer(item)}
                       className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-afri-bg border border-[#D4AF37]/30 hover:border-[#D4AF37] transition-all cursor-pointer shadow-xs"
-                      title="Cliquez pour voir le détail du Score AFRIGOMBO"
+                      title="Cliquez pour voir le détail du Score AFRIGOMBO ELITE"
                     >
                       <div className="text-right">
-                        <span className="text-[8px] font-mono uppercase text-afri-text-sec block leading-none">Score AFRIGOMBO</span>
+                        <span className="text-[8px] font-mono uppercase text-afri-text-sec block leading-none">Score AFRIGOMBO ELITE</span>
                         <span className="text-sm font-black text-[#D4AF37] leading-none inline-block">
                           {scoreDetails.finalScore} pts
                         </span>
@@ -979,7 +979,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                       <Flame className="w-5 h-5 fill-current" />
                     </span>
                     <div>
-                      <h3 className="text-base font-black text-afri-text uppercase">SCORE AFRIGOMBO</h3>
+                      <h3 className="text-base font-black text-afri-text uppercase">SCORE AFRIGOMBO ELITE</h3>
                       <p className="text-[10px] text-afri-text-sec font-mono">Décomposition officielle du classement</p>
                     </div>
                   </div>

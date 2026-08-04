@@ -45,11 +45,11 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
     },
     {
       q: "Qu'est-ce que le badge Bâtisseur et comment l'obtenir ?",
-      a: "Le badge Bâtisseur est attribué aux membres d'élite qui soutiennent activement la communauté AFRIGOMBO et participent à la gouvernance et au financement des projets majeurs de la plateforme."
+      a: "Le badge Bâtisseur est attribué aux membres d'élite qui soutiennent activement la communauté AFRIGOMBO ELITE et participent à la gouvernance et au financement des projets majeurs de la plateforme."
     },
     {
       q: "Comment contacter le Support Officiel en cas de besoin urgent ?",
-      a: "Utilisez le bouton principal 'Contacter le Support AFRIGOMBO' ci-dessous pour joindre directement notre équipe opérationnelle 24h/7 via WhatsApp officiel ou chat sécurisé."
+      a: "Utilisez le bouton principal 'Contacter le Support AFRIGOMBO ELITE' ci-dessous pour joindre directement notre équipe opérationnelle 24h/7 via WhatsApp officiel ou chat sécurisé."
     },
     {
       q: "Que faire en cas de litige sur un contrat ou un paiement ?",
@@ -199,7 +199,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
         <div className="flex justify-between items-center border-b border-afri-border pb-4">
           <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-3">
             <span className="text-[#D4AF37]">🛟</span>
-            Centre d'Aide AFRIGOMBO
+            Centre d'Aide AFRIGOMBO ELITE
           </h2>
           <button 
             onClick={onClose}
@@ -212,7 +212,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
         <div className="flex-1 space-y-6 pb-20">
           <div className="p-5 rounded-2xl bg-afri-bg border border-afri-border text-afri-text-sec text-xs leading-relaxed space-y-3">
             <p>
-              <strong className="text-afri-text">Le Support Officiel AFRIGOMBO</strong> est le seul canal autorisé pour obtenir une assistance technique, signaler un problème ou poser une question.
+              <strong className="text-afri-text">Le Support Officiel AFRIGOMBO ELITE</strong> est le seul canal autorisé pour obtenir une assistance technique, signaler un problème ou poser une question.
             </p>
             <p>
               Les échanges directs de coordonnées entre utilisateurs restent interdits afin de protéger les artistes, les organisateurs et les paiements sécurisés.
@@ -228,7 +228,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                 <MessageCircle className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-black text-afri-text uppercase text-sm">Contacter le Support AFRIGOMBO</h3>
+                <h3 className="font-black text-afri-text uppercase text-sm">Contacter le Support AFRIGOMBO ELITE</h3>
                 <p className="text-[10px] text-emerald-300">Support direct WhatsApp 24h/7</p>
               </div>
             </div>
@@ -322,7 +322,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                 <Star className="w-6 h-6 fill-current" />
               </div>
               <div className="flex-1">
-                <span className="text-xs font-black text-afri-gold uppercase block tracking-wider">❤️ Soutenir AFRIGOMBO</span>
+                <span className="text-xs font-black text-afri-gold uppercase block tracking-wider">❤️ Soutenir AFRIGOMBO ELITE</span>
                 <span className="text-[10px] text-afri-text-sec">Contribuer à l'autonomie et l'expansion du showbiz africain</span>
               </div>
             </button>
@@ -348,7 +348,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
               </div>
               <div>
                 <h3 className="text-sm font-black tracking-widest text-afri-gold uppercase">Questions Fréquentes (FAQ)</h3>
-                <p className="text-[10px] text-afri-text-sec font-mono">Tout savoir sur l'écosystème AFRIGOMBO</p>
+                <p className="text-[10px] text-afri-text-sec font-mono">Tout savoir sur l'écosystème AFRIGOMBO ELITE</p>
               </div>
             </div>
 
@@ -588,7 +588,7 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
               </div>
             </div>
             <h3 className="text-sm font-black tracking-widest text-afri-gold uppercase mb-1">Donner un Avis</h3>
-            <p className="text-[10px] text-afri-text-sec font-mono mb-6">Évaluez votre expérience sur AFRIGOMBO</p>
+            <p className="text-[10px] text-afri-text-sec font-mono mb-6">Évaluez votre expérience sur AFRIGOMBO ELITE</p>
 
             {successMsg ? (
               <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs font-bold text-center flex items-center justify-center gap-2">
@@ -718,13 +718,13 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
                 <Star className="w-5 h-5 fill-current" />
               </div>
               <div>
-                <h3 className="text-sm font-black tracking-widest text-afri-gold uppercase">❤️ Soutenir AFRIGOMBO</h3>
+                <h3 className="text-sm font-black tracking-widest text-afri-gold uppercase">❤️ Soutenir AFRIGOMBO ELITE</h3>
                 <p className="text-[10px] text-afri-text-sec font-mono">Développement & Souveraineté Culturelle</p>
               </div>
             </div>
 
             <p className="text-xs text-afri-text-sec leading-relaxed">
-              AFRIGOMBO est conçu pour propulser les artistes, instrumentistes et organisateurs d'Afrique. Votre soutien permet de financer les infrastructures serveurs, la protection des contrats et le développement d'outils d'élite.
+              AFRIGOMBO ELITE est conçu pour propulser les artistes, instrumentistes et organisateurs d'Afrique. Votre soutien permet de financer les infrastructures serveurs, la protection des contrats et le développement d'outils d'élite.
             </p>
 
             <div className="space-y-2.5 pt-2">

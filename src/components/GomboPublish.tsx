@@ -549,7 +549,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   <span className="text-[10px] font-black uppercase tracking-tighter">Gombo Sécurisé</span>
                   <ShieldCheck className={`w-3 h-3 ${gomboCategory === "securise" ? "text-[#D4AF37]" : "text-zinc-700"}`} />
                 </div>
-                <p className="text-[8px] font-medium leading-tight opacity-70">Paiement garanti par AFRIGOMBO.</p>
+                <p className="text-[8px] font-medium leading-tight opacity-70">Paiement garanti par AFRIGOMBO ELITE.</p>
                 <Lock className="absolute -bottom-1 -right-1 w-6 h-6 text-[#D4AF37]/10 -rotate-12 group-hover:scale-110 transition-transform" />
               </button>
             </div>
@@ -834,7 +834,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     <span className="font-mono font-bold text-afri-text">{financials.cachet.toLocaleString()} FCFA</span>
                   </div>
                   <div className="flex justify-between text-afri-text-sec">
-                    <span>Commission AFRIGOMBO ({isUserPremium ? "1,5%" : "2,5%"}):</span>
+                    <span>Commission AFRIGOMBO ELITE ({isUserPremium ? "1,5%" : "2,5%"}):</span>
                     <span className="font-mono font-bold text-[#D4AF37]">{financials.fee.toLocaleString()} FCFA</span>
                   </div>
                   <div className="pt-2 border-t border-afri-border flex justify-between items-center">

@@ -166,7 +166,7 @@ export default function MobileMoneyPayment({
               </h4>
               <BetaEscrowInfoButton variant="badge" />
             </div>
-            <span className="text-[9px] text-afri-text-sec font-mono">CADRE SÉCURISÉ AFRIGOMBO (PHASE BÊTA)</span>
+            <span className="text-[9px] text-afri-text-sec font-mono">CADRE SÉCURISÉ AFRIGOMBO ELITE (PHASE BÊTA)</span>
           </div>
         </div>
         {onClose && (
@@ -432,7 +432,7 @@ export default function MobileMoneyPayment({
             </div>
             
             <p className="text-center text-[9px] text-[#D4AF37]/60 font-mono uppercase tracking-wide leading-normal">
-              🛡️ Escrow Sécurisé : l'argent de ce cachet restera consigné en lieu sûr sur AFRIGOMBO jusqu'à la fin de la performance
+              🛡️ Escrow Sécurisé : l'argent de ce cachet restera consigné en lieu sûr sur AFRIGOMBO ELITE jusqu'à la fin de la performance
             </p>
           </motion.div>
         )}
@@ -517,7 +517,7 @@ export default function MobileMoneyPayment({
                   </div>
                 </div>
                 <div className="border border-emerald-600/30 text-emerald-700 bg-emerald-50/60 font-mono text-[7px] font-black tracking-widest uppercase py-1 px-1.5 rounded rotate-3 select-none">
-                  💰 AFRIGOMBO PAIÉ
+                  💰 AFRIGOMBO ELITE PAIÉ
                 </div>
               </div>
 

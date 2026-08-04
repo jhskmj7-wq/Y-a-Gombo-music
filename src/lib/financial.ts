@@ -87,7 +87,7 @@ import { SecurityService } from "./SecurityService";
  * Generate cryptographic signature hash for transaction anti-tampering
  */
 function generateTransactionSignature(txId: string, userId: string, amount: number, type: string, timestamp: number): string {
-  const secretKey = "AFRIGOMBO_BANK_SECURE_HMAC_V2";
+  const secretKey = "AFRIGOMBO_ELITE_BANK_SECURE_HMAC_V2";
   const rawString = `${txId}:${userId}:${amount}:${type}:${timestamp}:${secretKey}`;
   
   // Simple fast hash string generator (Fowler-Noll-Vo / DJB2 variant for frontend validation)

@@ -100,7 +100,7 @@ export const SmartAudioMenu: React.FC = () => {
                 </div>
                 <div className="text-left">
                   <p className={`text-xs font-bold ${isPlayingHymn ? "text-[#D4AF37]" : "text-afri-text"}`}>Hymne officiel</p>
-                  <p className="text-[9px] text-afri-text-sec font-mono">AFRIGOMBO SHOWBIZ</p>
+                  <p className="text-[9px] text-afri-text-sec font-mono">AFRIGOMBO ELITE SHOWBIZ</p>
                 </div>
               </div>
               <div className="text-afri-text-sec group-hover:text-[#D4AF37] transition-colors">

@@ -206,7 +206,7 @@ export default function GomboProfile({
       // Added immediate feedback before navigation
       if (typeof window !== 'undefined') {
         const toast = document.createElement('div');
-        toast.textContent = "Bienvenue sur AFRIGOMBO ♫ 🎷 🪘";
+        toast.textContent = "Bienvenue sur AFRIGOMBO ELITE ♫ 🎷 🪘";
         toast.style.position = 'fixed';
         toast.style.bottom = '20px';
         toast.style.right = '20px';
@@ -1266,7 +1266,7 @@ export default function GomboProfile({
                 <HelpCircle className="w-10 h-10" />
               </div>
               <h2 className="afri-title-lg text-afri-text text-center font-display font-black uppercase">SUPPORT ASSISTANCE GOMBO</h2>
-              <p className="afri-text-body text-afri-text-sec text-center">Besoin d'aide pour une transaction Wave suspendue ou une annulation de gombo de dernière minute ? Le support d'AFRIGOMBO est disponible 24/7.</p>
+              <p className="afri-text-body text-afri-text-sec text-center">Besoin d'aide pour une transaction Wave suspendue ou une annulation de gombo de dernière minute ? Le support d'AFRIGOMBO ELITE est disponible 24/7.</p>
             </div>
             
             <div className="space-y-3">
@@ -1274,10 +1274,10 @@ export default function GomboProfile({
                 onClick={() => supportConfig.openSupport("Aide générale")} 
                 className="afri-btn-primary py-4 text-center bg-afri-bg-sec border-[#25D366] flex items-center justify-center gap-2 cursor-pointer w-full font-black uppercase"
               >
-                <MessageSquare className="w-4 h-4" /> Contacter le Support AFRIGOMBO
+                <MessageSquare className="w-4 h-4" /> Contacter le Support AFRIGOMBO ELITE
               </button>
               <div className="text-center pt-2">
-                <p className="text-[10px] text-[#B9B9B9] font-mono font-bold uppercase">Assistance AFRIGOMBO 24h/7</p>
+                <p className="text-[10px] text-[#B9B9B9] font-mono font-bold uppercase">Assistance AFRIGOMBO ELITE 24h/7</p>
               </div>
             </div>
           </div>

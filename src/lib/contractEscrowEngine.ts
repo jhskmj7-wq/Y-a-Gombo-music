@@ -82,7 +82,7 @@ export interface ContractData {
 }
 
 /**
- * Calculates AFRIGOMBO escrow commissions automatically.
+ * Calculates AFRIGOMBO ELITE escrow commissions automatically.
  * Standard: Promoter 2.5%, Musician 2.5% (Total 5%)
  * Premium: Promoter 1.5%, Musician 1.5% (Total 3%)
  */
@@ -255,7 +255,7 @@ export async function payContractEscrow(
     await notifyUser(
       cData.artistId,
       "🛡️ Nouveau Contrat Financé !",
-      `Le promoteur ${cData.promoterName} a sécurisé les fonds (${cData.montant.toLocaleString("fr-FR")} FCFA) sous séquestre AFRIGOMBO pour "${cData.titre}". Veuillez l'accepter.`,
+      `Le promoteur ${cData.promoterName} a sécurisé les fonds (${cData.montant.toLocaleString("fr-FR")} FCFA) sous séquestre AFRIGOMBO ELITE pour "${cData.titre}". Veuillez l'accepter.`,
       "contract_funded",
       contractId
     );
@@ -333,7 +333,7 @@ export async function refuseContract(
       userId: cData.promoterId,
       amount: refundAmount,
       reason: `Remboursement contrat refusé/annulé : ${cData.titre} (${reason})`,
-      adminEmail: "Système Escrow AFRIGOMBO"
+      adminEmail: "Système Escrow AFRIGOMBO ELITE"
     });
 
     const now = new Date().toISOString();
@@ -431,7 +431,7 @@ export async function completeContractAndReleaseFunds(
       amount: netAmount,
       action: "credit",
       reason: `Cachet Libéré - Contrat: ${cData.titre}`,
-      adminEmail: "Moteur Escrow AFRIGOMBO"
+      adminEmail: "Moteur Escrow AFRIGOMBO ELITE"
     });
 
     if (!adjustRes.success) {
@@ -480,7 +480,7 @@ export async function completeContractAndReleaseFunds(
     await notifyUser(
       cData.promoterId,
       "✨ Mission Clôturée",
-      `Le contrat "${cData.titre}" est validé et clôturé avec succès. Merci d'utiliser AFRIGOMBO !`,
+      `Le contrat "${cData.titre}" est validé et clôturé avec succès. Merci d'utiliser AFRIGOMBO ELITE !`,
       "contract_completed",
       contractId
     );
@@ -545,7 +545,7 @@ export async function openContractDispute(payload: {
     await notifyUser(
       otherUserId,
       "🚨 Litige Ouvert sur un Contrat",
-      `Un litige a été ouvert pour "${cData.titre}". L'équipe d'administration AFRIGOMBO va arbitrer l'affaire.`,
+      `Un litige a été ouvert pour "${cData.titre}". L'équipe d'administration AFRIGOMBO ELITE va arbitrer l'affaire.`,
       "contract_disputed",
       payload.contractId
     );
@@ -605,7 +605,7 @@ export async function arbitrateContractDispute(payload: {
       await notifyUser(
         cData.promoterId,
         "⚖️ Décision d'Arbitrage : Remboursement",
-        `L'administration AFRIGOMBO a statué en votre faveur pour "${cData.titre}". Remboursement de ${refundAmount.toLocaleString("fr-FR")} FCFA crédité sur votre Wallet.`,
+        `L'administration AFRIGOMBO ELITE a statué en votre faveur pour "${cData.titre}". Remboursement de ${refundAmount.toLocaleString("fr-FR")} FCFA crédité sur votre Wallet.`,
         "dispute_resolved",
         payload.contractId
       );

@@ -324,7 +324,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
     return (
       <div className="flex flex-col items-center justify-center p-12 min-h-screen bg-afri-bg-sec animate-pulse select-none">
         <div className="w-12 h-12 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin mb-4" />
-        <p className="text-xs font-mono tracking-widest text-[#D4AF37] uppercase">Synchronisation AFRIGOMBO...</p>
+        <p className="text-xs font-mono tracking-widest text-[#D4AF37] uppercase">Synchronisation AFRIGOMBO ELITE...</p>
       </div>
     );
   }

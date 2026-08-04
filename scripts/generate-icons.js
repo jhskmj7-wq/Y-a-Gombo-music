@@ -105,7 +105,7 @@ async function generate() {
   // Also save SVG files directly
   fs.writeFileSync(path.join(publicDir, 'logo.svg'), svgLogo);
 
-  console.log('✅ Official AFRIGOMBO "A" Logo icons generated successfully!');
+  console.log('✅ Official AFRIGOMBO ELITE "A" Logo icons generated successfully!');
 }
 
 generate().catch(console.error);

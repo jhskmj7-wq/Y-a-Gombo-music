@@ -164,7 +164,7 @@ export default function GomboMusikEcosystem({
       return;
     }
 
-    const commission = Math.round(contractAmount * 0.05); // 5% AFRIGOMBO safety commission
+    const commission = Math.round(contractAmount * 0.05); // 5% AFRIGOMBO ELITE safety commission
 
     await gomboDB.createSafeContract({
       creatorId: currentUserProfile.uid,
@@ -223,7 +223,7 @@ export default function GomboMusikEcosystem({
       capacity: eventCapacity
     });
 
-    triggerPointsGrant(150, "Lancement d'une Billetterie AFRIGOMBO 2.0");
+    triggerPointsGrant(150, "Lancement d'une Billetterie AFRIGOMBO ELITE 2.0");
 
     // Clear event form
     setEventTitle("");
@@ -555,7 +555,7 @@ export default function GomboMusikEcosystem({
                       {activeGuide.category === "tarifs" ? "Tarif Conseillé" : activeGuide.category === "contrat" ? "Guide Juridique" : "Alerte Fraude"}
                     </span>
                     <h2 className="text-base sm:text-lg font-black uppercase dark:text-afri-text">{activeGuide.title}</h2>
-                    <span className="text-[9px] text-gray-505 font-mono">Publié par AFRIGOMBO ACADEMY</span>
+                    <span className="text-[9px] text-gray-505 font-mono">Publié par AFRIGOMBO ELITE ACADEMY</span>
                   </div>
 
                   {/* Formatted body simulation */}
@@ -565,13 +565,13 @@ export default function GomboMusikEcosystem({
 
                   <div className="flex flex-col sm:flex-row items-center gap-3 pt-6 border-t border-afri-border dark:border-afri-border">
                     <button 
-                      onClick={() => alert("⬇️ Téléchargement de la version PDF officiel d'AFRIGOMBO-CONTRAT pour consultations hors-ligne.")}
+                      onClick={() => alert("⬇️ Téléchargement de la version PDF officiel d'AFRIGOMBO ELITE-CONTRAT pour consultations hors-ligne.")}
                       className="w-full sm:w-auto px-4 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-black uppercase rounded-xl border border-emerald-500/10 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       Télécharger PDF utile 📥
                     </button>
                     <button 
-                      onClick={() => alert("📻 Lecture audio synthétisée par l'IA AFRIGOMBO en cours. Assurez-vous d'activer le son de votre enceinte.")}
+                      onClick={() => alert("📻 Lecture audio synthétisée par l'IA AFRIGOMBO ELITE en cours. Assurez-vous d'activer le son de votre enceinte.")}
                       className="w-full sm:w-auto px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-black uppercase rounded-xl border border-blue-500/10 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       Écouter Audio Guide 🔊
@@ -588,7 +588,7 @@ export default function GomboMusikEcosystem({
               <div className="flex justify-between items-center gap-4">
                 <div className="space-y-1">
                   <h3 className="text-sm font-black uppercase text-gray-900 dark:text-afri-text">🔒 BLOCK-CONTRAT SÉCURISÉ (GOMBO SAFE)</h3>
-                  <p className="text-xs text-afri-text-sec">Rédigez d'un commun accord un contrat inaltérable. AFRIGOMBO bloque les fonds et accorde sa sécurité.</p>
+                  <p className="text-xs text-afri-text-sec">Rédigez d'un commun accord un contrat inaltérable. AFRIGOMBO ELITE bloque les fonds et accorde sa sécurité.</p>
                 </div>
                 <button
                   onClick={() => setShowContractForm(!showContractForm)}
@@ -640,7 +640,7 @@ export default function GomboMusikEcosystem({
                         required
                       />
                       {contractAmount > 0 && (
-                        <p className="text-[9px] text-[#D4AF37] font-mono">Commission de sécurité AFRIGOMBO (5%) : {Math.round(contractAmount * 0.05)} FCFA</p>
+                        <p className="text-[9px] text-[#D4AF37] font-mono">Commission de sécurité AFRIGOMBO ELITE (5%) : {Math.round(contractAmount * 0.05)} FCFA</p>
                       )}
                     </div>
                     <div className="space-y-1 p-0.5">
@@ -732,7 +732,7 @@ export default function GomboMusikEcosystem({
 
                           <div className="flex justify-between items-center text-[10px] font-mono">
                             <span className="text-afri-text-sec">Garant :</span>
-                            <span className="text-[#D4AF37] font-black">Commission AFRIGOMBO : {c.commission} FCFA</span>
+                            <span className="text-[#D4AF37] font-black">Commission AFRIGOMBO ELITE : {c.commission} FCFA</span>
                           </div>
 
                           <div className="flex justify-between items-center text-[10px] font-mono">
@@ -1037,7 +1037,7 @@ export default function GomboMusikEcosystem({
                         </div>
                         <div className="absolute inset-x-0 h-0.5 bg-emerald-500 animate-bounce top-1/2" />
                       </div>
-                      <span className="text-[8.5px] text-afri-text-sec font-mono font-bold uppercase">AFRIGOMBO SECURE PASS - VALIDÉ</span>
+                      <span className="text-[8.5px] text-afri-text-sec font-mono font-bold uppercase">AFRIGOMBO ELITE SECURE PASS - VALIDÉ</span>
                     </div>
 
                     <div className="space-y-1.5 text-xs text-center text-afri-text-sec">
@@ -1733,7 +1733,7 @@ export default function GomboMusikEcosystem({
           {activeTab === "recompenses" && (
             <div className="space-y-6">
               <div className="space-y-1">
-                <h3 className="text-sm font-black uppercase text-gray-900 dark:text-afri-text">🎁 BOUTIQUE DES RÉCOMPENSES AFRIGOMBO</h3>
+                <h3 className="text-sm font-black uppercase text-gray-900 dark:text-afri-text">🎁 BOUTIQUE DES RÉCOMPENSES AFRIGOMBO ELITE</h3>
                 <p className="text-xs text-afri-text-sec">Échangez vos points d'entraide cumulés contre des avantages de mise en avant et des abonnements gratuits.</p>
               </div>
 

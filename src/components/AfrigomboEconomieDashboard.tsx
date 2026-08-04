@@ -272,7 +272,7 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
             </span>
           </div>
           <h2 className="text-xl font-black text-afri-text tracking-tight font-sans">
-            ÉCONOMIE AFRIGOMBO 1.0
+            ÉCONOMIE AFRIGOMBO ELITE 1.0
           </h2>
           <p className="text-[10px] text-afri-text-sec font-mono">
             Suivi fiduciaire des comptes séquestres et des commissions de l'Empire en temps réel.
@@ -303,7 +303,7 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
                 <div className="flex items-center gap-2">
                   <Percent className="w-4 h-4 text-[#D4AF37]" />
                   <span className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest">
-                    CONFIGURATEUR DE COMMISSION AFRIGOMBO
+                    CONFIGURATEUR DE COMMISSION AFRIGOMBO ELITE
                   </span>
                 </div>
                 <h3 className="text-sm font-bold text-afri-text">
@@ -403,7 +403,7 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
                     {stats.gombosPublies} <span className="text-xs text-afri-text-sec font-sans font-normal">annonces</span>
                   </span>
                   <span className="text-[9px] text-afri-text-sec font-mono block mt-1">
-                    Offres sur le marché AFRIGOMBO.
+                    Offres sur le marché AFRIGOMBO ELITE.
                   </span>
                 </div>
               </div>
@@ -568,7 +568,7 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
               <div className="flex justify-between items-center border-b border-afri-border pb-3">
                 <h3 className="text-xs font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
                   <TrendingUp className="w-4.5 h-4.5 text-[#D4AF37]" />
-                  COMMISSIONS ENCAISSÉES (AFRIGOMBO)
+                  COMMISSIONS ENCAISSÉES (AFRIGOMBO ELITE)
                 </h3>
                 <span className="text-[9px] font-mono bg-afri-bg-sec text-afri-text-sec px-2 py-0.5 rounded-full">
                   Dernières transactions

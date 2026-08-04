@@ -14,8 +14,8 @@ export interface ReputationDetails {
   activeAlertsCount: number;
   seniorityDays: number;
   trustScore: number;
-  badge: "Fiable" | "Très fiable" | "Excellence" | "Artiste Premium" | "Référence AFRIGOMBO" | "Standard" | "Vérifié" | "Premium" | "Elite" | "En tendance" | "Artiste recommandé" | "Gombo ID";
-  level: "Débutant" | "Confirmé" | "Professionnel" | "Elite" | "Légende AFRIGOMBO";
+  badge: "Fiable" | "Très fiable" | "Excellence" | "Artiste Premium" | "Référence AFRIGOMBO ELITE" | "Standard" | "Vérifié" | "Premium" | "Elite" | "En tendance" | "Artiste recommandé" | "Gombo ID";
+  level: "Débutant" | "Confirmé" | "Professionnel" | "Elite" | "Légende AFRIGOMBO ELITE";
 }
 
 export class ReputationEngine {
@@ -109,10 +109,10 @@ export class ReputationEngine {
     const trustScore = Math.max(0, Math.min(100, Math.round(score)));
 
     // 9. AUTOMATIC BADGES
-    let badge: "Fiable" | "Très fiable" | "Excellence" | "Artiste Premium" | "Référence AFRIGOMBO" | "Standard" | "Vérifié" | "Premium" | "Elite" | "En tendance" | "Artiste recommandé" | "Gombo ID" = "Standard";
+    let badge: "Fiable" | "Très fiable" | "Excellence" | "Artiste Premium" | "Référence AFRIGOMBO ELITE" | "Standard" | "Vérifié" | "Premium" | "Elite" | "En tendance" | "Artiste recommandé" | "Gombo ID" = "Standard";
     
     if (trustScore >= 98 && completedGombos >= 10 && averageRating >= 4.8) {
-      badge = "Référence AFRIGOMBO";
+      badge = "Référence AFRIGOMBO ELITE";
     } else if (kycVerified) {
       badge = "Vérifié";
     } else if (trustScore >= 95 && completedGombos >= 5) {
@@ -126,8 +126,8 @@ export class ReputationEngine {
     }
 
     // 10. LEVELS
-    let level: "Débutant" | "Confirmé" | "Professionnel" | "Elite" | "Légende AFRIGOMBO" = "Débutant";
-    if (completedGombos >= 500) level = "Légende AFRIGOMBO";
+    let level: "Débutant" | "Confirmé" | "Professionnel" | "Elite" | "Légende AFRIGOMBO ELITE" = "Débutant";
+    if (completedGombos >= 500) level = "Légende AFRIGOMBO ELITE";
     else if (completedGombos >= 100) level = "Elite";
     else if (completedGombos >= 50) level = "Professionnel";
     else if (completedGombos >= 10) level = "Confirmé";

@@ -37,10 +37,10 @@ export interface SupportMessage {
 
 export const SUPPORT_PROFILE = {
   uid: "afrigombo_support",
-  name: "Équipe AFRIGOMBO",
+  name: "Équipe AFRIGOMBO ELITE",
   photo: "/logo_afrigombo.png",
   badge: "✔ Vérifié",
-  description: "Support officiel AFRIGOMBO",
+  description: "Support officiel AFRIGOMBO ELITE",
   type: "systemAccount",
   role: "support",
   status: "🟢 En ligne"
@@ -97,7 +97,7 @@ export const SupportService = {
       type: "support",
       status: "open",
       createdAt: new Date().toISOString(),
-      lastMessage: "Bonjour 👋 Bienvenue chez AFRIGOMBO. Notre équipe est disponible pour répondre à toutes vos questions.",
+      lastMessage: "Bonjour 👋 Bienvenue chez AFRIGOMBO ELITE. Notre équipe est disponible pour répondre à toutes vos questions.",
       lastMessageAt: new Date().toISOString(),
       category: "Autre",
       unreadCount: {
@@ -114,7 +114,7 @@ export const SupportService = {
       conversationId: userUid,
       senderUid: SUPPORT_PROFILE.uid,
       senderName: SUPPORT_PROFILE.name,
-      text: "Bonjour 👋\nBienvenue chez AFRIGOMBO.\nNotre équipe est disponible pour répondre à toutes vos questions.\nChoisissez votre besoin ou écrivez directement votre message.",
+      text: "Bonjour 👋\nBienvenue chez AFRIGOMBO ELITE.\nNotre équipe est disponible pour répondre à toutes vos questions.\nChoisissez votre besoin ou écrivez directement votre message.",
       createdAt: new Date().toISOString()
     });
 
@@ -212,7 +212,7 @@ export const SupportService = {
       await addDoc(collection(db, "notifications"), {
         type: "support_message",
         recipientUid: notifyRecipient,
-        title: senderUid === "afrigombo_support" ? "Support AFRIGOMBO" : "Nouveau message de support",
+        title: senderUid === "afrigombo_support" ? "Support AFRIGOMBO ELITE" : "Nouveau message de support",
         body: text.length > 60 ? text.substring(0, 60) + "..." : text,
         createdAt: timestamp,
         read: false,

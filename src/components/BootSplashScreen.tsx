@@ -83,7 +83,7 @@ export default function BootSplashScreen({ onComplete }: BootSplashScreenProps) 
         {/* Ambient Gold Glow */}
         <div className="absolute w-48 h-48 rounded-full bg-[#D4AF37]/10 blur-3xl pointer-events-none" />
 
-        {/* Official "A" AFRIGOMBO Logo with Crown and Musical Notes */}
+        {/* Official "A" AFRIGOMBO ELITE Logo with Crown and Musical Notes */}
         <div className="w-24 h-24 relative flex items-center justify-center my-2">
           <AfriGomboLogo className="w-24 h-24 relative z-10 drop-shadow-[0_0_25px_rgba(212,175,55,0.4)] animate-pulse" />
         </div>

@@ -105,10 +105,10 @@ export default function AdminDashboard({
     const gomboIdNumber = `GMB-${code}-${digits}`;
 
     const levels = [
-      "🟢 Vérifié AFRIGOMBO",
+      "🟢 Vérifié AFRIGOMBO ELITE",
       "🥉 Musicien confirmé",
       "🥈 Professionnel actif",
-      "🥇 Référence AFRIGOMBO"
+      "🥇 Référence AFRIGOMBO ELITE"
     ];
     const level = levels[Math.floor(Math.random() * levels.length)];
 
@@ -460,7 +460,7 @@ export default function AdminDashboard({
               👑 Accéder au Trône du Fondateur
             </h4>
             <p className="text-xs text-afri-text-sec font-mono max-w-md mx-auto leading-relaxed">
-              Accédez au niveau de contrôle le plus élevé de l'écosystème AFRIGOMBO.
+              Accédez au niveau de contrôle le plus élevé de l'écosystème AFRIGOMBO ELITE.
             </p>
           </div>
 

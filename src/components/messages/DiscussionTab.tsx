@@ -104,7 +104,7 @@ export default function DiscussionTab({
 
   const handleDeleteConvo = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm("Voulez-vous vraiment supprimer cette conversation d'AFRIGOMBO ?")) {
+    if (window.confirm("Voulez-vous vraiment supprimer cette conversation d'AFRIGOMBO ELITE ?")) {
       const updated = [...deletedIds, id];
       setDeletedIds(updated);
       saveState("deleted_convos", updated);
@@ -241,7 +241,7 @@ export default function DiscussionTab({
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="text-xs font-black uppercase text-afri-text tracking-wide group-hover:text-[#D4AF37] transition">
-                  Support Officiel AFRIGOMBO
+                  Support Officiel AFRIGOMBO ELITE
                 </h3>
                 <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
               </div>
@@ -490,7 +490,7 @@ export default function DiscussionTab({
             </div>
 
             <p className="text-[11px] text-afri-text-sec leading-relaxed">
-              AFRIGOMBO maintient une tolérance zéro pour la fraude, le harcèlement et les propositions de paiement direct hors de la plateforme.
+              AFRIGOMBO ELITE maintient une tolérance zéro pour la fraude, le harcèlement et les propositions de paiement direct hors de la plateforme.
             </p>
 
             {reportSuccess ? (
@@ -502,7 +502,7 @@ export default function DiscussionTab({
             ) : (
               <div className="space-y-3">
                 <textarea
-                  placeholder="Expliquez brièvement l'abus (ex: demande de paiement en dehors d'AFRIGOMBO, harcèlement, propos racistes...)"
+                  placeholder="Expliquez brièvement l'abus (ex: demande de paiement en dehors d'AFRIGOMBO ELITE, harcèlement, propos racistes...)"
                   rows={4}
                   value={reportReason}
                   onChange={(e) => setReportReason(e.target.value)}

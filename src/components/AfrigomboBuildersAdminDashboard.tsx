@@ -118,7 +118,7 @@ export default function AfrigomboBuildersAdminDashboard() {
             Mécénat & Communauté
           </h2>
           <p className="text-[9px] text-afri-text-muted font-mono">
-            Suivi en temps réel du programme de soutien communautaire d'AFRIGOMBO.
+            Suivi en temps réel du programme de soutien communautaire d'AFRIGOMBO ELITE.
           </p>
         </div>
       </div>

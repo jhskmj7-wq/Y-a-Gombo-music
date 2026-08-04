@@ -913,7 +913,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                       const cleanDigits = waPhone.replace(/\D/g, "");
                       let normalizedPhone = cleanDigits;
                       if (normalizedPhone.startsWith("0") && normalizedPhone.length === 10) normalizedPhone = "225" + normalizedPhone;
-                      const waText = `Bonjour ${app.musicianName}, j'ai reçu votre demande sur AFRIGOMBO pour le plan "${app.gomboTitle}".`;
+                      const waText = `Bonjour ${app.musicianName}, j'ai reçu votre demande sur AFRIGOMBO ELITE pour le plan "${app.gomboTitle}".`;
                       const waLink = `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(waText)}`;
 
                       return (
@@ -1215,7 +1215,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           {activeTab === "historique" && (
             <div className="space-y-4">
               <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-afri-border dark:border-afri-border pb-2.5">
-                <span>📈</span> Mon Journal d'Activités AFRIGOMBO ({myActivities.length})
+                <span>📈</span> Mon Journal d'Activités AFRIGOMBO ELITE ({myActivities.length})
               </h3>
 
               {myActivities.length === 0 ? (
@@ -1264,7 +1264,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                           </span>
                         ) : (
                           <span className="text-[9px] uppercase font-black text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-md">
-                            ✓ Accord scellé sur AFRIGOMBO
+                            ✓ Accord scellé sur AFRIGOMBO ELITE
                           </span>
                         )}
                         <span className="font-mono text-sm font-black text-emerald-600">
@@ -1295,7 +1295,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                               <div>
                                 <p className="font-black uppercase tracking-wider">Paiement Dépôt de Garantie Opérationnel</p>
                                 <p className="text-[10px] text-afri-text-sec mt-1 leading-normal font-sans">
-                                  Le cachet de {res.amount.toLocaleString()} FCFA est consigné sur AFRIGOMBO. Il sera débloqué et transféré à l'artiste automatiquement à la fin de la prestation musicale.
+                                  Le cachet de {res.amount.toLocaleString()} FCFA est consigné sur AFRIGOMBO ELITE. Il sera débloqué et transféré à l'artiste automatiquement à la fin de la prestation musicale.
                                 </p>
                               </div>
                             </div>

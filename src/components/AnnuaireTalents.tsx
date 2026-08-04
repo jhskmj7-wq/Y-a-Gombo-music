@@ -608,7 +608,7 @@ export default function AnnuaireTalents({
                     return;
                   }
                   setContactingTalent(selectedTalent);
-                  setContactMessage(`Salut ${selectedTalent.firstName}, j'ai vu ton profil sur l'Annuaire AFRIGOMBO. Nous aurions besoin de ton talent pour une prestation...`);
+                  setContactMessage(`Salut ${selectedTalent.firstName}, j'ai vu ton profil sur l'Annuaire AFRIGOMBO ELITE. Nous aurions besoin de ton talent pour une prestation...`);
                 }}
                 className="flex-1 bg-afri-bg-sec hover:bg-afri-bg-sec text-[#0B0B0B] py-3.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
@@ -1022,7 +1022,7 @@ export default function AnnuaireTalents({
 
                               {talent.badge && talent.badge !== "Standard" && (
                                 <span className="text-[8.5px] font-black uppercase tracking-widest bg-[#D4AF37]/10 text-[#D4AF37] px-2 py-0.5 rounded-full leading-none border border-[#D4AF37]/30">
-                                  {talent.badge === "Référence AFRIGOMBO" && "👑 Référence"}
+                                  {talent.badge === "Référence AFRIGOMBO ELITE" && "👑 Référence"}
                                   {talent.badge === "Artiste Premium" && "🏆 Premium"}
                                   {talent.badge === "Excellence" && "🥇 Excellence"}
                                   {talent.badge === "Très fiable" && "🥈 Très fiable"}

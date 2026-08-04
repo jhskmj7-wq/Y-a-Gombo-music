@@ -110,7 +110,7 @@ export const AfrigomboSupportModal: React.FC<AfrigomboSupportModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={SUPPORT_PROFILE.name}
-      subtitle="Support Officiel AFRIGOMBO 24/7"
+      subtitle="Support Officiel AFRIGOMBO ELITE 24/7"
     >
       <div className="flex flex-col h-[70vh] space-y-3 font-sans text-left py-1">
         {/* Header - Official Support Profile Card */}

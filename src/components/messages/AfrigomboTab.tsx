@@ -85,7 +85,7 @@ export default function AfrigomboTab({
 
           <div>
             <h2 className="text-base font-black uppercase tracking-wide text-afri-text flex items-center gap-2">
-              AFRIGOMBO SERVICES
+              AFRIGOMBO ELITE SERVICES
             </h2>
             <p className="text-xs text-afri-text-sec mt-1 leading-relaxed">
               Espace institutionnel de la plateforme souveraine : assistance 24/7, garanties de sécurité, actualités du Fondateur et intelligence artificielle.
@@ -150,7 +150,7 @@ export default function AfrigomboTab({
               </div>
               <div>
                 <h3 className="text-xs font-black uppercase text-afri-text tracking-wider flex items-center gap-1.5">
-                  Support Officiel AFRIGOMBO
+                  Support Officiel AFRIGOMBO ELITE
                   <span className="text-[9px] text-[#D4AF37] font-bold">✔ Officiel</span>
                 </h3>
                 <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-1">
@@ -168,7 +168,7 @@ export default function AfrigomboTab({
           </div>
 
           <p className="text-xs text-afri-text-sec leading-relaxed">
-            Avez-vous une question sur un paiement en séquestre, un problème technique ou un litige sur une prestation ? L'équipe officielle AFRIGOMBO est à votre disposition 24h/24.
+            Avez-vous une question sur un paiement en séquestre, un problème technique ou un litige sur une prestation ? L'équipe officielle AFRIGOMBO ELITE est à votre disposition 24h/24.
           </p>
 
           <button
@@ -189,7 +189,7 @@ export default function AfrigomboTab({
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider flex items-center gap-2">
               <Bot className="w-4 h-4" />
-              Assistance IA Interactive AFRIGOMBO
+              Assistance IA Interactive AFRIGOMBO ELITE
             </h3>
             <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
               Gemini Instant
@@ -250,7 +250,7 @@ export default function AfrigomboTab({
                     setAiAssistantQuery(chip);
                     setIsAiLoading(true);
                     setTimeout(() => {
-                      let resp = "Sur AFRIGOMBO, le séquestre garantit que les fonds sont réservés avant la prestation. Vous êtes payé dès validation du service !";
+                      let resp = "Sur AFRIGOMBO ELITE, le séquestre garantit que les fonds sont réservés avant la prestation. Vous êtes payé dès validation du service !";
                       if (chip.includes("Numéro")) resp = "Les numéros sont masqués avant contrat pour protéger vos transactions contre la fraude hors réseau.";
                       if (chip.includes("annulation")) resp = "En cas d'annulation avant 24h, les fonds sont remboursés. En cas de non-présentation, le séquestre indemnise la partie lésée.";
                       setAiAssistantResponse(resp);
@@ -289,16 +289,16 @@ export default function AfrigomboTab({
               <div className="flex items-center gap-2">
                 <Crown className="w-4 h-4 text-[#D4AF37]" />
                 <h4 className="text-xs font-black uppercase text-[#D4AF37] tracking-wider">
-                  Le Mot du Fondateur d'AFRIGOMBO
+                  Le Mot du Fondateur d'AFRIGOMBO ELITE
                 </h4>
               </div>
               <span className="text-[9px] font-mono text-afri-text-muted">Officiel</span>
             </div>
             <p className="text-xs text-afri-text leading-relaxed italic">
-              « Chers artistes, prestataires et recruteurs africains. AFRIGOMBO a été conçu pour donner à nos compétences locales la valeur financière qu'elles méritent. Utilisez le séquestre : c'est notre meilleure garantie d'éthique et de sécurité. »
+              « Chers artistes, prestataires et recruteurs africains. AFRIGOMBO ELITE a été conçu pour donner à nos compétences locales la valeur financière qu'elles méritent. Utilisez le séquestre : c'est notre meilleure garantie d'éthique et de sécurité. »
             </p>
             <div className="pt-1 flex items-center justify-between text-[10px] text-afri-text-sec border-t border-afri-border">
-              <span>La Direction AFRIGOMBO</span>
+              <span>La Direction AFRIGOMBO ELITE</span>
               <span className="font-mono text-[#D4AF37]">Abidjan, Côte d'Ivoire</span>
             </div>
           </div>
@@ -339,7 +339,7 @@ export default function AfrigomboTab({
             <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center space-y-2 text-emerald-400 text-xs">
               <CheckCircle2 className="w-8 h-8 mx-auto" />
               <p className="font-bold">Dossier en cours d'examen</p>
-              <p className="text-[10px] text-afri-text-sec">L'équipe d'AFRIGOMBO valide votre pièce sous 24 heures.</p>
+              <p className="text-[10px] text-afri-text-sec">L'équipe d'AFRIGOMBO ELITE valide votre pièce sous 24 heures.</p>
             </div>
           ) : (
             <form onSubmit={handleCniSubmit} className="space-y-3 text-xs">
@@ -371,7 +371,7 @@ export default function AfrigomboTab({
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-afri-text uppercase tracking-wider flex items-center gap-2">
               <Server className="w-4 h-4 text-[#D4AF37]" />
-              Supervision des Infrastructures AFRIGOMBO
+              Supervision des Infrastructures AFRIGOMBO ELITE
             </h3>
             <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
               100% stable
@@ -447,7 +447,7 @@ export default function AfrigomboTab({
               <form onSubmit={handleSuggestionSubmit} className="space-y-2">
                 <textarea
                   required
-                  placeholder="Quelle fonctionnalité ou amélioration souhaiteriez-vous sur AFRIGOMBO ?"
+                  placeholder="Quelle fonctionnalité ou amélioration souhaiteriez-vous sur AFRIGOMBO ELITE ?"
                   rows={2}
                   value={suggestionText}
                   onChange={(e) => setSuggestionText(e.target.value)}
@@ -475,7 +475,7 @@ export default function AfrigomboTab({
             <div className="space-y-3">
               <div className="space-y-1">
                 <strong className="block text-afri-text">Qu'est-ce que le paiement séquestre ?</strong>
-                <p className="text-afri-text-sec">C'est une garantie souveraine d'AFRIGOMBO : l'argent du client est bloqué en toute sécurité avant le début de la prestation, et débloqué au prestataire dès que le service est rendu.</p>
+                <p className="text-afri-text-sec">C'est une garantie souveraine d'AFRIGOMBO ELITE : l'argent du client est bloqué en toute sécurité avant le début de la prestation, et débloqué au prestataire dès que le service est rendu.</p>
               </div>
               <div className="space-y-1">
                 <strong className="block text-afri-text">Que faire en cas de désaccord ou de litige ?</strong>

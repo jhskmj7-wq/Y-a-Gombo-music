@@ -88,7 +88,7 @@ export default function BouclierAfrigombo() {
       <div className="flex flex-col items-center justify-center py-24 space-y-4">
         <Shield className="w-16 h-16 text-[#D4AF37] animate-pulse" />
         <div className="text-[#D4AF37] font-mono text-xs font-black uppercase tracking-widest">
-          Initialisation Bouclier AFRIGOMBO...
+          Initialisation Bouclier AFRIGOMBO ELITE...
         </div>
         <div className="w-48 h-1 bg-afri-bg-sec rounded-full overflow-hidden">
           <div className="h-full bg-afri-bg-sec w-full animate-[progress_2s_ease-in-out]" />
@@ -120,7 +120,7 @@ export default function BouclierAfrigombo() {
       <div className="border-b border-afri-border pb-4 flex justify-between items-end">
         <div>
           <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">
-            <Shield className="w-4 h-4" /> Bouclier AFRIGOMBO
+            <Shield className="w-4 h-4" /> Bouclier AFRIGOMBO ELITE
           </h3>
           <p className="text-[10px] text-afri-text-sec mt-1 uppercase font-mono tracking-wider">
             Diagnostic & Santé en temps réel. Données certifiées Firebase.
@@ -130,7 +130,7 @@ export default function BouclierAfrigombo() {
           <div className={`text-3xl font-black font-mono ${healthScore > 80 ? "text-emerald-400" : healthScore > 50 ? "text-yellow-500" : "text-red-500"}`}>
             {healthScore}%
           </div>
-          <div className="text-[9px] font-mono uppercase text-afri-text-sec mt-1">Santé AFRIGOMBO</div>
+          <div className="text-[9px] font-mono uppercase text-afri-text-sec mt-1">Santé AFRIGOMBO ELITE</div>
         </div>
       </div>
 

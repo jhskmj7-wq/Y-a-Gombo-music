@@ -126,7 +126,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       color: "border-[#D4AF37]/40 bg-afri-bg-sec shadow-[0_10px_40px_rgba(212,175,55,0.08)]",
       accentColor: "text-[#D4AF37]",
       badge: "Prestige",
-      description: "La meilleure expérience AFRIGOMBO.",
+      description: "La meilleure expérience AFRIGOMBO ELITE.",
       features: [
         "💎 Badge Premium Gold",
         "⚡ Commission de 1,5%",
@@ -332,7 +332,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
 
         <div className="max-w-3xl mx-auto space-y-2.5 relative z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
-            👑 AFRIGOMBO PREMIUM
+            👑 AFRIGOMBO ELITE PREMIUM
           </div>
           
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-afri-text uppercase leading-tight">
@@ -881,14 +881,14 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                   Votre demande d'abonnement a été enregistrée.
                 </h4>
                 <p className="text-xs text-afri-text-sec leading-relaxed">
-                  Contactez le support AFRIGOMBO afin d'obtenir votre code d'activation.
+                  Contactez le support AFRIGOMBO ELITE afin d'obtenir votre code d'activation.
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => {
-                  supportConfig.openSupport(`Bonjour Support AFRIGOMBO 👋\nJe souhaite obtenir mon code d'activation pour mon abonnement ${currentSelectedPlanObj.name} (Tél: ${phonePayment}).`);
+                  supportConfig.openSupport(`Bonjour Support AFRIGOMBO ELITE 👋\nJe souhaite obtenir mon code d'activation pour mon abonnement ${currentSelectedPlanObj.name} (Tél: ${phonePayment}).`);
                 }}
                 className="w-full bg-emerald-500 hover:bg-emerald-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
               >
@@ -1018,7 +1018,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
               <button
                 type="button"
                 onClick={() => {
-                  supportConfig.openSupport("Bonjour Support AFRIGOMBO 👋\nJe n'ai pas encore reçu mon code d'activation d'abonnement.");
+                  supportConfig.openSupport("Bonjour Support AFRIGOMBO ELITE 👋\nJe n'ai pas encore reçu mon code d'activation d'abonnement.");
                 }}
                 className="w-full py-2 text-center text-[11px] font-bold text-afri-text-sec hover:text-[#D4AF37] cursor-pointer flex items-center justify-center gap-1.5"
               >

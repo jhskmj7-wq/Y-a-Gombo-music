@@ -1,5 +1,5 @@
 /**
- * AFRIGOMBO — OFFICIAL CAPACITOR INTERFACES ADAPTER
+ * AFRIGOMBO ELITE — OFFICIAL CAPACITOR INTERFACES ADAPTER
  * 
  * This module structures, documents, and prepares the single React codebase
  * to support both the standard Web deployment and a high-performance, native
@@ -24,7 +24,7 @@ export const isCapacitor = (): boolean => {
 
 // Log helper for debugging in Android Logcat or Chrome DevTools
 export const capLog = (message: string, ...args: any[]) => {
-  console.log(`📱 [AFRIGOMBO-CAPACITOR] ${message}`, ...args);
+  console.log(`📱 [AFRIGOMBO ELITE-CAPACITOR] ${message}`, ...args);
 };
 
 /**
@@ -216,7 +216,7 @@ export async function shareToNativeShowcase(title: string, text: string, url: st
       title,
       text,
       url,
-      dialogTitle: "Partager l'Artiste / Gombo via AFRIGOMBO"
+      dialogTitle: "Partager l'Artiste / Gombo via AFRIGOMBO ELITE"
     });
     return true;
   } catch (e) {

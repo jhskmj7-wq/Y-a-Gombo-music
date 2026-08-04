@@ -8,7 +8,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   if (loading) {
-    return <PremiumLoader message="Synchronisation AFRIGOMBO..." />;
+    return <PremiumLoader message="Synchronisation AFRIGOMBO ELITE..." />;
   }
 
   if (!currentUser) {

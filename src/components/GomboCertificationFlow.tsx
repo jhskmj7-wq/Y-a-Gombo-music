@@ -143,7 +143,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
       case 6: // Réseaux sociaux
         if (instagram || youtube || facebook || skippedSocials) return "Validée";
         return "À faire";
-      case 7: // Validation AFRIGOMBO
+      case 7: // Validation AFRIGOMBO ELITE
         if (currentUserProfile.isVerified === true || currentUserProfile.kycStatus === "approved") return "Validée";
         if (currentUserProfile.kycStatus === "pending") return "En cours";
         return "À faire";
@@ -645,12 +645,12 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
     },
     {
       title: "Selfie de vérification",
-      desc: "Portrait en direct tenant un papier 'AFRIGOMBO'",
+      desc: "Portrait en direct tenant un papier 'AFRIGOMBO ELITE'",
       icon: Shield,
       renderForm: () => (
         <div className="space-y-4 pt-2">
           <p className="text-[10px] text-afri-text-sec font-sans leading-relaxed">
-            Pour confirmer que la pièce d'identité vous appartient, téléversez un selfie de vous tenant un bout de papier écrit à la main <strong className="text-afri-gold">"AFRIGOMBO"</strong> avec la date d'aujourd'hui.
+            Pour confirmer que la pièce d'identité vous appartient, téléversez un selfie de vous tenant un bout de papier écrit à la main <strong className="text-afri-gold">"AFRIGOMBO ELITE"</strong> avec la date d'aujourd'hui.
           </p>
 
           <div className="flex flex-col items-center justify-center p-5 border border-dashed border-afri-border rounded-2xl bg-afri-bg-sec">
@@ -874,7 +874,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
       )
     },
     {
-      title: "Validation AFRIGOMBO",
+      title: "Validation AFRIGOMBO ELITE",
       desc: "Analyse finale de conformité par le Temple",
       icon: Clock,
       renderForm: () => {
@@ -1045,7 +1045,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
           <div className="space-y-1">
             <h4 className="text-xs font-mono uppercase font-black text-afri-text-sec tracking-wider">Soumettre le dossier de certification</h4>
             <p className="text-[10px] text-afri-text-sec font-sans">
-              Une fois validée, l'équipe AFRIGOMBO vous attribuera votre code officiel permanent sous 24 heures.
+              Une fois validée, l'équipe AFRIGOMBO ELITE vous attribuera votre code officiel permanent sous 24 heures.
             </p>
           </div>
 
@@ -1093,7 +1093,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
             </div>
 
             <p className="text-[11px] text-afri-text-sec leading-relaxed max-w-[280px] mx-auto">
-              Félicitations, votre dossier de certification artistique est désormais complet et en cours d'analyse. Un administrateur AFRIGOMBO validera votre statut très prochainement.
+              Félicitations, votre dossier de certification artistique est désormais complet et en cours d'analyse. Un administrateur AFRIGOMBO ELITE validera votre statut très prochainement.
             </p>
 
             <button

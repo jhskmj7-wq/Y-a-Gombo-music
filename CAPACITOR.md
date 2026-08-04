@@ -1,4 +1,4 @@
-# AFRIGOMBO — GUIDE OFFICIEL DE MIGRATION VERS CAPACITOR 🚀
+# AFRIGOMBO ELITE — GUIDE OFFICIEL DE MIGRATION VERS CAPACITOR 🚀
 
 Ce document formalise la **Décision Technique Officielle** d'abandonner AppsGeyser au profit de **Capacitor** (une seule base de code pour le Web officiel et l'application Android native).
 
@@ -15,7 +15,7 @@ Ce document formalise la **Décision Technique Officielle** d'abandonner AppsGey
 
 ## 🛠️ GUIDE DE MISE EN PLACE DE L'ENVIRONNEMENT
 
-### 1. Installation des dépendances Capacitor au sein d'AFRIGOMBO
+### 1. Installation des dépendances Capacitor au sein d'AFRIGOMBO ELITE
 
 Exécutez dans le dossier racine de votre application Web :
 
@@ -65,7 +65,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.afrigombo.app',
-  appName: 'AFRIGOMBO',
+  appName: 'AFRIGOMBO ELITE',
   webDir: 'dist',
   server: {
     androidScheme: 'https'
@@ -85,7 +85,7 @@ export default config;
 
 ### B. CONFIGURATION DE DEEP LINKING ET APP LINKS (RETOUR AUTOMATIQUE)
 
-Pour que Google Chrome ou l'onglet personnalisé Chrome renvoie spontanément l'artiste vers l'application AFRIGOMBO après une authentification réussie, configurez le protocole de schéma natif dans votre fichier Android officiel :
+Pour que Google Chrome ou l'onglet personnalisé Chrome renvoie spontanément l'artiste vers l'application AFRIGOMBO ELITE après une authentification réussie, configurez le protocole de schéma natif dans votre fichier Android officiel :
 
 #### 1. Configuration dans `AndroidManifest.xml` (situé dans `android/app/src/main/AndroidManifest.xml`)
 
@@ -116,7 +116,7 @@ Ajoutez cet `intent-filter` à l'intérieur de la balise `<activity>` principale
 2. Chrome procède à l'authentification sécurisée de l'utilisateur avec Google ou Facebook.
 3. À la validation, la passerelle web appelle :
    `afrigombo://redirect?transferId=goog_trans_xxx` ou `https://afrigombo.com/redirect?transferId=goog_trans_xxx`.
-4. L'OS Android réactive immédiatement l'application native AFRIGOMBO.
+4. L'OS Android réactive immédiatement l'application native AFRIGOMBO ELITE.
 5. Grâce à l'écouteur `window.onGomboDeepLinkReceived` ou au listener de deep links de Capacitor pré-codé dans `/src/App.tsx`, l'application récupère la session Firestore, authentifie l'utilisateur via Firebase de façon native, puis affiche le dashboard immédiatement.
 
 ---
@@ -136,7 +136,7 @@ L'application demandera automatiquement l'accès au démarrage ou à la connexio
 
 ## 🔄 COMMANDES DE CYCLE DE DÉVELOPPEMENT QUOTIDIEN
 
-Chaque fois que vous modifiez l'interface visuelle d'AFRIGOMBO et souhaitez la tester sur votre téléphone Android :
+Chaque fois que vous modifiez l'interface visuelle d'AFRIGOMBO ELITE et souhaitez la tester sur votre téléphone Android :
 
 ```bash
 # 1. Compiler l'application React
@@ -159,4 +159,4 @@ npx cap open android
 
 ---
 
-*L'architecture d'AFRIGOMBO est désormais modernisée, propre, sécurisée, et 100% compatible Android officiel sans dépendances obsolètes !*
+*L'architecture d'AFRIGOMBO ELITE est désormais modernisée, propre, sécurisée, et 100% compatible Android officiel sans dépendances obsolètes !*

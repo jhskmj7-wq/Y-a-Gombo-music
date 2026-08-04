@@ -17,7 +17,7 @@ export default function MessagesBottomNavigation({
     { id: "appels", label: "Appels", icon: PhoneCall },
     { id: "activites", label: "Activités", icon: Activity },
     { id: "parametres", label: "Paramètres", icon: Settings },
-    { id: "afrigombo", label: "AFRIGOMBO", icon: Crown },
+    { id: "afrigombo", label: "AFRIGOMBO ELITE", icon: Crown },
   ];
 
   return (

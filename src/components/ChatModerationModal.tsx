@@ -94,7 +94,7 @@ export function ChatModerationModal({
         <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl flex items-center justify-between">
           <div>
             <p className="text-xs font-bold text-afri-text">{partnerName}</p>
-            <p className="text-[10px] text-afri-text-sec font-mono">Membre AFRIGOMBO</p>
+            <p className="text-[10px] text-afri-text-sec font-mono">Membre AFRIGOMBO ELITE</p>
           </div>
           <button
             onClick={handleToggleBlock}

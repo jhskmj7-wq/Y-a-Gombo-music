@@ -43,7 +43,7 @@ export default function CertificationHub({
         userId: currentUserProfile.uid,
         userName: `${currentUserProfile.firstName || ""} ${currentUserProfile.lastName || ""}`.trim() || currentUserProfile.artistName || "Artiste",
         amount: 5000,
-        purpose: "💎 Abonnement Annuel Premium AFRIGOMBO",
+        purpose: "💎 Abonnement Annuel Premium AFRIGOMBO ELITE",
         provider: selectedMobileNetwork as any,
         phoneNumber: mobilePhoneNumber,
         status: "success"
@@ -59,7 +59,7 @@ export default function CertificationHub({
         userId: currentUserProfile.uid,
         type: "premium_activated",
         title: "👑 Abonnement Premium Activé !",
-        message: "Félicitations ! Votre adhésion Premium / VIP AFRIGOMBO a été validée. Bénéficiez immédiatement de vos privilèges souverains.",
+        message: "Félicitations ! Votre adhésion Premium / VIP AFRIGOMBO ELITE a été validée. Bénéficiez immédiatement de vos privilèges souverains.",
         priority: "high"
       });
 
@@ -577,7 +577,7 @@ export default function CertificationHub({
       <div id="tab-navigation" className="flex border-b border-afri-border dark:border-zinc-805">
         {[
           { id: "badges", label: "🏆 Badges & Dossier", icon: Award },
-          { id: "premium", label: "💎 Premium AFRIGOMBO", icon: Sparkles },
+          { id: "premium", label: "💎 Premium AFRIGOMBO ELITE", icon: Sparkles },
           { id: "boost", label: "🚀 Booster mes posts", icon: Zap },
           { id: "payments", label: "💳 Transactions", icon: DollarSign },
           { id: "admin", label: "🛠️ Console Vetting Admin", icon: Eye }
@@ -793,7 +793,7 @@ export default function CertificationHub({
         </div>
       )}
 
-      {/* VIEW 1.5: 💎 PREMIUM AFRIGOMBO & MONETIZATION CHECKOUTS */}
+      {/* VIEW 1.5: 💎 PREMIUM AFRIGOMBO ELITE & MONETIZATION CHECKOUTS */}
       {activeTab === "premium" && (
         <div id="premium-membership-panel" className="space-y-8 animate-fadeIn text-left">
           
@@ -808,7 +808,7 @@ export default function CertificationHub({
                   <span className="w-1.5 h-1.5 bg-afri-bg-sec rounded-full animate-ping" />
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-afri-text font-sans tracking-tight">
-                  Premium AFRIGOMBO
+                  Premium AFRIGOMBO ELITE
                 </h2>
                 <p className="text-afri-text text-[11px] leading-relaxed">
                   Propulsez votre carrière artistique au sommet de l'Afrique de l'Ouest. Rejoignez le cercle des artistes certifiés prioritaires et maximisez vos cachets.
@@ -842,7 +842,7 @@ export default function CertificationHub({
                     <div className="text-4xl text-[#D4AF37] animate-bounce">💎</div>
                     <h3 className="text-sm font-black text-afri-text uppercase">Premium Activé !</h3>
                     <p className="text-[11px] text-afri-text-sec">
-                      Vous êtes désormais Membre Premium AFRIGOMBO. Vos avantages sont opérationnels sur Cocody & toute l'Afrique.
+                      Vous êtes désormais Membre Premium AFRIGOMBO ELITE. Vos avantages sont opérationnels sur Cocody & toute l'Afrique.
                     </p>
                     <span className="inline-block text-[9px] font-black uppercase text-amber-500 bg-afri-bg-sec/15 px-3 py-1 rounded-full border border-[#D4AF37]/30">
                       Pastille Premium Active
@@ -1303,7 +1303,7 @@ export default function CertificationHub({
                 <form onSubmit={handleApplyGomboID} className="space-y-4">
                   <div className="space-y-1">
                     <h2 className="text-base font-black uppercase tracking-tight text-zinc-950 dark:text-afri-text flex items-center gap-1.5">
-                      🏆 TALENT CERTIFIÉ AFRIGOMBO
+                      🏆 TALENT CERTIFIÉ AFRIGOMBO ELITE
                     </h2>
                     <p className="text-[11px] text-afri-text-sec">
                       Remplissez votre dossier réel pour l'examen de conformité de nos agents d'audit de Côte d'Ivoire. Le badge ne s'achète pas !

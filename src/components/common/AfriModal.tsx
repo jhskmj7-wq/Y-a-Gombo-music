@@ -304,7 +304,7 @@ function renderModalBody(
             </div>
             <div>
               <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-widest block font-bold">Portefeuille Securisé</span>
-              <h4 className="text-xs font-black text-afri-text uppercase">Paiement Instantané AFRIGOMBO</h4>
+              <h4 className="text-xs font-black text-afri-text uppercase">Paiement Instantané AFRIGOMBO ELITE</h4>
             </div>
           </div>
           <div className="text-xs text-afri-text font-medium leading-relaxed">

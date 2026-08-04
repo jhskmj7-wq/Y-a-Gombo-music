@@ -26,7 +26,7 @@ export function PrivacyPage({ onBack }: PublicPageProps) {
         <div className="flex items-center justify-end pb-4 border-b border-afri-border">
           <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37]">
             <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
-            <span>AFRIGOMBO • CHARTE</span>
+            <span>AFRIGOMBO ELITE • CHARTE</span>
           </div>
         </div>
 
@@ -49,7 +49,7 @@ export function TermsPage({ onBack }: PublicPageProps) {
         <div className="flex items-center justify-end pb-4 border-b border-afri-border">
           <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37]">
             <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
-            <span>AFRIGOMBO • RÈGLEMENT</span>
+            <span>AFRIGOMBO ELITE • RÈGLEMENT</span>
           </div>
         </div>
 
@@ -184,7 +184,7 @@ export function AboutPage({ onBack }: PublicPageProps) {
           
           <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37]">
             <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
-            <span>AFRIGOMBO • Y’A GOMBO MUSIC</span>
+            <span>AFRIGOMBO ELITE • Y’A GOMBO MUSIC</span>
           </div>
         </div>
 
@@ -196,7 +196,7 @@ export function AboutPage({ onBack }: PublicPageProps) {
             À Propos de Nous
           </h1>
           <p className="text-xs text-afri-text-sec max-w-md mx-auto">
-            La révolution numérique d'AFRIGOMBO : opportunités certifiées et cachets sécurisés du showbiz.
+            La révolution numérique d'AFRIGOMBO ELITE : opportunités certifiées et cachets sécurisés du showbiz.
           </p>
         </div>
 
@@ -206,7 +206,7 @@ export function AboutPage({ onBack }: PublicPageProps) {
               <span className="text-[#D4AF37]">🇨🇮</span> Notre Mission
             </h2>
             <p className="text-xs text-afri-text-sec leading-relaxed">
-              <strong>AFRIGOMBO</strong>, propulsé par la solution <strong>Y'A GOMBO MUSIC</strong>, a été conçu par et pour les artistes. Notre but ultime est de professionnaliser la recherche, la planification et le paiement certifié des contrats musicaux et gombos scéniques à Abidjan et partout en Afrique de l'Ouest.
+              <strong>AFRIGOMBO ELITE</strong>, propulsé par la solution <strong>Y'A GOMBO MUSIC</strong>, a été conçu par et pour les artistes. Notre but ultime est de professionnaliser la recherche, la planification et le paiement certifié des contrats musicaux et gombos scéniques à Abidjan et partout en Afrique de l'Ouest.
             </p>
             <p className="text-xs text-afri-text-sec leading-relaxed">
               Fini les fausses promesses, les intermédiaires gourmands ou les cachets non payés après des heures de show live intense. Nous offrons une plateforme transparente de mise en relation directe.
@@ -324,7 +324,7 @@ export function SupportPage({ onBack }: PublicPageProps) {
                     onClick={() => supportConfig.openSupport("Centre d'Assistance")}
                     className="text-[#D4AF37] hover:underline block font-bold text-left cursor-pointer text-afri-gold"
                   >
-                    Contacter le Support AFRIGOMBO
+                    Contacter le Support AFRIGOMBO ELITE
                   </button>
                   <span className="text-[10px] text-afri-text-muted font-medium">Support direct 24h/7</span>
                 </div>

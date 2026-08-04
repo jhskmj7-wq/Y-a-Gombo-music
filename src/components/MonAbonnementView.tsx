@@ -264,7 +264,7 @@ export const MonAbonnementView: React.FC<Props> = ({
           </div>
           <button
             onClick={() => {
-              supportConfig.openSupport(`Bonjour Support AFRIGOMBO 👋\nJe vous contacte concernant la gestion de mon abonnement ${currentPlan}.`);
+              supportConfig.openSupport(`Bonjour Support AFRIGOMBO ELITE 👋\nJe vous contacte concernant la gestion de mon abonnement ${currentPlan}.`);
             }}
             className="px-4 py-2 bg-emerald-500/15 border border-emerald-500/30 hover:bg-emerald-500/25 text-emerald-400 text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
           >

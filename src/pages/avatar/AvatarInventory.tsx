@@ -26,7 +26,7 @@ export const AvatarInventory: React.FC<AvatarInventoryProps> = ({ currentUser, o
     <PageContainer className="p-0 bg-afri-bg text-afri-text" id="avatar-inventory-page-root">
       <AndroidTopBar
         title="Mon Inventaire Avatar"
-        subtitle="AFRIGOMBO Android First"
+        subtitle="AFRIGOMBO ELITE Android First"
         onBack={onBack}
       />
 

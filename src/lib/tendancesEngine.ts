@@ -172,7 +172,7 @@ export async function saveOrUpdateTrendingDoc(data: Partial<TrendingDoc>): Promi
     reportsCount: data.reportsCount || 0,
     createdAt: data.createdAt || now,
     updatedAt: now,
-    authorName: data.authorName || "Artiste AFRIGOMBO",
+    authorName: data.authorName || "Artiste AFRIGOMBO ELITE",
     authorAvatar: data.authorAvatar || "",
     category: data.category || "general",
     commune: data.commune || "Abidjan",
@@ -313,7 +313,7 @@ export function calculateTimeDecayMultiplier(createdAtMs: number): number {
 }
 
 /**
- * Calculate the final official AFRIGOMBO Score
+ * Calculate the final official AFRIGOMBO ELITE Score
  */
 export function calculateAfrigomboScore(
   item: Partial<TendancesItem>,
@@ -496,6 +496,6 @@ export function filterAndRankTendances(
       break;
   }
 
-  // Sort strictly by AFRIGOMBO Score (descending)
+  // Sort strictly by AFRIGOMBO ELITE Score (descending)
   return filtered.sort((a, b) => (b.afrigomboScore || 0) - (a.afrigomboScore || 0));
 }

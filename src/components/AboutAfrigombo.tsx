@@ -26,7 +26,7 @@ const features = [
   },
   {
     title: "Arbitrage & Protection",
-    description: "En cas de litige, AFRIGOMBO intervient pour trancher de manière impartiale en se basant sur le contrat et les preuves fournies.",
+    description: "En cas de litige, AFRIGOMBO ELITE intervient pour trancher de manière impartiale en se basant sur le contrat et les preuves fournies.",
     icon: ShieldAlert,
     color: "text-red-500",
     bg: "bg-red-500/10"
@@ -90,7 +90,7 @@ export default function AboutAfrigombo({ onBack, onSupport }: AboutAfrigomboProp
             transition={{ delay: 0.1 }}
             className="text-4xl md:text-6xl font-black font-mono tracking-tighter leading-none"
           >
-            POURQUOI <span className="text-[#D4AF37]">AFRIGOMBO</span> EST DIFFÉRENT ?
+            POURQUOI <span className="text-[#D4AF37]">AFRIGOMBO ELITE</span> EST DIFFÉRENT ?
           </motion.h1>
           
           <motion.p

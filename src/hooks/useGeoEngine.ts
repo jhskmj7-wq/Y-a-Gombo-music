@@ -52,7 +52,7 @@ export function useGeoEngine(profile: UserProfile | null) {
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`,
         {
           headers: {
-            "User-Agent": "AFRIGOMBO-App/1.0"
+            "User-Agent": "AFRIGOMBO ELITE-App/1.0"
           }
         }
       );

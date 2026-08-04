@@ -19,7 +19,7 @@ export type BlockType =
   | "RECOMMENDED_PRODUCTS"
   | "NEARBY_EVENTS"
   | "RENFORT_EXPRESS"
-  | "AFRIGOMBO_UNIVERSE"
+  | "AFRIGOMBO_ELITE_UNIVERSE"
   | "PREMIUM_MISSIONS"
   | "NEAR_YOU"
   | "NEW_TALENTS"
@@ -49,7 +49,7 @@ const getIconForType = (type: BlockType) => {
     case "RECOMMENDED_PRODUCTS": return <ShoppingBag className="w-4 h-4 text-pink-500" />;
     case "NEARBY_EVENTS": return <Calendar className="w-4 h-4 text-orange-500" />;
     case "RENFORT_EXPRESS": return <Users className="w-4 h-4 text-red-400" />;
-    case "AFRIGOMBO_UNIVERSE": return <Globe className="w-4 h-4 text-indigo-400" />;
+    case "AFRIGOMBO_ELITE_UNIVERSE": return <Globe className="w-4 h-4 text-indigo-400" />;
     case "PREMIUM_MISSIONS": return <Briefcase className="w-4 h-4 text-afri-text" />;
     case "NEAR_YOU": return <MapPin className="w-4 h-4 text-afri-text" />;
     case "NEW_TALENTS": return <Sparkles className="w-4 h-4 text-[#D4AF37]" />;
@@ -138,7 +138,7 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
                 )}
               </div>
               <p className="text-[10px] text-afri-text-sec line-clamp-2 leading-relaxed">
-                {item.description || item.bio || "Découvrez cette opportunité unique sur AFRIGOMBO."}
+                {item.description || item.bio || "Découvrez cette opportunité unique sur AFRIGOMBO ELITE."}
               </p>
               <div className="flex items-center gap-2 pt-1">
                 {item.location && (

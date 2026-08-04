@@ -35,7 +35,7 @@ export function InsufficientBalanceModal({
             <AlertCircle className="w-8 h-8" />
           </div>
           <p className="text-xs text-afri-text-sec font-mono leading-relaxed">
-            Votre Wallet AFRIGOMBO ne contient pas les fonds nécessaires pour {moduleName}.
+            Votre Wallet AFRIGOMBO ELITE ne contient pas les fonds nécessaires pour {moduleName}.
           </p>
         </div>
 

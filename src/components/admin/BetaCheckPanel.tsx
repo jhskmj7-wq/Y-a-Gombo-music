@@ -51,7 +51,7 @@ export default function BetaCheckPanel() {
           </div>
           <div>
             <h2 className="text-base font-black text-afri-text uppercase tracking-wider">
-              AFRIGOMBO BÊTA — AUDIT DIAGNOSTIC
+              AFRIGOMBO ELITE BÊTA — AUDIT DIAGNOSTIC
             </h2>
             <p className="text-xs text-afri-text-sec">
               Surveillance proactive des 12 modules fondateurs

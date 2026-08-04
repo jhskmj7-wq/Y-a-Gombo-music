@@ -42,7 +42,7 @@ export default function PremiumLoader({ message = "Connexion sécurisée..." }: 
         {/* Glowing aura */}
         <div className="absolute w-24 h-24 rounded-full bg-afri-bg-sec/5 blur-xl animate-pulse" />
 
-        {/* LOGO AFRIGOMBO (Official Image) */}
+        {/* LOGO AFRIGOMBO ELITE (Official Image) */}
         {isLogoLoaded && !isLogoFailed ? (
           <img 
             src="/logo_afrigombo.png" 

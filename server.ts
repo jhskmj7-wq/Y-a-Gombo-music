@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -42,7 +41,7 @@ async function startServer() {
       const base64Data = imageBase64.split(",")[1] || imageBase64;
       
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3.6-flash",
         contents: {
           parts: [
             { text: prompt },
@@ -67,6 +66,7 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",

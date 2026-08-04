@@ -3280,7 +3280,7 @@ export const gomboDB = {
         const currentBloque = clientData.wallet?.soldeBloque ?? 0;
         
         if (currentDisponible < totalClientPaid) {
-          throw new Error(`Solde insuffisant dans votre Wallet AFRIGOMBO. Solde disponible : ${currentDisponible.toLocaleString()} FCFA. Requis : ${totalClientPaid.toLocaleString()} FCFA (Cachet + Commission). Veuillez recharger votre Wallet.`);
+          throw new Error(`Solde insuffisant dans votre Wallet AFRIGOMBO ELITE. Solde disponible : ${currentDisponible.toLocaleString()} FCFA. Requis : ${totalClientPaid.toLocaleString()} FCFA (Cachet + Commission). Veuillez recharger votre Wallet.`);
         }
         
         await setDoc(clientRef, {
@@ -3353,7 +3353,7 @@ export const gomboDB = {
       // 5. Append to history
       const history = contractData.history || [];
       history.push({
-        action: `Paiement reçu. ${totalClientPaid.toLocaleString()} FCFA bloqués en séquestre. En attente de prestation (Coffre AFRIGOMBO)`,
+        action: `Paiement reçu. ${totalClientPaid.toLocaleString()} FCFA bloqués en séquestre. En attente de prestation (Coffre AFRIGOMBO ELITE)`,
         timestamp: now,
         userId: creatorId
       });
@@ -3460,7 +3460,7 @@ export const gomboDB = {
       if (contractSnap.exists()) {
         const history = contractSnap.data().history || [];
         history.push({
-          action: `Validation finale : Fonds libérés à l'artiste (Coffre AFRIGOMBO) [Artiste: +${netToArtist.toLocaleString()} FCFA | Plateforme: +${totalCommission.toLocaleString()} FCFA]`,
+          action: `Validation finale : Fonds libérés à l'artiste (Coffre AFRIGOMBO ELITE) [Artiste: +${netToArtist.toLocaleString()} FCFA | Plateforme: +${totalCommission.toLocaleString()} FCFA]`,
           timestamp: now,
           userId: "system"
         });

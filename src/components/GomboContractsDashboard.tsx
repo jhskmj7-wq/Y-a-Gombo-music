@@ -124,7 +124,7 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-sans font-black text-afri-text uppercase tracking-tighter">
-              {isAdminView ? "TABLEAU DE BORD DES CONTRATS" : "CONTRATS AFRIGOMBO"}
+              {isAdminView ? "TABLEAU DE BORD DES CONTRATS" : "CONTRATS AFRIGOMBO ELITE"}
             </h2>
             <BetaEscrowInfoButton variant="badge" />
           </div>

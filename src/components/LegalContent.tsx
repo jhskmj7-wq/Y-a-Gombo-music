@@ -12,7 +12,7 @@ export const CGUContent: React.FC = () => (
         Conditions Générales d'Utilisation (CGU)
       </h2>
       <p className="text-[11px] text-afri-text-sec max-w-sm mx-auto font-medium">
-        Règlement officiel de l'écosystème AFRIGOMBO • Y’A GOMBO MUSIC. Applicable à tous les artistes, musiciens, prestataires et recruteurs en Côte d’Ivoire.
+        Règlement officiel de l'écosystème AFRIGOMBO ELITE • Y’A GOMBO MUSIC. Applicable à tous les artistes, musiciens, prestataires et recruteurs en Côte d’Ivoire.
       </p>
     </div>
 
@@ -21,7 +21,7 @@ export const CGUContent: React.FC = () => (
         <span className="text-afri-gold">✓</span> 1. Acceptation & Vocation Exclusive
       </h3>
       <p>
-        En créant un compte ou en utilisant l'application <strong>AFRIGOMBO (Y’A GOMBO MUSIC)</strong>, vous acceptez pleinement et sans réserve le présent règlement. L'application a pour vocation exclusive de faciliter la mise en relation showbiz, la publication d'annonces de gombos scéniques (prestations, concerts, répétitions, contrats), et la gestion sécurisée des cachets d'artistes.
+        En créant un compte ou en utilisant l'application <strong>AFRIGOMBO ELITE (Y’A GOMBO MUSIC)</strong>, vous acceptez pleinement et sans réserve le présent règlement. L'application a pour vocation exclusive de faciliter la mise en relation showbiz, la publication d'annonces de gombos scéniques (prestations, concerts, répétitions, contrats), et la gestion sécurisée des cachets d'artistes.
       </p>
     </div>
 
@@ -65,8 +65,8 @@ export const CGUContent: React.FC = () => (
         <span className="text-afri-gold">✓</span> 5. Sécurité des Paiements & Cachets
       </h3>
       <p>
-        Les transactions s'effectuent par le biais de passerelles sécurisées (Wave, Orange Money) ou via le compte séquestre AFRIGOMBO. Il incombe à l'utilisateur de vérifier l'exactitude des numéros enregistrés. 
-        Pendant la phase Bêta, les validations de paiements sont vérifiées par le système AFRIGOMBO pour éliminer tout risque d'escroquerie direct entre inconnus.
+        Les transactions s'effectuent par le biais de passerelles sécurisées (Wave, Orange Money) ou via le compte séquestre AFRIGOMBO ELITE. Il incombe à l'utilisateur de vérifier l'exactitude des numéros enregistrés. 
+        Pendant la phase Bêta, les validations de paiements sont vérifiées par le système AFRIGOMBO ELITE pour éliminer tout risque d'escroquerie direct entre inconnus.
       </p>
     </div>
 
@@ -75,14 +75,14 @@ export const CGUContent: React.FC = () => (
         <span className="text-afri-gold">✓</span> 6. Tolérance Zéro & Sanctions
       </h3>
       <p className="text-red-500 font-bold">
-        AFRIGOMBO applique une politique de tolérance zéro face aux comportements frauduleux. L'usurpation d'identité d'artistes célèbres, la création de faux profil de recruteurs, le non-respect répété des engagements ou le contournement malveillant mèneront au blocage immédiat et irréversible du compte.
+        AFRIGOMBO ELITE applique une politique de tolérance zéro face aux comportements frauduleux. L'usurpation d'identité d'artistes célèbres, la création de faux profil de recruteurs, le non-respect répété des engagements ou le contournement malveillant mèneront au blocage immédiat et irréversible du compte.
       </p>
     </div>
 
     <div className="p-4 bg-afri-bg-ter border border-afri-gold/20 rounded-2xl flex items-center justify-between gap-3">
       <div>
         <h4 className="font-black text-afri-text uppercase text-[11px]">Besoin d'assistance juridique ou technique ?</h4>
-        <p className="text-[10px] text-afri-text-muted">Le Support Officiel AFRIGOMBO est disponible 24/7.</p>
+        <p className="text-[10px] text-afri-text-muted">Le Support Officiel AFRIGOMBO ELITE est disponible 24/7.</p>
       </div>
       <button
         onClick={() => supportConfig.openSupport("CGU & Assistance")}
@@ -104,7 +104,7 @@ export const PrivacyContent: React.FC = () => (
         Politique de Confidentialité & Protection des Données
       </h2>
       <p className="text-[11px] text-afri-text-sec max-w-sm mx-auto font-medium">
-        Engagement ferme pour la protection de la vie privée des membres de la communauté AFRIGOMBO.
+        Engagement ferme pour la protection de la vie privée des membres de la communauté AFRIGOMBO ELITE.
       </p>
     </div>
 
@@ -113,7 +113,7 @@ export const PrivacyContent: React.FC = () => (
         <span className="text-afri-gold">✓</span> 1. Collecte Strictement Utile
       </h3>
       <p>
-        Pour permettre la recherche de contrats, la réservation d'artistes et le versement des cachets, <strong>AFRIGOMBO</strong> collecte uniquement les informations nécessaires :
+        Pour permettre la recherche de contrats, la réservation d'artistes et le versement des cachets, <strong>AFRIGOMBO ELITE</strong> collecte uniquement les informations nécessaires :
       </p>
       <ul className="pl-5 space-y-1.5 list-disc text-afri-text-muted">
         <li>Informations de profil (Nom, Prénom, Nom de scène/artiste, Avatar).</li>
@@ -156,8 +156,8 @@ export const PrivacyContent: React.FC = () => (
         <span className="text-afri-gold">✓</span> 5. Non-Revente & Contact Support
       </h3>
       <p>
-        AFRIGOMBO ne vend ni ne loue aucune donnée personnelle à des tiers. Les numéros de téléphone sont exclusivement utilisés pour les notifications de gombos et le support. 
-        Le Support Officiel est joignable directement en cliquant sur <strong>Contacter le Support AFRIGOMBO</strong>.
+        AFRIGOMBO ELITE ne vend ni ne loue aucune donnée personnelle à des tiers. Les numéros de téléphone sont exclusivement utilisés pour les notifications de gombos et le support. 
+        Le Support Officiel est joignable directement en cliquant sur <strong>Contacter le Support AFRIGOMBO ELITE</strong>.
       </p>
     </div>
 

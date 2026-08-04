@@ -797,7 +797,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     return users.filter(u => u.role === "musicien" || u.role === "artiste").slice(0, 8);
   }, [users]);
 
-  // Section 10: Univers AFRIGOMBO
+  // Section 10: Univers AFRIGOMBO ELITE
   const universeItems = React.useMemo(() => [
     { id: "u1", type: "product" as const, title: "Micro Studio Pro Neumann", image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=400&auto=format&fit=crop&q=80", description: "Qualité exceptionnelle pour vos sessions studio à Abidjan.", tag: "Grand Marché" },
     { id: "u2", type: "course" as const, title: "Maîtrise du Piano Afro-Jazz", image: "https://images.unsplash.com/photo-1520529612722-68ec39750058?w=400&auto=format&fit=crop&q=80", description: "Apprenez avec les virtuoses du Trône.", tag: "Académie" },
@@ -850,7 +850,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 {logoUrl ? (
                   <img 
                     src={logoUrl} 
-                    alt="AFRIGOMBO LOGO" 
+                    alt="AFRIGOMBO ELITE LOGO" 
                     className="w-8 h-8 xs:w-10 xs:h-10 sm:w-16 sm:h-16 object-contain rounded-2xl shrink-0"
                   />
                 ) : (
@@ -861,7 +861,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       style={{ 
                         textShadow: "1px 1px 0px #B48F17"
                       }}>
-                    AFRIGOMBO
+                    AFRIGOMBO ELITE
                   </h1>
                   <span className="hidden xs:block text-[9.5px] sm:text-[13px] text-afri-text font-black tracking-wide mt-1 sm:mt-1.5 font-sans antialiased whitespace-nowrap">
                     Le Temple du Gombo Musical
@@ -1383,7 +1383,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       />
 
        {/* ==========================================
-          SECTION 3 — 🔥 TENDANCES AFRIGOMBO (PREMIUM)
+          SECTION 3 — 🔥 TENDANCES AFRIGOMBO ELITE (PREMIUM)
           Vitrine officielle de la plateforme. Apparaît AVANT les Gombos.
          ========================================== */}
       <div id="tendances-afrigombo-section" className="space-y-4">
@@ -1462,11 +1462,11 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       </div>
 
       {/* ==========================================
-          NIVEAU 2 — UNIVERS AFRIGOMBO
+          NIVEAU 2 — UNIVERS AFRIGOMBO ELITE
           Découverte intelligente et libre de tout l'écosystème.
          ========================================== */}
       <div className="space-y-8 pb-10 pt-2">
-        {/* AFRIGOMBO GEO ENGINE: RADAR & ARTISTES */}
+        {/* AFRIGOMBO ELITE GEO ENGINE: RADAR & ARTISTES */}
         <GeoRadarSection 
           nearbyGombos={geo.getNearbyItems(gombos, 10)}
           nearbyArtists={geo.getNearbyItems(users.filter(u => u.role === "musicien"), 15)}
@@ -1543,7 +1543,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           }}
         />
 
-        {/* 10. UNIVERS AFRIGOMBO */}
+        {/* 10. UNIVERS AFRIGOMBO ELITE */}
         <SmartUniverseCarousel 
           items={universeItems}
           onAction={(item) => {
@@ -1626,13 +1626,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           </button>
         </div>
 
-        {/* 12. AFRIGOMBO ACADEMY */}
+        {/* 12. AFRIGOMBO ELITE ACADEMY */}
         <div className="space-y-3 py-2 text-left bg-afri-bg-sec/30 p-4 rounded-3xl border border-afri-border">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <GraduationCap className="w-4 h-4 text-sky-400" />
               <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
-                🎓 AFRIGOMBO Academy & Masterclasses
+                🎓 AFRIGOMBO ELITE Academy & Masterclasses
               </h3>
             </div>
             <button 
@@ -1746,7 +1746,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               <MapPin className="w-8 h-8 text-[#D4AF37] animate-bounce" />
             </div>
             <p className="text-xs text-afri-text-sec font-bold uppercase leading-relaxed">
-              Autoriser AFRIGOMBO à accéder à votre position afin de trouver les opportunités et artistes proches de vous.
+              Autoriser AFRIGOMBO ELITE à accéder à votre position afin de trouver les opportunités et artistes proches de vous.
             </p>
             <div className="flex gap-2">
               <button 
@@ -2010,7 +2010,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             <span className="text-xl">🌟</span>
             <div>
               <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
-                AFRIGOMBO PLUS COCKPIT
+                AFRIGOMBO ELITE PLUS COCKPIT
               </h3>
               <p className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Tableau des Commandes Avancées</p>
             </div>
@@ -2285,7 +2285,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               <span>COMMUNAUTÉ</span>
             </div>
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-              {/* Univers AFRIGOMBO */}
+              {/* Univers AFRIGOMBO ELITE */}
               <button
                 onClick={() => {
                   setIsPlusMenuOpen(false);
@@ -2300,7 +2300,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   <span className="text-sm">🌍</span>
                 </div>
                 <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Univers AFRIGOMBO</div>
+                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Univers AFRIGOMBO ELITE</div>
                   <span className="text-[7.5px] font-mono text-red-400 uppercase tracking-widest block leading-none mt-1 font-bold">BÂTISSEURS</span>
                 </div>
               </button>
@@ -2499,7 +2499,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   {localComingSoonKey === "menu_favorites" ? "Enregistrez vos artistes et opportunités préférées pour ne plus jamais manquer un Gombo en Or !" :
                    localComingSoonKey === "menu_history" ? "Consultez l'historique de vos gombos, contrats, transactions et performances en un clin d'œil." :
                    localComingSoonKey === "menu_classement" ? "Découvrez le Top 10 des meilleurs artistes et recruteurs du pays. Grimpez dans la hiérarchie !" :
-                   "Cette fonctionnalité est en cours de finalisation pour la communauté AFRIGOMBO."}
+                   "Cette fonctionnalité est en cours de finalisation pour la communauté AFRIGOMBO ELITE."}
                 </p>
               </div>
 
@@ -2929,7 +2929,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
                       Top Talents
                     </h3>
-                    <p className="text-[8.5px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Classements d'Or AFRIGOMBO</p>
+                    <p className="text-[8.5px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Classements d'Or AFRIGOMBO ELITE</p>
                   </div>
                 </div>
                 <button

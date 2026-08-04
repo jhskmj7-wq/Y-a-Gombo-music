@@ -67,7 +67,7 @@ export default function AdminDeploymentCenter({
     { id: "radar", name: "Radar Géolocalisé Nearby", category: "Navigation", enabled: true, status: "validated", description: "Cartographie et proximité des membres" },
     { id: "cahier", name: "Cahier Numérique du Fondateur", category: "Gouvernance", enabled: true, status: "validated", description: "Carnet de notes Firestore professionnel" },
     { id: "appels", name: "Appels Audio/Vidéo WebRTC", category: "Communication", enabled: true, status: "experimental", description: "Flux direct peer-to-peer en temps réel" },
-    { id: "academie", name: "Académie AFRIGOMBO", category: "Formation", enabled: false, status: "pending", description: "Tutoriels et certifications professionnelles" },
+    { id: "academie", name: "Académie AFRIGOMBO ELITE", category: "Formation", enabled: false, status: "pending", description: "Tutoriels et certifications professionnelles" },
     { id: "podcasts", name: "Podcasts & Multimédia", category: "Média", enabled: true, status: "validated", description: "Lecteur audio kora et diffusions résonantes" },
     { id: "events", name: "Événements & Billetterie", category: "Communauté", enabled: true, status: "experimental", description: "Création et reservation d'événements" },
     { id: "gombo_id", name: "Gombo ID Souverain", category: "Sécurité", enabled: true, status: "validated", description: "Système de badges d'accréditation" },
@@ -222,7 +222,7 @@ export default function AdminDeploymentCenter({
     { name: "Cahier Numérique du Fondateur", status: "Terminé", env: "Production", code: "MOD_NOTEBOOK" },
     { name: "Centre de Déploiement", status: "Terminé", env: "Production", code: "MOD_DEPLOY" },
     { name: "Appels WebRTC Directs", status: "En développement", env: "Bêta", code: "MOD_WEBRTC" },
-    { name: "Académie AFRIGOMBO", status: "Pas encore disponible", env: "Backlog", code: "MOD_ACADEMY" }
+    { name: "Académie AFRIGOMBO ELITE", status: "Pas encore disponible", env: "Backlog", code: "MOD_ACADEMY" }
   ];
 
   const currentProdRecord = deploymentHistory.find((d) => d.targetEnv === "production") || {

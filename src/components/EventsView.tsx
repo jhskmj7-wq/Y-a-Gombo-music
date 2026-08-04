@@ -143,11 +143,11 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
         date: "2026-07-15",
         time: "21:00",
         lieu: "Le Balafon Chic, Plateau",
-        organisateur: "Club Élite AFRIGOMBO",
+        organisateur: "Club Élite AFRIGOMBO ELITE",
         participants: ["Alpha Blondy (Special Guest)"],
         status: "Confirmé",
         category: "Concert",
-        description: "Soirée acoustique haut de gamme pour célébrer l'intégration de la bêta publique AFRIGOMBO."
+        description: "Soirée acoustique haut de gamme pour célébrer l'intégration de la bêta publique AFRIGOMBO ELITE."
       },
       {
         title: "Signature Contrat d'Alliance Souverain",
@@ -155,7 +155,7 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
         time: "11:00",
         lieu: "Cabinet Juridique Gombo, Zone 4",
         organisateur: "Maître Bamba (Notaire d'Héritage)",
-        participants: ["Conseil d'Administration AFRIGOMBO"],
+        participants: ["Conseil d'Administration AFRIGOMBO ELITE"],
         status: "Confirmé",
         category: "Contrat",
         description: "Validation des droits d'auteur, de propriété intellectuelle et de versement de cachets automatisés via Wallet."

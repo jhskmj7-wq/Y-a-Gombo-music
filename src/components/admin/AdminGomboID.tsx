@@ -40,7 +40,7 @@ export default function AdminGomboID({
           Validation Gombo ID & Certification
         </h3>
         <p className="text-xs text-afri-text-sec mt-1">
-          Validez les dossiers de vérification d'identité des artistes d'AFRIGOMBO pour sécuriser les transactions.
+          Validez les dossiers de vérification d'identité des artistes d'AFRIGOMBO ELITE pour sécuriser les transactions.
         </p>
       </div>
 

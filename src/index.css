@@ -140,7 +140,7 @@ html.text-size-grand {
   }
 }
 
-/* GLOBAL RESPONSIVE LAYER - AFRIGOMBO NATIVE-LIKE STRATEGY */
+/* GLOBAL RESPONSIVE LAYER - AFRIGOMBO ELITE NATIVE-LIKE STRATEGY */
 @layer utilities {
   .afri-container {
     @apply px-4 xs:px-5 sm:px-8 max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto w-full;

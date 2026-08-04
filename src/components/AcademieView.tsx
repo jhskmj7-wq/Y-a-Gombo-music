@@ -361,7 +361,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
       category: newCategory,
       level: newLevel,
       price: parseFloat(newPrice) || 0,
-      instructorName: currentUserProfile?.displayName || "Formateur Certifié AFRIGOMBO",
+      instructorName: currentUserProfile?.displayName || "Formateur Certifié AFRIGOMBO ELITE",
       instructorId: currentUserProfile?.uid || "current_user",
       instructorAvatar: currentUserProfile?.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
       instructorRole: "Enseignant Certifié Gombo Academy",
@@ -407,7 +407,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                 <div className="flex flex-wrap items-center gap-2">
                   <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-[#D4AF37] shrink-0" />
                   <h1 className="text-lg sm:text-2xl font-black text-afri-text uppercase tracking-tight">
-                    L'Académie AFRIGOMBO
+                    L'Académie AFRIGOMBO ELITE
                   </h1>
                   <span className="text-[9px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] font-mono font-black uppercase rounded-md tracking-wider">
                     MASTERCLASSES & GUIDES
@@ -837,7 +837,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                     <span className="text-emerald-400 font-bold">{Math.round(selectedCourse.price * 0.95).toLocaleString()} FCFA</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Frais Plateforme AFRIGOMBO (5%) :</span>
+                    <span>Frais Plateforme AFRIGOMBO ELITE (5%) :</span>
                     <span className="text-amber-400">{Math.round(selectedCourse.price * 0.05).toLocaleString()} FCFA</span>
                   </div>
                 </div>
@@ -878,7 +878,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
               <span>1. Répartition des Gains (95% Formateur / 5% Plateforme)</span>
             </div>
             <p className="text-xs text-afri-text-sec leading-relaxed">
-              Sur l'Académie AFRIGOMBO, les formateurs perçoivent <strong>95% des revenus bruts</strong> sur chaque vente de cours ou masterclass. La commission de <strong>5%</strong> permet de maintenir l'infrastructure vidéo HD, la sécurisation des paiements Mobile Money/CB et la délivrance automatique des certificats.
+              Sur l'Académie AFRIGOMBO ELITE, les formateurs perçoivent <strong>95% des revenus bruts</strong> sur chaque vente de cours ou masterclass. La commission de <strong>5%</strong> permet de maintenir l'infrastructure vidéo HD, la sécurisation des paiements Mobile Money/CB et la délivrance automatique des certificats.
             </p>
           </div>
 
@@ -945,7 +945,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                 Accès Restreint - Certification & Score Requis
               </h3>
               <p className="text-xs text-afri-text-sec leading-relaxed">
-                Pour enseigner sur l'Académie AFRIGOMBO et monétiser vos formations, vous devez posséder un <strong>Profil Certifié (GOMBO ID)</strong> et un <strong>Score de Confiance d'au moins 60%</strong>.
+                Pour enseigner sur l'Académie AFRIGOMBO ELITE et monétiser vos formations, vous devez posséder un <strong>Profil Certifié (GOMBO ID)</strong> et un <strong>Score de Confiance d'au moins 60%</strong>.
               </p>
             </div>
 

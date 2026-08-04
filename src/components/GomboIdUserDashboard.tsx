@@ -392,7 +392,7 @@ function GomboIdUserDashboardInner({
           </motion.button>
           
           <p className="text-center afri-text-tiny text-afri-text-sec mt-3">
-            La clé d'excellence est régulée par le consortium AFRIGOMBO.
+            La clé d'excellence est régulée par le consortium AFRIGOMBO ELITE.
           </p>
         </div>
 
@@ -464,9 +464,9 @@ function GomboIdUserDashboardInner({
                     {step === "intro" && (
                       <div className="space-y-6">
                         <div className="space-y-2 text-center max-w-md mx-auto">
-                          <h5 className="text-lg font-display font-medium text-afri-text">Prétendez à l'excellence AFRIGOMBO</h5>
+                          <h5 className="text-lg font-display font-medium text-afri-text">Prétendez à l'excellence AFRIGOMBO ELITE</h5>
                           <p className="text-xs text-afri-text/60 leading-relaxed">
-                            Le GOMBO ID permet d'identifier les artistes sérieux et de renforcer la confiance au sein de la communauté musicale d'AFRIGOMBO.
+                            Le GOMBO ID permet d'identifier les artistes sérieux et de renforcer la confiance au sein de la communauté musicale d'AFRIGOMBO ELITE.
                           </p>
                         </div>
 
@@ -527,8 +527,8 @@ function GomboIdUserDashboardInner({
                           <ul className="space-y-2 text-xs text-afri-text/70 list-disc list-inside">
                             <li>Les informations d'identité fournies doivent être rigoureusement exactes, à jour et correspondre à votre véritable nom civil.</li>
                             <li><strong>Le badge ne s'achète pas.</strong> Les paiements express priorisent uniquement l'examen de votre dossier sans garantir d'obtention de la certification.</li>
-                            <li>Toute tentative de manipulation, d'usurpation d'identité ou d'utilisation de documents falsifiés entraînera le refus définitif ainsi que la suspension définitive de votre compte AFRIGOMBO.</li>
-                            <li>Les agents de vérification d'AFRIGOMBO se réservent le droit de demander des pièces complémentaires ou une validation vidéo en direct.</li>
+                            <li>Toute tentative de manipulation, d'usurpation d'identité ou d'utilisation de documents falsifiés entraînera le refus définitif ainsi que la suspension définitive de votre compte AFRIGOMBO ELITE.</li>
+                            <li>Les agents de vérification d'AFRIGOMBO ELITE se réservent le droit de demander des pièces complémentaires ou une validation vidéo en direct.</li>
                           </ul>
                         </div>
 
@@ -752,7 +752,7 @@ function GomboIdUserDashboardInner({
                       <div className="space-y-5">
                         <div className="text-center max-w-sm mx-auto space-y-1">
                           <h5 className="text-md font-bold text-afri-text uppercase tracking-tight">Choisissez la vitesse d'évaluation</h5>
-                          <p className="text-xs text-afri-text/50 leading-relaxed">Les équipes d'AFRIGOMBO traitent chaque dossier manuellement pour préserver l'excellence.</p>
+                          <p className="text-xs text-afri-text/50 leading-relaxed">Les équipes d'AFRIGOMBO ELITE traitent chaque dossier manuellement pour préserver l'excellence.</p>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -938,8 +938,8 @@ function GomboIdUserDashboardInner({
                     </div>
 
                     <div className="p-4 bg-afri-bg-sec/5 border border-[#D4AF37]/15 rounded-xl text-xs space-y-1 leading-relaxed text-afri-text/80">
-                      <p className="font-semibold text-[#D4AF37] mb-1">📢 À propos d'AFRIGOMBO ID d'excellence :</p>
-                      <p>Notre équipe s'engage à faire d'AFRIGOMBO un repère de fiabilité pour les concerts VIP, d'hôtels et événements en Côte d'Ivoire. Merci de participer à l'élévation de notre héritage musical !</p>
+                      <p className="font-semibold text-[#D4AF37] mb-1">📢 À propos d'AFRIGOMBO ELITE ID d'excellence :</p>
+                      <p>Notre équipe s'engage à faire d'AFRIGOMBO ELITE un repère de fiabilité pour les concerts VIP, d'hôtels et événements en Côte d'Ivoire. Merci de participer à l'élévation de notre héritage musical !</p>
                     </div>
 
                     <div className="flex justify-end pt-4 border-t border-afri-border">

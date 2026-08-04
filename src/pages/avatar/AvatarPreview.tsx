@@ -21,7 +21,7 @@ export const AvatarPreview: React.FC<AvatarPreviewProps> = ({ currentUser, curre
     <PageContainer className="p-0 bg-afri-bg text-afri-text" id="avatar-preview-page-root">
       <AndroidTopBar
         title="Aperçu en Direct"
-        subtitle="AFRIGOMBO Android First"
+        subtitle="AFRIGOMBO ELITE Android First"
         onBack={onBack}
       />
 

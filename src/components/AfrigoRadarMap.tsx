@@ -256,7 +256,7 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-xl">📍</span>
             <div>
-              <h3 className="text-xs font-black text-afri-text uppercase tracking-wider">Radar AFRIGOMBO (OpenStreetMap)</h3>
+              <h3 className="text-xs font-black text-afri-text uppercase tracking-wider">Radar AFRIGOMBO ELITE (OpenStreetMap)</h3>
               <p className="text-[9px] font-mono text-[#D4AF37]">
                 {filteredGombos.length} opportunité(s) • Triées par proximité
               </p>

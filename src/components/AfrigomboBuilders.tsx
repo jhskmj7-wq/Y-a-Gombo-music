@@ -47,7 +47,7 @@ const CONTRIBUTION_OPTIONS: ContributionOption[] = [
     title: "Devenir Bâtisseur Premium",
     icon: Rocket,
     emoji: "🚀",
-    description: "Soutenez la croissance et le déploiement d'AFRIGOMBO à grande échelle.",
+    description: "Soutenez la croissance et le déploiement d'AFRIGOMBO ELITE à grande échelle.",
     suggestedAmount: 25000
   },
   {
@@ -202,7 +202,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
             joinYear: currentUser?.builderData?.joinYear || new Date().getFullYear(),
             isAnonymous
           },
-          badges: Array.from(new Set([...(currentUser?.badges || []), "🏗️ Bâtisseur AFRIGOMBO"]))
+          badges: Array.from(new Set([...(currentUser?.badges || []), "🏗️ Bâtisseur AFRIGOMBO ELITE"]))
         }, { merge: true });
 
         try { audioSynth?.playValidationSuccess(); } catch (e) {}
@@ -251,10 +251,10 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
       <div className="text-center space-y-1 mb-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
           <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-          <span>Bêta Publique AFRIGOMBO</span>
+          <span>Bêta Publique AFRIGOMBO ELITE</span>
         </div>
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-afri-text uppercase flex items-center justify-center gap-2 px-1">
-          ❤️ Devenir Bâtisseur AFRIGOMBO
+          ❤️ Devenir Bâtisseur AFRIGOMBO ELITE
         </h1>
         <p className="text-[11px] sm:text-xs text-afri-text-sec font-medium max-w-lg mx-auto leading-normal italic">
           Ensemble, construisons la plus grande plateforme musicale africaine.
@@ -276,7 +276,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
           </div>
 
           <p className="text-xs sm:text-sm text-afri-text-sec leading-relaxed font-medium">
-            Chaque contribution permet de développer AFRIGOMBO afin d'offrir davantage d'opportunités aux artistes, musiciens, producteurs, techniciens, managers et créateurs africains.
+            Chaque contribution permet de développer AFRIGOMBO ELITE afin d'offrir davantage d'opportunités aux artistes, musiciens, producteurs, techniciens, managers et créateurs africains.
           </p>
           <p className="text-xs sm:text-sm text-afri-text-sec leading-relaxed font-medium">
             Votre soutien participe directement à l'évolution de la plateforme.
@@ -393,7 +393,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
                   <span className="text-2xl">{selectedOption.emoji}</span>
                   <div>
                     <h3 className="text-sm font-black text-afri-text uppercase">{selectedOption.title}</h3>
-                    <p className="text-[10px] font-mono text-afri-text-sec">Système de Paiement Bêta AFRIGOMBO</p>
+                    <p className="text-[10px] font-mono text-afri-text-sec">Système de Paiement Bêta AFRIGOMBO ELITE</p>
                   </div>
                 </div>
                 <button
@@ -497,7 +497,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
               </div>
               <h3 className="text-lg font-black text-afri-text uppercase">Gratitude Infinie !</h3>
               <p className="text-xs text-afri-text-sec leading-relaxed">
-                Votre contribution a été enregistrée avec succès. Merci de bâtir l'avenir de la musique africaine avec AFRIGOMBO.
+                Votre contribution a été enregistrée avec succès. Merci de bâtir l'avenir de la musique africaine avec AFRIGOMBO ELITE.
               </p>
               <button
                 onClick={() => setShowSuccess(false)}

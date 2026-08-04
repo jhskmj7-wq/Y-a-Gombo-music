@@ -1,6 +1,6 @@
 const config = {
   appId: 'com.afritrust.app',
-  appName: 'AFRIGOMBO',
+  appName: 'AFRIGOMBO ELITE',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

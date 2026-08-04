@@ -26,7 +26,7 @@ export function sanitizeMessageContent(text: string): SanitizeResult {
   if (WA_TELEGRAM_REGEX.test(text)) {
     hasViolation = true;
     violationType = "external_link";
-    sanitized = sanitized.replace(WA_TELEGRAM_REGEX, "[Lien externe sécurisé - Restez sur AFRIGOMBO]");
+    sanitized = sanitized.replace(WA_TELEGRAM_REGEX, "[Lien externe sécurisé - Restez sur AFRIGOMBO ELITE]");
   }
 
   // Check digits patterns

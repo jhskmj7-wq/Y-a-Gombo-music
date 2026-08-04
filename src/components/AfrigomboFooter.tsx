@@ -24,7 +24,7 @@ export const AfrigomboFooter: React.FC<AfrigomboFooterProps> = ({
       <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-mono">
         <span className="text-base">🪘</span>
         <span className="font-display font-black text-sm tracking-widest text-[#D4AF37] uppercase">
-          AFRIGOMBO
+          AFRIGOMBO ELITE
         </span>
         <span className="text-zinc-600">•</span>
         <span className="text-zinc-300 font-sans font-bold">Temple du Gombo Musical</span>
@@ -84,7 +84,7 @@ export const AfrigomboFooter: React.FC<AfrigomboFooterProps> = ({
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           <span>🟢 Réseau synchronisé (Firebase temps réel)</span>
         </div>
-        <span>© 2026 AFRIGOMBO</span>
+        <span>© 2026 AFRIGOMBO ELITE</span>
       </div>
     </footer>
   );

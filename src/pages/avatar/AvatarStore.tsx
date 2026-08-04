@@ -41,7 +41,7 @@ export const AvatarStore: React.FC<AvatarStoreProps> = ({ currentUser, currentUs
     <PageContainer className="p-0 bg-afri-bg text-afri-text" id="avatar-store-page-root">
       <AndroidTopBar
         title="Boutique Avatar"
-        subtitle="AFRIGOMBO Android First"
+        subtitle="AFRIGOMBO ELITE Android First"
         onBack={onBack}
         actions={
           <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full" id="avatar-store-wallet-coins">

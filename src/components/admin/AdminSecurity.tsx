@@ -55,7 +55,7 @@ export default function AdminSecurity({
           Centre de Sécurité & Audit
         </h3>
         <p className="text-xs text-afri-text-sec mt-1">
-          Surveillez le moteur autonome d'AFRIGOMBO, les tentatives de fraude, et les journaux système en temps réel.
+          Surveillez le moteur autonome d'AFRIGOMBO ELITE, les tentatives de fraude, et les journaux système en temps réel.
         </p>
       </div>
 

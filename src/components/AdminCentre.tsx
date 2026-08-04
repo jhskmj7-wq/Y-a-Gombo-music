@@ -1335,7 +1335,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   // --- ADMINISTRATIVE ACTION LOGS (ZONE C TERMINAL) ---
   const [terminalFeed, setTerminalFeed] = useState<string[]>([
-    `[${new Date().toLocaleTimeString()}] 🦅 AFRIGOMBO Elite Centre de Commandement allumé. Connecté au Firebase.`,
+    `[${new Date().toLocaleTimeString()}] 🦅 AFRIGOMBO ELITE Elite Centre de Commandement allumé. Connecté au Firebase.`,
     `[${new Date().toLocaleTimeString()}] Securité de l'Héritage Musical : auto-sauvegarde active.`,
     `[${new Date().toLocaleTimeString()}] Gombocaisse : commission par défaut fixée à 10%.`,
   ]);
@@ -1587,7 +1587,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       if (!isAuthorizedAdmin) {
         setPerspective("user");
         setActiveMenu("user_terrain");
-        alert("🔒 ACCÈS DÉFENDU\n\nAccès refusé. Cette zone est réservée au Fondateur AFRIGOMBO.");
+        alert("🔒 ACCÈS DÉFENDU\n\nAccès refusé. Cette zone est réservée au Fondateur AFRIGOMBO ELITE.");
         addToTerminal(`[🛡️ SECURE] Accès administratif bloqué pour l'adresse ${currentUser.email}.`);
         return;
       }
@@ -1820,7 +1820,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       commissionRate: rateNum,
       location: newGombo.location,
       organizerId: "admin",
-      organizerName: "AFRIGOMBO Administration",
+      organizerName: "AFRIGOMBO ELITE Administration",
       timestamp: new Date().toISOString(),
       applicantsCount: 0,
       status: "open"
@@ -2096,10 +2096,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     const gmbId = generateUniqueGomboId();
 
     const levels = [
-      "🟢 Vérifié AFRIGOMBO",
+      "🟢 Vérifié AFRIGOMBO ELITE",
       "🥉 Musicien confirmé",
       "🥈 Professionnel actif",
-      "🥇 Référence AFRIGOMBO"
+      "🥇 Référence AFRIGOMBO ELITE"
     ];
     const level = levels[Math.floor(Math.random() * levels.length)];
 
@@ -2125,7 +2125,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           gomboId: gomboIdObj,
           kycApprovedDate: new Date().toLocaleDateString("fr-FR"),
           verificationDate: new Date().toLocaleDateString("fr-FR"),
-          verifiedBy: "Yoro Admin (Equipe AFRIGOMBO)",
+          verifiedBy: "Yoro Admin (Equipe AFRIGOMBO ELITE)",
           verificationStatus: "approved"
         };
         saveToFirestore("users", user.id, u);
@@ -2134,7 +2134,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           userId: user.id,
           type: "kyc_validated",
           title: "🛡️ KYC Validé !",
-          message: "Félicitations, votre identité a été validée par l'administration d'AFRIGOMBO !",
+          message: "Félicitations, votre identité a été validée par l'administration d'AFRIGOMBO ELITE !",
           priority: "high"
         });
         gomboDB.publishNotification({
@@ -2482,7 +2482,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       </div>
                       <div>
                         <h2 className="text-sm font-sans font-black tracking-widest text-afri-gold uppercase">
-                          ═══ AFRIGOMBO ═══
+                          ═══ AFRIGOMBO ELITE ═══
                         </h2>
                         <span className="text-[8px] font-mono tracking-widest text-afri-text-sec block -mt-0.5">
                           L'ELITE MUSICALE IVOIRIENNE
@@ -2691,10 +2691,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           {/* SEPARATOR */}
                           <div className="border-t border-afri-border my-1" />
 
-                          {/* SECTION: Univers AFRIGOMBO */}
+                          {/* SECTION: Univers AFRIGOMBO ELITE */}
                           <div className="space-y-1">
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest block mb-1">
-                              🏛️ Univers AFRIGOMBO
+                              🏛️ Univers AFRIGOMBO ELITE
                             </span>
                             {renderMenuItem("menu_grand_marche", "Le Grand Marché", "🛍️", () => {
                               setPerspective("user");
@@ -2832,7 +2832,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, false)}
 
-                            {renderMenuItem("menu_builders_1", "❤️ Soutenir AFRIGOMBO", "❤️", () => {
+                            {renderMenuItem("menu_builders_1", "❤️ Soutenir AFRIGOMBO ELITE", "❤️", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_builders");
@@ -2935,7 +2935,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           )}
         </AnimatePresence>
 
-        {/* ELITE UPPER STATUS BAR (AFRIGOMBO PREMIUM HEADER OR EXCLUSIVE ADMIN HEADER) */}
+        {/* ELITE UPPER STATUS BAR (AFRIGOMBO ELITE PREMIUM HEADER OR EXCLUSIVE ADMIN HEADER) */}
         {activeMenu !== "super_admin" && (
           perspective === "admin" ? (
             <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 sm:px-8 py-3 sm:py-5 border-b border-afri-gold/35 bg-afri-bg-sec/98 backdrop-blur shrink-0 gap-2 sm:gap-4 w-full select-none animate-fadeIn">
@@ -3095,14 +3095,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         {isSlowConnection && (
           <div className="bg-cyan-950/80 text-cyan-400 border-b border-cyan-800/30 py-2 px-4 flex items-center justify-center gap-2 text-center text-[10px] sm:text-xs font-black animate-slideDown select-none shrink-0">
             <span>📶</span>
-            <span>AFRIGOMBO optimise votre expérience (Connexion lente détectée — Mode léger actif)</span>
+            <span>AFRIGOMBO ELITE optimise votre expérience (Connexion lente détectée — Mode léger actif)</span>
           </div>
         )}
 
         {isBatteryLow && (
           <div className="bg-yellow-950/80 text-yellow-550 border-b border-yellow-800/30 py-2 px-4 flex items-center justify-center gap-2 text-center text-[10px] sm:text-xs font-black animate-slideDown select-none shrink-0">
             <span>🔋</span>
-            <span>Mode léger AFRIGOMBO activé (Dispositif en batterie faible)</span>
+            <span>Mode léger AFRIGOMBO ELITE activé (Dispositif en batterie faible)</span>
           </div>
         )}
 
@@ -3567,12 +3567,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             </div>
                           </button>
 
-                          {/* 10. Portefeuille AFRIGOMBO WALLET */}
+                          {/* 10. Portefeuille AFRIGOMBO ELITE WALLET */}
                           <button
                             onClick={() => {
                               requireAuthThen(() => {
                                 setActiveMenu("user_wallet");
-                                addToTerminal("[ACTIONS RAPIDES] Portefeuille AFRIGOMBO WALLET ouvert.");
+                                addToTerminal("[ACTIONS RAPIDES] Portefeuille AFRIGOMBO ELITE WALLET ouvert.");
                                 try { audioSynth.playKoraSuccess(); } catch (err) {}
                               });
                             }}
@@ -3957,7 +3957,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           <div className="relative z-10 flex flex-col justify-center h-full max-w-[62%] text-left space-y-4">
                             <div>
                               <span className="text-[10px] sm:text-xs uppercase font-mono text-afri-gold tracking-[0.2em] block font-extrabold mb-1">
-                                AFRIGOMBO PORTAL
+                                AFRIGOMBO ELITE PORTAL
                               </span>
                               <h2 className="text-2xl sm:text-4xl font-display font-black tracking-tight leading-none uppercase">
                                 <span className="text-afri-text block mb-1">LE TERRAIN</span>
@@ -4774,7 +4774,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         status: "success",
                         gomboId: uniqueId,
                         contractId: uniqueId,
-                        description: `Commission AFRIGOMBO (2.5%) pour "${newGomboTitle.trim()}"`
+                        description: `Commission AFRIGOMBO ELITE (2.5%) pour "${newGomboTitle.trim()}"`
                       });
 
                       await addDoc(collection(db, "commissions"), {
@@ -4920,7 +4920,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               <span className="font-bold text-afri-text">{insufficientFundsData.cachet.toLocaleString('fr-FR')} FCFA</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-afri-text-muted">Commission AFRIGOMBO (2.5%) :</span>
+                              <span className="text-afri-text-muted">Commission AFRIGOMBO ELITE (2.5%) :</span>
                               <span className="font-bold text-afri-text">{insufficientFundsData.fee.toLocaleString('fr-FR')} FCFA</span>
                             </div>
                             <div className="flex justify-between border-t border-afri-border pt-2 text-sm">
@@ -5165,7 +5165,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <button
                           onClick={() => setShowHowWorksPopup(true)}
                           className="w-8 h-8 rounded-full bg-afri-bg-sec border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-afri-gold hover:border-afri-gold/50 transition-colors shrink-0"
-                          title="Comment fonctionne AFRIGOMBO ?"
+                          title="Comment fonctionne AFRIGOMBO ELITE ?"
                         >
                           <Info className="w-4 h-4" />
                         </button>
@@ -5796,7 +5796,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     title: "Modèle de Contrat de Prestation Standard",
                     description: "Document officiel encadrant les prestations musicales avec clause de séquestre et arbitrage.",
                     filename: `Contrat_Prestation_Afrigombo_${profile?.artisticName || "Artiste"}.txt`,
-                    content: `=== CONTRAT DE PRESTATION MUSICALE AFRIGOMBO ===\n\nNom de l'Artiste : ${profile?.artisticName || "Artiste Certifié"}\nGombo ID : ${profile?.gomboIdNumber || "AG-CERTIFIED"}\nDate : ${new Date().toLocaleDateString()}\n\nCe document garantit l'engagement bilatéral et le blocage sécurisé du cachet en compte de séquestre.`,
+                    content: `=== CONTRAT DE PRESTATION MUSICALE AFRIGOMBO ELITE ===\n\nNom de l'Artiste : ${profile?.artisticName || "Artiste Certifié"}\nGombo ID : ${profile?.gomboIdNumber || "AG-CERTIFIED"}\nDate : ${new Date().toLocaleDateString()}\n\nCe document garantit l'engagement bilatéral et le blocage sécurisé du cachet en compte de séquestre.`,
                     icon: "📜",
                     badge: "PDF / TXT",
                     sizeMb: 0.2
@@ -5818,7 +5818,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     title: "Pack Demo Audio & Extrait Studio",
                     description: "Pistes et ressources audio de haute qualité associées à vos projets et maquettes.",
                     filename: "Pack_Audio_Demo_Afrigombo.txt",
-                    content: `=== RESSOURCES AUDIO AFRIGOMBO ===\n\nPistes audio de démonstration haute fidélité (WAV 24-bit).\n\n[INFO] Fichier compressé contenant 4 maquettes instrumentales de percussion ivoirienne et djembe fola.\n\nRessources certifiées conformes aux normes d'écoute d'Abidjan.`,
+                    content: `=== RESSOURCES AUDIO AFRIGOMBO ELITE ===\n\nPistes audio de démonstration haute fidélité (WAV 24-bit).\n\n[INFO] Fichier compressé contenant 4 maquettes instrumentales de percussion ivoirienne et djembe fola.\n\nRessources certifiées conformes aux normes d'écoute d'Abidjan.`,
                     icon: "🎵",
                     badge: "AUDIO PACK (38 Mo)",
                     sizeMb: 38.0
@@ -6005,14 +6005,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 );
               })()}
 
-              {/* 7. CONTRATS AFRIGOMBO (USER) */}
+              {/* 7. CONTRATS AFRIGOMBO ELITE (USER) */}
               {activeMenu === "user_contracts" && (
                 <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
                   <GomboContractsDashboard currentUser={profile || (currentUser as any)} />
                 </div>
               )}
 
-              {/* 7b. PORTESECURE / AFRIGOMBO WALLET (USER) */}
+              {/* 7b. PORTESECURE / AFRIGOMBO ELITE WALLET (USER) */}
               {activeMenu === "user_wallet" && (
                 <div className="w-full animate-fadeIn text-left">
                   <AfrigomboWalletDashboard 
@@ -6317,7 +6317,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                       if (navigator.share) {
                                         navigator.share({
                                           title: gombo.title,
-                                          text: `Consultez cette offre sur AFRIGOMBO : ${gombo.title}`,
+                                          text: `Consultez cette offre sur AFRIGOMBO ELITE : ${gombo.title}`,
                                           url: window.location.href
                                         }).catch(() => {});
                                       } else {
@@ -6689,7 +6689,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         Accès Réservé 🔒
                       </h2>
                       <p className="text-xs text-afri-text-sec font-sans leading-relaxed mb-8">
-                        Connectez-vous pour accéder à vos notifications et rester synchronisé en temps réel avec AFRIGOMBO.
+                        Connectez-vous pour accéder à vos notifications et rester synchronisé en temps réel avec AFRIGOMBO ELITE.
                       </p>
                       
                       <div className="space-y-3">
@@ -7769,7 +7769,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       </div>
                     </button>
 
-                    {/* IA AFRIGOMBO */}
+                    {/* IA AFRIGOMBO ELITE */}
                     <button 
                       onClick={() => { setActiveMenu("security"); addToTerminal("[IA] Accès à la configuration du moteur de recommandation."); }}
                       className="p-4 bg-afri-bg-sec hover:bg-purple-500/5 border border-purple-500/10 hover:border-purple-500/30 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
@@ -7778,7 +7778,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <Brain className="w-5 h-5 text-purple-400" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-purple-100 uppercase tracking-wider font-mono">IA AFRIGOMBO</h4>
+                        <h4 className="text-xs font-bold text-purple-100 uppercase tracking-wider font-mono">IA AFRIGOMBO ELITE</h4>
                         <p className="text-[10px] text-afri-text-sec mt-1">Configuration du moteur de recommandation et modération Gemini.</p>
                       </div>
                     </button>
@@ -7910,7 +7910,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       </h4>
                       <p className="text-xs text-afri-text/70 leading-relaxed mb-4">
                         🚨 <strong>Principe de Souveraineté : "Ne jamais bloquer les fonctions essentielles"</strong>. 
-                        Toute la monétisation additionnelle d'AFRIGOMBO s'ajoute en tant que services facultatifs à valeur ajoutée pour propulser les carrières. 
+                        Toute la monétisation additionnelle d'AFRIGOMBO ELITE s'ajoute en tant que services facultatifs à valeur ajoutée pour propulser les carrières. 
                         Un artiste ivoirien sans ressources peut toujours : ✓ Publier sur le Tam-Tam, ✓ Chercher des opportunités de concerts, ✓ Candidater, ✓ Être certifié par file d'attente gratuite. Les contributions financières proviennent uniquement de la valeur d'accélération fournie.
                       </p>
                       
@@ -8174,7 +8174,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               <span className="text-[10px] font-mono uppercase tracking-widest text-purple-400 font-extrabold block">Décret Royal Activé</span>
               <h3 className="text-xl xs:text-2xl font-display font-black text-afri-text leading-tight">Salutations, Maître de l'Afrique Musicale</h3>
               <p className="text-[10px] xs:text-xs text-afri-text/75 leading-relaxed font-sans">
-                "L'Empire d'AFRIGOMBO est entièrement sous vos ordres souverains. Les cachets, les licences d'or et l'intégralité des talents nationaux reposent entre vos mains expertes."
+                "L'Empire d'AFRIGOMBO ELITE est entièrement sous vos ordres souverains. Les cachets, les licences d'or et l'intégralité des talents nationaux reposent entre vos mains expertes."
               </p>
             </div>
             
@@ -8294,14 +8294,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       <AndroidCenteredDialog
         isOpen={showHowWorksPopup}
         onClose={() => setShowHowWorksPopup(false)}
-        title="Comment fonctionne AFRIGOMBO ?"
+        title="Comment fonctionne AFRIGOMBO ELITE ?"
       >
         <div className="text-left space-y-4 pt-2">
           <div className="w-12 h-12 rounded-full bg-afri-gold/20 flex items-center justify-center mb-2 mx-auto">
             <Info className="w-6 h-6 text-afri-gold" />
           </div>
           <p className="text-xs text-afri-text font-sans leading-relaxed">
-            AFRIGOMBO permet la mise en relation entre talents et porteurs de projets. 
+            AFRIGOMBO ELITE permet la mise en relation entre talents et porteurs de projets. 
             <br/><br/>
             Certaines options premium (marquage urgent, mise en avant, profils vérifiés) peuvent comporter des frais qui seront affichés avant validation. Les paiements garantissent la sécurité et l'engagement des deux parties.
           </p>
@@ -8843,7 +8843,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           menu_downloads: {
             title: "Coffre Téléchargements",
             badge: "Bientôt disponible",
-            description: "Téléchargez instantanément vos contrats de prestation au format PDF officiel d'AFRIGOMBO, vos attestations de paiement et vos reçus BURIDA.",
+            description: "Téléchargez instantanément vos contrats de prestation au format PDF officiel d'AFRIGOMBO ELITE, vos attestations de paiement et vos reçus BURIDA.",
             incentive: "Générez des justificatifs officiels de vos revenus artistiques.",
             icon: "📥",
             color: "from-emerald-500 to-teal-600"
@@ -8919,7 +8919,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       try { audioSynth.playValidationSuccess(); } catch(_) {}
                     } catch (e) {
                       console.error(e);
-                      alert("Inscrit avec succès sur la liste d'attente locale d'AFRIGOMBO !");
+                      alert("Inscrit avec succès sur la liste d'attente locale d'AFRIGOMBO ELITE !");
                       setComingSoonFeatureKey(null);
                     }
                   }}
@@ -9121,7 +9121,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
               <div>
                 <h3 className="text-sm font-black tracking-widest text-afri-gold uppercase">Journal des Mises à Jour</h3>
-                <p className="text-[10px] text-afri-text-sec font-mono">AFRIGOMBO v1.0.0 — Bêta Publique</p>
+                <p className="text-[10px] text-afri-text-sec font-mono">AFRIGOMBO ELITE v1.0.0 — Bêta Publique</p>
               </div>
             </div>
 
@@ -9428,7 +9428,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 🔐 Connexion requise
               </h3>
               <p className="text-afri-text-sec text-xs leading-relaxed font-sans">
-                Connectez-vous pour accéder à votre identité AFRIGOMBO
+                Connectez-vous pour accéder à votre identité AFRIGOMBO ELITE
               </p>
             </div>
 
@@ -9737,7 +9737,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                       {contractDisputeOpened[selectedGomboDetails.id] ? (
                         <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/20 space-y-1.5 text-left font-mono text-[10px]">
-                          <p className="text-afri-text-sec italic font-sans">Un litige d'Escrow a été ouvert et est actuellement en cours d'analyse par l'Arbitrage final d'AFRIGOMBO.</p>
+                          <p className="text-afri-text-sec italic font-sans">Un litige d'Escrow a été ouvert et est actuellement en cours d'analyse par l'Arbitrage final d'AFRIGOMBO ELITE.</p>
                           <div className="text-afri-text-sec">
                             <strong>Motif :</strong> {contractDisputeDetails[selectedGomboDetails.id]?.reason || "Non spécifié"}<br/>
                             <strong>Preuves :</strong> {contractDisputeDetails[selectedGomboDetails.id]?.comment || "Aucun palabre supplémentaire"}
@@ -9851,7 +9851,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     onClick={() => {
                       requireAuthThen(() => {
                         try {
-                          navigator.clipboard.writeText(`AFRIGOMBO - ${selectedGomboDetails.title} (Cachet: ${selectedGomboDetails.budget} FCFA)`);
+                          navigator.clipboard.writeText(`AFRIGOMBO ELITE - ${selectedGomboDetails.title} (Cachet: ${selectedGomboDetails.budget} FCFA)`);
                           addToTerminal(`[↗️ PARTAGE] Informations du Gombo copiées dans le presse-papiers.`);
                           audioSynth.playValidationSuccess();
                         } catch (_) {}
@@ -10091,7 +10091,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         }}
       />
 
-      {/* 8b. Integrated AFRIGOMBO Support Modal */}
+      {/* 8b. Integrated AFRIGOMBO ELITE Support Modal */}
       <AfrigomboSupportModal
         isOpen={isSupportModalOpen}
         onClose={() => setIsSupportModalOpen(false)}
@@ -10130,7 +10130,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       {supportConfig.isDeveloper(profile) && (
         <div className="fixed bottom-2 right-2 z-[200] opacity-20 hover:opacity-100 transition-opacity pointer-events-none">
           <div className="bg-afri-bg/80 backdrop-blur-md border border-afri-border rounded-lg p-2 text-[8px] font-mono text-afri-text-sec uppercase leading-tight text-right">
-            <div>AFRIGOMBO v{supportConfig.APP_VERSION}</div>
+            <div>AFRIGOMBO ELITE v{supportConfig.APP_VERSION}</div>
             <div>BUILD: {supportConfig.BUILD_DATE}</div>
             <div className="text-[#D4AF37] font-black">MODE DÉVELOPPEUR ACTIF</div>
           </div>

@@ -77,7 +77,7 @@ export const CreatorActivityDashboard: React.FC<CreatorActivityDashboardProps> =
 
     triggerAutomationAction({
       userId,
-      userName: currentUserProfile?.displayName || "Créateur AFRIGOMBO",
+      userName: currentUserProfile?.displayName || "Créateur AFRIGOMBO ELITE",
       type: "withdrawal",
       amount,
       title: `Demande de retrait Mobile Money (${withdrawOperator}) de ${amount.toLocaleString()} FCFA`,

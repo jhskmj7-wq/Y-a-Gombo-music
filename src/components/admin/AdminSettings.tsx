@@ -61,7 +61,7 @@ export default function AdminSettings({
           Paramètres Généraux du Système
         </h3>
         <p className="text-xs text-afri-text-sec mt-1">
-          Gérez les frais d'infrastructure, taux d'imposition administratifs et options globales d'AFRIGOMBO.
+          Gérez les frais d'infrastructure, taux d'imposition administratifs et options globales d'AFRIGOMBO ELITE.
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export default function AdminSettings({
           <div className="space-y-3">
             <h5 className="text-[10px] font-mono uppercase tracking-wider text-afri-text-sec font-bold">Rappel des Directives</h5>
             <p className="text-xs text-afri-text-sec leading-relaxed font-sans">
-              Le taux de commission d'AFRIGOMBO garantit la stabilité des serveurs, la production de jetons Gombo ID certifiés par l'Administration, et le fonctionnement offline sécurisé.
+              Le taux de commission d'AFRIGOMBO ELITE garantit la stabilité des serveurs, la production de jetons Gombo ID certifiés par l'Administration, et le fonctionnement offline sécurisé.
             </p>
           </div>
 
@@ -139,7 +139,7 @@ export default function AdminSettings({
           </h4>
 
           <p className="text-xs text-afri-text-sec">
-            Contrôlez les pistes officielles et hymnes d'AFRIGOMBO intégrés à l'application.
+            Contrôlez les pistes officielles et hymnes d'AFRIGOMBO ELITE intégrés à l'application.
           </p>
 
           <div className="space-y-4">

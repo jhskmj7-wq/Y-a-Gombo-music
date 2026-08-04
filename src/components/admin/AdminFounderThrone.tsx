@@ -1615,7 +1615,7 @@ export default function AdminFounderThrone({
                       {getGreeting()}, <span className="text-[#D4AF37]">Sylvester</span>
                     </h1>
                     <p className="text-[10px] font-mono font-black uppercase tracking-[0.15em] text-[#D4AF37]/90">
-                      Fondateur d'AFRIGOMBO • Gardien du Temple du Gombo Musical
+                      Fondateur d'AFRIGOMBO ELITE • Gardien du Temple du Gombo Musical
                     </p>
                   </div>
                 </div>
@@ -2590,14 +2590,14 @@ export default function AdminFounderThrone({
                   <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Accéder →</span>
                 </div>
 
-                {/* Bouclier AFRIGOMBO */}
+                {/* Bouclier AFRIGOMBO ELITE */}
                 <div
                   onClick={() => setSelectedSection("bouclier")}
                   className="p-5 bg-afri-bg-sec/40 border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between"
                 >
                   <div className="space-y-2">
                     <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
-                    <h4 className="text-xs font-sans font-black text-afri-text">Bouclier AFRIGOMBO</h4>
+                    <h4 className="text-xs font-sans font-black text-afri-text">Bouclier AFRIGOMBO ELITE</h4>
                     <p className="text-[10px] font-mono text-afri-text-sec leading-relaxed">Cyber-défense & filtrage de sécurité.</p>
                   </div>
                   <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Accéder →</span>
@@ -2706,7 +2706,7 @@ export default function AdminFounderThrone({
                       handleSaveGovField("vision", e.target.value);
                     }}
                     className="w-full h-44 bg-afri-bg border border-afri-border rounded-2xl p-4 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37] font-mono leading-relaxed resize-none focus:ring-1 focus:ring-[#D4AF37]/45"
-                    placeholder="Écrivez la vision stratégique d'AFRIGOMBO..."
+                    placeholder="Écrivez la vision stratégique d'AFRIGOMBO ELITE..."
                   />
                   <div className="flex justify-between items-center text-[9px] font-mono text-afri-text-sec">
                     <span>⚡ CODES SYSTÈME COGÉRATEURS : CLASSE 1</span>
@@ -2861,7 +2861,7 @@ export default function AdminFounderThrone({
             )}
 
             {/* =========================================================
-                 DETAILED VIEW: 🛡 Bouclier AFRIGOMBO
+                 DETAILED VIEW: 🛡 Bouclier AFRIGOMBO ELITE
                  ========================================================= */}
             {selectedSection === "bouclier" && (
               <div className="space-y-6">

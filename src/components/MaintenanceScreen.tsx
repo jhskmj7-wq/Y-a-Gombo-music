@@ -11,7 +11,7 @@ export default function MaintenanceScreen({ message }: { message?: string }) {
         Application en maintenance
       </h1>
       <p className="text-sm text-afri-text-sec max-w-md mb-2">
-        {message || "Notre équipe technique intervient actuellement sur les serveurs d'AFRIGOMBO."}
+        {message || "Notre équipe technique intervient actuellement sur les serveurs d'AFRIGOMBO ELITE."}
       </p>
       <p className="text-xs text-afri-text-muted mb-8 font-mono">
         Veuillez patienter, nous serons de retour très bientôt.

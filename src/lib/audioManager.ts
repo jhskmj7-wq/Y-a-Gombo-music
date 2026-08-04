@@ -1,5 +1,5 @@
 /**
- * Global Premium AudioManager for AFRIGOMBO
+ * Global Premium AudioManager for AFRIGOMBO ELITE
  * Strictly uses real audio files (MP3, OGG, WAV).
  * Validates URLs to ensure they are playable audio files.
  */

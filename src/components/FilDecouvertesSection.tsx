@@ -152,7 +152,7 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
               </span>
             </div>
             <p className="text-[10px] text-afri-text-sec font-medium">
-              Grand Marché & Académie AFRIGOMBO recommandés en temps réel
+              Grand Marché & Académie AFRIGOMBO ELITE recommandés en temps réel
             </p>
           </div>
         </div>
@@ -324,7 +324,7 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
           <AfriModal
             isOpen={!!selectedDetail}
             onClose={() => setSelectedDetail(null)}
-            title={selectedDetail.type === "market" ? "🛒 Grand Marché AFRIGOMBO" : "🎓 Académie AFRIGOMBO"}
+            title={selectedDetail.type === "market" ? "🛒 Grand Marché AFRIGOMBO ELITE" : "🎓 Académie AFRIGOMBO ELITE"}
           >
             <div className="space-y-4 text-left">
               {/* Image Preview */}

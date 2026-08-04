@@ -21,7 +21,7 @@ interface ActivityItem {
 }
 
 export default function ActivityTab({ currentProfile }: ActivityTabProps) {
-  // Rich set of activity logs reflecting realistic events of a professional AFRIGOMBO platform
+  // Rich set of activity logs reflecting realistic events of a professional AFRIGOMBO ELITE platform
   const [activities, setActivities] = useState<ActivityItem[]>([
     {
       id: "act-1",
@@ -48,7 +48,7 @@ export default function ActivityTab({ currentProfile }: ActivityTabProps) {
       id: "act-3",
       type: "new_follower",
       title: "Nouveau Follower 👤",
-      description: "L'artiste peintre 'Moussa Diabaté' a commencé à s'abonner à votre book AFRIGOMBO.",
+      description: "L'artiste peintre 'Moussa Diabaté' a commencé à s'abonner à votre book AFRIGOMBO ELITE.",
       time: new Date(Date.now() - 3600000 * 8), // 8 hours ago
       group: "today",
       icon: Users,
@@ -143,7 +143,7 @@ export default function ActivityTab({ currentProfile }: ActivityTabProps) {
   };
 
   const clearAllActivities = () => {
-    if (window.confirm("Voulez-vous effacer tout l'historique d'activité d'AFRIGOMBO ?")) {
+    if (window.confirm("Voulez-vous effacer tout l'historique d'activité d'AFRIGOMBO ELITE ?")) {
       setActivities([]);
     }
   };
@@ -182,7 +182,7 @@ export default function ActivityTab({ currentProfile }: ActivityTabProps) {
           )}
         </div>
         <p className="text-xs text-afri-text-sec leading-relaxed">
-          Suivez l'activité en temps réel de votre compte, de vos candidatures, de vos followers et de la sécurité d'AFRIGOMBO.
+          Suivez l'activité en temps réel de votre compte, de vos candidatures, de vos followers et de la sécurité d'AFRIGOMBO ELITE.
         </p>
       </div>
 

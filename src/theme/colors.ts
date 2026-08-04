@@ -48,7 +48,7 @@ export const themeColors: Record<Theme, ThemeColors> = {
     background: "#F9F8F6", // Blanc Ivoire
     surface: "#FFFFFF",    // Blanc Pur (Cartes, Navbar, Modales)
     card: "#F2EFE9",       // Gris très clair nuancé / Marron glacé
-    primary: "#D4AF37",    // Gold AFRIGOMBO
+    primary: "#D4AF37",    // Gold AFRIGOMBO ELITE
     secondary: "#57534E",
     text: "#1C1917",       // Charcoal / Stone-900 (Sombres et contrastés)
     textSecondary: "#57534E", // Medium charcoal

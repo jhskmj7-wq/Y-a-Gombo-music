@@ -64,7 +64,7 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
       <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl">
         <h3 className="text-xs font-bold text-afri-text uppercase tracking-wider flex items-center gap-2">
           <Settings className="w-4 h-4 text-[#D4AF37]" />
-          Réglages de la Messagerie AFRIGOMBO
+          Réglages de la Messagerie AFRIGOMBO ELITE
         </h3>
         <p className="text-xs text-afri-text-sec mt-1">
           Personnalisez la confidentialité de votre profil, l'auto-répondeur d'absence Gombo et les alertes d'activité.
@@ -190,7 +190,7 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
             <div className="space-y-2">
               <span className="block text-[10px] text-afri-text-muted font-bold uppercase">Sauvegarde Cloud Souverain</span>
               <p className="text-[10.5px] text-afri-text-sec leading-relaxed">
-                Sauvegardez vos discussions, contrats et justificatifs d'appels sur le cloud souverain et sécurisé d'AFRIGOMBO.
+                Sauvegardez vos discussions, contrats et justificatifs d'appels sur le cloud souverain et sécurisé d'AFRIGOMBO ELITE.
               </p>
               <div className="flex gap-2">
                 <button
@@ -338,7 +338,7 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
             <div className="border-t border-afri-border/60 pt-3 space-y-2">
               <span className="block text-[10px] text-afri-text-muted font-bold uppercase">Configuration d'Appels Cryptés</span>
               <p className="text-[10.5px] text-afri-text-sec leading-relaxed">
-                Les flux vidéos et audios d'AFRIGOMBO utilisent le standard WebRTC Peer-to-Peer souverain pour garantir le cryptage complet sans stockage intermédiaire.
+                Les flux vidéos et audios d'AFRIGOMBO ELITE utilisent le standard WebRTC Peer-to-Peer souverain pour garantir le cryptage complet sans stockage intermédiaire.
               </p>
             </div>
           </div>
@@ -374,7 +374,7 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
             <div className="border-t border-afri-border/60 pt-3 space-y-2">
               <span className="block text-[10px] text-afri-text-muted font-bold uppercase">Nettoyage de l'espace de stockage</span>
               <p className="text-[10.5px] text-afri-text-sec">
-                Libérez l'espace local d'AFRIGOMBO en effaçant les fichiers temporaires et images en cache local.
+                Libérez l'espace local d'AFRIGOMBO ELITE en effaçant les fichiers temporaires et images en cache local.
               </p>
               <button
                 onClick={handleClearCache}
@@ -408,7 +408,7 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
           <div className="p-4 bg-afri-bg/40 border-t border-afri-border space-y-4 text-xs animate-fadeIn">
             {/* Langue souveraine */}
             <div className="space-y-2">
-              <span className="block text-[10px] text-afri-text-muted font-bold uppercase">Sélectionner la Langue d'AFRIGOMBO</span>
+              <span className="block text-[10px] text-afri-text-muted font-bold uppercase">Sélectionner la Langue d'AFRIGOMBO ELITE</span>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { id: "fr", label: "Français (Officiel)" },
@@ -461,7 +461,7 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
             <div className="space-y-2">
               <a 
                 href="#"
-                onClick={(e) => { e.preventDefault(); alert("Formulaire de signalement de bug d'AFRIGOMBO ouvert."); }}
+                onClick={(e) => { e.preventDefault(); alert("Formulaire de signalement de bug d'AFRIGOMBO ELITE ouvert."); }}
                 className="flex items-center justify-between p-2.5 bg-afri-bg hover:bg-afri-bg-ter rounded-xl border border-afri-border transition"
               >
                 <span>Signaler un problème ou bug technique</span>
@@ -470,7 +470,7 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
 
               <a 
                 href="#"
-                onClick={(e) => { e.preventDefault(); alert("Conditions d'utilisation souveraines d'AFRIGOMBO."); }}
+                onClick={(e) => { e.preventDefault(); alert("Conditions d'utilisation souveraines d'AFRIGOMBO ELITE."); }}
                 className="flex items-center justify-between p-2.5 bg-afri-bg hover:bg-afri-bg-ter rounded-xl border border-afri-border transition"
               >
                 <span>Conditions Générales d'Utilisation (CGU)</span>
@@ -478,7 +478,7 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
               </a>
 
               <div className="flex items-center justify-between p-2.5 text-afri-text-sec">
-                <span>Version Officielle d'AFRIGOMBO</span>
+                <span>Version Officielle d'AFRIGOMBO ELITE</span>
                 <span className="font-mono text-[10.5px] font-bold text-[#D4AF37]">v2.5 (Souverain)</span>
               </div>
             </div>

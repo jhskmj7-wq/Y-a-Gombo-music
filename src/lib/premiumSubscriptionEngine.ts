@@ -31,7 +31,7 @@ export async function createPendingSubscriptionRequest(
     const now = new Date().toISOString();
     const docRef = await addDoc(collection(db, "premium_subscriptions"), {
       userId: req.userId,
-      userName: req.userName || "Membre AFRIGOMBO",
+      userName: req.userName || "Membre AFRIGOMBO ELITE",
       userPhone: req.userPhone || "",
       plan: req.plan,
       billingCycle: req.billingCycle,

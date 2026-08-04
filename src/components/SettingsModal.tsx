@@ -32,7 +32,7 @@ interface SettingsModalProps {
 const modalTranslations: Record<string, Record<string, string>> = {
   fr: {
     title: "⚙️ Paramètres Premium",
-    subtitle: "AFRIGOMBO Configuration",
+    subtitle: "AFRIGOMBO ELITE Configuration",
     back: "Retour ✕",
     compte_title: "Compte d'Artiste",
     modifier_profil: "Modifier profil",
@@ -72,7 +72,7 @@ const modalTranslations: Record<string, Record<string, string>> = {
     autoplay_video_desc: "Lancer le flux vidéo de scène directement",
     autoplay_audio: "Lecture automatique de l'audio",
     autoplay_audio_desc: "Écouter les démos instrumentales dès l'ouverture",
-    music_label: "● Musique Officielle AFRIGOMBO",
+    music_label: "● Musique Officielle AFRIGOMBO ELITE",
     play_intro: "▶ Réécouter l'introduction",
     play_hymne: "▶ Hymne officiel",
     stop_music: "■ Arrêter la musique",
@@ -90,7 +90,7 @@ const modalTranslations: Record<string, Record<string, string>> = {
   },
   en: {
     title: "⚙️ Premium Settings",
-    subtitle: "AFRIGOMBO Configuration",
+    subtitle: "AFRIGOMBO ELITE Configuration",
     back: "Back ✕",
     compte_title: "Artist Account",
     modifier_profil: "Edit Profile",
@@ -130,7 +130,7 @@ const modalTranslations: Record<string, Record<string, string>> = {
     autoplay_video_desc: "Launch stage video stream directly",
     autoplay_audio: "Autoplay audio",
     autoplay_audio_desc: "Listen to instrumental demos on open",
-    music_label: "● Official AFRIGOMBO Music",
+    music_label: "● Official AFRIGOMBO ELITE Music",
     play_intro: "▶ Replay cinematic intro",
     play_hymne: "▶ Official Anthem",
     stop_music: "■ Stop music",
@@ -407,7 +407,7 @@ export default function SettingsModal({
                   {issueSent ? (
                     <div className="p-5 rounded-2xl bg-emerald-950/20 border border-emerald-900/50 text-emerald-400 text-center space-y-2">
                       <p className="font-black uppercase text-xs">✓ Signalement scellé !</p>
-                      <p className="text-[10.5px]">L'équipe d'administration centrale AFRIGOMBO a reçu votre ticket. Nous vous répondrons par notification sous 24 heures.</p>
+                      <p className="text-[10.5px]">L'équipe d'administration centrale AFRIGOMBO ELITE a reçu votre ticket. Nous vous répondrons par notification sous 24 heures.</p>
                     </div>
                   ) : (
                     <form onSubmit={handleSendIssue} className="space-y-4">
@@ -448,7 +448,7 @@ export default function SettingsModal({
                   <p className="text-afri-text-sec text-xs leading-relaxed max-w-sm mx-auto">
                     Conçu en Côte d'Ivoire pour propulser, protéger et professionnaliser les carrières des instrumentistes, chanteurs, beatmakers et promoteurs de spectacles d'Afrique.
                   </p>
-                  <p className="text-[10px] font-mono text-afri-text-muted pt-4">© 2026 AFRIGOMBO. Tous droits réservés.</p>
+                  <p className="text-[10px] font-mono text-afri-text-muted pt-4">© 2026 AFRIGOMBO ELITE. Tous droits réservés.</p>
                 </div>
               )}
             </div>
@@ -494,9 +494,9 @@ export default function SettingsModal({
           </h2>
 
           <div className="space-y-4">
-            {/* EXPÉRIENCE AFRIGOMBO */}
+            {/* EXPÉRIENCE AFRIGOMBO ELITE */}
             <div className="space-y-3">
-              <span className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest block">Expérience AFRIGOMBO</span>
+              <span className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest block">Expérience AFRIGOMBO ELITE</span>
               
               {/* Animations Premium */}
               <label className="flex items-center justify-between cursor-pointer group">
@@ -625,7 +625,7 @@ export default function SettingsModal({
                       type="button"
                       onClick={() => {
                         if (locked) {
-                          showToast("Thème réservé aux membres AFRIGOMBO Premium.", "warning");
+                          showToast("Thème réservé aux membres AFRIGOMBO ELITE Premium.", "warning");
                           return;
                         }
                         setThemePreset(th.id as any);
@@ -789,7 +789,7 @@ export default function SettingsModal({
                 onChange={(e) => updateProfileCustomizationPref('profileMusic', e.target.value)}
                 className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text focus:outline-none"
               >
-                <option value="intro_hymn">Hymne Officiel AFRIGOMBO 🎵</option>
+                <option value="intro_hymn">Hymne Officiel AFRIGOMBO ELITE 🎵</option>
                 <option value="jazz_africain">Solo Guitare Jazz Africain 🎷</option>
                 <option value="percussions_coupe_decale">Rythme Tam-Tam & Percussions 🥁</option>
                 <option value="piano_balade">Mélodie Piano Douce 🎹</option>
@@ -1224,7 +1224,7 @@ export default function SettingsModal({
               { key: "contracts", label: "Contrats & Signatures", desc: "Statuts de contrats, validations et signatures" },
               { key: "gomboId", label: "Gombo ID & Badges", desc: "Suivi de validation KYC et certifications" },
               { key: "premium", label: "Prestige Premium & VIP", desc: "Souscriptions, promotions et avantages" },
-              { key: "news", label: "Actualités AFRIGOMBO", desc: "Mises à jour de l'écosystème d'Abidjan" }
+              { key: "news", label: "Actualités AFRIGOMBO ELITE", desc: "Mises à jour de l'écosystème d'Abidjan" }
             ].map((n) => {
               const k = n.key as keyof typeof notifications;
               const isChecked = notifications[k] && notifications.masterEnabled;
@@ -1477,7 +1477,7 @@ export default function SettingsModal({
               );
             })}
 
-            {/* SOUTENIR AFRIGOMBO */}
+            {/* SOUTENIR AFRIGOMBO ELITE */}
             <button
               onClick={() => {
                 if (onSupportClick) {
@@ -1491,7 +1491,7 @@ export default function SettingsModal({
             >
               <div className="flex items-center gap-2.5">
                 <Star className="w-4 h-4 fill-current text-afri-gold" />
-                <span className="text-[11px] uppercase tracking-wider">❤️ Soutenir AFRIGOMBO</span>
+                <span className="text-[11px] uppercase tracking-wider">❤️ Soutenir AFRIGOMBO ELITE</span>
               </div>
               <ChevronRight className="w-4.5 h-4.5 text-afri-gold" />
             </button>
@@ -1543,7 +1543,7 @@ export default function SettingsModal({
 
         {/* 9. VERSION APPLICATION */}
         <div className="text-center space-y-1.5 pt-4">
-          <p className="text-[11px] font-sans font-black text-afri-text uppercase tracking-wider">AFRIGOMBO</p>
+          <p className="text-[11px] font-sans font-black text-afri-text uppercase tracking-wider">AFRIGOMBO ELITE</p>
           <p className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest">Version 1.0 — Elite Release</p>
           <div className="flex items-center justify-center gap-1.5 text-[8.5px] font-mono text-afri-text-muted uppercase">
             <span>Made in AFRI</span>

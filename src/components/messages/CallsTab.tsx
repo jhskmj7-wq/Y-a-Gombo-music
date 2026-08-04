@@ -98,7 +98,7 @@ export default function CallsTab({
           Appels Audio & Vidéo Souverains
         </h3>
         <p className="text-xs text-afri-text-sec leading-relaxed">
-          Passez des appels cryptés de bout en bout d'AFRIGOMBO. Toutes les communications vocales et visuelles passent par notre canal sécurisé et sont gratuites.
+          Passez des appels cryptés de bout en bout d'AFRIGOMBO ELITE. Toutes les communications vocales et visuelles passent par notre canal sécurisé et sont gratuites.
         </p>
       </div>
 
@@ -133,7 +133,7 @@ export default function CallsTab({
             </button>
           </div>
           <p className="text-[10px] text-afri-text-sec">
-            Saisissez le pseudonyme ou l'ID AFRIGOMBO du membre à appeler.
+            Saisissez le pseudonyme ou l'ID AFRIGOMBO ELITE du membre à appeler.
           </p>
           <div className="flex gap-2">
             <input

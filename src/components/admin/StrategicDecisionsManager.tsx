@@ -534,7 +534,7 @@ export default function StrategicDecisionsManager() {
                     <h3 className="text-base font-black text-afri-text uppercase tracking-tight font-display">
                       {editingDecision ? "Modifier la Décision" : "Nouvel Acte Stratégique"}
                     </h3>
-                    <p className="text-[10px] text-afri-text-sec font-mono uppercase">Registre Souverain AFRIGOMBO</p>
+                    <p className="text-[10px] text-afri-text-sec font-mono uppercase">Registre Souverain AFRIGOMBO ELITE</p>
                   </div>
                 </div>
 

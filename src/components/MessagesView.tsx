@@ -51,7 +51,7 @@ export default function MessagesView({
   onNavigateToSearch,
   onBack
 }: MessagesViewProps) {
-  // 1. Navigation Tabs (Discussions, Appels, Activité, Paramètres, AFRIGOMBO)
+  // 1. Navigation Tabs (Discussions, Appels, Activité, Paramètres, AFRIGOMBO ELITE)
   const [activeTab, setActiveTab] = useState<"discussions" | "appels" | "activite" | "parametres" | "afrigombo">("discussions");
   
   // Settings & Preferences States
@@ -114,7 +114,7 @@ export default function MessagesView({
   const [msgSearchQuery, setMsgSearchQuery] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  // 8. AFRIGOMBO Service Center States
+  // 8. AFRIGOMBO ELITE Service Center States
   const [afrigomboCategory, setAfrigomboCategory] = useState<"all" | "support" | "admin" | "fondateur" | "ia" | "updates" | "security" | "faq" | "tutorials">("all");
   const [aiAssistantQuery, setAiAssistantQuery] = useState("");
   const [aiAssistantResponse, setAiAssistantResponse] = useState<string | null>(null);
@@ -243,7 +243,7 @@ export default function MessagesView({
         setSupportConvo({
           id: currentUser.uid,
           isPlaceholder: true,
-          userName: "Équipe AFRIGOMBO",
+          userName: "Équipe AFRIGOMBO ELITE",
           userPhoto: "/logo_afrigombo.png",
           lastMessage: "Bonjour 👋 Comment pouvons-nous vous aider aujourd'hui ?",
           lastMessageAt: new Date().toISOString(),
@@ -261,7 +261,7 @@ export default function MessagesView({
         id: currentUser.uid,
         type: "support",
         participants: [currentUser.uid, "afrigombo_support"],
-        userName: "Équipe AFRIGOMBO",
+        userName: "Équipe AFRIGOMBO ELITE",
         userPhoto: "/logo_afrigombo.png",
         ...supportConvo
       });
@@ -421,7 +421,7 @@ export default function MessagesView({
       }
     } catch (err: any) {
       console.error("Failed to send message:", err);
-      if (err.message && err.message.includes("AFRIGOMBO")) {
+      if (err.message && err.message.includes("AFRIGOMBO ELITE")) {
         setSecurityError(err.message);
       }
     } finally {
@@ -626,7 +626,7 @@ export default function MessagesView({
       id: currentUser.uid,
       type: "support",
       participants: [currentUser.uid, "afrigombo_support"],
-      userName: "Équipe AFRIGOMBO",
+      userName: "Équipe AFRIGOMBO ELITE",
       userPhoto: "/logo_afrigombo.png",
       ...supportConvo
     });
@@ -722,7 +722,7 @@ export default function MessagesView({
                 {activeTab === "appels" && "Centre d'Appels WebRTC"}
                 {activeTab === "activite" && "Activités & Directs"}
                 {activeTab === "parametres" && "Paramètres Messagerie"}
-                {activeTab === "afrigombo" && "Espace AFRIGOMBO"}
+                {activeTab === "afrigombo" && "Espace AFRIGOMBO ELITE"}
               </h2>
             </div>
           </div>
@@ -789,7 +789,7 @@ export default function MessagesView({
                         <div className="min-w-0">
                           <div className="flex items-center gap-1">
                             <h3 className="text-xs font-bold text-afri-text truncate">
-                              {activeConvo.type === "support" ? "Équipe AFRIGOMBO" : partnerUid ? activeConvo.participantNames?.[partnerUid] : "Partenaire Gombo"}
+                              {activeConvo.type === "support" ? "Équipe AFRIGOMBO ELITE" : partnerUid ? activeConvo.participantNames?.[partnerUid] : "Partenaire Gombo"}
                             </h3>
                             {activeConvo.type === "support" && (
                               <span className="text-[#D4AF37] text-[10px] font-black" title="Support officiel">✔</span>
@@ -1166,7 +1166,7 @@ export default function MessagesView({
             </div>
           )}
 
-          {/* TAB 5: CENTRE OFFICIEL AFRIGOMBO */}
+          {/* TAB 5: CENTRE OFFICIEL AFRIGOMBO ELITE */}
           {activeTab === "afrigombo" && (
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 w-full h-full space-y-4 no-scrollbar pb-24">
               <AfrigomboTab

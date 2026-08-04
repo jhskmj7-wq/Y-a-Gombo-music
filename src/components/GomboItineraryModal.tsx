@@ -118,7 +118,7 @@ export default function GomboItineraryModal({
               <h3 className="text-base font-black text-[#D4AF37] uppercase tracking-wide">
                 Se Rendre Au Gombo
               </h3>
-              <p className="text-xs text-afri-text-sec font-mono">Itinéraire souverain AFRIGOMBO</p>
+              <p className="text-xs text-afri-text-sec font-mono">Itinéraire souverain AFRIGOMBO ELITE</p>
             </div>
           </div>
           <button
