@@ -18,6 +18,7 @@ import {
   Check
 } from "lucide-react";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getEffectiveGomboId } from "../lib/gomboIdHelper";
 import { storage } from "../lib/firebase";
 import { User } from "../types";
 import { motion, AnimatePresence } from "motion/react";
@@ -339,7 +340,7 @@ function GomboIdUserDashboardInner({
               
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1">
                 <span className="text-[9px] xs:text-[10px] uppercase font-mono bg-white/5 border border-afri-border text-afri-text/50 px-1.5 xs:px-2 py-0.5 rounded">
-                  {currentUser?.gomboIdNumber || "ID_PENDING"}
+                  {getEffectiveGomboId(currentUser)}
                 </span>
                 <span className="text-[#D4AF37] font-mono text-[9px] xs:text-[10px]">📍 {currentUser?.commune ?? ""}</span>
               </div>
@@ -358,12 +359,12 @@ function GomboIdUserDashboardInner({
             <div className="text-left md:text-right border-t md:border-t-0 sm:border-l md:border-l-0 border-afri-border pt-2 sm:pt-0 md:pt-2 sm:pl-3 md:pl-0 flex flex-col items-start sm:items-end">
               <span className="afri-text-tiny text-afri-text-sec block">NIVEAU GOMBO ID :</span>
               <strong className="text-base xs:text-lg font-sans font-black text-[#D4AF37] block mt-0.5">
-                NIVEAU {currentUser?.gomboId?.niveau || 1}
+                {currentUser?.kycStatus === "approved" ? `NIVEAU ${currentUser?.gomboId?.niveau || 1}` : "ID NON ATTRIBUÉ"}
               </strong>
               <div className="mt-2 flex flex-col items-start sm:items-end">
                 <span className="afri-text-tiny text-afri-text-sec block uppercase font-bold">SCORE CONFIANCE :</span>
                 <strong className="text-xs xs:text-sm font-sans font-black text-emerald-400 block mt-0.5">
-                  {currentUser?.gomboId?.scoreConfiance ?? currentUser?.trustScore ?? 96} / 100
+                  {currentUser?.kycStatus === "approved" ? `${currentUser?.gomboId?.scoreConfiance ?? currentUser?.trustScore ?? 96} / 100` : "EN ATTENTE KYC"}
                 </strong>
               </div>
             </div>

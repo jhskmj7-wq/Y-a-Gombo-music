@@ -41,8 +41,8 @@ export const AfriGomboLogo: React.FC<{ className?: string }> = ({ className = ""
           fill="url(#goldGradientMaster)"
         />
 
-        {/* IMPERIAL CROWN AT THE TOP */}
-        <g transform="translate(50, 9) scale(0.18)">
+        {/* IMPERIAL CROWN AT THE TOP - PERFECTLY CENTERED */}
+        <g transform="translate(50, 8.5) scale(0.18)">
           <motion.g
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}

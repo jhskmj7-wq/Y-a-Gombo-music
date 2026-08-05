@@ -2077,15 +2077,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   };
 
   const generateUniqueGomboId = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let id;
+    let id = "";
     let isUnique = false;
     while (!isUnique) {
-      const part1 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-      const part2 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-      id = `GMB-${part1}-${part2}`;
-      
-      // Check if any existing user has this gomboIdNumber
+      const num = Math.floor(1000000 + Math.random() * 9000000);
+      id = `AG-${num}`;
       isUnique = !users.some(u => u.gomboIdNumber === id || u.gomboId?.id === id || (typeof u.gomboId === 'string' && u.gomboId === id));
     }
     return id;
@@ -2095,7 +2091,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     const targetUser = users.find(u => u.id === userId);
     if (!targetUser) return;
 
-    const gmbId = generateUniqueGomboId();
+    const gmbId = targetUser.gomboIdNumber || (typeof targetUser.gomboId === "string" ? targetUser.gomboId : targetUser.gomboId?.id) || generateUniqueGomboId();
 
     const levels = [
       "🟢 Vérifié AFRIGOMBO ELITE",
@@ -2479,12 +2475,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   {/* BRAND HEADER LINE */}
                   <div className="p-5 border-b border-afri-border bg-afri-bg/60 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-afri-gold/10 border border-afri-gold/50 flex items-center justify-center animate-pulse">
-                        <Flame className="text-afri-gold w-4.5 h-4.5" />
+                      <div className="w-8 h-8 rounded-full bg-afri-gold/10 border border-afri-gold/50 flex items-center justify-center p-1 overflow-hidden shrink-0">
+                        <AfriGomboLogo className="w-full h-full" />
                       </div>
                       <div>
-                        <h2 className="text-sm font-sans font-black tracking-widest text-afri-gold uppercase">
-                          ═══ AFRIGOMBO ELITE ═══
+                        <h2 className="text-sm font-sans font-black tracking-wider text-afri-gold uppercase">
+                          AFRIGOMBO
                         </h2>
                         <span className="text-[8px] font-mono tracking-widest text-afri-text-sec block -mt-0.5">
                           L'ELITE MUSICALE IVOIRIENNE
@@ -2560,7 +2556,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
                                   </h3>
                                   <p className="text-[10px] text-afri-text-sec font-mono uppercase tracking-wide font-medium mt-1">
-                                    GOMBO ID: {profile?.gomboIdNumber ? profile.gomboIdNumber : "AG-0001258"}
+                                    GOMBO ID: {profile?.kycStatus === "approved" ? (profile?.gomboIdNumber || (typeof profile?.gomboId === "string" ? profile?.gomboId : profile?.gomboId?.id) || "ID NON ATTRIBUÉ") : "ID NON ATTRIBUÉ"}
                                   </p>
                                   <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                                     <span className="px-1.5 py-0.5 rounded border border-afri-gold/40 text-afri-gold text-[9px] font-sans uppercase font-bold flex items-center gap-1">
@@ -5798,7 +5794,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     title: "Modèle de Contrat de Prestation Standard",
                     description: "Document officiel encadrant les prestations musicales avec clause de séquestre et arbitrage.",
                     filename: `Contrat_Prestation_Afrigombo_${profile?.artisticName || "Artiste"}.txt`,
-                    content: `=== CONTRAT DE PRESTATION MUSICALE AFRIGOMBO ELITE ===\n\nNom de l'Artiste : ${profile?.artisticName || "Artiste Certifié"}\nGombo ID : ${profile?.gomboIdNumber || "AG-CERTIFIED"}\nDate : ${new Date().toLocaleDateString()}\n\nCe document garantit l'engagement bilatéral et le blocage sécurisé du cachet en compte de séquestre.`,
+                    content: `=== CONTRAT DE PRESTATION MUSICALE AFRIGOMBO ELITE ===\n\nNom de l'Artiste : ${profile?.artisticName || "Artiste Certifié"}\nGombo ID : ${profile?.kycStatus === "approved" ? (profile?.gomboIdNumber || (typeof profile?.gomboId === "string" ? profile?.gomboId : profile?.gomboId?.id) || "ID NON ATTRIBUÉ") : "ID NON ATTRIBUÉ"}\nDate : ${new Date().toLocaleDateString()}\n\nCe document garantit l'engagement bilatéral et le blocage sécurisé du cachet en compte de séquestre.`,
                     icon: "📜",
                     badge: "PDF / TXT",
                     sizeMb: 0.2

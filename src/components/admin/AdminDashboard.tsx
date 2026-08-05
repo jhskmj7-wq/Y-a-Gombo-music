@@ -100,9 +100,9 @@ export default function AdminDashboard({
   
   const handleQuickApproveKyc = async (userId: string) => {
     const targetUser = users.find(u => u.id === userId);
-    const code = (targetUser?.artisticName || "ELT").replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase() || "ELT";
-    const digits = Math.floor(10000 + Math.random() * 90000); // 5 digits
-    const gomboIdNumber = `GMB-${code}-${digits}`;
+    const existingId = targetUser?.gomboIdNumber || (typeof targetUser?.gomboId === "string" ? targetUser?.gomboId : targetUser?.gomboId?.id);
+    const num = Math.floor(1000000 + Math.random() * 9000000);
+    const gomboIdNumber = existingId || `AG-${num}`;
 
     const levels = [
       "🟢 Vérifié AFRIGOMBO ELITE",

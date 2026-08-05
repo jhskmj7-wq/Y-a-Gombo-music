@@ -25,7 +25,7 @@ import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
 import { 
-  collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, getDocs 
+  collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, getDocs, getDoc 
 } from "firebase/firestore";
 import { gomboDB } from "../../firebase";
 import { safeStringify, getCircularReplacer } from "../../lib/jsonUtils";
@@ -634,9 +634,23 @@ export default function AdminFounderThrone({
       // 2. Update user profile in users collection
       if (reqItem.userId) {
         try {
+          const userSnap = await getDoc(doc(db, "users", reqItem.userId));
+          const userData = userSnap.data() || {};
+          const existingGomboId = userData.gomboIdNumber || (typeof userData.gomboId === "string" ? userData.gomboId : userData.gomboId?.id);
+          const gomboIdNumber = existingGomboId || `AG-${Math.floor(1000000 + Math.random() * 9000000)}`;
+          const gomboIdObj = {
+            id: gomboIdNumber,
+            scoreConfiance: 95,
+            niveau: "🟢 Vérifié AFRIGOMBO ELITE",
+            certifie: true,
+            createdAt: new Date().toISOString()
+          };
           await updateDoc(doc(db, "users", reqItem.userId), {
             isVerified: true,
+            isCertified: true,
             kycStatus: "approved",
+            gomboIdNumber,
+            gomboId: gomboIdObj,
             verificationBadge: "certified_artist"
           });
         } catch (e) {
@@ -953,9 +967,12 @@ export default function AdminFounderThrone({
     try {
       const currentCert = Boolean(u.isCertified || u.gomboId?.certifie);
       const nextCert = !currentCert;
+      const existingId = u.gomboIdNumber || (typeof u.gomboId === "string" ? u.gomboId : u.gomboId?.id);
+      const gomboIdNumber = existingId || `AG-${Math.floor(1000000 + Math.random() * 9000000)}`;
       await updateDoc(doc(db, "users", u.id || u.uid), {
         isCertified: nextCert,
         kycStatus: nextCert ? "approved" : "rejected",
+        gomboIdNumber: nextCert ? gomboIdNumber : u.gomboIdNumber,
         "gomboId.certifie": nextCert,
         "gomboId.statut": nextCert ? "CERTIFIÉ ELITE" : "NON CERTIFIÉ"
       });
@@ -1238,9 +1255,14 @@ export default function AdminFounderThrone({
   
   const handleApproveCert = async (userId: string) => {
     try {
+      const userSnap = await getDoc(doc(db, "users", userId));
+      const userData = userSnap.data() || {};
+      const existingGomboId = userData.gomboIdNumber || (typeof userData.gomboId === "string" ? userData.gomboId : userData.gomboId?.id);
+      const gomboIdNumber = existingGomboId || `AG-${Math.floor(1000000 + Math.random() * 9000000)}`;
       await updateDoc(doc(db, "users", userId), {
         kycStatus: "approved",
         isCertified: true,
+        gomboIdNumber,
         "gomboId.certifie": true,
         "gomboId.statut": "CERTIFIÉ ELITE"
       });

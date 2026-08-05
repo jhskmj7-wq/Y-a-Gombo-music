@@ -896,7 +896,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                   </p>
                 </div>
               </div>
-            ) : currentUserProfile.isVerified === true || kycStatus === "approved" ? (
+            ) : kycStatus === "approved" ? (
               <div className="space-y-3">
                 <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto">
                   <ShieldCheck className="w-7 h-7 text-emerald-400" />

@@ -295,7 +295,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
             )}
           </div>
           <h1 className="text-3xl font-black text-[#D4AF37] tracking-wider uppercase mb-1">
-            AFRIGOMBO ELITE
+            AFRIGOMBO
           </h1>
           <h2 className="text-xs font-bold text-afri-text-sec tracking-widest uppercase mb-1">
             LE TEMPLE DU GOMBO MUSICAL

@@ -10,6 +10,7 @@ import { collection, query, where, getDocs, doc, getDoc, onSnapshot, orderBy } f
 import { db } from "../lib/firebase";
 import { gomboDB } from "../firebase";
 import { UserProfile, Post, Gombo, GomboSafeContract } from "../types";
+import { getEffectiveGomboId } from "../lib/gomboIdHelper";
 import { useAudio } from "../context/AudioContext";
 import { AndroidBottomSheet, AfriModal } from "./common/AfriModal";
 
@@ -183,10 +184,10 @@ export function PublicProfileModal({
   if (!isOpen) return null;
 
   // Derive profile attributes safely
-  const isKycApproved = profile?.kycStatus === "approved" || profile?.isCertified === true || profile?.isVerified === true;
+  const isKycApproved = profile?.kycStatus === "approved";
   const isPremium = profile?.isPro || profile?.isVip || (profile?.balance !== undefined && profile.balance > 0);
   const displayName = profile?.artisticName || profile?.artistName || profile?.displayName || `${profile?.firstName || "Artiste"} ${profile?.lastName || ""}`.trim();
-  const gomboId = profile?.gomboIdNumber || (typeof profile?.gomboId === "string" ? profile?.gomboId : profile?.gomboId?.id) || `GMB-${(targetUserId || "").substring(0, 6).toUpperCase()}`;
+  const gomboId = getEffectiveGomboId(profile);
   const trustScore = profile?.trustScore ?? profile?.reputationScore ?? 96;
   const roleTitle = profile?.specialty || (profile?.specialties && profile?.specialties[0]) || profile?.role || "Artiste Musicien";
   const communeCity = `${profile?.commune || profile?.city || profile?.ville || "Abidjan"}, ${profile?.country || "Côte d'Ivoire"}`;

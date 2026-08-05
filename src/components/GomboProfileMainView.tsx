@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { UserProfile } from "../types";
 import { audioSynth } from "../lib/audio";
+import { getEffectiveGomboId } from "../lib/gomboIdHelper";
 import { AndroidCenteredDialog } from "./common/GlobalPortalModal";
 import { AndroidBottomSheet } from "./ui/AndroidBottomSheet";
 import { useTheme } from "../context/ThemeContext";
@@ -53,10 +54,10 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
   if (!currentUserProfile) return null;
 
-  const isKycApproved = currentUserProfile.kycStatus === "approved" || currentUserProfile.isCertified === true || currentUserProfile.isVerified === true || currentUserProfile.hasGomboId === true;
+  const isKycApproved = currentUserProfile.kycStatus === "approved";
   
-  // Clean, trust-centric Gombo ID resolution
-  const gomboId = (currentUserProfile.gomboIdNumber || (typeof currentUserProfile.gomboId === "string" ? currentUserProfile.gomboId : currentUserProfile.gomboId?.id) || "GBO-225-8904X");
+  // Clean, single source of truth Gombo ID resolution
+  const gomboId = getEffectiveGomboId(currentUserProfile);
 
   const showCopyToast = (msg: string = "Gombo ID copié !") => {
     if (typeof window === "undefined") return;

@@ -907,7 +907,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
                     </div>
                  )}
-                 {(profile?.isCertified || profile?.gomboIdNumber) && (
+                 {profile?.kycStatus === "approved" && (
                     <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-afri-gold rounded-full border border-afri-border flex items-center justify-center">
                       <CheckCircle2 className="w-1.5 sm:w-2 h-1.5 sm:h-2 text-black stroke-[4]" />
                     </div>
@@ -1827,14 +1827,19 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Ex: GMB-4859-CI"
+                      placeholder="Ex: AG-849201"
                       value={verifyGomboIdInput}
                       onChange={(e) => setVerifyGomboIdInput(e.target.value)}
                       className="flex-1 bg-afri-bg border border-afri-border text-xs text-[#D4AF37] p-2.5 rounded-xl font-mono focus:outline-none"
                     />
                     <button
                       onClick={() => {
-                        const verifiedUser = users.find(u => u.kycStatus === "approved" || u.isCertified);
+                        const searchVal = verifyGomboIdInput.trim();
+                        const verifiedUser = users.find(u => u.kycStatus === "approved" && (
+                          u.gomboIdNumber === searchVal || 
+                          u.gomboId?.id === searchVal ||
+                          (typeof u.gomboId === "string" && u.gomboId === searchVal)
+                        ));
                         if (verifyGomboIdInput.trim().length > 3 && verifiedUser) {
                           setVerifyGomboIdResult({
                             success: true,
