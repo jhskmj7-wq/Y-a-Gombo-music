@@ -7,9 +7,18 @@
 export const NOT_ASSIGNED_GOMBO_ID = "ID NON ATTRIBUÉ";
 export const PENDING_KYC_GOMBO_ID = "EN ATTENTE DE VALIDATION KYC";
 
+const ALPHANUM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+function getRandomChars(count: number): string {
+  let result = "";
+  for (let i = 0; i < count; i++) {
+    result += ALPHANUM.charAt(Math.floor(Math.random() * ALPHANUM.length));
+  }
+  return result;
+}
+
 /**
- * Formats any raw Gombo ID or numeric string into the official display format GMB-XXX-XXX.
- * Example outputs: GMB-001-001, GMB-125-487, GMB-999-999
+ * Formats any raw Gombo ID or string into the official display format GMB-XXX-XXX (alphanumeric).
  */
 export function formatGomboIdDisplay(rawId: string | null | undefined): string {
   if (!rawId) return NOT_ASSIGNED_GOMBO_ID;
@@ -18,36 +27,39 @@ export function formatGomboIdDisplay(rawId: string | null | undefined): string {
   }
 
   // If already formatted like GMB-XXX-XXX
-  if (/^GMB-\d{3}-\d{3}$/.test(rawId)) {
+  if (/^GMB-[A-Z0-9]{3}-[A-Z0-9]{3}$/.test(rawId)) {
     return rawId;
   }
 
-  // Extract all numeric digits
-  const digits = rawId.replace(/\D/g, "");
+  // Clean alphanumeric characters only (uppercase)
+  const clean = rawId.replace(/[^A-Z0-9]/gi, "").toUpperCase();
 
-  if (digits.length >= 6) {
-    const cleanDigits = digits.slice(-6);
-    return `GMB-${cleanDigits.slice(0, 3)}-${cleanDigits.slice(3, 6)}`;
+  if (clean.length >= 6) {
+    const slice = clean.slice(-6);
+    return `GMB-${slice.slice(0, 3)}-${slice.slice(3, 6)}`;
   }
 
-  // Deterministic mapping for short or non-numeric raw IDs
+  // Deterministic or padded fallback
   let hash = 0;
   for (let i = 0; i < rawId.length; i++) {
     hash = (hash << 5) - hash + rawId.charCodeAt(i);
     hash |= 0;
   }
-  const positiveHash = Math.abs(hash);
-  const numStr = String(positiveHash % 1000000).padStart(6, "0");
-  return `GMB-${numStr.slice(0, 3)}-${numStr.slice(3, 6)}`;
+  const pos = Math.abs(hash);
+  const part1 = ALPHANUM.charAt((pos >> 0) % ALPHANUM.length) +
+                ALPHANUM.charAt((pos >> 3) % ALPHANUM.length) +
+                ALPHANUM.charAt((pos >> 6) % ALPHANUM.length);
+  const part2 = ALPHANUM.charAt((pos >> 9) % ALPHANUM.length) +
+                ALPHANUM.charAt((pos >> 12) % ALPHANUM.length) +
+                ALPHANUM.charAt((pos >> 15) % ALPHANUM.length);
+  return `GMB-${part1}-${part2}`;
 }
 
 /**
- * Single function to generate a unique Gombo ID format (GMB-XXX-XXX) upon KYC approval.
+ * Single function to generate a unique Gombo ID format (GMB-XXX-XXX) with random alphanumeric characters upon KYC approval.
  */
 export function generateGomboId(): string {
-  const d1 = String(Math.floor(100 + Math.random() * 900)).padStart(3, "0");
-  const d2 = String(Math.floor(100 + Math.random() * 900)).padStart(3, "0");
-  return `GMB-${d1}-${d2}`;
+  return `GMB-${getRandomChars(3)}-${getRandomChars(3)}`;
 }
 
 /**
