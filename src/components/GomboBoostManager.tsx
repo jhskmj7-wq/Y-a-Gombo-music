@@ -9,7 +9,7 @@ import { PremiumEngine } from "../lib/premiumEngine";
 import { PaymentEngine } from "../lib/paymentEngine";
 import { InsufficientBalanceModal } from "./wallet/InsufficientBalanceModal";
 import { db } from "../firebase";
-import { doc, getDoc, updateDoc, setDoc, addDoc, collection } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc, addDoc, collection, onSnapshot } from "firebase/firestore";
 
 interface GomboBoostManagerProps {
   isOpen: boolean;
@@ -48,23 +48,20 @@ export default function GomboBoostManager({
   // Fetch current wallet balance in real-time
   useEffect(() => {
     if (isOpen && currentUserProfile?.uid) {
-      const fetchBalance = async () => {
-        try {
-          const userRef = doc(db, "users", currentUserProfile.uid);
-          const snap = await getDoc(userRef);
-          if (snap.exists()) {
-            const data = snap.data();
-            const bal = data.wallet?.soldeDisponible ?? data.walletBalance ?? 0;
-            setWalletBalance(bal);
-          }
-        } catch (err) {
-          console.error("Error fetching wallet balance:", err);
+      const userRef = doc(db, "users", currentUserProfile.uid);
+      const unsub = onSnapshot(userRef, (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          const bal = data.wallet?.soldeDisponible ?? data.walletBalance ?? 0;
+          setWalletBalance(bal);
         }
-      };
-      fetchBalance();
+      }, (err) => {
+        console.error("Error listening to wallet balance:", err);
+      });
       // Reset view
       setStep("options");
       setErrorMsg(null);
+      return () => unsub();
     }
   }, [isOpen, currentUserProfile]);
 
