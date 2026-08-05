@@ -166,7 +166,7 @@ export default defineConfig({
             urlPattern: ({ request }) => request.mode === 'navigate',
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'pages-v4',
+              cacheName: 'pages-v5',
               networkTimeoutSeconds: 3,
               expiration: {
                 maxEntries: 10,

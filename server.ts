@@ -76,11 +76,19 @@ async function startServer() {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath, {
       setHeaders: (res, filePath) => {
-        if (filePath.endsWith('.webmanifest')) {
+        if (filePath.endsWith('.webmanifest') || filePath.endsWith('manifest.json')) {
           res.setHeader('Content-Type', 'application/manifest+json');
+        }
+        if (filePath.endsWith('sw.js')) {
+          res.setHeader('Service-Worker-Allowed', '/');
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         }
       }
     }));
+    app.get('/manifest.json', (req, res) => {
+      res.setHeader('Content-Type', 'application/manifest+json');
+      res.sendFile(path.join(distPath, 'manifest.webmanifest'));
+    });
     app.get('*all', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
