@@ -216,6 +216,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
           commissionRate: 0.015,
           badges: updatedBadges,
           walletBalance: newSolde,
+          balance: newSolde,
           wallet: {
             ...(uData?.wallet || {}),
             soldeDisponible: newSolde

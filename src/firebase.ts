@@ -3422,17 +3422,18 @@ export const gomboDB = {
           const artistSnap = await getDoc(artistRef);
           if (artistSnap.exists()) {
             const artistData = artistSnap.data();
-            const currentDisponible = artistData.wallet?.soldeDisponible ?? 0;
             const currentBloque = artistData.wallet?.soldeBloque ?? 0;
             const artistRevenue = artistData.revenue ?? 0;
             const artistTotalRevenue = artistData.totalRevenue ?? 0;
 
+            const newBalanceVal = (artistData.wallet?.soldeDisponible ?? artistData.balance ?? 0) + netToArtist;
             await setDoc(artistRef, {
               wallet: {
-                soldeDisponible: currentDisponible + netToArtist,
+                soldeDisponible: newBalanceVal,
                 soldeBloque: currentBloque
               },
-              balance: (artistData.balance ?? 0) + netToArtist,
+              walletBalance: newBalanceVal,
+              balance: newBalanceVal,
               revenue: artistRevenue + netToArtist,
               totalRevenue: artistTotalRevenue + netToArtist,
               gombosCompleted: (artistData.gombosCompleted ?? 0) + 1
@@ -3805,17 +3806,18 @@ export const gomboDB = {
           const artistSnap = await getDoc(artistRef);
           if (artistSnap.exists()) {
             const artistData = artistSnap.data();
-            const currentDisponible = artistData.wallet?.soldeDisponible ?? 0;
             const currentBloque = artistData.wallet?.soldeBloque ?? 0;
             const artistRevenue = artistData.revenue ?? 0;
             const artistTotalRevenue = artistData.totalRevenue ?? 0;
 
+            const newBalanceVal = (artistData.wallet?.soldeDisponible ?? artistData.balance ?? 0) + netToArtist;
             await setDoc(artistRef, {
               wallet: {
-                soldeDisponible: currentDisponible + netToArtist,
+                soldeDisponible: newBalanceVal,
                 soldeBloque: currentBloque
               },
-              balance: (artistData.balance ?? 0) + netToArtist,
+              walletBalance: newBalanceVal,
+              balance: newBalanceVal,
               revenue: artistRevenue + netToArtist,
               totalRevenue: artistTotalRevenue + netToArtist,
               gombosCompleted: (artistData.gombosCompleted ?? 0) + 1

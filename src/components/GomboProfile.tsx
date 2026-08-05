@@ -271,7 +271,7 @@ export default function GomboProfile({
   const [withdrawErrorMsg, setWithdrawErrorMsg] = useState("");
 
   // Wallet defaults in database
-  const balance = currentUserProfile?.balance ?? 0;
+  const balance = currentUserProfile?.wallet?.soldeDisponible ?? currentUserProfile?.balance ?? 0;
   const totalRevenue = currentUserProfile?.totalRevenue ?? 0;
   const totalWithdrawals = currentUserProfile?.totalWithdrawals ?? 0;
 
@@ -773,6 +773,8 @@ export default function GomboProfile({
 
       await gomboDB.updateUserProfile(currentUserProfile.uid, {
         balance: newBalance,
+        walletBalance: newBalance,
+        "wallet.soldeDisponible": newBalance,
         totalWithdrawals: newWithdrawals
       });
 

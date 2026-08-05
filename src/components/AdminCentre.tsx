@@ -392,6 +392,11 @@ function RevenuQuickActionModal({
                 const updatedUser = { 
                   ...currentUserData, 
                   balance: newBal, 
+                  walletBalance: newBal,
+                  wallet: {
+                    ...(currentUserData.wallet || {}),
+                    soldeDisponible: newBal
+                  },
                   revenue: newBal, 
                   revenues: newBal 
                 };

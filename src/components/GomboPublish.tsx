@@ -244,6 +244,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         const newBloque = liveBloque + cachetVal;
         transaction.update(userRef, {
           walletBalance: finalNewSolde,
+          balance: finalNewSolde,
           wallet: { ...(userData.wallet || {}), soldeDisponible: finalNewSolde, soldeBloque: newBloque }
         });
 

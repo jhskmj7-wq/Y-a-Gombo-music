@@ -388,6 +388,8 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               "wallet.soldeDisponible": newDispo,
               "wallet.balance": newBalance,
               "wallet.depots": newDepots,
+              balance: newDispo,
+              walletBalance: newDispo,
               updatedAt: nowIso
             });
 
@@ -530,6 +532,8 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               "wallet.soldeDisponible": newDispo,
               "wallet.balance": newBalance,
               "wallet.retraits": newRetraits,
+              balance: newDispo,
+              walletBalance: newDispo,
               updatedAt: nowIso
             });
 

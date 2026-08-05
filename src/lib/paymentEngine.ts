@@ -32,6 +32,52 @@ export interface PaymentResult {
 
 export class PaymentEngineClass {
   /**
+   * Helper to fetch canonical wallet balance, perform safety sync on legacy fields,
+   * or complete smooth, idempotent migration from old fields if needed.
+   */
+  async getCanonicalBalanceAndSync(userId: string, userData: any, userRef: any): Promise<number> {
+    const walletObj = userData?.wallet;
+    const solde = walletObj?.soldeDisponible;
+    
+    if (typeof solde === "number") {
+      // It is already canonical. Ensure legacy fields match if they differ to prevent drift.
+      if (userData.walletBalance !== solde || userData.balance !== solde) {
+        console.log(`[PaymentEngine] Syncing legacy balance fields to canonical value: ${solde}`);
+        try {
+          await updateDoc(userRef, {
+            walletBalance: solde,
+            balance: solde,
+            "wallet.soldeDisponible": solde
+          });
+        } catch (e) {
+          console.error("[PaymentEngine] Sync warning:", e);
+        }
+      }
+      return solde;
+    }
+
+    // It is not canonical yet. Resolve using legacy fields.
+    const legacyBalance = typeof userData?.walletBalance === "number" 
+      ? userData.walletBalance 
+      : (typeof userData?.balance === "number" ? userData.balance : 0);
+    
+    // Perform a smooth, idempotent migration to canonical wallet.soldeDisponible.
+    console.log(`[PaymentEngine] Migrating user ${userId} to canonical wallet.soldeDisponible: ${legacyBalance}`);
+    try {
+      await updateDoc(userRef, {
+        walletBalance: legacyBalance,
+        balance: legacyBalance,
+        "wallet.soldeDisponible": legacyBalance,
+        "wallet.devise": "FCFA"
+      });
+    } catch (e) {
+      console.error("[PaymentEngine] Migration warning:", e);
+    }
+    
+    return legacyBalance;
+  }
+
+  /**
    * Check if user has enough balance in Wallet.
    */
   async checkBalance(userId: string, amount: number): Promise<{ canPay: boolean; currentBalance: number; missingAmount: number }> {
@@ -42,7 +88,7 @@ export class PaymentEngineClass {
         return { canPay: false, currentBalance: 0, missingAmount: amount };
       }
       const data = userSnap.data();
-      const currentBalance = data?.wallet?.soldeDisponible ?? data?.walletBalance ?? data?.balance ?? 0;
+      const currentBalance = await this.getCanonicalBalanceAndSync(userId, data, userRef);
       const canPay = currentBalance >= amount;
       const missingAmount = canPay ? 0 : amount - currentBalance;
       return { canPay, currentBalance, missingAmount };
@@ -81,7 +127,7 @@ export class PaymentEngineClass {
         return { success: false, error: "Votre Wallet est actuellement bloqué. Veuillez contacter le support." };
       }
 
-      const currentBalance = userData?.wallet?.soldeDisponible ?? userData?.walletBalance ?? userData?.balance ?? 0;
+      const currentBalance = await this.getCanonicalBalanceAndSync(userId, userData, userRef);
 
       if (currentBalance < amount) {
         return {
@@ -97,8 +143,7 @@ export class PaymentEngineClass {
       const now = new Date();
       const txId = `tx_${module}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
-      // Update User Wallet in Firestore
-      const currentWallet = userData?.wallet || {};
+      // Update User Wallet in Firestore synchronously across all three fields
       await updateDoc(userRef, {
         walletBalance: balanceAfter,
         balance: balanceAfter,
@@ -170,7 +215,7 @@ export class PaymentEngineClass {
       }
 
       const userData = userSnap.data();
-      const currentBalance = userData?.wallet?.soldeDisponible ?? userData?.walletBalance ?? userData?.balance ?? 0;
+      const currentBalance = await this.getCanonicalBalanceAndSync(userId, userData, userRef);
       const balanceAfter = currentBalance + amount;
       const now = new Date();
       const refundId = `ref_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -233,7 +278,7 @@ export class PaymentEngineClass {
       if (!userSnap.exists()) return { success: false, error: "Utilisateur non trouvé." };
 
       const userData = userSnap.data();
-      const currentBalance = userData?.wallet?.soldeDisponible ?? userData?.walletBalance ?? userData?.balance ?? 0;
+      const currentBalance = await this.getCanonicalBalanceAndSync(userId, userData, userRef);
 
       let balanceAfter = currentBalance;
       if (action === "credit") balanceAfter = currentBalance + amount;

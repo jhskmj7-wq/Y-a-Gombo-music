@@ -622,7 +622,9 @@ export default function AfrigomboWalletDashboard({
           wallet: {
             soldeDisponible: newDisponible,
             retraits: (wallet.retraits || 0) + sendAmt
-          }
+          },
+          balance: newDisponible,
+          walletBalance: newDisponible
         }, { merge: true });
 
         // 2. Record transaction for sender

@@ -278,7 +278,9 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
           await setDoc(userRef, {
             wallet: {
               soldeDisponible: newSolde
-            }
+            },
+            balance: newSolde,
+            walletBalance: newSolde
           }, { merge: true });
 
           await recordWalletTransaction({
