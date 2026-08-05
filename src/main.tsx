@@ -11,6 +11,15 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import App from "./App";
 import "./index.css";
 
+// Capture beforeinstallprompt at the absolute earliest moment during boot
+window.addEventListener("beforeinstallprompt", (e: any) => {
+  console.log("📥 [GLOBAL PWA] beforeinstallprompt captured at startup!");
+  e.preventDefault();
+  (window as any).deferredPrompt = e;
+  // Dispatch a custom event to notify any active React components
+  window.dispatchEvent(new CustomEvent("afrigombo-beforeinstallprompt", { detail: e }));
+});
+
 window.addEventListener(
   "error",
   (e) => {

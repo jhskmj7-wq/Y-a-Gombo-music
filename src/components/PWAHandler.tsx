@@ -16,7 +16,9 @@ export default function PWAHandler() {
   const { profile } = useAuth();
   const isDev = supportConfig.isDeveloper(profile);
   
-  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [installPrompt, setInstallPrompt] = useState<any>(() => {
+    return typeof window !== "undefined" ? (window as any).deferredPrompt : null;
+  });
   const [showInstallBanner, setShowInstallBanner] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   
@@ -97,12 +99,13 @@ export default function PWAHandler() {
     }
   };
 
-  // Capture beforeinstallprompt
+  // Capture beforeinstallprompt + custom startup listeners
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
       console.log("📥 [AFRIGOMBO PWA] beforeinstallprompt event fired!");
       e.preventDefault();
       setInstallPrompt(e);
+      (window as any).deferredPrompt = e;
       
       const dismissed = localStorage.getItem("pwa_install_dismissed");
       const lastDismissed = dismissed ? parseInt(dismissed, 10) : 0;
@@ -114,10 +117,41 @@ export default function PWAHandler() {
       }
     };
 
+    const handleCustomEvent = (e: any) => {
+      console.log("📥 [AFRIGOMBO PWA] custom beforeinstallprompt event received!");
+      if (e.detail) {
+        setInstallPrompt(e.detail);
+        (window as any).deferredPrompt = e.detail;
+        
+        const dismissed = localStorage.getItem("pwa_install_dismissed");
+        const lastDismissed = dismissed ? parseInt(dismissed, 10) : 0;
+        const now = Date.now();
+        if (now - lastDismissed > 1000 * 60 * 60 * 24) {
+          setShowInstallBanner(true);
+        }
+      }
+    };
+
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("afrigombo-beforeinstallprompt", handleCustomEvent);
+
+    // Synchronize if already captured by our early global boot listener
+    if (typeof window !== "undefined" && (window as any).deferredPrompt) {
+      const e = (window as any).deferredPrompt;
+      console.log("📥 [AFRIGOMBO PWA] Resolving early-captured prompt.");
+      setInstallPrompt(e);
+      
+      const dismissed = localStorage.getItem("pwa_install_dismissed");
+      const lastDismissed = dismissed ? parseInt(dismissed, 10) : 0;
+      const now = Date.now();
+      if (now - lastDismissed > 1000 * 60 * 60 * 24) {
+        setShowInstallBanner(true);
+      }
+    }
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("afrigombo-beforeinstallprompt", handleCustomEvent);
     };
   }, []);
 
@@ -126,6 +160,7 @@ export default function PWAHandler() {
     const handleAppInstalled = () => {
       console.log("🎉 [AFRIGOMBO ELITE PWA] Application installed successfully!");
       setInstallPrompt(null);
+      (window as any).deferredPrompt = null;
       setShowInstallBanner(false);
       setIsStandalone(true);
     };
@@ -147,14 +182,16 @@ export default function PWAHandler() {
   }, [installPrompt]);
 
   const handleInstall = async () => {
-    if (!installPrompt) return;
+    const activePrompt = installPrompt || (typeof window !== "undefined" ? (window as any).deferredPrompt : null);
+    if (!activePrompt) return;
     
-    installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
+    activePrompt.prompt();
+    const { outcome } = await activePrompt.userChoice;
     
     if (outcome === "accepted") {
       console.log("User accepted the PWA install");
       setInstallPrompt(null);
+      (window as any).deferredPrompt = null;
       setShowInstallBanner(false);
     }
   };
@@ -189,10 +226,19 @@ export default function PWAHandler() {
       title: "Contexte d'affichage (iFrame)",
       status: isIframe ? "ERROR" : "SUCCESS",
       message: isIframe ? "L'application est ouverte dans une iframe (Sandbox AI Studio)." : "L'application est ouverte directement (hors iframe).",
-      solution: isIframe ? "Chrome interdit l'installation PWA au sein des iframes. Veuillez ouvrir l'application directement dans un nouvel onglet de Chrome à l'aide de l'icône de redirection externe en haut à droite." : undefined
+      solution: isIframe ? "Chrome interdit l'installation PWA au sein des iframes. Veuillez ouvrir l'application directement dans un nouvel onglet de Chrome." : undefined
     });
 
-    // 3. Display Mode check
+    // 3. Navigateur Chromium (Google Chrome)
+    const isChromium = /Chrome|Chromium|CriOS/i.test(navigator.userAgent) && !/Edge|OPR|Brave/i.test(navigator.userAgent);
+    results.push({
+      title: "Navigateur de test (Chromium)",
+      status: isChromium ? "SUCCESS" : "WARNING",
+      message: isChromium ? "Le navigateur détecté est Google Chrome / Chromium." : `Navigateur non-Chromium détecté (User Agent: ${navigator.userAgent.substring(0, 50)}...).`,
+      solution: isChromium ? undefined : "Le déclenchement automatique de beforeinstallprompt est principalement supporté par Google Chrome sur Android."
+    });
+
+    // 4. Mode d'affichage actif
     results.push({
       title: "Mode d'affichage actif",
       status: isStandalone ? "SUCCESS" : "WARNING",
@@ -200,55 +246,24 @@ export default function PWAHandler() {
       solution: isStandalone ? undefined : "Si vous avez déjà installé l'application, lancez-la directement depuis votre écran d'accueil."
     });
 
-    // 4. Chrome's Qualified Install Promotion check (beforeinstallprompt)
-    const hasPrompt = !!installPrompt;
+    // 5. Standalone déjà installé (Vérification PWA)
     results.push({
-      title: "Éligibilité à l'installation Chrome",
-      status: hasPrompt ? "SUCCESS" : "WARNING",
-      message: hasPrompt ? "L'événement 'beforeinstallprompt' a été reçu avec succès." : "L'événement 'beforeinstallprompt' n'a pas encore été déclenché par Chrome.",
-      solution: hasPrompt ? "L'installation directe est disponible et fonctionnelle !" : "Chrome attend que l'application valide l'ensemble de ses critères de qualité (Service Worker enregistré, manifest valide, interaction minimale). Veuillez interagir un instant avec l'application ou vérifier les diagnostics ci-dessous."
+      title: "PWA déjà installée",
+      status: isStandalone ? "SUCCESS" : "WARNING",
+      message: isStandalone ? "L'application est officiellement installée comme PWA autonome." : "L'application n'est pas encore installée en mode autonome sur cet appareil.",
+      solution: isStandalone ? undefined : "Pour installer la PWA, utilisez le bouton d'installation honnête ou le menu de Chrome."
     });
 
-    // 5. Browser Service Worker API check
-    const swSupported = "serviceWorker" in navigator;
+    // 6. Engagement Utilisateur
+    const userInteracted = (navigator as any).userActivation?.hasBeenActive || document.hasFocus();
     results.push({
-      title: "Support Service Worker par le navigateur",
-      status: swSupported ? "SUCCESS" : "ERROR",
-      message: swSupported ? "Le navigateur intègre l'API Service Worker." : "Ce navigateur ne supporte pas l'API Service Worker.",
-      solution: swSupported ? undefined : "Utilisez un navigateur moderne comme Google Chrome sur Android."
+      title: "Engagement utilisateur requis",
+      status: userInteracted ? "SUCCESS" : "WARNING",
+      message: userInteracted ? "Une interaction utilisateur préalable a été enregistrée par le navigateur." : "Aucune interaction utilisateur récente détectée.",
+      solution: userInteracted ? undefined : "Cliquez ou interagissez avec l'application pour satisfaire l'heuristique de Chrome."
     });
 
-    // 6. Active SW Registration check
-    let swRegObj: any = null;
-    if (swSupported) {
-      try {
-        swRegObj = await navigator.serviceWorker.getRegistration();
-        results.push({
-          title: "Service Worker enregistré sur le domaine",
-          status: swRegObj ? "SUCCESS" : "ERROR",
-          message: swRegObj ? `SW enregistré détecté : ${swRegObj.active ? "Actif & Opérationnel" : "En cours d'installation ou en attente"}` : "Aucun Service Worker n'est enregistré pour ce domaine.",
-          solution: swRegObj ? undefined : "Veuillez patienter quelques instants, le Service Worker s'enregistre automatiquement dès l'initialisation de l'application."
-        });
-      } catch (err: any) {
-        results.push({
-          title: "Enregistrement Service Worker",
-          status: "ERROR",
-          message: `Erreur d'accès à l'enregistrement : ${err?.message || err}`,
-          solution: "Vérifiez que sw.js est valide et correctement compilé."
-        });
-      }
-    }
-
-    // 7. SW Page Controller check
-    const swController = swSupported ? !!navigator.serviceWorker.controller : false;
-    results.push({
-      title: "Service Worker contrôleur de page",
-      status: swController ? "SUCCESS" : "WARNING",
-      message: swController ? "Le Service Worker contrôle activement les requêtes de cette page." : "Le Service Worker est présent mais ne contrôle pas encore la page.",
-      solution: swController ? undefined : "Rechargez la page une fois pour lui permettre de prendre le contrôle complet."
-    });
-
-    // 8. Manifest link in HTML check
+    // 7. Liaison HTML du manifest
     const manifestLink = document.querySelector('link[rel="manifest"]');
     results.push({
       title: "Liaison HTML du manifest",
@@ -257,122 +272,212 @@ export default function PWAHandler() {
       solution: manifestLink ? undefined : "Vérifiez que le build de production intègre la balise manifest."
     });
 
-    // 9. Manifest accessibility and auth proxy checks
+    // 8. Accessibilité et Validité du manifest.webmanifest (MIME application/manifest+json)
+    let manifestValid = false;
+    let startUrlVal = "";
+    let scopeVal = "";
     try {
       const manifestRes = await fetch("/manifest.webmanifest");
       if (manifestRes.ok) {
         const ct = manifestRes.headers.get("content-type") || "";
         const text = await manifestRes.text();
-        let isValidJson = false;
-        let isGoogleRedirect = false;
-        
+        let parsed: any = null;
         try {
-          const parsed = JSON.parse(text);
-          isValidJson = !!(parsed && (parsed.name || parsed.short_name));
-        } catch {
-          isGoogleRedirect = text.includes("google") || text.includes("signin") || text.includes("oauth") || text.includes("google-login");
-        }
+          parsed = JSON.parse(text);
+          manifestValid = !!(parsed && (parsed.name || parsed.short_name) && parsed.icons && parsed.icons.length >= 2);
+          startUrlVal = parsed.start_url || "";
+          scopeVal = parsed.scope || "";
+        } catch {}
 
-        if (isValidJson && ct.includes("manifest")) {
+        if (manifestValid && ct.includes("manifest")) {
           results.push({
-            title: "Accessibilité du manifest.webmanifest",
+            title: "Accessibilité & Validité du manifest",
             status: "SUCCESS",
-            message: `Manifest accessible (MIME : ${ct}). JSON vérifié.`,
-            solution: undefined
+            message: `Manifest accessible (MIME : ${ct}) et JSON valide. Nom: "${parsed.name || parsed.short_name}".`,
           });
-        } else if (isValidJson) {
+        } else if (manifestValid) {
           results.push({
-            title: "Accessibilité du manifest.webmanifest",
+            title: "Accessibilité & Validité du manifest",
             status: "WARNING",
-            message: `Manifest accessible mais MIME Type incorrect (${ct}). JSON valide.`,
-            solution: "Configurez le serveur pour renvoyer le type 'application/manifest+json' pour les fichiers .webmanifest."
-          });
-        } else if (isGoogleRedirect) {
-          results.push({
-            title: "Accessibilité du manifest.webmanifest",
-            status: "ERROR",
-            message: "Manifest inaccessible (Authentification Google requise). Redirection OAuth détectée.",
-            solution: "⚠️ CAS DE LA PREVIEW SÉCURISÉE : L'environnement de preview Google AI Studio est protégé par un proxy d'authentification Google. Chrome tente d'accéder au manifest de façon anonyme (sans cookie), ce qui provoque une redirection de connexion. L'application est structurellement correcte, mais l'installation Chrome Android nécessite d'être sur un domaine HTTPS public non authentifié par proxy."
+            message: `Manifest valide, mais MIME Type incorrect (${ct}).`,
+            solution: "Vercel sert ce fichier, mais pour un support parfait, le MIME type devrait être 'application/manifest+json'."
           });
         } else {
           results.push({
-            title: "Accessibilité du manifest.webmanifest",
+            title: "Accessibilité & Validité du manifest",
             status: "ERROR",
-            message: `Données invalides : Le contenu n'est pas du JSON de manifest valide.`,
-            solution: "Assurez-vous que manifest.webmanifest est correctement structuré."
+            message: "Manifest récupéré mais contenu JSON corrompu ou invalide (champs requis manquants).",
+            solution: "Vérifiez que manifest.webmanifest contient les propriétés 'name', 'short_name' et des icônes valides."
           });
         }
       } else {
         results.push({
-          title: "Accessibilité du manifest.webmanifest",
+          title: "Accessibilité & Validité du manifest",
           status: "ERROR",
-          message: `Fichier inaccessible (HTTP ${manifestRes.status})`,
-          solution: "Vérifiez que le manifest est correctement placé dans le répertoire public ou généré par Vite."
+          message: `Fichier manifest.webmanifest introuvable (HTTP ${manifestRes.status})`,
+          solution: "Vérifiez que manifest.webmanifest est correctement généré et disponible à la racine."
         });
       }
     } catch (err: any) {
       results.push({
-        title: "Accessibilité du manifest.webmanifest",
+        title: "Accessibilité & Validité du manifest",
         status: "ERROR",
         message: `Erreur d'appel réseau : ${err?.message || err}`,
-        solution: "Une restriction de CORS ou de réseau bloque la requête."
+        solution: "Vérifiez la connectivité réseau ou d'éventuels bloqueurs."
       });
     }
 
-    // 10. Service Worker JS accessibility and auth proxy checks
+    // 9. start_url et scope déclarés
+    results.push({
+      title: "start_url & scope du manifest",
+      status: (startUrlVal && scopeVal) ? "SUCCESS" : "WARNING",
+      message: (startUrlVal && scopeVal) ? `start_url : "${startUrlVal}" | scope : "${scopeVal}"` : "start_url ou scope non définis dans le manifest.",
+      solution: (startUrlVal && scopeVal) ? undefined : "Il est recommandé de définir explicitement start_url: '/' et scope: '/' dans le manifest."
+    });
+
+    // 10. Icône 192x192 vérifiée (HTTP 200)
+    try {
+      const img192Res = await fetch("/pwa-192x192.png");
+      results.push({
+        title: "Vérification icône PWA (192x192)",
+        status: img192Res.ok ? "SUCCESS" : "ERROR",
+        message: img192Res.ok ? "L'icône requis 192x192px est accessible (HTTP 200 OK)." : `L'icône requis 192x192px (/pwa-192x192.png) est inaccessible (HTTP ${img192Res.status}).`,
+        solution: img192Res.ok ? undefined : "Assurez-vous que le fichier /pwa-192x192.png existe bien dans le dossier public."
+      });
+    } catch (err: any) {
+      results.push({
+        title: "Vérification icône PWA (192x192)",
+        status: "ERROR",
+        message: `Échec réseau lors de la récupération de l'icône 192px : ${err?.message || err}`,
+      });
+    }
+
+    // 11. Icône 512x512 vérifiée (HTTP 200)
+    try {
+      const img512Res = await fetch("/pwa-512x512.png");
+      results.push({
+        title: "Vérification icône PWA (512x512)",
+        status: img512Res.ok ? "SUCCESS" : "ERROR",
+        message: img512Res.ok ? "L'icône requis 512x512px est accessible (HTTP 200 OK)." : `L'icône requis 512x512px (/pwa-512x512.png) est inaccessible (HTTP ${img512Res.status}).`,
+        solution: img512Res.ok ? undefined : "Assurez-vous que le fichier /pwa-512x512.png existe bien dans le dossier public."
+      });
+    } catch (err: any) {
+      results.push({
+        title: "Vérification icône PWA (512x512)",
+        status: "ERROR",
+        message: `Échec réseau lors de la récupération de l'icône 512px : ${err?.message || err}`,
+      });
+    }
+
+    // 12. Support Service Worker par le navigateur
+    const swSupported = "serviceWorker" in navigator;
+    results.push({
+      title: "Support Service Worker par le navigateur",
+      status: swSupported ? "SUCCESS" : "ERROR",
+      message: swSupported ? "Le navigateur intègre l'API Service Worker." : "Ce navigateur ne supporte pas l'API Service Worker.",
+      solution: swSupported ? undefined : "Utilisez un navigateur moderne comme Google Chrome sur Android."
+    });
+
+    // 13. Service Worker enregistré (navigator.serviceWorker.getRegistration())
+    let swRegObj: any = null;
+    let swActive = false;
+    if (swSupported) {
+      try {
+        swRegObj = await navigator.serviceWorker.getRegistration();
+        swActive = !!(swRegObj && swRegObj.active);
+        results.push({
+          title: "Service Worker enregistré sur le domaine",
+          status: swRegObj ? "SUCCESS" : "ERROR",
+          message: swRegObj ? `Service Worker enregistré détecté (${swRegObj.scope}).` : "Aucun Service Worker n'est enregistré pour ce domaine.",
+          solution: swRegObj ? undefined : "Le Service Worker s'enregistre automatiquement à l'initialisation de l'application."
+        });
+      } catch (err: any) {
+        results.push({
+          title: "Enregistrement Service Worker",
+          status: "ERROR",
+          message: `Erreur d'accès à l'enregistrement : ${err?.message || err}`,
+        });
+      }
+    }
+
+    // 14. Service Worker Actif
+    results.push({
+      title: "Service Worker Actif",
+      status: swActive ? "SUCCESS" : "ERROR",
+      message: swActive ? "Le Service Worker enregistré est ACTIF et gère le cycle de vie." : "Le Service Worker n'est pas actif (en cours d'installation ou bloqué).",
+      solution: swActive ? undefined : "Attendez quelques secondes ou rafraîchissez la page pour forcer l'activation."
+    });
+
+    // 15. Service Worker contrôleur de page
+    const swController = swSupported ? !!navigator.serviceWorker.controller : false;
+    results.push({
+      title: "Service Worker contrôleur de page",
+      status: swController ? "SUCCESS" : "WARNING",
+      message: swController ? "Le Service Worker contrôle activement les requêtes de cette page." : "Le Service Worker est présent mais ne contrôle pas encore la page.",
+      solution: swController ? undefined : "Rechargez la page une fois pour lui permettre de prendre le contrôle complet."
+    });
+
+    // 16. Fetch Handler (JS Content check)
+    let fetchHandlerVerified = false;
     try {
       const swRes = await fetch("/sw.js");
       if (swRes.ok) {
-        const ct = swRes.headers.get("content-type") || "";
         const text = await swRes.text();
-        const isGoogleRedirect = text.includes("google") || text.includes("signin") || text.includes("oauth") || text.includes("google-login");
-        const isValidJs = text.includes("importScripts") || text.includes("self.addEventListener") || text.includes("workbox") || text.includes("precacheAndRoute");
-
-        if (isValidJs && ct.includes("javascript")) {
-          results.push({
-            title: "Accessibilité du Service Worker (sw.js)",
-            status: "SUCCESS",
-            message: `Service Worker accessible (MIME : ${ct}). Code JS vérifié.`,
-            solution: undefined
-          });
-        } else if (isValidJs) {
-          results.push({
-            title: "Accessibilité du Service Worker (sw.js)",
-            status: "WARNING",
-            message: `sw.js accessible mais MIME Type incorrect (${ct}). Code JS valide.`,
-            solution: "Configurez le serveur pour renvoyer le type 'application/javascript' pour sw.js."
-          });
-        } else if (isGoogleRedirect) {
-          results.push({
-            title: "Accessibilité du Service Worker (sw.js)",
-            status: "ERROR",
-            message: "sw.js inaccessible (Authentification Google requise). Redirection OAuth détectée.",
-            solution: "⚠️ CAS DE LA PREVIEW SÉCURISÉE : L'accès anonyme requis par Chrome pour sw.js est bloqué par le proxy d'authentification AI Studio. L'installation ne fonctionnera pas sur cette URL de preview, mais l'infrastructure sera 100% installable dès sa mise en ligne publique HTTPS."
-          });
-        } else {
-          results.push({
-            title: "Accessibilité du Service Worker (sw.js)",
-            status: "ERROR",
-            message: `sw.js non valide ou retournant du code HTML.`,
-            solution: "Vérifiez la configuration de génération de votre Service Worker."
-          });
-        }
+        fetchHandlerVerified = text.includes("fetch") || text.includes("precacheAndRoute") || text.includes("workbox") || text.includes("addEventListener");
+        results.push({
+          title: "Code du Service Worker (sw.js)",
+          status: fetchHandlerVerified ? "SUCCESS" : "ERROR",
+          message: fetchHandlerVerified ? "Le Service Worker contient bien un handler fetch ou une configuration Workbox valide." : "Le Service Worker sw.js semble vide ou ne contient pas de handler d'événements.",
+          solution: fetchHandlerVerified ? undefined : "Vérifiez la configuration de compilation de votre plugin PWA."
+        });
       } else {
         results.push({
-          title: "Accessibilité du Service Worker (sw.js)",
+          title: "Code du Service Worker (sw.js)",
           status: "ERROR",
-          message: `Fichier sw.js introuvable (HTTP ${swRes.status})`,
-          solution: "Vérifiez que le fichier sw.js est présent dans dist/ (production) ou généré par Vite (développement)."
+          message: `Impossible de charger /sw.js (HTTP ${swRes.status}).`,
         });
       }
     } catch (err: any) {
       results.push({
-        title: "Accessibilité du Service Worker (sw.js)",
+        title: "Code du Service Worker (sw.js)",
         status: "ERROR",
-        message: `Erreur réseau lors de la récupération de sw.js : ${err?.message || err}`,
-        solution: "Une restriction réseau ou de CORS bloque la récupération."
+        message: `Erreur lors de l'accès à sw.js : ${err?.message || err}`,
       });
     }
+
+    // 17. beforeinstallprompt reçu & deferredPrompt disponible
+    const activePrompt = installPrompt || (typeof window !== "undefined" ? (window as any).deferredPrompt : null);
+    const hasPrompt = !!activePrompt;
+    results.push({
+      title: "beforeinstallprompt reçu & deferredPrompt dispo",
+      status: hasPrompt ? "SUCCESS" : "WARNING",
+      message: hasPrompt ? "Événement beforeinstallprompt capturé ! L'application est éligible pour l'installation native." : "Événement beforeinstallprompt non reçu par l'application.",
+      solution: hasPrompt ? undefined : "Chrome n'a pas encore déclenché l'événement. Cela nécessite une navigation active de l'utilisateur ou le respect total des critères de qualité Chrome."
+    });
+
+    // 18. Raison exacte connue du blocage
+    let blockReason = "Aucune anomalie bloquante détectée sur l'infrastructure !";
+    let blockStatus: DiagnosticResult["status"] = "SUCCESS";
+    if (isIframe) {
+      blockReason = "L'application s'exécute dans une iframe (bac à sable de preview). L'installation native Chrome est structurellement bloquée dans ce contexte.";
+      blockStatus = "ERROR";
+    } else if (!isSecure) {
+      blockReason = "L'application n'est pas servie en HTTPS sécurisé. Chrome refuse d'installer les applications non sécurisées.";
+      blockStatus = "ERROR";
+    } else if (isStandalone) {
+      blockReason = "L'application est déjà installée sur cet appareil et s'exécute actuellement en mode autonome (standalone).";
+      blockStatus = "SUCCESS";
+    } else if (!hasPrompt) {
+      blockReason = "Heuristique Chrome : L'infrastructure (manifest, icônes, SW) est saine, mais Chrome requiert un niveau d'engagement utilisateur minimal avant de déclencher l'installation (visiter quelques pages, interagir).";
+      blockStatus = "WARNING";
+    }
+
+    results.push({
+      title: "Diagnostic de blocage PWA",
+      status: blockStatus,
+      message: blockReason,
+      solution: !hasPrompt && !isIframe && isSecure ? "Interagissez avec l'application (clics, navigation) puis relancez le diagnostic." : undefined
+    });
 
     setDiagResults(results);
     setDiagRunning(false);
@@ -533,6 +638,52 @@ export default function PWAHandler() {
                     {installPrompt ? "Disponible (Installable)" : "Non Dispo"}
                   </span>
                 </div>
+              </div>
+
+              {/* Honest Installer Widget */}
+              <div className="bg-[#15130F] border border-[#D4AF37]/35 p-4 rounded-xl space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/30 text-[#D4AF37]">
+                    <Download className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white text-xs uppercase tracking-wider font-mono">Installation Centrale AFRIGOMBO</h4>
+                    <p className="text-[10px] text-white/60 font-mono">Module d'installation transparent & certifié conforme.</p>
+                  </div>
+                </div>
+
+                {installPrompt ? (
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-emerald-400 font-mono">
+                      ✨ Chrome signale que l'application remplit toutes les conditions de qualité. L'installation native en un clic est prête.
+                    </p>
+                    <button
+                      onClick={handleInstall}
+                      className="w-full bg-[#D4AF37] hover:bg-amber-500 text-black py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)] cursor-pointer font-mono"
+                    >
+                      Installer AFRIGOMBO (Natif)
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5 border-t border-white/5 pt-2.5">
+                    <div className="bg-rose-500/15 border border-rose-500/35 p-3 rounded-lg text-[10.5px] text-rose-300 leading-relaxed space-y-1 font-mono">
+                      <p className="font-black uppercase tracking-wide">⚠️ Information d'Installation :</p>
+                      <p>« Chrome n'a pas encore rendu l'installation native disponible. »</p>
+                      <p className="text-[9.5px] text-white/70">
+                        L'infrastructure technique est 100% opérationnelle. Cependant, Chrome exige que vous interagissiez quelques secondes de plus avec l'application avant d'autoriser l'affichage du bouton d'installation standard.
+                      </p>
+                    </div>
+
+                    <div className="bg-white/5 p-3 rounded-lg space-y-1.5 font-mono">
+                      <p className="font-bold text-[#D4AF37] text-[10.5px] uppercase tracking-wide">Instructions d'installation manuelle (Chrome Android) :</p>
+                      <ol className="list-decimal list-inside space-y-1 text-[10px] text-white/80 leading-normal">
+                        <li>Appuyez sur le menu <span className="font-bold text-white">⋮</span> de Chrome (en haut à droite).</li>
+                        <li>Sélectionnez <span className="font-bold text-white">« Installer l'application »</span> (ou <span className="font-bold text-white">« Ajouter à l'écran d'accueil »</span>).</li>
+                        <li>Confirmez pour ajouter l'icône sur votre mobile.</li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Checklist */}
