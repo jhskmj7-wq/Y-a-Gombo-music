@@ -7,6 +7,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
   return lazy(async () => {
     try {
       const component = await componentImport();
+      window.sessionStorage.removeItem("afrigombo_chunk_retry"); // Success: Reset the retry flag for future imports
       window.sessionStorage.setItem("last_chunk_reload_success", "true");
       return component;
     } catch (error: any) {
