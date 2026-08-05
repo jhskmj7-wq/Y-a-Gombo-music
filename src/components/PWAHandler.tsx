@@ -57,12 +57,18 @@ export default function PWAHandler() {
   }, [needRefresh]);
 
   const handleRefresh = async () => {
-    console.log("🚀 [AFRIGOMBO ELITE PWA] User clicked Actualiser. Updating Service Worker...");
+    console.log("🚀 [AFRIGOMBO PWA] User clicked Actualiser. Updating Service Worker...");
     try {
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration && registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+      }
       await updateServiceWorker(true);
+      window.location.reload();
     } catch (err) {
       console.error("Failed to update Service Worker:", err);
-      // Fallback: simple reload if SW update fails
       window.location.reload();
     }
   };
@@ -129,7 +135,7 @@ export default function PWAHandler() {
                 <RefreshCw className="w-4 h-4 text-[#D4AF37] animate-spin" />
               </div>
               <p className="text-xs sm:text-sm font-medium text-afri-text leading-snug">
-                Une nouvelle version d'AFRIGOMBO ELITE est disponible.
+                Une nouvelle version d'AFRIGOMBO est disponible.
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end pt-1 sm:pt-0 border-t sm:border-t-0 border-white/5">
@@ -185,7 +191,7 @@ export default function PWAHandler() {
                 <Download className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-black text-afri-text uppercase tracking-tight">Installer AFRIGOMBO ELITE</p>
+                <p className="text-sm font-black text-afri-text uppercase tracking-tight">Installer AFRIGOMBO</p>
                 <p className="text-[10px] text-afri-text-sec font-medium">Accès rapide & expérience plein écran.</p>
               </div>
             </div>

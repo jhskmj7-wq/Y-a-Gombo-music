@@ -850,7 +850,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 {logoUrl ? (
                   <img 
                     src={logoUrl} 
-                    alt="AFRIGOMBO ELITE LOGO" 
+                    alt="AFRIGOMBO LOGO" 
                     className="w-8 h-8 xs:w-10 xs:h-10 sm:w-16 sm:h-16 object-contain rounded-2xl shrink-0"
                   />
                 ) : (
@@ -861,7 +861,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       style={{ 
                         textShadow: "1px 1px 0px #B48F17"
                       }}>
-                    AFRIGOMBO ELITE
+                    AFRIGOMBO
                   </h1>
                   <span className="hidden xs:block text-[9.5px] sm:text-[13px] text-afri-text font-black tracking-wide mt-1 sm:mt-1.5 font-sans antialiased whitespace-nowrap">
                     Le Temple du Gombo Musical

@@ -37,18 +37,20 @@ export default defineConfig({
         'sounds/*.mp3'
       ],
       manifest: {
-        name: 'AFRIGOMBO ELITE',
+        id: '/',
+        name: 'AFRIGOMBO',
         short_name: 'AFRIGOMBO',
-        description: "AFRIGOMBO ELITE - Y'A GOMBO MUSIC. Le Temple du Gombo : Vos opportunités musicales certifiées, vos cachets sécurisés.",
+        description: "AFRIGOMBO - Y'A GOMBO MUSIC. Le Temple du Gombo : Vos opportunités musicales certifiées, vos cachets sécurisés.",
         theme_color: '#050505',
         background_color: '#050505',
         display: 'standalone',
-        display_override: ['standalone', 'fullscreen'],
+        display_override: ['standalone', 'fullscreen', 'minimal-ui'],
         scope: '/',
         start_url: '/',
         orientation: 'portrait',
         lang: 'fr',
         dir: 'ltr',
+        prefer_related_applications: false,
         icons: [
           {
             src: 'favicon-16x16.png',
@@ -102,6 +104,12 @@ export default defineConfig({
             purpose: 'any'
           },
           {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
             src: 'logo-256.png',
             sizes: '256x256',
             type: 'image/png'
@@ -118,6 +126,12 @@ export default defineConfig({
             purpose: 'any'
           },
           {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
             src: 'maskable-icon.png',
             sizes: '512x512',
             type: 'image/png',
@@ -127,7 +141,7 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3,json}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: false, // Required for 'prompt' type to work correctly with updateServiceWorker

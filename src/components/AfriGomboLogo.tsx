@@ -42,22 +42,23 @@ export const AfriGomboLogo: React.FC<{ className?: string }> = ({ className = ""
         />
 
         {/* IMPERIAL CROWN AT THE TOP */}
-        <motion.g
-          initial={{ y: -5, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 1, duration: 0.5, type: "spring" }}
-          transform="translate(50, 14) scale(0.18)"
-        >
-          <path d="M-60 10 H60 L75 -25 L35 -5 L0 -45 L-35 -5 L-75 -25 Z" 
-                fill="url(#goldGradientMaster)" 
-                stroke="#D4AF37" 
-                strokeWidth="2" />
-          
-          {/* Jewels */}
-          <circle cx="0" cy="-45" r="8" fill="#FFFFFF" />
-          <circle cx="-75" cy="-25" r="6" fill="#FFFFFF" />
-          <circle cx="75" cy="-25" r="6" fill="#FFFFFF" />
-        </motion.g>
+        <g transform="translate(50, 9) scale(0.18)">
+          <motion.g
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1, duration: 0.5 }}
+          >
+            <path d="M-60 10 H60 L75 -25 L35 -5 L0 -45 L-35 -5 L-75 -25 Z" 
+                  fill="url(#goldGradientMaster)" 
+                  stroke="#D4AF37" 
+                  strokeWidth="2" />
+            
+            {/* Jewels */}
+            <circle cx="0" cy="-45" r="8" fill="#FFFFFF" />
+            <circle cx="-75" cy="-25" r="6" fill="#FFFFFF" />
+            <circle cx="75" cy="-25" r="6" fill="#FFFFFF" />
+          </motion.g>
+        </g>
 
         {/* STYLIZED MUSICAL NOTES */}
         <motion.g
