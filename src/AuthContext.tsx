@@ -215,13 +215,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error("Error fetching/creating user profile in auth state change:", error);
         }
       } else {
-        // If we have a cached user session and this is a transient background/network null,
-        // preserve the session unless explicit logout was triggered.
-        const hasStored = localStorage.getItem("afrigombo_user_session");
-        if (!hasStored) {
-          setCurrentUser(null);
-          setProfile(null);
-        }
+        // Truly logged out or session expired
+        setCurrentUser(null);
+        setProfile(null);
+        try {
+          localStorage.removeItem("afrigombo_user_session");
+        } catch (e) {}
       }
 
       setAuthLoading(false);

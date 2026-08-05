@@ -35,7 +35,7 @@ import { AndroidPageLayout } from "./layout/AndroidPageLayout";
 import { AndroidCard } from "./layout/AndroidCard";
 import { AndroidBottomSheet } from "./common/AndroidBottomSheet";
 import { db, gomboDB } from "../firebase";
-import { collection, query, where, getDocs, addDoc, onSnapshot, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, onSnapshot, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
 import { supportConfig } from "../supportConfig";
 import { recordWalletTransaction } from "../lib/financial";
@@ -333,17 +333,12 @@ export default function AfrigomboWalletDashboard({
       
       if (walletNeedsSync) {
         const userRef = doc(db, "users", uid);
-        await setDoc(userRef, {
-          wallet: {
-            soldeDisponible: wallet.soldeDisponible,
-            soldeBloque: calculatedBloque,
-            depots: calculatedDepots,
-            retraits: calculatedRetraits,
-            revenus: calculatedRevenus,
-            economiesPremium: wallet.economiesPremium || 0,
-            niveauWallet: wallet.niveauWallet || "Standard"
-          }
-        }, { merge: true });
+        await updateDoc(userRef, {
+          "wallet.soldeBloque": calculatedBloque,
+          "wallet.depots": calculatedDepots,
+          "wallet.retraits": calculatedRetraits,
+          "wallet.revenus": calculatedRevenus
+        });
       }
     };
 
