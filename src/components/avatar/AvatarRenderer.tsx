@@ -78,22 +78,22 @@ const AvatarRenderer = memo(({ config, size = 120, className = "", storeItems = 
 
     const result: { zIndex: number, element: React.ReactNode }[] = [];
 
-    // ELITE BASE SHAPES (Semi-Realistic)
+    // ELITE BASE SHAPES (Semi-Realistic Human)
     if (!hasBody) {
       result.push({
         zIndex: Z_INDEX_MAP['corps'],
         element: (
           <g key="base-body">
-            {/* Shadow under the head */}
-            <ellipse cx="100" cy="142" rx="30" ry="8" fill="black" opacity="0.1" />
-            {/* Torso & Shoulders */}
-            <path d="M30 215 C 30 160, 55 130, 100 130 C 145 130, 170 160, 170 215 L 170 230 L 30 230 Z" fill={skinColor} />
-            {/* Neck (refined connection) */}
-            <path d="M 88 130 L 112 130 L 110 110 L 90 110 Z" fill={skinColor} />
-            <path d="M84 130 Q100 138 116 130" stroke="black" strokeWidth="1.2" opacity="0.15" fill="none" />
-            {/* Clavicles */}
-            <path d="M55 145 Q80 148 95 142" stroke="black" strokeWidth="0.8" opacity="0.1" fill="none" />
-            <path d="M145 145 Q120 148 105 142" stroke="black" strokeWidth="0.8" opacity="0.1" fill="none" />
+            {/* Soft Shadow under chin */}
+            <ellipse cx="100" cy="140" rx="28" ry="7" fill="black" opacity="0.12" />
+            {/* Torso & Shoulders: Anatomical curve */}
+            <path d="M 28 220 C 32 155, 58 132, 100 132 C 142 132, 168 155, 172 220 Z" fill={skinColor} />
+            {/* Neck definition */}
+            <path d="M 86 108 L 114 108 L 112 136 Q 100 142 88 136 Z" fill={skinColor} />
+            <path d="M 86 112 Q 100 120 114 112" stroke="#000000" strokeWidth="1.2" opacity="0.18" fill="none" />
+            {/* Clavicles / Chest contour */}
+            <path d="M 52 148 Q 78 152 96 145" stroke="#000000" strokeWidth="0.8" opacity="0.12" fill="none" />
+            <path d="M 148 148 Q 122 152 104 145" stroke="#000000" strokeWidth="0.8" opacity="0.12" fill="none" />
           </g>
         )
       });
@@ -104,13 +104,26 @@ const AvatarRenderer = memo(({ config, size = 120, className = "", storeItems = 
         zIndex: Z_INDEX_MAP['tete'],
         element: (
           <g key="base-head">
-            {/* Detailed Ears (smaller) */}
-            <path d="M60 90 Q56 85 60 78 Q64 73 70 78 L70 98 Q64 103 60 90" fill={skinColor} />
-            <path d="M140 90 Q144 85 140 78 Q136 73 130 78 L130 98 Q136 103 140 90" fill={skinColor} />
-            {/* Refined Face Shape (smaller, more oval) */}
-            <path d="M75 70 C 75 30, 125 30, 125 70 C 125 115, 110 135, 100 140 C 90 135, 75 115, 75 70 Z" fill={skinColor} />
-            {/* Jaw definition */}
-            <path d="M66 85 Q66 125 100 150 Q134 125 134 85" fill="none" stroke="black" strokeWidth="0.8" opacity="0.1" />
+            {/* Left Ear */}
+            <path d="M 58 92 Q 53 85 57 78 Q 62 72 68 76 L 68 100 Q 61 105 58 92 Z" fill={skinColor} />
+            <path d="M 61 82 Q 59 86 61 90" stroke="#000000" strokeWidth="0.6" opacity="0.15" fill="none" />
+            {/* Right Ear */}
+            <path d="M 142 92 Q 147 85 143 78 Q 138 72 132 76 L 132 100 Q 139 105 142 92 Z" fill={skinColor} />
+            <path d="M 139 82 Q 141 86 139 90" stroke="#000000" strokeWidth="0.6" opacity="0.15" fill="none" />
+
+            {/* Refined Face Shape */}
+            <path d="M 68 76 C 68 32, 132 32, 132 76 C 132 120, 114 142, 100 146 C 86 142, 68 120, 68 76 Z" fill={skinColor} />
+            
+            {/* Jawline shadow */}
+            <path d="M 68 82 Q 68 120 100 146 Q 132 120 132 82" fill="none" stroke="#000000" strokeWidth="0.8" opacity="0.1" />
+            
+            {/* Eyebrows */}
+            <path d="M 75 73 Q 84 68 93 72" stroke="#1A1A1A" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+            <path d="M 107 72 Q 116 68 125 73" stroke="#1A1A1A" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+
+            {/* Nose contour */}
+            <path d="M 98 83 L 96 98 Q 100 102 104 98 L 102 83" fill="none" stroke="#221208" strokeWidth="0.8" opacity="0.25" />
+            <path d="M 94 98 Q 100 103 106 98" stroke="#1A1A1A" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.3" />
           </g>
         )
       });
@@ -121,9 +134,20 @@ const AvatarRenderer = memo(({ config, size = 120, className = "", storeItems = 
       result.push({
         zIndex: Z_INDEX_MAP['yeux'],
         element: (
-          <g key="base-eyes" opacity="0.8">
-            <circle cx="85" cy="80" r="4.5" fill="#111" />
-            <circle cx="115" cy="80" r="4.5" fill="#111" />
+          <g key="base-eyes">
+            {/* Left Eye */}
+            <path d="M 77 82 Q 85 75 93 82 Q 85 88 77 82 Z" fill="#FFFFFF" opacity="0.95" />
+            <circle cx="85" cy="81.5" r="4" fill="#3D2314" />
+            <circle cx="85" cy="81.5" r="2" fill="#111111" />
+            <circle cx="83.5" cy="80" r="1.2" fill="#FFFFFF" />
+            <path d="M 76 81 Q 85 74 94 81" stroke="#111111" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+            
+            {/* Right Eye */}
+            <path d="M 107 82 Q 115 75 123 82 Q 115 88 107 82 Z" fill="#FFFFFF" opacity="0.95" />
+            <circle cx="115" cy="81.5" r="4" fill="#3D2314" />
+            <circle cx="115" cy="81.5" r="2" fill="#111111" />
+            <circle cx="113.5" cy="80" r="1.2" fill="#FFFFFF" />
+            <path d="M 106 81 Q 115 74 124 81" stroke="#111111" strokeWidth="1.8" fill="none" strokeLinecap="round" />
           </g>
         )
       });
@@ -132,7 +156,13 @@ const AvatarRenderer = memo(({ config, size = 120, className = "", storeItems = 
     if (!hasMouth) {
       result.push({
         zIndex: Z_INDEX_MAP['bouche'],
-        element: <path key="base-mouth" d="M85 115 Q100 122 115 115" stroke="#4A3018" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.6" />
+        element: (
+          <g key="base-mouth">
+            <path d="M 87 114 Q 93 111 100 113 Q 107 111 113 114" stroke="#4A3018" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.7" />
+            <path d="M 85 115 Q 100 120 115 115" stroke="#3D2314" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+            <path d="M 90 121 Q 100 125 110 121" stroke="#2A1508" strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.2" />
+          </g>
+        )
       });
     }
 

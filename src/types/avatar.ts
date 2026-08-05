@@ -231,6 +231,7 @@ export interface UserAvatarData {
   inventory: string[]; // IDs of purchased AvatarItems
   lastUpdated?: string;
   updatedAt?: string;
+  avatarDataUri?: string;
 }
 
 export interface UserInventoryData {

@@ -24,26 +24,19 @@ export const AvatarRenderer = {
     }
 
     // 2. ELITE BASE CHARACTER (Semi-Realistic)
-    // The core anatomical structure that gives the premium feel
     if (!equippedV2['corps']) {
       layers.push(`
         <g id="elite_character_base">
-          <!-- Shadow under the head -->
-          <ellipse cx="100" cy="142" rx="30" ry="8" fill="black" opacity="0.1" />
-          
-          <!-- Torso & Shoulders: Anatomically curved for clothes to sit naturally -->
-          <path d="M30 215 C 30 160, 55 130, 100 130 C 145 130, 170 160, 170 215 L 170 230 L 30 230 Z" fill="${skinColor}" />
-          
-          <!-- Neck: Defined with subtle shadow -->
-          <path d="M84 130 L116 130 L114 105 L86 105 Z" fill="${skinColor}" />
-          <path d="M84 130 Q100 138 116 130" stroke="black" stroke-width="1.2" opacity="0.15" fill="none" />
-          
-          <!-- Clavicles & Traps definition -->
-          <path d="M55 145 Q80 148 95 142" stroke="black" stroke-width="0.8" opacity="0.1" fill="none" />
-          <path d="M145 145 Q120 148 105 142" stroke="black" stroke-width="0.8" opacity="0.1" fill="none" />
-          
-          <!-- Pectoral area shadow -->
-          <path d="M70 180 Q100 190 130 180" stroke="black" stroke-width="0.5" opacity="0.05" fill="none" />
+          <!-- Shadow under chin -->
+          <ellipse cx="100" cy="140" rx="28" ry="7" fill="black" opacity="0.12" />
+          <!-- Torso & Shoulders -->
+          <path d="M 28 220 C 32 155, 58 132, 100 132 C 142 132, 168 155, 172 220 Z" fill="${skinColor}" />
+          <!-- Neck -->
+          <path d="M 86 108 L 114 108 L 112 136 Q 100 142 88 136 Z" fill="${skinColor}" />
+          <path d="M 86 112 Q 100 120 114 112" stroke="black" stroke-width="1.2" opacity="0.18" fill="none" />
+          <!-- Clavicles -->
+          <path d="M 52 148 Q 78 152 96 145" stroke="black" stroke-width="0.8" opacity="0.12" fill="none" />
+          <path d="M 148 148 Q 122 152 104 145" stroke="black" stroke-width="0.8" opacity="0.12" fill="none" />
         </g>
       `);
     }
@@ -51,19 +44,54 @@ export const AvatarRenderer = {
     if (!equippedV2['tete']) {
       layers.push(`
         <g id="elite_head_base">
-          <!-- Ears: More detailed realistic ears -->
-          <path d="M54 95 Q50 88 54 81 Q58 73 66 78 L66 103 Q58 108 54 95" fill="${skinColor}" />
-          <path d="M146 95 Q150 88 146 81 Q142 73 134 78 L134 103 Q142 108 146 95" fill="${skinColor}" />
-          <!-- Inner ear detail -->
-          <path d="M58 85 Q56 88 58 92" stroke="black" stroke-width="0.5" opacity="0.1" fill="none" />
-          <path d="M142 85 Q144 88 142 92" stroke="black" stroke-width="0.5" opacity="0.1" fill="none" />
+          <!-- Left Ear -->
+          <path d="M 58 92 Q 53 85 57 78 Q 62 72 68 76 L 68 100 Q 61 105 58 92 Z" fill="${skinColor}" />
+          <path d="M 61 82 Q 59 86 61 90" stroke="black" stroke-width="0.6" opacity="0.15" fill="none" />
+          <!-- Right Ear -->
+          <path d="M 142 92 Q 147 85 143 78 Q 138 72 132 76 L 132 100 Q 139 105 142 92 Z" fill="${skinColor}" />
+          <path d="M 139 82 Q 141 86 139 90" stroke="black" stroke-width="0.6" opacity="0.15" fill="none" />
 
-          <!-- Face Shape: Refined oval with defined jaw and chin -->
-          <path d="M66 80 C 66 30, 134 30, 134 80 C 134 125, 115 145, 100 150 C 85 145, 66 125, 66 80 Z" fill="${skinColor}" />
+          <!-- Refined Face Shape -->
+          <path d="M 68 76 C 68 32, 132 32, 132 76 C 132 120, 114 142, 100 146 C 86 142, 68 120, 68 76 Z" fill="${skinColor}" />
+          <path d="M 68 82 Q 68 120 100 146 Q 132 120 132 82" fill="none" stroke="black" stroke-width="0.8" opacity="0.1" />
+
+          <!-- Eyebrows -->
+          <path d="M 75 73 Q 84 68 93 72" stroke="#1A1A1A" stroke-width="2.2" stroke-linecap="round" fill="none" />
+          <path d="M 107 72 Q 116 68 125 73" stroke="#1A1A1A" stroke-width="2.2" stroke-linecap="round" fill="none" />
+
+          <!-- Nose contour -->
+          <path d="M 98 83 L 96 98 Q 100 102 104 98 L 102 83" fill="none" stroke="#221208" stroke-width="0.8" opacity="0.25" />
+          <path d="M 94 98 Q 100 103 106 98" stroke="#1A1A1A" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.3" />
+        </g>
+      `);
+    }
+
+    if (!equippedV2['yeux']) {
+      layers.push(`
+        <g id="elite_eyes_base">
+          <!-- Left Eye -->
+          <path d="M 77 82 Q 85 75 93 82 Q 85 88 77 82 Z" fill="#FFFFFF" opacity="0.95" />
+          <circle cx="85" cy="81.5" r="4" fill="#3D2314" />
+          <circle cx="85" cy="81.5" r="2" fill="#111111" />
+          <circle cx="83.5" cy="80" r="1.2" fill="#FFFFFF" />
+          <path d="M 76 81 Q 85 74 94 81" stroke="#111111" stroke-width="1.8" fill="none" stroke-linecap="round" />
           
-          <!-- Jawline & Chin definition -->
-          <path d="M66 85 Q66 125 100 150 Q134 125 134 85" fill="none" stroke="black" stroke-width="0.8" opacity="0.1" />
-          <path d="M92 145 Q100 148 108 145" fill="none" stroke="black" stroke-width="0.5" opacity="0.1" />
+          <!-- Right Eye -->
+          <path d="M 107 82 Q 115 75 123 82 Q 115 88 107 82 Z" fill="#FFFFFF" opacity="0.95" />
+          <circle cx="115" cy="81.5" r="4" fill="#3D2314" />
+          <circle cx="115" cy="81.5" r="2" fill="#111111" />
+          <circle cx="113.5" cy="80" r="1.2" fill="#FFFFFF" />
+          <path d="M 106 81 Q 115 74 124 81" stroke="#111111" stroke-width="1.8" fill="none" stroke-linecap="round" />
+        </g>
+      `);
+    }
+
+    if (!equippedV2['bouche']) {
+      layers.push(`
+        <g id="elite_mouth_base">
+          <path d="M 87 114 Q 93 111 100 113 Q 107 111 113 114" stroke="#4A3018" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.7" />
+          <path d="M 85 115 Q 100 120 115 115" stroke="#3D2314" stroke-width="2.2" fill="none" stroke-linecap="round" />
+          <path d="M 90 121 Q 100 125 110 121" stroke="#2A1508" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.2" />
         </g>
       `);
     }

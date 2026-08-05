@@ -12,7 +12,13 @@ export const getCircularReplacer = () => {
     }
 
     if (typeof value === "object" && value !== null) {
-      // 1. Filter out DOM Nodes, Window, Event, HTMLMediaElement/Audio/Image, AudioContext
+      // 1. Cycle detection first to prevent infinite recursion
+      if (seen.has(value)) {
+        return "[Circular]";
+      }
+      seen.add(value);
+
+      // 2. Filter out DOM Nodes, Window, Event, HTMLMediaElement/Audio/Image, AudioContext, React elements
       if (
         (typeof window !== "undefined" && (value === window || value === document)) ||
         (typeof Node !== "undefined" && value instanceof Node) ||
@@ -23,29 +29,28 @@ export const getCircularReplacer = () => {
         value.nodeType !== undefined ||
         value.$$typeof !== undefined || // React Element
         value._reactInternals !== undefined || // React Fiber
-        value._reactFiber !== undefined
+        value._reactFiber !== undefined ||
+        value.src !== undefined && (value instanceof HTMLMediaElement || typeof value.play === "function")
       ) {
         return undefined;
       }
 
-      // 2. Filter out Firestore / Firebase internal instances with circular references
+      // 3. Filter out Firestore / Firebase internal instances with circular references
       if (
         value._firestore !== undefined ||
         value._db !== undefined ||
+        value._delegate !== undefined ||
         (value.constructor && (
           value.constructor.name === "Firestore" ||
           value.constructor.name === "DocumentReference" ||
-          value.constructor.name === "QuerySnapshot"
+          value.constructor.name === "QuerySnapshot" ||
+          value.constructor.name === "ResourcePath" ||
+          value.constructor.name === "FieldPath"
         ))
       ) {
-        return value.id || value.path || "[FirebaseRef]";
+        const idStr = typeof value.id === "string" ? value.id : (typeof value.path === "string" ? value.path : null);
+        return idStr || "[FirebaseRef]";
       }
-
-      // 3. Cycle detection
-      if (seen.has(value)) {
-        return "[Circular]";
-      }
-      seen.add(value);
     }
 
     return value;

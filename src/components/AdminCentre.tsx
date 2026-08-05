@@ -5894,14 +5894,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   };
                   let jsonString = "{}";
                   try {
-                    const seen = new WeakSet();
-                    jsonString = JSON.stringify(backupData, (key, value) => {
-                      if (typeof value === "object" && value !== null) {
-                        if (seen.has(value)) return;
-                        seen.add(value);
-                      }
-                      return value;
-                    }, 2);
+                    jsonString = safeStringify(backupData, 2);
                   } catch (e) {
                     console.error("Backup serialization error:", e);
                   }
