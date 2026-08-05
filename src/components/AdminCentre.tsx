@@ -6648,12 +6648,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {activeMenu === "user_settings" && (() => {
                 return (
-                  <SettingsModal 
-                    isOpen={true} 
-                    onClose={() => goBackMenu()}
-                    onNavigateToFounder={() => setActiveMenu("super_admin")}
-                    onSupportClick={() => setIsSupportModalOpen(true)}
-                  />
+                  <ErrorBoundary moduleName="Paramètres">
+                    <SettingsModal 
+                      isOpen={true} 
+                      onClose={() => goBackMenu()}
+                      onNavigateToFounder={() => setActiveMenu("super_admin")}
+                      onSupportClick={() => setIsSupportModalOpen(true)}
+                    />
+                  </ErrorBoundary>
                 );
               })()}
 
