@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ShieldCheck, Terminal, Database, RefreshCw, Cpu, Activity, Play, AlertTriangle, ShieldAlert, Lock, Search } from "lucide-react";
 import { gomboDB } from "../../firebase";
+import { safeStringify } from "../../lib/jsonUtils";
 
 interface AdminSecurityProps {
   adminLogs: string[];
@@ -100,16 +101,9 @@ export default function AdminSecurity({
               <button 
                 onClick={() => {
                   try {
-                    const seen = new WeakSet();
-                    const jsonString = JSON.stringify({
+                    const jsonString = safeStringify({
                       activities, alerts, suspensions, exportDate: new Date().toISOString()
-                    }, (key, value) => {
-                      if (typeof value === "object" && value !== null) {
-                        if (seen.has(value)) return;
-                        seen.add(value);
-                      }
-                      return value;
-                    });
+                    }, 2);
                     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonString);
                     const dlAnchorElem = document.createElement('a');
                     dlAnchorElem.setAttribute("href", dataStr);

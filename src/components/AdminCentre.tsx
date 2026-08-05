@@ -22,7 +22,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
-import { safeStringify, getCircularReplacer } from "../lib/jsonUtils";
+import { safeStringify, getCircularReplacer, safeJsonClone } from "../lib/jsonUtils";
 import { useNavigate } from "react-router-dom";
 import { lazyWithRetry } from "../lib/lazyWithRetry";
 import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
@@ -1687,18 +1687,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     }, 2500);
   };
 
-  // Helper to sanitize data
-  const getCircularReplacer = () => {
-    const seen = new WeakSet();
-    return (key: string, value: any) => {
-      if (typeof value === "object" && value !== null) {
-        if (seen.has(value)) return;
-        seen.add(value);
-      }
-      return value;
-    };
-  };
-
   const saveToFirestore = async (collectionName: string, docId: string, data: any) => {
     try {
       setAutoSaveActive(true);
@@ -1707,7 +1695,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       // Deep clone and clean up data to avoid cyclic object or custom class errors
       let safeData = data;
       try {
-        safeData = JSON.parse(JSON.stringify(data, getCircularReplacer()));
+        safeData = safeJsonClone(data);
       } catch (err) {
         console.error("Error sanitizing data for Firestore:", err);
       }
