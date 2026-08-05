@@ -584,7 +584,7 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
                   {recentCommissions.map(comm => (
                     <div key={comm.id} className="py-3 flex justify-between items-center gap-4">
                       <div className="space-y-0.5">
-                        <p className="text-xs font-bold text-afri-text uppercase">Contrat {comm.contractId || "AG-XXXX"}</p>
+                        <p className="text-xs font-bold text-afri-text uppercase">Contrat {comm.contractId || "GMB-001-001"}</p>
                         <p className="text-[8.5px] font-mono text-afri-text-sec">
                           Encaissé le {comm.createdAt ? new Date(comm.createdAt).toLocaleString("fr-FR") : "Date inconnue"}
                         </p>

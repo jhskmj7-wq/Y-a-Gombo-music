@@ -18,6 +18,7 @@ import TendancesSection from "./TendancesSection";
 import FilDecouvertesSection from "./FilDecouvertesSection";
 import { useAuth } from "../AuthContext";
 import { db } from "../lib/firebase";
+import { formatGomboIdDisplay, getEffectiveGomboId } from "../lib/gomboIdHelper";
 import { gomboDB } from "../firebase";
 import { collection, onSnapshot, addDoc, doc, updateDoc, increment } from "firebase/firestore";
 import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
@@ -1225,6 +1226,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 onClick={() => {
                   const matchedUser = users.find(u => 
                     u.gomboIdNumber === globalSearchTerm || 
+                    formatGomboIdDisplay(u.gomboIdNumber) === globalSearchTerm.toUpperCase() ||
+                    getEffectiveGomboId(u) === globalSearchTerm.toUpperCase() ||
                     u.gomboId?.id === globalSearchTerm || 
                     (u.artisticName && u.artisticName.toLowerCase().includes(globalSearchTerm.toLowerCase()))
                   );
@@ -1827,16 +1830,18 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Ex: AG-849201"
+                      placeholder="Ex: GMB-125-487"
                       value={verifyGomboIdInput}
                       onChange={(e) => setVerifyGomboIdInput(e.target.value)}
                       className="flex-1 bg-afri-bg border border-afri-border text-xs text-[#D4AF37] p-2.5 rounded-xl font-mono focus:outline-none"
                     />
                     <button
                       onClick={() => {
-                        const searchVal = verifyGomboIdInput.trim();
+                        const searchVal = verifyGomboIdInput.trim().toUpperCase();
                         const verifiedUser = users.find(u => u.kycStatus === "approved" && (
                           u.gomboIdNumber === searchVal || 
+                          formatGomboIdDisplay(u.gomboIdNumber) === searchVal ||
+                          getEffectiveGomboId(u) === searchVal ||
                           u.gomboId?.id === searchVal ||
                           (typeof u.gomboId === "string" && u.gomboId === searchVal)
                         ));

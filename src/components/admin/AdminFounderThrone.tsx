@@ -23,6 +23,7 @@ import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";
 import { useMaintenance } from "../../hooks/useMaintenance";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
 import { db } from "../../lib/firebase";
+import { generateGomboId, formatGomboIdDisplay } from "../../lib/gomboIdHelper";
 import { useAuth } from "../../AuthContext";
 import { 
   collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, getDocs, getDoc 
@@ -637,7 +638,7 @@ export default function AdminFounderThrone({
           const userSnap = await getDoc(doc(db, "users", reqItem.userId));
           const userData = userSnap.data() || {};
           const existingGomboId = userData.gomboIdNumber || (typeof userData.gomboId === "string" ? userData.gomboId : userData.gomboId?.id);
-          const gomboIdNumber = existingGomboId || `AG-${Math.floor(1000000 + Math.random() * 9000000)}`;
+          const gomboIdNumber = existingGomboId ? formatGomboIdDisplay(existingGomboId) : generateGomboId();
           const gomboIdObj = {
             id: gomboIdNumber,
             scoreConfiance: 95,
@@ -968,7 +969,7 @@ export default function AdminFounderThrone({
       const currentCert = Boolean(u.isCertified || u.gomboId?.certifie);
       const nextCert = !currentCert;
       const existingId = u.gomboIdNumber || (typeof u.gomboId === "string" ? u.gomboId : u.gomboId?.id);
-      const gomboIdNumber = existingId || `AG-${Math.floor(1000000 + Math.random() * 9000000)}`;
+      const gomboIdNumber = existingId ? formatGomboIdDisplay(existingId) : generateGomboId();
       await updateDoc(doc(db, "users", u.id || u.uid), {
         isCertified: nextCert,
         kycStatus: nextCert ? "approved" : "rejected",
@@ -1258,7 +1259,7 @@ export default function AdminFounderThrone({
       const userSnap = await getDoc(doc(db, "users", userId));
       const userData = userSnap.data() || {};
       const existingGomboId = userData.gomboIdNumber || (typeof userData.gomboId === "string" ? userData.gomboId : userData.gomboId?.id);
-      const gomboIdNumber = existingGomboId || `AG-${Math.floor(1000000 + Math.random() * 9000000)}`;
+      const gomboIdNumber = existingGomboId ? formatGomboIdDisplay(existingGomboId) : generateGomboId();
       await updateDoc(doc(db, "users", userId), {
         kycStatus: "approved",
         isCertified: true,

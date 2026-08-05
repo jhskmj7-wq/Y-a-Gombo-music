@@ -13,6 +13,7 @@ import {
   Crown 
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { generateGomboId, formatGomboIdDisplay } from '../../lib/gomboIdHelper';
 
 function AnimatedCounter({ value, duration = 1200 }: { value: number; duration?: number }) {
   const [count, setCount] = useState(0);
@@ -101,8 +102,7 @@ export default function AdminDashboard({
   const handleQuickApproveKyc = async (userId: string) => {
     const targetUser = users.find(u => u.id === userId);
     const existingId = targetUser?.gomboIdNumber || (typeof targetUser?.gomboId === "string" ? targetUser?.gomboId : targetUser?.gomboId?.id);
-    const num = Math.floor(1000000 + Math.random() * 9000000);
-    const gomboIdNumber = existingId || `AG-${num}`;
+    const gomboIdNumber = existingId ? formatGomboIdDisplay(existingId) : generateGomboId();
 
     const levels = [
       "🟢 Vérifié AFRIGOMBO ELITE",

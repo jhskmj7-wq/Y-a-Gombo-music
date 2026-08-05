@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Star, Award, Search } from "lucide-react";
 import { User } from "../../types";
+import { getEffectiveGomboId } from "../../lib/gomboIdHelper";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -372,7 +373,7 @@ export default function AdminUsers({
                   <div className="flex flex-col items-start lg:items-end shrink-0">
                     <span className="text-[8px] font-mono uppercase text-[#D4AF37] font-semibold tracking-widest">Identifiant GOMBO ID</span>
                     <span className="font-mono text-xs font-bold text-afri-text bg-afri-bg-sec/15 border border-[#D4AF37]/35 px-2.5 py-0.5 rounded mt-1">
-                      {user.gomboIdNumber}
+                      {getEffectiveGomboId(user)}
                     </span>
                   </div>
                 )}

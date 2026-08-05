@@ -139,7 +139,7 @@ export const PendingPaymentModal: React.FC<PendingPaymentModalProps> = ({
                 type="text"
                 value={enteredCode}
                 onChange={(e) => setEnteredCode(e.target.value.toUpperCase())}
-                placeholder="Ex: AG-849201"
+                placeholder="Ex: GMB-125-487"
                 className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] rounded-xl px-3.5 py-2.5 text-xs font-mono font-bold tracking-wider text-afri-text uppercase outline-none"
               />
 
