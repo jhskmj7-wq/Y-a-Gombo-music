@@ -162,6 +162,9 @@ export interface AvatarEconomyStats {
 }
 
 export interface AvatarConfig {
+  gender?: 'male' | 'female';
+  age?: number;
+  bodyType?: 'standard' | 'athletic' | 'slim' | 'robust';
   skinColor: string;
   faceShape: string;
   hair: string;

@@ -695,26 +695,64 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
               
               {/* Skin Tone Selector */}
               {activeSubCategory === 'corps' && (
-                <div className="mb-8 p-6 bg-zinc-950/40 rounded-3xl border border-afri-border/10">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-5">Teinture de Peau Elite</h4>
-                  <div className="flex flex-wrap gap-4">
-                    {SKIN_COLORS.map(color => (
+                <div className="mb-8 p-6 bg-zinc-950/40 rounded-3xl border border-afri-border/10 space-y-6">
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-3">Genre & Morphologie</h4>
+                    <div className="grid grid-cols-2 gap-3">
                       <button
-                        key={color.id}
-                        onClick={() => setConfig(prev => ({ ...prev, skinColor: color.hex }))}
-                        className={`w-12 h-12 rounded-2xl border-4 transition-all relative group ${
-                          config.skinColor === color.hex ? 'border-[#D4AF37] scale-110 shadow-lg' : 'border-transparent opacity-60'
+                        onClick={() => setConfig(prev => ({ ...prev, gender: 'male' }))}
+                        className={`py-3 rounded-2xl text-xs font-black uppercase tracking-wider border transition ${
+                          (config.gender || 'male') === 'male' ? 'bg-[#D4AF37] text-black border-[#D4AF37] shadow-lg' : 'bg-zinc-900 text-afri-text-sec border-white/5'
                         }`}
-                        style={{ backgroundColor: color.hex }}
-                        title={color.name}
                       >
-                        {config.skinColor === color.hex && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-2 h-2 bg-white rounded-full animate-ping" />
-                          </div>
-                        )}
+                        👨 Homme Elite
                       </button>
-                    ))}
+                      <button
+                        onClick={() => setConfig(prev => ({ ...prev, gender: 'female', barbe: '', moustache: '' }))}
+                        className={`py-3 rounded-2xl text-xs font-black uppercase tracking-wider border transition ${
+                          config.gender === 'female' ? 'bg-[#D4AF37] text-black border-[#D4AF37] shadow-lg' : 'bg-zinc-900 text-afri-text-sec border-white/5'
+                        }`}
+                      >
+                        👩 Femme Elite
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37]">Tranche d'Âge ({config.age || 25} ans)</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="18" 
+                      max="70" 
+                      value={config.age || 25} 
+                      onChange={(e) => setConfig(prev => ({ ...prev, age: Number(e.target.value) }))}
+                      className="w-full accent-[#D4AF37] cursor-pointer"
+                    />
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-3">Teinture de Peau Elite</h4>
+                    <div className="flex flex-wrap gap-4">
+                      {SKIN_COLORS.map(color => (
+                        <button
+                          key={color.id}
+                          onClick={() => setConfig(prev => ({ ...prev, skinColor: color.hex }))}
+                          className={`w-12 h-12 rounded-2xl border-4 transition-all relative group ${
+                            config.skinColor === color.hex ? 'border-[#D4AF37] scale-110 shadow-lg' : 'border-transparent opacity-60'
+                          }`}
+                          style={{ backgroundColor: color.hex }}
+                          title={color.name}
+                        >
+                          {config.skinColor === color.hex && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-2 h-2 bg-white rounded-full animate-ping" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}

@@ -23,6 +23,14 @@ export const AvatarRenderer = {
       layers.push(getItem(equippedV2['arriere_plans'])?.svgContent || "");
     }
 
+    const isFemale = configV1?.gender === 'female';
+    const bodyPath = isFemale 
+      ? "M 32 220 C 35 158, 56 134, 100 134 C 144 134, 165 158, 168 220 Z" 
+      : "M 28 220 C 32 155, 58 132, 100 132 C 142 132, 168 155, 172 220 Z";
+    const headPath = isFemale
+      ? "M 70 76 C 70 34, 130 34, 130 76 C 130 118, 112 140, 100 144 C 88 140, 70 118, 70 76 Z"
+      : "M 68 76 C 68 32, 132 32, 132 76 C 132 120, 114 142, 100 146 C 86 142, 68 120, 68 76 Z";
+
     // 2. ELITE BASE CHARACTER (Semi-Realistic)
     if (!equippedV2['corps']) {
       layers.push(`
@@ -30,7 +38,7 @@ export const AvatarRenderer = {
           <!-- Shadow under chin -->
           <ellipse cx="100" cy="140" rx="28" ry="7" fill="black" opacity="0.12" />
           <!-- Torso & Shoulders -->
-          <path d="M 28 220 C 32 155, 58 132, 100 132 C 142 132, 168 155, 172 220 Z" fill="${skinColor}" />
+          <path d="${bodyPath}" fill="${skinColor}" />
           <!-- Neck -->
           <path d="M 86 108 L 114 108 L 112 136 Q 100 142 88 136 Z" fill="${skinColor}" />
           <path d="M 86 112 Q 100 120 114 112" stroke="black" stroke-width="1.2" opacity="0.18" fill="none" />
@@ -52,7 +60,7 @@ export const AvatarRenderer = {
           <path d="M 139 82 Q 141 86 139 90" stroke="black" stroke-width="0.6" opacity="0.15" fill="none" />
 
           <!-- Refined Face Shape -->
-          <path d="M 68 76 C 68 32, 132 32, 132 76 C 132 120, 114 142, 100 146 C 86 142, 68 120, 68 76 Z" fill="${skinColor}" />
+          <path d="${headPath}" fill="${skinColor}" />
           <path d="M 68 82 Q 68 120 100 146 Q 132 120 132 82" fill="none" stroke="black" stroke-width="0.8" opacity="0.1" />
 
           <!-- Eyebrows -->
@@ -100,6 +108,7 @@ export const AvatarRenderer = {
     AVATAR_RENDER_ORDER.forEach(cat => {
       // Background and Base are handled manually for performance/logic
       if (cat === 'arriere_plans' || cat === 'corps' || cat === 'tete') return;
+      if (isFemale && (cat === 'barbe' || cat === 'moustache')) return;
       
       const itemId = equippedV2[cat];
       if (itemId) {
