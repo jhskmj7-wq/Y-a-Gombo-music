@@ -4,6 +4,7 @@ import { Download, RefreshCw, X, ShieldCheck, Activity, CheckCircle2, AlertTrian
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../AuthContext";
 import { supportConfig } from "../supportConfig";
+import { safeStringify } from "../lib/jsonUtils";
 
 interface DiagnosticResult {
   title: string;
@@ -886,7 +887,7 @@ export default function PWAHandler() {
                           <span>{entry.timestamp}</span>
                           <span className="text-blue-400 uppercase font-bold">{entry.action}</span>
                         </div>
-                        <div className="text-white/80">{entry.message || JSON.stringify(entry)}</div>
+                        <div className="text-white/80">{entry.message || safeStringify(entry)}</div>
                         <div className="text-white/30 truncate text-[8px]">
                           URL: {entry.url} | DM: {entry.displayMode} | SW: {entry.serviceWorkerController}
                         </div>
