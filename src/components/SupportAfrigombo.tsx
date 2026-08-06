@@ -1,6 +1,8 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { useAuth } from "../AuthContext";
-import AfrigomboBuilders from "./AfrigomboBuilders";
+import { lazyWithRetry } from "../lib/lazyWithRetry";
+
+const AfrigomboBuilders = lazyWithRetry(() => import("./AfrigomboBuilders"));
 
 interface SupportAfrigomboProps {
   onBack?: () => void;
@@ -10,10 +12,12 @@ interface SupportAfrigomboProps {
 export default function SupportAfrigombo({ onBack, audioSynth }: SupportAfrigomboProps) {
   const { profile } = useAuth();
   return (
-    <AfrigomboBuilders 
-      currentUser={profile as any} 
-      onBack={onBack} 
-      audioSynth={audioSynth} 
-    />
+    <Suspense fallback={<div className="flex h-full items-center justify-center p-8"><div className="w-8 h-8 rounded-full border-t-2 border-afri-gold animate-spin"></div></div>}>
+      <AfrigomboBuilders 
+        currentUser={profile as any} 
+        onBack={onBack} 
+        audioSynth={audioSynth} 
+      />
+    </Suspense>
   );
 }

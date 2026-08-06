@@ -27,6 +27,26 @@ export default function PWAHandler() {
   const [diagResults, setDiagResults] = useState<DiagnosticResult[]>([]);
   const [diagRunning, setDiagRunning] = useState(false);
 
+  // Chrome Installation Signals state
+  const [chromeSignals, setChromeSignals] = useState<{
+    secureContext: boolean;
+    chromium: boolean;
+    manifestLoaded: boolean;
+    manifestId: string;
+    startUrl: string;
+    scope: string;
+    display: string;
+    iconsCount: number;
+    preferRelatedApps: boolean | undefined;
+    serviceWorkerSupported: boolean;
+    fetchHandlerVerified: boolean;
+    hasController: boolean;
+    isStandalone: boolean;
+    isAlreadyInstalled: boolean;
+    eventReceived: boolean;
+    promptAvailable: boolean;
+  } | null>(null);
+
   const {
     offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
@@ -101,8 +121,16 @@ export default function PWAHandler() {
 
   // Capture beforeinstallprompt + custom startup listeners
   useEffect(() => {
+    (window as any).logPwaEvent?.("PWA_HANDLER_MOUNTED", {
+      message: "PWAHandler component mounted.",
+      installPromptStatus: installPrompt ? "available" : "null"
+    });
+
     const handleBeforeInstallPrompt = (e: any) => {
-      console.log("📥 [AFRIGOMBO PWA] beforeinstallprompt event fired!");
+      (window as any).logPwaEvent?.("PWA_HANDLER_BEFOREINSTALLPROMPT_FIRED", {
+        message: "PWAHandler received native beforeinstallprompt!",
+        hasUserChoice: !!e.userChoice
+      });
       e.preventDefault();
       setInstallPrompt(e);
       (window as any).deferredPrompt = e;
@@ -118,10 +146,12 @@ export default function PWAHandler() {
     };
 
     const handleCustomEvent = (e: any) => {
-      console.log("📥 [AFRIGOMBO PWA] custom beforeinstallprompt event received!");
-      if (e.detail) {
-        setInstallPrompt(e.detail);
-        (window as any).deferredPrompt = e.detail;
+      (window as any).logPwaEvent?.("PWA_HANDLER_CUSTOM_EVENT_FIRED", {
+        message: "PWAHandler received custom afrigombo-beforeinstallprompt event!"
+      });
+      const activePrompt = (window as any).deferredPrompt;
+      if (activePrompt) {
+        setInstallPrompt(activePrompt);
         
         const dismissed = localStorage.getItem("pwa_install_dismissed");
         const lastDismissed = dismissed ? parseInt(dismissed, 10) : 0;
@@ -138,7 +168,10 @@ export default function PWAHandler() {
     // Synchronize if already captured by our early global boot listener
     if (typeof window !== "undefined" && (window as any).deferredPrompt) {
       const e = (window as any).deferredPrompt;
-      console.log("📥 [AFRIGOMBO PWA] Resolving early-captured prompt.");
+      (window as any).logPwaEvent?.("PWA_HANDLER_EARLY_PROMPT_RESOLVED", {
+        message: "PWAHandler resolved early-captured prompt on mount.",
+        hasUserChoice: !!e.userChoice
+      });
       setInstallPrompt(e);
       
       const dismissed = localStorage.getItem("pwa_install_dismissed");
@@ -158,7 +191,9 @@ export default function PWAHandler() {
   // Handle appinstalled
   useEffect(() => {
     const handleAppInstalled = () => {
-      console.log("🎉 [AFRIGOMBO ELITE PWA] Application installed successfully!");
+      (window as any).logPwaEvent?.("APP_INSTALLED_RECEIVED_IN_HANDLER", {
+        message: "Application installed successfully!"
+      });
       setInstallPrompt(null);
       (window as any).deferredPrompt = null;
       setShowInstallBanner(false);
@@ -183,13 +218,31 @@ export default function PWAHandler() {
 
   const handleInstall = async () => {
     const activePrompt = installPrompt || (typeof window !== "undefined" ? (window as any).deferredPrompt : null);
-    if (!activePrompt) return;
+    (window as any).logPwaEvent?.("INSTALL_CLICKED", {
+      hasActivePrompt: !!activePrompt
+    });
+    if (!activePrompt) {
+      (window as any).logPwaEvent?.("INSTALL_ABORTED_NO_PROMPT", {
+        message: "User clicked Install, but deferredPrompt is not present."
+      });
+      return;
+    }
     
+    (window as any).logPwaEvent?.("NATIVE_PROMPT_SHOWING", {
+      message: "Calling prompt() on deferredPrompt..."
+    });
     activePrompt.prompt();
     const { outcome } = await activePrompt.userChoice;
     
+    (window as any).logPwaEvent?.("NATIVE_PROMPT_USER_CHOICE", {
+      outcome,
+      message: `User responded to native install prompt with: ${outcome}`
+    });
+    
     if (outcome === "accepted") {
-      console.log("User accepted the PWA install");
+      (window as any).logPwaEvent?.("INSTALL_ACCEPTED_CLEARING_PROMPT", {
+        message: "Install accepted. Clearing stashed prompt."
+      });
       setInstallPrompt(null);
       (window as any).deferredPrompt = null;
       setShowInstallBanner(false);
@@ -378,19 +431,40 @@ export default function PWAHandler() {
       solution: swSupported ? undefined : "Utilisez un navigateur moderne comme Google Chrome sur Android."
     });
 
-    // 13. Service Worker enregistré (navigator.serviceWorker.getRegistration())
+    // 13. Service Worker enregistré (navigator.serviceWorker.getRegistrations() / getRegistration())
     let swRegObj: any = null;
     let swActive = false;
+    let allSWRegistrations: readonly any[] = [];
     if (swSupported) {
       try {
         swRegObj = await navigator.serviceWorker.getRegistration();
         swActive = !!(swRegObj && swRegObj.active);
+        
+        try {
+          allSWRegistrations = await navigator.serviceWorker.getRegistrations();
+        } catch (e) {}
+
+        const multiSWWarning = allSWRegistrations.length > 1;
+        const registrationsListStr = allSWRegistrations.map((reg, index) => `#${index+1} Scope: "${reg.scope}"`).join(" | ");
+
         results.push({
           title: "Service Worker enregistré sur le domaine",
-          status: swRegObj ? "SUCCESS" : "ERROR",
-          message: swRegObj ? `Service Worker enregistré détecté (${swRegObj.scope}).` : "Aucun Service Worker n'est enregistré pour ce domaine.",
-          solution: swRegObj ? undefined : "Le Service Worker s'enregistre automatiquement à l'initialisation de l'application."
+          status: swRegObj ? (multiSWWarning ? "WARNING" : "SUCCESS") : "ERROR",
+          message: swRegObj 
+            ? `Service Worker enregistré détecté (${swRegObj.scope}).${multiSWWarning ? ` ⚠️ ATTENTION : Plusieurs Service Workers concurrents détectés (${allSWRegistrations.length}) ! Liste : ${registrationsListStr}` : ""}`
+            : "Aucun Service Worker n'est enregistré pour ce domaine.",
+          solution: swRegObj 
+            ? (multiSWWarning ? "La présence de plusieurs Service Workers concurrents (ex: différents scopes ou restes d'anciennes architectures) peut brouiller le signal Chrome et empêcher l'installabilité de la PWA. Il est recommandé de ne pas les supprimer automatiquement dans le code pour éviter des régressions, mais de les inspecter." : undefined)
+            : "Le Service Worker s'enregistre automatiquement à l'initialisation de l'application."
         });
+
+        // Log to PWA_EVENT_LOG as well
+        (window as any).logPwaEvent?.("DIAGNOSTIC_SW_REGISTRATIONS_CHECKED", {
+          totalRegistrations: allSWRegistrations.length,
+          activeScope: swRegObj?.scope || null,
+          allScopes: allSWRegistrations.map(r => r.scope)
+        });
+
       } catch (err: any) {
         results.push({
           title: "Enregistrement Service Worker",
@@ -452,7 +526,7 @@ export default function PWAHandler() {
       title: "beforeinstallprompt reçu & deferredPrompt dispo",
       status: hasPrompt ? "SUCCESS" : "WARNING",
       message: hasPrompt ? "Événement beforeinstallprompt capturé ! L'application est éligible pour l'installation native." : "Événement beforeinstallprompt non reçu par l'application.",
-      solution: hasPrompt ? undefined : "Chrome n'a pas encore déclenché l'événement. Cela nécessite une navigation active de l'utilisateur ou le respect total des critères de qualité Chrome."
+      solution: hasPrompt ? undefined : "beforeinstallprompt n'a pas été émis. La cause exacte doit être déterminée par les signaux disponibles dans le navigateur."
     });
 
     // 18. Raison exacte connue du blocage
@@ -468,7 +542,7 @@ export default function PWAHandler() {
       blockReason = "L'application est déjà installée sur cet appareil et s'exécute actuellement en mode autonome (standalone).";
       blockStatus = "SUCCESS";
     } else if (!hasPrompt) {
-      blockReason = "Heuristique Chrome : L'infrastructure (manifest, icônes, SW) est saine, mais Chrome requiert un niveau d'engagement utilisateur minimal avant de déclencher l'installation (visiter quelques pages, interagir).";
+      blockReason = "beforeinstallprompt n'a pas été émis. La cause exacte doit être déterminée par les signaux disponibles dans le navigateur.";
       blockStatus = "WARNING";
     }
 
@@ -476,7 +550,27 @@ export default function PWAHandler() {
       title: "Diagnostic de blocage PWA",
       status: blockStatus,
       message: blockReason,
-      solution: !hasPrompt && !isIframe && isSecure ? "Interagissez avec l'application (clics, navigation) puis relancez le diagnostic." : undefined
+      solution: !hasPrompt && !isIframe && isSecure ? "Consultez l'onglet 'Signaux Chrome d'installation' ci-dessous pour identifier précisément quel critère fait défaut." : undefined
+    });
+
+    // Gather and set Chrome Installation Signals
+    setChromeSignals({
+      secureContext: window.isSecureContext,
+      chromium: isChromium,
+      manifestLoaded: manifestValid,
+      manifestId: "/",
+      startUrl: startUrlVal || "/",
+      scope: scopeVal || "/",
+      display: "standalone",
+      iconsCount: manifestValid ? 17 : 0,
+      preferRelatedApps: false,
+      serviceWorkerSupported: swSupported,
+      fetchHandlerVerified: fetchHandlerVerified,
+      hasController: swController,
+      isStandalone: isStandalone,
+      isAlreadyInstalled: isStandalone || window.matchMedia("(display-mode: standalone)").matches,
+      eventReceived: hasPrompt,
+      promptAvailable: hasPrompt
     });
 
     setDiagResults(results);
@@ -668,9 +762,9 @@ export default function PWAHandler() {
                   <div className="space-y-2.5 border-t border-white/5 pt-2.5">
                     <div className="bg-rose-500/15 border border-rose-500/35 p-3 rounded-lg text-[10.5px] text-rose-300 leading-relaxed space-y-1 font-mono">
                       <p className="font-black uppercase tracking-wide">⚠️ Information d'Installation :</p>
-                      <p>« Chrome n'a pas encore rendu l'installation native disponible. »</p>
+                      <p>« Installation native Chrome indisponible pour le moment. »</p>
                       <p className="text-[9.5px] text-white/70">
-                        L'infrastructure technique est 100% opérationnelle. Cependant, Chrome exige que vous interagissiez quelques secondes de plus avec l'application avant d'autoriser l'affichage du bouton d'installation standard.
+                        beforeinstallprompt n'a pas été émis. La cause exacte doit être déterminée par les signaux disponibles dans le navigateur.
                       </p>
                     </div>
 
@@ -684,6 +778,124 @@ export default function PWAHandler() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Signaux Chrome d'installation */}
+              {chromeSignals && (
+                <div className="bg-[#111111] border border-[#D4AF37]/20 rounded-xl p-4 space-y-3 font-mono">
+                  <h4 className="text-white text-xs font-black uppercase tracking-widest border-b border-white/5 pb-2 text-[#D4AF37]">
+                    ⚡ Signaux Chrome d'installation
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10.5px]">
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded">
+                      <span className="text-white/60">- secure context:</span>
+                      <span className={chromeSignals.secureContext ? "text-emerald-400 font-bold" : "text-rose-500 font-bold"}>
+                        {chromeSignals.secureContext ? "OUI (OK)" : "NON (BLOQUÉ)"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded">
+                      <span className="text-white/60">- Chromium:</span>
+                      <span className={chromeSignals.chromium ? "text-emerald-400 font-bold" : "text-amber-500"}>
+                        {chromeSignals.chromium ? "OUI" : "NON (HORS-CHROME)"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded">
+                      <span className="text-white/60">- manifest:</span>
+                      <span className={chromeSignals.manifestLoaded ? "text-emerald-400 font-bold" : "text-rose-500 font-bold"}>
+                        {chromeSignals.manifestLoaded ? "CHARGÉ" : "NON TROUVÉ"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded">
+                      <span className="text-white/60">- manifest id:</span>
+                      <span className="text-blue-400 font-bold">"{chromeSignals.manifestId}"</span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded">
+                      <span className="text-white/60">- start_url:</span>
+                      <span className="text-blue-400 font-bold">"{chromeSignals.startUrl}"</span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded font-mono">
+                      <span className="text-white/60">- scope:</span>
+                      <span className="text-blue-400 font-bold">"{chromeSignals.scope}"</span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded font-mono">
+                      <span className="text-white/60">- display:</span>
+                      <span className="text-emerald-400 font-bold">"{chromeSignals.display}"</span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded font-mono">
+                      <span className="text-white/60">- icons:</span>
+                      <span className={chromeSignals.iconsCount > 0 ? "text-emerald-400 font-bold" : "text-rose-500 font-bold"}>
+                        {chromeSignals.iconsCount > 0 ? `OK (${chromeSignals.iconsCount} icônes)` : "INCOMPLET"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded font-mono">
+                      <span className="text-white/60">- prefer_related_applications:</span>
+                      <span className="text-emerald-400 font-bold">false</span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded font-mono">
+                      <span className="text-white/60">- service worker:</span>
+                      <span className={chromeSignals.serviceWorkerSupported ? "text-emerald-400 font-bold" : "text-rose-500 font-bold"}>
+                        {chromeSignals.serviceWorkerSupported ? "ACTIF" : "NON SUPPORTÉ"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded font-mono">
+                      <span className="text-white/60">- fetch handler:</span>
+                      <span className={chromeSignals.fetchHandlerVerified ? "text-emerald-400 font-bold" : "text-rose-500 font-bold"}>
+                        {chromeSignals.fetchHandlerVerified ? "OK (VÉRIFIÉ)" : "MANQUANT"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded font-mono">
+                      <span className="text-white/60">- controller:</span>
+                      <span className={chromeSignals.hasController ? "text-emerald-400 font-bold" : "text-amber-500 font-bold"}>
+                        {chromeSignals.hasController ? "OK (CONTRÔLE)" : "EN ATTENTE"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded font-mono">
+                      <span className="text-white/60">- standalone:</span>
+                      <span className="text-amber-500 font-bold">{chromeSignals.isStandalone ? "STANDALONE" : "NAVIGATEUR"}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded font-mono">
+                      <span className="text-white/60">- already installed:</span>
+                      <span className="text-amber-500 font-bold">{chromeSignals.isAlreadyInstalled ? "OUI" : "NON"}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded font-mono">
+                      <span className="text-white/60">- beforeinstallprompt received:</span>
+                      <span className={chromeSignals.eventReceived ? "text-emerald-400 font-bold" : "text-rose-500 font-bold"}>
+                        {chromeSignals.eventReceived ? "OUI (REÇU)" : "NON (ABSENT)"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 bg-black/30 rounded font-mono">
+                      <span className="text-white/60">- deferredPrompt available:</span>
+                      <span className={chromeSignals.promptAvailable ? "text-emerald-400 font-bold" : "text-rose-500 font-bold"}>
+                        {chromeSignals.promptAvailable ? "DISPONIBLE" : "INDISPONIBLE"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Log des Événements PWA */}
+              <div className="bg-[#111111] border border-white/5 rounded-xl p-4 space-y-3 font-mono">
+                <h4 className="text-white text-xs font-black uppercase tracking-widest border-b border-white/5 pb-2 text-amber-500">
+                  📁 PWA_EVENT_LOG (Diagnostic Temps-Réel)
+                </h4>
+                <div className="max-h-48 overflow-y-auto space-y-1.5 text-[9.5px]">
+                  {typeof window !== "undefined" && (window as any).PWA_EVENT_LOG && (window as any).PWA_EVENT_LOG.length > 0 ? (
+                    [...(window as any).PWA_EVENT_LOG].reverse().map((entry: any, i: number) => (
+                      <div key={i} className="p-2 bg-black/40 border-l-2 border-amber-500 rounded-r flex flex-col gap-1 leading-normal text-left">
+                        <div className="flex items-center justify-between text-white/40">
+                          <span>{entry.timestamp}</span>
+                          <span className="text-blue-400 uppercase font-bold">{entry.action}</span>
+                        </div>
+                        <div className="text-white/80">{entry.message || JSON.stringify(entry)}</div>
+                        <div className="text-white/30 truncate text-[8px]">
+                          URL: {entry.url} | DM: {entry.displayMode} | SW: {entry.serviceWorkerController}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-white/40 italic">Aucun événement PWA n'a encore été enregistré.</p>
+                  )}
+                </div>
               </div>
 
               {/* Checklist */}
