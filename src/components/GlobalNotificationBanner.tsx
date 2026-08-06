@@ -5,6 +5,8 @@ import { Megaphone, X, Info, AlertTriangle, Activity, Calendar, Settings, Plus }
 import { useAuth } from "../AuthContext";
 import { useTheme } from "../context/ThemeContext";
 
+import { safeStringify } from "../lib/jsonUtils";
+
 export default function GlobalNotificationBanner() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [dismissed, setDismissed] = useState<string[]>([]);
@@ -45,7 +47,7 @@ export default function GlobalNotificationBanner() {
     const newDismissed = [...dismissed, id];
     setDismissed(newDismissed);
     try {
-      localStorage.setItem("afrigombo_dismissed_notifs", JSON.stringify(newDismissed));
+      localStorage.setItem("afrigombo_dismissed_notifs", safeStringify(newDismissed));
     } catch (e) {}
   };
 

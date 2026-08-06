@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { safeStringify } from "../lib/jsonUtils";
 import { 
   ShoppingBag, Search, Tag, Filter, Plus, ShieldCheck, CheckCircle2, 
   AlertTriangle, Crown, Sparkles, MapPin, Phone, MessageCircle, ArrowLeft, 
@@ -183,7 +184,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
     }
     setFavoriteIds(updated);
     try {
-      localStorage.setItem("afrigombo_market_favs", JSON.stringify(updated));
+      localStorage.setItem("afrigombo_market_favs", safeStringify(updated));
     } catch (e) {
       console.warn("Could not save afrigombo_market_favs:", e);
     }
@@ -239,7 +240,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
   // Save items to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem("afrigombo_market_items", JSON.stringify(items));
+      localStorage.setItem("afrigombo_market_items", safeStringify(items));
     } catch (e) {
       console.warn("Could not save afrigombo_market_items:", e);
     }
@@ -1197,7 +1198,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
                   localStorage.setItem("afrigombo_suggested_deposit_amount", String(insufficientBalanceDetails.missing));
                   localStorage.setItem(
                     "afrigombo_pending_purchase",
-                    JSON.stringify({ type: "grand_marche", item: { price: insufficientBalanceDetails.required, title: boughtItemTitle || "Article du Marché" } })
+                    safeStringify({ type: "grand_marche", item: { price: insufficientBalanceDetails.required, title: boughtItemTitle || "Article du Marché" } })
                   );
                   if (onNavigateView) {
                     onNavigateView("user_wallet");

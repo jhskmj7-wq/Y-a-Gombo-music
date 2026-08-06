@@ -244,7 +244,7 @@ export default function MessagesView({
           id: currentUser.uid,
           isPlaceholder: true,
           userName: "Équipe AFRIGOMBO ELITE",
-          userPhoto: "/logo_afrigombo.png",
+          userPhoto: "/logo.svg",
           lastMessage: "Bonjour 👋 Comment pouvons-nous vous aider aujourd'hui ?",
           lastMessageAt: new Date().toISOString(),
           unreadCount: { [currentUser.uid]: 0 }
@@ -262,7 +262,7 @@ export default function MessagesView({
         type: "support",
         participants: [currentUser.uid, "afrigombo_support"],
         userName: "Équipe AFRIGOMBO ELITE",
-        userPhoto: "/logo_afrigombo.png",
+        userPhoto: "/logo.svg",
         ...supportConvo
       });
 
@@ -774,7 +774,8 @@ export default function MessagesView({
 
                         <div className="relative shrink-0">
                           <img
-                            src={activeConvo.type === "support" ? "/logo_afrigombo.png" : partnerDetails?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"}
+                            src={activeConvo.type === "support" ? "/logo.svg" : partnerDetails?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"}
+                            onError={(e) => { if (activeConvo.type === "support") (e.currentTarget as HTMLImageElement).src = "/logo.svg"; }}
                             alt=""
                             className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]/40"
                             referrerPolicy="no-referrer"

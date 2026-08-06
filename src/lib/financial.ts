@@ -82,6 +82,7 @@ export function getEffectiveCommissionRate(userData: any): number {
 }
 
 import { SecurityService } from "./SecurityService";
+import { sanitizeForFirestore } from "./firestoreUtils";
 
 /**
  * Generate cryptographic signature hash for transaction anti-tampering
@@ -155,8 +156,9 @@ export async function recordWalletTransaction(payload: {
   };
 
   try {
-    await setDoc(doc(db, "transactions", txId), txData, { merge: true });
-    await setDoc(doc(db, "walletTransactions", txId), txData, { merge: true });
+    const cleanTxData = sanitizeForFirestore(txData);
+    await setDoc(doc(db, "transactions", txId), cleanTxData, { merge: true });
+    await setDoc(doc(db, "walletTransactions", txId), cleanTxData, { merge: true });
   } catch (err) {
     console.error("Failed to record wallet transaction:", err);
   }

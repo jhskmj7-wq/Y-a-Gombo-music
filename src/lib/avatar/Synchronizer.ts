@@ -3,6 +3,7 @@ import { db } from "../firebase";
 import { doc, setDoc, updateDoc, collection, query, where, getDocs, writeBatch } from "firebase/firestore";
 import { UserAvatarData, AvatarItem } from "../../types/avatar";
 import { AvatarRenderer } from "./Renderer";
+import { sanitizeForFirestore } from "../firestoreUtils";
 
 /**
  * AFRIGOMBO ELITE - PROFILE SYNCHRONIZER
@@ -46,9 +47,12 @@ export const AvatarSynchronizer = {
     const avatarRef = doc(db, "userAvatars", userId);
     const legacyAvatarRef = doc(db, "avatars", userId);
 
-    batch.set(userRef, userUpdates, { merge: true });
-    batch.set(avatarRef, { ...data, updatedAt: now }, { merge: true });
-    batch.set(legacyAvatarRef, { ...data, updatedAt: now }, { merge: true });
+    const cleanUserUpdates = sanitizeForFirestore(userUpdates);
+    const cleanData = sanitizeForFirestore({ ...data, updatedAt: now });
+
+    batch.set(userRef, cleanUserUpdates, { merge: true });
+    batch.set(avatarRef, cleanData, { merge: true });
+    batch.set(legacyAvatarRef, cleanData, { merge: true });
 
     // 4. Denormalized Data Sync (Optional but requested for "real-time everywhere")
     // Note: Updating thousands of comments is slow. We should favor dynamic profile fetching.

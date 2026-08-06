@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { AvatarItem, AvatarItemCategory, UserInventoryData, AvatarConfig } from '../../types/avatar';
 import { AvatarEngine, getLevelFromXp } from '../../lib/avatarEngine';
+import { sanitizeForFirestore } from '../../lib/firestoreUtils';
 import { useAuth } from '../../AuthContext';
 import DailyRewardModal from './DailyRewardModal';
 import CoinPurchaseModal from './CoinPurchaseModal';
@@ -189,11 +190,11 @@ export default function AvatarStore({ onClose, inventory: initialInventory = [] 
         currentConfig[category] = !isCurrentlyEquipped ? item.id : '';
       }
 
-      await AvatarEngine.saveUserAvatar(currentUser.uid, {
+      await AvatarEngine.saveUserAvatar(currentUser.uid, sanitizeForFirestore({
         config: currentConfig,
         useAvatarAsProfile: currentAvatar?.useAvatarAsProfile ?? false,
-        inventory: userInventory.ownedItems
-      }, items);
+        inventory: userInventory?.ownedItems || []
+      }), items);
 
       setSuccessMsg(
         !isCurrentlyEquipped 

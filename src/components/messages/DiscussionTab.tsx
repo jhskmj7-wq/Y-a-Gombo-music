@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { safeStringify } from "../../lib/jsonUtils";
 import { 
   MessageSquare, ShieldCheck, Search, Plus, Sparkles, Pin, PinOff,
   Archive, VolumeX, Volume2, Trash2, Flag, Ban, Check, CheckCheck, 
@@ -59,7 +60,7 @@ export default function DiscussionTab({
   // Save helpers
   const saveState = (key: string, list: string[]) => {
     if (!currentUser?.uid) return;
-    localStorage.setItem(`${key}_${currentUser.uid}`, JSON.stringify(list));
+    localStorage.setItem(`${key}_${currentUser.uid}`, safeStringify(list));
   };
 
   const handleTogglePin = (id: string, e: React.MouseEvent) => {
@@ -234,7 +235,7 @@ export default function DiscussionTab({
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-11 h-11 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37] overflow-hidden shrink-0">
-                <img src="/logo_afrigombo.png" alt="Support" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <img src="/logo.svg" onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.svg"; }} alt="Support" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-afri-bg-sec rounded-full" />
             </div>

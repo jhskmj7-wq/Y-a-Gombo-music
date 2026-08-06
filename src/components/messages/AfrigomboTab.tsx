@@ -146,7 +146,7 @@ export default function AfrigomboTab({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37] shrink-0">
-                <img src="/logo_afrigombo.png" alt="" className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
+                <img src="/logo.svg" onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.svg"; }} alt="Support" className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
               </div>
               <div>
                 <h3 className="text-xs font-black uppercase text-afri-text tracking-wider flex items-center gap-1.5">

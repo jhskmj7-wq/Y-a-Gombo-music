@@ -38,7 +38,7 @@ export interface SupportMessage {
 export const SUPPORT_PROFILE = {
   uid: "afrigombo_support",
   name: "Équipe AFRIGOMBO ELITE",
-  photo: "/logo_afrigombo.png",
+  photo: "/logo.svg",
   badge: "✔ Vérifié",
   description: "Support officiel AFRIGOMBO ELITE",
   type: "systemAccount",

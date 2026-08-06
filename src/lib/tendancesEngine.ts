@@ -1,4 +1,5 @@
 import { Gombo, Post } from "../types";
+import { safeStringify } from "./jsonUtils";
 import { db } from "./firebase";
 import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 
@@ -366,7 +367,7 @@ export function recordUniqueViewInSession(postId: string): boolean {
       return false; // Already viewed in this session
     }
     sessionViews[postId] = Date.now();
-    sessionStorage.setItem("afrigombo_session_views", JSON.stringify(sessionViews));
+    sessionStorage.setItem("afrigombo_session_views", safeStringify(sessionViews));
     return true; // First time view in this session
   } catch (_) {
     return true;

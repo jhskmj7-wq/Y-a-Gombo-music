@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Save, ShoppingBag, UserCheck, ArrowLeft, RefreshCw, CheckCircle2, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AvatarConfig, UserAvatarData, AvatarItemCategory, AvatarItem, UserInventoryData } from '../../types/avatar';
 import { AvatarEngine } from '../../lib/avatarEngine';
 import { useAuth } from '../../AuthContext';
 import AvatarRenderer from './AvatarRenderer';
 import AvatarStore from './AvatarStore';
+
+import { sanitizeForFirestore } from '../../lib/firestoreUtils';
 
 interface AvatarEditorProps {
   onClose: () => void;
@@ -398,23 +400,25 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
       const mergedStoreAndFreeItems = [...FREE_DEFAULT_ITEMS, ...storeItems];
       const avatarUri = AvatarEngine.generateAvatarSvgV2(configV2, finalConfig, mergedStoreAndFreeItems);
 
+      const ownedList = Array.isArray(inventory?.ownedItems) ? inventory.ownedItems : [];
+
       // Batch sync via the new Modular Synchronizer
-      await AvatarEngine.saveUserAvatar(currentUser.uid, {
+      await AvatarEngine.saveUserAvatar(currentUser.uid, sanitizeForFirestore({
         config: finalConfig,
         configV2: configV2,
         useAvatarAsProfile: useAsProfile,
-        inventory: inventory.ownedItems,
+        inventory: ownedList,
         avatarDataUri: avatarUri
-      }, mergedStoreAndFreeItems);
+      }), mergedStoreAndFreeItems);
 
       if (useAsProfile) {
         await AvatarEngine.setAvatarAsProfile(currentUser.uid, avatarUri, true);
       }
 
-      setSaveSuccess("Votre avatar Gombo Elite a été sauvegardé avec succès ! 🎉");
+      setSaveSuccess("Avatar enregistré avec succès ! 🎉");
       setTimeout(() => {
         onClose();
-      }, 1200);
+      }, 1000);
     } catch (e: any) {
       console.error("Failed to save avatar", e);
       setSaveSuccess(`Erreur lors de la sauvegarde : ${e.message || "Inconnue"}`);
@@ -442,16 +446,18 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
 
       setUseAsProfile(true);
 
+      const ownedList = Array.isArray(inventory?.ownedItems) ? inventory.ownedItems : [];
+
       await AvatarEngine.setAvatarAsProfile(currentUser.uid, avatarUri, true);
-      await AvatarEngine.saveUserAvatar(currentUser.uid, {
+      await AvatarEngine.saveUserAvatar(currentUser.uid, sanitizeForFirestore({
         config: finalConfig,
         configV2: configV2,
         useAvatarAsProfile: true,
-        inventory: inventory.ownedItems,
+        inventory: ownedList,
         avatarDataUri: avatarUri
-      }, mergedStoreAndFreeItems);
+      }), mergedStoreAndFreeItems);
 
-      setSaveSuccess("Votre avatar Elite est maintenant synchronisé avec votre profil public ! 🌟");
+      setSaveSuccess("Avatar enregistré et synchronisé avec votre profil public ! 🌟");
     } catch (e: any) {
       console.error("Sync failed", e);
       setSaveSuccess(`Erreur de synchronisation : ${e.message || "Inconnue"}`);

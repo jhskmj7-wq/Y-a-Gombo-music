@@ -29,6 +29,7 @@ import { recordWalletTransaction } from "../../lib/financial";
 import { audioSynth } from "../../lib/audio";
 import { logAdminAction } from "../../lib/adminLogger";
 import { SupportService, SUPPORT_PROFILE } from "../../services/SupportService";
+import { sanitizeForFirestore } from "../../lib/firestoreUtils";
 
 interface WalletRequest {
   id: string;
@@ -328,7 +329,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
         // AJOUT DE NOTE INTERNE - Does not affect balance or status, can be simple log
         if (!comment) throw new Error("La note interne ne peut pas être vide.");
 
-        await addDoc(collection(db, "transactionHistory"), {
+        await addDoc(collection(db, "transactionHistory"), sanitizeForFirestore({
           transactionId: req.id,
           createdAt: nowIso,
           date: dateStr,
@@ -339,7 +340,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
           oldStatus: req.status,
           newStatus: req.status,
           comment: comment
-        });
+        }));
 
         showToast("📝 Note interne enregistrée !");
         setPendingAction(null);
@@ -384,55 +385,55 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             const newDepots = (uData.wallet?.depots ?? 0) + req.montant;
 
             // Update user wallet atomically
-            transaction.update(userRef, {
+            transaction.update(userRef, sanitizeForFirestore({
               "wallet.soldeDisponible": newDispo,
               "wallet.balance": newBalance,
               "wallet.depots": newDepots,
               balance: newDispo,
               walletBalance: newDispo,
               updatedAt: nowIso
-            });
+            }));
 
             // Update the request document atomically
-            transaction.update(requestRef, {
+            transaction.update(requestRef, sanitizeForFirestore({
               status: "validated",
               statut: "validated",
               validatedAt: nowIso,
               validatedBy: currentUser?.uid || "admin_souverain",
               walletOperationId: txId,
               processed: true
-            });
+            }));
 
             // Set general request or transactions in the transaction
             const walletRequestRef = doc(db, "walletRequests", req.id);
-            transaction.set(walletRequestRef, {
+            transaction.set(walletRequestRef, sanitizeForFirestore({
               status: "validated",
               statut: "validated",
               validatedAt: nowIso,
               validatedBy: currentUser?.uid || "admin_souverain",
               walletOperationId: txId,
               processed: true
-            }, { merge: true });
+            }), { merge: true });
 
             const transactionRef = doc(db, "transactions", req.id);
-            transaction.set(transactionRef, {
+            transaction.set(transactionRef, sanitizeForFirestore({
               status: "valide",
               statut: "valide",
               validatedAt: nowIso,
               validatedBy: currentUser?.uid || "admin_souverain",
               walletOperationId: txId,
               processed: true
-            }, { merge: true });
+            }), { merge: true });
 
             // Create entry in walletTransactions/
             const walletTxRef = doc(db, "walletTransactions", txId);
-            const txData = {
+            const txData = sanitizeForFirestore({
               id: txId,
               reference: txId,
               uid: req.uid,
               userId: req.uid,
-              userName: req.userName,
-              userConcerned: req.userName,
+              userName: req.userName || "Membre",
+              userConcerned: req.userName || "Membre",
               type: "recharge_wallet",
               amount: req.montant,
               montant: req.montant,
@@ -444,15 +445,15 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               createdAt: nowIso,
               updatedAt: nowIso,
               timestamp: Date.now()
-            };
+            });
             transaction.set(walletTxRef, txData, { merge: true });
 
             // Move to Archive / Validated Automatically
             const archiveRef = doc(db, "archivesValidated", req.id);
-            transaction.set(archiveRef, {
+            transaction.set(archiveRef, sanitizeForFirestore({
               id: req.id,
               uid: req.uid,
-              userName: req.userName,
+              userName: req.userName || "Membre",
               montant: req.montant,
               type: req.type,
               reference: req.reference || "",
@@ -464,11 +465,11 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               walletOperationId: txId,
               processed: true,
               archivedAt: nowIso
-            });
+            }));
 
             // Journal History
             const histRef = doc(collection(db, "transactionHistory"));
-            transaction.set(histRef, {
+            transaction.set(histRef, sanitizeForFirestore({
               transactionId: req.id,
               createdAt: nowIso,
               date: dateStr,
@@ -479,11 +480,11 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               oldStatus: currentStatus,
               newStatus: "validated",
               comment: comment || "Rechargement validé avec succès."
-            });
+            }));
 
             // Create Admin Audit Log
             const auditRef = doc(collection(db, "adminAuditLogs"));
-            transaction.set(auditRef, {
+            transaction.set(auditRef, sanitizeForFirestore({
               transactionId: req.id,
               oldValue: currentStatus,
               newValue: "validated",
@@ -494,28 +495,28 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               action: "VALIDATION_DEPOT",
               amount: req.montant,
               createdAt: nowIso
-            });
+            }));
 
             // Update betaTransactions doc atomically if it exists
             const betaTxRef = doc(db, "betaTransactions", req.id);
-            transaction.set(betaTxRef, {
+            transaction.set(betaTxRef, sanitizeForFirestore({
               status: "completed",
               statut: "valide",
               validatedAt: nowIso,
               validatedBy: currentUser?.uid || "admin_souverain",
               processed: true
-            }, { merge: true });
+            }), { merge: true });
 
             // User Notification
             const notifRef = doc(collection(db, "notifications"));
-            transaction.set(notifRef, {
+            transaction.set(notifRef, sanitizeForFirestore({
               userId: req.uid,
               title: "💳 Dépôt Crédité avec Succès !",
               message: `Votre rechargement Wallet de ${req.montant.toLocaleString('fr-FR')} FCFA (Réf: ${req.reference || req.id}) a été validé par le Fondateur.`,
               type: "payment_received",
               createdAt: nowIso,
               isRead: false
-            });
+            }));
 
           } else {
             // Validation of Withdrawal
@@ -528,75 +529,75 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             const newRetraits = (uData.wallet?.retraits ?? 0) + req.montant;
 
             // Update user wallet atomically
-            transaction.update(userRef, {
+            transaction.update(userRef, sanitizeForFirestore({
               "wallet.soldeDisponible": newDispo,
               "wallet.balance": newBalance,
               "wallet.retraits": newRetraits,
               balance: newDispo,
               walletBalance: newDispo,
               updatedAt: nowIso
-            });
+            }));
 
             // Update the request document atomically
-            transaction.update(requestRef, {
+            transaction.update(requestRef, sanitizeForFirestore({
               status: "validated",
               statut: "validated",
               validatedAt: nowIso,
               validatedBy: currentUser?.uid || "admin_souverain",
               walletOperationId: txId,
               processed: true
-            });
+            }));
 
             // Set general request or transactions in the transaction
             const walletRequestRef = doc(db, "walletRequests", req.id);
-            transaction.set(walletRequestRef, {
+            transaction.set(walletRequestRef, sanitizeForFirestore({
               status: "validated",
               statut: "validated",
               validatedAt: nowIso,
               validatedBy: currentUser?.uid || "admin_souverain",
               walletOperationId: txId,
               processed: true
-            }, { merge: true });
+            }), { merge: true });
 
             const transactionRef = doc(db, "transactions", req.id);
-            transaction.set(transactionRef, {
+            transaction.set(transactionRef, sanitizeForFirestore({
               status: "valide",
               statut: "valide",
               validatedAt: nowIso,
               validatedBy: currentUser?.uid || "admin_souverain",
               walletOperationId: txId,
               processed: true
-            }, { merge: true });
+            }), { merge: true });
 
             // Create entry in walletTransactions/
             const walletTxRef = doc(db, "walletTransactions", txId);
-            const txData = {
+            const txData = sanitizeForFirestore({
               id: txId,
               reference: txId,
               uid: req.uid,
               userId: req.uid,
-              userName: req.userName,
-              userConcerned: req.userName,
+              userName: req.userName || "Membre",
+              userConcerned: req.userName || "Membre",
               type: "retrait",
               amount: req.montant,
               montant: req.montant,
               status: "success",
               statut: "success",
-              description: `Retrait validé vers Mobile Money (${req.numero || req.phoneNumber})`,
+              description: `Retrait validé vers Mobile Money (${req.numero || req.phoneNumber || "non spécifié"})`,
               date: dateStr,
               heure: heureStr,
               createdAt: nowIso,
               updatedAt: nowIso,
               timestamp: Date.now()
-            };
+            });
             transaction.set(walletTxRef, txData, { merge: true });
 
             // Move to Archive / Validated Automatically
             const archiveRef = doc(db, "archivesValidated", req.id);
-            transaction.set(archiveRef, {
+            transaction.set(archiveRef, sanitizeForFirestore({
               id: req.id,
               uid: req.uid,
-              userName: req.userName,
+              userName: req.userName || "Membre",
               montant: req.montant,
               type: req.type,
               reference: req.reference || "",
@@ -608,11 +609,11 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               walletOperationId: txId,
               processed: true,
               archivedAt: nowIso
-            });
+            }));
 
             // Journal History
             const histRef = doc(collection(db, "transactionHistory"));
-            transaction.set(histRef, {
+            transaction.set(histRef, sanitizeForFirestore({
               transactionId: req.id,
               createdAt: nowIso,
               date: dateStr,
@@ -623,11 +624,11 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               oldStatus: currentStatus,
               newStatus: "validated",
               comment: comment || "Retrait validé et transféré."
-            });
+            }));
 
             // Create Admin Audit Log
             const auditRef = doc(collection(db, "adminAuditLogs"));
-            transaction.set(auditRef, {
+            transaction.set(auditRef, sanitizeForFirestore({
               transactionId: req.id,
               oldValue: currentStatus,
               newValue: "validated",
@@ -638,28 +639,28 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
               action: "VALIDATION_RETRAIT",
               amount: req.montant,
               createdAt: nowIso
-            });
+            }));
 
             // Update betaTransactions doc atomically if it exists
             const betaTxRef = doc(db, "betaTransactions", req.id);
-            transaction.set(betaTxRef, {
+            transaction.set(betaTxRef, sanitizeForFirestore({
               status: "completed",
               statut: "valide",
               validatedAt: nowIso,
               validatedBy: currentUser?.uid || "admin_souverain",
               processed: true
-            }, { merge: true });
+            }), { merge: true });
 
             // User Notification
             const notifRef = doc(collection(db, "notifications"));
-            transaction.set(notifRef, {
+            transaction.set(notifRef, sanitizeForFirestore({
               userId: req.uid,
               title: "💸 Retrait Transféré !",
-              message: `Votre demande de retrait de ${req.montant.toLocaleString('fr-FR')} FCFA a été validée et exécutée vers le ${req.numero || req.phoneNumber}.`,
+              message: `Votre demande de retrait de ${req.montant.toLocaleString('fr-FR')} FCFA a été validée et exécutée vers le ${req.numero || req.phoneNumber || "Mobile Money"}.`,
               type: "payment_received",
               createdAt: nowIso,
               isRead: false
-            });
+            }));
           }
         } else if (pendingAction === "REFUSE") {
           if (!comment) throw new Error("Un motif de refus explicite est obligatoire.");
@@ -667,40 +668,40 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
           const targetStatus = "refused";
 
           // Update status
-          transaction.update(requestRef, {
+          transaction.update(requestRef, sanitizeForFirestore({
             status: targetStatus,
             statut: targetStatus,
             refusedAt: nowIso
-          });
+          }));
 
           const walletRequestRef = doc(db, "walletRequests", req.id);
-          transaction.set(walletRequestRef, {
+          transaction.set(walletRequestRef, sanitizeForFirestore({
             status: targetStatus,
             statut: targetStatus,
             refusalReason: comment,
             refusedAt: nowIso
-          }, { merge: true });
+          }), { merge: true });
 
           const transactionRef = doc(db, "transactions", req.id);
-          transaction.set(transactionRef, {
+          transaction.set(transactionRef, sanitizeForFirestore({
             status: "refuse",
             statut: "refuse",
             refusalReason: comment
-          }, { merge: true });
+          }), { merge: true });
 
           // Update betaTransactions doc atomically
           const betaTxRef = doc(db, "betaTransactions", req.id);
-          transaction.set(betaTxRef, {
+          transaction.set(betaTxRef, sanitizeForFirestore({
             status: "rejected",
             statut: "refuse",
             refusedAt: nowIso,
             refusalReason: comment,
             processed: true
-          }, { merge: true });
+          }), { merge: true });
 
           // Journal History
           const histRef = doc(collection(db, "transactionHistory"));
-          transaction.set(histRef, {
+          transaction.set(histRef, sanitizeForFirestore({
             transactionId: req.id,
             createdAt: nowIso,
             date: dateStr,
@@ -711,11 +712,11 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             oldStatus: currentStatus,
             newStatus: targetStatus,
             comment: comment
-          });
+          }));
 
           // Create Admin Audit Log
           const auditRef = doc(collection(db, "adminAuditLogs"));
-          transaction.set(auditRef, {
+          transaction.set(auditRef, sanitizeForFirestore({
             transactionId: req.id,
             oldValue: currentStatus,
             newValue: targetStatus,
@@ -726,49 +727,49 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             action: "REFUS_TRANSACTION",
             amount: req.montant,
             createdAt: nowIso
-          });
+          }));
 
           // User Notification
           const notifRef = doc(collection(db, "notifications"));
-          transaction.set(notifRef, {
+          transaction.set(notifRef, sanitizeForFirestore({
             userId: req.uid,
             title: req.type === "deposit" ? "🔴 Rechargement Refusé" : "🔴 Retrait Refusé",
             message: `Votre demande de ${req.type === "deposit" ? "dépôt" : "retrait"} de ${req.montant.toLocaleString('fr-FR')} FCFA a été refusée par le Fondateur. Motif : ${comment}`,
             type: "payment_refused",
             createdAt: nowIso,
             isRead: false
-          });
+          }));
 
         } else if (pendingAction === "PENDING") {
           const targetStatus = "pending";
 
-          transaction.update(requestRef, {
+          transaction.update(requestRef, sanitizeForFirestore({
             status: targetStatus,
             statut: targetStatus
-          });
+          }));
 
           const walletRequestRef = doc(db, "walletRequests", req.id);
-          transaction.set(walletRequestRef, {
+          transaction.set(walletRequestRef, sanitizeForFirestore({
             status: targetStatus,
             statut: targetStatus
-          }, { merge: true });
+          }), { merge: true });
 
           const transactionRef = doc(db, "transactions", req.id);
-          transaction.set(transactionRef, {
+          transaction.set(transactionRef, sanitizeForFirestore({
             status: "en_attente",
             statut: "en_attente"
-          }, { merge: true });
+          }), { merge: true });
 
           // Update betaTransactions doc atomically
           const betaTxRef = doc(db, "betaTransactions", req.id);
-          transaction.set(betaTxRef, {
+          transaction.set(betaTxRef, sanitizeForFirestore({
             status: "pending",
             statut: "en_attente"
-          }, { merge: true });
+          }), { merge: true });
 
           // Journal History
           const histRef = doc(collection(db, "transactionHistory"));
-          transaction.set(histRef, {
+          transaction.set(histRef, sanitizeForFirestore({
             transactionId: req.id,
             createdAt: nowIso,
             date: dateStr,
@@ -779,11 +780,11 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             oldStatus: currentStatus,
             newStatus: targetStatus,
             comment: comment || "Remis en attente de vérification."
-          });
+          }));
 
           // Create Admin Audit Log
           const auditRef = doc(collection(db, "adminAuditLogs"));
-          transaction.set(auditRef, {
+          transaction.set(auditRef, sanitizeForFirestore({
             transactionId: req.id,
             oldValue: currentStatus,
             newValue: targetStatus,
@@ -794,7 +795,7 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             action: "MISE_EN_ATTENTE",
             amount: req.montant,
             createdAt: nowIso
-          });
+          }));
         }
       });
 

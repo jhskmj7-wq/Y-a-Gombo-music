@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { safeStringify } from "../lib/jsonUtils";
 import { 
   Search, 
   MapPin, 
@@ -157,7 +158,7 @@ export default function AnnuaireTalents({
   // Sync favorites of talents to localStorage & Firestore
   useEffect(() => {
     try {
-      localStorage.setItem("favorite_talents_list", JSON.stringify(favorites));
+      localStorage.setItem("favorite_talents_list", safeStringify(favorites));
     } catch (e) {
       console.warn("Could not save favorite_talents_list to localStorage:", e);
     }
@@ -178,7 +179,7 @@ export default function AnnuaireTalents({
   // Handle local persistence of simulated page views
   useEffect(() => {
     try {
-      localStorage.setItem("talent_page_views", JSON.stringify(viewsCount));
+      localStorage.setItem("talent_page_views", safeStringify(viewsCount));
     } catch (e) {
       console.warn("Could not save talent_page_views to localStorage:", e);
     }

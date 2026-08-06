@@ -1,4 +1,5 @@
 import { db } from "./firebase";
+import { safeStringify } from "./jsonUtils";
 import { 
   collection, 
   doc, 
@@ -61,7 +62,7 @@ export function recordUserPreferenceClick(type: "market" | "academy", category?:
       prefs.academyCount = (prefs.academyCount || 0) + 1;
     }
     if (category) prefs.lastCategoryClicked = category;
-    localStorage.setItem(USER_PREF_KEY, JSON.stringify(prefs));
+    localStorage.setItem(USER_PREF_KEY, safeStringify(prefs));
   } catch (_) {}
 }
 

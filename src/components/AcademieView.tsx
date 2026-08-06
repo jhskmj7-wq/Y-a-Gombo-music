@@ -1205,7 +1205,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                   localStorage.setItem("afrigombo_suggested_deposit_amount", String(insufficientBalanceDetails.missing));
                   localStorage.setItem(
                     "afrigombo_pending_purchase",
-                    JSON.stringify({ type: "academie", course: { price: insufficientBalanceDetails.required, title: enrolledCourseTitle || "Cours Académie", id: `course-${Date.now()}` } })
+                    safeStringify({ type: "academie", course: { price: insufficientBalanceDetails.required, title: enrolledCourseTitle || "Cours Académie", id: `course-${Date.now()}` } })
                   );
                   if (onNavigateView) {
                     onNavigateView("user_wallet");

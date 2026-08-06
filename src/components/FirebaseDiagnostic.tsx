@@ -89,8 +89,8 @@ export default function FirebaseDiagnostic({ isOpen, onClose }: FirebaseDiagnost
                 <ShieldCheck className="w-6 h-6 text-amber-500" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-afri-text">Diagnostic Firebase</h2>
-                <p className="text-xs text-afri-text-sec">Infrastructure & Connectivité</p>
+                <h2 className="text-xl font-bold text-afri-text">Diagnostics PWA (Fondateur uniquement)</h2>
+                <p className="text-xs text-afri-text-sec">Infrastructure, Cache & Connectivité Firebase</p>
               </div>
             </div>
             <button 

@@ -27,10 +27,21 @@ export const getCircularReplacer = () => {
         (typeof HTMLAudioElement !== "undefined" && value instanceof HTMLAudioElement) ||
         (typeof HTMLImageElement !== "undefined" && value instanceof HTMLImageElement) ||
         value.nodeType !== undefined ||
+        value.tagName !== undefined ||
+        value.nodeName !== undefined ||
+        value.ownerDocument !== undefined ||
+        value.addEventListener !== undefined ||
         value.$$typeof !== undefined || // React Element
         value._reactInternals !== undefined || // React Fiber
         value._reactFiber !== undefined ||
-        value.src !== undefined && (value instanceof HTMLMediaElement || typeof value.play === "function")
+        // Detect HTMLImageElement / Audio / Video objects regardless of minified constructor name
+        (value.src !== undefined && (
+          typeof value.src !== "string" ||
+          typeof value.play === "function" ||
+          value.naturalWidth !== undefined ||
+          value.complete !== undefined ||
+          value.currentSrc !== undefined
+        ))
       ) {
         return undefined;
       }

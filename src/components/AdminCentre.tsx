@@ -475,7 +475,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   // Mount log
   useEffect(() => {
-    const handleOpenDiagnostic = () => setIsDiagnosticOpen(true);
+    const handleOpenDiagnostic = () => {
+      const userEmail = (currentUser?.email ?? "").toLowerCase();
+      if (userEmail === "jhs.kmj7@gmail.com" || profile?.isFounder) {
+        setIsDiagnosticOpen(true);
+      }
+    };
     window.addEventListener('open-firebase-diagnostic', handleOpenDiagnostic);
 
     const handleTriggerProfileBoost = () => {
@@ -919,7 +924,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       next.add(notifId);
       if (currentUser?.uid) {
         try {
-          localStorage.setItem(`afrigombo_read_notifs_${currentUser.uid}`, JSON.stringify(Array.from(next)));
+          localStorage.setItem(`afrigombo_read_notifs_${currentUser.uid}`, safeStringify(Array.from(next)));
         } catch (e) {}
       }
       return next;
@@ -939,7 +944,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       const next = new Set([...prev, ...allIds]);
       if (currentUser?.uid) {
         try {
-          localStorage.setItem(`afrigombo_read_notifs_${currentUser.uid}`, JSON.stringify(Array.from(next)));
+          localStorage.setItem(`afrigombo_read_notifs_${currentUser.uid}`, safeStringify(Array.from(next)));
         } catch (e) {}
       }
       return next;
@@ -2840,6 +2845,21 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 QUITTER
                               </span>
                             ))}
+
+                            {/* DIAGNOSTICS PWA - SOUVERAIN (SUPER FONDATEUR UNIQUEMENT) */}
+                            {isAuthorizedSuperFounder && (
+                              <>
+                                <div className="border-t border-afri-border/60 my-2" />
+                                {renderMenuItem("menu_pwa_diagnostics", "Diagnostics PWA (Fondateur uniquement)", "⚡", () => {
+                                  setIsDiagnosticOpen(true);
+                                  try { audioSynth.playValidationSuccess(); } catch (_) {}
+                                }, false, (
+                                  <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/20 text-[#D4AF37] rounded border border-[#D4AF37]/40 font-black tracking-wider uppercase">
+                                    Fondateur
+                                  </span>
+                                ))}
+                              </>
+                            )}
                           </div>
 
                         </div>
@@ -10035,11 +10055,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         <AvatarStore onClose={() => setIsAvatarStoreOpen(false)} inventory={[]} />
       )}
 
-      {/* 6. Firebase Diagnostic Modal */}
-      <FirebaseDiagnostic 
-        isOpen={isDiagnosticOpen} 
-        onClose={() => setIsDiagnosticOpen(false)} 
-      />
+      {/* 6. Firebase Diagnostic Modal (Super Fondateur uniquement) */}
+      {isAuthorizedSuperFounder && (
+        <FirebaseDiagnostic 
+          isOpen={isDiagnosticOpen} 
+          onClose={() => setIsDiagnosticOpen(false)} 
+        />
+      )}
 
       {/* 7. Public Profile / CV Musical Modal */}
       <PublicProfileModal

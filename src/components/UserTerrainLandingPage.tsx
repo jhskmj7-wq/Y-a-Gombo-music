@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { safeStringify } from "../lib/jsonUtils";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Search, Sliders, Plus, Megaphone, MessageSquare, ShieldCheck, Bell, 
@@ -319,7 +320,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       let historyIds: string[] = stored ? JSON.parse(stored) : [];
       historyIds = historyIds.filter(id => id !== g.id);
       historyIds.unshift(g.id);
-      localStorage.setItem("afrigombo_view_history", JSON.stringify(historyIds.slice(0, 20)));
+      localStorage.setItem("afrigombo_view_history", safeStringify(historyIds.slice(0, 20)));
     } catch (e) {
       console.warn("History save error:", e);
     }

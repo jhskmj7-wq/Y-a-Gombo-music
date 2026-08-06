@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
+import { safeStringify } from "../lib/jsonUtils";
 
 interface ArbreAPalabresBubbleProps {
   unreadCount?: number;
@@ -101,7 +102,7 @@ export const ArbreAPalabresBubble: React.FC<ArbreAPalabresBubbleProps> = ({ unre
     if (dragRef.current.hasDragged) {
       // Save position to localStorage
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(position));
+        localStorage.setItem(STORAGE_KEY, safeStringify(position));
       } catch (_) {}
     } else {
       // Simple tap / click -> Open Arbre à Palabres
