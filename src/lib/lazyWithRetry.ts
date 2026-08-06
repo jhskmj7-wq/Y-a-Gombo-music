@@ -24,12 +24,6 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       const pageHasBeenRefreshed = window.sessionStorage.getItem("afrigombo_chunk_retry");
       if (!pageHasBeenRefreshed) {
         window.sessionStorage.setItem("afrigombo_chunk_retry", "true");
-        if ('serviceWorker' in navigator) {
-          try {
-            const regs = await navigator.serviceWorker.getRegistrations();
-            for (const r of regs) await r.unregister();
-          } catch (_) {}
-        }
         if ('caches' in window) {
           try {
             const keys = await caches.keys();

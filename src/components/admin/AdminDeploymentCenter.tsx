@@ -358,17 +358,17 @@ export default function AdminDeploymentCenter({
             <p className="text-[11px] text-afri-text-sec font-mono">Collection gomboDB / Synchro Live</p>
           </div>
 
-          {/* PWA */}
+          {/* Web App */}
           <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-white uppercase flex items-center gap-2">
-                <Globe className="w-4 h-4 text-sky-400" /> Application PWA
+                <Globe className="w-4 h-4 text-sky-400" /> Application Web
               </span>
               <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                INSTALLEE
+                OPÉRATIONNELLE
               </span>
             </div>
-            <p className="text-[11px] text-afri-text-sec font-mono">ServiceWorker Registered & Active</p>
+            <p className="text-[11px] text-afri-text-sec font-mono">Standard SPA Web Client</p>
           </div>
 
           {/* Android Build */}

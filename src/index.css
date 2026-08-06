@@ -468,8 +468,8 @@ img {
 .light header,
 .light footer,
 .light nav {
-  background-color: #FFFFFF !important;
-  border-color: #DDD8CF !important;
+  background-color: var(--afri-bg-sec, #FFFFFF) !important;
+  border-color: var(--afri-border, #DDD8CF) !important;
 }
 
 .light .afri-card {

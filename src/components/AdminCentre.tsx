@@ -1133,12 +1133,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   useEffect(() => {
     if (isAnyAdminModalOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
           setIsPlusMenuOpen(false);
@@ -1167,12 +1161,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       window.addEventListener("popstate", handlePopState);
 
       return () => {
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        document.body.style.overflow = '';
-        document.documentElement.style.overflow = '';
-        window.scrollTo(0, scrollY);
         window.removeEventListener("keydown", handleKeyDown);
         window.removeEventListener("popstate", handlePopState);
       };
@@ -3186,9 +3174,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
-                className={`h-full w-full ${
+                className={`flex-1 min-h-0 h-full w-full ${
                   ["user_settings", "user_notifications", "user_messages", "user_reels"].includes(activeMenu)
-                    ? "overflow-hidden"
+                    ? "flex flex-col overflow-hidden"
                     : "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
                 } ${
                   activeMenu === "super_admin" || activeMenu === "user_builders" || activeMenu === "dashboard" || activeMenu === "user_terrain" || activeMenu === "user_vibes" || activeMenu === "user_mes_gombos" || activeMenu === "user_heritage"

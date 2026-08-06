@@ -12,7 +12,6 @@ import CompleteProfile from "./components/CompleteProfile";
 import AuthPage from "./components/AuthPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import PremiumLoader from "./components/PremiumLoader";
-import PWAHandler from "./components/PWAHandler";
 import { useTheme } from "./context/ThemeContext";
 import { db } from "./firebase";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -237,10 +236,9 @@ function App() {
           )}
         </AnimatePresence>
 
-        {/* 2. PERSISTENT BACKGROUND MUSIC & PWA */}
+        {/* 2. PERSISTENT BACKGROUND MUSIC */}
         <BackgroundMusic />
         <FloatingAudioPlayer />
-        <PWAHandler />
       </div>
     </ErrorBoundary>
   );

@@ -275,12 +275,6 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
   useEffect(() => {
     if (isAnyTerrainModalOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
           setIsPlusMenuOpen(false);
@@ -307,11 +301,6 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       window.addEventListener("popstate", handlePopState);
 
       return () => {
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        document.body.style.overflow = '';
-        window.scrollTo(0, scrollY);
         window.removeEventListener("keydown", handleKeyDown);
         window.removeEventListener("popstate", handlePopState);
       };

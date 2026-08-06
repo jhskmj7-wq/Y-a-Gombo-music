@@ -64,15 +64,6 @@ class BootManager {
         }
       },
       {
-        name: "Service Worker (PWA)",
-        run: async () => {
-          if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-            return { status: "OK", message: "PWA SW supported" };
-          }
-          return { status: "WARNING", message: "SW disabled or unsupported" };
-        }
-      },
-      {
         name: "SyncManager Singleton",
         run: async () => {
           const state = syncManager.getState();
