@@ -849,6 +849,28 @@ export const gomboDB = {
           if (gData.status === "publie" || !gData.status) {
             updates.status = "candidatures_ouvertes";
           }
+          // Send notification to Gombo creator client
+          const creatorId = gData.clientId || gData.creatorId || gData.userId;
+          if (creatorId) {
+            try {
+              await addDoc(collection(db, "notifications"), {
+                userId: creatorId,
+                title: "Nouvelle candidature ! 🔥",
+                message: `${application.applicantName || application.musicianName || 'Un artiste'} a postulé à votre gombo "${gData.title || 'Contrat'}" !`,
+                type: "new_application",
+                read: false,
+                isRead: false,
+                createdAt: new Date().toISOString(),
+                gomboId: gomboId,
+                gomboTitle: gData.title || "",
+                candidateName: application.applicantName || application.musicianName || "",
+                candidatePhoto: application.applicantPhoto || application.musicianAvatar || "",
+                candidateId: application.musicianId || application.userId || ""
+              });
+            } catch (notifErr) {
+              console.warn("Could not send application notification to creator:", notifErr);
+            }
+          }
         }
         await updateDoc(gomboRef, updates);
       }
@@ -892,6 +914,33 @@ export const gomboDB = {
         finalStatus = optionalStatus;
       }
       await updateDoc(doc(db, "applications", finalAppId), { status: finalStatus });
+
+      // Notify candidate if accepted
+      try {
+        const appRef = doc(db, "applications", finalAppId);
+        const appSnap = await getDoc(appRef);
+        if (appSnap.exists()) {
+          const appData = appSnap.data();
+          const candidateId = appData.musicianId || appData.userId || appData.applicantId;
+          const gomboTitle = appData.gomboTitle || "votre gombo";
+          
+          if (finalStatus === "accepte" && candidateId) {
+            await addDoc(collection(db, "notifications"), {
+              userId: candidateId,
+              title: "Candidature Acceptée ! 🎉",
+              message: `Félicitations ! Votre candidature pour le gombo "${gomboTitle}" a été officiellement acceptée par l'organisateur.`,
+              type: "application_accepted",
+              read: false,
+              isRead: false,
+              createdAt: new Date().toISOString(),
+              gomboId: appData.gomboId || "",
+              gomboTitle: gomboTitle
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("Could not send application accepted notification:", err);
+      }
     }
   },
 

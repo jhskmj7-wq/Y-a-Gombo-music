@@ -118,6 +118,24 @@ export default function AdminFounderThrone({
         updatedBy: currentUser?.email || profile?.email || "Super Fondateur"
       }, { merge: true });
       
+      // Send global notification for maintenance state change
+      try {
+        await addDoc(collection(db, "notifications"), {
+          title: nextMode ? "Maintenance En Cours ⚠️" : "Maintenance Terminée ✅",
+          message: nextMode 
+            ? "L'application est maintenant en maintenance pour amélioration de vos services. Merci de patienter !" 
+            : "La maintenance est terminée ! L'application est entièrement opérationnelle.",
+          type: "app_update",
+          audience: "Tous",
+          status: "published",
+          read: false,
+          isRead: false,
+          createdAt: now
+        });
+      } catch (errNotif) {
+        console.warn("Could not send global maintenance notification:", errNotif);
+      }
+
       setSuccessMsg(`Maintenance ${nextMode ? "activée" : "désactivée"} avec succès.`);
       setTimeout(() => setSuccessMsg(""), 4000);
       try { audioSynth?.playValidationSuccess?.(); } catch (_) {}

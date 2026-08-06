@@ -6724,7 +6724,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-afri-text-sec">Aucun artiste disponible.</p>;
                 return (
-                  <div className="w-full animate-fadeIn text-left">
+                  <div className="w-full h-full flex flex-col justify-between p-0 m-0 border-none rounded-none bg-afri-bg animate-fadeIn text-left min-h-0">
                     <NotificationCenter 
                       currentUserProfile={profile || currentArtist} 
                       notifications={allNotifications}

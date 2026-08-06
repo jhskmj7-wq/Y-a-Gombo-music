@@ -151,6 +151,41 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
       console.log("Saving maintenance payload:", payload);
       await setDoc(doc(db, "settings", "maintenance"), payload, { merge: true });
       console.log("Maintenance payload saved successfully");
+
+      // Send global notification for maintenance state change
+      try {
+        let title = "Maintenance de l'application";
+        let message = payload.globalMessage || "Mise à jour du statut de la plateforme.";
+        
+        const isStarted = payload.globalMode === true || payload.status === "maintenance";
+        const isEnded = payload.globalMode === false || payload.status === "operational";
+        const isScheduled = payload.scheduled === true && payload.startAt && payload.endAt;
+
+        if (isStarted) {
+          title = "Maintenance En Cours ⚠️";
+          message = payload.globalMessage || "L'application est actuellement en maintenance. Merci de patienter !";
+        } else if (isScheduled) {
+          title = "Maintenance Programmée ⚙️";
+          message = `Une maintenance est planifiée du ${new Date(payload.startAt).toLocaleString('fr-FR')} au ${new Date(payload.endAt).toLocaleString('fr-FR')}.`;
+        } else if (isEnded) {
+          title = "Maintenance Terminée ✅";
+          message = "La maintenance est terminée ! L'application est entièrement opérationnelle.";
+        }
+
+        await addDoc(collection(db, "notifications"), {
+          title,
+          message,
+          type: "app_update",
+          audience: "Tous",
+          status: "published",
+          read: false,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        });
+      } catch (errNotif) {
+        console.warn("Could not send global maintenance notification:", errNotif);
+      }
+
       setSuccessMsg("Mise à jour serveur enregistrée en temps réel !");
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {

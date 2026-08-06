@@ -1,5 +1,5 @@
 export async function clearAppCaches() {
-  console.log("🧹 [CachePurge] Clearing caches and local storage...");
+  console.log("🧹 [CachePurge] Clearing caches, unregistering service workers and local storage...");
   if ('caches' in window) {
     try {
       const keys = await caches.keys();
@@ -8,6 +8,18 @@ export async function clearAppCaches() {
       console.error("Cache delete error:", e);
     }
   }
+
+  if ('serviceWorker' in navigator) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+      }
+    } catch (e) {
+      console.error("ServiceWorker unregister error:", e);
+    }
+  }
+
   try {
     localStorage.removeItem("afrigombo_app_version");
     sessionStorage.removeItem("last_chunk_reload_ts");
@@ -16,3 +28,4 @@ export async function clearAppCaches() {
 
   window.location.reload();
 }
+

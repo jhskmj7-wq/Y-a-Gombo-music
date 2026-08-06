@@ -438,6 +438,29 @@ export default function AfrigomboWalletDashboard({
       };
       await setDoc(doc(db, "betaTransactions", txRef.id), betaTxPayload);
 
+      // Create notification for SUPER_FOUNDER
+      try {
+        await addDoc(collection(db, "notifications"), {
+          userId: "SUPER_FOUNDER",
+          receiverUid: "SUPER_FOUNDER",
+          audience: "Super Fondateur",
+          isFounderOnly: true,
+          title: "Demande de Dépôt Wallet 📥",
+          message: `L'utilisateur ${userName} demande un dépôt de ${depositAmount.toLocaleString('fr-FR')} FCFA via ${operator.toUpperCase()} (${phoneNumber}). Réf: ${reference}`,
+          type: "PAYMENT",
+          category: "PAIEMENT",
+          read: false,
+          isRead: false,
+          createdAt: nowIso,
+          amount: depositAmount,
+          reference: reference,
+          operator: operator,
+          phoneNumber: phoneNumber
+        });
+      } catch (e) {
+        console.warn("Could not create deposit notification for Super Founder:", e);
+      }
+
       // 4. Update/Sync Support Conversation Metadata
       try {
         const convoId = await SupportService.getOrCreateSupportConversation(uid, currentUserProfile);
@@ -570,6 +593,29 @@ export default function AfrigomboWalletDashboard({
 
         await setDoc(doc(db, "walletWithdrawalRequests", txRef.id), withdrawPayload);
         await setDoc(doc(db, "walletRequests", txRef.id), withdrawPayload);
+
+        // Create notification for SUPER_FOUNDER
+        try {
+          await addDoc(collection(db, "notifications"), {
+            userId: "SUPER_FOUNDER",
+            receiverUid: "SUPER_FOUNDER",
+            audience: "Super Fondateur",
+            isFounderOnly: true,
+            title: "Demande de Retrait Wallet 📤",
+            message: `L'utilisateur ${userName} demande un retrait de ${withdrawAmount.toLocaleString('fr-FR')} FCFA via ${operator.toUpperCase()} (${phoneNumber}). Réf: ${reference}`,
+            type: "PAYMENT",
+            category: "PAIEMENT",
+            read: false,
+            isRead: false,
+            createdAt: nowIso,
+            amount: withdrawAmount,
+            reference: reference,
+            operator: operator,
+            phoneNumber: phoneNumber
+          });
+        } catch (e) {
+          console.warn("Could not create withdrawal notification for Super Founder:", e);
+        }
 
         // Send automated support message for withdrawal request
         try {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../firebase";
-import { doc, onSnapshot, setDoc } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, addDoc, collection } from "firebase/firestore";
 import { Settings, Save, AlertTriangle, MessageSquare, Globe, Navigation, ShieldAlert, CheckCircle2, Wrench } from "lucide-react";
 import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";
 import { useMaintenance } from "../../hooks/useMaintenance";
@@ -46,6 +46,24 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
         updatedBy: currentUser?.email || profile?.email || "Super Fondateur"
       }, { merge: true });
       
+      // Send global notification for maintenance state change
+      try {
+        await addDoc(collection(db, "notifications"), {
+          title: nextMode ? "Maintenance En Cours ⚠️" : "Maintenance Terminée ✅",
+          message: nextMode 
+            ? "L'application est maintenant en maintenance pour amélioration de vos services. Merci de patienter !" 
+            : "La maintenance est terminée ! L'application est entièrement opérationnelle.",
+          type: "app_update",
+          audience: "Tous",
+          status: "published",
+          read: false,
+          isRead: false,
+          createdAt: now
+        });
+      } catch (errNotif) {
+        console.warn("Could not send global maintenance notification:", errNotif);
+      }
+
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
       try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
@@ -86,6 +104,36 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
       }, { merge: true });
 
       await setDoc(doc(db, "settings", "maintenance"), maintPayload, { merge: true });
+
+      // Send global notification for maintenance state change
+      try {
+        let title = "Maintenance de l'application";
+        let message = globalMessage || "Mise à jour du statut de la plateforme.";
+        
+        if (mMode) {
+          title = "Maintenance En Cours ⚠️";
+          message = globalMessage || "L'application est actuellement en maintenance. Merci de patienter !";
+        } else if (scheduled && startAt && endAt) {
+          title = "Maintenance Programmée ⚙️";
+          message = `Une maintenance est planifiée du ${new Date(startAt).toLocaleString('fr-FR')} au ${new Date(endAt).toLocaleString('fr-FR')}.`;
+        } else {
+          title = "Maintenance Terminée ✅";
+          message = "La maintenance est terminée ! L'application est entièrement opérationnelle.";
+        }
+
+        await addDoc(collection(db, "notifications"), {
+          title,
+          message,
+          type: "app_update",
+          audience: "Tous",
+          status: "published",
+          read: false,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        });
+      } catch (errNotif) {
+        console.warn("Could not send global maintenance notification:", errNotif);
+      }
 
       setSaved(true);
       if (audioSynth) {
