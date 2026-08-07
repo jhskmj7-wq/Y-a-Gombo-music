@@ -101,6 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (firebaseUser) {
         setCurrentUser(firebaseUser);
+        setShowAuthPopup(false);
         try {
           let uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
           
@@ -243,9 +244,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async () => {
     try {
-      await gomboAuth.loginWithGoogle();
+      const res = await gomboAuth.loginWithGoogle();
+      setShowAuthPopup(false);
+      return res;
     } catch (error) {
       console.error("❌ Google Login Error:", error);
+      throw error;
     }
   };
 

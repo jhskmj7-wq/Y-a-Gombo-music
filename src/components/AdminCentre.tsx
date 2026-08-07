@@ -241,7 +241,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     "Chercher un beatmaker...",
     "Trouver un studio..."
   ]);
-  const { currentUser, profile, logout, refreshProfile, setProfile, loginWithGoogle } = useAuth();
+  const { currentUser, profile, logout, refreshProfile, setProfile, loginWithGoogle, showAuthPopup, setShowAuthPopup } = useAuth();
   const { network, showToast: appShowToast } = useAppSettings();
   const geo = useGeoEngine(profile);
   const navigate = useNavigate();
@@ -260,6 +260,23 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   // Avatar modals state
   const [isAvatarEditorOpen, setIsAvatarEditorOpen] = useState<boolean>(false);
   const [isAvatarStoreOpen, setIsAvatarStoreOpen] = useState<boolean>(false);
+
+  // Auto-close auth modals immediately when user is authenticated or session restored
+  useEffect(() => {
+    if (currentUser) {
+      setIsAuthModalOpen(false);
+      setShowHeritageLoginRequired(false);
+      setShowGoogleLoginRequiredModal(false);
+      if (setShowAuthPopup) setShowAuthPopup(false);
+    }
+  }, [currentUser, setShowAuthPopup]);
+
+  // Synchronize showAuthPopup with local isAuthModalOpen state
+  useEffect(() => {
+    if (showAuthPopup && !currentUser) {
+      setIsAuthModalOpen(true);
+    }
+  }, [showAuthPopup, currentUser]);
 
   // Scroll Position Memory Engine for Independent Scroll Preservation
   const scrollPositionsRef = useRef<Record<string, number>>({});
@@ -6492,6 +6509,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             try {
                               if (audioSynth) audioSynth.playValidationSuccess();
                               await loginWithGoogle();
+                              setIsAuthModalOpen(false);
+                              if (setShowAuthPopup) setShowAuthPopup(false);
                             } catch (err) {
                               console.error("Google Auth failed in notification gate:", err);
                               setIsAuthModalOpen(true);
@@ -9151,6 +9170,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 onClick={async () => {
                   try {
                     await loginWithGoogle();
+                    setIsAuthModalOpen(false);
+                    if (setShowAuthPopup) setShowAuthPopup(false);
                   } catch (err) {
                     console.error(err);
                   }
@@ -9209,7 +9230,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               <div className="pt-2">
                 <button
-                  onClick={() => setIsAuthModalOpen(false)}
+                  onClick={() => {
+                    setIsAuthModalOpen(false);
+                    if (setShowAuthPopup) setShowAuthPopup(false);
+                  }}
                   className="w-full py-2 px-4 rounded-xl bg-transparent hover:bg-afri-bg text-afri-text-sec hover:text-afri-text text-xs font-mono font-bold transition-all duration-300"
                 >
                   Plus tard
@@ -9242,6 +9266,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   setShowHeritageLoginRequired(false);
                   try {
                     await loginWithGoogle();
+                    setIsAuthModalOpen(false);
+                    if (setShowAuthPopup) setShowAuthPopup(false);
                     try { audioSynth.playTamTam(true); } catch (_) {}
                   } catch (err) {
                     console.error("Google login failed", err);
@@ -9295,8 +9321,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 onClick={async () => {
                   setShowGoogleLoginRequiredModal(false);
                   try { await logout(); } catch(e){}
-                  setIsAuthModalOpen(true);
-                  try { audioSynth.playTamTam(false); } catch(e){}
+                  try {
+                    await loginWithGoogle();
+                    setIsAuthModalOpen(false);
+                    if (setShowAuthPopup) setShowAuthPopup(false);
+                    try { audioSynth.playTamTam(false); } catch(e){}
+                  } catch(e) {
+                    console.error("Google login failed", e);
+                  }
                 }}
                 className="flex-1 py-2.5 rounded-xl bg-afri-gold hover:bg-afri-bg-sec text-black transition-all text-xs font-sans font-black uppercase tracking-wider"
               >
