@@ -20,9 +20,13 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       const path = pathMatch ? pathMatch[1] : "Unknown path";
       const actualModuleName = moduleName || path.split('/').pop() || "Unknown module";
 
-      // If chunk loading failed, attempt an automatic recovery reload once
+      // If chunk loading failed, attempt an automatic recovery reload once, only for chunk errors
       const pageHasBeenRefreshed = window.sessionStorage.getItem("afrigombo_chunk_retry");
-      if (!pageHasBeenRefreshed) {
+      const isChunkError = errorMessage.includes("Failed to fetch") || 
+                           errorMessage.includes("ChunkLoadError") || 
+                           errorMessage.includes("Loading chunk");
+
+      if (!pageHasBeenRefreshed && isChunkError) {
         window.sessionStorage.setItem("afrigombo_chunk_retry", "true");
         if ('caches' in window) {
           try {
@@ -36,45 +40,32 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       }
       return {
         default: (() => createElement('div', {
-          className: "p-6 text-left text-red-500 font-mono bg-afri-bg-sec border border-red-500/30 rounded-2xl m-4 w-full max-w-4xl shadow-xl flex flex-col items-start overflow-auto"
+          className: "p-6 text-left text-afri-gold font-mono bg-black border border-afri-gold/30 rounded-2xl m-4 w-full max-w-4xl shadow-xl flex flex-col items-start overflow-auto"
         }, [
           createElement('div', { key: 'icon', className: 'text-3xl mb-4 text-center w-full' }, '⚠️'),
-          createElement('h3', { key: 'title', className: 'font-black uppercase tracking-wider text-xl mb-4 text-red-500 text-center w-full' }, 'Impossible de charger ce module'),
+          createElement('h3', { key: 'title', className: 'font-black uppercase tracking-wider text-xl mb-4 text-afri-gold text-center w-full' }, 'Impossible de charger ce module'),
           
           createElement('div', { key: 'details', className: 'w-full space-y-3 text-xs md:text-sm' }, [
             createElement('p', { key: 'module' }, [
-              createElement('strong', { key: 'l', className: 'text-red-400' }, 'Module : '),
+              createElement('strong', { key: 'l', className: 'text-afri-gold' }, 'Module : '),
               actualModuleName
             ]),
             createElement('p', { key: 'path' }, [
-              createElement('strong', { key: 'l', className: 'text-red-400' }, 'Chemin : '),
+              createElement('strong', { key: 'l', className: 'text-afri-gold' }, 'Chemin : '),
               path
             ]),
-            createElement('p', { key: 'func' }, [
-              createElement('strong', { key: 'l', className: 'text-red-400' }, 'Import concerné : '),
-              createElement('code', { key: 'c', className: 'bg-black/30 px-1 py-0.5 rounded' }, importFuncString)
-            ]),
-            createElement('div', { key: 'error', className: 'mt-4' }, [
-              createElement('strong', { key: 'l', className: 'text-red-400 block mb-1' }, 'Erreur JavaScript : '),
-              createElement('pre', { key: 'c', className: 'bg-black/50 p-3 rounded-lg overflow-x-auto text-red-300' }, errorMessage)
-            ]),
-            createElement('div', { key: 'stack', className: 'mt-4' }, [
-              createElement('strong', { key: 'l', className: 'text-red-400 block mb-1' }, 'Stack trace : '),
-              createElement('pre', { key: 'c', className: 'bg-black/50 p-3 rounded-lg overflow-x-auto text-afri-text-muted text-[10px]' }, stack)
+            createElement('div', { key: 'actions', className: 'flex justify-center gap-4 mt-8 w-full' }, [
+              createElement('button', {
+                key: 'retry',
+                onClick: () => window.location.reload(),
+                className: 'px-6 py-2 bg-afri-gold text-black text-xs font-bold font-mono uppercase rounded-xl tracking-widest cursor-pointer hover:bg-yellow-600 transition'
+              }, 'Réessayer'),
+              createElement('button', {
+                key: 'home',
+                onClick: () => { window.location.href = '/'; },
+                className: 'px-6 py-2 bg-black text-afri-gold border border-afri-gold text-xs font-bold font-mono uppercase rounded-xl tracking-widest cursor-pointer hover:bg-zinc-900 transition'
+              }, 'Retour Accueil')
             ])
-          ]),
-
-          createElement('div', { key: 'actions', className: 'flex justify-center gap-4 mt-8 w-full' }, [
-            createElement('button', {
-              key: 'retry',
-              onClick: () => window.location.reload(),
-              className: 'px-6 py-2 bg-red-600 text-white text-xs font-bold font-mono uppercase rounded-xl tracking-widest cursor-pointer hover:bg-red-500 transition'
-            }, 'Réessayer'),
-            createElement('button', {
-              key: 'home',
-              onClick: () => { window.location.href = '/'; },
-              className: 'px-6 py-2 bg-afri-bg-ter text-afri-text border border-afri-border text-xs font-bold font-mono uppercase rounded-xl tracking-widest cursor-pointer hover:bg-zinc-700 transition'
-            }, 'Retour Accueil')
           ])
         ])) as unknown as T
       };
