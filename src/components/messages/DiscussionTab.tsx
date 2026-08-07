@@ -185,7 +185,7 @@ export default function DiscussionTab({
   });
 
   return (
-    <div className="space-y-3 pb-24 relative">
+    <div className="space-y-3 pb-24 relative afri-container pt-4">
       {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-afri-text-muted" />

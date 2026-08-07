@@ -20,6 +20,7 @@ import { SecurityService } from "./lib/SecurityService";
 import ScrollToTop from "./components/ScrollToTop";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
 import GlobalNotificationBanner from "./components/GlobalNotificationBanner";
+import UpdateNotification from "./components/UpdateNotification";
 import BootSplashScreen from "./components/BootSplashScreen";
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
@@ -195,6 +196,7 @@ function App() {
     <ErrorBoundary>
       <div className="h-full h-[100dvh] w-full overflow-x-hidden font-sans antialiased transition-colors duration-300 bg-afri-bg text-afri-text flex flex-col">
         <ScrollToTop />
+        <UpdateNotification />
         
         {/* Main application layer, rendered cleanly */}
         <Routes>

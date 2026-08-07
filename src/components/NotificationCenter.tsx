@@ -460,7 +460,7 @@ export default function NotificationCenter({
       scrollable={true}
       className="pb-safe"
     >
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="afri-container py-6 space-y-6">
 
       {/* IMPERIAL HEADER */}
       <motion.div 

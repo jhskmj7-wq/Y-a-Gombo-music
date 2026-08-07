@@ -21,13 +21,13 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       const actualModuleName = moduleName || path.split('/').pop() || "Unknown module";
 
       // If chunk loading failed, attempt an automatic recovery reload once, only for chunk errors
-      const pageHasBeenRefreshed = window.sessionStorage.getItem("afrigombo_chunk_retry");
+      const pageHasBeenRefreshed = window.sessionStorage.getItem("afrigombo_chunk_reload_attempt");
       const isChunkError = errorMessage.includes("Failed to fetch") || 
                            errorMessage.includes("ChunkLoadError") || 
                            errorMessage.includes("Loading chunk");
 
       if (!pageHasBeenRefreshed && isChunkError) {
-        window.sessionStorage.setItem("afrigombo_chunk_retry", "true");
+        window.sessionStorage.setItem("afrigombo_chunk_reload_attempt", "true");
         if ('caches' in window) {
           try {
             const keys = await caches.keys();
