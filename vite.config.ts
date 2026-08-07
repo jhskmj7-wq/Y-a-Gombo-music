@@ -2,13 +2,71 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import fs from "fs";
+import path from "path";
+
+const now = new Date();
+const buildTimestamp = now.toISOString();
+const buildDateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+const buildTimeStr = now.toISOString().slice(11, 16).replace(':', '');
+const randomHash = Math.random().toString(36).substring(2, 7).toUpperCase();
+const BUILD_ID = `ELITE-${buildDateStr}-${buildTimeStr}-${randomHash}`;
+
+function versionJsonPlugin() {
+  return {
+    name: 'generate-version-json',
+    buildStart() {
+      try {
+        const publicDir = path.resolve(__dirname, 'public');
+        if (!fs.existsSync(publicDir)) {
+          fs.mkdirSync(publicDir, { recursive: true });
+        }
+        fs.writeFileSync(
+          path.resolve(publicDir, 'version.json'),
+          JSON.stringify({
+            buildId: BUILD_ID,
+            timestamp: buildTimestamp,
+            version: '2.6.0-ELITE',
+            env: process.env.NODE_ENV || 'production'
+          }, null, 2)
+        );
+      } catch (e) {
+        console.error('Error writing public/version.json:', e);
+      }
+    },
+    writeBundle() {
+      try {
+        const distDir = path.resolve(__dirname, 'dist');
+        if (!fs.existsSync(distDir)) {
+          fs.mkdirSync(distDir, { recursive: true });
+        }
+        fs.writeFileSync(
+          path.resolve(distDir, 'version.json'),
+          JSON.stringify({
+            buildId: BUILD_ID,
+            timestamp: buildTimestamp,
+            version: '2.6.0-ELITE',
+            env: process.env.NODE_ENV || 'production'
+          }, null, 2)
+        );
+      } catch (e) {
+        console.error('Error writing dist/version.json:', e);
+      }
+    }
+  };
+}
 
 export default defineConfig({
   base: '/',
   build: { sourcemap: true },
+  define: {
+    '__AFRIGOMBO_BUILD_ID__': JSON.stringify(BUILD_ID),
+    '__AFRIGOMBO_BUILD_TIME__': JSON.stringify(buildTimestamp),
+  },
   plugins: [
     react(), 
     tailwindcss(),
+    versionJsonPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',

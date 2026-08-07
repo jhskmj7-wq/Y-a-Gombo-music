@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { BUILD_ID, BUILD_TIME } from "../../buildInfo";
 import {
   Rocket, ToggleRight, CheckCircle, History, Info, Clock, Check, X,
   ShieldAlert, ChevronRight, User, Server, Database, GitBranch, Cpu,
@@ -48,6 +49,31 @@ export default function AdminDeploymentCenter({
   const [featureFlags, setFeatureFlags] = useState<FeatureFlagItem[]>([]);
   const [bugReports, setBugReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Live Server Version check
+  const [serverVersion, setServerVersion] = useState<{ buildId?: string; timestamp?: string; env?: string } | null>(null);
+  const [isCheckingServerVersion, setIsCheckingServerVersion] = useState(false);
+
+  const checkServerVersion = async () => {
+    setIsCheckingServerVersion(true);
+    try {
+      const res = await fetch(`/version.json?t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setServerVersion(data);
+      } else {
+        setServerVersion({ buildId: "Indisponible (HTTP " + res.status + ")" });
+      }
+    } catch (e: any) {
+      setServerVersion({ buildId: "Erreur (" + (e.message || "Réseau") + ")" });
+    } finally {
+      setIsCheckingServerVersion(false);
+    }
+  };
+
+  useEffect(() => {
+    checkServerVersion();
+  }, []);
 
   // New Deployment Form modal
   const [showDeployModal, setShowDeployModal] = useState(false);
@@ -269,6 +295,69 @@ export default function AdminDeploymentCenter({
             <Rocket className="w-4 h-4" />
             <span>Enregistrer un Déploiement</span>
           </button>
+        </div>
+      </div>
+
+      {/* FORENSIC BUILD & SYNCHRONIZATION DIAGNOSTIC CARD */}
+      <div className="p-5 bg-black/80 border border-afri-gold/50 rounded-3xl space-y-4 shadow-2xl relative overflow-hidden backdrop-blur-xl font-mono text-xs">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-afri-border/60 pb-3">
+          <div className="flex items-center gap-2">
+            <Terminal className="w-5 h-5 text-afri-gold" />
+            <h3 className="text-sm font-black text-afri-gold uppercase tracking-wider">
+              DIAGNOSTIC DE SYNCHRONISATION EN TEMPS RÉEL
+            </h3>
+          </div>
+          <button
+            onClick={checkServerVersion}
+            disabled={isCheckingServerVersion}
+            className="px-3 py-1.5 bg-afri-gold/10 hover:bg-afri-gold/20 text-afri-gold border border-afri-gold/30 rounded-xl text-[10px] uppercase font-bold transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isCheckingServerVersion ? 'animate-spin' : ''}`} />
+            Vérifier le Serveur
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Client Runtime Build ID */}
+          <div className="p-3 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-1">
+            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">1. BUILD_ID Client (React JS)</span>
+            <div className="text-sm font-black text-white truncate text-afri-gold">{BUILD_ID}</div>
+            <span className="text-[9px] text-afri-text-sec block">Compilé : {new Date(BUILD_TIME).toLocaleString("fr-FR")}</span>
+          </div>
+
+          {/* Server Version.json Build ID */}
+          <div className="p-3 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-1">
+            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">2. BUILD_ID Serveur (version.json)</span>
+            <div className="text-sm font-black text-white truncate">
+              {serverVersion?.buildId || (isCheckingServerVersion ? "Vérification..." : "Non disponible")}
+            </div>
+            <span className="text-[9px] text-afri-text-sec block">
+              {serverVersion?.timestamp ? `Serveur : ${new Date(serverVersion.timestamp).toLocaleString("fr-FR")}` : "GET /version.json"}
+            </span>
+          </div>
+
+          {/* Verdict */}
+          <div className="p-3 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-1 flex flex-col justify-center">
+            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">3. Verdict de Cohérence</span>
+            <div>
+              {serverVersion?.buildId === BUILD_ID ? (
+                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-xs font-bold uppercase inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  🟢 SYNCHRONISÉ
+                </span>
+              ) : (
+                <span className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/40 text-xs font-bold uppercase inline-flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-rose-400" />
+                  🔴 DIVERGENCE DÉTECTÉE
+                </span>
+              )}
+            </div>
+            <span className="text-[9px] text-afri-text-sec block pt-1">
+              {serverVersion?.buildId === BUILD_ID
+                ? "Preview, Vercel & Client exécutent le même code !"
+                : "Vercel ou Chrome sert une version différente."}
+            </span>
+          </div>
         </div>
       </div>
 

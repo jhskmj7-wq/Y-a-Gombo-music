@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Download, RotateCcw, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { BUILD_ID } from '../buildInfo';
 
 export default function PWAHandler() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -13,18 +14,55 @@ export default function PWAHandler() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-      console.log('📡 [AFRIGOMBO] SW Registered:', r);
-      // Optional: Periodic update check
+      console.log('📡 [AFRIGOMBO] SW Registered with BUILD_ID:', BUILD_ID);
       if (r) {
+        // Check SW update every 15 minutes
         setInterval(() => {
           r.update();
-        }, 60 * 60 * 1000); // Check every hour
+        }, 15 * 60 * 1000);
       }
     },
     onRegisterError(error) {
       console.error('❌ [AFRIGOMBO] SW registration error', error);
     },
   });
+
+  // Version polling check against /version.json
+  useEffect(() => {
+    const checkVersion = async () => {
+      try {
+        const res = await fetch(`/version.json?t=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.buildId && data.buildId !== BUILD_ID) {
+            console.log(`🔔 [AFRIGOMBO] Version divergence detected: Server ${data.buildId} vs Client ${BUILD_ID}`);
+            setNeedRefresh(true);
+          }
+        }
+      } catch (e) {
+        // Silent network error check
+      }
+    };
+
+    // Check version immediately on mount
+    checkVersion();
+
+    // Check on tab visibility change
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkVersion();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    // Interval check every 3 minutes
+    const intervalId = setInterval(checkVersion, 3 * 60 * 1000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      clearInterval(intervalId);
+    };
+  }, [setNeedRefresh]);
 
   useEffect(() => {
     const handler = (e: any) => {
