@@ -1,3 +1,6 @@
+declare const __AFRIGOMBO_BUILD_ID__: string | undefined;
+declare const __AFRIGOMBO_BUILD_TIME__: string | undefined;
+
 declare global {
   interface Window {
     __AFRIGOMBO_BUILD_ID__?: string;
@@ -14,3 +17,4 @@ export const BUILD_TIME =
   typeof __AFRIGOMBO_BUILD_TIME__ !== "undefined"
     ? __AFRIGOMBO_BUILD_TIME__
     : new Date().toISOString();
+

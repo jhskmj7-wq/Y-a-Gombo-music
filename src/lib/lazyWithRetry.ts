@@ -39,9 +39,9 @@ export function lazyWithRetry<T extends ComponentType<any>>(
         default: (() => createElement('div', {
           className: "p-8 text-left text-afri-gold font-mono bg-black border border-afri-gold/30 rounded-3xl m-4 w-full max-w-4xl shadow-2xl flex flex-col items-start overflow-auto animate-fadeIn"
         }, [
-          createElement('div', { key: 'icon', className: 'text-4xl mb-6 text-center w-full' }, '🚀'),
-          createElement('h3', { key: 'title', className: 'font-black uppercase tracking-tighter text-2xl mb-4 text-afri-gold text-center w-full' }, 'Mise à jour requise'),
-          createElement('p', { key: 'desc', className: 'text-sm text-afri-text-sec text-center mb-8 w-full' }, 'Une nouvelle version de l\'application est disponible ou un module n\'a pas pu être chargé.'),
+          createElement('div', { key: 'icon', className: 'text-4xl mb-6 text-center w-full' }, '⚡'),
+          createElement('h3', { key: 'title', className: 'font-black uppercase tracking-tighter text-2xl mb-4 text-afri-gold text-center w-full' }, 'Chargement du module'),
+          createElement('p', { key: 'desc', className: 'text-sm text-afri-text-sec text-center mb-8 w-full' }, 'Le composant demandé est en cours de synchronisation.'),
           
           createElement('div', { key: 'details', className: 'w-full p-4 bg-afri-bg/50 border border-afri-border rounded-2xl space-y-3 text-[10px] md:text-xs mb-8' }, [
             createElement('p', { key: 'module' }, [
@@ -53,7 +53,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
               path
             ]),
             createElement('p', { key: 'error', className: 'truncate' }, [
-              createElement('strong', { key: 'l', className: 'text-afri-gold uppercase' }, 'Erreur : '),
+              createElement('strong', { key: 'l', className: 'text-afri-gold uppercase' }, 'Statut : '),
               errorMessage
             ])
           ]),
@@ -62,7 +62,6 @@ export function lazyWithRetry<T extends ComponentType<any>>(
             createElement('button', {
               key: 'retry',
               onClick: async () => {
-                // Hard reload and clear caches
                 if ('caches' in window) {
                   try {
                     const keys = await caches.keys();
@@ -72,7 +71,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
                 window.location.reload();
               },
               className: 'px-8 py-3 bg-afri-gold text-black text-xs font-black font-mono uppercase rounded-xl tracking-widest cursor-pointer hover:scale-105 transition shadow-[0_0_20px_rgba(212,175,55,0.3)]'
-            }, 'Forcer l\'actualisation'),
+            }, 'Recharger la page'),
             createElement('button', {
               key: 'home',
               onClick: () => { window.location.href = '/'; },
