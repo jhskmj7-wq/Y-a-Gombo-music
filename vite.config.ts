@@ -19,8 +19,8 @@ export default defineConfig({
         start_url: "/",
         scope: "/",
         orientation: "portrait",
-        theme_color: "#000000",
-        background_color: "#000000",
+        theme_color: "#050505",
+        background_color: "#050505",
         icons: [
           {
             src: '/logo-192.png',
@@ -46,6 +46,8 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//],
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        skipWaiting: true,
+        clientsClaim: true,
       }
     })
   ],
