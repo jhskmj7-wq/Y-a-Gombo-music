@@ -3,8 +3,6 @@ import { AfrigomboSupportModal } from "./AfrigomboSupportModal";
 import { NearbyPageView } from "./NearbyPageView";
 import { ErrorBoundary } from "./ErrorBoundary";
 import GomboBoostManager from "./GomboBoostManager";
-import AvatarEditor from "./avatar/AvatarEditor";
-import AvatarStore from "./avatar/AvatarStore";
 import React, { useState, useEffect, useRef, useLayoutEffect, lazy, Suspense } from "react";
 import {
   collection,
@@ -49,18 +47,34 @@ const BetaTransactionsAdminPanel = lazyWithRetry(() => import("./admin/BetaTrans
 const GeoLocationCenter = lazyWithRetry(() => import("./admin/GeoLocationCenter"));
 const UserCommentsView = lazyWithRetry(() => import("./UserCommentsView"));
 const GomboMusikEcosystem = lazyWithRetry(() => import("./GomboMusikEcosystem"));
+
+// Optimized Lazy Imports
+const GrandMarcheView = lazyWithRetry(() => import("./GrandMarcheView"));
+const AcademieView = lazyWithRetry(() => import("./AcademieView"));
+const MessagesView = lazyWithRetry(() => import("./MessagesView"));
+const AfrigomboWalletDashboard = lazyWithRetry(() => import("./AfrigomboWalletDashboard"));
+const GomboContractsDashboard = lazyWithRetry(() => import("./GomboContractsDashboard"));
+const CreatorActivityDashboard = lazyWithRetry(() => import("./CreatorActivityDashboard"));
+const FirebaseDiagnostic = lazyWithRetry(() => import("./FirebaseDiagnostic"));
+const AboutAfrigombo = lazyWithRetry(() => import("./AboutAfrigombo"));
+const SupportAfrigombo = lazyWithRetry(() => import("./SupportAfrigombo"));
+const WhatsNew = lazyWithRetry(() => import("./WhatsNew"));
+const AfrigomboHelpCenter = lazyWithRetry(() => import("./AfrigomboHelpCenter"));
+const AvatarEditor = lazyWithRetry(() => import("./avatar/AvatarEditor"));
+const AvatarStore = lazyWithRetry(() => import("./avatar/AvatarStore"));
+const EventsView = lazyWithRetry(() => import("./EventsView"));
+const HeritagePage = lazyWithRetry(() => import("./HeritagePage"));
+const GomboIdUserDashboard = lazyWithRetry(() => import("./GomboIdUserDashboard"));
+const AfrigomboLabs = lazyWithRetry(() => import("./admin/AfrigomboLabs"));
+const BetaCheckPanel = lazyWithRetry(() => import("./admin/BetaCheckPanel"));
+
 import AfrigomboFooter from "./AfrigomboFooter";
 
 import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
 import AuthScreen from "./AuthScreen";
-import CompleteProfile from "./CompleteProfile";
-import GomboIdUserDashboard from "./GomboIdUserDashboard";
-import HeritagePage from "./HeritagePage";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
-import FounderThrone from "./FounderThrone";
 import { PendingPaymentModal } from "./PendingPaymentModal";
-import MessagesView from "./MessagesView";
 import { ArbreAPalabresBubble } from "./ArbreAPalabresBubble";
 import { ReelsPlayer } from "./ReelsPlayer";
 import NotificationCenter from "./NotificationCenter";
@@ -70,15 +84,7 @@ import SettingsModal from "./SettingsModal";
 import AfrigomboPlus from "./AfrigomboPlus";
 import { MonAbonnementView } from "./MonAbonnementView";
 import PremiumEmptyState from "./PremiumEmptyState";
-import AboutAfrigombo from "./AboutAfrigombo";
 import { AfriGomboLogo } from "./AfriGomboLogo";
-import SupportAfrigombo from "./SupportAfrigombo";
-import WhatsNew from "./WhatsNew";
-import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
-import GrandMarcheView from "./GrandMarcheView";
-import AcademieView from "./AcademieView";
-import CreatorActivityDashboard from "./CreatorActivityDashboard";
-import FirebaseDiagnostic from "./FirebaseDiagnostic";
 import { supportConfig } from "../supportConfig";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 import { calculatePublicationFinancials, recordWalletTransaction } from "../lib/financial";
@@ -99,11 +105,6 @@ import {
   Conversation,
   GomboSafeContract
 } from "../types";
-import GomboContractsDashboard from "./GomboContractsDashboard";
-import AfrigomboWalletDashboard from "./AfrigomboWalletDashboard";
-import AfrigomboLabs from "./admin/AfrigomboLabs";
-import BetaCheckPanel from "./admin/BetaCheckPanel";
-import EventsView from "./EventsView";
 import { audioSynth } from "../lib/audio";
 import { interactionBus } from "./LivingInteractions";
 import { AfrigomboVibeWaves } from "./AfrigomboVibeWaves";
@@ -5989,75 +5990,89 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {/* 7. CONTRATS AFRIGOMBO ELITE (USER) */}
               {activeMenu === "user_contracts" && (
                 <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
-                  <GomboContractsDashboard currentUser={profile || (currentUser as any)} />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <GomboContractsDashboard currentUser={profile || (currentUser as any)} />
+                  </Suspense>
                 </div>
               )}
 
               {/* 7b. PORTESECURE / AFRIGOMBO ELITE WALLET (USER) */}
               {activeMenu === "user_wallet" && (
                 <div className="w-full animate-fadeIn text-left">
-                  <AfrigomboWalletDashboard 
-                    currentUserProfile={profile || (currentUser as any)} 
-                    addToTerminal={addToTerminal}
-                    onBack={() => goBackMenu()}
-                    onNavigateToMessages={(targetId) => {
-                      if (setOpenConvoWithUserId) setOpenConvoWithUserId(targetId || "admin");
-                      setActiveMenu("user_messages");
-                    }}
-                  />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <AfrigomboWalletDashboard 
+                      currentUserProfile={profile || (currentUser as any)} 
+                      addToTerminal={addToTerminal}
+                      onBack={() => goBackMenu()}
+                      onNavigateToMessages={(targetId) => {
+                        if (setOpenConvoWithUserId) setOpenConvoWithUserId(targetId || "admin");
+                        setActiveMenu("user_messages");
+                      }}
+                    />
+                  </Suspense>
                 </div>
               )}
 
               {/* 7d. ÉVÉNEMENTS (USER) */}
               {activeMenu === "user_events" && (
                 <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
-                  <EventsView 
-                    onBack={() => goBackMenu()} 
-                    addToTerminal={addToTerminal}
-                  />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <EventsView 
+                      onBack={() => goBackMenu()} 
+                      addToTerminal={addToTerminal}
+                    />
+                  </Suspense>
                 </div>
               )}
 
               {activeMenu === "user_grand_marche" && (
                 <div className="afri-container space-y-6 animate-fadeIn text-left py-2 xs:py-4">
-                  <GrandMarcheView
-                    currentUserProfile={profile}
-                    onNavigateView={(view) => setActiveMenu(view as any)}
-                    onBack={() => goBackMenu()}
-                  />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <GrandMarcheView
+                      currentUserProfile={profile}
+                      onNavigateView={(view) => setActiveMenu(view as any)}
+                      onBack={() => goBackMenu()}
+                    />
+                  </Suspense>
                 </div>
               )}
 
               {activeMenu === "user_academie" && (
                 <div className="afri-container space-y-6 animate-fadeIn text-left py-2 xs:py-4">
-                  <AcademieView
-                    currentUserProfile={profile}
-                    onNavigateView={(view) => setActiveMenu(view as any)}
-                    onBack={() => goBackMenu()}
-                  />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <AcademieView
+                      currentUserProfile={profile}
+                      onNavigateView={(view) => setActiveMenu(view as any)}
+                      onBack={() => goBackMenu()}
+                    />
+                  </Suspense>
                 </div>
               )}
 
               {(activeMenu === "user_command_center" || activeMenu === "user_mon_activite") && (
                 <div className="afri-container space-y-6 animate-fadeIn text-left py-2 xs:py-4">
-                  <CreatorActivityDashboard
-                    currentUserProfile={profile}
-                    onNavigateView={(view, tab) => {
-                      if (view) setActiveMenu(view as any);
-                    }}
-                    onBack={() => goBackMenu()}
-                  />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <CreatorActivityDashboard
+                      currentUserProfile={profile}
+                      onNavigateView={(view, tab) => {
+                        if (view) setActiveMenu(view as any);
+                      }}
+                      onBack={() => goBackMenu()}
+                    />
+                  </Suspense>
                 </div>
               )}
 
               {activeMenu === "user_help_center" && (
                 <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
-                  <AfrigomboHelpCenter 
-                    onClose={() => goBackMenu()} 
-                    currentUser={currentUser}
-                    profile={profile}
-                    audioSynth={audioSynth}
-                  />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <AfrigomboHelpCenter 
+                      onClose={() => goBackMenu()} 
+                      currentUser={currentUser}
+                      profile={profile}
+                      audioSynth={audioSynth}
+                    />
+                  </Suspense>
                 </div>
               )}
 
@@ -6074,22 +6089,24 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {activeMenu === "user_heritage" && (
                 <div className="w-full animate-fadeIn">
-                  <HeritagePage 
-                    onNavigateView={(view, tab) => {
-                      if (view === "heritage") setActiveMenu("user_heritage");
-                      else if (view === "home") setActiveMenu("user_terrain");
-                      else if (view === "settings") setActiveMenu("settings");
-                      else if (view === "admin" || view === "admin_centre") {
-                        setPerspective("admin");
-                        setActiveMenu("dashboard");
-                        addToTerminal("[ADMIN] Entrée au Centre de Commandement.");
-                      }
-                      else setActiveMenu(view);
-                    }}
-                    darkMode={darkMode}
-                    setDarkMode={setDarkMode}
-                    onViewPublicPortfolio={(userId) => setPublicProfileTargetUserId(userId)}
-                  />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <HeritagePage 
+                      onNavigateView={(view, tab) => {
+                        if (view === "heritage") setActiveMenu("user_heritage");
+                        else if (view === "home") setActiveMenu("user_terrain");
+                        else if (view === "settings") setActiveMenu("settings");
+                        else if (view === "admin" || view === "admin_centre") {
+                          setPerspective("admin");
+                          setActiveMenu("dashboard");
+                          addToTerminal("[ADMIN] Entrée au Centre de Commandement.");
+                        }
+                        else setActiveMenu(view);
+                      }}
+                      darkMode={darkMode}
+                      setDarkMode={setDarkMode}
+                      onViewPublicPortfolio={(userId) => setPublicProfileTargetUserId(userId)}
+                    />
+                  </Suspense>
                 </div>
               )}
 
@@ -6119,13 +6136,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 };
 
                 return (
-                  <GomboIdUserDashboard
-                    currentUser={artistWithRating}
-                    onUpdateUser={handleUpdateUser}
-                    onCreateTransaction={handleCreateTransaction}
-                    addToTerminal={(msg: string) => addToTerminal(msg)}
-                    onBack={() => goBackMenu()}
-                  />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <GomboIdUserDashboard
+                      currentUser={artistWithRating}
+                      onUpdateUser={handleUpdateUser}
+                      onCreateTransaction={handleCreateTransaction}
+                      addToTerminal={(msg: string) => addToTerminal(msg)}
+                      onBack={() => goBackMenu()}
+                    />
+                  </Suspense>
                 );
               })()}
 
@@ -6770,49 +6789,57 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {activeMenu === "user_about" && (
                 <div className="animate-fadeIn">
-                  <AboutAfrigombo 
-                    onBack={() => goBackMenu()} 
-                    onSupport={() => setActiveMenu("user_support")}
-                  />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <AboutAfrigombo 
+                      onBack={() => goBackMenu()} 
+                      onSupport={() => setActiveMenu("user_support")}
+                    />
+                  </Suspense>
                 </div>
               )}
 
               {activeMenu === "user_support" && (
                 <div className="animate-fadeIn">
-                  <SupportAfrigombo 
-                    onBack={() => goBackMenu()} 
-                  />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <SupportAfrigombo 
+                      onBack={() => goBackMenu()} 
+                    />
+                  </Suspense>
                 </div>
               )}
 
               {activeMenu === "user_whats_new" && (
                 <div className="animate-fadeIn">
-                  <WhatsNew 
-                    onBack={() => goBackMenu()} 
-                  />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <WhatsNew 
+                      onBack={() => goBackMenu()} 
+                    />
+                  </Suspense>
                 </div>
               )}
 
               {activeMenu === "user_messages" && (
                 <div className="w-full h-full flex flex-col justify-between p-0 m-0 border-none rounded-none bg-afri-bg animate-fadeIn text-left min-h-0">
-                  <MessagesView
-                    currentUser={currentUser || { uid: activeArtistId }}
-                    currentProfile={profile || (users.find(u => u.id === activeArtistId) || users[0])}
-                    openConvoWithUserId={openConvoWithUserId}
-                    setOpenConvoWithUserId={setOpenConvoWithUserId}
-                    openConvoWithGomboId={openConvoWithGomboId}
-                    setOpenConvoWithGomboId={setOpenConvoWithGomboId}
-                    onNavigateToPublish={() => {
-                      setActiveMenu("user_publish");
-                    }}
-                    onNavigateToSearch={() => {
-                      setActiveMenu("user_terrain");
-                    }}
-                    onBack={() => {
-                      setActiveMenu("user_terrain");
-                      try { audioSynth.playValidationSuccess(); } catch (err) {}
-                    }}
-                  />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <MessagesView
+                      currentUser={currentUser || { uid: activeArtistId }}
+                      currentProfile={profile || (users.find(u => u.id === activeArtistId) || users[0])}
+                      openConvoWithUserId={openConvoWithUserId}
+                      setOpenConvoWithUserId={setOpenConvoWithUserId}
+                      openConvoWithGomboId={openConvoWithGomboId}
+                      setOpenConvoWithGomboId={setOpenConvoWithGomboId}
+                      onNavigateToPublish={() => {
+                        setActiveMenu("user_publish");
+                      }}
+                      onNavigateToSearch={() => {
+                        setActiveMenu("user_terrain");
+                      }}
+                      onBack={() => {
+                        setActiveMenu("user_terrain");
+                        try { audioSynth.playValidationSuccess(); } catch (err) {}
+                      }}
+                    />
+                  </Suspense>
                 </div>
               )}
 
@@ -6915,7 +6942,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       <p className="text-afri-text-sec text-[10px] font-black uppercase tracking-widest">Surveillance des engagements et résolution des litiges</p>
                     </div>
                   </div>
-                  <GomboContractsDashboard currentUser={{ ...profile, role: 'admin' } as any} />
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
+                    <GomboContractsDashboard currentUser={{ ...profile, role: 'admin' } as any} />
+                  </Suspense>
                 </div>
               )}
 
@@ -10103,18 +10132,24 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
       {/* Avatar Modals */}
       {isAvatarEditorOpen && (
-        <AvatarEditor onClose={() => setIsAvatarEditorOpen(false)} />
+        <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin"></div></div>}>
+          <AvatarEditor onClose={() => setIsAvatarEditorOpen(false)} />
+        </Suspense>
       )}
       {isAvatarStoreOpen && (
-        <AvatarStore onClose={() => setIsAvatarStoreOpen(false)} inventory={[]} />
+        <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin"></div></div>}>
+          <AvatarStore onClose={() => setIsAvatarStoreOpen(false)} inventory={[]} />
+        </Suspense>
       )}
 
       {/* 6. Firebase Diagnostic Modal (Super Fondateur uniquement) */}
       {isAuthorizedSuperFounder && (
-        <FirebaseDiagnostic 
-          isOpen={isDiagnosticOpen} 
-          onClose={() => setIsDiagnosticOpen(false)} 
-        />
+        <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin"></div></div>}>
+          <FirebaseDiagnostic 
+            isOpen={isDiagnosticOpen} 
+            onClose={() => setIsDiagnosticOpen(false)} 
+          />
+        </Suspense>
       )}
 
       {/* 7. Public Profile / CV Musical Modal */}
