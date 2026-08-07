@@ -3,38 +3,119 @@
  * Provides safe serialization helpers to prevent circular reference crashes and non-serializable DOM/Firebase errors.
  */
 
+export function deepSanitize(val: any, seen = new WeakSet()): any {
+  if (val === null || val === undefined) return val;
+  const t = typeof val;
+  if (t === "number" || t === "string" || t === "boolean") return val;
+  if (t === "function" || t === "symbol" || t === "bigint") return undefined;
+
+  if (t === "object") {
+    if (seen.has(val)) return "[Circular]";
+    seen.add(val);
+
+    if (val instanceof Date) return val.toISOString();
+
+    const tag = Object.prototype.toString.call(val);
+    if (
+      tag.startsWith("[object HTML") ||
+      tag.startsWith("[object SVG") ||
+      tag === "[object Window]" ||
+      tag === "[object Document]" ||
+      tag === "[object Event]" ||
+      tag === "[object AudioContext]" ||
+      tag === "[object MediaStream]" ||
+      tag === "[object CanvasRenderingContext2D]" ||
+      tag === "[object Node]" ||
+      val.nodeType !== undefined ||
+      val.tagName !== undefined ||
+      val.nodeName !== undefined ||
+      val.ownerDocument !== undefined ||
+      val.addEventListener !== undefined ||
+      val.$$typeof !== undefined ||
+      val._reactInternals !== undefined ||
+      val._reactFiber !== undefined ||
+      (val.src !== undefined && (
+        typeof val.src !== "string" ||
+        typeof val.play === "function" ||
+        val.naturalWidth !== undefined ||
+        val.complete !== undefined ||
+        val.currentSrc !== undefined
+      ))
+    ) {
+      return undefined;
+    }
+
+    if (
+      val._firestore !== undefined ||
+      val._db !== undefined ||
+      val._delegate !== undefined ||
+      (val.constructor && (
+        val.constructor.name === "Firestore" ||
+        val.constructor.name === "DocumentReference" ||
+        val.constructor.name === "QuerySnapshot" ||
+        val.constructor.name === "ResourcePath" ||
+        val.constructor.name === "FieldPath"
+      ))
+    ) {
+      return typeof val.id === "string" ? val.id : (typeof val.path === "string" ? val.path : "[FirebaseRef]");
+    }
+
+    if (Array.isArray(val)) {
+      return val
+        .map((item) => deepSanitize(item, seen))
+        .filter((item) => item !== undefined);
+    }
+
+    const out: Record<string, any> = {};
+    for (const key of Object.keys(val)) {
+      try {
+        const child = val[key];
+        const cleaned = deepSanitize(child, seen);
+        if (cleaned !== undefined) {
+          out[key] = cleaned;
+        }
+      } catch {
+        // Ignore getters that throw errors
+      }
+    }
+    return out;
+  }
+
+  return undefined;
+}
+
 export const getCircularReplacer = () => {
   const seen = new WeakSet();
   return (key: string, value: any) => {
-    // Strip out functions which can hold closures with circular references
-    if (typeof value === "function") {
+    if (typeof value === "function" || typeof value === "symbol") {
       return undefined;
     }
 
     if (typeof value === "object" && value !== null) {
-      // 1. Cycle detection first to prevent infinite recursion
       if (seen.has(value)) {
         return "[Circular]";
       }
       seen.add(value);
 
-      // 2. Filter out DOM Nodes, Window, Event, HTMLMediaElement/Audio/Image, AudioContext, React elements
+      const tag = Object.prototype.toString.call(value);
       if (
-        (typeof window !== "undefined" && (value === window || value === document)) ||
-        (typeof Node !== "undefined" && value instanceof Node) ||
-        (typeof Event !== "undefined" && value instanceof Event) ||
-        (typeof HTMLMediaElement !== "undefined" && value instanceof HTMLMediaElement) ||
-        (typeof HTMLAudioElement !== "undefined" && value instanceof HTMLAudioElement) ||
-        (typeof HTMLImageElement !== "undefined" && value instanceof HTMLImageElement) ||
+        tag.startsWith("[object HTML") ||
+        tag.startsWith("[object SVG") ||
+        tag === "[object Window]" ||
+        tag === "[object Document]" ||
+        tag === "[object Event]" ||
+        tag === "[object AudioContext]" ||
+        tag === "[object MediaStream]" ||
+        tag === "[object CanvasRenderingContext2D]" ||
+        tag === "[object Node]" ||
         value.nodeType !== undefined ||
         value.tagName !== undefined ||
         value.nodeName !== undefined ||
         value.ownerDocument !== undefined ||
         value.addEventListener !== undefined ||
-        value.$$typeof !== undefined || // React Element
-        value._reactInternals !== undefined || // React Fiber
+        value.$$typeof !== undefined ||
+        value._reactInternals !== undefined ||
         value._reactFiber !== undefined ||
-        // Detect HTMLImageElement / Audio / Video objects regardless of minified constructor name
         (value.src !== undefined && (
           typeof value.src !== "string" ||
           typeof value.play === "function" ||
@@ -46,7 +127,6 @@ export const getCircularReplacer = () => {
         return undefined;
       }
 
-      // 3. Filter out Firestore / Firebase internal instances with circular references
       if (
         value._firestore !== undefined ||
         value._db !== undefined ||
@@ -78,22 +158,12 @@ export const safeStringify = (obj: any, space?: string | number): string => {
   if (obj === undefined) return "undefined";
   if (obj === null) return "null";
   try {
-    return JSON.stringify(obj, getCircularReplacer(), space);
+    const clean = deepSanitize(obj);
+    return JSON.stringify(clean, null, space);
   } catch (err) {
     console.error("Critical error during safeStringify:", err);
     try {
-      // Fallback: simple sanitized clone keeping only primitives
-      const sanitized: Record<string, any> = {};
-      if (obj && typeof obj === "object") {
-        for (const k of Object.keys(obj)) {
-          const val = obj[k];
-          const t = typeof val;
-          if (t === "string" || t === "number" || t === "boolean" || val === null) {
-            sanitized[k] = val;
-          }
-        }
-      }
-      return JSON.stringify(sanitized, null, space);
+      return JSON.stringify(obj, getCircularReplacer(), space);
     } catch {
       return "{}";
     }
@@ -107,8 +177,8 @@ export const safeJsonClone = <T = any>(data: T): T => {
   if (data === null || data === undefined) return data;
   if (typeof data !== "object") return data;
   try {
-    const jsonStr = safeStringify(data);
-    return JSON.parse(jsonStr) as T;
+    const clean = deepSanitize(data);
+    return clean as T;
   } catch {
     return data;
   }
@@ -125,4 +195,5 @@ export const safeJsonParse = <T = any>(str: string | null | undefined, fallback:
     return fallback;
   }
 };
+
 
