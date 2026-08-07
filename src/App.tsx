@@ -2,26 +2,29 @@ import React, { useState, useEffect, useCallback, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { audioSynth } from "./lib/audio";
-import { BackgroundMusic } from "./components/BackgroundMusic";
-import { FloatingAudioPlayer } from "./components/FloatingAudioPlayer";
-import { LivingInteractions } from "./components/LivingInteractions";
 import { useAuth } from "./AuthContext";
 import { AuthGuard } from "./components/AuthGuard";
 import { ProfileGuard } from "./components/ProfileGuard";
-import CompleteProfile from "./components/CompleteProfile";
-import AuthPage from "./components/AuthPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import PremiumLoader from "./components/PremiumLoader";
 import { useTheme } from "./context/ThemeContext";
 import { db } from "./firebase";
 import { doc, onSnapshot } from "firebase/firestore";
-import MaintenanceScreen from "./components/MaintenanceScreen";
 import { SecurityService } from "./lib/SecurityService";
 import ScrollToTop from "./components/ScrollToTop";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
-import GlobalNotificationBanner from "./components/GlobalNotificationBanner";
-import UpdateNotification from "./components/UpdateNotification";
-import BootSplashScreen from "./components/BootSplashScreen";
+
+// Lazy Loaded Components
+const AdminCentre = lazyWithRetry(() => import("./components/AdminCentre"));
+const AuthPage = lazyWithRetry(() => import("./components/AuthPage"));
+const CompleteProfile = lazyWithRetry(() => import("./components/CompleteProfile"));
+const MaintenanceScreen = lazyWithRetry(() => import("./components/MaintenanceScreen"));
+const PremiumLoader = lazyWithRetry(() => import("./components/PremiumLoader"));
+const GlobalNotificationBanner = lazyWithRetry(() => import("./components/GlobalNotificationBanner"));
+const PWAHandler = lazyWithRetry(() => import("./components/PWAHandler"));
+const BootSplashScreen = lazyWithRetry(() => import("./components/BootSplashScreen"));
+const BackgroundMusic = lazyWithRetry(() => import("./components/BackgroundMusic").then(m => ({ default: m.BackgroundMusic })));
+const FloatingAudioPlayer = lazyWithRetry(() => import("./components/FloatingAudioPlayer").then(m => ({ default: m.FloatingAudioPlayer })));
+const LivingInteractions = lazyWithRetry(() => import("./components/LivingInteractions").then(m => ({ default: m.LivingInteractions })));
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
   try {
@@ -40,7 +43,6 @@ const safeSetItem = (key: string, value: string): void => {
 };
 
 // Lazy load the main Application Layer
-const AdminCentre = lazyWithRetry(() => import("./components/AdminCentre"));
 
 const MainAppLayout = React.memo(function MainAppLayout() {
   const { theme, toggleTheme } = useTheme();
@@ -50,8 +52,14 @@ const MainAppLayout = React.memo(function MainAppLayout() {
           <div className="w-16 h-16 rounded-full border-t-2 border-afri-gold animate-spin shadow-[0_0_20px_rgba(212,175,55,0.2)]"></div>
        </div>
     }>
-      <div className="fixed top-0 left-0 w-full z-[9999]"><GlobalNotificationBanner /></div>
-      <LivingInteractions />
+      <div className="fixed top-0 left-0 w-full z-[9999]">
+        <Suspense fallback={null}>
+          <GlobalNotificationBanner />
+        </Suspense>
+      </div>
+      <Suspense fallback={null}>
+        <LivingInteractions />
+      </Suspense>
       <AdminCentre theme={theme} toggleTheme={toggleTheme} />
     </Suspense>
   );
@@ -63,18 +71,24 @@ function CompleteProfileView() {
   const navigate = useNavigate();
   
   if (!profile) {
-    return <PremiumLoader message="Chargement du Profil..." />;
+    return (
+      <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg" />}>
+        <PremiumLoader message="Chargement du Profil..." />
+      </Suspense>
+    );
   }
   
   return (
     <div className="w-full h-full h-[100dvh] bg-afri-bg flex items-center justify-center overflow-hidden px-4 font-sans select-none">
-      <CompleteProfile 
-        currentUserProfile={profile} 
-        onComplete={async () => {
-          await refreshProfile();
-          navigate("/home", { replace: true });
-        }} 
-      />
+      <Suspense fallback={<div className="w-full h-full bg-afri-bg" />}>
+        <CompleteProfile 
+          currentUserProfile={profile} 
+          onComplete={async () => {
+            await refreshProfile();
+            navigate("/home", { replace: true });
+          }} 
+        />
+      </Suspense>
     </div>
   );
 }
@@ -189,14 +203,20 @@ function App() {
                       profile?.email === "jhs.kmj7@gmail.com";
 
   if (isMaintenance && !isSuperUser) {
-    return <MaintenanceScreen message={maintenanceMessage} />;
+    return (
+      <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg" />}>
+        <MaintenanceScreen message={maintenanceMessage} />
+      </Suspense>
+    );
   }
 
   return (
     <ErrorBoundary>
       <div className="h-full h-[100dvh] w-full overflow-x-hidden font-sans antialiased transition-colors duration-300 bg-afri-bg text-afri-text flex flex-col">
         <ScrollToTop />
-        <UpdateNotification />
+        <Suspense fallback={null}>
+          <PWAHandler />
+        </Suspense>
         
         {/* Main application layer, rendered cleanly */}
         <Routes>
@@ -219,7 +239,11 @@ function App() {
           />
           <Route 
             path="/auth" 
-            element={<AuthPage />} 
+            element={
+              <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg" />}>
+                <AuthPage />
+              </Suspense>
+            } 
           />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
@@ -233,14 +257,18 @@ function App() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
             >
-              <BootSplashScreen onComplete={handleSplashComplete} />
+              <Suspense fallback={null}>
+                <BootSplashScreen onComplete={handleSplashComplete} />
+              </Suspense>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* 2. PERSISTENT BACKGROUND MUSIC */}
-        <BackgroundMusic />
-        <FloatingAudioPlayer />
+        <Suspense fallback={null}>
+          <BackgroundMusic />
+          <FloatingAudioPlayer />
+        </Suspense>
       </div>
     </ErrorBoundary>
   );

@@ -1,8 +1,5 @@
 import { useGeoEngine } from "../hooks/useGeoEngine";
-import { AfrigomboSupportModal } from "./AfrigomboSupportModal";
-import { NearbyPageView } from "./NearbyPageView";
 import { ErrorBoundary } from "./ErrorBoundary";
-import GomboBoostManager from "./GomboBoostManager";
 import React, { useState, useEffect, useRef, useLayoutEffect, lazy, Suspense } from "react";
 import {
   collection,
@@ -68,27 +65,41 @@ const GomboIdUserDashboard = lazyWithRetry(() => import("./GomboIdUserDashboard"
 const AfrigomboLabs = lazyWithRetry(() => import("./admin/AfrigomboLabs"));
 const BetaCheckPanel = lazyWithRetry(() => import("./admin/BetaCheckPanel"));
 
-import AfrigomboFooter from "./AfrigomboFooter";
+// New Lazy Imports for optimization
+const NearbyPageView = lazyWithRetry(() => import("./NearbyPageView").then(m => ({ default: m.NearbyPageView })));
+const GomboBoostManager = lazyWithRetry(() => import("./GomboBoostManager"));
+const AfrigomboSupportModal = lazyWithRetry(() => import("./AfrigomboSupportModal").then(m => ({ default: m.AfrigomboSupportModal })));
+const NotificationCenter = lazyWithRetry(() => import("./NotificationCenter"));
+const SettingsModal = lazyWithRetry(() => import("./SettingsModal"));
+const ComingSoon = lazyWithRetry(() => import("./ComingSoon"));
+const AfrigomboPlus = lazyWithRetry(() => import("./AfrigomboPlus"));
+const PublicProfileModal = lazyWithRetry(() => import("./PublicProfileModal").then(m => ({ default: m.PublicProfileModal })));
+const ArbreAPalabresBubble = lazyWithRetry(() => import("./ArbreAPalabresBubble").then(m => ({ default: m.ArbreAPalabresBubble })));
+const ReelsPlayer = lazyWithRetry(() => import("./ReelsPlayer").then(m => ({ default: m.ReelsPlayer })));
+const AfrigomboVibeWaves = lazyWithRetry(() => import("./AfrigomboVibeWaves").then(m => ({ default: m.AfrigomboVibeWaves })));
+const Carousel = lazyWithRetry(() => import("./Carousel").then(m => ({ default: m.Carousel })));
+const WakandaTechBackground = lazyWithRetry(() => import("./WakandaTechBackground"));
+const AfrigomboFooter = lazyWithRetry(() => import("./AfrigomboFooter"));
+const AuthScreen = lazyWithRetry(() => import("./AuthScreen"));
+const PremiumEmptyState = lazyWithRetry(() => import("./PremiumEmptyState"));
+const PendingPaymentModal = lazyWithRetry(() => import("./PendingPaymentModal").then(m => ({ default: m.PendingPaymentModal })));
+const MonAbonnementView = lazyWithRetry(() => import("./MonAbonnementView").then(m => ({ default: m.MonAbonnementView })));
+
+// Extracted Sub-components
+const UserReelsView = lazyWithRetry(() => import("./UserReelsView").then(m => ({ default: m.UserReelsView })));
+const RevenuQuickActionModal = lazyWithRetry(() => import("./RevenuQuickActionModal").then(m => ({ default: m.RevenuQuickActionModal })));
+
+// Chart Isolation
+const AdminAreaChart = lazyWithRetry(() => import("./charts/AdminAreaChart"));
 
 import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
-import AuthScreen from "./AuthScreen";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
-import { PendingPaymentModal } from "./PendingPaymentModal";
-import { ArbreAPalabresBubble } from "./ArbreAPalabresBubble";
-import { ReelsPlayer } from "./ReelsPlayer";
-import NotificationCenter from "./NotificationCenter";
-import ComingSoon from "./ComingSoon";
 import { UserTerrainLandingPage } from "./UserTerrainLandingPage";
-import SettingsModal from "./SettingsModal";
-import AfrigomboPlus from "./AfrigomboPlus";
-import { MonAbonnementView } from "./MonAbonnementView";
-import PremiumEmptyState from "./PremiumEmptyState";
 import { AfriGomboLogo } from "./AfriGomboLogo";
 import { supportConfig } from "../supportConfig";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 import { calculatePublicationFinancials, recordWalletTransaction } from "../lib/financial";
-import { PublicProfileModal } from "./PublicProfileModal";
 import { gomboDB } from "../firebase";
 import { usePerformance } from "../services/performanceService";
 import {
@@ -107,11 +118,8 @@ import {
 } from "../types";
 import { audioSynth } from "../lib/audio";
 import { interactionBus } from "./LivingInteractions";
-import { AfrigomboVibeWaves } from "./AfrigomboVibeWaves";
-import { Carousel } from "./Carousel";
 import { useDynamicPlaceholder } from "../hooks/useDynamicPlaceholder";
 import { isSuperFounder } from "../shared/admin/constants";
-import WakandaTechBackground from "./WakandaTechBackground";
 import { useAppSettings } from "../context/AppSettingsContext";
 import {
   motion,
@@ -201,15 +209,6 @@ import {
   ArrowLeft,
   Lightbulb
 } from "lucide-react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from "recharts";
 
 // --- IVORY COAST LOCATIONS (COMMUNES) & DEFAULTS ---
 const IVORIAN_COMMUNES = [
@@ -225,217 +224,6 @@ function getYoutubeId(url: string): string | null {
 }
 
 // --- TYPE DEFINITIONS AND COMPONENT INTERFACES ---
-
-interface UserReelsViewProps {
-  users: any[];
-  setReelsVideoId: (id: string | null) => void;
-  setReelsVideoUrl: (url: string | null) => void;
-}
-
-function UserReelsView({ users, setReelsVideoId, setReelsVideoUrl }: UserReelsViewProps) {
-  const [selectedReelFilter, setSelectedReelFilter] = useState("all");
-  
-  // Aggregate real videos uploaded by artists + falling back to premium clips
-  const allReels = [
-    {
-      id: "local-reel-1",
-      title: "Intro Improvisation - Saxophone Prestigieux Live",
-      type: "video",
-      url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
-      artisticName: "Thierry Sax d'Abidjan",
-      category: "sax",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-      description: "Test de sonorité en coulisse avant le live de ce soir à Cocody. Un pur régal instrumental."
-    },
-    {
-      id: "local-reel-2",
-      title: "Fusion Kora Traditionnelle & Batterie Jazz",
-      type: "video",
-      url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4",
-      artisticName: "Sékou Kora Excellence",
-      category: "kora",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
-      description: "Enregistrement direct de notre répétition en trio à Marcory pour le Gombo de l'ambassade."
-    },
-    ...users.flatMap(u => (u.mediaGallery || []).filter((m: any) => m.type === "video" || m.type === "youtube").map((media: any) => ({
-      id: media.id,
-      title: media.title || "Démo Artiste",
-      type: media.type,
-      url: media.url,
-      artisticName: u.artisticName || u.name || "Artiste Gombo",
-      category: media.type === "video" ? "raw" : "youtube",
-      avatar: u.photoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
-      description: "Démonstration authentique et accréditée téléchargée directement par l'artiste."
-    })))
-  ];
-
-  const filteredReels = selectedReelFilter === "all" 
-    ? allReels 
-    : allReels.filter(r => r.category === selectedReelFilter || r.type === selectedReelFilter);
-
-
-  return (
-    <div className="space-y-6 text-left animate-fadeIn">
-      <div className="bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg p-6 rounded-3xl border border-afri-gold/30 shadow-2xl relative overflow-hidden">
-        <div className="absolute right-0 top-0 bottom-0 w-[30%] opacity-25 flex items-center justify-center">
-          <Video className="w-40 h-40 text-afri-gold animate-pulse" />
-        </div>
-        <div className="relative z-10 max-w-xl">
-          <span className="text-[9px] font-mono tracking-widest text-afri-gold font-black uppercase bg-afri-gold/10 px-2.5 py-1 rounded-full border border-afri-gold/20">
-            PROUVER VOTRE TALENT
-          </span>
-          <h2 className="text-xl sm:text-2xl font-black text-afri-text uppercase tracking-tight mt-3">
-            Vidéos Réelles & Sessions Live
-          </h2>
-          <p className="text-xs text-afri-text-sec mt-2 leading-relaxed">
-            La crédibilité d'un artiste n'est pas négociable. Découvrez les coulisses, les preuves de répétition au studio, et les captations scéniques authentiques des musiciens d'élite d'AfriGombo.
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-col items-center justify-center p-12 bg-afri-bg/40 border border-afri-border rounded-3xl text-center min-h-[300px]">
-        <div className="w-16 h-16 rounded-full bg-afri-gold/10 flex items-center justify-center mb-4 border border-afri-gold/30">
-          <span className="text-afri-gold text-2xl">🎥</span>
-        </div>
-        <h3 className="text-sm font-bold text-afri-text tracking-wide uppercase font-sans">Vidéos Réelles</h3>
-        <p className="text-xs text-afri-text-sec mt-2 max-w-xs">Bientôt disponible dans votre espace d'élite.</p>
-      </div>
-    </div>
-  );
-}
-
-interface RevenuQuickActionModalProps {
-  activeArtistId: string;
-  users: User[];
-  saveToFirestore: (collectionName: string, docId: string, data: any) => Promise<void>;
-  transactions: Transaction[];
-  setTransactions: (txs: Transaction[]) => void;
-  setActiveQuickActionModal: (val: string | null) => void;
-  addToTerminal: (msg: string) => void;
-}
-
-function RevenuQuickActionModal({
-  activeArtistId,
-  users,
-  saveToFirestore,
-  transactions,
-  setTransactions,
-  setActiveQuickActionModal,
-  addToTerminal
-}: RevenuQuickActionModalProps) {
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [withdrawCarrier, setWithdrawCarrier] = useState("Orange Money");
-  const [withdrawNumber, setWithdrawNumber] = useState("");
-
-  const currentUserData = users.find(u => u.id === activeArtistId) || users[0];
-  const balanceValue = currentUserData ? (currentUserData.balance || currentUserData.revenue || currentUserData.revenues || 125000) : 125000;
-
-  return (
-    <div className="space-y-4 text-left">
-      <div className="space-y-1">
-        <h3 className="text-sm font-display font-black text-afri-text uppercase tracking-widest flex items-center gap-2">
-          <span>💰</span> RETRAITS & REVENUS SÉCURISÉS
-        </h3>
-        <p className="text-[11px] text-afri-text-sec">Suivi comptable en temps réel lié à l'Académie Afrigombo.</p>
-      </div>
-
-      <div className="p-4 bg-gradient-to-r from-afri-bg-action to-afri-bg border border-afri-gold/35 rounded-2xl select-none flex justify-between items-center text-left">
-        <div>
-          <span className="text-[8px] font-mono text-afri-gold block uppercase font-black">SOLDE DISPONIBLE</span>
-          <strong className="text-xl font-display font-black text-afri-text block mt-1">{balanceValue.toLocaleString("fr-FR")} FCFA</strong>
-        </div>
-        <div className="text-[8.5px] font-mono py-1 px-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg shrink-0">
-          GARANTI COCOT ⚖
-        </div>
-      </div>
-
-      {/* MOBILE MONEY WITHDRAW FORMS */}
-      <div className="p-3.5 bg-afri-bg border border-afri-border rounded-2xl space-y-2.5">
-        <span className="text-[9.5px] font-mono text-afri-gold uppercase block font-bold leading-none">DEMANDE DE RETRAIT INSTANTANÉ</span>
-        <div className="space-y-2">
-          <div className="grid grid-cols-3 gap-1">
-            {["Orange Money", "MTN MoMo", "Wave"].map(op => (
-              <button
-                key={op}
-                type="button"
-                onClick={() => setWithdrawCarrier(op)}
-                className={`py-1 rounded text-[8px] font-mono font-bold uppercase border transition ${withdrawCarrier === op ? "bg-afri-gold text-black border-afri-gold" : "bg-afri-bg border-afri-border text-afri-text-sec hover:text-afri-text"}`}
-              >
-                {op}
-              </button>
-            ))}
-          </div>
-          <input
-            type="number"
-            placeholder="Ex: 10000 (FCFA)"
-            value={withdrawAmount}
-            onChange={(e) => setWithdrawAmount(e.target.value)}
-            className="w-full bg-afri-bg border border-afri-border text-xs text-afri-text p-2 rounded-lg font-mono focus:outline-none"
-          />
-          <input
-            type="tel"
-            placeholder="N° de téléphone du destinataire..."
-            value={withdrawNumber}
-            onChange={(e) => setWithdrawNumber(e.target.value)}
-            className="w-full bg-afri-bg border border-afri-border text-xs text-afri-text p-2 rounded-lg font-mono focus:outline-none"
-          />
-          <button
-            onClick={async () => {
-              const cash = parseFloat(withdrawAmount);
-              if (isNaN(cash) || cash <= 0 || !withdrawNumber) return;
-              if (cash > balanceValue) {
-                alert("❌ Solde insuffisant pour ce montant de retrait.");
-                return;
-              }
-              try {
-                // Update user balance via Firestore sync
-                const newBal = balanceValue - cash;
-                const updatedUser = { 
-                  ...currentUserData, 
-                  balance: newBal, 
-                  walletBalance: newBal,
-                  wallet: {
-                    ...(currentUserData.wallet || {}),
-                    soldeDisponible: newBal
-                  },
-                  revenue: newBal, 
-                  revenues: newBal 
-                };
-                await saveToFirestore("users", currentUserData.id, updatedUser);
-                
-                // Log transaction
-                const txId = "tx_" + Date.now();
-                const tx: Transaction = {
-                  id: txId,
-                  amount: cash,
-                  type: "payout",
-                  description: `Retrait Mobile Money (${withdrawCarrier}) vers le numéro ${withdrawNumber}`,
-                  userId: currentUserData.id,
-                  userArtisticName: currentUserData.artisticName,
-                  timestamp: new Date().toISOString()
-                };
-                await saveToFirestore("transactions", txId, tx);
-
-                // Post local list updates
-                setTransactions([tx, ...transactions]);
-                
-                setWithdrawAmount("");
-                setWithdrawNumber("");
-                setActiveQuickActionModal(null);
-                addToTerminal(`[PAYOUT] Retrait de ${cash} FCFA demandé via ${withdrawCarrier} vers ${withdrawNumber}.`);
-                try { audioSynth.playKoraSuccess(); } catch(_) {}
-                alert(`💸 Retrait réussi de ${cash.toLocaleString("fr-FR")} FCFA vers votre compte ${withdrawCarrier} !`);
-              } catch (_) {}
-            }}
-            className="w-full py-2 bg-afri-gold hover:bg-afri-bg-sec text-black font-mono font-black text-[10.5px] uppercase rounded-lg transition"
-          >
-            ORDONNER LE TRANSFERT ⚡
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 interface AdminCentreProps {
   theme: any;
@@ -3888,25 +3676,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               <div className="p-3 bg-afri-bg border border-afri-border rounded-2xl space-y-1 select-none">
                                 <span className="text-[8px] font-mono text-afri-text-sec uppercase block font-bold">FRÉQUENTATION JOURNALIÈRE</span>
                                 <div className="h-28 w-full mt-2">
-                                  <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart
+                                  <Suspense fallback={<div className="w-full h-full bg-afri-bg/50 animate-pulse rounded-lg" />}>
+                                    <AdminAreaChart
                                       data={[
-                                        { day: "Lun", v: 240 },
-                                        { day: "Mar", v: 380 },
-                                        { day: "Mer", v: 310 },
-                                        { day: "Jeu", v: 480 },
-                                        { day: "Ven", v: 620 },
-                                        { day: "Sam", v: 750 },
-                                        { day: "Dim", v: 910 },
+                                        { name: "Lun", revenue: 240 },
+                                        { name: "Mar", revenue: 380 },
+                                        { name: "Mer", revenue: 310 },
+                                        { name: "Jeu", revenue: 480 },
+                                        { name: "Ven", revenue: 620 },
+                                        { name: "Sam", revenue: 750 },
+                                        { name: "Dim", revenue: 910 },
                                       ]}
-                                      margin={{ top: 5, right: 5, left: -25, bottom: 5 }}
-                                    >
-                                      <XAxis dataKey="day" stroke="#52525b" fontSize={8} tickLine={false} />
-                                      <YAxis stroke="#52525b" fontSize={8} tickLine={false} />
-                                      <Tooltip contentStyle={{ background: "#0e0e10", borderColor: "#52525b", fontSize: 8 }} />
-                                      <Area type="monotone" dataKey="v" stroke="#D4AF37" fill="rgba(212, 175, 55, 0.15)" strokeWidth={2} />
-                                    </AreaChart>
-                                  </ResponsiveContainer>
+                                    />
+                                  </Suspense>
                                 </div>
                               </div>
                             </div>
@@ -3914,15 +3696,17 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                           {/* MODAL 6: REVENUS / CAISSE */}
                           {activeQuickActionModal === "revenu" && (
-                            <RevenuQuickActionModal
-                              activeArtistId={activeArtistId}
-                              users={users}
-                              saveToFirestore={saveToFirestore}
-                              transactions={transactions}
-                              setTransactions={setTransactions}
-                              setActiveQuickActionModal={setActiveQuickActionModal}
-                              addToTerminal={addToTerminal}
-                            />
+                            <Suspense fallback={<div className="p-6 text-center text-afri-gold font-mono animate-pulse">Chargement de la Caisse...</div>}>
+                              <RevenuQuickActionModal
+                                activeArtistId={activeArtistId}
+                                users={users}
+                                saveToFirestore={saveToFirestore}
+                                transactions={transactions}
+                                setTransactions={setTransactions}
+                                setActiveQuickActionModal={setActiveQuickActionModal}
+                                addToTerminal={addToTerminal}
+                              />
+                            </Suspense>
                           )}
                         </div>
                       </div>
