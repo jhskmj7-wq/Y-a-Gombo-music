@@ -36,8 +36,8 @@ export default function WhatsNew({ onBack }: WhatsNewProps) {
             },
             {
               id: "2",
-              title: "Système de PWA & Cache Intelligent",
-              content: "AFRIGOMBO ELITE est désormais installable sur votre écran d'accueil avec une gestion de cache optimisée pour la vitesse.",
+              title: "Système de Cache & Performance",
+              content: "AFRIGOMBO ELITE est désormais équipé d'une gestion de cache locale optimisée pour un chargement et une réactivité instantanés.",
               version: "v0.8.5",
               date: new Date(Date.now() - 86400000).toISOString(),
               type: "security"

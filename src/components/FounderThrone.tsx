@@ -52,14 +52,14 @@ export default function FounderThrone({
   const totalGombos = gombos.length;
   const totalAlerts = alerts.length;
 
-  // PWA Version Controls
+  // Version & Cache Controls
   const handlePurgeCache = async () => {
     if ('caches' in window) {
       try {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
-        addToTerminal("✅ [SYSTEM] Cache PWA purgé avec succès.");
-        alert("Cache PWA purgé.");
+        addToTerminal("✅ [SYSTEM] Cache de l'application purgé.");
+        alert("Cache de l'application purgé.");
       } catch (e) {
         addToTerminal("❌ [SYSTEM] Échec de la purge du cache.");
       }
@@ -72,8 +72,8 @@ export default function FounderThrone({
     window.location.reload();
   };
 
-  const handleReloadPWA = () => {
-    addToTerminal("⚡ [SYSTEM] Rechargement de la PWA...");
+  const handleReloadApp = () => {
+    addToTerminal("⚡ [SYSTEM] Rechargement de l'application...");
     window.location.reload();
   };
 
@@ -660,7 +660,7 @@ export default function FounderThrone({
                 </div>
               </div>
 
-              {/* GESTION DE LA VERSION (PWA) */}
+              {/* GESTION DE LA VERSION */}
               <div className="bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/40 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                  <div className="flex items-center justify-between mb-4 border-b border-[#D4AF37]/20 pb-3">
                    <div className="flex items-center gap-2">
@@ -696,7 +696,7 @@ export default function FounderThrone({
                    >
                      <div className="flex items-center gap-3">
                        <Database className="w-4 h-4 text-[#D4AF37] group-hover:text-black" />
-                       <span className="text-[10px] font-mono font-black uppercase tracking-widest">Vider le cache PWA</span>
+                       <span className="text-[10px] font-mono font-black uppercase tracking-widest">Vider le cache</span>
                      </div>
                      <ChevronRight className="w-4 h-4 opacity-30" />
                    </button>
@@ -713,12 +713,12 @@ export default function FounderThrone({
                    </button>
 
                    <button 
-                     onClick={handleReloadPWA}
+                     onClick={handleReloadApp}
                      className="w-full flex items-center justify-between p-3 bg-afri-bg-sec/5 border border-afri-border rounded-xl hover:bg-afri-bg-ter transition-all group"
                    >
                      <div className="flex items-center gap-3">
                        <RefreshCcw className="w-4 h-4 text-[#D4AF37]" />
-                       <span className="text-[10px] font-mono font-black uppercase tracking-widest">Recharger la PWA</span>
+                       <span className="text-[10px] font-mono font-black uppercase tracking-widest">Recharger l'application</span>
                      </div>
                      <ChevronRight className="w-4 h-4 opacity-30" />
                    </button>

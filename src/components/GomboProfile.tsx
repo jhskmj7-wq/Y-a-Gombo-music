@@ -1041,17 +1041,17 @@ export default function GomboProfile({
   const handleDeleteOwnAccount = async () => {
     if (!currentUserProfile?.uid) return;
     const confirmDelete = window.confirm(
-      "🔑 Sécurité Y’A GOMBO MUSIC :\n\nÊtes-vous sûr de vouloir supprimer définitivement votre compte de la plateforme ?\n\nCette action est irréversible et supprimera instantanément :\n- Vos données Firebase d'Authentification\n- Votre profil public et privé d'artiste/recruteur\n- Toutes vos candidatures et médias associés.\n\nConfirmer ?"
+      "🔑 Sécurité Y’A GOMBO MUSIC :\n\nÊtes-vous sûr de vouloir supprimer votre compte de la plateforme ?\n\nVotre compte sera programmé pour être supprimé dans 30 jours, et vous pourrez encore le récupérer avant cette date.\n\nConfirmer ?"
     );
     if (!confirmDelete) return;
 
     try {
-      await gomboDB.deleteUserProfile(currentUserProfile.uid);
-      alert("Votre compte et toutes vos données associées ont été supprimés avec succès.");
+      await gomboDB.scheduleUserProfileDeletion(currentUserProfile.uid);
+      alert("Votre compte est programmé pour être supprimé dans 30 jours. Vous pourrez encore le récupérer avant cette date.");
       onLogout();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur de suppression du compte :", error);
-      alert("Une erreur est survenue lors de la suppression de votre compte.");
+      alert(`Erreur: ${error?.message || "Une erreur est survenue lors de la suppression de votre compte."}`);
     }
   };
 

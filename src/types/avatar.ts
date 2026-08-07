@@ -220,6 +220,71 @@ export interface AvatarConfig {
   tatouages_visage?: string;
   maquillage_yeux?: string;
   maquillage_levres?: string;
+  // Dynamic Face Feature Parameters
+  faceWidth?: number;
+  faceHeight?: number;
+  foreheadWidth?: number;
+  jawShape?: number;
+  eyesHeight?: number;
+  eyesWidth?: number;
+  eyesSpacing?: number;
+  irisSize?: number;
+  noseHeight?: number;
+  noseWidth?: number;
+  noseLength?: number;
+  mouthWidth?: number;
+  mouthThickness?: number;
+  eyebrowsPosition?: number;
+  earsShape?: string;
+  hairline?: number;
+  
+  // V3 Modern Face & Body Parameters
+  cheekWidth?: number;
+  jawWidth?: number;
+  jawHeight?: number;
+  chinWidth?: number;
+  chinHeight?: number;
+  chinProjection?: number;
+  eyeWidth?: number;
+  eyeHeight?: number;
+  eyeSpacing?: number;
+  eyeSize?: number;
+  eyeTilt?: number;
+  eyeHeightPosition?: number;
+  eyelidStyle?: string;
+  eyebrowWidth?: number;
+  eyebrowThickness?: number;
+  eyebrowAngle?: number;
+  eyebrowSpacing?: number;
+  eyebrowHeight?: number;
+  noseTipWidth?: number;
+  noseTipHeight?: number;
+  nostrilWidth?: number;
+  noseBridgeWidth?: number;
+  upperLipThickness?: number;
+  lowerLipThickness?: number;
+  mouthHeight?: number;
+  mouthCornerAngle?: number;
+  earSize?: number;
+  earAngle?: number;
+  earPosition?: number;
+  hairlineHeight?: number;
+  hairVolume?: number;
+  hairWidth?: number;
+  hairstyle?: string;
+  hairTexture?: string;
+  hairLength?: number;
+  beardStyle?: string;
+  beardDensity?: number;
+  moustacheStyle?: string;
+  shoulderWidth?: number;
+  torsoWidth?: number;
+  waistWidth?: number;
+  hipWidth?: number;
+  armLength?: number;
+  legLength?: number;
+  neckWidth?: number;
+  bodyHeight?: number;
 }
 
 export interface AvatarEngineConfigV2 {

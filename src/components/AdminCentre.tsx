@@ -457,6 +457,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const geo = useGeoEngine(profile);
   const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
+  const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
   const [isBetaFeedbackOpen, setIsBetaFeedbackOpen] = useState<boolean>(false);
   const [isBugModalOpen, setIsBugModalOpen] = useState<boolean>(false);
   const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState<boolean>(false);
@@ -622,7 +624,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     });
   };
 
-  // Hardware and browser back button support (Chrome Android / PWA)
+  // Hardware and browser back button support (Chrome Android)
   useEffect(() => {
     const handlePopState = () => {
       goBackMenu();
@@ -2824,33 +2826,20 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               });
                             }, false)}
                             
-                            {currentUser && renderMenuItem("menu_logout", "Déconnexion", "🚪", async () => {
-                              const confirmLogout = window.confirm(
-                                lang === "nouchi" 
-                                  ? "Vieux môgô, tu veux libérer la session ?" 
-                                  : "Souhaitez-vous vous déconnecter de votre session d'artiste ?"
-                              );
-                              if (confirmLogout) {
-                                try {
-                                  await logout();
-                                  setPerspective("user");
-                                  setActiveMenu("user_terrain");
-                                  try { audioSynth.playValidationSuccess(); } catch (err) {}
-                                } catch (err) {
-                                  console.error("Logout err", err);
-                                }
-                              }
+                            {currentUser && renderMenuItem("menu_logout", "Déconnexion", "🚪", () => {
+                              setShowLogoutConfirm(true);
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, false, (
                               <span className="text-[7.5px] font-mono py-0.5 px-1 bg-red-950/40 text-red-400 rounded border border-red-900/30 font-black scale-90">
                                 QUITTER
                               </span>
                             ))}
 
-                            {/* DIAGNOSTICS PWA - SOUVERAIN (SUPER FONDATEUR UNIQUEMENT) */}
+                            {/* DIAGNOSTICS FIREBASE - SOUVERAIN (SUPER FONDATEUR UNIQUEMENT) */}
                             {isAuthorizedSuperFounder && (
                               <>
                                 <div className="border-t border-afri-border/60 my-2" />
-                                {renderMenuItem("menu_pwa_diagnostics", "Diagnostics PWA (Fondateur uniquement)", "⚡", () => {
+                                {renderMenuItem("menu_firebase_diagnostics", "Diagnostics Firebase (Fondateur uniquement)", "⚡", () => {
                                   setIsDiagnosticOpen(true);
                                   try { audioSynth.playValidationSuccess(); } catch (_) {}
                                 }, false, (
@@ -6665,6 +6654,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <SettingsModal 
                       isOpen={true} 
                       onClose={() => goBackMenu()}
+                      onLogout={async () => {
+                        try {
+                          await logout();
+                          navigate("/auth");
+                        } catch (err) {
+                          console.error("Logout error after deletion:", err);
+                        }
+                      }}
                       onNavigateToFounder={() => setActiveMenu("super_admin")}
                       onSupportClick={() => setIsSupportModalOpen(true)}
                     />
@@ -9491,6 +9488,63 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 className="flex-1 py-2.5 rounded-xl bg-afri-gold hover:bg-afri-bg-sec text-black transition-all text-xs font-sans font-black uppercase tracking-wider"
               >
                 S'AUTHENTIFIER ↩
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-afri-bg/95 backdrop-blur-md flex items-center justify-center p-4 z-[9999] animate-fadeIn text-left">
+          <div className="w-full max-w-sm bg-afri-bg border border-red-500/35 rounded-3xl p-6 space-y-5 shadow-2xl shadow-red-500/5">
+            <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mx-auto select-none">
+              <LogOut className="w-7 h-7" />
+            </div>
+            
+            <div className="text-center space-y-2">
+              <h3 className="text-afri-text text-base font-sans font-black uppercase tracking-wide">
+                Se déconnecter ?
+              </h3>
+              <p className="text-afri-text-sec text-xs leading-relaxed font-sans">
+                Voulez-vous vraiment vous déconnecter d'AFRIGOMBO ?
+              </p>
+            </div>
+
+            <div className="flex gap-2.5 pt-2">
+              <button
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  try { audioSynth.playValidationSuccess(); } catch (_) {}
+                }}
+                disabled={isLoggingOut}
+                className="flex-1 py-3 rounded-xl bg-afri-bg border border-afri-border text-afri-text hover:text-afri-text font-bold text-xs transition-all cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={async () => {
+                  setIsLoggingOut(true);
+                  try {
+                    await logout();
+                    try { audioSynth.playValidationSuccess(); } catch (_) {}
+                    // Close dialog and reset state
+                    setShowLogoutConfirm(false);
+                    // Redirect to login page
+                    navigate("/auth");
+                  } catch (err) {
+                    console.error("Logout error:", err);
+                  } finally {
+                    setIsLoggingOut(false);
+                  }
+                }}
+                disabled={isLoggingOut}
+                className="flex-1 py-3 rounded-xl bg-red-650 hover:bg-red-700 text-white font-black uppercase text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                {isLoggingOut ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                ) : (
+                  "Se déconnecter"
+                )}
               </button>
             </div>
           </div>

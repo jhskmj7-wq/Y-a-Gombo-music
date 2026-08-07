@@ -514,6 +514,17 @@ export const gomboDB = {
     }
   },
 
+  async scheduleUserProfileDeletion(uid: string) {
+    if (db) {
+      const userRef = doc(db, "users", uid);
+      await updateDoc(userRef, {
+        status: "pending_deletion",
+        scheduledDeletionAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        deletedByUser: true
+      });
+    }
+  },
+
   // MESSAGING
   async getOrCreateConversation(currentUserId: string, targetUserId: string, arg3?: any, arg4?: any, arg5?: any): Promise<Conversation> {
     if (db) {

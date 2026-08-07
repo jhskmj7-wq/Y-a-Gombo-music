@@ -370,6 +370,29 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
     }
   }, [activeTab]);
 
+  const handleRandomize = () => {
+    setConfig(prev => ({
+      ...prev,
+      faceWidth: Number((0.9 + Math.random() * 0.2).toFixed(2)),
+      faceHeight: Number((0.9 + Math.random() * 0.2).toFixed(2)),
+      foreheadWidth: Number((0.85 + Math.random() * 0.3).toFixed(2)),
+      jawShape: Number((0.25 + Math.random() * 0.5).toFixed(2)),
+      eyesHeight: Number((0.9 + Math.random() * 0.2).toFixed(2)),
+      eyesWidth: Number((0.85 + Math.random() * 0.3).toFixed(2)),
+      eyesSpacing: Number((0.85 + Math.random() * 0.3).toFixed(2)),
+      irisSize: Number((3.6 + Math.random() * 1.4).toFixed(1)),
+      noseHeight: Number((0.9 + Math.random() * 0.2).toFixed(2)),
+      noseWidth: Number((0.85 + Math.random() * 0.35).toFixed(2)),
+      noseLength: Number((0.85 + Math.random() * 0.3).toFixed(2)),
+      mouthWidth: Number((0.85 + Math.random() * 0.35).toFixed(2)),
+      mouthThickness: Number((0.8 + Math.random() * 0.4).toFixed(2)),
+      eyebrowsPosition: Number((0.9 + Math.random() * 0.2).toFixed(2)),
+      hairline: Number((0.85 + Math.random() * 0.3).toFixed(2)),
+      earsShape: ['standard', 'round', 'pointed'][Math.floor(Math.random() * 3)],
+      skinColor: SKIN_COLORS[Math.floor(Math.random() * SKIN_COLORS.length)].hex
+    }));
+  };
+
   const handleCancel = () => {
     onClose();
   };
@@ -640,6 +663,14 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
               </div>
 
               <button 
+                onClick={handleRandomize}
+                className="w-full py-3 sm:py-3.5 bg-zinc-900 hover:bg-zinc-800 text-[#D4AF37] border border-[#D4AF37]/20 font-black text-[9px] sm:text-[10px] uppercase tracking-widest rounded-xl transition flex items-center justify-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4 text-[#D4AF37]" />
+                Générer au Hasard 🎲
+              </button>
+
+              <button 
                 onClick={() => setShowStore(true)}
                 className="w-full py-3 sm:py-3.5 bg-zinc-800 hover:bg-zinc-700 text-afri-text border border-white/5 font-black text-[9px] sm:text-[10px] uppercase tracking-widest rounded-xl transition flex items-center justify-center gap-2"
               >
@@ -752,6 +783,284 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
                           )}
                         </button>
                       ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeSubCategory === 'tete' && (
+                <div className="mb-6 p-6 bg-zinc-950/40 rounded-3xl border border-afri-border/10 space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-2">Morphologie de la Tête</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Largeur du Visage</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.faceWidth ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.85" 
+                        max="1.15" 
+                        step="0.01"
+                        value={config.faceWidth ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, faceWidth: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Hauteur du Visage</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.faceHeight ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.85" 
+                        max="1.15" 
+                        step="0.01"
+                        value={config.faceHeight ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, faceHeight: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Largeur du Front</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.foreheadWidth ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.80" 
+                        max="1.20" 
+                        step="0.01"
+                        value={config.foreheadWidth ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, foreheadWidth: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Forme de la Mâchoire</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.jawShape ?? 0.5) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.15" 
+                        max="0.85" 
+                        step="0.01"
+                        value={config.jawShape ?? 0.5} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, jawShape: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Ligne de Cheveux (Hauteur)</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.hairline ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.80" 
+                        max="1.20" 
+                        step="0.01"
+                        value={config.hairline ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, hairline: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Forme des Oreilles</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {['standard', 'round', 'pointed'].map(shape => (
+                          <button
+                            key={shape}
+                            type="button"
+                            onClick={() => setConfig(prev => ({ ...prev, earsShape: shape }))}
+                            className={`py-1.5 rounded-xl text-[9px] font-black uppercase transition-all border ${
+                              (config.earsShape || 'standard') === shape
+                                ? 'bg-[#D4AF37] text-black border-[#D4AF37]'
+                                : 'bg-zinc-900 border-afri-border/10 text-afri-text-sec'
+                            }`}
+                          >
+                            {shape === 'standard' ? 'Standard' : shape === 'round' ? 'Rondes' : 'Pointues'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeSubCategory === 'yeux' && (
+                <div className="mb-6 p-6 bg-zinc-950/40 rounded-3xl border border-afri-border/10 space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-2">Ajustement des Yeux & Sourcils</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Hauteur des Yeux</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.eyesHeight ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.85" 
+                        max="1.15" 
+                        step="0.01"
+                        value={config.eyesHeight ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, eyesHeight: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Écartement des Yeux</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.eyesSpacing ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.80" 
+                        max="1.20" 
+                        step="0.01"
+                        value={config.eyesSpacing ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, eyesSpacing: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Largeur de l'Oeil</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.eyesWidth ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.80" 
+                        max="1.20" 
+                        step="0.01"
+                        value={config.eyesWidth ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, eyesWidth: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Taille de l'Iris / Pupille</span>
+                        <span className="text-[#D4AF37]">{(config.irisSize ?? 4.2).toFixed(1)}px</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="3.0" 
+                        max="5.5" 
+                        step="0.1"
+                        value={config.irisSize ?? 4.2} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, irisSize: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Hauteur des Sourcils</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.eyebrowsPosition ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.85" 
+                        max="1.15" 
+                        step="0.01"
+                        value={config.eyebrowsPosition ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, eyebrowsPosition: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeSubCategory === 'nez' && (
+                <div className="mb-6 p-6 bg-zinc-950/40 rounded-3xl border border-afri-border/10 space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-2">Ajustement du Nez</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Hauteur du Nez</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.noseHeight ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.85" 
+                        max="1.15" 
+                        step="0.01"
+                        value={config.noseHeight ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, noseHeight: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Largeur du Nez</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.noseWidth ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.80" 
+                        max="1.30" 
+                        step="0.01"
+                        value={config.noseWidth ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, noseWidth: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Longueur du Nez</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.noseLength ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.80" 
+                        max="1.20" 
+                        step="0.01"
+                        value={config.noseLength ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, noseLength: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeSubCategory === 'bouche' && (
+                <div className="mb-6 p-6 bg-zinc-950/40 rounded-3xl border border-afri-border/10 space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-2">Ajustement de la Bouche & Lèvres</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Largeur de la Bouche</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.mouthWidth ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.80" 
+                        max="1.25" 
+                        step="0.01"
+                        value={config.mouthWidth ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, mouthWidth: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1 text-[10px] text-afri-text-sec uppercase font-bold tracking-wider">
+                        <span>Épaisseur des Lèvres</span>
+                        <span className="text-[#D4AF37]">{Math.round((config.mouthThickness ?? 1.0) * 100)}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.70" 
+                        max="1.30" 
+                        step="0.01"
+                        value={config.mouthThickness ?? 1.0} 
+                        onChange={(e) => setConfig(prev => ({ ...prev, mouthThickness: Number(e.target.value) }))}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
                     </div>
                   </div>
                 </div>

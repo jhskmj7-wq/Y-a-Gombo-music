@@ -364,16 +364,16 @@ export default function SettingsModal({
     if (!currentUser) return;
     setIsDeleting(true);
     try {
-      await gomboDB.deleteUserProfile(currentUser.uid);
-      showToast(mt("delete_success"), "info");
+      await gomboDB.scheduleUserProfileDeletion(currentUser.uid);
+      alert("Votre compte est programmé pour être supprimé dans 30 jours. Vous pourrez encore le récupérer avant cette date.");
       if (onLogout) {
         onLogout();
       } else {
         window.location.reload();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to delete account:", err);
-      showToast("Erreur lors de la suppression du compte. Réessayez.", "warning");
+      alert(`Erreur: ${err?.message || "Une erreur est survenue lors de la suppression."}`);
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);

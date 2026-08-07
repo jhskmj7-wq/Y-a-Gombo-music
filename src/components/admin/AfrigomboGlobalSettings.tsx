@@ -323,7 +323,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
           </div>
         </div>
 
-        {/* SECTION GRAPHISME SOUVERAIN (FAVICON, LOGO, PWA, SPLASH SCREEN) */}
+        {/* SECTION GRAPHISME SOUVERAIN (FAVICON, LOGO, APPLICATION, SPLASH SCREEN) */}
         <div className="border-t border-afri-border pt-6 mt-6 space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-sm">🎨</span>
@@ -457,17 +457,17 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
               </div>
             </div>
 
-            {/* 3. ICÔNE PWA */}
+            {/* 3. ICÔNE DE L'APPLICATION */}
             <div className="bg-afri-bg p-4 rounded-2xl border border-afri-border space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-[9.5px] font-mono uppercase font-black text-afri-text">3. Icône PWA (Mobile)</span>
+                <span className="text-[9.5px] font-mono uppercase font-black text-afri-text">3. Icône de l'Application (Mobile)</span>
                 <span className="text-[8px] font-mono text-afri-text-sec">FORMAT : PNG 512x512</span>
               </div>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-xl bg-afri-bg border border-afri-border flex items-center justify-center overflow-hidden shrink-0">
                   <img 
-                    src={localStorage.getItem("custom_app_pwa_icon") || "/logo_afrigombo.png"} 
-                    alt="PWA Icon" 
+                    src={localStorage.getItem("custom_app_mobile_icon") || "/logo_afrigombo.png"} 
+                    alt="Application Icon" 
                     className="w-10 h-10 object-contain"
                   />
                 </div>
@@ -475,14 +475,14 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
                   <input 
                     type="file" 
                     accept="image/*"
-                    id="pwa-upload"
+                    id="app-mobile-icon-upload"
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
                         const reader = new FileReader();
                         reader.onload = () => {
-                          localStorage.setItem("custom_app_pwa_icon", reader.result as string);
+                          localStorage.setItem("custom_app_mobile_icon", reader.result as string);
                           if (audioSynth) audioSynth.playValidationSuccess();
                         };
                         reader.readAsDataURL(file);
@@ -491,7 +491,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
                   />
                   <div className="flex gap-2">
                     <label 
-                      htmlFor="pwa-upload"
+                      htmlFor="app-mobile-icon-upload"
                       className="px-2.5 py-1.5 bg-afri-bg-sec/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[9px] font-mono font-bold rounded uppercase cursor-pointer hover:bg-afri-bg-sec/20"
                     >
                       Téléverser
@@ -499,7 +499,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
                     <button
                       type="button"
                       onClick={() => {
-                        localStorage.removeItem("custom_app_pwa_icon");
+                        localStorage.removeItem("custom_app_mobile_icon");
                         if (audioSynth) audioSynth.playTamTam(true);
                       }}
                       className="px-2.5 py-1.5 bg-red-950/10 border border-red-900/30 text-red-400 text-[9px] font-mono font-bold rounded uppercase hover:bg-red-950/20"
