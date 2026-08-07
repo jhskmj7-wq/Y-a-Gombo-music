@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BUILD_ID, BUILD_TIME } from "../../buildInfo";
+import { BUILD_ID, BUILD_TIME, COMMIT_SHA, COMMIT_SHORT_SHA } from "../../buildInfo";
 import {
   Rocket, ToggleRight, CheckCircle, History, Info, Clock, Check, X,
   ShieldAlert, ChevronRight, User, Server, Database, GitBranch, Cpu,
@@ -7,7 +7,6 @@ import {
   XCircle, Zap, Globe, Smartphone, Cloud, Code, Settings
 } from "lucide-react";
 import { gomboDB, db } from "../../firebase";
-import { auth } from "../../lib/firebase";
 import {
   collection, doc, onSnapshot, setDoc, updateDoc, addDoc, query, orderBy, limit
 } from "firebase/firestore";
@@ -52,7 +51,14 @@ export default function AdminDeploymentCenter({
   const [loading, setLoading] = useState(true);
 
   // Live Server Version check
-  const [serverVersion, setServerVersion] = useState<{ buildId?: string; timestamp?: string; env?: string } | null>(null);
+  const [serverVersion, setServerVersion] = useState<{
+    buildId?: string;
+    timestamp?: string;
+    env?: string;
+    commitSha?: string;
+    commitShortSha?: string;
+    isVercel?: boolean;
+  } | null>(null);
   const [isCheckingServerVersion, setIsCheckingServerVersion] = useState(false);
 
   const checkServerVersion = async () => {
@@ -305,7 +311,7 @@ export default function AdminDeploymentCenter({
           <div className="flex items-center gap-2">
             <Terminal className="w-5 h-5 text-afri-gold" />
             <h3 className="text-sm font-black text-afri-gold uppercase tracking-wider">
-              DIAGNOSTIC DE SYNCHRONISATION EN TEMPS RÉEL
+              INSPECTOR 4.0 — SUIVI DES COMMITS & DÉPLOIEMENT REAL-TIME
             </h3>
           </div>
           <button
@@ -318,106 +324,112 @@ export default function AdminDeploymentCenter({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* 1. Client Runtime Build ID */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          {/* 1. AI Studio Preview Local */}
           <div className="p-3 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-1">
-            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">1. BUILD_ID Client (React)</span>
-            <div className="text-xs font-black text-afri-gold truncate">{BUILD_ID}</div>
-            <span className="text-[9px] text-afri-text-sec block">Compilé : {new Date(BUILD_TIME).toLocaleTimeString("fr-FR")}</span>
+            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">1. GOOGLE AI STUDIO</span>
+            <div className="text-xs font-black text-amber-400 truncate">
+              {window.location.hostname.includes("run.app") ? "PREVIEW LOCAL" : "DEVELOPMENT"}
+            </div>
+            <span className="text-[9px] text-afri-text-sec block truncate">
+              Commit: {COMMIT_SHORT_SHA || "HEAD"}
+            </span>
+            <span className="text-[9px] text-afri-text-muted block truncate">{BUILD_ID}</span>
           </div>
 
-          {/* 2. Server Version.json Build ID */}
+          {/* 2. Vercel Server / version.json */}
           <div className="p-3 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-1">
-            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">2. BUILD_ID Serveur</span>
+            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">2. VERCEL SERVEUR</span>
             <div className="text-xs font-black text-white truncate">
-              {serverVersion?.buildId || (isCheckingServerVersion ? "Vérification..." : "NON VÉRIFIABLE")}
-            </div>
-            <span className="text-[9px] text-afri-text-sec block">
-              {serverVersion?.timestamp ? `Serveur : ${new Date(serverVersion.timestamp).toLocaleTimeString("fr-FR")}` : "/version.json"}
-            </span>
-          </div>
-
-          {/* 3. Git Commit */}
-          <div className="p-3 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-1">
-            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">3. Git Commit Hash</span>
-            <div className="text-xs font-black text-emerald-400 truncate">
-              {serverVersion?.commitHash ? serverVersion.commitHash.substring(0, 12) : "master (HEAD)"}
-            </div>
-            <span className="text-[9px] text-afri-text-sec block">Branche : master</span>
-          </div>
-
-          {/* 4. Firebase Project ID */}
-          <div className="p-3 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-1">
-            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">4. Projet Firebase</span>
-            <div className="text-xs font-black text-cyan-400 truncate">
-              {auth?.app?.options?.projectId || "afrigombo"}
-            </div>
-            <span className="text-[9px] text-afri-text-sec block">Base : Firestore Souveraine</span>
-          </div>
-
-          {/* 5. Anonymized Auth User */}
-          <div className="p-3 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-1">
-            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">5. Utilisateur Connecté</span>
-            <div className="text-xs font-black text-amber-300 truncate">
-              {auth?.currentUser?.email
-                ? `${auth.currentUser.email.substring(0, 3)}***@${auth.currentUser.email.split('@')[1] || ''}`
-                : (currentUser?.email ? `${currentUser.email.substring(0, 3)}***` : "Anonyme / Non Connecté")}
+              {serverVersion?.commitShortSha && serverVersion.commitShortSha !== "LOCAL"
+                ? `COMMIT: ${serverVersion.commitShortSha}`
+                : serverVersion?.buildId || (isCheckingServerVersion ? "Vérification..." : "Inaccessible")}
             </div>
             <span className="text-[9px] text-afri-text-sec block truncate">
-              UID : {auth?.currentUser?.uid ? `${auth.currentUser.uid.substring(0, 4)}***${auth.currentUser.uid.slice(-3)}` : "Aucun"}
+              {serverVersion?.timestamp ? new Date(serverVersion.timestamp).toLocaleTimeString("fr-FR") : "GET /version.json"}
             </span>
+            <span className="text-[9px] text-afri-text-muted block truncate">{serverVersion?.buildId || "N/A"}</span>
           </div>
 
-          {/* 6. Firebase Status */}
+          {/* 3. Chrome Client JS */}
           <div className="p-3 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-1">
-            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">6. Statut Firebase</span>
-            <div className="text-xs font-black text-emerald-400 flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Connecté & Initialisé</span>
+            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">3. CLIENT CHROME</span>
+            <div className="text-xs font-black text-sky-400 truncate">
+              {COMMIT_SHORT_SHA && COMMIT_SHORT_SHA !== "LOCAL" ? `COMMIT: ${COMMIT_SHORT_SHA}` : "EXÉCUTION ACTIVE"}
             </div>
-            <span className="text-[9px] text-afri-text-sec block">Auth + Firestore prêt</span>
+            <span className="text-[9px] text-afri-text-sec block truncate">
+              {new Date(BUILD_TIME).toLocaleTimeString("fr-FR")}
+            </span>
+            <span className="text-[9px] text-afri-text-muted block truncate">{BUILD_ID}</span>
           </div>
 
-          {/* 7. Vercel Status */}
-          <div className="p-3 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-1">
-            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">7. Statut Serveur Vercel</span>
-            <div className="text-xs font-black text-white">
-              {serverVersion?.buildId ? (
-                <span className="text-emerald-400 flex items-center gap-1">
-                  <Globe className="w-3.5 h-3.5" /> Joignable (/version.json OK)
-                </span>
-              ) : (
-                <span className="text-amber-400 font-bold">NON VÉRIFIABLE EN DIRECT</span>
-              )}
-            </div>
-            <span className="text-[9px] text-afri-text-sec block">CDN Cache : Revalidation 0s</span>
-          </div>
-
-          {/* 8. Verdict de Diagnostic */}
-          <div className="p-3 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-1">
-            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">8. Bilan du Build</span>
+          {/* 4. Honest Verdict */}
+          <div className="p-3 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-1 flex flex-col justify-center">
+            <span className="text-[9px] uppercase text-afri-text-muted font-bold block">4. Verdict Final</span>
             <div>
-              {serverVersion?.buildId && serverVersion.buildId === BUILD_ID ? (
-                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                  BUILD DÉPLOYÉ CONFORME
-                </span>
-              ) : serverVersion?.buildId ? (
-                <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3 text-rose-400" />
-                  NOUVEAU BUILD DISPONIBLE
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1">
-                  <Info className="w-3 h-3 text-amber-400" />
-                  NON VÉRIFIABLE
-                </span>
-              )}
+              {(() => {
+                const isAIStudio = window.location.hostname.includes("run.app") || window.location.hostname.includes("localhost");
+                const isVercel = window.location.hostname.includes("vercel.app") || (!isAIStudio);
+
+                if (isAIStudio) {
+                  return (
+                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1">
+                      <Zap className="w-3.5 h-3.5 text-amber-400" />
+                      PREVIEW LOCAL AI STUDIO
+                    </span>
+                  );
+                }
+
+                if (!serverVersion || !serverVersion.buildId || serverVersion.buildId.includes("Erreur")) {
+                  return (
+                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+                      NON VÉRIFIABLE
+                    </span>
+                  );
+                }
+
+                if (serverVersion.commitSha && serverVersion.commitSha !== "NO_GIT_SHA" && COMMIT_SHA !== "NO_GIT_SHA") {
+                  if (serverVersion.commitSha === COMMIT_SHA) {
+                    return (
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        🟢 CHROME = VERCEL (CONFORME)
+                      </span>
+                    );
+                  } else {
+                    return (
+                      <span className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
+                        🔴 CHROME OBSOLÈTE
+                      </span>
+                    );
+                  }
+                }
+
+                if (serverVersion.buildId === BUILD_ID) {
+                  return (
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      🟢 BUILD HARMONISÉ
+                    </span>
+                  );
+                }
+
+                return (
+                  <span className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
+                    🔴 DIVERGENCE DÉTECTÉE
+                  </span>
+                );
+              })()}
             </div>
-            <span className="text-[9px] text-afri-text-sec block truncate">
-              {serverVersion?.buildId === BUILD_ID
-                ? "Code source et bundle version.json concordants"
-                : "Vérifiez que Chrome a rechargé index.html"}
+            <span className="text-[9px] text-afri-text-sec block pt-1 leading-tight">
+              {window.location.hostname.includes("run.app")
+                ? "Preview en conteneur Cloud Run. Exportez vers GitHub pour mettre à jour Vercel."
+                : serverVersion?.commitSha && serverVersion.commitSha === COMMIT_SHA
+                ? "Chrome exécute le commit Vercel déployé depuis GitHub."
+                : "Vercel et Chrome ne sont pas sur le même commit."}
             </span>
           </div>
         </div>
