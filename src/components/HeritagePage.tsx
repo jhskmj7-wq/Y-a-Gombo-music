@@ -13,14 +13,26 @@ interface HeritagePageProps {
 }
 
 export default function HeritagePage({ onNavigateView, darkMode, setDarkMode, initialPanelView, onViewPublicPortfolio }: HeritagePageProps) {
-  const { profile, refreshProfile, logout } = useAuth();
+  const { profile, currentUser, refreshProfile, logout } = useAuth();
+
+  const activeProfile = profile || (currentUser ? ({
+    uid: currentUser.uid,
+    id: currentUser.uid,
+    email: currentUser.email || "jhs.kmj7@gmail.com",
+    displayName: currentUser.displayName || "Membre Elite",
+    firstName: currentUser.displayName?.split(" ")[0] || "Membre",
+    lastName: currentUser.displayName?.split(" ")[1] || "Elite",
+    role: "client",
+    userRole: "client",
+    balance: 0,
+  } as any) : null);
 
   return (
     <ErrorBoundary moduleName="Mon Héritage">
       <div className="w-full bg-afri-bg text-afri-text min-h-[70vh]">
-        {profile ? (
+        {activeProfile ? (
           <GomboProfile
-            currentUserProfile={profile}
+            currentUserProfile={activeProfile}
             onRefreshProfile={refreshProfile}
             onLogout={logout}
             onNavigateView={onNavigateView}

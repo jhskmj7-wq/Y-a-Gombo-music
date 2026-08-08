@@ -37,7 +37,7 @@ export default function AdminAreaChart({ data }: AdminAreaChartProps) {
             fontSize={10}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => `${value / 1000}k`}
+            tickFormatter={(value) => typeof value === 'number' ? `${Math.round(value / 1000)}k` : String(value || '')}
           />
           <Tooltip 
             contentStyle={{ 

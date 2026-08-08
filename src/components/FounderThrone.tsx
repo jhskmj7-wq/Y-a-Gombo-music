@@ -365,7 +365,7 @@ export default function FounderThrone({
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
                             <XAxis dataKey="name" stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} tickMargin={10} />
-                            <YAxis stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${v/1000}K`} tickMargin={10} />
+                            <YAxis stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => typeof v === 'number' ? `${Math.round(v/1000)}K` : String(v || '')} tickMargin={10} />
                             <Tooltip 
                                contentStyle={{ backgroundColor: "var(--afri-text)", border: "1px solid #D4AF37", borderRadius: "8px", fontSize: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.8)" }} 
                                itemStyle={{ color: "var(--afri-text)", fontWeight: "bold" }}

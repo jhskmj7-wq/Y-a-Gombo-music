@@ -5894,14 +5894,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <HeritagePage 
                       onNavigateView={(view, tab) => {
                         if (view === "heritage") setActiveMenu("user_heritage");
-                        else if (view === "home") setActiveMenu("user_terrain");
+                        else if (view === "home" || view === "terrain") setActiveMenu("user_terrain");
                         else if (view === "settings") setActiveMenu("settings");
-                        else if (view === "admin" || view === "admin_centre") {
+                        else if (view === "admin" || view === "admin_centre" || view === "dashboard" || view === "command_center" || view === "super_admin") {
                           setPerspective("admin");
-                          setActiveMenu("dashboard");
+                          setActiveMenu(view === "super_admin" ? "super_admin" : "dashboard");
                           addToTerminal("[ADMIN] Entrée au Centre de Commandement.");
                         }
-                        else setActiveMenu(view);
+                        else setActiveMenu(view as any);
                       }}
                       darkMode={darkMode}
                       setDarkMode={setDarkMode}
@@ -6482,8 +6482,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           console.error("Logout error after deletion:", err);
                         }
                       }}
-                      onNavigateToFounder={() => setActiveMenu("dashboard")}
-                      onNavigateToThrone={() => setActiveMenu("super_admin")}
+                      onNavigateToFounder={() => {
+                        setPerspective("admin");
+                        setActiveMenu("dashboard");
+                        addToTerminal("[ADMIN] Entrée au Centre de Commandement.");
+                      }}
+                      onNavigateToThrone={() => {
+                        setPerspective("admin");
+                        setActiveMenu("super_admin");
+                      }}
                       onSupportClick={() => setIsSupportModalOpen(true)}
                     />
                   </ErrorBoundary>

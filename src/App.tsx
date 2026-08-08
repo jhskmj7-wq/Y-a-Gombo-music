@@ -24,6 +24,7 @@ const BootSplashScreen = lazyWithRetry(() => import("./components/BootSplashScre
 const BackgroundMusic = lazyWithRetry(() => import("./components/BackgroundMusic").then(m => ({ default: m.BackgroundMusic })));
 const FloatingAudioPlayer = lazyWithRetry(() => import("./components/FloatingAudioPlayer").then(m => ({ default: m.FloatingAudioPlayer })));
 const LivingInteractions = lazyWithRetry(() => import("./components/LivingInteractions").then(m => ({ default: m.LivingInteractions })));
+const PWAHandler = lazyWithRetry(() => import("./components/PWAHandler"));
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
   try {
@@ -260,10 +261,11 @@ function App() {
           )}
         </AnimatePresence>
 
-        {/* 2. PERSISTENT BACKGROUND MUSIC */}
+        {/* 2. PERSISTENT BACKGROUND MUSIC & PWA HANDLER */}
         <Suspense fallback={null}>
           <BackgroundMusic />
           <FloatingAudioPlayer />
+          <PWAHandler />
         </Suspense>
       </div>
     </ErrorBoundary>

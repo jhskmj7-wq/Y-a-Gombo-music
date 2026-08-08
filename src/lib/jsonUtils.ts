@@ -16,32 +16,49 @@ export function deepSanitize(val: any, seen = new WeakSet()): any {
     if (val instanceof Date) return val.toISOString();
 
     const tag = Object.prototype.toString.call(val);
-    if (
+    
+    // Check for DOM elements, Audio/Video/Media objects, Events, Windows, React Fibers, AudioContext, etc.
+    const isDomOrMedia =
       tag.startsWith("[object HTML") ||
       tag.startsWith("[object SVG") ||
-      tag === "[object Window]" ||
-      tag === "[object Document]" ||
-      tag === "[object Event]" ||
-      tag === "[object AudioContext]" ||
-      tag === "[object MediaStream]" ||
-      tag === "[object CanvasRenderingContext2D]" ||
-      tag === "[object Node]" ||
+      tag.includes("Audio") ||
+      tag.includes("Media") ||
+      tag.includes("Video") ||
+      tag.includes("Canvas") ||
+      tag.includes("Element") ||
+      tag.includes("Event") ||
+      tag.includes("Window") ||
+      tag.includes("Document") ||
+      tag.includes("Node") ||
+      tag.includes("Context") ||
+      tag.includes("Stream") ||
+      tag.includes("Track") ||
+      tag.includes("Source") ||
+      tag.includes("Buffer") ||
+      tag.includes("Reader") ||
+      tag.includes("Request") ||
+      tag.includes("Response") ||
+      tag.includes("Channel") ||
+      tag.includes("Port") ||
+      tag.includes("Worker") ||
+      tag.includes("Fiber") ||
+      tag.includes("Synthetic") ||
       val.nodeType !== undefined ||
       val.tagName !== undefined ||
       val.nodeName !== undefined ||
       val.ownerDocument !== undefined ||
       val.addEventListener !== undefined ||
+      val.removeEventListener !== undefined ||
+      val.dispatchEvent !== undefined ||
       val.$$typeof !== undefined ||
       val._reactInternals !== undefined ||
       val._reactFiber !== undefined ||
-      (val.src !== undefined && (
-        typeof val.src !== "string" ||
-        typeof val.play === "function" ||
-        val.naturalWidth !== undefined ||
-        val.complete !== undefined ||
-        val.currentSrc !== undefined
-      ))
-    ) {
+      typeof val.play === "function" ||
+      typeof val.pause === "function" ||
+      typeof val.load === "function" ||
+      typeof val.getContext === "function";
+
+    if (isDomOrMedia) {
       return undefined;
     }
 
@@ -67,7 +84,8 @@ export function deepSanitize(val: any, seen = new WeakSet()): any {
     }
 
     const out: Record<string, any> = {};
-    for (const key of Object.keys(val)) {
+    const keys = Object.keys(val);
+    for (const key of keys) {
       try {
         const child = val[key];
         const cleaned = deepSanitize(child, seen);
@@ -87,7 +105,7 @@ export function deepSanitize(val: any, seen = new WeakSet()): any {
 export const getCircularReplacer = () => {
   const seen = new WeakSet();
   return (key: string, value: any) => {
-    if (typeof value === "function" || typeof value === "symbol") {
+    if (typeof value === "function" || typeof value === "symbol" || typeof value === "bigint") {
       return undefined;
     }
 
@@ -98,32 +116,47 @@ export const getCircularReplacer = () => {
       seen.add(value);
 
       const tag = Object.prototype.toString.call(value);
-      if (
+      const isDomOrMedia =
         tag.startsWith("[object HTML") ||
         tag.startsWith("[object SVG") ||
-        tag === "[object Window]" ||
-        tag === "[object Document]" ||
-        tag === "[object Event]" ||
-        tag === "[object AudioContext]" ||
-        tag === "[object MediaStream]" ||
-        tag === "[object CanvasRenderingContext2D]" ||
-        tag === "[object Node]" ||
+        tag.includes("Audio") ||
+        tag.includes("Media") ||
+        tag.includes("Video") ||
+        tag.includes("Canvas") ||
+        tag.includes("Element") ||
+        tag.includes("Event") ||
+        tag.includes("Window") ||
+        tag.includes("Document") ||
+        tag.includes("Node") ||
+        tag.includes("Context") ||
+        tag.includes("Stream") ||
+        tag.includes("Track") ||
+        tag.includes("Source") ||
+        tag.includes("Buffer") ||
+        tag.includes("Reader") ||
+        tag.includes("Request") ||
+        tag.includes("Response") ||
+        tag.includes("Channel") ||
+        tag.includes("Port") ||
+        tag.includes("Worker") ||
+        tag.includes("Fiber") ||
+        tag.includes("Synthetic") ||
         value.nodeType !== undefined ||
         value.tagName !== undefined ||
         value.nodeName !== undefined ||
         value.ownerDocument !== undefined ||
         value.addEventListener !== undefined ||
+        value.removeEventListener !== undefined ||
+        value.dispatchEvent !== undefined ||
         value.$$typeof !== undefined ||
         value._reactInternals !== undefined ||
         value._reactFiber !== undefined ||
-        (value.src !== undefined && (
-          typeof value.src !== "string" ||
-          typeof value.play === "function" ||
-          value.naturalWidth !== undefined ||
-          value.complete !== undefined ||
-          value.currentSrc !== undefined
-        ))
-      ) {
+        typeof value.play === "function" ||
+        typeof value.pause === "function" ||
+        typeof value.load === "function" ||
+        typeof value.getContext === "function";
+
+      if (isDomOrMedia) {
         return undefined;
       }
 

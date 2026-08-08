@@ -471,7 +471,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
               <XAxis dataKey="date" stroke="#71717a" fontSize={10} fontFamily="monospace" />
-              <YAxis stroke="#71717a" fontSize={10} fontFamily="monospace" tickFormatter={(v) => `${v / 1000}k`} />
+              <YAxis stroke="#71717a" fontSize={10} fontFamily="monospace" tickFormatter={(v) => typeof v === 'number' ? `${Math.round(v / 1000)}k` : String(v || '')} />
               <Tooltip 
                 contentStyle={{ backgroundColor: "#09090b", borderColor: "#27272a", borderRadius: "12px" }} 
                 labelStyle={{ color: "#d4af37", fontSize: "10px", fontFamily: "monospace" }}
