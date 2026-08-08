@@ -1250,7 +1250,14 @@ export default function GomboProfile({
           isOpen={true} 
           onClose={() => setPanelView("main")} 
           onLogout={onLogout}
-          onNavigateToFounder={() => onNavigateView("admin")}
+          onNavigateToFounder={() => {
+            setPanelView("main");
+            onNavigateView("dashboard");
+          }}
+          onNavigateToThrone={() => {
+            setPanelView("main");
+            onNavigateView("super_admin");
+          }}
         />
       )}
 

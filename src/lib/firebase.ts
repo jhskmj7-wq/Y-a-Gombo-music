@@ -44,28 +44,12 @@ if (typeof window !== "undefined") {
 
 let firestoreInstance;
 try {
-  const isIframe = typeof window !== "undefined" && window.self !== window.top;
-  if (isIframe) {
-    firestoreInstance = initializeFirestore(app, {
-      localCache: memoryLocalCache()
-    });
-    console.log("FIRESTORE: Sandboxed iframe detected, fallback to memoryLocalCache to avoid IndexedDB lockups.");
-  } else {
-    firestoreInstance = initializeFirestore(app, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
-      })
-    });
-    console.log("FIRESTORE: Multi-tab persistent cache enabled.");
-  }
+  firestoreInstance = initializeFirestore(app, {
+    localCache: memoryLocalCache()
+  });
+  console.log("FIRESTORE: memoryLocalCache initialized. Single source of truth from Firestore active across all environments.");
 } catch (e) {
-  try {
-    firestoreInstance = initializeFirestore(app, {
-      localCache: memoryLocalCache()
-    });
-  } catch (err2) {
-    firestoreInstance = getFirestore(app);
-  }
+  firestoreInstance = getFirestore(app);
 }
 
 export const db = firestoreInstance;

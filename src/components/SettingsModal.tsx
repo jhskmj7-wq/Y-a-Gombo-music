@@ -26,6 +26,7 @@ interface SettingsModalProps {
   onClose: () => void;
   onLogout?: () => void;
   onNavigateToFounder?: () => void;
+  onNavigateToThrone?: () => void;
   onSupportClick?: () => void;
 }
 
@@ -153,6 +154,7 @@ export default function SettingsModal({
   onClose, 
   onLogout,
   onNavigateToFounder,
+  onNavigateToThrone,
   onSupportClick
 }: SettingsModalProps) {
   useEffect(() => {
@@ -1536,6 +1538,23 @@ export default function SettingsModal({
                   <span className="text-[11px] font-black uppercase tracking-wider">Centre de Commandement</span>
                 </div>
                 <ChevronRight className="w-4.5 h-4.5" />
+              </button>
+
+              <button
+                onClick={() => {
+                  try { audioSynth.playTamTam(true); } catch (_) {}
+                  if (onNavigateToThrone) {
+                    onClose();
+                    onNavigateToThrone();
+                  }
+                }}
+                className="flex items-center justify-between p-3 rounded-xl bg-afri-gold/20 border border-afri-gold/60 hover:bg-afri-gold/30 text-afri-gold transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">👑</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider">Trône du Fondateur</span>
+                </div>
+                <ChevronRight className="w-4.5 h-4.5 text-afri-gold" />
               </button>
             </div>
           </div>

@@ -20,73 +20,6 @@ async function startServer() {
 
   app.use(express.json({ limit: '10mb' }));
 
-  // --- PWA SPECIFIC ENDPOINTS & MIDDLEWARES ---
-  // Ensure Service Worker is always served with perfect cache control and correct headers
-  app.get("/sw.js", (req, res, next) => {
-    res.setHeader("Service-Worker-Allowed", "/");
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.setHeader("Content-Type", "application/javascript");
-    
-    // In production, serve the file directly to avoid any middleware/SPA interception
-    if (process.env.NODE_ENV === "production") {
-      res.sendFile(path.join(process.cwd(), 'dist', 'sw.js'));
-    } else {
-      // In development, let Vite middleware handle the virtual sw.js
-      next();
-    }
-  });
-
-  // Ensure manifest and icons are served with public access and proper MIME types, allowing Chrome background downloads
-  app.get(["/manifest.webmanifest", "/manifest.json"], (req, res, next) => {
-    res.setHeader("Content-Type", "application/manifest+json");
-    res.setHeader("Access-Control-Allow-Origin", "*"); // Vital for Chrome to read the manifest in authenticated preview environments
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    
-    if (process.env.NODE_ENV === "production") {
-      res.sendFile(path.join(process.cwd(), 'dist', 'manifest.webmanifest'));
-    } else {
-      // In development, look for it in the public folder or let Vite serve it
-      res.sendFile(path.join(process.cwd(), 'public', 'manifest.webmanifest'));
-    }
-  });
-
-  // Serve static icons with correct cache headers before any SPA fallbacks
-  const pwaIcons = [
-    "/favicon.ico",
-    "/favicon.png",
-    "/favicon-16x16.png",
-    "/favicon-32x32.png",
-    "/favicon-48x48.png",
-    "/favicon-64x64.png",
-    "/logo.png",
-    "/logo-72.png",
-    "/logo-96.png",
-    "/logo-128.png",
-    "/logo-144.png",
-    "/logo-152.png",
-    "/logo-192.png",
-    "/pwa-192x192.png",
-    "/logo-256.png",
-    "/logo-384.png",
-    "/logo-512.png",
-    "/pwa-512x512.png",
-    "/maskable-icon.png",
-    "/apple-touch-icon.png",
-    "/logo_afrigombo.png",
-    "/logo.svg"
-  ];
-
-  app.get(pwaIcons, (req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*"); // Allow Chrome background fetch to download PWA icons
-    res.setHeader("Cache-Control", "public, max-age=86400"); // 1 day cache is safe for static PWA assets
-    
-    if (process.env.NODE_ENV === "production") {
-      res.sendFile(path.join(process.cwd(), 'dist', req.path));
-    } else {
-      res.sendFile(path.join(process.cwd(), 'public', req.path));
-    }
-  });
-
   // API health-check for network latency diagnostic pings
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: Date.now() });
@@ -141,22 +74,20 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
+    // Serve static assets with standard caching except index.html
     app.use(express.static(distPath, {
-      setHeaders: (res, filePath) => {
-        if (filePath.endsWith('.webmanifest') || filePath.endsWith('manifest.json')) {
-          res.setHeader('Content-Type', 'application/manifest+json');
-        }
-        if (filePath.endsWith('sw.js')) {
-          res.setHeader('Service-Worker-Allowed', '/');
-          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      setHeaders: (res, pathStr) => {
+        if (pathStr.endsWith('index.html')) {
+          res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
         }
       }
     }));
-    app.get('/manifest.json', (req, res) => {
-      res.setHeader('Content-Type', 'application/manifest+json');
-      res.sendFile(path.join(distPath, 'manifest.webmanifest'));
-    });
     app.get('*all', (req, res) => {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

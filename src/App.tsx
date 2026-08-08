@@ -20,7 +20,6 @@ const CompleteProfile = lazyWithRetry(() => import("./components/CompleteProfile
 const MaintenanceScreen = lazyWithRetry(() => import("./components/MaintenanceScreen"));
 const PremiumLoader = lazyWithRetry(() => import("./components/PremiumLoader"));
 const GlobalNotificationBanner = lazyWithRetry(() => import("./components/GlobalNotificationBanner"));
-const PWAHandler = lazyWithRetry(() => import("./components/PWAHandler"));
 const BootSplashScreen = lazyWithRetry(() => import("./components/BootSplashScreen"));
 const BackgroundMusic = lazyWithRetry(() => import("./components/BackgroundMusic").then(m => ({ default: m.BackgroundMusic })));
 const FloatingAudioPlayer = lazyWithRetry(() => import("./components/FloatingAudioPlayer").then(m => ({ default: m.FloatingAudioPlayer })));
@@ -214,9 +213,6 @@ function App() {
     <ErrorBoundary>
       <div className="h-full h-[100dvh] w-full overflow-x-hidden font-sans antialiased transition-colors duration-300 bg-afri-bg text-afri-text flex flex-col">
         <ScrollToTop />
-        <Suspense fallback={null}>
-          <PWAHandler />
-        </Suspense>
         
         {/* Main application layer, rendered cleanly */}
         <Routes>

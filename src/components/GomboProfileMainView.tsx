@@ -154,7 +154,10 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           </p>
           
           <button 
-            onClick={() => onNavigateView("dashboard")}
+            onClick={() => {
+              onNavigateView("dashboard");
+              try { audioSynth.playTamTam(true); } catch (_) {}
+            }}
             className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-sans font-black text-xs uppercase tracking-[0.1em] rounded-xl shadow-sm hover:scale-[1.01] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             <ShieldAlert className="w-4 h-4" />

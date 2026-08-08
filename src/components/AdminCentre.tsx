@@ -26,13 +26,13 @@ import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortal
 const AdminStats = lazyWithRetry(() => import("./AdminStats"));
 const AdminReports = lazyWithRetry(() => import("./admin/AdminReports"));
 const AdminActions = lazyWithRetry(() => import("./AdminActions"));
-const AdminDashboard = lazyWithRetry(() => import("./admin/AdminDashboard"));
+import AdminDashboard from "./admin/AdminDashboard";
 const AdminUsers = lazyWithRetry(() => import("./admin/AdminUsers"));
 const AdminNotifications = lazyWithRetry(() => import("./admin/AdminNotifications"));
 const AdminRevenue = lazyWithRetry(() => import("./admin/AdminRevenue"));
 const AdminSettings = lazyWithRetry(() => import("./admin/AdminSettings"));
 const AdminSecurity = lazyWithRetry(() => import("./admin/AdminSecurity"));
-const AdminFounderThrone = lazyWithRetry(() => import("./admin/AdminFounderThrone"));
+import AdminFounderThrone from "./admin/AdminFounderThrone";
 const AdminSuperFounderHub = lazyWithRetry(() => import("./admin/AdminSuperFounderHub"));
 const AdminAvatarStore = lazyWithRetry(() => import("./admin/AdminAvatarStore"));
 const MultimediaCenter = lazyWithRetry(() => import("./admin/MultimediaCenter"));
@@ -45,23 +45,23 @@ const GeoLocationCenter = lazyWithRetry(() => import("./admin/GeoLocationCenter"
 const UserCommentsView = lazyWithRetry(() => import("./UserCommentsView"));
 const GomboMusikEcosystem = lazyWithRetry(() => import("./GomboMusikEcosystem"));
 
-// Optimized Lazy Imports
-const GrandMarcheView = lazyWithRetry(() => import("./GrandMarcheView"));
-const AcademieView = lazyWithRetry(() => import("./AcademieView"));
-const MessagesView = lazyWithRetry(() => import("./MessagesView"));
-const AfrigomboWalletDashboard = lazyWithRetry(() => import("./AfrigomboWalletDashboard"));
-const GomboContractsDashboard = lazyWithRetry(() => import("./GomboContractsDashboard"));
-const CreatorActivityDashboard = lazyWithRetry(() => import("./CreatorActivityDashboard"));
+// Optimized Static Imports for instant opening without loading screens
+import GrandMarcheView from "./GrandMarcheView";
+import AcademieView from "./AcademieView";
+import MessagesView from "./MessagesView";
+import AfrigomboWalletDashboard from "./AfrigomboWalletDashboard";
+import GomboContractsDashboard from "./GomboContractsDashboard";
+import CreatorActivityDashboard from "./CreatorActivityDashboard";
 const FirebaseDiagnostic = lazyWithRetry(() => import("./FirebaseDiagnostic"));
 const AboutAfrigombo = lazyWithRetry(() => import("./AboutAfrigombo"));
 const SupportAfrigombo = lazyWithRetry(() => import("./SupportAfrigombo"));
 const WhatsNew = lazyWithRetry(() => import("./WhatsNew"));
 const AfrigomboHelpCenter = lazyWithRetry(() => import("./AfrigomboHelpCenter"));
-const AvatarEditor = lazyWithRetry(() => import("./avatar/AvatarEditor"));
-const AvatarStore = lazyWithRetry(() => import("./avatar/AvatarStore"));
-const EventsView = lazyWithRetry(() => import("./EventsView"));
-const HeritagePage = lazyWithRetry(() => import("./HeritagePage"));
-const GomboIdUserDashboard = lazyWithRetry(() => import("./GomboIdUserDashboard"));
+import AvatarEditor from "./avatar/AvatarEditor";
+import AvatarStore from "./avatar/AvatarStore";
+import EventsView from "./EventsView";
+import HeritagePage from "./HeritagePage";
+import GomboIdUserDashboard from "./GomboIdUserDashboard";
 const AfrigomboLabs = lazyWithRetry(() => import("./admin/AfrigomboLabs"));
 const BetaCheckPanel = lazyWithRetry(() => import("./admin/BetaCheckPanel"));
 
@@ -69,21 +69,21 @@ const BetaCheckPanel = lazyWithRetry(() => import("./admin/BetaCheckPanel"));
 const NearbyPageView = lazyWithRetry(() => import("./NearbyPageView").then(m => ({ default: m.NearbyPageView })));
 const GomboBoostManager = lazyWithRetry(() => import("./GomboBoostManager"));
 const AfrigomboSupportModal = lazyWithRetry(() => import("./AfrigomboSupportModal").then(m => ({ default: m.AfrigomboSupportModal })));
-const NotificationCenter = lazyWithRetry(() => import("./NotificationCenter"));
-const SettingsModal = lazyWithRetry(() => import("./SettingsModal"));
+import NotificationCenter from "./NotificationCenter";
+import SettingsModal from "./SettingsModal";
 const ComingSoon = lazyWithRetry(() => import("./ComingSoon"));
-const AfrigomboPlus = lazyWithRetry(() => import("./AfrigomboPlus"));
+import AfrigomboPlus from "./AfrigomboPlus";
 const PublicProfileModal = lazyWithRetry(() => import("./PublicProfileModal").then(m => ({ default: m.PublicProfileModal })));
 const ArbreAPalabresBubble = lazyWithRetry(() => import("./ArbreAPalabresBubble").then(m => ({ default: m.ArbreAPalabresBubble })));
 const ReelsPlayer = lazyWithRetry(() => import("./ReelsPlayer").then(m => ({ default: m.ReelsPlayer })));
 const AfrigomboVibeWaves = lazyWithRetry(() => import("./AfrigomboVibeWaves").then(m => ({ default: m.AfrigomboVibeWaves })));
 const Carousel = lazyWithRetry(() => import("./Carousel").then(m => ({ default: m.Carousel })));
-const WakandaTechBackground = lazyWithRetry(() => import("./WakandaTechBackground"));
+import WakandaTechBackground from "./WakandaTechBackground";
 const AfrigomboFooter = lazyWithRetry(() => import("./AfrigomboFooter"));
-const AuthScreen = lazyWithRetry(() => import("./AuthScreen"));
+import AuthScreen from "./AuthScreen";
 const PremiumEmptyState = lazyWithRetry(() => import("./PremiumEmptyState"));
 const PendingPaymentModal = lazyWithRetry(() => import("./PendingPaymentModal").then(m => ({ default: m.PendingPaymentModal })));
-const MonAbonnementView = lazyWithRetry(() => import("./MonAbonnementView").then(m => ({ default: m.MonAbonnementView })));
+import { MonAbonnementView } from "./MonAbonnementView";
 
 // Extracted Sub-components
 const UserReelsView = lazyWithRetry(() => import("./UserReelsView").then(m => ({ default: m.UserReelsView })));
@@ -6482,7 +6482,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           console.error("Logout error after deletion:", err);
                         }
                       }}
-                      onNavigateToFounder={() => setActiveMenu("super_admin")}
+                      onNavigateToFounder={() => setActiveMenu("dashboard")}
+                      onNavigateToThrone={() => setActiveMenu("super_admin")}
                       onSupportClick={() => setIsSupportModalOpen(true)}
                     />
                   </ErrorBoundary>
