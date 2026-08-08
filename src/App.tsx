@@ -13,8 +13,10 @@ import { SecurityService } from "./lib/SecurityService";
 import ScrollToTop from "./components/ScrollToTop";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
 
-// Lazy Loaded Components
-const AdminCentre = lazyWithRetry(() => import("./components/AdminCentre"));
+// Static Import for Critical Navigation Layer
+import AdminCentre from "./components/AdminCentre";
+
+// Lazy Loaded Auxiliary Components
 const AuthPage = lazyWithRetry(() => import("./components/AuthPage"));
 const CompleteProfile = lazyWithRetry(() => import("./components/CompleteProfile"));
 const MaintenanceScreen = lazyWithRetry(() => import("./components/MaintenanceScreen"));

@@ -705,66 +705,85 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
         {/* Workspace */}
         <div className="flex-1 flex flex-col md:flex-row overflow-x-hidden md:overflow-hidden w-full max-w-full min-w-0 box-border">
           
-          {/* Left Column: Premium Preview */}
-          <div className="w-full md:w-[320px] lg:w-[350px] bg-zinc-950 border-b md:border-b-0 md:border-r border-afri-border/20 p-4 sm:p-6 flex flex-col items-center justify-start gap-4 sm:gap-6 shrink-0 md:overflow-y-auto custom-scrollbar box-border min-w-0">
-            <div className="relative group my-2">
-              <div className="absolute inset-0 bg-[#D4AF37]/10 blur-[50px] rounded-full animate-pulse" />
-              <div className="relative z-10 w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full border-4 sm:border-8 border-zinc-900 shadow-2xl overflow-hidden p-1 bg-gradient-to-b from-white/5 to-transparent flex items-center justify-center">
-                <AvatarRenderer 
-                  config={{ 
-                    ...config, 
-                    configV2: { 
-                      items: Object.fromEntries(
-                        Object.entries(config).filter(([k, v]) => typeof v === 'string' && v && !['skinColor', 'faceShape', 'background'].includes(k))
-                      )
-                    } 
-                  }} 
-                  size={220} 
-                  storeItems={[...FREE_DEFAULT_ITEMS, ...storeItems]}
-                />
-              </div>
-            </div>
-            
-            <div className="w-full space-y-3 sm:space-y-4">
-              <div className="p-3.5 sm:p-4 bg-zinc-900 rounded-2xl border border-afri-border/20 space-y-3">
-                <label className="flex items-center justify-between cursor-pointer group gap-2">
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] sm:text-[11px] font-black text-afri-text uppercase tracking-wider group-hover:text-[#D4AF37] transition truncate">Synchro Profil</span>
-                    <span className="text-[8px] sm:text-[9px] text-afri-text-sec truncate">Appliquer à mon profil public</span>
+          {/* Left Column: Avatar Preview & Quick Actions */}
+          <div className="w-full md:w-[320px] lg:w-[360px] bg-zinc-950 border-b md:border-b-0 md:border-r border-afri-border/20 p-3 sm:p-5 flex flex-col items-center justify-center shrink-0 box-border min-w-0">
+            {/* AvatarWrapper: Flexbox row centered around avatar */}
+            <div className="w-full flex items-center justify-center gap-2 sm:gap-4 md:gap-5 py-2 px-1 relative">
+              
+              {/* Left Button: Boutique Elite (Reduced/Compact) */}
+              <button 
+                onClick={() => setShowStore(true)}
+                className="flex flex-col items-center justify-center p-2.5 sm:p-3 bg-zinc-900 hover:bg-zinc-800 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl text-[#D4AF37] hover:scale-105 active:scale-95 transition-all shadow-lg shrink-0 group w-20 sm:w-24"
+                title="Boutique Elite"
+              >
+                <div className="relative">
+                  <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-[#D4AF37] group-hover:scale-110 transition-transform" />
+                  {storeItems.length > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 bg-[#D4AF37] text-black text-[8px] font-black px-1.5 py-0.2 rounded-full shadow">
+                      {storeItems.length}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-center mt-1 text-afri-text group-hover:text-[#D4AF37] leading-tight">
+                  Boutique
+                </span>
+              </button>
+
+              {/* Center: Avatar Circle + Hasard (Dice) Floating Button */}
+              <div className="relative flex flex-col items-center shrink-0">
+                <div className="relative group my-1">
+                  <div className="absolute inset-0 bg-[#D4AF37]/10 blur-[40px] rounded-full animate-pulse" />
+                  <div className="relative z-10 w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-full border-4 sm:border-6 border-zinc-900 shadow-2xl overflow-hidden p-1 bg-gradient-to-b from-white/5 to-transparent flex items-center justify-center">
+                    <AvatarRenderer 
+                      config={{ 
+                        ...config, 
+                        configV2: { 
+                          items: Object.fromEntries(
+                            Object.entries(config).filter(([k, v]) => typeof v === 'string' && v && !['skinColor', 'faceShape', 'background'].includes(k))
+                          )
+                        } 
+                      }} 
+                      size={180} 
+                      storeItems={[...FREE_DEFAULT_ITEMS, ...storeItems]}
+                    />
                   </div>
+                </div>
+
+                {/* Hasard (Dice) compact floating button directly attached to bottom of avatar circle */}
+                <button 
+                  onClick={handleRandomize}
+                  className="absolute -bottom-2.5 z-20 px-3 py-1 bg-zinc-900 hover:bg-zinc-800 border border-[#D4AF37]/50 rounded-full text-[#D4AF37] text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow-xl flex items-center gap-1 hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
+                  title="Générer un avatar au hasard"
+                >
+                  <RefreshCw className="w-3 h-3 text-[#D4AF37]" />
+                  <span>Hasard 🎲</span>
+                </button>
+              </div>
+
+              {/* Right Button: Synchro Profil (Reduced/Compact) */}
+              <div className="flex flex-col items-center shrink-0">
+                <button 
+                  onClick={handleSyncProfile}
+                  disabled={saving}
+                  className="flex flex-col items-center justify-center p-2.5 sm:p-3 bg-zinc-900 hover:bg-zinc-800 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl text-[#D4AF37] hover:scale-105 active:scale-95 transition-all shadow-lg group disabled:opacity-50 w-20 sm:w-24"
+                  title="Mise à jour immédiate sur le profil"
+                >
+                  <RefreshCw className={`w-5 h-5 sm:w-6 sm:h-6 text-[#D4AF37] group-hover:rotate-180 transition-transform ${saving ? 'animate-spin' : ''}`} />
+                  <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-center mt-1 text-afri-text group-hover:text-[#D4AF37] leading-tight">
+                    Synchro
+                  </span>
+                </button>
+                <label className="flex items-center gap-1 cursor-pointer text-[8px] text-afri-text-sec hover:text-[#D4AF37] transition mt-1.5" title="Appliquer automatiquement à mon profil public">
                   <input 
                     type="checkbox" 
                     checked={useAsProfile} 
                     onChange={(e) => setUseAsProfile(e.target.checked)}
-                    className="w-4 h-4 sm:w-5 sm:h-5 accent-[#D4AF37] shrink-0"
+                    className="w-3 h-3 accent-[#D4AF37] cursor-pointer"
                   />
+                  <span className="font-bold uppercase tracking-widest text-[7px] sm:text-[8px]">Auto</span>
                 </label>
-                
-                <button 
-                  onClick={handleSyncProfile}
-                  disabled={saving}
-                  className="w-full py-2.5 sm:py-3 bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-black text-[9px] sm:text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 border border-[#D4AF37]/30"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${saving ? 'animate-spin' : ''}`} />
-                  Mise à jour immédiate
-                </button>
               </div>
 
-              <button 
-                onClick={handleRandomize}
-                className="w-full py-3 sm:py-3.5 bg-zinc-900 hover:bg-zinc-800 text-[#D4AF37] border border-[#D4AF37]/20 font-black text-[9px] sm:text-[10px] uppercase tracking-widest rounded-xl transition flex items-center justify-center gap-2"
-              >
-                <RefreshCw className="w-4 h-4 text-[#D4AF37]" />
-                Générer au Hasard 🎲
-              </button>
-
-              <button 
-                onClick={() => setShowStore(true)}
-                className="w-full py-3 sm:py-3.5 bg-zinc-800 hover:bg-zinc-700 text-afri-text border border-white/5 font-black text-[9px] sm:text-[10px] uppercase tracking-widest rounded-xl transition flex items-center justify-center gap-2"
-              >
-                <ShoppingBag className="w-4 h-4 text-[#D4AF37]" />
-                Boutique Elite ({storeItems.length})
-              </button>
             </div>
           </div>
 
