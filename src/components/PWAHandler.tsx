@@ -20,12 +20,16 @@ export default function PWAHandler() {
   });
 
   useEffect(() => {
+    // Check if app is already running in standalone mode
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    if (isStandalone) {
+      return;
+    }
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      if (!sessionStorage.getItem('pwa_install_dismissed')) {
-        setShowInstallBanner(true);
-      }
+      setShowInstallBanner(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -46,7 +50,6 @@ export default function PWAHandler() {
 
   const handleDismissInstall = () => {
     setShowInstallBanner(false);
-    sessionStorage.setItem('pwa_install_dismissed', 'true');
   };
 
   const closeRefresh = () => {

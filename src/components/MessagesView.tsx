@@ -254,27 +254,32 @@ export default function MessagesView({
     return () => unsub();
   }, [currentUser?.uid]);
 
-  // Auto-opening Support Chat
+  // Auto-opening Target User or Support Chat when openConvoWithUserId is passed
   useEffect(() => {
-    if (openConvoWithUserId === "afrigombo_support" && supportConvo) {
-      setActiveConvo({
-        id: currentUser.uid,
-        type: "support",
-        participants: [currentUser.uid, "afrigombo_support"],
-        userName: "Équipe AFRIGOMBO ELITE",
-        userPhoto: "/logo.svg",
-        ...supportConvo
-      });
+    if (!currentUser?.uid || !openConvoWithUserId) return;
 
+    if (openConvoWithUserId === "afrigombo_support") {
+      handleOpenSupport();
       setOpenConvoWithUserId(null);
-
-      const draft = localStorage.getItem("support_draft");
-      if (draft) {
-        setInputText(draft);
-        localStorage.removeItem("support_draft");
-      }
+      return;
     }
-  }, [openConvoWithUserId, supportConvo, currentUser?.uid, setOpenConvoWithUserId]);
+
+    let isMounted = true;
+    (async () => {
+      try {
+        const convo = await gomboDB.getOrCreateConversation(currentUser.uid, openConvoWithUserId);
+        if (isMounted && convo) {
+          setActiveTab("discussions");
+          setActiveConvo(convo);
+          setOpenConvoWithUserId(null);
+        }
+      } catch (err) {
+        console.error("Error opening target conversation:", err);
+      }
+    })();
+
+    return () => { isMounted = false; };
+  }, [openConvoWithUserId, currentUser?.uid, setOpenConvoWithUserId]);
 
   // Messages stream listener
   useEffect(() => {
@@ -617,24 +622,29 @@ export default function MessagesView({
   };
 
   const handleOpenSupport = async () => {
+    setActiveTab("discussions");
     try {
-      await SupportService.getOrCreateSupportConversation(currentUser.uid, currentProfile);
+      if (currentUser?.uid) {
+        await SupportService.getOrCreateSupportConversation(currentUser.uid, currentProfile);
+      }
     } catch (e) {
       console.warn("Could not ensure support conversation:", e);
     }
-    setActiveConvo({
-      id: currentUser.uid,
-      type: "support",
-      participants: [currentUser.uid, "afrigombo_support"],
-      userName: "Équipe AFRIGOMBO ELITE",
-      userPhoto: "/logo_afrigombo.png",
-      ...supportConvo
-    });
-    if (supportConvo?.unreadCount?.[currentUser?.uid] > 0) {
-      try {
-        const convoRef = doc(db, "supportConversations", currentUser.uid);
-        updateDoc(convoRef, { [`unreadCount.${currentUser.uid}`]: 0 });
-      } catch (err) {}
+    if (currentUser?.uid) {
+      setActiveConvo({
+        id: currentUser.uid,
+        type: "support",
+        participants: [currentUser.uid, "afrigombo_support"],
+        userName: "Équipe AFRIGOMBO ELITE",
+        userPhoto: "/logo.svg",
+        ...supportConvo
+      });
+      if (supportConvo?.unreadCount?.[currentUser?.uid] > 0) {
+        try {
+          const convoRef = doc(db, "supportConversations", currentUser.uid);
+          updateDoc(convoRef, { [`unreadCount.${currentUser.uid}`]: 0 });
+        } catch (err) {}
+      }
     }
   };
 
@@ -681,15 +691,6 @@ export default function MessagesView({
 
   const partnerUid = activeConvo?.participants.find((p) => p !== currentUser?.uid);
   const partnerDetails = partnerUid ? activeConvo?.participantDetails?.[partnerUid] : null;
-
-  if (!currentUser?.uid) {
-    return (
-      <div className="w-full flex-1 flex flex-col items-center justify-center p-8 bg-afri-bg text-afri-text text-center space-y-4 min-h-[400px]">
-        <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
-        <p className="text-xs font-mono text-afri-text-sec">Initialisation de la messagerie sécurisée...</p>
-      </div>
-    );
-  }
 
   return (
     
@@ -916,13 +917,21 @@ export default function MessagesView({
                         </div>
                       )}
 
-                      {messages.map((m) => {
-                        const isMe = m.senderId === currentUser?.uid;
+                      {messages.map((m, idx) => {
+                        const senderUid = (m as any).senderId || (m as any).senderUid || (m as any).authorId || (m as any).userId;
+                        const isMe = senderUid === currentUser?.uid;
                         const hasReactions = m.reactions && Object.keys(m.reactions).length > 0;
                         const myReaction = m.reactions?.[currentUser?.uid || ""];
 
+                        const messageContent = (m as any).text || (m as any).content || (m as any).message || (m as any).body || (m as any).texte || (m as any).preview || "";
+                        const mediaUrl = (m as any).mediaUrl || (m as any).image || (m as any).audio;
+
+                        const isImage = m.type === "image" || (mediaUrl && (m.type === "image" || mediaUrl.match(/\.(jpeg|jpg|gif|png|webp|svg)/i)));
+                        const isAudio = m.type === "audio" || (mediaUrl && (m.type === "audio" || mediaUrl.match(/\.(mp3|wav|ogg|m4a|webm)/i)));
+                        const isLocation = m.type === "location";
+
                         return (
-                          <div key={m.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"} relative mb-3 group w-full`}>
+                          <div key={m.id || idx} className={`flex flex-col ${isMe ? "items-end" : "items-start"} relative mb-3 group w-full`}>
                             {/* Reaction Picker Bar popup */}
                             {activeReactionMenuMsgId === m.id && (
                               <div className="absolute z-50 -top-10 flex items-center gap-1 bg-afri-bg-sec border border-afri-border rounded-full shadow-2xl animate-fadeIn">
@@ -957,20 +966,17 @@ export default function MessagesView({
                                     : "bg-afri-bg-sec text-afri-text rounded-bl-xs border border-afri-border"
                                 } break-words min-w-[70px] ${hasReactions ? "pb-5" : ""}`}
                               >
-                                {m.type === "text" && (
-                                  <p className="whitespace-pre-wrap break-words">{highlightText(m.text || "", msgSearchQuery)}</p>
-                                )}
-                                {m.type === "image" && (
-                                  <img src={m.mediaUrl || m.text} alt="" className="rounded-xl max-h-60 object-cover" />
-                                )}
-                                {m.type === "audio" && (
-                                  <audio controls src={m.mediaUrl} className="w-full max-w-xs h-8 mt-1" />
-                                )}
-                                {m.type === "location" && (
+                                {isImage ? (
+                                  <img src={mediaUrl || messageContent} alt="" className="rounded-xl max-h-60 object-cover" />
+                                ) : isAudio ? (
+                                  <audio controls src={mediaUrl} className="w-full max-w-xs h-8 mt-1" />
+                                ) : isLocation ? (
                                   <div className="flex items-center gap-2">
                                     <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
-                                    <span className="break-words">{m.text}</span>
+                                    <span className="break-words">{messageContent}</span>
                                   </div>
+                                ) : (
+                                  <p className="whitespace-pre-wrap break-words">{highlightText(messageContent, msgSearchQuery)}</p>
                                 )}
 
                                 {/* Reactions Overlapping on Bubble Corner */}
@@ -995,7 +1001,10 @@ export default function MessagesView({
                                 <span className={`text-[9px] font-mono mt-1 block text-right ${isMe ? "text-black/70" : "text-afri-text-sec"}`}>
                                   {(() => {
                                     try {
-                                      return new Date(m.timestamp || m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                      const rawDate = m.timestamp || m.createdAt;
+                                      if (!rawDate) return "";
+                                      const d = typeof rawDate === "string" || typeof rawDate === "number" ? new Date(rawDate) : (rawDate as any)?.toDate ? (rawDate as any).toDate() : new Date();
+                                      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                                     } catch (e) {
                                       return "";
                                     }
