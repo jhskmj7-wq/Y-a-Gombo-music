@@ -675,7 +675,6 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const setThemePreset = async (preset: Theme) => {
     setThemePresetState(preset);
-    safeSetItem("gombo_theme", preset);
     showToast(`Thème visual : [${preset.toUpperCase()}] appliqué 🎨`);
     if (currentUser?.uid) {
       try {

@@ -56,6 +56,7 @@ try {
         tabManager: persistentMultipleTabManager()
       })
     });
+    console.log("FIRESTORE: Multi-tab persistent cache enabled.");
   }
 } catch (e) {
   try {

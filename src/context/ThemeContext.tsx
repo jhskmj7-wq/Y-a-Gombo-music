@@ -48,8 +48,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
       const stored = safeGetItem("gombo_theme", "imperial");
-      if (stored === "dark") return "imperial";
-      if (["imperial", "light", "nuit", "elite", "studio", "nature"].includes(stored)) {
+      if (["imperial", "light", "royal", "saphir", "emeraude", "studio", "rouge"].includes(stored)) {
         return stored as Theme;
       }
     }
