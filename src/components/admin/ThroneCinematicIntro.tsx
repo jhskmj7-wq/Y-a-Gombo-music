@@ -18,7 +18,11 @@ export default function ThroneCinematicIntro({ onComplete }: ThroneCinematicIntr
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-[999] bg-afri-bg select-none overflow-hidden flex flex-col items-center justify-center font-sans">
+    <div 
+      onClick={onComplete}
+      className="fixed inset-0 z-[999] bg-afri-bg/90 backdrop-blur-sm select-none overflow-hidden flex flex-col items-center justify-center font-sans cursor-pointer"
+      title="Cliquer pour passer"
+    >
       {/* 1. Black Fade (starts immediately, 150ms) */}
       <motion.div
         initial={{ opacity: 0 }}

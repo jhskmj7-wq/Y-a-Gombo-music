@@ -12,8 +12,9 @@ import StrategicDecisionsManager from "./StrategicDecisionsManager";
 import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";
 import { useMaintenance } from "../../hooks/useMaintenance";
 
+import AdminFounderThrone from "./AdminFounderThrone";
+
 // Lazy load the independent modules
-const AdminFounderThrone = lazyWithRetry(() => import("./AdminFounderThrone"));
 const AdminDashboard = lazyWithRetry(() => import("./AdminDashboard"));
 const AdminSupportCenter = lazyWithRetry(() => import("./AdminSupportCenter"));
 const BetaTransactionsAdminPanel = lazyWithRetry(() => import("./BetaTransactionsAdminPanel"));

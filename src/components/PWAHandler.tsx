@@ -12,7 +12,7 @@ export default function PWAHandler() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-      console.log('📡 [PWA] Service Worker inscrit avec succès:', r);
+      console.log('📡 [PWA] Service Worker inscrit avec succès:', r?.scope || 'Inscrit');
     },
     onRegisterError(error) {
       console.error('⚠️ [PWA] Erreur lors de l\'inscription du Service Worker:', error);

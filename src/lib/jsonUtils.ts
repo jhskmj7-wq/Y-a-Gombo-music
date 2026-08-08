@@ -14,10 +14,20 @@ export function deepSanitize(val: any, seen = new WeakSet()): any {
     seen.add(val);
 
     if (val instanceof Date) return val.toISOString();
+    if (val instanceof Error) return `${val.name}: ${val.message}${val.stack ? `\n${val.stack}` : ""}`;
 
     const tag = Object.prototype.toString.call(val);
     
-    // Check for DOM elements, Audio/Video/Media objects, Events, Windows, React Fibers, AudioContext, etc.
+    // Safely extract primitive fields for DOM Event objects (like beforeinstallprompt)
+    if (tag.includes("Event") || (val.type && (val.preventDefault || val.stopPropagation))) {
+      return {
+        type: String(val.type || "event"),
+        timeStamp: typeof val.timeStamp === "number" ? val.timeStamp : Date.now(),
+        defaultPrevented: Boolean(val.defaultPrevented),
+      };
+    }
+
+    // Check for DOM elements, Audio/Video/Media objects, ServiceWorkers, Windows, React Fibers, AudioContext, Promises, etc.
     const isDomOrMedia =
       tag.startsWith("[object HTML") ||
       tag.startsWith("[object SVG") ||
@@ -43,6 +53,8 @@ export function deepSanitize(val: any, seen = new WeakSet()): any {
       tag.includes("Worker") ||
       tag.includes("Fiber") ||
       tag.includes("Synthetic") ||
+      tag.includes("Promise") ||
+      tag.includes("Registration") ||
       val.nodeType !== undefined ||
       val.tagName !== undefined ||
       val.nodeName !== undefined ||
@@ -56,7 +68,8 @@ export function deepSanitize(val: any, seen = new WeakSet()): any {
       typeof val.play === "function" ||
       typeof val.pause === "function" ||
       typeof val.load === "function" ||
-      typeof val.getContext === "function";
+      typeof val.getContext === "function" ||
+      typeof val.then === "function";
 
     if (isDomOrMedia) {
       return undefined;
@@ -86,6 +99,7 @@ export function deepSanitize(val: any, seen = new WeakSet()): any {
     const out: Record<string, any> = {};
     const keys = Object.keys(val);
     for (const key of keys) {
+      if (key === "toJSON") continue; // Never pass un-sanitized toJSON function onto plain objects
       try {
         const child = val[key];
         const cleaned = deepSanitize(child, seen);
@@ -105,7 +119,7 @@ export function deepSanitize(val: any, seen = new WeakSet()): any {
 export const getCircularReplacer = () => {
   const seen = new WeakSet();
   return (key: string, value: any) => {
-    if (typeof value === "function" || typeof value === "symbol" || typeof value === "bigint") {
+    if (typeof value === "function" || typeof value === "symbol" || typeof value === "bigint" || key === "toJSON") {
       return undefined;
     }
 
@@ -141,6 +155,8 @@ export const getCircularReplacer = () => {
         tag.includes("Worker") ||
         tag.includes("Fiber") ||
         tag.includes("Synthetic") ||
+        tag.includes("Promise") ||
+        tag.includes("Registration") ||
         value.nodeType !== undefined ||
         value.tagName !== undefined ||
         value.nodeName !== undefined ||
@@ -154,7 +170,8 @@ export const getCircularReplacer = () => {
         typeof value.play === "function" ||
         typeof value.pause === "function" ||
         typeof value.load === "function" ||
-        typeof value.getContext === "function";
+        typeof value.getContext === "function" ||
+        typeof value.then === "function";
 
       if (isDomOrMedia) {
         return undefined;
@@ -190,13 +207,19 @@ export const getCircularReplacer = () => {
 export const safeStringify = (obj: any, space?: string | number): string => {
   if (obj === undefined) return "undefined";
   if (obj === null) return "null";
+  if (typeof obj === "string") return obj;
+  if (typeof obj === "number" || typeof obj === "boolean") return String(obj);
+
   try {
     const clean = deepSanitize(obj);
     return JSON.stringify(clean, null, space);
-  } catch (err) {
-    console.error("Critical error during safeStringify:", err);
+  } catch (_) {
     try {
-      return JSON.stringify(obj, getCircularReplacer(), space);
+      if (obj instanceof Error) return `${obj.name}: ${obj.message}`;
+      if (typeof obj === "object") {
+        return `[Object ${obj.constructor ? obj.constructor.name : "Unknown"}]`;
+      }
+      return String(obj);
     } catch {
       return "{}";
     }

@@ -33,13 +33,13 @@ const AdminRevenue = lazyWithRetry(() => import("./admin/AdminRevenue"));
 const AdminSettings = lazyWithRetry(() => import("./admin/AdminSettings"));
 const AdminSecurity = lazyWithRetry(() => import("./admin/AdminSecurity"));
 import AdminFounderThrone from "./admin/AdminFounderThrone";
-const AdminSuperFounderHub = lazyWithRetry(() => import("./admin/AdminSuperFounderHub"));
+import AdminSuperFounderHub from "./admin/AdminSuperFounderHub";
+import ThroneCinematicIntro from "./admin/ThroneCinematicIntro";
 const AdminAvatarStore = lazyWithRetry(() => import("./admin/AdminAvatarStore"));
 const MultimediaCenter = lazyWithRetry(() => import("./admin/MultimediaCenter"));
 const AfrigomboEconomieDashboard = lazyWithRetry(() => import("./AfrigomboEconomieDashboard"));
 const AfrigomboBuilders = lazyWithRetry(() => import("./AfrigomboBuilders"));
 const AfrigomboBuildersAdminDashboard = lazyWithRetry(() => import("./AfrigomboBuildersAdminDashboard"));
-const ThroneCinematicIntro = lazyWithRetry(() => import("./admin/ThroneCinematicIntro"));
 const BetaTransactionsAdminPanel = lazyWithRetry(() => import("./admin/BetaTransactionsAdminPanel"));
 const GeoLocationCenter = lazyWithRetry(() => import("./admin/GeoLocationCenter"));
 const UserCommentsView = lazyWithRetry(() => import("./UserCommentsView"));
@@ -6763,11 +6763,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 VIEW: CABINET SUPRÊME PRIVÉ (LE TRÔNE DU FONDATEUR / CENTRE MULTIMÉDIA)
                   ---------------------------------------------------- */}
               {activeMenu === "super_admin" && (
-                showThroneCinematic ? (
-                  <Suspense fallback={<div className="fixed inset-0 bg-afri-bg" />}>
-                    <ThroneCinematicIntro onComplete={() => setShowThroneCinematic(false)} />
-                  </Suspense>
-                ) : (
+                <>
                   <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement du Centre Super Fondateur...</div>}>
                     <AdminSuperFounderHub
                       userEmail={userEmail || ""}
@@ -6785,7 +6781,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       }}
                     />
                   </Suspense>
-                )
+                  {showThroneCinematic && (
+                    <Suspense fallback={null}>
+                      <ThroneCinematicIntro onComplete={() => setShowThroneCinematic(false)} />
+                    </Suspense>
+                  )}
+                </>
               )}
 
               {/* ----------------------------------------------------
