@@ -26,12 +26,12 @@ const FREE_ITEM_IDS = [
 ];
 
 /**
- * AFRIGOMBO ELITE - PROFESSIONAL SVG RENDERER (V3 MODERN)
- * Handles highly customized dynamic facial geometry for realistic modern African individuals.
+ * AFRIGOMBO ELITE - PROFESSIONAL 3D STYLIZED SVG EXPORT RENDERER
+ * Renders 3D-stylized vector avatars with volumetric melanin shaders and full African identity.
  */
 export const AvatarRenderer = {
   /**
-   * Generates a high-quality SVG URI for the Elite Avatar engine
+   * Generates a high-quality SVG data URI for the Elite Avatar engine
    */
   render(configV2: any, configV1: AvatarConfig, storeItems: AvatarItem[]): string {
     const skinColor = configV1?.skinColor || "#8D5524";
@@ -50,7 +50,7 @@ export const AvatarRenderer = {
     const isFemale = configV1?.gender === 'female';
     const age = configV1?.age !== undefined ? Number(configV1.age) : 25;
 
-    // Face Structure parameters (V3 Modern)
+    // Face Structure parameters
     const faceWidth = configV1?.faceWidth !== undefined ? Number(configV1.faceWidth) : 1.0;
     const faceHeight = configV1?.faceHeight !== undefined ? Number(configV1.faceHeight) : 1.0;
     const foreheadWidth = configV1?.foreheadWidth !== undefined ? Number(configV1.foreheadWidth) : 1.0;
@@ -60,14 +60,14 @@ export const AvatarRenderer = {
     const chinWidth = configV1?.chinWidth !== undefined ? Number(configV1.chinWidth) : 1.0;
     const chinHeight = configV1?.chinHeight !== undefined ? Number(configV1.chinHeight) : 1.0;
 
-    // Eyes & Eyebrows parameters (V3 Modern)
+    // Eyes & Eyebrows parameters
     const eyesHeight = configV1?.eyesHeight !== undefined ? Number(configV1.eyesHeight) : 1.0;
     const eyesWidth = configV1?.eyesWidth !== undefined ? Number(configV1.eyesWidth) : (configV1?.eyeWidth !== undefined ? Number(configV1.eyeWidth) : 1.0);
     const eyesSpacing = configV1?.eyesSpacing !== undefined ? Number(configV1.eyesSpacing) : (configV1?.eyeSpacing !== undefined ? Number(configV1.eyeSpacing) : 1.0);
     const eyeSize = configV1?.eyeSize !== undefined ? Number(configV1.eyeSize) : 1.0;
     const eyeTilt = configV1?.eyeTilt !== undefined ? Number(configV1.eyeTilt) : 0;
     const eyeHeightPosition = configV1?.eyeHeightPosition !== undefined ? Number(configV1.eyeHeightPosition) : 1.0;
-    const irisSize = configV1?.irisSize !== undefined ? Number(configV1.irisSize) : 4.2;
+    const irisSize = configV1?.irisSize !== undefined ? Number(configV1.irisSize) : 4.4;
 
     const eyebrowsPosition = configV1?.eyebrowsPosition !== undefined ? Number(configV1.eyebrowsPosition) : 1.0;
     const eyebrowWidth = configV1?.eyebrowWidth !== undefined ? Number(configV1.eyebrowWidth) : 1.0;
@@ -75,16 +75,15 @@ export const AvatarRenderer = {
     const eyebrowAngle = configV1?.eyebrowAngle !== undefined ? Number(configV1.eyebrowAngle) : 0;
     const eyebrowHeight = configV1?.eyebrowHeight !== undefined ? Number(configV1.eyebrowHeight) : 1.0;
 
-    // Nose parameters (V3 Modern)
+    // Nose parameters
     const noseHeight = configV1?.noseHeight !== undefined ? Number(configV1.noseHeight) : 1.0;
     const noseWidth = configV1?.noseWidth !== undefined ? Number(configV1.noseWidth) : 1.0;
-    const noseLength = configV1?.noseLength !== undefined ? Number(configV1.noseLength) : 1.0;
     const noseTipWidth = configV1?.noseTipWidth !== undefined ? Number(configV1.noseTipWidth) : 1.0;
     const noseTipHeight = configV1?.noseTipHeight !== undefined ? Number(configV1.noseTipHeight) : 1.0;
     const nostrilWidth = configV1?.nostrilWidth !== undefined ? Number(configV1.nostrilWidth) : 1.0;
     const noseBridgeWidth = configV1?.noseBridgeWidth !== undefined ? Number(configV1.noseBridgeWidth) : 1.0;
 
-    // Mouth parameters (V3 Modern)
+    // Mouth parameters
     const mouthWidth = configV1?.mouthWidth !== undefined ? Number(configV1.mouthWidth) : 1.0;
     const mouthThickness = configV1?.mouthThickness !== undefined ? Number(configV1.mouthThickness) : 1.0;
     const upperLipThickness = configV1?.upperLipThickness !== undefined ? Number(configV1.upperLipThickness) : 1.0;
@@ -92,7 +91,7 @@ export const AvatarRenderer = {
     const mouthHeight = configV1?.mouthHeight !== undefined ? Number(configV1.mouthHeight) : 1.0;
     const mouthCornerAngle = configV1?.mouthCornerAngle !== undefined ? Number(configV1.mouthCornerAngle) : 0;
 
-    // Ears parameters (V3 Modern)
+    // Ears parameters
     const earsShape = configV1?.earsShape || 'standard';
     const earSize = configV1?.earSize !== undefined ? Number(configV1.earSize) : 1.0;
     const earAngle = configV1?.earAngle !== undefined ? Number(configV1.earAngle) : 0;
@@ -101,7 +100,7 @@ export const AvatarRenderer = {
     // Hair parameters
     const hairline = configV1?.hairline !== undefined ? Number(configV1.hairline) : (configV1?.hairlineHeight !== undefined ? Number(configV1.hairlineHeight) : 1.0);
 
-    // Body parameters (V3 Modern)
+    // Body parameters
     const shoulderWidth = configV1?.shoulderWidth !== undefined ? Number(configV1.shoulderWidth) : 1.0;
     const torsoWidth = configV1?.torsoWidth !== undefined ? Number(configV1.torsoWidth) : 1.0;
     const neckWidth = configV1?.neckWidth !== undefined ? Number(configV1.neckWidth) : 1.0;
@@ -120,50 +119,77 @@ export const AvatarRenderer = {
     const jawY = 76 + (isFemale ? 40 : 42) * faceHeight * jawHeight;
     const chinY = 76 + (isFemale ? 68 : 70) * faceHeight * chinHeight;
 
-    // Elegant HSL-based skin-tone shadow/highlight calculation for volumetric 3D effects
+    // 3D Melanin Shader Color Mathematics
     const cleanColorHex = skinColor.replace('#', '');
-    const skinR = parseInt(cleanColorHex.substring(0, 2), 16) || 0;
-    const skinG = parseInt(cleanColorHex.substring(2, 4), 16) || 0;
-    const skinB = parseInt(cleanColorHex.substring(4, 6), 16) || 0;
+    const skinR = parseInt(cleanColorHex.substring(0, 2), 16) || 141;
+    const skinG = parseInt(cleanColorHex.substring(2, 4), 16) || 85;
+    const skinB = parseInt(cleanColorHex.substring(4, 6), 16) || 36;
 
-    const skinLr = Math.min(255, Math.floor(skinR * 1.25 + 15));
-    const skinLg = Math.min(255, Math.floor(skinG * 1.25 + 10));
-    const skinLb = Math.min(255, Math.floor(skinB * 1.15 + 5));
-    const skinLight = `#${skinLr.toString(16).padStart(2, '0')}${skinLg.toString(16).padStart(2, '0')}${skinLb.toString(16).padStart(2, '0')}`;
+    const hlR = Math.min(255, Math.floor(skinR * 1.35 + 30));
+    const hlG = Math.min(255, Math.floor(skinG * 1.3 + 20));
+    const hlB = Math.min(255, Math.floor(skinB * 1.25 + 15));
+    const skinHighlight = `#${hlR.toString(16).padStart(2, '0')}${hlG.toString(16).padStart(2, '0')}${hlB.toString(16).padStart(2, '0')}`;
 
-    const skinDr = Math.max(0, Math.floor(skinR * 0.75 - 10));
-    const skinDg = Math.max(0, Math.floor(skinG * 0.75 - 10));
-    const skinDb = Math.max(0, Math.floor(skinB * 0.7 - 10));
-    const skinDark = `#${skinDr.toString(16).padStart(2, '0')}${skinDg.toString(16).padStart(2, '0')}${skinDb.toString(16).padStart(2, '0')}`;
+    const subR = Math.min(255, Math.floor(skinR * 1.15 + 15));
+    const subG = Math.min(255, Math.floor(skinG * 1.05 + 8));
+    const subB = Math.min(255, Math.floor(skinB * 0.95));
+    const skinSubsurface = `#${subR.toString(16).padStart(2, '0')}${subG.toString(16).padStart(2, '0')}${subB.toString(16).padStart(2, '0')}`;
 
-    const gradIdFace = `skinGradFace_${cleanColorHex}`;
-    const gradIdNeck = `skinGradNeck_${cleanColorHex}`;
+    const shR = Math.max(0, Math.floor(skinR * 0.65 - 8));
+    const shG = Math.max(0, Math.floor(skinG * 0.65 - 8));
+    const shB = Math.max(0, Math.floor(skinB * 0.6 - 8));
+    const skinShadow = `#${shR.toString(16).padStart(2, '0')}${shG.toString(16).padStart(2, '0')}${shB.toString(16).padStart(2, '0')}`;
 
-    // Define custom SVG gradients for breathtaking 3D depth rendering
+    const aoR = Math.max(0, Math.floor(skinR * 0.42 - 12));
+    const aoG = Math.max(0, Math.floor(skinG * 0.42 - 12));
+    const aoB = Math.max(0, Math.floor(skinB * 0.38 - 10));
+    const skinDeepShadow = `#${aoR.toString(16).padStart(2, '0')}${aoG.toString(16).padStart(2, '0')}${aoB.toString(16).padStart(2, '0')}`;
+
+    const gradIdFace = `melaninFace3D_${cleanColorHex}`;
+    const gradIdNeck = `melaninNeck3D_${cleanColorHex}`;
+    const cheekGradId = `cheekHighlight3D_${cleanColorHex}`;
+
+    // Define SVG gradients for 3D depth rendering
     const gradientsDefs = `
       <defs>
-        <radialGradient id="${gradIdFace}" cx="50%" cy="35%" r="65%" fx="42%" fy="28%">
-          <stop offset="0%" stop-color="${skinLight}" />
-          <stop offset="65%" stop-color="${skinColor}" />
-          <stop offset="100%" stop-color="${skinDark}" />
+        <radialGradient id="${gradIdFace}" cx="42%" cy="32%" r="68%" fx="36%" fx2="26%">
+          <stop offset="0%" stop-color="${skinHighlight}" />
+          <stop offset="30%" stop-color="${skinSubsurface}" />
+          <stop offset="70%" stop-color="${skinColor}" />
+          <stop offset="90%" stop-color="${skinShadow}" />
+          <stop offset="100%" stop-color="${skinDeepShadow}" />
+        </radialGradient>
+        <radialGradient id="${cheekGradId}" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="${skinHighlight}" stop-opacity="0.4" />
+          <stop offset="100%" stop-color="${skinSubsurface}" stop-opacity="0" />
         </radialGradient>
         <linearGradient id="${gradIdNeck}" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="${skinColor}" />
-          <stop offset="100%" stop-color="${skinDark}" />
+          <stop offset="0%" stop-color="${skinDeepShadow}" />
+          <stop offset="35%" stop-color="${skinShadow}" />
+          <stop offset="85%" stop-color="${skinColor}" />
+          <stop offset="100%" stop-color="${skinDeepShadow}" />
         </linearGradient>
-        <linearGradient id="scleraGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#EBEFF2" />
-          <stop offset="15%" stop-color="#FFFFFF" />
-          <stop offset="85%" stop-color="#FFFFFF" />
-          <stop offset="100%" stop-color="#EBEFF2" />
+        <radialGradient id="scleraGrad3D" cx="50%" cy="35%" r="60%">
+          <stop offset="0%" stop-color="#FFFFFF" />
+          <stop offset="75%" stop-color="#F0F4F8" />
+          <stop offset="100%" stop-color="#D9E1E8" />
+        </radialGradient>
+        <linearGradient id="goldAfrican3D" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#FFF2A1" />
+          <stop offset="30%" stop-color="#F5D061" />
+          <stop offset="70%" stop-color="#D4AF37" />
+          <stop offset="100%" stop-color="#8F6D17" />
+        </linearGradient>
+        <linearGradient id="lipGlossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6" />
+          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
         </linearGradient>
       </defs>
     `;
 
-    // Push definitions directly as the second layer so everything can use them
     layers.push(gradientsDefs);
 
-    // 2. ELITE BASE CHARACTER BODY (Refined shoulder, neck and torso math)
+    // 2. ELITE BASE CHARACTER BODY
     const hasCustomBody = equippedV2['corps'] && !FREE_ITEM_IDS.includes(equippedV2['corps']);
     if (!hasCustomBody) {
       const shoulderScale = shoulderWidth * (isFemale ? 0.9 : 1.0);
@@ -188,23 +214,19 @@ export const AvatarRenderer = {
       
       layers.push(`
         <g id="elite_character_base">
-          <!-- Volumetric clavicle base shadow -->
-          <ellipse cx="100" cy="140" rx="28" ry="7" fill="black" opacity="0.12" />
-          <!-- Anatomically elegant Torso -->
+          <ellipse cx="100" cy="142" rx="30" ry="8" fill="black" opacity="0.16" />
           <path d="${bodyPath}" fill="url(#${gradIdNeck})" />
-          <!-- Neck connecting face and body with natural drop shadow -->
           <path d="${neckPath}" fill="url(#${gradIdNeck})" />
-          <path d="M ${100 - neckW_val} ${neckY1 + 1} Q 100 ${neckY1 + 8} ${100 + neckW_val} ${neckY1 + 1}" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" fill="none" />
-          <!-- Artistic clavicle definitions -->
-          <path d="M 52 148 Q 78 152 96 145" stroke="rgba(0,0,0,0.1)" stroke-width="0.8" fill="none" />
-          <path d="M 148 148 Q 122 152 104 145" stroke="rgba(0,0,0,0.1)" stroke-width="0.8" fill="none" />
+          <path d="M ${100 - neckW_val} ${neckY1 + 1} Q 100 ${neckY1 + 9} ${100 + neckW_val} ${neckY1 + 1}" stroke="${skinDeepShadow}" stroke-width="2.2" fill="none" opacity="0.5" />
+          <path d="M 52 148 Q 78 153 96 145" stroke="${skinHighlight}" stroke-width="1.2" fill="none" opacity="0.25" />
+          <path d="M 148 148 Q 122 153 104 145" stroke="${skinHighlight}" stroke-width="1.2" fill="none" opacity="0.25" />
         </g>
       `);
     } else {
       layers.push(getItem(equippedV2['corps'])?.svgContent || "");
     }
 
-    // 3. HEAD & EARS (Fully parameterized 3D curves)
+    // 3. HEAD & EARS
     const hasCustomHead = equippedV2['tete'] && !FREE_ITEM_IDS.includes(equippedV2['tete']);
     if (!hasCustomHead) {
       const earY = 82 + (earPosition - 1.0) * 8;
@@ -231,7 +253,6 @@ export const AvatarRenderer = {
           Q ${100 + halfW + earW * 1.3} ${earY - earH_val * 1.4} ${100 + halfW + earW * 0.4} ${earY - earH_val * 0.15} 
           Q ${100 + halfW + earW * 0.9} ${earY + earH_val * 0.9} ${100 + halfW} ${earY + earH_val * 1.1} Z`;
       } else {
-        // standard
         leftEarPath = `M ${100 - halfW} ${earY - earH_val * 0.8} 
           C ${100 - halfW - earW * 0.9} ${earY - earH_val * 1.1}, ${100 - halfW - earW * 1.1} ${earY + earH_val * 0.8}, ${100 - halfW} ${earY + earH_val * 1.2} 
           C ${100 - halfW - earW * 0.3} ${earY + earH_val * 0.9}, ${100 - halfW - earW * 0.2} ${earY - earH_val * 0.5}, ${100 - halfW} ${earY - earH_val * 0.8} Z`;
@@ -240,7 +261,6 @@ export const AvatarRenderer = {
           C ${100 + halfW + earW * 0.3} ${earY + earH_val * 0.9}, ${100 + halfW + earW * 0.2} ${earY - earH_val * 0.5}, ${100 + halfW} ${earY - earH_val * 0.8} Z`;
       }
 
-      // 10-point symmetric high-fidelity organic Bezier face path
       const facePath = `M 100 ${foreheadY} 
         C ${100 + halfFw * 0.5} ${foreheadY}, ${100 + halfFw} ${foreheadY + (templeY - foreheadY) * 0.25}, ${100 + halfFw} ${templeY}
         C ${100 + halfFw} ${templeY + (cheekY - templeY) * 0.4}, ${100 + halfCheekW} ${templeY + (cheekY - templeY) * 0.7}, ${100 + halfCheekW} ${cheekY}
@@ -254,57 +274,50 @@ export const AvatarRenderer = {
 
       layers.push(`
         <g id="elite_head_base">
-          <!-- Left Ear with dynamic angle rotation -->
           <g transform="rotate(${earRotL}, ${100 - halfW}, ${earY})">
             <path d="${leftEarPath}" fill="url(#${gradIdFace})" />
-            <path d="${leftEarPath}" stroke="rgba(0,0,0,0.18)" stroke-width="0.8" fill="none" />
+            <path d="${leftEarPath}" stroke="${skinDeepShadow}" stroke-width="1.0" fill="none" opacity="0.4" />
           </g>
-
-          <!-- Right Ear with dynamic angle rotation -->
           <g transform="rotate(${earRotR}, ${100 + halfW}, ${earY})">
             <path d="${rightEarPath}" fill="url(#${gradIdFace})" />
-            <path d="${rightEarPath}" stroke="rgba(0,0,0,0.18)" stroke-width="0.8" fill="none" />
+            <path d="${rightEarPath}" stroke="${skinDeepShadow}" stroke-width="1.0" fill="none" opacity="0.4" />
           </g>
-
-          <!-- Volumetric 3D Face Outline -->
           <path d="${facePath}" fill="url(#${gradIdFace})" />
-          <path d="${facePath}" fill="none" stroke="rgba(0,0,0,0.12)" stroke-width="0.8" />
+          <path d="${facePath}" fill="none" stroke="${skinDeepShadow}" stroke-width="0.8" opacity="0.2" />
+          <ellipse cx="${100 - halfCheekW * 0.55}" cy="${cheekY + 2}" rx="15" ry="10" fill="url(#${cheekGradId})" />
+          <ellipse cx="${100 + halfCheekW * 0.55}" cy="${cheekY + 2}" rx="15" ry="10" fill="url(#${cheekGradId})" />
+          <ellipse cx="100" cy="${foreheadY + 16}" rx="${halfFw * 0.45}" ry="8" fill="${skinHighlight}" opacity="0.32" />
         </g>
       `);
     } else {
       layers.push(getItem(equippedV2['tete'])?.svgContent || "");
     }
 
-    // 4. EYES & IRISES & EYELASHES (High-end V3 details)
+    // 4. EYES
     const hasCustomEyes = equippedV2['yeux'] && !FREE_ITEM_IDS.includes(equippedV2['yeux']);
     if (!hasCustomEyes) {
       const eyeY = 76 + 6 * faceHeight * eyeHeightPosition;
       const eyeSpacingOffset = (isFemale ? 14 : 15) * eyesSpacing;
       const eyeW = (isFemale ? 15 : 16) * eyesWidth * eyeSize;
-      const eyeH = (isFemale ? 5.5 : 6) * (eyesWidth * 0.4 + 0.6) * eyeSize;
+      const eyeH = (isFemale ? 5.8 : 6.2) * (eyesWidth * 0.4 + 0.6) * eyeSize;
       
       const L_eyeX = 100 - eyeSpacingOffset;
       const R_eyeX = 100 + eyeSpacingOffset;
 
       const eyelashesLeft = isFemale ? `
-        <!-- Eyelash Wing Layout & Creases for female -->
-        <path d="M ${L_eyeX - eyeW/2 - 2} ${eyeY} C ${L_eyeX - eyeW/4} ${eyeY - eyeH - 2} ${L_eyeX + eyeW/4} ${eyeY - eyeH - 2.5} ${L_eyeX + eyeW/2 + 2} ${eyeY - 0.5}" stroke="#111111" stroke-width="2.5" stroke-linecap="round" fill="none" />
-        <path d="M ${L_eyeX - eyeW/3} ${eyeY - eyeH * 0.8} Q ${L_eyeX - eyeW/2 - 4} ${eyeY - eyeH - 5} ${L_eyeX - eyeW/2 - 6} ${eyeY - eyeH - 6.5}" stroke="#111111" stroke-width="1.2" stroke-linecap="round" fill="none" />
-        <path d="M ${L_eyeX + eyeW/4} ${eyeY - eyeH} Q ${L_eyeX + eyeW/2} ${eyeY - eyeH - 4.5} ${L_eyeX + eyeW/2 + 3} ${eyeY - eyeH - 5}" stroke="#111111" stroke-width="1.2" stroke-linecap="round" fill="none" />
+        <path d="M ${L_eyeX - eyeW/2 - 2} ${eyeY} C ${L_eyeX - eyeW/4} ${eyeY - eyeH - 2.5} ${L_eyeX + eyeW/4} ${eyeY - eyeH - 3} ${L_eyeX + eyeW/2 + 2} ${eyeY - 0.5}" stroke="#111111" stroke-width="2.8" stroke-linecap="round" fill="none" />
+        <path d="M ${L_eyeX - eyeW/3} ${eyeY - eyeH * 0.8} Q ${L_eyeX - eyeW/2 - 4} ${eyeY - eyeH - 5} ${L_eyeX - eyeW/2 - 6} ${eyeY - eyeH - 7}" stroke="#111111" stroke-width="1.4" stroke-linecap="round" fill="none" />
       ` : `
-        <!-- Defined eyelid lines for male -->
-        <path d="M ${L_eyeX - eyeW/2 - 1} ${eyeY} Q ${L_eyeX} ${eyeY - eyeH - 1.2} ${L_eyeX + eyeW/2 + 1} ${eyeY}" stroke="#111111" stroke-width="1.8" stroke-linecap="round" fill="none" />
+        <path d="M ${L_eyeX - eyeW/2 - 1} ${eyeY} Q ${L_eyeX} ${eyeY - eyeH - 1.2} ${L_eyeX + eyeW/2 + 1} ${eyeY}" stroke="#111111" stroke-width="2.0" stroke-linecap="round" fill="none" />
       `;
 
       const eyelashesRight = isFemale ? `
-        <path d="M ${R_eyeX - eyeW/2 - 2} ${eyeY - 0.5} C ${R_eyeX - eyeW/4} ${eyeY - eyeH - 2.5} ${R_eyeX + eyeW/4} ${eyeY - eyeH - 2} ${R_eyeX + eyeW/2 + 2} ${eyeY}" stroke="#111111" stroke-width="2.5" stroke-linecap="round" fill="none" />
-        <path d="M ${R_eyeX + eyeW/3} ${eyeY - eyeH * 0.8} Q ${R_eyeX + eyeW/2 + 4} ${eyeY - eyeH - 5} ${R_eyeX + eyeW/2 + 6} ${eyeY - eyeH - 6.5}" stroke="#111111" stroke-width="1.2" stroke-linecap="round" fill="none" />
-        <path d="M ${R_eyeX - eyeW/4} ${eyeY - eyeH} Q ${R_eyeX - eyeW/2} ${eyeY - eyeH - 4.5} ${R_eyeX - eyeW/2 - 3} ${eyeY - eyeH - 5}" stroke="#111111" stroke-width="1.2" stroke-linecap="round" fill="none" />
+        <path d="M ${R_eyeX - eyeW/2 - 2} ${eyeY - 0.5} C ${R_eyeX - eyeW/4} ${eyeY - eyeH - 3} ${R_eyeX + eyeW/4} ${eyeY - eyeH - 2.5} ${R_eyeX + eyeW/2 + 2} ${eyeY}" stroke="#111111" stroke-width="2.8" stroke-linecap="round" fill="none" />
+        <path d="M ${R_eyeX + eyeW/3} ${eyeY - eyeH * 0.8} Q ${R_eyeX + eyeW/2 + 4} ${eyeY - eyeH - 5} ${R_eyeX + eyeW/2 + 6} ${eyeY - eyeH - 7}" stroke="#111111" stroke-width="1.4" stroke-linecap="round" fill="none" />
       ` : `
-        <path d="M ${R_eyeX - eyeW/2 - 1} ${eyeY} Q ${R_eyeX} ${eyeY - eyeH - 1.2} ${R_eyeX + eyeW/2 + 1} ${eyeY}" stroke="#111111" stroke-width="1.8" stroke-linecap="round" fill="none" />
+        <path d="M ${R_eyeX - eyeW/2 - 1} ${eyeY} Q ${R_eyeX} ${eyeY - eyeH - 1.2} ${R_eyeX + eyeW/2 + 1} ${eyeY}" stroke="#111111" stroke-width="2.0" stroke-linecap="round" fill="none" />
       `;
 
-      // Organic almond outlines
       const leftEyePath = `M ${L_eyeX - eyeW/2} ${eyeY} 
         C ${L_eyeX - eyeW/3} ${eyeY - eyeH}, ${L_eyeX + eyeW/3} ${eyeY - eyeH * 0.95}, ${L_eyeX + eyeW/2} ${eyeY} 
         C ${L_eyeX + eyeW/3} ${eyeY + eyeH * 0.95}, ${L_eyeX - eyeW/3} ${eyeY + eyeH}, ${L_eyeX - eyeW/2} ${eyeY} Z`;
@@ -315,35 +328,27 @@ export const AvatarRenderer = {
 
       layers.push(`
         <g id="elite_eyes_base">
-          <!-- Left Eye System -->
           <g transform="rotate(${eyeTilt}, ${L_eyeX}, ${eyeY})">
-            <!-- 3D shaded white sclera -->
-            <path d="${leftEyePath}" fill="url(#scleraGrad)" />
-            <!-- Inner shade detail -->
-            <path d="${leftEyePath}" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" />
-            <!-- Dual-tone Iris with vibrant depth -->
-            <circle cx="${L_eyeX}" cy="${eyeY}" r="${irisSize}" fill="#4E3629" />
-            <circle cx="${L_eyeX}" cy="${eyeY}" r="${irisSize * 0.85}" fill="#2E1D13" />
-            <circle cx="${L_eyeX}" cy="${eyeY}" r="${irisSize * 0.42}" fill="#0A0502" />
-            <!-- Specular light reflections (lifelike eye shine) -->
-            <circle cx="${L_eyeX - irisSize * 0.4}" cy="${eyeY - irisSize * 0.4}" r="1.3" fill="#FFFFFF" />
-            <circle cx="${L_eyeX + irisSize * 0.35}" cy="${eyeY + irisSize * 0.35}" r="0.6" fill="#FFFFFF" opacity="0.6" />
+            <path d="${leftEyePath}" fill="url(#scleraGrad3D)" />
+            <path d="${leftEyePath}" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8" />
+            <circle cx="${L_eyeX}" cy="${eyeY}" r="${irisSize}" fill="#3E271E" />
+            <circle cx="${L_eyeX}" cy="${eyeY}" r="${irisSize * 0.85}" fill="#24140D" />
+            <circle cx="${L_eyeX}" cy="${eyeY}" r="${irisSize * 0.42}" fill="#050302" />
+            <circle cx="${L_eyeX - irisSize * 0.38}" cy="${eyeY - irisSize * 0.38}" r="1.5" fill="#FFFFFF" />
+            <circle cx="${L_eyeX + irisSize * 0.35}" cy="${eyeY + irisSize * 0.35}" r="0.8" fill="#FFFFFF" opacity="0.7" />
             ${eyelashesLeft}
-            <!-- Eyelid fold (paupière crease) -->
-            <path d="M ${L_eyeX - eyeW * 0.55} ${eyeY - eyeH - 1.5} Q ${L_eyeX} ${eyeY - eyeH - 4} ${L_eyeX + eyeW * 0.45} ${eyeY - eyeH - 2.2}" stroke="rgba(0,0,0,0.22)" stroke-width="1.2" fill="none" />
+            <path d="M ${L_eyeX - eyeW * 0.55} ${eyeY - eyeH - 1.8} Q ${L_eyeX} ${eyeY - eyeH - 4.5} ${L_eyeX + eyeW * 0.45} ${eyeY - eyeH - 2.5}" stroke="rgba(0,0,0,0.28)" stroke-width="1.4" fill="none" />
           </g>
-
-          <!-- Right Eye System -->
           <g transform="rotate(${-eyeTilt}, ${R_eyeX}, ${eyeY})">
-            <path d="${rightEyePath}" fill="url(#scleraGrad)" />
-            <path d="${rightEyePath}" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" />
-            <circle cx="${R_eyeX}" cy="${eyeY}" r="${irisSize}" fill="#4E3629" />
-            <circle cx="${R_eyeX}" cy="${eyeY}" r="${irisSize * 0.85}" fill="#2E1D13" />
-            <circle cx="${R_eyeX}" cy="${eyeY}" r="${irisSize * 0.42}" fill="#0A0502" />
-            <circle cx="${R_eyeX - irisSize * 0.4}" cy="${eyeY - irisSize * 0.4}" r="1.3" fill="#FFFFFF" />
-            <circle cx="${R_eyeX + irisSize * 0.35}" cy="${eyeY + irisSize * 0.35}" r="0.6" fill="#FFFFFF" opacity="0.6" />
+            <path d="${rightEyePath}" fill="url(#scleraGrad3D)" />
+            <path d="${rightEyePath}" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8" />
+            <circle cx="${R_eyeX}" cy="${eyeY}" r="${irisSize}" fill="#3E271E" />
+            <circle cx="${R_eyeX}" cy="${eyeY}" r="${irisSize * 0.85}" fill="#24140D" />
+            <circle cx="${R_eyeX}" cy="${eyeY}" r="${irisSize * 0.42}" fill="#050302" />
+            <circle cx="${R_eyeX - irisSize * 0.38}" cy="${eyeY - irisSize * 0.38}" r="1.5" fill="#FFFFFF" />
+            <circle cx="${R_eyeX + irisSize * 0.35}" cy="${eyeY + irisSize * 0.35}" r="0.8" fill="#FFFFFF" opacity="0.7" />
             ${eyelashesRight}
-            <path d="M ${R_eyeX - eyeW * 0.45} ${eyeY - eyeH - 2.2} Q ${R_eyeX} ${eyeY - eyeH - 4} ${R_eyeX + eyeW * 0.55} ${eyeY - eyeH - 1.5}" stroke="rgba(0,0,0,0.22)" stroke-width="1.2" fill="none" />
+            <path d="M ${R_eyeX - eyeW * 0.45} ${eyeY - eyeH - 2.5} Q ${R_eyeX} ${eyeY - eyeH - 4.5} ${R_eyeX + eyeW * 0.55} ${eyeY - eyeH - 1.8}" stroke="rgba(0,0,0,0.28)" stroke-width="1.4" fill="none" />
           </g>
         </g>
       `);
@@ -351,7 +356,7 @@ export const AvatarRenderer = {
       layers.push(getItem(equippedV2['yeux'])?.svgContent || "");
     }
 
-    // 5. EYEBROWS (Sleek vector arches)
+    // 5. EYEBROWS
     const hasCustomEyebrows = equippedV2['sourcils'] && !FREE_ITEM_IDS.includes(equippedV2['sourcils']);
     if (!hasCustomEyebrows) {
       const eyeY = 76 + 6 * faceHeight * eyeHeightPosition;
@@ -361,24 +366,22 @@ export const AvatarRenderer = {
       const R_eyeX = 100 + eyeSpacingOffset;
 
       const eyebrowY = eyeY - 8 * faceHeight * eyebrowsPosition;
-      const eb_w = eyeW * 1.05 * eyebrowWidth;
-      const sOpacity = equippedV2['sourcils'] === "sourcils_sculptes" ? 0.95 : 0.85;
+      const eb_w = eyeW * 1.08 * eyebrowWidth;
+      const sOpacity = equippedV2['sourcils'] === "sourcils_sculptes" ? 0.95 : 0.88;
 
       const leftEyebrowPath = `M ${L_eyeX - eb_w * 0.55} ${eyebrowY + 1} 
-        Q ${L_eyeX - eb_w * 0.05} ${eyebrowY - 4 - (eyebrowHeight - 1) * 3} ${L_eyeX + eb_w * 0.5} ${eyebrowY + 1.5} 
+        Q ${L_eyeX - eb_w * 0.05} ${eyebrowY - 4.5 - (eyebrowHeight - 1) * 3} ${L_eyeX + eb_w * 0.5} ${eyebrowY + 1.5} 
         Q ${L_eyeX} ${eyebrowY - 2.5 - (eyebrowHeight - 1) * 2} ${L_eyeX - eb_w * 0.5} ${eyebrowY + 0.8} Z`;
 
       const rightEyebrowPath = `M ${R_eyeX - eb_w * 0.5} ${eyebrowY + 1.5} 
-        Q ${R_eyeX + eb_w * 0.05} ${eyebrowY - 4 - (eyebrowHeight - 1) * 3} ${R_eyeX + eb_w * 0.55} ${eyebrowY + 1} 
+        Q ${R_eyeX + eb_w * 0.05} ${eyebrowY - 4.5 - (eyebrowHeight - 1) * 3} ${R_eyeX + eb_w * 0.55} ${eyebrowY + 1} 
         Q ${R_eyeX} ${eyebrowY - 2.5 - (eyebrowHeight - 1) * 2} ${R_eyeX - eb_w * 0.5} ${eyebrowY + 0.8} Z`;
 
       layers.push(`
         <g id="elite_eyebrows_base" fill="#111111" opacity="${sOpacity}">
-          <!-- Left Eyebrow with dynamic rotation -->
           <g transform="rotate(${-eyebrowAngle}, ${L_eyeX}, ${eyebrowY})">
             <path d="${leftEyebrowPath}" />
           </g>
-          <!-- Right Eyebrow with dynamic rotation -->
           <g transform="rotate(${eyebrowAngle}, ${R_eyeX}, ${eyebrowY})">
             <path d="${rightEyebrowPath}" />
           </g>
@@ -388,47 +391,40 @@ export const AvatarRenderer = {
       layers.push(getItem(equippedV2['sourcils'])?.svgContent || "");
     }
 
-    // 6. NOSE (V3 Multi-element anatomical model)
+    // 6. NOSE
     const noseY = 76 + 24 * faceHeight * noseHeight;
     const noseW_val = 5 * noseWidth;
     const bridgeTopY = 76 + 6 * faceHeight * eyeHeightPosition;
 
     layers.push(`
       <g id="elite_nose_base">
-        <!-- Natural Nose Bridge highlight/shadow defining bone structure -->
-        <path d="M 97.5 ${bridgeTopY} L ${100 - 1.5 * noseBridgeWidth} ${noseY - 4}" stroke="rgba(0,0,0,0.06)" stroke-width="1.5" fill="none" />
-        <path d="M 101.5 ${bridgeTopY} L ${100 + 1.5 * noseBridgeWidth} ${noseY - 4}" stroke="rgba(255,255,255,0.08)" stroke-width="1.2" fill="none" />
-
-        <!-- Soft nasal tip definition -->
-        <ellipse cx="100" cy="${noseY}" rx="${3 * noseTipWidth * noseWidth}" ry="${2.2 * noseTipHeight}" fill="rgba(0,0,0,0.08)" />
-        <ellipse cx="99.5" cy="${noseY - 0.5}" rx="${1.5 * noseTipWidth * noseWidth}" ry="1.0" fill="rgba(255,255,255,0.06)" />
-
-        <!-- Warm natural African nasal wings -->
-        <path d="M ${100 - noseW_val * 1.4 * nostrilWidth} ${noseY + 0.5} Q ${100 - noseW_val * 0.8} ${noseY - 1.8} 100 ${noseY + 0.2}" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" stroke-linecap="round" fill="none" />
-        <path d="M ${100 + noseW_val * 1.4 * nostrilWidth} ${noseY + 0.5} Q ${100 + noseW_val * 0.8} ${noseY - 1.8} 100 ${noseY + 0.2}" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" stroke-linecap="round" fill="none" />
-
-        <!-- Shadows under nostrils -->
-        <path d="M ${100 - noseW_val * 1.1} ${noseY + 1} Q 100 ${noseY + 3.2} ${100 + noseW_val * 1.1} ${noseY + 1}" stroke="rgba(0,0,0,0.32)" stroke-width="1.5" stroke-linecap="round" fill="none" />
+        <path d="M 97.5 ${bridgeTopY} L ${100 - 1.5 * noseBridgeWidth} ${noseY - 4}" stroke="${skinDeepShadow}" stroke-width="1.8" fill="none" opacity="0.25" />
+        <path d="M 101.5 ${bridgeTopY} L ${100 + 1.5 * noseBridgeWidth} ${noseY - 4}" stroke="${skinHighlight}" stroke-width="1.4" fill="none" opacity="0.35" />
+        <ellipse cx="100" cy="${noseY}" rx="${3.2 * noseTipWidth * noseWidth}" ry="${2.4 * noseTipHeight}" fill="${skinDeepShadow}" opacity="0.18" />
+        <ellipse cx="99.2" cy="${noseY - 0.8}" rx="${1.8 * noseTipWidth * noseWidth}" ry="1.2" fill="${skinHighlight}" opacity="0.45" />
+        <path d="M ${100 - noseW_val * 1.4 * nostrilWidth} ${noseY + 0.5} Q ${100 - noseW_val * 0.8} ${noseY - 2.0} 100 ${noseY + 0.2}" stroke="${skinDeepShadow}" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6" />
+        <path d="M ${100 + noseW_val * 1.4 * nostrilWidth} ${noseY + 0.5} Q ${100 + noseW_val * 0.8} ${noseY - 2.0} 100 ${noseY + 0.2}" stroke="${skinDeepShadow}" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6" />
+        <path d="M ${100 - noseW_val * 1.1} ${noseY + 1} Q 100 ${noseY + 3.5} ${100 + noseW_val * 1.1} ${noseY + 1}" stroke="#1A0D06" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.75" />
       </g>
     `);
 
-    // 7. MOUTH / LIPS (High-end realistic lips with beautiful highlights)
+    // 7. MOUTH / LIPS
     const hasCustomMouth = equippedV2['bouche'] && !FREE_ITEM_IDS.includes(equippedV2['bouche']);
     if (!hasCustomMouth) {
       const mouthY = noseY + 16 * faceHeight + 4 * mouthThickness * mouthHeight;
-      const mouthW_val = (isFemale ? 13 : 14) * mouthWidth;
-      const lipThicknessTop = (isFemale ? 4.2 : 3.6) * mouthThickness * upperLipThickness;
-      const lipThicknessBottom = (isFemale ? 4.5 : 3.8) * mouthThickness * lowerLipThickness;
+      const mouthW_val = (isFemale ? 13.5 : 14.5) * mouthWidth;
+      const lipThicknessTop = (isFemale ? 4.5 : 3.8) * mouthThickness * upperLipThickness;
+      const lipThicknessBottom = (isFemale ? 4.8 : 4.0) * mouthThickness * lowerLipThickness;
       const cornerY = mouthCornerAngle;
       
-      const lipToneTop = isFemale ? "rgba(165,42,42,0.32)" : "rgba(0,0,0,0.22)";
-      const lipToneBottom = isFemale ? "rgba(180,60,60,0.28)" : "rgba(0,0,0,0.12)";
+      const lipToneTop = isFemale ? "rgba(165,42,42,0.48)" : "rgba(80,30,15,0.38)";
+      const lipToneBottom = isFemale ? "rgba(195,65,65,0.42)" : "rgba(100,40,20,0.28)";
 
       const isSourire = equippedV2['bouche'] !== "mouth_elite_neutre";
       const topLipPath = isSourire 
         ? `M ${100 - mouthW_val} ${mouthY + cornerY} 
-           Q ${100 - mouthW_val * 0.45} ${mouthY - lipThicknessTop * 1.15} 100 ${mouthY - lipThicknessTop * 0.45} 
-           Q ${100 + mouthW_val * 0.45} ${mouthY - lipThicknessTop * 1.15} ${100 + mouthW_val} ${mouthY + cornerY} 
+           Q ${100 - mouthW_val * 0.45} ${mouthY - lipThicknessTop * 1.25} 100 ${mouthY - lipThicknessTop * 0.5} 
+           Q ${100 + mouthW_val * 0.45} ${mouthY - lipThicknessTop * 1.25} ${100 + mouthW_val} ${mouthY + cornerY} 
            Q 100 ${mouthY + 0.2} ${100 - mouthW_val} ${mouthY + cornerY} Z`
         : `M ${100 - mouthW_val} ${mouthY + cornerY} 
            Q ${100 - mouthW_val * 0.45} ${mouthY - lipThicknessTop * 0.9} 100 ${mouthY - lipThicknessTop * 0.3} 
@@ -437,78 +433,31 @@ export const AvatarRenderer = {
 
       const bottomLipPath = isSourire
         ? `M ${100 - mouthW_val} ${mouthY + cornerY} 
-           Q 100 ${mouthY + lipThicknessBottom * 1.25} ${100 + mouthW_val} ${mouthY + cornerY} 
+           Q 100 ${mouthY + lipThicknessBottom * 1.35} ${100 + mouthW_val} ${mouthY + cornerY} 
            Q 100 ${mouthY + 0.5} ${100 - mouthW_val} ${mouthY + cornerY} Z`
         : `M ${100 - mouthW_val} ${mouthY + cornerY} 
-           Q 100 ${mouthY + lipThicknessBottom * 1.05} ${100 + mouthW_val} ${mouthY + cornerY} 
+           Q 100 ${mouthY + lipThicknessBottom * 1.1} ${100 + mouthW_val} ${mouthY + cornerY} 
            Q 100 ${mouthY + 0.5} ${100 - mouthW_val} ${mouthY + cornerY} Z`;
 
       const lipLine = isSourire
-        ? `M ${100 - mouthW_val + 0.8} ${mouthY + cornerY} Q 100 ${mouthY + cornerY * 0.5 + 0.5} ${100 + mouthW_val - 0.8} ${mouthY + cornerY}`
+        ? `M ${100 - mouthW_val + 0.8} ${mouthY + cornerY} Q 100 ${mouthY + cornerY * 0.5 + 1.2} ${100 + mouthW_val - 0.8} ${mouthY + cornerY}`
         : `M ${100 - mouthW_val + 0.8} ${mouthY + cornerY} L ${100 + mouthW_val - 0.8} ${mouthY + cornerY}`;
 
       layers.push(`
         <g id="elite_mouth_base">
-          <!-- Top Lip (Natural Blend Crimson-Brown Shadow) -->
           <path d="${topLipPath}" fill="${lipToneTop}" />
-          <!-- Bottom Lip (Natural Soft Glow/Highlight) -->
           <path d="${bottomLipPath}" fill="${lipToneBottom}" />
-          <!-- Sub-lip depth shadow -->
-          <path d="M ${100 - mouthW_val * 0.8} ${mouthY + lipThicknessBottom + 2} Q 100 ${mouthY + lipThicknessBottom + 5} ${100 + mouthW_val * 0.8} ${mouthY + lipThicknessBottom + 2}" stroke="rgba(0,0,0,0.1)" stroke-width="1.2" fill="none" />
-          <!-- Central Lip Connection Line -->
-          <path d="${lipLine}" stroke="#211005" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.85" />
+          <ellipse cx="100" cy="${mouthY + lipThicknessBottom * 0.5}" rx="${mouthW_val * 0.38}" ry="1.2" fill="url(#lipGlossGrad)" />
+          <path d="M ${100 - mouthW_val * 0.8} ${mouthY + lipThicknessBottom + 2} Q 100 ${mouthY + lipThicknessBottom + 5.5} ${100 + mouthW_val * 0.8} ${mouthY + lipThicknessBottom + 2}" stroke="${skinDeepShadow}" stroke-width="1.5" fill="none" opacity="0.3" />
+          <path d="${lipLine}" stroke="#211005" stroke-width="2.0" stroke-linecap="round" fill="none" opacity="0.9" />
         </g>
       `);
     } else {
       layers.push(getItem(equippedV2['bouche'])?.svgContent || "");
     }
 
-    // 8. AGE PROGRESSION LINES (If age is set and high)
-    if (age > 45) {
-      const eyeY = 76 + 6 * faceHeight * eyesHeight;
-      const eyeSpacingOffset = (isFemale ? 14 : 15) * eyesSpacing;
-      const eyeW = (isFemale ? 15 : 16) * eyesWidth;
-      const eyeH = (isFemale ? 5.5 : 6) * (eyesWidth * 0.4 + 0.6);
-      const L_eyeX = 100 - eyeSpacingOffset;
-      const R_eyeX = 100 + eyeSpacingOffset;
-      const mouthY = noseY + 16 * faceHeight + 4 * mouthThickness;
-      const mouthW_val = (isFemale ? 13 : 14) * mouthWidth;
-
-      const lineOpacity = age > 60 ? "0.22" : "0.14";
-      const strokeW = age > 60 ? "1.0" : "0.7";
-
-      layers.push(`
-        <g id="elite_age_progression" stroke="#111111" stroke-width="${strokeW}" fill="none" stroke-linecap="round" opacity="${lineOpacity}">
-          <!-- Forehead lines -->
-          <path d="M 82 ${foreheadY + 14 * faceHeight} Q 100 ${foreheadY + 16.5 * faceHeight} 118 ${foreheadY + 14 * faceHeight}" />
-          <path d="M 86 ${foreheadY + 22 * faceHeight} Q 100 ${foreheadY + 24.5 * faceHeight} 114 ${foreheadY + 22 * faceHeight}" />
-
-          <!-- Crow's feet (Left eye) -->
-          <path d="M ${L_eyeX - eyeW/2 - 1} ${eyeY} Q ${L_eyeX - eyeW/2 - 6} ${eyeY - 3} ${L_eyeX - eyeW/2 - 10} ${eyeY - 4}" />
-          <path d="M ${L_eyeX - eyeW/2 - 1} ${eyeY + 1.5} Q ${L_eyeX - eyeW/2 - 7} ${eyeY + 1.5} ${L_eyeX - eyeW/2 - 11} ${eyeY + 1.5}" />
-          <path d="M ${L_eyeX - eyeW/2 - 1} ${eyeY + 3} Q ${L_eyeX - eyeW/2 - 6} ${eyeY + 4.5} ${L_eyeX - eyeW/2 - 9} ${eyeY + 5}" />
-
-          <!-- Crow's feet (Right eye) -->
-          <path d="M ${R_eyeX + eyeW/2 + 1} ${eyeY} Q ${R_eyeX + eyeW/2 + 6} ${eyeY - 3} ${R_eyeX + eyeW/2 + 10} ${eyeY - 4}" />
-          <path d="M ${R_eyeX + eyeW/2 + 1} ${eyeY + 1.5} Q ${R_eyeX + eyeW/2 + 7} ${eyeY + 1.5} ${R_eyeX + eyeW/2 + 11} ${eyeY + 1.5}" />
-          <path d="M ${R_eyeX + eyeW/2 + 1} ${eyeY + 3} Q ${R_eyeX + eyeW/2 + 6} ${eyeY + 4.5} ${R_eyeX + eyeW/2 + 9} ${eyeY + 5}" />
-
-          <!-- Nasolabial folds -->
-          <path d="M ${100 - noseW_val * 1.1} ${noseY + 2} Q ${100 - mouthW_val * 0.9} ${mouthY} ${100 - mouthW_val * 0.75} ${mouthY + 10}" />
-          <path d="M ${100 + noseW_val * 1.1} ${noseY + 2} Q ${100 + mouthW_val * 0.9} ${mouthY} ${100 + mouthW_val * 0.75} ${mouthY + 10}" />
-
-          ${age > 60 ? `
-            <!-- Soft under-eye bags -->
-            <path d="M ${L_eyeX - eyeW/2 + 1} ${eyeY + eyeH + 1.5} Q ${L_eyeX} ${eyeY + eyeH + 4.5} ${L_eyeX + eyeW/2 - 1} ${eyeY + eyeH + 1.5}" />
-            <path d="M ${R_eyeX - eyeW/2 + 1} ${eyeY + eyeH + 1.5} Q ${R_eyeX} ${eyeY + eyeH + 4.5} ${R_eyeX + eyeW/2 - 1} ${eyeY + eyeH + 1.5}" />
-          ` : ""}
-        </g>
-      `);
-    }
-
-    // 9. OTHER EQUIPMENT LAYERING (Dynamic engine)
+    // 8. OTHER EQUIPMENT LAYERING
     AVATAR_RENDER_ORDER.forEach(cat => {
-      // Handled manually above
       if (cat === 'arriere_plans' || cat === 'corps' || cat === 'tete' || cat === 'yeux' || cat === 'bouche' || cat === 'sourcils' || cat === 'nez') return;
       if (isFemale && (cat === 'barbe' || cat === 'moustache')) return;
       
@@ -518,7 +467,6 @@ export const AvatarRenderer = {
         if (item?.svgContent) {
           const cfg = item.engineConfig || { anchorX: 0, anchorY: 0, scaleX: 1, scaleY: 1, rotation: 0, zIndex: 0 };
           
-          // Scaled offset origin for hair and cap positioning based on face height/width
           let hairYOffset = 0;
           let hairXOffset = 0;
           
@@ -541,7 +489,7 @@ export const AvatarRenderer = {
       }
     });
 
-    // 10. LEGACY V1 COMPATIBILITY (Safety Rule)
+    // 9. LEGACY V1 COMPATIBILITY
     if (Object.keys(equippedV2).length === 0) {
       const getItemSvg = (id: string) => getItem(id)?.svgContent || "";
       if (configV1.clothes) layers.push(getItemSvg(configV1.clothes));
