@@ -176,38 +176,78 @@ const FREE_DEFAULT_ITEMS: AvatarItem[] = [
     isActive: true,
     svgContent: `<path d="M 85 109 Q 100 106 115 109 Q 118 113 113 114 Q 100 110 87 114 Q 82 113 85 109 Z" fill="#111111" />`
   },
-  // COIFFURES
+  // COIFFURES (Riche bibliothèque moderne et parfaitement ancrée sur la tête)
   {
     id: "hair_elite_afro_short",
-    name: "Afro Elite Court",
+    name: "Afro Court Ébène",
     category: "cheveux",
     price: 0,
     isActive: true,
-    svgContent: `<path d="M 55 80 C 55 25, 145 25, 145 80 Q 100 35 55 80 Z" fill="#111111" />`
+    svgContent: `<path d="M 64 78 C 58 30, 142 30, 136 78 C 130 52, 70 52, 64 78 Z" fill="#1A1107" />`
+  },
+  {
+    id: "hair_elite_afro_volumineux",
+    name: "Afro Volumineux Royal",
+    category: "cheveux",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M 58 76 C 48 20, 152 20, 142 76 C 135 48, 65 48, 58 76 Z" fill="#110A05" />`
   },
   {
     id: "hair_elite_degrade",
-    name: "Dégradé Pro",
+    name: "Dégradé Pro Stylé",
     category: "cheveux",
     price: 0,
     isActive: true,
-    svgContent: `<path d="M 68 80 C 68 35, 132 35, 132 80 Q 100 45 68 80 Z" fill="#181818" />`
+    svgContent: `<path d="M 67 76 C 66 38, 134 38, 133 76 C 125 50, 75 50, 67 76 Z" fill="#1D1815" />`
   },
   {
     id: "hair_elite_nattes",
-    name: "Nattes Afro-Chic",
+    name: "Nattes Afro-Chic Or",
     category: "cheveux",
     price: 0,
     isActive: true,
-    svgContent: `<g fill="#1A1A1A"><path d="M 68 80 C 68 35, 132 35, 132 80 Q 100 45 68 80 Z" /><path d="M 80 40 L 80 80 M 100 35 L 100 80 M 120 40 L 120 80" stroke="#D4AF37" strokeWidth="1.8" strokeLinecap="round" opacity="0.8"/></g>`
+    svgContent: `<g fill="#1A1A1A"><path d="M 67 76 C 66 38, 134 38, 133 76 C 125 50, 75 50, 67 76 Z" /><path d="M 78 45 L 75 85 M 89 42 L 88 88 M 100 40 L 100 90 M 111 42 L 112 88 M 122 45 L 125 85" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" opacity="0.9"/></g>`
   },
   {
     id: "hair_elite_locks",
-    name: "Elite Locks",
+    name: "Elite Locks & Dreads",
     category: "cheveux",
     price: 0,
     isActive: true,
-    svgContent: `<g fill="#111111"><path d="M 68 80 C 68 35, 132 35, 132 80 Q 100 45 68 80 Z" /><path d="M 70 60 L 60 110 M 85 45 L 80 115 M 100 40 L 100 120 M 115 45 L 120 115 M 130 60 L 140 110" stroke="#111111" strokeWidth="5" strokeLinecap="round" /></g>`
+    svgContent: `<g fill="#16100A"><path d="M 66 76 C 64 36, 136 36, 134 76 C 125 48, 75 48, 66 76 Z" /><path d="M 68 62 L 56 118 M 80 48 L 72 124 M 92 42 L 92 130 M 108 42 L 108 130 M 120 48 L 128 124 M 132 62 L 144 118" stroke="#16100A" strokeWidth="5.5" strokeLinecap="round" /></g>`
+  },
+  {
+    id: "hair_elite_braids_women",
+    name: "Braids Longues Élégance",
+    category: "cheveux",
+    price: 0,
+    isActive: true,
+    svgContent: `<g fill="#111111"><path d="M 65 76 C 62 34, 138 34, 135 76 C 125 48, 75 48, 65 76 Z" /><path d="M 68 70 Q 52 100 48 145 M 132 70 Q 148 100 152 145" stroke="#111111" strokeWidth="8" strokeLinecap="round" /></g>`
+  },
+  {
+    id: "hair_elite_box_braids",
+    name: "Box Braids Tendance",
+    category: "cheveux",
+    price: 0,
+    isActive: true,
+    svgContent: `<g fill="#1A1510"><path d="M 66 76 C 64 36, 136 36, 134 76 Z" /><path d="M 72 50 L 65 110 M 86 42 L 84 116 M 100 40 L 100 120 M 114 42 L 116 116 M 128 50 L 135 110" stroke="#251A12" strokeWidth="4.5" strokeLinecap="round" /></g>`
+  },
+  {
+    id: "hair_elite_afro_puff",
+    name: "Afro Puff Haut",
+    category: "cheveux",
+    price: 0,
+    isActive: true,
+    svgContent: `<g fill="#140E08"><ellipse cx="100" cy="36" rx="34" ry="26" /><path d="M 70 76 C 68 55, 132 55, 130 76 Z" /></g>`
+  },
+  {
+    id: "hair_elite_chignon",
+    name: "Chignon Royal Tressé",
+    category: "cheveux",
+    price: 0,
+    isActive: true,
+    svgContent: `<g fill="#1A1107"><path d="M 66 76 C 64 38, 136 38, 134 76 Z" /><circle cx="100" cy="24" r="18" fill="#1A1107" stroke="#D4AF37" strokeWidth="1.5" /></g>`
   },
   // YEUX
   {
@@ -285,6 +325,22 @@ const FREE_DEFAULT_ITEMS: AvatarItem[] = [
     isActive: true,
     svgContent: `<g><path d="M 32 215 L 50 145 Q 100 130 150 145 L 168 215 Z" fill="#C0392B" /><path d="M 85 135 L 100 170 L 115 135" fill="#FFFFFF" /></g>`
   },
+  {
+    id: "clothes_elite_chemise_pagne",
+    name: "Chemise Pagne Wax",
+    category: "chemise",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><path d="M 32 215 C 32 158, 58 132, 100 132 C 142 132, 168 158, 168 215 Z" fill="#1E3A8A" stroke="#F59E0B" strokeWidth="2" /><path d="M 85 132 L 100 160 L 115 132" fill="#F59E0B" /></g>`
+  },
+  {
+    id: "clothes_elite_hoodie_urbain",
+    name: "Hoodie Urbain Afro",
+    category: "veste",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><path d="M 28 215 C 28 155, 55 130, 100 130 C 145 130, 172 155, 172 215 Z" fill="#111827" stroke="#374151" strokeWidth="1.5" /><path d="M 80 130 Q 100 150 120 130" stroke="#4B5563" strokeWidth="4" fill="none" /></g>`
+  },
   // ACCESSOIRES
   {
     id: "lunettes_soleil_gold",
@@ -295,12 +351,44 @@ const FREE_DEFAULT_ITEMS: AvatarItem[] = [
     svgContent: `<g fill="#111111" stroke="#D4AF37" strokeWidth="1.5"><rect x="72" y="75" width="22" height="14" rx="3" /><rect x="106" y="75" width="22" height="14" rx="3" /><line x1="94" y1="80" x2="106" y2="80" strokeWidth="2" /></g>`
   },
   {
+    id: "lunettes_modernes_rondes",
+    name: "Lunettes Rondes Pro",
+    category: "lunettes",
+    price: 0,
+    isActive: true,
+    svgContent: `<g fill="rgba(255,255,255,0.15)" stroke="#111111" strokeWidth="1.8"><circle cx="84" cy="81" r="11" /><circle cx="116" cy="81" r="11" /><line x1="95" y1="80" x2="105" y2="80" strokeWidth="2" /></g>`
+  },
+  {
+    id: "casquette_elite",
+    name: "Casquette Streetwear",
+    category: "casquettes",
+    price: 0,
+    isActive: true,
+    svgContent: `<g><path d="M 68 76 C 65 38, 135 38, 132 76 Z" fill="#1F2937" /><path d="M 68 73 Q 100 68 145 78 L 138 82 Q 100 73 68 77 Z" fill="#111827" /></g>`
+  },
+  {
+    id: "bonnet_laine",
+    name: "Bonnet Laine Tendance",
+    category: "chapeaux",
+    price: 0,
+    isActive: true,
+    svgContent: `<path d="M 66 78 C 62 30, 138 30, 134 78 Q 100 70 66 78 Z" fill="#B91C1C" />`
+  },
+  {
     id: "couronne_baoule",
     name: "Couronne Royale",
     category: "couronnes",
     price: 0,
     isActive: true,
     svgContent: `<path d="M 68 52 L 80 35 L 100 50 L 120 35 L 132 52 Z" fill="#D4AF37" stroke="#111111" strokeWidth="1" />`
+  },
+  {
+    id: "boucles_oreilles_creoles",
+    name: "Créoles Dorées",
+    category: "bracelets",
+    price: 0,
+    isActive: true,
+    svgContent: `<g stroke="#D4AF37" strokeWidth="2.5" fill="none"><circle cx="56" cy="98" r="7" /><circle cx="144" cy="98" r="7" /></g>`
   }
 ];
 
