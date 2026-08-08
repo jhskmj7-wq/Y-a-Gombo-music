@@ -25,13 +25,15 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error(`Uncaught error in ${this.props.moduleName || 'module'}:`, error, errorInfo);
+    const msg = error?.message || String(error);
+    const stack = errorInfo?.componentStack || error?.stack || "";
+    console.error(`Uncaught error in ${this.props.moduleName || 'module'}: ${msg}`);
     this.setState({ error, errorInfo });
     logBugReport({
       module: this.props.moduleName || "ReactErrorBoundary",
       ecran: window.location.pathname,
-      message: error.message || String(error),
-      stack: errorInfo.componentStack || error.stack
+      message: msg,
+      stack: stack
     });
   }
 

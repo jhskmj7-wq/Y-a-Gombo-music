@@ -47,10 +47,10 @@ export const logBugReport = async (data: BugReportInput) => {
 // Global safety error attachment
 if (typeof window !== "undefined") {
   window.addEventListener("error", (event) => {
-    if (event.message && event.message.includes("ResizeObserver")) return;
+    if (event.message && (event.message.includes("ResizeObserver") || event.message.includes("Converting circular structure to JSON"))) return;
     const errObj = event.error;
-    const msg = event.message || (errObj && typeof errObj.message === "string" ? errObj.message : String(errObj || event));
-    const stk = errObj?.stack || (event.filename ? `${event.filename}:${event.lineno}:${event.colno}` : "");
+    const msg = typeof event.message === "string" ? event.message : (errObj && typeof errObj.message === "string" ? errObj.message : String(errObj || "Window Error"));
+    const stk = typeof errObj?.stack === "string" ? errObj.stack : (event.filename ? `${event.filename}:${event.lineno}:${event.colno}` : "");
     logBugReport({
       module: "WindowError",
       ecran: window.location.pathname,
@@ -61,8 +61,9 @@ if (typeof window !== "undefined") {
 
   window.addEventListener("unhandledrejection", (event) => {
     const reason = event.reason;
+    if (reason && typeof reason.message === "string" && reason.message.includes("Converting circular structure to JSON")) return;
     const msg = typeof reason === "string" ? reason : (reason && typeof reason.message === "string" ? reason.message : String(reason || "Unhandled Promise Rejection"));
-    const stk = reason?.stack || "";
+    const stk = typeof reason?.stack === "string" ? reason.stack : "";
     logBugReport({
       module: "UnhandledPromise",
       ecran: window.location.pathname,
