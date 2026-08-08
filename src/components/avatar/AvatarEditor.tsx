@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Save, ShoppingBag, UserCheck, ArrowLeft, RefreshCw, CheckCircle2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AvatarConfig, UserAvatarData, AvatarItemCategory, AvatarItem, UserInventoryData } from '../../types/avatar';
@@ -450,6 +450,8 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
     };
   }, [currentUser]);
 
+  const gridScrollRef = useRef<HTMLDivElement>(null);
+
   // When tab changes, set default subcategory
   useEffect(() => {
     const tab = TABS.find(t => t.id === activeTab);
@@ -457,6 +459,13 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
       setActiveSubCategory(tab.categories[0]);
     }
   }, [activeTab]);
+
+  // Reset scroll level to top when tab or subcategory changes
+  useEffect(() => {
+    if (gridScrollRef.current) {
+      gridScrollRef.current.scrollTop = 0;
+    }
+  }, [activeTab, activeSubCategory]);
 
   const handleRandomize = () => {
     setConfig(prev => ({
@@ -829,7 +838,7 @@ export default function AvatarEditor({ onClose }: AvatarEditorProps) {
             </div>
 
             {/* Grid Showcase */}
-            <div className="flex-1 overflow-y-auto p-6 pb-24 md:pb-8 custom-scrollbar">
+            <div ref={gridScrollRef} className="flex-1 overflow-y-auto p-6 pb-24 md:pb-8 custom-scrollbar">
               
               {/* Skin Tone Selector */}
               {activeSubCategory === 'corps' && (

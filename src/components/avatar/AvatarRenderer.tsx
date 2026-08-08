@@ -564,8 +564,8 @@ const AvatarRenderer = memo(({ config, size = 120, className = "", storeItems = 
       let hairYOffset = 0;
       let hairXOffset = 0;
       
-      if (item.category === 'cheveux' || item.category === 'casquettes' || item.category === 'chapeaux' || item.category === 'couronnes') {
-        hairYOffset = (faceHeight - 1.0) * -12;
+      if (['cheveux', 'casquettes', 'chapeaux', 'couronnes', 'hair', 'chapeau', 'casquette', 'headwear'].includes(item.category)) {
+        hairYOffset = -15 + (faceHeight - 1.0) * -12;
         hairXOffset = 0;
       }
 

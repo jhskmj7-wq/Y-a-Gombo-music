@@ -522,8 +522,8 @@ export const AvatarRenderer = {
           let hairYOffset = 0;
           let hairXOffset = 0;
           
-          if (cat === 'cheveux' || cat === 'casquettes' || cat === 'chapeaux' || cat === 'couronnes') {
-            hairYOffset = (faceHeight - 1.0) * -12;
+          if (['cheveux', 'casquettes', 'chapeaux', 'couronnes', 'hair', 'chapeau', 'casquette', 'headwear'].includes(cat)) {
+            hairYOffset = -15 + (faceHeight - 1.0) * -12;
             hairXOffset = 0;
           }
 
