@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
-import { Download, RefreshCw, X } from 'lucide-react';
+import { Download, RefreshCw, X, Smartphone, Check } from 'lucide-react';
 
+/**
+ * AFRIGOMBO PWA ENGINE & SERVICE WORKER HANDLER
+ * Manages background updates, offline caching, and PWA installation prompts.
+ */
 export default function PWAHandler() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [installed, setInstalled] = useState(false);
 
   const {
     offlineReady: [offlineReady, setOfflineReady],
@@ -20,32 +25,65 @@ export default function PWAHandler() {
   });
 
   useEffect(() => {
-    // Check if app is already running in standalone mode
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    // Check if app is running in standalone mode (already installed)
+    const isStandalone = 
+      window.matchMedia('(display-mode: standalone)').matches || 
+      (window.navigator as any).standalone === true ||
+      document.referrer.includes('android-app://');
+
     if (isStandalone) {
+      setInstalled(true);
       return;
+    }
+
+    // Capture global install prompt if already attached to window
+    if ((window as any).deferredPWAInstallPrompt) {
+      setDeferredPrompt((window as any).deferredPWAInstallPrompt);
+      setShowInstallBanner(true);
     }
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
+      (window as any).deferredPWAInstallPrompt = e;
       setDeferredPrompt(e);
       setShowInstallBanner(true);
     };
 
+    const handleAppInstalled = () => {
+      console.log('🎉 [PWA] Application AfriGombo installée avec succès!');
+      setInstalled(true);
+      setShowInstallBanner(false);
+      setDeferredPrompt(null);
+      delete (window as any).deferredPWAInstallPrompt;
+    };
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`[PWA] Choix d'installation utilisateur: ${outcome}`);
-    setDeferredPrompt(null);
-    setShowInstallBanner(false);
+    const promptEvent = deferredPrompt || (window as any).deferredPWAInstallPrompt;
+    if (!promptEvent) return;
+
+    try {
+      await promptEvent.prompt();
+      const choiceResult = await promptEvent.userChoice;
+      console.log(`[PWA] Résultat installation: ${choiceResult.outcome}`);
+      if (choiceResult.outcome === 'accepted') {
+        setInstalled(true);
+      }
+    } catch (e) {
+      console.warn('[PWA] Exception lors du déclenchement du prompt PWA:', e);
+    } finally {
+      setDeferredPrompt(null);
+      delete (window as any).deferredPWAInstallPrompt;
+      setShowInstallBanner(false);
+    }
   };
 
   const handleDismissInstall = () => {
@@ -61,23 +99,23 @@ export default function PWAHandler() {
     <>
       {/* PWA Update Toast */}
       {needRefresh && (
-        <div className="fixed bottom-20 right-4 z-[9999] max-w-sm w-full bg-afri-bg-sec/95 backdrop-blur-md border border-afri-gold/40 p-4 rounded-xl shadow-2xl text-white flex flex-col gap-3 animate-fade-in">
+        <div className="fixed bottom-20 right-4 z-[9999] max-w-sm w-full bg-black/90 backdrop-blur-md border border-[#D4AF37]/50 p-4 rounded-2xl shadow-2xl text-white flex flex-col gap-3 animate-fadeIn">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-afri-gold font-bold text-sm">
+            <div className="flex items-center gap-2 text-[#D4AF37] font-bold text-sm">
               <RefreshCw className="w-4 h-4 animate-spin" />
               <span>Mise à jour disponible</span>
             </div>
-            <button onClick={closeRefresh} className="text-gray-400 hover:text-white p-1">
+            <button onClick={closeRefresh} className="text-gray-400 hover:text-white p-1 cursor-pointer">
               <X className="w-4 h-4" />
             </button>
           </div>
           <p className="text-xs text-gray-300">
-            Une nouvelle version d'AfriGombo est disponible. Cliquez sur mettre à jour pour appliquer la nouvelle version.
+            Une nouvelle version d'AfriGombo est prête. Cliquez pour mettre à jour instantanément.
           </p>
           <div className="flex justify-end gap-2 pt-1">
             <button
               onClick={() => updateServiceWorker(true)}
-              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold text-xs rounded-lg transition-all shadow-md"
+              className="px-4 py-2 bg-[#D4AF37] text-black font-extrabold text-xs rounded-xl hover:bg-yellow-400 transition-all shadow-md cursor-pointer uppercase tracking-wider"
             >
               Mettre à jour
             </button>
@@ -86,27 +124,31 @@ export default function PWAHandler() {
       )}
 
       {/* PWA Install Banner */}
-      {showInstallBanner && deferredPrompt && (
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-[9998] bg-gradient-to-r from-gray-900 to-black border border-afri-gold/30 p-4 rounded-2xl shadow-2xl text-white flex items-center justify-between gap-3">
+      {showInstallBanner && deferredPrompt && !installed && (
+        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-[9998] bg-black/90 backdrop-blur-lg border border-[#D4AF37]/40 p-4 rounded-2xl shadow-2xl text-white flex items-center justify-between gap-3 animate-fadeIn">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-afri-gold/20 flex items-center justify-center text-afri-gold shrink-0">
-              <Download className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] shrink-0">
+              <Smartphone className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="font-bold text-sm text-white">Installer l'application</h4>
-              <p className="text-xs text-gray-400">Installez AfriGombo sur votre écran d'accueil pour un accès rapide.</p>
+              <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
+                <span>Installer AfriGombo</span>
+                <span className="text-[10px] px-1.5 py-0.5 bg-[#D4AF37]/20 text-[#D4AF37] rounded font-mono">PWA</span>
+              </h4>
+              <p className="text-xs text-gray-400">Accès direct et rapide depuis l'écran d'accueil.</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleInstall}
-              className="px-3 py-1.5 bg-afri-gold text-black font-bold text-xs rounded-xl hover:bg-yellow-400 transition-colors"
+              className="px-3.5 py-2 bg-[#D4AF37] text-black font-black text-xs rounded-xl hover:bg-yellow-400 transition-all shadow-md cursor-pointer uppercase tracking-wider"
             >
               Installer
             </button>
             <button
               onClick={handleDismissInstall}
-              className="p-1.5 text-gray-400 hover:text-white rounded-lg"
+              className="p-1.5 text-gray-400 hover:text-white rounded-lg cursor-pointer"
+              title="Fermer"
             >
               <X className="w-4 h-4" />
             </button>

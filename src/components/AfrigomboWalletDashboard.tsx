@@ -41,6 +41,8 @@ import { supportConfig } from "../supportConfig";
 import { recordWalletTransaction } from "../lib/financial";
 import { SupportService } from "../services/SupportService";
 import { useAppSettings } from "../context/AppSettingsContext";
+import { PremiumEngine } from "../lib/premiumEngine";
+import { getGomboRef, formatGomboRefDisplay } from "../lib/gomboIdHelper";
 
 import { SecurityService } from "../lib/SecurityService";
 import { useMaintenance } from "../hooks/useMaintenance";
@@ -202,6 +204,8 @@ export default function AfrigomboWalletDashboard({
       if (snap.exists()) {
         const uData = snap.data();
         const solde = uData.walletBalance ?? uData.wallet?.soldeDisponible ?? 0;
+        const isUserPremium = PremiumEngine.isPremium(uData) || PremiumEngine.isPremium(currentUserProfile);
+        const resolvedNiveau = isUserPremium ? "PREMIUM" : (uData.wallet?.niveauWallet || "Standard");
         setWallet({
           soldeDisponible: solde,
           soldeBloque: uData.wallet?.soldeBloque || 0,
@@ -211,7 +215,7 @@ export default function AfrigomboWalletDashboard({
           gainsMensuels: uData.wallet?.gainsMensuels || 0,
           revenusMois: uData.wallet?.revenusMois || 0,
           economiesPremium: uData.wallet?.economiesPremium || 0,
-          niveauWallet: uData.wallet?.niveauWallet || "Standard"
+          niveauWallet: resolvedNiveau
         });
         setWalletPinSettings({
           pinHash: uData.paymentSettings?.pinHash || "",

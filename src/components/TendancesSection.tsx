@@ -20,6 +20,8 @@ import {
 import { db } from "../firebase";
 import { collection, onSnapshot, query } from "firebase/firestore";
 
+import { getGomboRef } from "../lib/gomboIdHelper";
+
 interface TendancesSectionProps {
   gombos: Gombo[];
   posts?: Post[];
@@ -100,7 +102,11 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
     // 1. Map Gombos
     gombos.forEach(g => {
       const gomboId = g.id || `gombo_${Math.random()}`;
+      const gomboRef = getGomboRef(g);
+      if (processedIds.has(gomboId) || (gomboRef && processedIds.has(gomboRef))) return;
       processedIds.add(gomboId);
+      if (gomboRef) processedIds.add(gomboRef);
+
       const local = localInteractions[gomboId];
       const firestoreDoc = firestoreTrendingMap[gomboId];
 
@@ -175,7 +181,11 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
     // 2. Map Posts
     posts.forEach(p => {
       const postId = p.id || `post_${Math.random()}`;
+      const postRef = getGomboRef(p);
+      if (processedIds.has(postId) || (postRef && processedIds.has(postRef))) return;
       processedIds.add(postId);
+      if (postRef) processedIds.add(postRef);
+
       const local = localInteractions[postId];
       const firestoreDoc = firestoreTrendingMap[postId];
       const author = users.find(u => u.id === p.userId || u.uid === p.userId);
@@ -328,24 +338,6 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
     });
   }, [allTendancesItems]);
 
-  // Filtered and Ranked items
-  const rankedItems = useMemo(() => {
-    return filterAndRankTendances(allTendancesItems, activeTab, userCommune, searchTerm);
-  }, [allTendancesItems, activeTab, userCommune, searchTerm]);
-
-  // Top 8 Automatic Trends for the horizontal carousel
-  const carouselItems = useMemo(() => {
-    return [...allTendancesItems]
-      .sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1;
-        if (!a.pinned && b.pinned) return 1;
-        const scoreA = calculateTrendingScore(a);
-        const scoreB = calculateTrendingScore(b);
-        return scoreB - scoreA;
-      })
-      .slice(0, 10);
-  }, [allTendancesItems]);
-
   // Pinned/Sponsored trends highlighted by Super Founder
   const pinnedTrends = useMemo(() => {
     return allTendancesItems.filter(item => item.pinned || item.sponsored);
@@ -353,8 +345,41 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
 
   // Top Featured Main Card item (Super Founder Pinned doc or top scored item)
   const featuredItem = useMemo(() => {
-    return pinnedTrends[0] || carouselItems[0] || allTendancesItems[0];
-  }, [pinnedTrends, carouselItems, allTendancesItems]);
+    return pinnedTrends[0] || allTendancesItems[0] || null;
+  }, [pinnedTrends, allTendancesItems]);
+
+  // Top Automatic Trends for the horizontal carousel (excluding featuredItem)
+  const carouselItems = useMemo(() => {
+    const baseList = [...allTendancesItems].sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      const scoreA = calculateTrendingScore(a);
+      const scoreB = calculateTrendingScore(b);
+      return scoreB - scoreA;
+    });
+
+    if (!featuredItem) return baseList.slice(0, 10);
+    const featRef = getGomboRef(featuredItem.rawItem || featuredItem);
+    return baseList.filter(item => {
+      if (item.id === featuredItem.id) return false;
+      const itemRef = getGomboRef(item.rawItem || item);
+      return itemRef !== featRef;
+    }).slice(0, 10);
+  }, [allTendancesItems, featuredItem]);
+
+  // Filtered and Ranked items for feed (excluding featuredItem in "tendances" tab)
+  const rankedItems = useMemo(() => {
+    let list = filterAndRankTendances(allTendancesItems, activeTab, userCommune, searchTerm);
+    if (activeTab === "tendances" && featuredItem) {
+      const featRef = getGomboRef(featuredItem.rawItem || featuredItem);
+      list = list.filter(item => {
+        if (item.id === featuredItem.id) return false;
+        const itemRef = getGomboRef(item.rawItem || item);
+        return itemRef !== featRef;
+      });
+    }
+    return list;
+  }, [allTendancesItems, activeTab, userCommune, searchTerm, featuredItem]);
 
   // Handle J'honore (Like) action
   const handleToggleLike = (item: TendancesItem) => {
@@ -566,7 +591,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
             animate={{ opacity: 1, y: 0 }}
             className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-black via-zinc-950 to-black border-2 border-[#D4AF37] shadow-[0_10px_35px_rgba(212,175,55,0.25)] group"
           >
-            <div className="relative h-64 sm:h-80 w-full overflow-hidden">
+            <div className="relative h-44 sm:h-56 w-full overflow-hidden">
               <img 
                 src={featuredItem.imageUrl} 
                 alt={featuredItem.title} 

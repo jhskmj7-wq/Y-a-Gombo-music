@@ -7,10 +7,12 @@ import {
 } from "lucide-react";
 import { db, gomboDB } from "../firebase";
 import { safeStringify } from "../lib/jsonUtils";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, runTransaction, collection } from "firebase/firestore";
 import { Renfort, RenfortApplication, UserProfile } from "../types";
 import { supportConfig } from "../supportConfig";
-import { calculatePublicationFinancials, recordWalletTransaction } from "../lib/financial";
+import { calculatePublicationFinancials, recordWalletTransaction, getEffectiveCommissionRate } from "../lib/financial";
+import { PremiumEngine } from "../lib/premiumEngine";
+import { AndroidBottomSheet } from "./common/AfriModal";
 import { useLocations } from "../hooks/useLocations";
 import UserLocationProposalModal from "./common/UserLocationProposalModal";
 
@@ -108,6 +110,21 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
     userSolde: number;
   } | null>(null);
 
+  // Publish confirmation bottom-sheet state & loading lock
+  const [showRenfortConfirmBottomSheet, setShowRenfortConfirmBottomSheet] = useState(false);
+  const [renfortPublishLoading, setRenfortPublishLoading] = useState(false);
+  const [renfortPublishConfirmData, setRenfortPublishConfirmData] = useState<{
+    title: string;
+    cachet: number;
+    fee: number;
+    rate: number;
+    isPremium: boolean;
+    total: number;
+    soldeAvant: number;
+    soldeApres: number;
+    renfortPayload: any;
+  } | null>(null);
+
   // Load and Listen to DB real-time
   useEffect(() => {
     setLoading(true);
@@ -190,20 +207,25 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
 
     try {
       const cachetVal = Number(budget) || 0;
-      const financials = calculatePublicationFinancials(cachetVal);
-      const reqAmount = financials.total; // cachet + commission
-
-      // 3. VÉRIFICATION DU SOLDE EN TEMPS RÉEL
+      
+      // 3. VÉRIFICATION DU SOLDE ET STATUT EN TEMPS RÉEL DEPUIS FIRESTORE
       let liveSolde = 0;
       let liveBloque = 0;
+      let uData: any = currentUserProfile;
       try {
         const uSnap = await getDoc(doc(db, "users", currentUserProfile.uid));
         if (uSnap.exists()) {
-          const uData = uSnap.data();
-          liveSolde = uData?.wallet?.soldeDisponible ?? 0;
+          uData = uSnap.data();
+          liveSolde = uData?.walletBalance ?? uData?.wallet?.soldeDisponible ?? 0;
           liveBloque = uData?.wallet?.soldeBloque ?? 0;
         }
       } catch (_) {}
+
+      // CALCUL TARIPHAIRE DYNAMIQUE
+      const isUserPremium = PremiumEngine.isPremium(uData);
+      const effectiveRate = getEffectiveCommissionRate(uData);
+      const financials = calculatePublicationFinancials(cachetVal, effectiveRate);
+      const reqAmount = financials.total; // cachet + commission
 
       // 4. SI SOLDE INSUFFISANT : INTERDICTION DE PUBLIER + MODAL
       if (reqAmount > 0 && liveSolde < reqAmount) {
@@ -218,15 +240,15 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
         return; // ARRÊT IMMÉDIAT. AUCUN DOCUMENT FIRESTORE CRÉÉ.
       }
 
-      // 5. CRÉER LA PUBLICATION DANS FIRESTORE
       const authorFullName = `${currentUserProfile.firstName || ""} ${currentUserProfile.lastName || ""}`.trim() || currentUserProfile.artistName || "Artiste";
-      const createdRenfortId = await gomboDB.publishRenfort({
+
+      const renfortPayload = {
         userId: currentUserProfile.uid,
         userName: authorFullName,
         userAvatar: currentUserProfile.avatarUrl || currentUserProfile.photoURL || "",
         title: title.trim(),
         description: description.trim(),
-        instrument: finalSpecialties[0], // Compat primary
+        instrument: finalSpecialties[0],
         instruments: finalSpecialties,
         date: selectedDateStr,
         time,
@@ -236,55 +258,160 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
         whatsapp,
         requestType,
         genres: finalGenres
-      }) || `RENFORT-${Date.now()}`;
+      };
 
-      // 6. DÉBITER LE WALLET FIRESTORE & ENREGISTRER L'HISTORIQUE
-      if (reqAmount > 0) {
-        const newSolde = Math.max(0, liveSolde - reqAmount);
-        const newBloque = liveBloque + cachetVal;
-        await setDoc(doc(db, "users", currentUserProfile.uid), {
-          wallet: { soldeDisponible: newSolde, soldeBloque: newBloque }
-        }, { merge: true });
+      // 5. OUVRIR LA BOTTOM-SHEET DE CONFIRMATION (NO DIRECT PUBLISH)
+      setRenfortPublishConfirmData({
+        title: title.trim(),
+        cachet: cachetVal,
+        fee: financials.fee,
+        rate: effectiveRate,
+        isPremium: isUserPremium,
+        total: reqAmount,
+        soldeAvant: liveSolde,
+        soldeApres: Math.max(0, liveSolde - reqAmount),
+        renfortPayload
+      });
+      setShowRenfortConfirmBottomSheet(true);
+    } catch (err: any) {
+      triggerToast("error", "Erreur lors de la préparation : " + (err.message || ""));
+    }
+  };
 
-        await recordWalletTransaction({
-          userId: currentUserProfile.uid,
-          userName: authorFullName,
-          type: "debit_publication",
-          amount: reqAmount,
-          status: "success",
-          gomboId: createdRenfortId,
-          contractId: createdRenfortId,
-          description: `Débit publication Renfort Express : "${title.trim()}" (Cachet: ${cachetVal.toLocaleString()} FCFA, Comm: ${financials.fee.toLocaleString()} FCFA)`
+  // EXECUTION ATOMIQUE DE LA PUBLICATION DE RENFORT
+  const executeConfirmedRenfortPublish = async () => {
+    if (!renfortPublishConfirmData || !currentUserProfile) return;
+    
+    setRenfortPublishLoading(true);
+    const uid = currentUserProfile.uid;
+    const { cachet, total: reqAmount, renfortPayload } = renfortPublishConfirmData;
+    const authorFullName = renfortPayload.userName;
+    let verifiedSoldeFromFirestore = 0;
+
+    try {
+      const createdRenfortId = `RENFORT-${Date.now()}`;
+
+      await runTransaction(db, async (transaction) => {
+        const userRef = doc(db, "users", uid);
+        const userSnap = await transaction.get(userRef);
+        if (!userSnap.exists()) throw new Error("Utilisateur introuvable");
+
+        const uData = userSnap.data();
+        const liveSolde = uData?.walletBalance ?? uData?.wallet?.soldeDisponible ?? 0;
+        const liveBloque = uData?.wallet?.soldeBloque ?? 0;
+
+        const dynamicRate = getEffectiveCommissionRate(uData);
+        const freshFinancials = calculatePublicationFinancials(cachet, dynamicRate);
+        const currentReqAmount = freshFinancials.total;
+
+        if (currentReqAmount > 0 && liveSolde < currentReqAmount) {
+          throw new Error("INSUFFICIENT_FUNDS");
+        }
+
+        // 1. Débit Atomique Wallet
+        const newSolde = Math.max(0, liveSolde - currentReqAmount);
+        const newBloque = liveBloque + cachet;
+
+        transaction.update(userRef, {
+          walletBalance: newSolde,
+          balance: newSolde,
+          "wallet.soldeDisponible": newSolde,
+          "wallet.soldeBloque": newBloque,
+          updatedAt: new Date().toISOString()
         });
 
-        if (financials.fee > 0) {
-          await recordWalletTransaction({
-            userId: currentUserProfile.uid,
+        const nowIso = new Date().toISOString();
+
+        // 2. Historique de transaction
+        if (currentReqAmount > 0) {
+          const txDebitId = `tx_renfort_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+          const pubTxData = {
+            id: txDebitId,
+            reference: txDebitId,
+            uid,
+            userId: uid,
             userName: authorFullName,
-            type: "commission_plateforme",
-            amount: financials.fee,
+            type: "debit_publication",
+            amount: currentReqAmount,
+            montant: currentReqAmount,
             status: "success",
+            statut: "success",
             gomboId: createdRenfortId,
             contractId: createdRenfortId,
-            description: `Commission AFRIGOMBO ELITE (2,5%) Renfort Express : "${title.trim()}"`
-          });
+            description: `Débit Renfort Express : "${renfortPayload.title}" (Cachet: ${cachet.toLocaleString('fr-FR')} FCFA, Comm: ${freshFinancials.fee.toLocaleString('fr-FR')} FCFA)`,
+            createdAt: nowIso,
+            timestamp: Date.now()
+          };
+          transaction.set(doc(db, "transactions", txDebitId), pubTxData);
+          transaction.set(doc(db, "walletTransactions", txDebitId), pubTxData);
+
+          if (freshFinancials.fee > 0) {
+            const commTxId = `tx_comm_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+            const commTxData = {
+              id: commTxId,
+              reference: commTxId,
+              uid,
+              userId: uid,
+              userName: authorFullName,
+              type: "commission_plateforme",
+              amount: freshFinancials.fee,
+              montant: freshFinancials.fee,
+              status: "success",
+              statut: "success",
+              gomboId: createdRenfortId,
+              contractId: createdRenfortId,
+              description: `Commission AFRIGOMBO ELITE (${(dynamicRate * 100).toFixed(1)}%) Renfort Express : "${renfortPayload.title}"`,
+              createdAt: nowIso,
+              timestamp: Date.now()
+            };
+            transaction.set(doc(db, "transactions", commTxId), commTxData);
+            transaction.set(doc(db, "walletTransactions", commTxId), commTxData);
+          }
+
+          if (cachet > 0) {
+            const escrowTxId = `tx_escrow_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+            const escrowTxData = {
+              id: escrowTxId,
+              reference: escrowTxId,
+              uid,
+              userId: uid,
+              userName: authorFullName,
+              type: "fonds_bloques",
+              amount: cachet,
+              montant: cachet,
+              status: "fonds_bloques",
+              statut: "fonds_bloques",
+              gomboId: createdRenfortId,
+              contractId: createdRenfortId,
+              description: `Fonds bloqués en séquestre Renfort Express : "${renfortPayload.title}"`,
+              createdAt: nowIso,
+              timestamp: Date.now()
+            };
+            transaction.set(doc(db, "transactions", escrowTxId), escrowTxData);
+            transaction.set(doc(db, "walletTransactions", escrowTxId), escrowTxData);
+          }
         }
 
-        if (cachetVal > 0) {
-          await recordWalletTransaction({
-            userId: currentUserProfile.uid,
-            userName: authorFullName,
-            type: "fonds_bloques",
-            amount: cachetVal,
-            status: "fonds_bloques",
-            gomboId: createdRenfortId,
-            contractId: createdRenfortId,
-            description: `Fonds bloqués en séquestre Renfort Express : "${title.trim()}"`
-          });
-        }
-      }
+        // 3. Document Renfort
+        const renfortRef = doc(db, "renforts", createdRenfortId);
+        transaction.set(renfortRef, {
+          ...renfortPayload,
+          id: createdRenfortId,
+          createdAt: nowIso,
+          status: "OPEN",
+          applicantsCount: 0
+        });
+      });
 
-      // Clear Form & Close
+      // SOURCE DE VÉRITÉ : Re-lire Firestore
+      const updatedUserSnap = await getDoc(doc(db, "users", uid));
+      const verifiedData = updatedUserSnap.exists() ? updatedUserSnap.data() : null;
+      verifiedSoldeFromFirestore = verifiedData?.walletBalance ?? verifiedData?.wallet?.soldeDisponible ?? 0;
+
+      window.dispatchEvent(new CustomEvent("wallet_balance_updated", { detail: { newBalance: verifiedSoldeFromFirestore } }));
+      window.dispatchEvent(new CustomEvent("wallet_updated", { detail: { newBalance: verifiedSoldeFromFirestore } }));
+
+      // Clear form
       setTitle("");
       setDescription("");
       setSelectedSpecialties([]);
@@ -297,10 +424,18 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
       setSelectedGenres([]);
       setCustomGenre("");
       setShowForm(false);
+      setShowRenfortConfirmBottomSheet(false);
 
-      triggerToast("success", "Votre demande Renfort Express a été publiée avec succès ! 🎼");
+      triggerToast("success", `🎉 Renfort Express publié ! Solde actualisé : ${verifiedSoldeFromFirestore.toLocaleString('fr-FR')} FCFA`);
     } catch (err: any) {
-      triggerToast("error", "Erreur lors de la publication : " + err.message);
+      if (err.message === "INSUFFICIENT_FUNDS") {
+        setShowRenfortConfirmBottomSheet(false);
+        setShowRenfortInsufficientModal(true);
+      } else {
+        triggerToast("error", "Erreur lors de la publication : " + (err.message || "Erreur réseau"));
+      }
+    } finally {
+      setRenfortPublishLoading(false);
     }
   };
 
@@ -1231,6 +1366,102 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
           })}
         </div>
       )}
+
+      {/* Android Bottom-Sheet Confirmation Avant Publication Renfort */}
+      <AndroidBottomSheet
+        isOpen={showRenfortConfirmBottomSheet}
+        onClose={() => { if (!renfortPublishLoading) setShowRenfortConfirmBottomSheet(false); }}
+        title="Confirmation Financière"
+      >
+        {renfortPublishConfirmData && (
+          <div className="space-y-4 pt-1 text-left">
+            <div className="bg-afri-gold/10 border border-afri-gold/30 rounded-2xl p-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-afri-gold/20 flex items-center justify-center text-afri-gold font-bold text-sm">
+                  👑
+                </div>
+                <div>
+                  <p className="text-[10px] text-afri-text-sec uppercase font-mono">Statut du Compte</p>
+                  <p className="text-xs font-black text-afri-gold uppercase tracking-wide">
+                    {renfortPublishConfirmData.isPremium ? "Compte Premium" : "Compte Standard"}
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-mono font-bold bg-afri-gold/20 text-afri-gold px-2.5 py-1 rounded-full border border-afri-gold/30">
+                {(renfortPublishConfirmData.rate * 100).toFixed(1)} % de frais
+              </span>
+            </div>
+
+            <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 space-y-2.5 font-mono text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-afri-text-sec">Cachet du Renfort :</span>
+                <span className="font-bold text-afri-text">{renfortPublishConfirmData.cachet.toLocaleString('fr-FR')} FCFA</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-afri-text-sec">Taux de frais applicable :</span>
+                <span className="font-bold text-afri-gold">{(renfortPublishConfirmData.rate * 100).toFixed(1)} %</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-afri-text-sec">Montant exact des frais :</span>
+                <span className="font-bold text-amber-400">{renfortPublishConfirmData.fee.toLocaleString('fr-FR')} FCFA</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-afri-text-sec">Montant à séquestrer :</span>
+                <span className="font-bold text-afri-gold">{renfortPublishConfirmData.cachet.toLocaleString('fr-FR')} FCFA</span>
+              </div>
+
+              <div className="pt-2 border-t border-afri-border flex justify-between items-center">
+                <span className="text-afri-text font-bold uppercase text-xs">Total débité du Wallet :</span>
+                <span className="font-black text-emerald-400 text-sm">{renfortPublishConfirmData.total.toLocaleString('fr-FR')} FCFA</span>
+              </div>
+
+              <div className="pt-2 border-t border-dashed border-afri-border/60 flex justify-between items-center">
+                <span className="text-afri-text-sec">Solde avant opération :</span>
+                <span className="font-bold text-afri-text">{renfortPublishConfirmData.soldeAvant.toLocaleString('fr-FR')} FCFA</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-afri-text-sec">Solde après opération :</span>
+                <span className="font-bold text-emerald-400">{renfortPublishConfirmData.soldeApres.toLocaleString('fr-FR')} FCFA</span>
+              </div>
+            </div>
+
+            <p className="text-[10px] text-afri-text-sec text-center leading-relaxed">
+              En cliquant sur Confirmer, votre wallet sera débité de {renfortPublishConfirmData.total.toLocaleString('fr-FR')} FCFA, le cachet sera placé sous séquestre sécurisé, et votre Renfort sera publié instantanément.
+            </p>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                disabled={renfortPublishLoading}
+                onClick={() => setShowRenfortConfirmBottomSheet(false)}
+                className="flex-1 py-3 bg-afri-bg hover:bg-afri-bg-sec text-afri-text-sec font-bold text-xs uppercase rounded-xl border border-afri-border transition-all cursor-pointer"
+              >
+                Annuler
+              </button>
+
+              <button
+                type="button"
+                disabled={renfortPublishLoading}
+                onClick={executeConfirmedRenfortPublish}
+                className="flex-1 py-3 bg-gradient-to-r from-afri-gold to-[#F1C40F] hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {renfortPublishLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    <span>Traitement...</span>
+                  </>
+                ) : (
+                  <span>Confirmer</span>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </AndroidBottomSheet>
 
       {/* Modal Solde Insuffisant */}
       <AnimatePresence>

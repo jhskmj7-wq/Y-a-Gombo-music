@@ -18,6 +18,28 @@ function getRandomChars(count: number): string {
 }
 
 /**
+ * Formats any raw Gombo reference or ID into official business format GB-2026-XXXXX.
+ */
+export function formatGomboRefDisplay(rawRef: string | null | undefined): string {
+  if (!rawRef) return "GB-2026-00000";
+  if (/^GB-\d{4}-[A-Z0-9]{4,8}$/i.test(rawRef)) {
+    return rawRef.toUpperCase();
+  }
+  const clean = rawRef.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+  if (clean.length >= 5) {
+    return `GB-2026-${clean.slice(-5)}`;
+  }
+  return `GB-2026-${clean.padStart(5, "0")}`;
+}
+
+export function getGomboRef(item: any): string {
+  if (!item) return "GB-2026-00000";
+  if (typeof item === "string") return formatGomboRefDisplay(item);
+  const rawRef = item.reference || item.gomboRef || item.ref || item.id || item.gomboId || item.gomboIdNumber;
+  return formatGomboRefDisplay(rawRef);
+}
+
+/**
  * Formats any raw Gombo ID or string into the official display format GMB-XXX-XXX (alphanumeric).
  */
 export function formatGomboIdDisplay(rawId: string | null | undefined): string {

@@ -13,6 +13,7 @@ import GomboSecureModal from "./GomboSecureModal";
 import { calculatePlatformFee, calculatePublicationFinancials, recordWalletTransaction, getEffectiveCommissionRate } from "../lib/financial";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 import { PremiumEngine } from "../lib/premiumEngine";
+import { getGomboRef } from "../lib/gomboIdHelper";
 import { useLocations } from "../hooks/useLocations";
 import UserLocationProposalModal from "./common/UserLocationProposalModal";
 import { Plus } from "lucide-react";
@@ -304,34 +305,44 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
         // Create Gombo/Post
         const postRef = doc(collection(db, "social_posts"));
-        transaction.set(postRef, {
-            id: postRef.id,
-            userId: currentUserProfile.uid,
-            authorName,
-            authorPhoto: currentUserProfile.photoURL || currentUserProfile.avatar || "",
-            title: title.trim(),
-            description: description.trim(),
-            type: selectedType,
-            commune: effectiveCommune,
-            communeCustom: commune === "📍 Autre commune" ? customCommune.trim() : "",
-            quartier: quartier.trim(),
-            locationDetail: locationDetail.trim(),
-            date: date,
-            budget: cachetVal,
-            fee: financials.fee,
-            totalDebit: financials.total,
-            status: "PUBLISHED",
-            imageUrl: uploadedImageUrl,
-            audioUrl: uploadedAudioUrl,
-            latitude: latitude,
-            longitude: longitude,
-            searchRadius: searchRadius,
-            locationPrivacy: locationPrivacy,
-            city: currentUserProfile.city || "Abidjan",
-            country: currentUserProfile.country || "Côte d'Ivoire",
-            createdAt: new Date().toISOString()
-        });
+        const gomboRefVal = getGomboRef(postRef.id);
+
+        const gomboPayload = {
+          id: postRef.id,
+          gomboRef: gomboRefVal,
+          reference: gomboRefVal,
+          userId: currentUserProfile.uid,
+          authorName,
+          authorPhoto: currentUserProfile.photoURL || currentUserProfile.avatar || "",
+          title: title.trim(),
+          description: description.trim(),
+          type: selectedType,
+          commune: effectiveCommune,
+          communeCustom: commune === "📍 Autre commune" ? customCommune.trim() : "",
+          quartier: quartier.trim(),
+          locationDetail: locationDetail.trim(),
+          date: date,
+          budget: cachetVal,
+          fee: freshFinancials.fee,
+          totalDebit: freshFinancials.total,
+          status: "PUBLISHED",
+          imageUrl: uploadedImageUrl,
+          audioUrl: uploadedAudioUrl,
+          latitude: latitude,
+          longitude: longitude,
+          searchRadius: searchRadius,
+          locationPrivacy: locationPrivacy,
+          city: currentUserProfile.city || "Abidjan",
+          country: currentUserProfile.country || "Côte d'Ivoire",
+          createdAt: new Date().toISOString()
+        };
+
+        transaction.set(postRef, gomboPayload);
+        transaction.set(doc(db, "gombos", postRef.id), gomboPayload);
       });
+
+      window.dispatchEvent(new CustomEvent("wallet_balance_updated", { detail: { newBalance: finalNewSolde } }));
+      window.dispatchEvent(new CustomEvent("wallet_updated", { detail: { newBalance: finalNewSolde } }));
 
       setDepositDetails(prev => ({ ...prev, userSolde: finalNewSolde }));
       setPublishOutcome("success_published");
@@ -467,8 +478,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                         <span className="font-mono font-black text-[#D4AF37]">{depositDetails.total.toLocaleString()} FCFA</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-afri-text-sec">Réf ID :</span>
-                        <span className="font-mono text-[10px] bg-afri-bg-sec px-2 py-0.5 rounded text-afri-text-sec border border-afri-border">{depositDetails.refId}</span>
+                        <span className="text-afri-text-sec">Référence du gombo :</span>
+                        <span className="font-mono text-[10px] bg-afri-bg-sec px-2 py-0.5 rounded text-afri-text-sec border border-afri-border">Gombo Réf {getGomboRef(depositDetails.refId)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-afri-text-sec">Nouveau solde Coffre :</span>
@@ -949,92 +960,81 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         </form>
       </motion.div>
 
-      {/* MODAL DE CONFIRMATION AVANT PUBLICATION */}
-      <AnimatePresence>
-        {showConfirmModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-afri-bg/80 backdrop-blur-sm flex items-center justify-center p-4"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, y: 10 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 10 }}
-              className="bg-afri-bg-sec border border-[#D4AF37]/50 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl"
+      {/* MODAL DE CONFIRMATION AVANT PUBLICATION (ANDROID BOTTOM-SHEET) */}
+      <AndroidBottomSheet
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="CONFIRMATION DE PUBLICATION"
+      >
+        <div className="space-y-4 py-2">
+          <div className="text-center space-y-1">
+            <span className="inline-block text-[9.5px] font-mono font-black text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
+              🔐 CONFIRMATION DE PUBLICATION
+            </span>
+          </div>
+
+          <div className="space-y-2.5 bg-afri-bg p-4 rounded-2xl border border-afri-border text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-afri-text-sec">Statut :</span>
+              <span className="font-bold text-[#D4AF37] flex items-center gap-1">
+                {isUserPremium ? "👑 PREMIUM" : "👤 STANDARD"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-afri-text-sec">Cachet du Gombo :</span>
+              <span className="font-mono font-bold text-afri-text">{depositDetails.cachet.toLocaleString('fr-FR')} F</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-afri-text-sec">Taux appliqué :</span>
+              <span className="font-mono text-afri-text-sec">{isUserPremium ? "1,5 %" : "2,5 %"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-afri-text-sec">Frais :</span>
+              <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.fee.toLocaleString('fr-FR')} F</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-afri-text-sec">Montant séquestré :</span>
+              <span className="font-mono font-bold text-sky-400">{depositDetails.cachet.toLocaleString('fr-FR')} F</span>
+            </div>
+            <div className="flex justify-between items-center pt-2 border-t border-afri-border">
+              <span className="font-bold text-afri-text uppercase text-xs">Montant total prélevé :</span>
+              <span className="font-mono font-black text-amber-400 text-sm">{depositDetails.total.toLocaleString('fr-FR')} F</span>
+            </div>
+            <div className="flex justify-between items-center pt-1 border-t border-dashed border-afri-border/50">
+              <span className="text-afri-text-sec">Solde disponible avant :</span>
+              <span className="font-mono font-bold text-emerald-400">{(depositDetails.userSolde ?? 0).toLocaleString('fr-FR')} F</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-afri-text-sec">Solde disponible après :</span>
+              <span className={`font-mono font-bold ${((depositDetails.userSolde ?? 0) - depositDetails.total) >= 0 ? "text-emerald-400" : "text-rose-500"}`}>
+                {Math.max(0, (depositDetails.userSolde ?? 0) - depositDetails.total).toLocaleString('fr-FR')} F
+              </span>
+            </div>
+          </div>
+
+          <p className="text-[10px] text-afri-text-sec text-center leading-relaxed">
+            Aucun débit et aucune création de publication avant le clic sur "CONFIRMER LA PUBLICATION".
+          </p>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setShowConfirmModal(false)}
+              className="flex-1 py-3.5 bg-afri-bg hover:bg-afri-bg/80 text-afri-text font-black text-xs uppercase rounded-xl transition-all border border-afri-border cursor-pointer active:scale-98"
             >
-              <div className="w-12 h-12 mx-auto bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl flex items-center justify-center text-[#D4AF37]">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-
-              <div className="text-center space-y-1">
-                <span className="inline-block text-[9px] font-mono font-black text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 px-3 py-0.5 rounded-full border border-[#D4AF37]/30">
-                  🔐 CONFIRMATION DE PUBLICATION
-                </span>
-                <h3 className="text-lg font-black text-afri-text uppercase tracking-wide pt-1">
-                  Récapitulatif Financier
-                </h3>
-              </div>
-
-              <div className="space-y-2.5 bg-afri-bg p-4 rounded-2xl border border-afri-border text-xs">
-                <div className="flex justify-between items-center text-afri-text-sec">
-                  <span>Montant du Gombo :</span>
-                  <span className="font-mono font-bold text-afri-text">{depositDetails.cachet.toLocaleString()} FCFA</span>
-                </div>
-                <div className="flex justify-between items-center text-afri-text-sec">
-                  <span>Statut de l'utilisateur :</span>
-                  <span className="font-bold text-[#D4AF37]">{isUserPremium ? "Premium" : "Standard"}</span>
-                </div>
-                <div className="flex justify-between items-center text-afri-text-sec">
-                  <span>Commission appliquée :</span>
-                  <span className="font-mono text-afri-text-sec">{isUserPremium ? "1,5 %" : "2,5 %"}</span>
-                </div>
-                <div className="flex justify-between items-center text-afri-text-sec">
-                  <span>Montant de la commission :</span>
-                  <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.fee.toLocaleString()} FCFA</span>
-                </div>
-                <div className="flex justify-between items-center text-afri-text-sec pt-1 border-t border-dashed border-afri-border/50">
-                  <span>Solde actuel du Wallet :</span>
-                  <span className="font-mono font-bold text-emerald-400">{(depositDetails.userSolde ?? 0).toLocaleString()} FCFA</span>
-                </div>
-                <div className="flex justify-between items-center text-afri-text-sec">
-                  <span>Solde restant après opération :</span>
-                  <span className={`font-mono font-bold ${((depositDetails.userSolde ?? 0) - depositDetails.total) >= 0 ? "text-emerald-400" : "text-rose-500"}`}>
-                    {Math.max(0, (depositDetails.userSolde ?? 0) - depositDetails.total).toLocaleString()} FCFA
-                  </span>
-                </div>
-                <div className="pt-2.5 border-t border-afri-border flex justify-between items-center">
-                  <span className="font-bold text-afri-text uppercase text-xs">Total à débiter du Wallet :</span>
-                  <span className="font-mono font-black text-emerald-400 text-sm">{depositDetails.total.toLocaleString()} FCFA</span>
-                </div>
-              </div>
-
-              <p className="text-[10px] text-afri-text-sec text-center leading-relaxed">
-                Vérification automatique : Wallet suffisant, date future et champs obligatoires validés.
-              </p>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmModal(false)}
-                  className="flex-1 py-3.5 bg-afri-bg hover:bg-afri-bg/80 text-afri-text font-black text-xs uppercase rounded-xl transition-all border border-afri-border cursor-pointer"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={executePublish}
-                  className="flex-1 py-3.5 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
-                >
-                  {loading ? <div className="w-4 h-4 border-2 border-afri-border border-t-transparent rounded-full animate-spin" /> : "Publier maintenant"}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              ANNULER
+            </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={executePublish}
+              className="flex-1 py-3.5 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+            >
+              {loading ? <div className="w-4 h-4 border-2 border-afri-border border-t-transparent rounded-full animate-spin" /> : "CONFIRMER LA PUBLICATION"}
+            </button>
+          </div>
+        </div>
+      </AndroidBottomSheet>
 
       <GomboSecureModal 
         isOpen={showSecureModal} 

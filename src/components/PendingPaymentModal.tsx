@@ -5,6 +5,7 @@ import { supportConfig } from "../supportConfig";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 import { audioSynth } from "../lib/audio";
 import { AndroidBottomSheet } from "./common/AfriModal";
+import { getGomboRef } from "../lib/gomboIdHelper";
 
 interface PendingPaymentModalProps {
   isOpen: boolean;
@@ -104,8 +105,8 @@ export const PendingPaymentModal: React.FC<PendingPaymentModalProps> = ({
               </div>
             )}
             <div className="flex justify-between items-center text-xs">
-              <span className="text-afri-text-sec">Réf ID :</span>
-              <span className="font-mono text-[10px] bg-afri-bg px-2 py-0.5 rounded text-afri-text-sec">{post.id}</span>
+              <span className="text-afri-text-sec">Référence du gombo :</span>
+              <span className="font-mono text-[10px] bg-afri-bg px-2 py-0.5 rounded text-afri-text-sec">Gombo Réf {getGomboRef(post)}</span>
             </div>
           </div>
 

@@ -13,12 +13,15 @@ import {
   query,
   limit,
   where,
-  orderBy
+  orderBy,
+  runTransaction
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
 import { safeStringify, getCircularReplacer, safeJsonClone } from "../lib/jsonUtils";
 import { getEffectiveGomboId, generateGomboId, formatGomboIdDisplay } from "../lib/gomboIdHelper";
+import { PremiumEngine } from "../lib/premiumEngine";
+import { getEffectiveCommissionRate, calculatePublicationFinancials, recordWalletTransaction } from "../lib/financial";
 import { useNavigate } from "react-router-dom";
 import { lazyWithRetry } from "../lib/lazyWithRetry";
 import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
@@ -99,7 +102,6 @@ import { UserTerrainLandingPage } from "./UserTerrainLandingPage";
 import { AfriGomboLogo } from "./AfriGomboLogo";
 import { supportConfig } from "../supportConfig";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
-import { calculatePublicationFinancials, recordWalletTransaction } from "../lib/financial";
 import { gomboDB } from "../firebase";
 import { usePerformance } from "../services/performanceService";
 import {
@@ -913,6 +915,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     fee: number;
     total: number;
     userSolde: number;
+  } | null>(null);
+
+  // Publish Confirmation Bottom-Sheet state (Android Bottom-Sheet)
+  const [showPublishConfirmBottomSheet, setShowPublishConfirmBottomSheet] = useState<boolean>(false);
+  const [publishConfirmData, setPublishConfirmData] = useState<{
+    title: string;
+    cachet: number;
+    fee: number;
+    rate: number;
+    isPremium: boolean;
+    total: number;
+    soldeAvant: number;
+    soldeApres: number;
   } | null>(null);
   
   // Draft restoration and auto-saving logic
@@ -4487,18 +4502,16 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   }
 
                   const cachetVal = activePublishType === "reel" ? 0 : (newGomboPrice || 0);
-                  const financials = calculatePublicationFinancials(cachetVal);
-                  const feeAmount = financials.fee;
-                  const reqAmount = financials.total; // Total à débiter = cachet + commission
 
-                  // ÉTAPE 1 : LIRE LE SOLDE RÉEL DU WALLET FIRESTORE
+                  // ÉTAPE 1 : LIRE LE SOLDE RÉEL ET LE STATUT DE L'UTILISATEUR FIRESTORE
                   let liveSolde = 0;
                   let liveBloque = 0;
+                  let uData: any = profile;
                   const currentUid = currentUser.uid;
                   try {
                     const uSnap = await getDoc(doc(db, "users", currentUid));
                     if (uSnap.exists()) {
-                      const uData = uSnap.data();
+                      uData = uSnap.data();
                       liveSolde = uData?.wallet?.soldeDisponible ?? uData?.walletBalance ?? 0;
                       liveBloque = uData?.wallet?.soldeBloque ?? 0;
                     } else {
@@ -4510,7 +4523,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     liveBloque = (profile as any)?.wallet?.soldeBloque ?? 0;
                   }
 
-                  // ÉTAPE 3 : SI LE WALLET EST INSUFFISANT -> STOP IMMÉDIAT. AUCUNE CRÉATION DE DOCUMENT FIRESTORE.
+                  // CALCUL TARIPHAIRE DYNAMIQUE SELON LE STATUT RÉEL (PREMIUM vs STANDARD)
+                  const isUserPremium = PremiumEngine.isPremium(uData);
+                  const effectiveRate = getEffectiveCommissionRate(uData);
+                  const financials = calculatePublicationFinancials(cachetVal, effectiveRate);
+                  const feeAmount = financials.fee;
+                  const reqAmount = financials.total; // Total à débiter = cachet + commission
+
+                  // ÉTAPE 2 : SI LE WALLET EST INSUFFISANT -> STOP IMMÉDIAT
                   if (reqAmount > 0 && liveSolde < reqAmount) {
                     setInsufficientFundsData({
                       title: newGomboTitle.trim(),
@@ -4523,166 +4543,271 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     return; // STOP EXECUTION
                   }
 
-                  // 1. Trigger Loading State
+                  // ÉTAPE 3 : SI WALLET SUFFISANT -> OUVRIR OBLIGATOIREMENT LA BOTTOM-SHEET DE CONFIRMATION
+                  // AUCUN DÉBIT. AUCUNE PUBLICATION DIRECTE.
+                  setPublishConfirmData({
+                    title: newGomboTitle.trim(),
+                    cachet: cachetVal,
+                    fee: feeAmount,
+                    rate: effectiveRate,
+                    isPremium: isUserPremium,
+                    total: reqAmount,
+                    soldeAvant: liveSolde,
+                    soldeApres: Math.max(0, liveSolde - reqAmount)
+                  });
+                  setShowPublishConfirmBottomSheet(true);
+                };
+
+                // FONCTION D'EXÉCUTION ATOMIQUE APRÈS CONFIRMATION DANS LA BOTTOM-SHEET
+                const executeConfirmedPublication = async () => {
+                  if (!publishConfirmData || !currentUser) return;
+                  
+                  // Verrouiller immédiatement le bouton pour empêcher le double-débit
                   setPublishLoading(true);
                   try { audioSynth.playTamTam(true); } catch (_) {}
 
+                  const currentUid = currentUser.uid;
+                  const cachetVal = publishConfirmData.cachet;
+                  const reqAmount = publishConfirmData.total;
                   const uniqueId = "gombo_new_" + Date.now();
                   const categoryLabel = getCategoryLabel();
+                  let verifiedSoldeFromFirestore = 0;
 
-                  // Débit automatique du Wallet Firestore
-                  if (reqAmount > 0) {
-                    const newSolde = Math.max(0, liveSolde - reqAmount);
-                    const newBloque = liveBloque + cachetVal;
+                  try {
+                    // TRANSACTION ATOMIQUE FIRESTORE
+                    await runTransaction(db, async (transaction) => {
+                      const userRef = doc(db, "users", currentUid);
+                      const userSnap = await transaction.get(userRef);
+                      if (!userSnap.exists()) throw new Error("Utilisateur introuvable");
+                      
+                      const uData = userSnap.data();
+                      const liveSolde = uData?.walletBalance ?? uData?.wallet?.soldeDisponible ?? 0;
+                      const liveBloque = uData?.wallet?.soldeBloque ?? 0;
 
-                    await setDoc(doc(db, "users", currentUid), {
-                      wallet: {
-                        soldeDisponible: newSolde,
-                        soldeBloque: newBloque
+                      const isPremium = PremiumEngine.isPremium(uData);
+                      const dynamicRate = getEffectiveCommissionRate(uData);
+                      const freshFinancials = calculatePublicationFinancials(cachetVal, dynamicRate);
+                      const currentReqAmount = freshFinancials.total;
+
+                      if (currentReqAmount > 0 && liveSolde < currentReqAmount) {
+                        throw new Error("INSUFFICIENT_FUNDS");
                       }
-                    }, { merge: true });
 
-                    // Enregistrer la transaction de débit
-                    await recordWalletTransaction({
-                      userId: currentUid,
-                      userName: profile?.artisticName || profile?.name || currentUser.displayName || "Membre Gombo",
-                      type: "debit_publication",
-                      amount: reqAmount,
-                      status: "success",
-                      gomboId: uniqueId,
-                      contractId: uniqueId,
-                      description: `Débit publication : Gombo "${newGomboTitle.trim()}" (Cachet: ${cachetVal.toLocaleString('fr-FR')} FCFA, Comm: ${feeAmount.toLocaleString('fr-FR')} FCFA)`
+                      // 1. Débit Wallet Atomique
+                      const finalNewSolde = Math.max(0, liveSolde - currentReqAmount);
+                      const newBloque = liveBloque + cachetVal;
+
+                      transaction.update(userRef, {
+                        walletBalance: finalNewSolde,
+                        balance: finalNewSolde,
+                        "wallet.soldeDisponible": finalNewSolde,
+                        "wallet.soldeBloque": newBloque,
+                        updatedAt: new Date().toISOString()
+                      });
+
+                      const nowIso = new Date().toISOString();
+
+                      // 2. Enregistrer l'historique de transaction
+                      if (currentReqAmount > 0) {
+                        const txDebitId = `tx_pub_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+                        const pubTxData = {
+                          id: txDebitId,
+                          reference: txDebitId,
+                          uid: currentUid,
+                          userId: currentUid,
+                          userName: profile?.artisticName || profile?.name || currentUser.displayName || "Membre Gombo",
+                          type: "debit_publication",
+                          amount: currentReqAmount,
+                          montant: currentReqAmount,
+                          status: "success",
+                          statut: "success",
+                          gomboId: uniqueId,
+                          contractId: uniqueId,
+                          description: `Débit publication : Gombo "${newGomboTitle.trim()}" (Cachet: ${cachetVal.toLocaleString('fr-FR')} FCFA, Comm: ${freshFinancials.fee.toLocaleString('fr-FR')} FCFA)`,
+                          createdAt: nowIso,
+                          timestamp: Date.now()
+                        };
+                        transaction.set(doc(db, "transactions", txDebitId), pubTxData);
+                        transaction.set(doc(db, "walletTransactions", txDebitId), pubTxData);
+
+                        if (freshFinancials.fee > 0) {
+                          const commTxId = `tx_comm_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+                          const commTxData = {
+                            id: commTxId,
+                            reference: commTxId,
+                            uid: currentUid,
+                            userId: currentUid,
+                            userName: profile?.artisticName || profile?.name || currentUser.displayName || "Membre Gombo",
+                            type: "commission_plateforme",
+                            amount: freshFinancials.fee,
+                            montant: freshFinancials.fee,
+                            status: "success",
+                            statut: "success",
+                            gomboId: uniqueId,
+                            contractId: uniqueId,
+                            description: `Commission AFRIGOMBO ELITE (${(dynamicRate * 100).toFixed(1)}%) pour "${newGomboTitle.trim()}"`,
+                            createdAt: nowIso,
+                            timestamp: Date.now()
+                          };
+                          transaction.set(doc(db, "transactions", commTxId), commTxData);
+                          transaction.set(doc(db, "walletTransactions", commTxId), commTxData);
+
+                          transaction.set(doc(collection(db, "commissions")), {
+                            userId: currentUid,
+                            userName: profile?.artisticName || profile?.name || currentUser.displayName || "Membre Gombo",
+                            amount: freshFinancials.fee,
+                            cachet: cachetVal,
+                            gomboTitle: newGomboTitle.trim(),
+                            gomboId: uniqueId,
+                            rate: dynamicRate,
+                            createdAt: nowIso
+                          });
+                        }
+
+                        if (cachetVal > 0) {
+                          const escrowTxId = `tx_escrow_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+                          const escrowTxData = {
+                            id: escrowTxId,
+                            reference: escrowTxId,
+                            uid: currentUid,
+                            userId: currentUid,
+                            userName: profile?.artisticName || profile?.name || currentUser.displayName || "Membre Gombo",
+                            type: "fonds_bloques",
+                            amount: cachetVal,
+                            montant: cachetVal,
+                            status: "fonds_bloques",
+                            statut: "fonds_bloques",
+                            gomboId: uniqueId,
+                            contractId: uniqueId,
+                            description: `Fonds bloqués en séquestre pour le gombo "${newGomboTitle.trim()}"`,
+                            createdAt: nowIso,
+                            timestamp: Date.now()
+                          };
+                          transaction.set(doc(db, "transactions", escrowTxId), escrowTxData);
+                          transaction.set(doc(db, "walletTransactions", escrowTxId), escrowTxData);
+                        }
+                      }
+
+                      // 3. Créer le document de publication
+                      if (activePublishType === "reel") {
+                        const newPostId = "post_reel_" + Date.now();
+                        const newP: Post = {
+                          id: newPostId,
+                          userId: currentUid,
+                          authorName: currentUser.displayName || "Artiste",
+                          authorArtisticName: profile?.artisticName || currentUser.displayName || "Artiste",
+                          content: `📹 Nouveau Réel publié !\n\n${newGomboDesc}`,
+                          likes: 0,
+                          comments: 0,
+                          isFlagged: false,
+                          timestamp: nowIso,
+                          mediaUrl: publishAudio,
+                          mediaType: "video"
+                        } as any;
+                        transaction.set(doc(db, "posts", newPostId), newP);
+                      } else {
+                        const newG: Gombo = {
+                          id: uniqueId,
+                          title: `🎖️ (${categoryLabel}) ${newGomboTitle}`,
+                          description: newGomboDesc + (selectedPublishTags.length > 0 ? `\n\nTags: ${selectedPublishTags.map(t => `#${t}`).join(" ")}` : ""),
+                          budget: newGomboPrice,
+                          commissionRate: dynamicRate,
+                          location: `${newGomboQuartier}, ${newGomboCity}`,
+                          city: newGomboCity,
+                          quartier: newGomboQuartier,
+                          lieuPrecis: newGomboLieuPrecis || "Sur scène",
+                          organizerId: currentUid,
+                          organizerName: profile?.artisticName || profile?.name || currentUser.displayName || "Artiste",
+                          timestamp: nowIso,
+                          applicantsCount: 0,
+                          status: "PUBLISHED",
+                          visible: true,
+                          adminValidated: true,
+                          depositConfirmed: true,
+                          paymentMethod: "wallet_debit",
+                          paymentStatus: "paid",
+                          publishedAt: nowIso,
+                          isBoosted: false,
+                          date: newGomboDate,
+                          time: `${newGomboHeureDebut} - ${newGomboHeureFin}`,
+                          category: categoryLabel,
+                          styleMusical: newGomboStyleMusical || "Tous styles",
+                          tenueExigee: newGomboTenueExigee || "Tenue de scène libre",
+                          experienceSouhaitee: newGomboExperienceSouhaitee || "Tous niveaux bienvenus",
+                          nombreRecherche: newGomboNombreRecherche,
+                          isRenfort: activePublishType === "renfort",
+                          transportFee: activePublishType === "renfort" ? newGomboTransportFee : 0,
+                          repetitionsCount: activePublishType === "renfort" ? newGomboRepetitionsCount : 0,
+                          repetitionsSchedule: activePublishType === "renfort" ? newGomboRepetitionsSchedule : "",
+                          repetitionsDates: activePublishType === "renfort" ? newGomboRepetitionsDates : ""
+                        };
+
+                        if (multiplePublishPhotos.length > 0) {
+                          (newG as any).coverUrl = multiplePublishPhotos[0];
+                          (newG as any).photos = multiplePublishPhotos;
+                        }
+                        if (publishAudio) {
+                          (newG as any).audioUrl = publishAudio;
+                        }
+
+                        transaction.set(doc(db, "gombos", uniqueId), newG);
+
+                        const newPostId = "post_new_" + Date.now();
+                        const newP: Post = {
+                          id: newPostId,
+                          userId: currentUid,
+                          authorName: currentUser.displayName || "Artiste",
+                          authorArtisticName: profile?.artisticName || currentUser.displayName || "Artiste",
+                          content: `📢 [${categoryLabel}] ${newGomboTitle}\n\n📍 Lieu : ${newGomboQuartier}, ${newGomboCity}\n💰 Budget : ${newGomboPrice.toLocaleString('fr-FR')} FCFA\n📅 Date : ${newGomboDate}\n\n${newGomboDesc}`,
+                          likes: 0,
+                          comments: 0,
+                          isFlagged: false,
+                          timestamp: nowIso
+                        };
+                        if (multiplePublishPhotos.length > 0) newP.mediaUrl = multiplePublishPhotos[0];
+                        if (publishAudio) (newP as any).audioUrl = publishAudio;
+                        transaction.set(doc(db, "posts", newPostId), newP);
+                      }
                     });
 
-                    // Enregistrer la commission
-                    if (feeAmount > 0) {
-                      await recordWalletTransaction({
-                        userId: currentUid,
-                        userName: profile?.artisticName || profile?.name || currentUser.displayName || "Membre Gombo",
-                        type: "commission_plateforme",
-                        amount: feeAmount,
-                        status: "success",
-                        gomboId: uniqueId,
-                        contractId: uniqueId,
-                        description: `Commission AFRIGOMBO ELITE (2.5%) pour "${newGomboTitle.trim()}"`
-                      });
+                    // ÉTAPE SOURCE DE VÉRITÉ : RE-LIRE LE DOC FIRESTORE APRÈS TRANSACTION POUR AFFICHER LE VRAI SOLDE
+                    const updatedUserSnap = await getDoc(doc(db, "users", currentUid));
+                    const verifiedUserData = updatedUserSnap.exists() ? updatedUserSnap.data() : null;
+                    verifiedSoldeFromFirestore = verifiedUserData?.walletBalance ?? verifiedUserData?.wallet?.soldeDisponible ?? 0;
 
-                      await addDoc(collection(db, "commissions"), {
-                        userId: currentUid,
-                        userName: profile?.artisticName || profile?.name || currentUser.displayName || "Membre Gombo",
-                        amount: feeAmount,
-                        cachet: cachetVal,
-                        gomboTitle: newGomboTitle.trim(),
-                        gomboId: uniqueId,
-                        rate: 0.025,
-                        createdAt: new Date().toISOString()
-                      });
+                    // Mettre à jour le state local profile
+                    if (setProfile) {
+                      setProfile(prev => prev ? {
+                        ...prev,
+                        walletBalance: verifiedSoldeFromFirestore,
+                        balance: verifiedSoldeFromFirestore,
+                        wallet: {
+                          ...(prev.wallet || {}),
+                          soldeDisponible: verifiedSoldeFromFirestore,
+                          soldeBloque: verifiedUserData?.wallet?.soldeBloque ?? 0
+                        }
+                      } : null);
                     }
 
-                    // Enregistrer les fonds bloqués en séquestre
-                    if (cachetVal > 0) {
-                      await recordWalletTransaction({
-                        userId: currentUid,
-                        userName: profile?.artisticName || profile?.name || currentUser.displayName || "Membre Gombo",
-                        type: "fonds_bloques",
-                        amount: cachetVal,
-                        status: "fonds_bloques",
-                        gomboId: uniqueId,
-                        contractId: uniqueId,
-                        description: `Fonds bloqués en séquestre pour le gombo "${newGomboTitle.trim()}"`
-                      });
+                    // Notifier les composants de la mise à jour du solde réel
+                    window.dispatchEvent(new CustomEvent("wallet_balance_updated", { detail: { newBalance: verifiedSoldeFromFirestore } }));
+                    window.dispatchEvent(new CustomEvent("wallet_updated", { detail: { newBalance: verifiedSoldeFromFirestore } }));
+
+                    clearDraft();
+                    setShowPublishConfirmBottomSheet(false);
+                    try { audioSynth.playValidationSuccess(); } catch (_) {}
+                    alert(`🎉 Félicitations ! Votre publication a été débitée de votre Wallet et est désormais EN LIGNE !\n\nSolde actualisé depuis Firestore : ${verifiedSoldeFromFirestore.toLocaleString('fr-FR')} FCFA`);
+                    setActiveMenu("user_terrain");
+                  } catch (err: any) {
+                    if (err.message === "INSUFFICIENT_FUNDS") {
+                      setShowPublishConfirmBottomSheet(false);
+                      setShowInsufficientFundsModal(true);
+                    } else {
+                      alert("Erreur lors de la publication : " + (err.message || "Erreur réseau"));
                     }
+                  } finally {
+                    setPublishLoading(false);
                   }
-
-                  if (activePublishType === "reel") {
-                    // Just create a reel post
-                    const newPostId = "post_reel_" + Date.now();
-                    const newP: Post = {
-                      id: newPostId,
-                      userId: currentUid,
-                      authorName: currentUser.displayName || "Artiste",
-                      authorArtisticName: profile?.artisticName || currentUser.displayName || "Artiste",
-                      content: `📹 Nouveau Réel publié !\n\n${newGomboDesc}`,
-                      likes: 0,
-                      comments: 0,
-                      isFlagged: false,
-                      timestamp: new Date().toISOString(),
-                      mediaUrl: publishAudio,
-                      mediaType: "video"
-                    } as any;
-                    setPosts(prev => [newP, ...prev]);
-                    await saveToFirestore("posts", newP.id, newP);
-                  } else {
-                    const newG: Gombo = {
-                      id: uniqueId,
-                      title: `🎖️ (${categoryLabel}) ${newGomboTitle}`,
-                      description: newGomboDesc + (selectedPublishTags.length > 0 ? `\n\nTags: ${selectedPublishTags.map(t => `#${t}`).join(" ")}` : ""),
-                      budget: newGomboPrice,
-                      commissionRate: 0.025,
-                      location: `${newGomboQuartier}, ${newGomboCity}`,
-                      city: newGomboCity,
-                      quartier: newGomboQuartier,
-                      lieuPrecis: newGomboLieuPrecis || "Sur scène",
-                      organizerId: currentUid,
-                      organizerName: profile?.artisticName || profile?.name || currentUser.displayName || "Artiste",
-                      timestamp: new Date().toISOString(),
-                      applicantsCount: 0,
-                      status: "PUBLISHED",
-                      visible: true,
-                      adminValidated: true,
-                      depositConfirmed: true,
-                      paymentMethod: "wallet_debit",
-                      paymentStatus: "paid",
-                      publishedAt: new Date().toISOString(),
-                      isBoosted: false,
-                      date: newGomboDate,
-                      time: `${newGomboHeureDebut} - ${newGomboHeureFin}`,
-                      category: categoryLabel,
-                      styleMusical: newGomboStyleMusical || "Tous styles",
-                      tenueExigee: newGomboTenueExigee || "Tenue de scène libre",
-                      experienceSouhaitee: newGomboExperienceSouhaitee || "Tous niveaux bienvenus",
-                      nombreRecherche: newGomboNombreRecherche,
-                      isRenfort: activePublishType === "renfort",
-                      transportFee: activePublishType === "renfort" ? newGomboTransportFee : 0,
-                      repetitionsCount: activePublishType === "renfort" ? newGomboRepetitionsCount : 0,
-                      repetitionsSchedule: activePublishType === "renfort" ? newGomboRepetitionsSchedule : "",
-                      repetitionsDates: activePublishType === "renfort" ? newGomboRepetitionsDates : ""
-                    };
-
-                    if (multiplePublishPhotos.length > 0) {
-                      (newG as any).coverUrl = multiplePublishPhotos[0];
-                      (newG as any).photos = multiplePublishPhotos;
-                    }
-                    if (publishAudio) {
-                      (newG as any).audioUrl = publishAudio;
-                    }
-
-                    setGombos(prev => [newG, ...prev]);
-                    await saveToFirestore("gombos", newG.id, newG);
-
-                    const newPostId = "post_new_" + Date.now();
-                    const newP: Post = {
-                      id: newPostId,
-                      userId: currentUid,
-                      authorName: currentUser.displayName || "Artiste",
-                      authorArtisticName: profile?.artisticName || currentUser.displayName || "Artiste",
-                      content: `📢 [${categoryLabel}] ${newGomboTitle}\n\n📍 Lieu : ${newGomboQuartier}, ${newGomboCity}\n💰 Budget : ${newGomboPrice.toLocaleString('fr-FR')} FCFA\n📅 Date : ${newGomboDate}\n\n${newGomboDesc}`,
-                      likes: 0,
-                      comments: 0,
-                      isFlagged: false,
-                      timestamp: new Date().toISOString()
-                    };
-                    if (multiplePublishPhotos.length > 0) newP.mediaUrl = multiplePublishPhotos[0];
-                    if (publishAudio) (newP as any).audioUrl = publishAudio;
-                    setPosts(prev => [newP, ...prev]);
-                    await saveToFirestore("posts", newP.id, newP);
-                  }
-
-                  setPublishLoading(false);
-                  clearDraft();
-                  try { audioSynth.playValidationSuccess(); } catch (_) {}
-                  alert("🎉 Félicitations ! Votre publication a été débitée de votre Wallet et est désormais EN LIGNE !");
-                  setActiveMenu("user_terrain");
                 };
 
                 return (
@@ -4753,6 +4878,102 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         </div>
                       </div>
                     )}
+
+                    {/* Bottom-Sheet Confirmation Avant Publication (Mandatory Android Bottom-Sheet) */}
+                    <AndroidBottomSheet
+                      isOpen={showPublishConfirmBottomSheet}
+                      onClose={() => { if (!publishLoading) setShowPublishConfirmBottomSheet(false); }}
+                      title="Confirmation Financière"
+                    >
+                      {publishConfirmData && (
+                        <div className="space-y-4 pt-1 text-left">
+                          <div className="bg-afri-gold/10 border border-afri-gold/30 rounded-2xl p-3.5 flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-afri-gold/20 flex items-center justify-center text-afri-gold font-bold text-sm">
+                                👑
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-afri-text-sec uppercase font-mono">Statut du Compte</p>
+                                <p className="text-xs font-black text-afri-gold uppercase tracking-wide">
+                                  {publishConfirmData.isPremium ? "Compte Premium" : "Compte Standard"}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-xs font-mono font-bold bg-afri-gold/20 text-afri-gold px-2.5 py-1 rounded-full border border-afri-gold/30">
+                              {(publishConfirmData.rate * 100).toFixed(1)} % de frais
+                            </span>
+                          </div>
+
+                          <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 space-y-2.5 font-mono text-xs">
+                            <div className="flex justify-between items-center">
+                              <span className="text-afri-text-sec">Cachet du Gombo :</span>
+                              <span className="font-bold text-afri-text">{publishConfirmData.cachet.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+
+                            <div className="flex justify-between items-center">
+                              <span className="text-afri-text-sec">Taux de frais applicable :</span>
+                              <span className="font-bold text-afri-gold">{(publishConfirmData.rate * 100).toFixed(1)} %</span>
+                            </div>
+
+                            <div className="flex justify-between items-center">
+                              <span className="text-afri-text-sec">Montant exact des frais :</span>
+                              <span className="font-bold text-amber-400">{publishConfirmData.fee.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+
+                            <div className="flex justify-between items-center">
+                              <span className="text-afri-text-sec">Montant à séquestrer :</span>
+                              <span className="font-bold text-afri-gold">{publishConfirmData.cachet.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+
+                            <div className="pt-2 border-t border-afri-border flex justify-between items-center">
+                              <span className="text-afri-text font-bold uppercase text-xs">Total débité du Wallet :</span>
+                              <span className="font-black text-emerald-400 text-sm">{publishConfirmData.total.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+
+                            <div className="pt-2 border-t border-dashed border-afri-border/60 flex justify-between items-center">
+                              <span className="text-afri-text-sec">Solde avant opération :</span>
+                              <span className="font-bold text-afri-text">{publishConfirmData.soldeAvant.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+
+                            <div className="flex justify-between items-center">
+                              <span className="text-afri-text-sec">Solde après opération :</span>
+                              <span className="font-bold text-emerald-400">{publishConfirmData.soldeApres.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+                          </div>
+
+                          <p className="text-[10px] text-afri-text-sec text-center leading-relaxed">
+                            En cliquant sur Confirmer, votre wallet sera débité de {publishConfirmData.total.toLocaleString('fr-FR')} FCFA, le cachet sera placé sous séquestre sécurisé, et votre Gombo sera publié instantanément.
+                          </p>
+
+                          <div className="flex gap-3 pt-2">
+                            <button
+                              type="button"
+                              disabled={publishLoading}
+                              onClick={() => setShowPublishConfirmBottomSheet(false)}
+                              className="flex-1 py-3 bg-afri-bg hover:bg-afri-bg-sec text-afri-text-sec font-bold text-xs uppercase rounded-xl border border-afri-border transition-all cursor-pointer"
+                            >
+                              Annuler
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={publishLoading}
+                              onClick={executeConfirmedPublication}
+                              className="flex-1 py-3 bg-gradient-to-r from-afri-gold to-[#F1C40F] hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {publishLoading ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                  <span>Traitement...</span>
+                                </>
+                              ) : (
+                                <span>Confirmer</span>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </AndroidBottomSheet>
 
                     {/* Draft restoration alert banner */}
                     {publishDraftDetected && (
@@ -4832,8 +5053,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               </div>
                             )}
                             <div className="flex justify-between items-center text-xs">
-                              <span className="text-afri-text-sec">Réf ID :</span>
-                              <span className="font-mono text-[10px] bg-afri-bg-sec px-2 py-0.5 rounded text-afri-text-sec">{createdPubRefId}</span>
+                              <span className="text-afri-text-sec">Référence du gombo :</span>
+                              <span className="font-mono text-[10px] bg-afri-bg-sec px-2 py-0.5 rounded text-afri-text-sec">Gombo Réf {formatGomboRefDisplay(createdPubRefId)}</span>
                             </div>
                             <div className="flex justify-between items-center text-xs">
                               <span className="text-afri-text-sec">Statut :</span>
