@@ -3,6 +3,27 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 
 import { PremiumEngine } from "./premiumEngine";
 
+/**
+ * SINGLE CANONICAL SOURCE OF TRUTH RESOLUTION FOR WALLET BALANCE
+ * Priority:
+ * 1. wallet.soldeDisponible (nested canonical field)
+ * 2. walletBalance (top-level numeric field)
+ * 3. balance (legacy fallback field)
+ */
+export function getCanonicalWalletBalance(userData: any): number {
+  if (!userData) return 0;
+  if (typeof userData.wallet?.soldeDisponible === "number") {
+    return userData.wallet.soldeDisponible;
+  }
+  if (typeof userData.walletBalance === "number") {
+    return userData.walletBalance;
+  }
+  if (typeof userData.balance === "number") {
+    return userData.balance;
+  }
+  return 0;
+}
+
 // Global in-memory cache for platform fee rate (default 2.5% during Beta)
 let currentFeeRate = 0.025;
 

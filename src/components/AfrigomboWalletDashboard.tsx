@@ -38,7 +38,7 @@ import { db, gomboDB } from "../firebase";
 import { collection, query, where, getDocs, addDoc, onSnapshot, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
 import { supportConfig } from "../supportConfig";
-import { recordWalletTransaction } from "../lib/financial";
+import { recordWalletTransaction, getCanonicalWalletBalance } from "../lib/financial";
 import { SupportService } from "../services/SupportService";
 import { useAppSettings } from "../context/AppSettingsContext";
 import { PremiumEngine } from "../lib/premiumEngine";
@@ -66,16 +66,22 @@ export default function AfrigomboWalletDashboard({
   const historyRef = useRef<HTMLDivElement>(null);
   
   // Real-time ledger states from users/{uid}
-  const [wallet, setWallet] = useState({ 
-    soldeDisponible: 0, 
-    soldeBloque: 0,
-    revenus: 0,
-    depots: 0,
-    retraits: 0,
-    gainsMensuels: 0,
-    revenusMois: 0,
-    economiesPremium: 0,
-    niveauWallet: "Standard"
+  const [wallet, setWallet] = useState(() => {
+    const initialSolde = getCanonicalWalletBalance(currentUserProfile);
+    const initialBloque = currentUserProfile?.wallet?.soldeBloque || 0;
+    const isUserPremium = PremiumEngine.isPremium(currentUserProfile);
+    const resolvedNiveau = isUserPremium ? "PREMIUM" : (currentUserProfile?.wallet?.niveauWallet || "Standard");
+    return {
+      soldeDisponible: initialSolde,
+      soldeBloque: initialBloque,
+      revenus: currentUserProfile?.wallet?.revenus || 0,
+      depots: currentUserProfile?.wallet?.depots || 0,
+      retraits: currentUserProfile?.wallet?.retraits || 0,
+      gainsMensuels: currentUserProfile?.wallet?.gainsMensuels || 0,
+      revenusMois: currentUserProfile?.wallet?.revenusMois || 0,
+      economiesPremium: currentUserProfile?.wallet?.economiesPremium || 0,
+      niveauWallet: resolvedNiveau
+    };
   });
   const [transactions, setTransactions] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
@@ -203,7 +209,7 @@ export default function AfrigomboWalletDashboard({
     const unsubProfile = onSnapshot(doc(db, "users", uid), (snap) => {
       if (snap.exists()) {
         const uData = snap.data();
-        const solde = uData.walletBalance ?? uData.wallet?.soldeDisponible ?? 0;
+        const solde = getCanonicalWalletBalance(uData);
         const isUserPremium = PremiumEngine.isPremium(uData) || PremiumEngine.isPremium(currentUserProfile);
         const resolvedNiveau = isUserPremium ? "PREMIUM" : (uData.wallet?.niveauWallet || "Standard");
         setWallet({
