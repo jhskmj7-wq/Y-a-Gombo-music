@@ -212,7 +212,7 @@ export const safeStringify = (obj: any, space?: string | number): string => {
 
   try {
     const clean = deepSanitize(obj);
-    return JSON.stringify(clean, null, space);
+    return JSON.stringify(clean, getCircularReplacer(), space);
   } catch (_) {
     try {
       if (obj instanceof Error) return `${obj.name}: ${obj.message}`;

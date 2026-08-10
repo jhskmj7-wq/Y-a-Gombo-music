@@ -17,6 +17,10 @@ export default function PWAHandler() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
+      if (typeof window !== "undefined") {
+        if ((window as any)._afrigombo_sw_registered) return;
+        (window as any)._afrigombo_sw_registered = true;
+      }
       console.log('📡 [PWA] Service Worker inscrit avec succès:', r?.scope || 'Inscrit');
     },
     onRegisterError(error) {
