@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { gomboDB, db } from "../../firebase";
 import {
-  collection, doc, onSnapshot, setDoc, updateDoc, addDoc, query, orderBy, limit
+  collection, doc, onSnapshot, setDoc, updateDoc, addDoc, query, orderBy, limit, serverTimestamp
 } from "firebase/firestore";
 
 export interface AdminDeploymentCenterProps {
@@ -94,7 +94,11 @@ export default function AdminDeploymentCenter({
 
   // 1. DEFAULT FEATURE FLAGS INITIALIZER
   const defaultFlags: FeatureFlagItem[] = [
-    { id: "marche", name: "Grand Marché & Annonces", category: "Économie", enabled: true, status: "validated", description: "Plateforme de transactions et petites annonces" },
+    { id: "grandMarket", name: "Grand Marché & Annonces", category: "Économie", enabled: true, status: "validated", description: "Plateforme de transactions et petites annonces" },
+    { id: "updateJournal", name: "Journal des mises à jour", category: "Système", enabled: true, status: "validated", description: "Registre de modifications et notes de version" },
+    { id: "downloads", name: "Téléchargements de documents", category: "Média", enabled: true, status: "validated", description: "Téléchargement sécurisé des reçus et documents" },
+    { id: "backups", name: "Sauvegardes du Système", category: "Sécurité", enabled: true, status: "validated", description: "Sauvegardes de sécurité automatiques" },
+    { id: "avatar", name: "Avatar Personnalisé", category: "Profil", enabled: true, status: "validated", description: "Système de personnalisation d'avatars et boutiques" },
     { id: "wallet", name: "Wallet Souverain AFRIPAY", category: "Finance", enabled: true, status: "validated", description: "Solde rechargeable et virements sécurisés" },
     { id: "chat", name: "Messagerie Instantanée V2", category: "Communication", enabled: true, status: "validated", description: "Messages cryptés et notifications" },
     { id: "radar", name: "Radar Géolocalisé Nearby", category: "Navigation", enabled: true, status: "validated", description: "Cartographie et proximité des membres" },
@@ -133,17 +137,91 @@ export default function AdminDeploymentCenter({
       setDeploymentHistory(records);
     }, (err) => console.error("Err deployment stream:", err));
 
-    // Feature Flags stream
+    // Combined feature flags streams
+    const targetKeys = ["grandMarket", "updateJournal", "downloads", "backups", "avatar"];
     const flagsRef = doc(db, "settings", "feature_flags");
+    const sysConfigRef = doc(db, "systemConfig", "features");
+
+    let lastSettingsFlags: FeatureFlagItem[] = [];
+    let lastSysFlags: Record<string, { enabled: boolean; updatedAt?: any }> = {};
+
+    const updateCombinedFlags = (
+      settingsFlags: FeatureFlagItem[],
+      sysFlags: Record<string, { enabled: boolean; updatedAt?: any }>
+    ) => {
+      const combined = defaultFlags.map(f => {
+        if (targetKeys.includes(f.id)) {
+          const sysValue = sysFlags[f.id];
+          if (sysValue !== undefined) {
+            return {
+              ...f,
+              enabled: sysValue.enabled,
+              status: sysValue.enabled ? "validated" : "disabled" as any
+            };
+          }
+          return f;
+        } else {
+          const settingsMatch = settingsFlags.find(sf => sf.id === f.id);
+          if (settingsMatch) {
+            return settingsMatch;
+          }
+          return f;
+        }
+      });
+      setFeatureFlags(combined);
+    };
+
     const unsubFlags = onSnapshot(flagsRef, (docSnap) => {
       if (docSnap.exists() && docSnap.data().flags) {
-        setFeatureFlags(docSnap.data().flags);
+        lastSettingsFlags = docSnap.data().flags;
       } else {
-        setFeatureFlags(defaultFlags);
+        lastSettingsFlags = [];
       }
+      updateCombinedFlags(lastSettingsFlags, lastSysFlags);
     }, (err) => {
       console.error("Err feature flags stream:", err);
-      setFeatureFlags(defaultFlags);
+      updateCombinedFlags(lastSettingsFlags, lastSysFlags);
+    });
+
+    const unsubSysConfig = onSnapshot(sysConfigRef, async (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as Record<string, { enabled: boolean; updatedAt?: any }>;
+        lastSysFlags = data;
+        
+        // Auto-initialize any missing keys in systemConfig/features to true
+        const missingKeys = targetKeys.filter(k => data[k] === undefined);
+        if (missingKeys.length > 0) {
+          const updates: Record<string, any> = {};
+          missingKeys.forEach(k => {
+            updates[k] = {
+              enabled: true,
+              updatedAt: serverTimestamp()
+            };
+          });
+          try {
+            await setDoc(sysConfigRef, updates, { merge: true });
+          } catch (e) {
+            console.error("Error auto-initializing systemConfig/features keys:", e);
+          }
+        }
+      } else {
+        lastSysFlags = {};
+        const initialData = {
+          grandMarket: { enabled: true, updatedAt: serverTimestamp() },
+          updateJournal: { enabled: true, updatedAt: serverTimestamp() },
+          downloads: { enabled: true, updatedAt: serverTimestamp() },
+          backups: { enabled: true, updatedAt: serverTimestamp() },
+          avatar: { enabled: true, updatedAt: serverTimestamp() }
+        };
+        try {
+          await setDoc(sysConfigRef, initialData);
+        } catch (e) {
+          console.error("Error auto-initializing systemConfig/features document:", e);
+        }
+      }
+      updateCombinedFlags(lastSettingsFlags, lastSysFlags);
+    }, (err) => {
+      console.error("Err systemConfig stream:", err);
     });
 
     // Error logs / Bug reports stream
@@ -164,38 +242,61 @@ export default function AdminDeploymentCenter({
     return () => {
       unsubDeploys();
       unsubFlags();
+      unsubSysConfig();
       unsubBugs();
     };
   }, []);
 
   // TOGGLE FEATURE FLAG IN FIRESTORE
   const handleToggleFlag = async (flagId: string) => {
-    const updatedFlags: FeatureFlagItem[] = featureFlags.map((f) => {
+    const targetKeys = ["grandMarket", "updateJournal", "downloads", "backups", "avatar"];
+    const isTarget = targetKeys.includes(flagId);
+
+    const currentFlag = featureFlags.find((f) => f.id === flagId);
+    if (!currentFlag) return;
+
+    const newEnabled = !currentFlag.enabled;
+
+    // Optimistically update React state
+    const updatedFlags = featureFlags.map((f) => {
       if (f.id === flagId) {
-        const newEnabled = !f.enabled;
-        const newStatus: FeatureFlagItem["status"] = newEnabled
-          ? (f.status === "disabled" ? "experimental" : f.status)
-          : "disabled";
         return {
           ...f,
           enabled: newEnabled,
-          status: newStatus
+          status: newEnabled
+            ? (f.status === "disabled" ? "experimental" : f.status)
+            : "disabled" as any
         };
       }
       return f;
     });
-
     setFeatureFlags(updatedFlags);
-    try {
-      const flagsRef = doc(db, "settings", "feature_flags");
-      await setDoc(flagsRef, {
-        flags: updatedFlags,
-        updatedAt: new Date().toISOString(),
-        updatedBy: founderEmail
-      }, { merge: true });
-      try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
-    } catch (err) {
-      console.error("Erreur mise à jour feature flag:", err);
+
+    if (isTarget) {
+      try {
+        const sysConfigRef = doc(db, "systemConfig", "features");
+        await setDoc(sysConfigRef, {
+          [flagId]: {
+            enabled: newEnabled,
+            updatedAt: serverTimestamp()
+          }
+        }, { merge: true });
+        try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
+      } catch (err) {
+        console.error("Erreur systemConfig update:", err);
+      }
+    } else {
+      try {
+        const flagsRef = doc(db, "settings", "feature_flags");
+        await setDoc(flagsRef, {
+          flags: updatedFlags,
+          updatedAt: new Date().toISOString(),
+          updatedBy: founderEmail
+        }, { merge: true });
+        try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
+      } catch (err) {
+        console.error("Erreur mise à jour feature flag:", err);
+      }
     }
   };
 

@@ -333,6 +333,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           fee: freshFinancials.fee,
           totalDebit: freshFinancials.total,
           status: "PUBLISHED",
+          visible: true,
+          adminValidated: true,
           imageUrl: uploadedImageUrl,
           audioUrl: uploadedAudioUrl,
           latitude: latitude,

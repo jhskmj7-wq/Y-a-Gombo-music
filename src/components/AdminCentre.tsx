@@ -6117,10 +6117,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         if (view === "heritage") setActiveMenu("user_heritage");
                         else if (view === "home" || view === "terrain") setActiveMenu("user_terrain");
                         else if (view === "settings") setActiveMenu("settings");
-                        else if (view === "admin" || view === "admin_centre" || view === "dashboard" || view === "command_center" || view === "super_admin") {
-                          setPerspective("admin");
-                          setActiveMenu(view === "super_admin" ? "super_admin" : "dashboard");
-                          addToTerminal("[ADMIN] Entrée au Centre de Commandement.");
+                        else if (view === "super_admin") {
+                          navigate("/Le-Throne-Of-The-Founder?tab=founder");
+                        }
+                        else if (view === "admin" || view === "admin_centre" || view === "dashboard" || view === "command_center") {
+                          navigate("/Le-Throne-Of-The-Founder?tab=command");
                         }
                         else setActiveMenu(view as any);
                       }}
@@ -6704,13 +6705,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         }
                       }}
                       onNavigateToFounder={() => {
-                        setPerspective("admin");
-                        setActiveMenu("dashboard");
-                        addToTerminal("[ADMIN] Entrée au Centre de Commandement.");
+                        navigate("/Le-Throne-Of-The-Founder?tab=command");
                       }}
                       onNavigateToThrone={() => {
-                        setPerspective("admin");
-                        setActiveMenu("super_admin");
+                        navigate("/Le-Throne-Of-The-Founder?tab=founder");
                       }}
                       onSupportClick={() => setIsSupportModalOpen(true)}
                     />
@@ -8546,7 +8544,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           <button
             id="admin-nav-dashboard"
             onClick={() => {
-              setActiveMenu("dashboard");
+              navigate("/Le-Throne-Of-The-Founder?tab=command");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-2 xs:px-3 sm:px-4 rounded-lg ${
@@ -8682,7 +8680,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             <button
               id="admin-nav-super_admin"
               onClick={() => {
-                setActiveMenu("super_admin");
+                navigate("/Le-Throne-Of-The-Founder?tab=founder");
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               }}
               className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${

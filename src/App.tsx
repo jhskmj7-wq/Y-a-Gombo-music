@@ -28,6 +28,7 @@ const FloatingAudioPlayer = lazyWithRetry(() => import("./components/FloatingAud
 const LivingInteractions = lazyWithRetry(() => import("./components/LivingInteractions").then(m => ({ default: m.LivingInteractions })));
 const PWAHandler = lazyWithRetry(() => import("./components/PWAHandler"));
 const PWADiagnosticPage = lazyWithRetry(() => import("./components/PWADiagnosticPage"));
+const TheThroneOfTheFounder = lazyWithRetry(() => import("./components/TheThroneOfTheFounder"));
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
   try {
@@ -251,6 +252,26 @@ function App() {
               <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg" />}>
                 <PWADiagnosticPage />
               </Suspense>
+            } 
+          />
+          <Route 
+            path="/The-Throne-Of-The-Founder" 
+            element={
+              <AuthGuard>
+                <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg animate-pulse" />}>
+                  <TheThroneOfTheFounder />
+                </Suspense>
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/Le-Throne-Of-The-Founder" 
+            element={
+              <AuthGuard>
+                <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg animate-pulse" />}>
+                  <TheThroneOfTheFounder />
+                </Suspense>
+              </AuthGuard>
             } 
           />
           <Route path="*" element={<Navigate to="/home" replace />} />

@@ -1,0 +1,25 @@
+{
+  "packageId": "com.afrigombo.elite",
+  "host": "afrigombo-elite.vercel.app",
+  "name": "AFRIGOMBO",
+  "shortName": "AFRIGOMBO",
+  "themeColor": "#050505",
+  "backgroundColor": "#050505",
+  "startUrl": "/",
+  "iconUrl": "https://afrigombo-elite.vercel.app/pwa-512x512.png",
+  "maskableIconUrl": "https://afrigombo-elite.vercel.app/pwa-512x512-maskable.png",
+  "orientation": "portrait",
+  "display": "standalone",
+  "shortcuts": [],
+  "features": {
+    "locationDelegation": true,
+    "playBilling": false
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "signingKey": {
+    "path": "./afrigombo-elite.keystore",
+    "alias": "afrigombo-key"
+  }
+}
