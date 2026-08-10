@@ -17,6 +17,7 @@ import { getGomboRef } from "../lib/gomboIdHelper";
 import { useLocations } from "../hooks/useLocations";
 import UserLocationProposalModal from "./common/UserLocationProposalModal";
 import { Plus } from "lucide-react";
+import { AndroidBottomSheet } from "./common/GlobalPortalModal";
 
 const ABIDJAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", "Abobo", 
@@ -101,14 +102,17 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const [depositDetails, setDepositDetails] = useState<{
     cachet: number;
     fee: number;
+    sequestre: number;
     total: number;
+    rate: number;
+    isPremium: boolean;
     requiresDeposit: boolean;
     refId: string;
     typeName: string;
     authorName: string;
     title: string;
     userSolde?: number;
-  }>({ cachet: 0, fee: 0, total: 0, requiresDeposit: false, refId: "", typeName: "", authorName: "", title: "", userSolde: 0 });
+  }>({ cachet: 0, fee: 0, sequestre: 0, total: 0, rate: 0.025, isPremium: false, requiresDeposit: false, refId: "", typeName: "", authorName: "", title: "", userSolde: 0 });
   const [errorMsg, setErrorMsg] = useState("");
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [uploadingState, setUploadingState] = useState<{ [key: string]: boolean }>({});
@@ -188,7 +192,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       setDepositDetails({
         cachet: cachetVal,
         fee: financials.fee,
+        sequestre: financials.sequestre,
         total: financials.total,
+        rate: financials.rate,
+        isPremium: financials.isPremium,
         requiresDeposit: financials.total > 0,
         refId: `PUB-${Date.now()}`,
         typeName: selectedType,
@@ -242,7 +249,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
         // Debit Wallet
         finalNewSolde = Math.max(0, liveSolde - freshFinancials.total);
-        const newBloque = liveBloque + cachetVal;
+        const newBloque = liveBloque + freshFinancials.sequestre;
         transaction.update(userRef, {
           walletBalance: finalNewSolde,
           balance: finalNewSolde,
@@ -977,28 +984,28 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             <div className="flex justify-between items-center">
               <span className="text-afri-text-sec">Statut :</span>
               <span className="font-bold text-[#D4AF37] flex items-center gap-1">
-                {isUserPremium ? "👑 PREMIUM" : "👤 STANDARD"}
+                {depositDetails.isPremium ? "👑 PREMIUM" : "👤 STANDARD"}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-afri-text-sec">Cachet du Gombo :</span>
-              <span className="font-mono font-bold text-afri-text">{depositDetails.cachet.toLocaleString('fr-FR')} F</span>
+              <span className="text-afri-text-sec">Cachet :</span>
+              <span className="font-mono font-bold text-afri-text">{depositDetails.cachet.toLocaleString('fr-FR')} FCFA</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-afri-text-sec">Taux appliqué :</span>
-              <span className="font-mono text-afri-text-sec">{isUserPremium ? "1,5 %" : "2,5 %"}</span>
+              <span className="text-afri-text-sec">Commission (Taux applicable) :</span>
+              <span className="font-mono text-afri-text-sec">{(depositDetails.rate * 100).toFixed(1).replace('.', ',')} %</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-afri-text-sec">Frais :</span>
-              <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.fee.toLocaleString('fr-FR')} F</span>
+              <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.fee.toLocaleString('fr-FR')} FCFA</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-afri-text-sec">Montant séquestré :</span>
-              <span className="font-mono font-bold text-sky-400">{depositDetails.cachet.toLocaleString('fr-FR')} F</span>
+              <span className="font-mono font-bold text-sky-400">{depositDetails.sequestre.toLocaleString('fr-FR')} FCFA</span>
             </div>
             <div className="flex justify-between items-center pt-2 border-t border-afri-border">
-              <span className="font-bold text-afri-text uppercase text-xs">Montant total prélevé :</span>
-              <span className="font-mono font-black text-amber-400 text-sm">{depositDetails.total.toLocaleString('fr-FR')} F</span>
+              <span className="font-bold text-afri-text uppercase text-xs">Total débité :</span>
+              <span className="font-mono font-black text-amber-400 text-sm">{depositDetails.total.toLocaleString('fr-FR')} FCFA</span>
             </div>
             <div className="flex justify-between items-center pt-1 border-t border-dashed border-afri-border/50">
               <span className="text-afri-text-sec">Solde disponible avant :</span>

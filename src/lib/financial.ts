@@ -68,12 +68,17 @@ export function calculatePlatformFee(amount: number, feeRate?: number): number {
  */
 export function calculatePublicationFinancials(cachet: number, feeRate?: number) {
   const cachetVal = Math.max(0, cachet);
-  const feeAmount = calculatePlatformFee(cachetVal, feeRate);
-  const totalToBlock = cachetVal + feeAmount;
+  const rate = typeof feeRate === "number" ? feeRate : currentFeeRate;
+  const feeAmount = Math.round(cachetVal * rate);
+  const montantSequestre = Math.max(0, cachetVal - feeAmount);
+  const totalDebite = cachetVal;
   return {
     cachet: cachetVal,
     fee: feeAmount,
-    total: totalToBlock
+    sequestre: montantSequestre,
+    total: totalDebite,
+    rate: rate,
+    isPremium: rate === 0.015
   };
 }
 

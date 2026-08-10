@@ -27,6 +27,7 @@ const BackgroundMusic = lazyWithRetry(() => import("./components/BackgroundMusic
 const FloatingAudioPlayer = lazyWithRetry(() => import("./components/FloatingAudioPlayer").then(m => ({ default: m.FloatingAudioPlayer })));
 const LivingInteractions = lazyWithRetry(() => import("./components/LivingInteractions").then(m => ({ default: m.LivingInteractions })));
 const PWAHandler = lazyWithRetry(() => import("./components/PWAHandler"));
+const PWADiagnosticPage = lazyWithRetry(() => import("./components/PWADiagnosticPage"));
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
   try {
@@ -241,6 +242,14 @@ function App() {
             element={
               <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg" />}>
                 <AuthPage />
+              </Suspense>
+            } 
+          />
+          <Route 
+            path="/pwa-diagnostic" 
+            element={
+              <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg" />}>
+                <PWADiagnosticPage />
               </Suspense>
             } 
           />

@@ -19,9 +19,9 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
 import { safeStringify, getCircularReplacer, safeJsonClone } from "../lib/jsonUtils";
-import { getEffectiveGomboId, generateGomboId, formatGomboIdDisplay } from "../lib/gomboIdHelper";
+import { getEffectiveGomboId, generateGomboId, formatGomboIdDisplay, formatGomboRefDisplay } from "../lib/gomboIdHelper";
 import { PremiumEngine } from "../lib/premiumEngine";
-import { getEffectiveCommissionRate, calculatePublicationFinancials, recordWalletTransaction } from "../lib/financial";
+import { getEffectiveCommissionRate, calculatePublicationFinancials, recordWalletTransaction, getCanonicalWalletBalance } from "../lib/financial";
 import { useNavigate } from "react-router-dom";
 import { lazyWithRetry } from "../lib/lazyWithRetry";
 import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";

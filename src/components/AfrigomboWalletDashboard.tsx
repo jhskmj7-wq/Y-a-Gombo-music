@@ -323,14 +323,15 @@ export default function AfrigomboWalletDashboard({
       let calculatedRevenus = 0;
 
       transactions.forEach(t => {
-        const isSuccess = t.status === "success" || !t.status || t.status === "Terminé" || t.status === "Paiement reçu";
+        const isSuccess = t.status === "success" || !t.status || t.status === "Terminé" || t.status === "Paiement reçu" || t.status === "validated" || t.status === "PAID" || t.status === "valide" || t.status === "fonds_liberes" || t.status === "approved" || t.status === "released" || t.status === "debloque";
         if (isSuccess) {
-          if (t.type === "deposit" || t.type === "depot" || t.type === "recharge_wallet") {
-            if (t.userId === uid) calculatedDepots += (t.amount || t.montant || 0);
-          } else if (t.type === "withdrawal" || t.type === "retrait") {
-            if (t.userId === uid) calculatedRetraits += (t.amount || t.montant || 0);
-          } else if (t.type === "release" || t.type === "deblocage_cachet") {
-            if (t.userId === uid || t.artistId === uid) calculatedRevenus += (t.amount || t.montant || 0);
+          const type = String(t.type || "").toLowerCase();
+          if (type === "deposit" || type === "depot" || type === "recharge_wallet" || type === "recharge" || type === "credit" || type === "credit_admin" || type === "credit_administrateur" || type === "deposit_confirmed") {
+            if (t.userId === uid || t.uid === uid) calculatedDepots += (t.amount || t.montant || 0);
+          } else if (type === "withdrawal" || type === "retrait" || type === "withdraw" || type === "withdraw_request" || type === "withdraw_approved") {
+            if (t.userId === uid || t.uid === uid) calculatedRetraits += (t.amount || t.montant || 0);
+          } else if (type === "release" || type === "deblocage_cachet" || type === "gain" || type === "revenu" || type === "prime_bonus" || type === "bonus" || type === "reward" || type === "recompense" || type === "transfer_received" || type === "transfert_recu") {
+            if (t.userId === uid || t.artistId === uid || t.uid === uid) calculatedRevenus += (t.amount || t.montant || 0);
           }
         }
       });
@@ -1024,6 +1025,41 @@ export default function AfrigomboWalletDashboard({
     return true;
   });
 
+  // --- REAL-TIME CALCULATED FINANCIAL METRICS FROM ACTUAL TRANSACTIONS ---
+  const isTxSuccess = (tx: any) => {
+    const status = String(tx.status || tx.statut || "").toLowerCase();
+    return !status || ["success", "validated", "paid", "valide", "fonds_liberes", "terminé", "paiement reçu", "approved", "released", "debloque"].includes(status);
+  };
+
+  const computedArgentRecu = transactions
+    .filter(tx => {
+      if (!isTxSuccess(tx)) return false;
+      const type = String(tx.type || "").toLowerCase();
+      return type === "deposit" || type === "depot" || type === "recharge_wallet" || type === "recharge" || type === "credit" || type === "credit_admin" || type === "credit_administrateur" || type === "deposit_confirmed";
+    })
+    .reduce((sum, tx) => sum + Math.abs(Number(tx.amount || tx.montant || 0)), 0);
+
+  const computedArgentDepense = transactions
+    .filter(tx => {
+      if (!isTxSuccess(tx)) return false;
+      const type = String(tx.type || "").toLowerCase();
+      return (
+        type === "withdrawal" || type === "retrait" || type === "withdraw" || type === "withdraw_request" || type === "withdraw_approved" ||
+        type === "purchase" || type === "achat" || type === "marketplace" || type === "premium" || type === "abonnement_premium" ||
+        type === "debit_publication" || type === "publication" || type === "achat_avatar" || type === "commission" || type === "commission_plateforme" ||
+        type === "transfer_sent" || type === "transfert_envoye"
+      );
+    })
+    .reduce((sum, tx) => sum + Math.abs(Number(tx.amount || tx.montant || 0)), 0);
+
+  const computedGains = transactions
+    .filter(tx => {
+      if (!isTxSuccess(tx)) return false;
+      const type = String(tx.type || "").toLowerCase();
+      return type === "release" || type === "deblocage_cachet" || type === "gain" || type === "revenu" || type === "prime_bonus" || type === "bonus" || type === "reward" || type === "recompense" || type === "transfer_received" || type === "transfert_recu";
+    })
+    .reduce((sum, tx) => sum + Math.abs(Number(tx.amount || tx.montant || 0)), 0);
+
   if (showWalletSettings) {
     return (
       <AndroidPageLayout
@@ -1445,7 +1481,7 @@ export default function AfrigomboWalletDashboard({
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-afri-bg/60 border border-afri-border text-[10px] font-mono text-emerald-400 font-bold">
                 <TrendingUp className="w-3 h-3" />
-                Gains : +{wallet.revenus?.toLocaleString('fr-FR') || 0} FCFA
+                Gains : +{computedGains.toLocaleString('fr-FR')} FCFA
               </span>
             </div>
           </div>
@@ -1548,7 +1584,7 @@ export default function AfrigomboWalletDashboard({
               📥 Argent reçu
             </span>
             <span className="text-sm xs:text-base font-black text-emerald-400 font-mono block truncate">
-              +{wallet.revenus?.toLocaleString('fr-FR') || 0} <span className="text-[9px]">FCFA</span>
+              +{computedArgentRecu.toLocaleString('fr-FR')} <span className="text-[9px]">FCFA</span>
             </span>
           </div>
 
@@ -1558,7 +1594,7 @@ export default function AfrigomboWalletDashboard({
               📤 Argent dépensé
             </span>
             <span className="text-sm xs:text-base font-black text-rose-400 font-mono block truncate">
-              -{(wallet.retraits || wallet.depots || 0).toLocaleString('fr-FR')} <span className="text-[9px]">FCFA</span>
+              -{computedArgentDepense.toLocaleString('fr-FR')} <span className="text-[9px]">FCFA</span>
             </span>
           </div>
 
