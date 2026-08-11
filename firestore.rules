@@ -112,32 +112,47 @@ service cloud.firestore {
     // WALLETS / TRANSACTIONS / PAYMENTS
     match /transactions/{id} {
       allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
-      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid);
-      allow update, delete: if isFounder();
+      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
     }
     match /walletTransactions/{id} {
       allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
-      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid);
-      allow update, delete: if isFounder();
+      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
     }
     match /walletDepositRequests/{id} {
       allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
       allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid);
-      allow update, delete: if isFounder();
+      allow update, delete: if isAdmin();
+    }
+    match /walletWithdrawalRequests/{id} {
+      allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
+      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid);
+      allow update, delete: if isAdmin();
     }
     match /walletRequests/{id} {
       allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
       allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid);
-      allow update, delete: if isFounder();
+      allow update, delete: if isAdmin();
+    }
+    match /betaTransactions/{id} {
+      allow read: if isSignedIn() || true;
+      allow create, update, delete: if isSignedIn();
+    }
+    match /transactionHistory/{id} {
+      allow read, create, update, delete: if isSignedIn();
+    }
+    match /adminAuditLogs/{id} {
+      allow read, create, update, delete: if isSignedIn();
     }
     match /payments/{id} {
       allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
-      allow write: if isFounder();
+      allow write: if isAdmin();
     }
     match /withdrawals/{id} {
       allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
       allow create: if isSignedIn() && incoming().userId == request.auth.uid && incoming().status == 'pending';
-      allow update, delete: if isFounder();
+      allow update, delete: if isAdmin();
     }
 
     // MESSAGING
@@ -211,10 +226,11 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // COMMISSIONS
+    // COMMISSIONS / COFFRE DES FRAIS FONDATEUR
     match /commissions/{id} {
       allow read: if isAdmin();
-      allow write: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isFounder();
     }
 
     // Waiting Features

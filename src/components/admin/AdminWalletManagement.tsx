@@ -13,12 +13,14 @@ import {
 } from "firebase/firestore";
 import { PaymentEngine } from "../../lib/paymentEngine";
 import { safeStringify } from "../../lib/jsonUtils";
+import FounderFeesVault from "./FounderFeesVault";
 
 interface AdminWalletManagementProps {
   currentUser?: any;
 }
 
 export default function AdminWalletManagement({ currentUser }: AdminWalletManagementProps) {
+  const [walletSubTab, setWalletSubTab] = useState<"wallet_central" | "founder_vault">("wallet_central");
   const [users, setUsers] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -341,7 +343,38 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
         )}
       </AnimatePresence>
 
-      {/* Header Banner */}
+      {/* Sub-Navigation Tabs: Wallet Central vs Coffre des Frais Fondateur */}
+      <div className="flex items-center gap-2 p-1.5 bg-afri-bg-sec border border-afri-border rounded-2xl w-fit max-w-full overflow-x-auto">
+        <button
+          onClick={() => setWalletSubTab("wallet_central")}
+          className={`px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-2 shrink-0 cursor-pointer ${
+            walletSubTab === "wallet_central"
+              ? "bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20 font-black"
+              : "text-afri-text-sec hover:text-afri-text"
+          }`}
+        >
+          <Wallet className="w-4 h-4" />
+          <span>Wallet Central & Utilisateurs</span>
+        </button>
+
+        <button
+          onClick={() => setWalletSubTab("founder_vault")}
+          className={`px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-2 shrink-0 cursor-pointer ${
+            walletSubTab === "founder_vault"
+              ? "bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20 font-black"
+              : "text-afri-text-sec hover:text-afri-text"
+          }`}
+        >
+          <Landmark className="w-4 h-4" />
+          <span>Coffre des Frais (Fondateur)</span>
+        </button>
+      </div>
+
+      {walletSubTab === "founder_vault" ? (
+        <FounderFeesVault currentUser={currentUser} />
+      ) : (
+        <>
+          {/* Header Banner */}
       <div className="p-6 rounded-3xl bg-afri-bg border border-[#D4AF37]/40 shadow-2xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
@@ -904,6 +937,8 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
           </div>
         )}
       </AnimatePresence>
+        </>
+      )}
 
     </div>
   );

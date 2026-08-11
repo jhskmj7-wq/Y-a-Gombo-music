@@ -28,8 +28,10 @@ import {
   Eye,
   EyeOff,
   Shield,
-  Fingerprint
+  Fingerprint,
+  Landmark
 } from "lucide-react";
+import FounderFeesVault from "./admin/FounderFeesVault";
 import { motion, AnimatePresence } from "motion/react";
 import { AndroidPageLayout } from "./layout/AndroidPageLayout";
 import { AndroidCard } from "./layout/AndroidCard";
@@ -91,6 +93,11 @@ export default function AfrigomboWalletDashboard({
   const [activeTab, setActiveTab] = useState<"all" | "flows" | "contracts" | "commissions" | "disputes">("all");
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [selectedTxDetails, setSelectedTxDetails] = useState<any | null>(null);
+  const [showFounderVaultView, setShowFounderVaultView] = useState(false);
+
+  const isAuthorizedSuperFounder = 
+    (currentUserProfile?.email || "").toLowerCase() === "jhs.kmj7@gmail.com" || 
+    Boolean(currentUserProfile?.isFounder || currentUserProfile?.isSuperFounder || currentUserProfile?.role === "admin");
   
   // Dialog states
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -1421,16 +1428,35 @@ export default function AfrigomboWalletDashboard({
           Mon Wallet Souverain
         </h1>
       </div>
-      <button 
-        id="btn-wallet-settings-toggle"
-        onClick={() => {
-          playSound("click");
-          setShowWalletSettings(true);
-        }}
-        className="p-2 text-zinc-400 hover:text-afri-gold transition-colors shrink-0 flex items-center justify-center bg-afri-bg-sec border border-afri-border rounded-xl w-9 h-9 active:scale-95"
-      >
-        <Settings className="w-4 h-4" />
-      </button>
+      <div className="flex items-center gap-2">
+        {isAuthorizedSuperFounder && (
+          <button
+            onClick={() => {
+              playSound("click");
+              setShowFounderVaultView(!showFounderVaultView);
+            }}
+            className={`px-3 py-1.5 rounded-xl text-[10px] font-mono font-black uppercase transition flex items-center gap-1.5 border cursor-pointer ${
+              showFounderVaultView 
+                ? "bg-[#D4AF37] text-black border-[#D4AF37] font-extrabold shadow-md shadow-[#D4AF37]/20" 
+                : "bg-afri-bg-sec text-[#D4AF37] border-[#D4AF37]/40 hover:bg-[#D4AF37]/10"
+            }`}
+            title="Consulter le Coffre des Frais Fondateur"
+          >
+            <Landmark className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Coffre des Frais</span>
+          </button>
+        )}
+        <button 
+          id="btn-wallet-settings-toggle"
+          onClick={() => {
+            playSound("click");
+            setShowWalletSettings(true);
+          }}
+          className="p-2 text-zinc-400 hover:text-afri-gold transition-colors shrink-0 flex items-center justify-center bg-afri-bg-sec border border-afri-border rounded-xl w-9 h-9 active:scale-95"
+        >
+          <Settings className="w-4 h-4" />
+        </button>
+      </div>
     </header>
   );
 
@@ -1441,6 +1467,18 @@ export default function AfrigomboWalletDashboard({
           moduleName="Wallet & Finances"
           message={maintenance.globalMessage}
           onBack={onBack}
+        />
+      </AndroidPageLayout>
+    );
+  }
+
+  if (showFounderVaultView && isAuthorizedSuperFounder) {
+    return (
+      <AndroidPageLayout header={customHeader} scrollable={true} className="pb-safe p-4">
+        <FounderFeesVault 
+          currentUser={currentUserProfile} 
+          userEmail={currentUserProfile?.email} 
+          onClose={() => setShowFounderVaultView(false)} 
         />
       </AndroidPageLayout>
     );

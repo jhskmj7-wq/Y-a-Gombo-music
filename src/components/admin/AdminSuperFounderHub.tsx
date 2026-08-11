@@ -3,7 +3,7 @@ import {
   LayoutDashboard, MessageSquare, CreditCard, MapPin, User, BarChart3, 
   FlaskConical, Music, Settings, Crown, ShieldCheck, RefreshCw, ChevronRight, X,
   Sparkles, Bell, Shield, Users, TrendingUp, LogOut, Radio, AlertOctagon, ArrowLeft, Rocket, Globe,
-  ShieldAlert, Wrench
+  ShieldAlert, Wrench, Landmark
 } from "lucide-react";
 import { lazyWithRetry } from "../../lib/lazyWithRetry";
 import { ErrorBoundary } from "../ErrorBoundary";
@@ -32,6 +32,7 @@ const AdminRevenue = lazyWithRetry(() => import("./AdminRevenue"));
 const AdminSettings = lazyWithRetry(() => import("./AdminSettings"));
 const MultimediaCenter = lazyWithRetry(() => import("./MultimediaCenter"));
 const AdminWalletManagement = lazyWithRetry(() => import("./AdminWalletManagement"));
+const FounderFeesVault = lazyWithRetry(() => import("./FounderFeesVault"));
 const AdminContracts = lazyWithRetry(() => import("./AdminContracts"));
 const AdminDeploymentCenter = lazyWithRetry(() => import("./AdminDeploymentCenter"));
 
@@ -40,6 +41,7 @@ export type AdminModuleType =
   | "dashboard"
   | "contracts"
   | "wallet_management"
+  | "coffre_frais"
   | "transactions"
   | "messaging"
   | "geolocation"
@@ -138,6 +140,7 @@ export default function AdminSuperFounderHub({
     { key: "security" as AdminModuleType, label: "🛡 Sécurité", icon: ShieldCheck, badge: "Pro" },
     { key: "strategic_decisions" as AdminModuleType, label: "📋 Décisions Stratégiques", icon: ShieldCheck, badge: "Gouvernance" },
     { key: "wallet_management" as AdminModuleType, label: "💰 Gestion Wallet", icon: ShieldCheck, badge: "Souverain" },
+    { key: "coffre_frais" as AdminModuleType, label: "🏛 Coffre des Frais", icon: Landmark, badge: "Fondateur" },
     { key: "transactions" as AdminModuleType, label: "💳 Transactions", icon: CreditCard, badge: undefined },
     { key: "contracts" as AdminModuleType, label: "📜 Contrats (Escrow)", icon: ShieldCheck, badge: "Séquestre" },
     { key: "users" as AdminModuleType, label: "👥 Utilisateurs", icon: Users, badge: undefined },
@@ -308,6 +311,12 @@ export default function AdminSuperFounderHub({
           <ErrorBoundary moduleName="Wallet Management">
             {activeModule === "wallet_management" && (
               <AdminWalletManagement currentUser={currentUser} />
+            )}
+          </ErrorBoundary>
+
+          <ErrorBoundary moduleName="Coffre des Frais">
+            {activeModule === "coffre_frais" && (
+              <FounderFeesVault currentUser={currentUser} userEmail={userEmail} />
             )}
           </ErrorBoundary>
 

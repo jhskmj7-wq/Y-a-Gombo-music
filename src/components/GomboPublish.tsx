@@ -328,14 +328,42 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           transaction.set(doc(db, "walletTransactions", commTxId), commTxData);
         }
 
-        // Commission reporting collection
-        const commId = `comm_${currentTimestamp}`;
+        // Commission reporting collection ("commissions" / "founder_vault" history)
+        const commId = `comm_${currentTimestamp}_${Math.random().toString(36).substring(2, 6)}`;
         transaction.set(doc(db, "commissions", commId), {
+          id: commId,
+          commId: commId,
+          transactionId: txDebitId,
           userId: currentUserProfile.uid,
-          amount: freshFinancials.fee,
-          rate: dynamicFeeRate,
+          uid: currentUserProfile.uid,
+          userName: authorName,
+          clientName: authorName,
+          userEmail: currentUserProfile.email || "",
+          userPhone: currentUserProfile.phoneNumber || currentUserProfile.phone || "",
           publicationId: postRef.id,
-          createdAt: nowIso
+          gomboId: postRef.id,
+          gomboTitle: title.trim(),
+          title: title.trim(),
+          gomboAmount: cachetVal,
+          montantGombo: cachetVal,
+          feeRate: dynamicFeeRate,
+          rate: dynamicFeeRate,
+          pourcentageFrais: dynamicFeeRate * 100,
+          feeAmount: freshFinancials.fee,
+          montantFrais: freshFinancials.fee,
+          frais: freshFinancials.fee,
+          amount: freshFinancials.fee,
+          totalAmount: freshFinancials.total,
+          totalPaid: freshFinancials.total,
+          totalPaye: freshFinancials.total,
+          createdAt: nowIso,
+          publishedAt: nowIso,
+          timestamp: currentTimestamp,
+          status: "success",
+          statut: "Réussi",
+          type: "publication_fee",
+          typeTransaction: "commission_publication",
+          description: `Frais de publication Gombo : "${title.trim()}"`
         });
 
         // Canonical Payload with all alias fields and real statistics initialized to zero
