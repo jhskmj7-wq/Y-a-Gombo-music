@@ -30,6 +30,7 @@ const PWAHandler = lazyWithRetry(() => import("./components/PWAHandler"));
 const PWADiagnosticPage = lazyWithRetry(() => import("./components/PWADiagnosticPage"));
 const TheThroneOfTheFounder = lazyWithRetry(() => import("./components/TheThroneOfTheFounder"));
 const FounderThronePage = lazyWithRetry(() => import("./components/FounderThronePage"));
+const IntelligentNotificationManager = lazyWithRetry(() => import("./components/IntelligentNotificationManager").then(m => ({ default: m.IntelligentNotificationManager })));
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
   try {
@@ -319,6 +320,7 @@ function App() {
           <BackgroundMusic />
           <FloatingAudioPlayer />
           <PWAHandler />
+          <IntelligentNotificationManager />
         </Suspense>
       </div>
     </ErrorBoundary>
