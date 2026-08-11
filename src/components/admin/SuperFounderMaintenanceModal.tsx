@@ -75,6 +75,60 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showScheduleForm, setShowScheduleForm] = useState<boolean>(false);
+  const [previewMessage, setPreviewMessage] = useState<string>("");
+
+  // Date Formatting Helpers
+  const formatMaintenanceDate = (isoString: string) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const formatMaintenanceTime = (isoString: string) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "";
+    const h = date.getHours().toString().padStart(2, "0");
+    const m = date.getMinutes().toString().padStart(2, "0");
+    return `${h}h${m}`;
+  };
+
+  const generateMaintenanceMessage = (start: string, end: string) => {
+    if (!start || !end) return "";
+    
+    const startDate = formatMaintenanceDate(start);
+    const endDate = formatMaintenanceDate(end);
+    const startTime = formatMaintenanceTime(start);
+    const endTime = formatMaintenanceTime(end);
+    
+    if (!startDate || !endDate) return "";
+
+    let timeRange = "";
+    if (startDate === endDate) {
+      timeRange = `le ${startDate} de ${startTime} à ${endTime}`;
+    } else {
+      timeRange = `du ${startDate} à ${startTime} au ${endDate} à ${endTime}`;
+    }
+    
+    return `🛠️ Maintenance AFRIGOMBO ELITE programmée\n\nUne maintenance est prévue ${timeRange}.\n\nL'accès à certaines fonctionnalités pourra être temporairement indisponible pendant cette période. Merci pour votre compréhension.`;
+  };
+
+  // Update preview when dates change
+  useEffect(() => {
+    if (startAt && endAt) {
+      const msg = generateMaintenanceMessage(startAt, endAt);
+      setPreviewMessage(msg);
+      // For scheduled maintenance, we sync the globalMessage with the generated one
+      if (showScheduleForm) {
+        setGlobalMessage(msg);
+      }
+    }
+  }, [startAt, endAt, showScheduleForm]);
 
   // Global Alert Form State
   const [alertTitle, setAlertTitle] = useState<string>("⚠️ Information Système AfriGombo");
@@ -273,12 +327,14 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
       return;
     }
 
+    const generatedMsg = generateMaintenanceMessage(startAt, endAt);
+    
     const newSchedule = {
       id: "sched_" + Date.now(),
       name: `Maintenance #${schedules.length + 1}`,
       startAt,
       endAt,
-      globalMessage,
+      globalMessage: generatedMsg || globalMessage,
       alertBeforeMinutes
     };
 
@@ -291,7 +347,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
       scheduled: true,
       startAt,
       endAt,
-      globalMessage,
+      globalMessage: generatedMsg || globalMessage,
       alertBeforeMinutes,
       schedules: updatedSchedules
     });
@@ -618,11 +674,29 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
                 <textarea
                   value={globalMessage}
                   onChange={(e) => setGlobalMessage(e.target.value)}
-                  rows={2}
+                  rows={4}
                   className="w-full bg-zinc-900 border border-zinc-700 text-white p-2.5 rounded-xl text-xs font-sans focus:border-[#D4AF37] outline-none"
-                  placeholder="Message de maintenance..."
+                  placeholder="Le message sera généré automatiquement..."
                 />
               </div>
+
+              {/* MESSAGE PREVIEW */}
+              {previewMessage && (
+                <div className="space-y-1.5 animate-fadeIn">
+                  <label className="text-[10px] font-mono text-emerald-400 font-bold uppercase flex items-center gap-1.5">
+                    <Check className="w-3 h-3" />
+                    Aperçu du Message de Maintenance
+                  </label>
+                  <div className="bg-afri-bg border border-[#D4AF37]/30 p-4 rounded-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <Wrench className="w-12 h-12 text-[#D4AF37]" />
+                    </div>
+                    <div className="text-[11px] text-afri-text leading-relaxed whitespace-pre-wrap font-sans relative z-10">
+                      {previewMessage}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Automatic Pre-Alert Selection */}
               <div className="space-y-1.5 pt-1">

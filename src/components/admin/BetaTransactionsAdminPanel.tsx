@@ -31,6 +31,8 @@ import { logAdminAction } from "../../lib/adminLogger";
 import { SupportService, SUPPORT_PROFILE } from "../../services/SupportService";
 import { sanitizeForFirestore } from "../../lib/firestoreUtils";
 
+import FounderBottomSheet from "./FounderBottomSheet";
+
 interface WalletRequest {
   id: string;
   uid: string;
@@ -1040,395 +1042,346 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
       )}
 
       {/* =========================================================
-           10. INTERFACE ANDROID : DETAILED VIEW BOTTOM SHEET / FULL SCREEN
+           10. INTERFACE ANDROID : DETAILED VIEW BOTTOM SHEET
            ========================================================= */}
-      <AnimatePresence>
-        {selectedRequest && (
-          <div className="fixed inset-0 bg-afri-bg/45 backdrop-blur-[2px] z-[9999] flex items-center justify-center p-4">
-            
-            {/* Overlay background for closing on click outside */}
-            <div 
-              className="absolute inset-0 z-10 cursor-pointer" 
-              onClick={() => {
-                setSelectedRequest(null);
-                setPendingAction(null);
-              }}
-            />
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2 }}
-              className="w-[92%] max-w-[480px] max-h-[85vh] h-auto bg-[#08080a] border border-afri-border rounded-[24px] flex flex-col overflow-hidden relative shadow-2xl z-20"
-            >
-              
-              {/* Android Pill Handle */}
-              <div className="w-full py-3.5 flex justify-center shrink-0 bg-neutral-950/60 border-b border-neutral-900 relative">
-                <div className="w-12 h-1 bg-neutral-700 rounded-full" />
-                <button
-                  onClick={() => {
-                    setSelectedRequest(null);
-                    setPendingAction(null);
-                  }}
-                  className="absolute right-5 top-1/2 -translate-y-1/2 text-afri-text-muted hover:text-afri-text text-xs bg-afri-bg-sec px-3 py-1 rounded-xl font-mono"
-                >
-                  Fermer ✕
-                </button>
+      <FounderBottomSheet
+        isOpen={!!selectedRequest}
+        onClose={() => {
+          setSelectedRequest(null);
+          setPendingAction(null);
+        }}
+        title={selectedRequest ? (selectedRequest.type === "deposit" ? "Détails du Dépôt" : "Détails du Retrait") : ""}
+        subtitle={selectedRequest ? `Réf : ${selectedRequest.reference || selectedRequest.id}` : ""}
+      >
+        <div className="space-y-6">
+          {/* Header de la Fiche */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-afri-bg p-4 rounded-2xl border border-neutral-900">
+            <div className="flex items-center gap-4">
+              {/* Photo Utilisateur */}
+              <div className="w-14 h-14 rounded-2xl border border-afri-border overflow-hidden shrink-0 bg-afri-bg-sec flex items-center justify-center">
+                {(selectedReqUser?.photoURL || selectedReqUser?.photoUrl || selectedRequest?.userPhoto) ? (
+                  <img 
+                    referrerPolicy="no-referrer"
+                    src={selectedReqUser?.photoURL || selectedReqUser?.photoUrl || selectedRequest?.userPhoto} 
+                    alt="Avatar" 
+                    className="w-full h-full object-cover" 
+                  />
+                ) : (
+                  <User className="w-6 h-6 text-zinc-600" />
+                )}
               </div>
 
-              {/* Contenu principal défilable */}
-              <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 scrollbar-none text-left">
-                
-                {/* Header de la Fiche */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-afri-bg p-4 rounded-2xl border border-neutral-900">
-                  <div className="flex items-center gap-4">
-                    {/* Photo Utilisateur */}
-                    <div className="w-14 h-14 rounded-2xl border border-afri-border overflow-hidden shrink-0 bg-afri-bg-sec flex items-center justify-center">
-                      {(selectedReqUser?.photoURL || selectedReqUser?.photoUrl || selectedRequest.userPhoto) ? (
-                        <img 
-                          referrerPolicy="no-referrer"
-                          src={selectedReqUser?.photoURL || selectedReqUser?.photoUrl || selectedRequest.userPhoto} 
-                          alt="Avatar" 
-                          className="w-full h-full object-cover" 
-                        />
-                      ) : (
-                        <User className="w-6 h-6 text-zinc-600" />
-                      )}
-                    </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-black text-afri-text uppercase tracking-tight flex items-center gap-2">
+                  <span>{selectedReqUser?.displayName || selectedRequest?.userName}</span>
+                  {selectedReqUser?.isPremium && (
+                    <span className="text-[7.5px] font-black bg-amber-500/15 text-[#D4AF37] px-2 py-0.5 rounded border border-[#D4AF37]/30 tracking-widest">
+                      ELITE
+                    </span>
+                  )}
+                </h3>
+                <p className="text-[10px] text-afri-text-muted font-mono">UID : {selectedRequest?.uid}</p>
+              </div>
+            </div>
 
-                    <div className="space-y-1">
-                      <h3 className="text-base font-black text-afri-text uppercase tracking-tight flex items-center gap-2">
-                        <span>{selectedReqUser?.displayName || selectedRequest.userName}</span>
-                        {selectedReqUser?.isPremium && (
-                          <span className="text-[7.5px] font-black bg-amber-500/15 text-[#D4AF37] px-2 py-0.5 rounded border border-[#D4AF37]/30 tracking-widest">
-                            ELITE
-                          </span>
-                        )}
-                      </h3>
-                      <p className="text-[10px] text-afri-text-muted font-mono">UID : {selectedRequest.uid}</p>
-                    </div>
-                  </div>
+            <div className="text-left sm:text-right shrink-0">
+              <span className="text-[10px] font-mono text-afri-text-muted uppercase block tracking-wider">Montant de la Transaction</span>
+              <span className={`text-xl font-mono font-black block ${selectedRequest?.type === "deposit" ? "text-emerald-400" : "text-amber-500"}`}>
+                {selectedRequest?.type === "deposit" ? "+" : "-"}{selectedRequest?.montant.toLocaleString('fr-FR')} FCFA
+              </span>
+            </div>
+          </div>
 
-                  <div className="text-left sm:text-right shrink-0">
-                    <span className="text-[10px] font-mono text-afri-text-muted uppercase block tracking-wider">Montant de la Transaction</span>
-                    <span className={`text-xl font-mono font-black block ${selectedRequest.type === "deposit" ? "text-emerald-400" : "text-amber-500"}`}>
-                      {selectedRequest.type === "deposit" ? "+" : "-"}{selectedRequest.montant.toLocaleString('fr-FR')} FCFA
+          {/* Section Informations Complètes */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Détails Financiers */}
+            <div className="bg-afri-bg p-4 rounded-2xl border border-neutral-900 space-y-3.5">
+              <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest pb-1 border-b border-neutral-900">
+                Spécifications de la Demande
+              </h4>
+              
+              <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs font-mono">
+                <div>
+                  <span className="text-zinc-600 block text-[9px] uppercase">GOMBO ID</span>
+                  <span className="text-afri-text-sec font-bold">
+                    {typeof selectedReqUser?.gomboId === 'object' ? selectedReqUser.gomboId.id : (selectedReqUser?.gomboId || typeof selectedRequest?.gomboId === 'object' ? (selectedRequest?.gomboId as any).id : selectedRequest?.gomboId || "Non renseigné")}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-zinc-600 block text-[9px] uppercase">AFRI ID</span>
+                  <span className="text-afri-text-sec font-bold">
+                    {typeof selectedReqUser?.afriId === 'object' ? (selectedReqUser.afriId as any).id : (selectedReqUser?.afriId || typeof selectedRequest?.afriId === 'object' ? (selectedRequest?.afriId as any).id : selectedRequest?.afriId || "Non renseigné")}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-zinc-600 block text-[9px] uppercase">Type de Flux</span>
+                  <span className={`font-bold ${selectedRequest?.type === "deposit" ? "text-emerald-400" : "text-amber-500"}`}>
+                    {selectedRequest?.type === "deposit" ? "Dépôt (Recharge)" : "Retrait Cashout"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-zinc-600 block text-[9px] uppercase">Moyen de Paiement</span>
+                  <span className="text-afri-text-sec font-bold">{selectedRequest?.operator || "Mobile Money"}</span>
+                </div>
+                <div>
+                  <span className="text-zinc-600 block text-[9px] uppercase">Référence</span>
+                  <span className="text-afri-text-sec font-bold select-all">{selectedRequest?.reference || selectedRequest?.id}</span>
+                </div>
+                <div>
+                  <span className="text-zinc-600 block text-[9px] uppercase">Numéro Dist.</span>
+                  <span className="text-afri-text-sec font-bold">{selectedRequest?.numero || selectedRequest?.phoneNumber || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-zinc-600 block text-[9px] uppercase">Date</span>
+                  <span className="text-afri-text-sec">
+                    {selectedRequest?.createdAt ? new Date(selectedRequest.createdAt).toLocaleDateString("fr-FR") : "--"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-zinc-600 block text-[9px] uppercase">Heure</span>
+                  <span className="text-afri-text-sec">
+                    {selectedRequest?.createdAt ? new Date(selectedRequest.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "--"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Solde Live du Membre */}
+            <div className="bg-afri-bg p-4 rounded-2xl border border-neutral-900 flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest pb-1 border-b border-neutral-900">
+                  État de Caisse du Membre (Live)
+                </h4>
+                <div className="flex items-center gap-3">
+                  <Coins className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <div>
+                    <span className="text-[9px] text-afri-text-muted block uppercase font-mono">Solde Disponible Actuel</span>
+                    <span className="text-xl font-mono font-black text-emerald-400">
+                      {(selectedReqUser?.wallet?.soldeDisponible ?? 0).toLocaleString('fr-FR')} FCFA
                     </span>
                   </div>
                 </div>
-
-                {/* Section Informations Complètes */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Détails Financiers */}
-                  <div className="bg-afri-bg p-4 rounded-2xl border border-neutral-900 space-y-3.5">
-                    <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest pb-1 border-b border-neutral-900">
-                      Spécifications de la Demande
-                    </h4>
-                    
-                    <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs font-mono">
-                      <div>
-                        <span className="text-zinc-600 block text-[9px] uppercase">GOMBO ID</span>
-                        <span className="text-afri-text-sec font-bold">
-                          {typeof selectedReqUser?.gomboId === 'object' ? selectedReqUser.gomboId.id : (selectedReqUser?.gomboId || typeof selectedRequest.gomboId === 'object' ? (selectedRequest.gomboId as any).id : selectedRequest.gomboId || "Non renseigné")}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-zinc-600 block text-[9px] uppercase">AFRI ID</span>
-                        <span className="text-afri-text-sec font-bold">
-                          {typeof selectedReqUser?.afriId === 'object' ? (selectedReqUser.afriId as any).id : (selectedReqUser?.afriId || typeof selectedRequest.afriId === 'object' ? (selectedRequest.afriId as any).id : selectedRequest.afriId || "Non renseigné")}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-zinc-600 block text-[9px] uppercase">Type de Flux</span>
-                        <span className={`font-bold ${selectedRequest.type === "deposit" ? "text-emerald-400" : "text-amber-500"}`}>
-                          {selectedRequest.type === "deposit" ? "Dépôt (Recharge)" : "Retrait Cashout"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-zinc-600 block text-[9px] uppercase">Moyen de Paiement</span>
-                        <span className="text-afri-text-sec font-bold">{selectedRequest.operator || "Mobile Money"}</span>
-                      </div>
-                      <div>
-                        <span className="text-zinc-600 block text-[9px] uppercase">Référence</span>
-                        <span className="text-afri-text-sec font-bold select-all">{selectedRequest.reference || selectedRequest.id}</span>
-                      </div>
-                      <div>
-                        <span className="text-zinc-600 block text-[9px] uppercase">Numéro Dist.</span>
-                        <span className="text-afri-text-sec font-bold">{selectedRequest.numero || selectedRequest.phoneNumber || "N/A"}</span>
-                      </div>
-                      <div>
-                        <span className="text-zinc-600 block text-[9px] uppercase">Date de création</span>
-                        <span className="text-afri-text-sec">
-                          {selectedRequest.createdAt ? new Date(selectedRequest.createdAt).toLocaleDateString("fr-FR") : "--"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-zinc-600 block text-[9px] uppercase">Heure de création</span>
-                        <span className="text-afri-text-sec">
-                          {selectedRequest.createdAt ? new Date(selectedRequest.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "--"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Solde Live du Membre */}
-                  <div className="bg-afri-bg p-4 rounded-2xl border border-neutral-900 flex flex-col justify-between space-y-4">
-                    <div className="space-y-3">
-                      <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest pb-1 border-b border-neutral-900">
-                        État de Caisse du Membre (Live)
-                      </h4>
-                      <div className="flex items-center gap-3">
-                        <Coins className="w-5 h-5 text-emerald-400 shrink-0" />
-                        <div>
-                          <span className="text-[9px] text-afri-text-muted block uppercase font-mono">Solde Disponible Actuel</span>
-                          <span className="text-xl font-mono font-black text-emerald-400">
-                            {(selectedReqUser?.wallet?.soldeDisponible ?? 0).toLocaleString('fr-FR')} FCFA
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-neutral-900/60 p-3 rounded-xl border border-neutral-850 text-[10px] font-mono text-afri-text-sec space-y-1">
-                      <p>• Dépôts Cumulés : <strong className="text-afri-text">{(selectedReqUser?.wallet?.depots ?? 0).toLocaleString('fr-FR')} FCFA</strong></p>
-                      <p>• Retraits Cumulés : <strong className="text-afri-text">{(selectedReqUser?.wallet?.retraits ?? 0).toLocaleString('fr-FR')} FCFA</strong></p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Preuve de Paiement (Capture) */}
-                <div className="bg-afri-bg p-4 rounded-2xl border border-neutral-900 space-y-3">
-                  <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest pb-1 border-b border-neutral-900">
-                    Capture de Preuve (si disponible)
-                  </h4>
-                  {selectedRequest.preuveUrl ? (
-                    <div className="space-y-2">
-                      <div className="w-full max-h-80 rounded-xl overflow-hidden border border-afri-border bg-afri-bg relative group">
-                        <img 
-                          referrerPolicy="no-referrer"
-                          src={selectedRequest.preuveUrl} 
-                          alt="Capture Preuve Bêta" 
-                          className="w-full h-auto max-h-80 object-contain mx-auto"
-                        />
-                      </div>
-                      <div className="flex justify-end">
-                        <a 
-                          href={selectedRequest.preuveUrl} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="text-[10px] text-[#D4AF37] hover:underline flex items-center gap-1 font-mono"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Ouvrir l'image en plein écran</span>
-                        </a>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-6 text-center border border-dashed border-afri-border rounded-xl space-y-1.5">
-                      <AlertCircle className="w-6 h-6 text-zinc-600 mx-auto" />
-                      <p className="text-[11px] font-mono text-afri-text-muted">Aucun fichier image de preuve attaché directement à la demande.</p>
-                      <p className="text-[9px] text-zinc-600">Le membre peut transmettre sa preuve de virement via le chat d'Arbre à Palabres.</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* HISTORIQUE DES ACTIONS (JOURNAL TEMPS RÉEL) */}
-                <div className="bg-afri-bg p-4 rounded-2xl border border-neutral-900 space-y-4">
-                  <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest pb-1 border-b border-neutral-900">
-                    Historique Souverain des Actions
-                  </h4>
-
-                  {selectedReqHistory.length === 0 ? (
-                    <p className="text-[10px] font-mono text-zinc-600 italic">Aucune action n'a encore été enregistrée pour cette transaction.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {selectedReqHistory.map((log) => (
-                        <div key={log.id} className="p-3 bg-[#0a0a0c] border border-neutral-900 rounded-xl text-[11px] font-mono space-y-1.5">
-                          <div className="flex justify-between items-start flex-wrap gap-1">
-                            <span className={`px-2 py-0.5 rounded text-[8px] font-bold ${
-                              log.action === "VALIDATION" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
-                              log.action === "REFUS" ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" :
-                              log.action === "MISE_EN_ATTENTE" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
-                              "bg-afri-bg-ter text-afri-text-sec"
-                            }`}>
-                              {log.action}
-                            </span>
-                            <span className="text-zinc-600 text-[9px]">{log.date} à {log.heure}</span>
-                          </div>
-                          
-                          <p className="text-afri-text-sec leading-relaxed">
-                            {log.comment || "(Aucun commentaire enregistré)"}
-                          </p>
-
-                          <div className="text-[9px] text-afri-text-muted flex justify-between pt-1 border-t border-neutral-900">
-                            <span>Par : <strong className="text-afri-text-sec">{log.founderName}</strong></span>
-                            <span>Statut : <strong className="text-afri-text-sec">{log.oldStatus} ➔ {log.newStatus}</strong></span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
               </div>
 
-              {/* Panneau de Confirmation d'Action (S'ouvre si une action est choisie) */}
-              <AnimatePresence>
-                {pendingAction && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 50 }}
-                    className="absolute inset-x-0 bottom-0 bg-[#0e0e12] border-t-2 border-[#D4AF37]/50 p-5 space-y-4 z-30 shadow-2xl text-left"
-                  >
-                    <div className="flex justify-between items-center pb-2 border-b border-neutral-850">
-                      <h4 className="text-xs font-black font-mono text-[#D4AF37] uppercase flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-[#D4AF37]" />
-                        <span>
-                          {pendingAction === "VALIDATE" ? "CONFIRMER LA VALIDATION" :
-                           pendingAction === "REFUSE" ? "CONFIRMER LE REFUS" :
-                           pendingAction === "PENDING" ? "CONFIRMER LA MISE EN ATTENTE" :
-                           "AJOUTER UNE NOTE INTERNE"}
-                        </span>
-                      </h4>
-                      <button 
-                        onClick={() => {
-                          setPendingAction(null);
-                          setActionComment("");
-                        }}
-                        className="text-afri-text-muted hover:text-afri-text font-mono text-[10px]"
-                      >
-                        Annuler
-                      </button>
-                    </div>
+              <div className="bg-neutral-900/60 p-3 rounded-xl border border-neutral-850 text-[10px] font-mono text-afri-text-sec space-y-1">
+                <p>• Dépôts Cumulés : <strong className="text-afri-text">{(selectedReqUser?.wallet?.depots ?? 0).toLocaleString('fr-FR')} FCFA</strong></p>
+                <p>• Retraits Cumulés : <strong className="text-afri-text">{(selectedReqUser?.wallet?.retraits ?? 0).toLocaleString('fr-FR')} FCFA</strong></p>
+              </div>
+            </div>
+          </div>
 
-                    <p className="text-[11px] font-sans text-afri-text-sec">
-                      {pendingAction === "VALIDATE" && "Cette action mettra instantanément à jour le solde du Wallet de l'utilisateur, créera un enregistrement comptable et enverra une notification de confirmation."}
-                      {pendingAction === "REFUSE" && "Veuillez spécifier le motif du refus. Cette information sera directement notifiée au membre de l'Arbre à Palabre."}
-                      {pendingAction === "PENDING" && "Le statut sera remis à 'en attente'. Aucun fonds ne sera mouvementé."}
-                      {pendingAction === "ADD_NOTE" && "Ajoutez un commentaire ou une observation interne sur cette transaction bêta."}
+          {/* Preuve de Paiement (Capture) */}
+          <div className="bg-afri-bg p-4 rounded-2xl border border-neutral-900 space-y-3">
+            <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest pb-1 border-b border-neutral-900">
+              Capture de Preuve (si disponible)
+            </h4>
+            {selectedRequest?.preuveUrl ? (
+              <div className="space-y-2">
+                <div className="w-full max-h-80 rounded-xl overflow-hidden border border-afri-border bg-afri-bg relative group">
+                  <img 
+                    referrerPolicy="no-referrer"
+                    src={selectedRequest.preuveUrl} 
+                    alt="Capture Preuve Bêta" 
+                    className="w-full h-auto max-h-80 object-contain mx-auto"
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <a 
+                    href={selectedRequest.preuveUrl} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="text-[10px] text-[#D4AF37] hover:underline flex items-center gap-1 font-mono"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Ouvrir l'image en plein écran</span>
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 text-center border border-dashed border-afri-border rounded-xl space-y-1.5">
+                <AlertCircle className="w-6 h-6 text-zinc-600 mx-auto" />
+                <p className="text-[11px] font-mono text-afri-text-muted">Aucun fichier image de preuve attaché.</p>
+                <p className="text-[9px] text-zinc-600">Le membre peut transmettre sa preuve via l'Arbre à Palabres.</p>
+              </div>
+            )}
+          </div>
+
+          {/* HISTORIQUE DES ACTIONS (JOURNAL TEMPS RÉEL) */}
+          <div className="bg-afri-bg p-4 rounded-2xl border border-neutral-900 space-y-4">
+            <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest pb-1 border-b border-neutral-900">
+              Historique Souverain des Actions
+            </h4>
+
+            {selectedReqHistory.length === 0 ? (
+              <p className="text-[10px] font-mono text-zinc-600 italic">Aucune action enregistrée pour cette transaction.</p>
+            ) : (
+              <div className="space-y-3">
+                {selectedReqHistory.map((log) => (
+                  <div key={log.id} className="p-3 bg-[#0a0a0c] border border-neutral-900 rounded-xl text-[11px] font-mono space-y-1.5">
+                    <div className="flex justify-between items-start flex-wrap gap-1">
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-bold ${
+                        log.action === "VALIDATION" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                        log.action === "REFUS" ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" :
+                        log.action === "MISE_EN_ATTENTE" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
+                        "bg-afri-bg-ter text-afri-text-sec"
+                      }`}>
+                        {log.action}
+                      </span>
+                      <span className="text-zinc-600 text-[9px]">{log.date} à {log.heure}</span>
+                    </div>
+                    
+                    <p className="text-afri-text-sec leading-relaxed">
+                      {log.comment || "(Sans commentaire)"}
                     </p>
 
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-mono text-[#D4AF37] uppercase tracking-widest block">
-                        Note explicite / Commentaire {pendingAction === "REFUSE" ? "*" : "(Optionnel)"}
-                      </label>
-                      <textarea
-                        value={actionComment}
-                        onChange={(e) => setActionComment(e.target.value)}
-                        placeholder={
-                          pendingAction === "REFUSE" 
-                            ? "Motif de refus : ex. Référence invalide, virement non reçu..."
-                            : "Entrez un commentaire pour le journal d'administration..."
-                        }
-                        rows={2}
-                        className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37]/40 rounded-xl p-3 text-xs text-afri-text font-mono outline-none placeholder:text-zinc-700"
-                      />
+                    <div className="text-[9px] text-afri-text-muted flex justify-between pt-1 border-t border-neutral-900">
+                      <span>Par : <strong className="text-afri-text-sec">{log.founderName}</strong></span>
+                      <span>Statut : <strong className="text-afri-text-sec">{log.oldStatus} ➔ {log.newStatus}</strong></span>
                     </div>
-
-                    <div className="flex gap-2.5">
-                      <button
-                        onClick={() => {
-                          setPendingAction(null);
-                          setActionComment("");
-                        }}
-                        className="flex-1 py-3 bg-afri-bg-sec border border-neutral-850 hover:bg-neutral-850 text-afri-text rounded-xl text-xs font-mono font-bold uppercase transition-colors"
-                      >
-                        Annuler
-                      </button>
-                      <button
-                        onClick={handleActionExecute}
-                        disabled={actionLoading || (pendingAction === "REFUSE" && !actionComment.trim())}
-                        className={`flex-1 py-3 text-afri-text font-black rounded-xl text-xs font-mono uppercase shadow-lg transition-colors flex items-center justify-center gap-1.5 ${
-                          pendingAction === "VALIDATE" ? "bg-emerald-400 hover:bg-emerald-300" :
-                          pendingAction === "REFUSE" ? "bg-rose-500 hover:bg-rose-400 text-afri-text" :
-                          "bg-[#D4AF37] hover:bg-[#D4AF37]/80"
-                        } disabled:opacity-40`}
-                      >
-                        {actionLoading ? (
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          "Confirmer l'opération"
-                        )}
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Actions Footer de la Fiche (Masqué si une confirmation d'action est en cours) */}
-              {!pendingAction && (
-                <div className="p-4 sm:p-5 bg-afri-bg border-t border-neutral-900 grid grid-cols-2 xs:grid-cols-4 gap-2 shrink-0 z-10">
-                  {selectedIsValidated || selectedIsRefused ? (
-                    <>
-                      <div className="col-span-3 p-3 bg-neutral-900 border border-neutral-800 rounded-xl text-center text-xs font-mono font-bold text-amber-400 flex items-center justify-center gap-2">
-                        <span>🔒 Déjà traitée ({selectedIsValidated ? "TRAITÉ / VALIDÉ" : "TRAITÉ / REFUSÉ"})</span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setPendingAction("ADD_NOTE");
-                          setActionComment("");
-                        }}
-                        className="py-3 bg-afri-bg-sec hover:bg-neutral-850 border border-afri-border text-[#D4AF37] text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
-                      >
-                        <FileText className="w-4 h-4" />
-                        <span>Note</span>
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => {
-                          setPendingAction("VALIDATE");
-                          setActionComment("");
-                        }}
-                        className="py-3 bg-emerald-600 hover:bg-emerald-500 text-afri-text text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow flex items-center justify-center gap-1.5 active:scale-98"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span>Valider</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setPendingAction("REFUSE");
-                          setActionComment("");
-                        }}
-                        className="py-3 bg-rose-600 hover:bg-rose-500 text-afri-text text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow flex items-center justify-center gap-1.5 active:scale-98"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        <span>Refuser</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setPendingAction("PENDING");
-                          setActionComment("");
-                        }}
-                        className="py-3 bg-afri-bg-sec hover:bg-neutral-850 border border-afri-border text-afri-text-sec text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
-                      >
-                        <Clock className="w-4 h-4" />
-                        <span>Attente</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setPendingAction("ADD_NOTE");
-                          setActionComment("");
-                        }}
-                        className="py-3 bg-afri-bg-sec hover:bg-neutral-850 border border-afri-border text-[#D4AF37] text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
-                      >
-                        <FileText className="w-4 h-4" />
-                        <span>Note</span>
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-
-            </motion.div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </AnimatePresence>
+
+          {/* Panneau de Confirmation d'Action (S'ouvre si une action est choisie) */}
+          <AnimatePresence>
+            {pendingAction && (
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                className="bg-[#0e0e12] border-t-2 border-[#D4AF37]/50 p-5 rounded-2xl space-y-4 shadow-2xl text-left mt-4"
+              >
+                <div className="flex justify-between items-center pb-2 border-b border-neutral-850">
+                  <h4 className="text-xs font-black font-mono text-[#D4AF37] uppercase flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-[#D4AF37]" />
+                    <span>
+                      {pendingAction === "VALIDATE" ? "VALIDATION" :
+                        pendingAction === "REFUSE" ? "REFUS" :
+                        pendingAction === "PENDING" ? "ATTENTE" :
+                        "NOTE INTERNE"}
+                    </span>
+                  </h4>
+                  <button 
+                    onClick={() => {
+                      setPendingAction(null);
+                      setActionComment("");
+                    }}
+                    className="text-rose-500 font-mono text-[10px] font-black uppercase"
+                  >
+                    Annuler
+                  </button>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-mono text-[#D4AF37] uppercase tracking-widest block">
+                    Commentaire {pendingAction === "REFUSE" ? "*" : "(Optionnel)"}
+                  </label>
+                  <textarea
+                    value={actionComment}
+                    onChange={(e) => setActionComment(e.target.value)}
+                    placeholder={
+                      pendingAction === "REFUSE" 
+                        ? "Motif de refus obligatoire..."
+                        : "Commentaire d'administration..."
+                    }
+                    rows={2}
+                    className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37]/40 rounded-xl p-3 text-xs text-afri-text font-mono outline-none"
+                  />
+                </div>
+
+                <div className="flex gap-2.5">
+                  <button
+                    onClick={handleActionExecute}
+                    disabled={actionLoading || (pendingAction === "REFUSE" && !actionComment.trim())}
+                    className={`flex-1 py-4 text-afri-text font-black rounded-xl text-xs font-mono uppercase shadow-lg transition-colors flex items-center justify-center gap-1.5 ${
+                      pendingAction === "VALIDATE" ? "bg-emerald-600 hover:bg-emerald-500" :
+                      pendingAction === "REFUSE" ? "bg-rose-600 hover:bg-rose-500" :
+                      "bg-[#D4AF37] hover:bg-[#D4AF37]/80"
+                    } disabled:opacity-40`}
+                  >
+                    {actionLoading ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Confirmer l'opération"
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Actions Footer de la Fiche (Masqué si une confirmation d'action est en cours) */}
+          {!pendingAction && (
+            <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 pt-4 border-t border-neutral-900">
+              {selectedIsValidated || selectedIsRefused ? (
+                <>
+                  <div className="col-span-3 p-3 bg-neutral-900 border border-neutral-800 rounded-xl text-center text-xs font-mono font-bold text-amber-400 flex items-center justify-center gap-2">
+                    <span>🔒 Traitée ({selectedIsValidated ? "VALIDÉ" : "REFUSÉ"})</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setPendingAction("ADD_NOTE");
+                      setActionComment("");
+                    }}
+                    className="py-3 bg-afri-bg-sec border border-afri-border text-[#D4AF37] text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>Note</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      setPendingAction("VALIDATE");
+                      setActionComment("");
+                    }}
+                    className="py-4 bg-emerald-600 hover:bg-emerald-500 text-afri-text text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-1.5 active:scale-95"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Valider</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setPendingAction("REFUSE");
+                      setActionComment("");
+                    }}
+                    className="py-4 bg-rose-600 hover:bg-rose-500 text-afri-text text-xs font-black font-mono rounded-xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-1.5 active:scale-95"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    <span>Refuser</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setPendingAction("PENDING");
+                      setActionComment("");
+                    }}
+                    className="py-4 bg-afri-bg-sec hover:bg-neutral-850 border border-afri-border text-afri-text-sec text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span>Attente</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setPendingAction("ADD_NOTE");
+                      setActionComment("");
+                    }}
+                    className="py-4 bg-afri-bg-sec hover:bg-neutral-850 border border-afri-border text-[#D4AF37] text-xs font-black font-mono rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>Note</span>
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </FounderBottomSheet>
 
     </div>
   );

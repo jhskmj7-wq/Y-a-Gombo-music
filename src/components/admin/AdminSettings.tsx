@@ -6,6 +6,7 @@ import { fetchPlatformPricing, updatePlatformPricing, PricingConfig } from "../.
 import { useAuth } from "../../AuthContext";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "../../firebase";
+import FounderBottomSheet from "./FounderBottomSheet";
 
 interface AdminSettingsProps {
   audioSynth?: any;
@@ -303,65 +304,65 @@ export default function AdminSettings({
       </div>
 
       {/* CONFIRMATION BOTTOM SHEET */}
-      {sheetOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-afri-bg-sec border border-afri-border w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative animate-slideUp">
-            <button 
-              onClick={() => setSheetOpen(false)}
-              className="absolute top-4 right-4 p-2 bg-afri-bg rounded-full text-afri-text-sec hover:text-white"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            
-            <div className="mb-4">
-              <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mb-3">
-                <AlertTriangle className="w-5 h-5 text-amber-500" />
-              </div>
-              <h2 className="text-sm font-mono font-black uppercase text-afri-text">Modifier les Commissions</h2>
-              <p className="text-xs text-afri-text-sec font-mono mt-1">
-                Résumé des changements
-              </p>
-            </div>
-
-            <div className="space-y-4 bg-afri-bg border border-afri-border p-4 rounded-xl">
-              <div className="flex justify-between items-center text-xs font-mono">
-                <span className="text-afri-text-sec">Standard :</span>
-                <span className="text-red-400 line-through">
+      <FounderBottomSheet
+        isOpen={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title="Modifier les Commissions"
+        subtitle="Vérifiez les nouveaux taux avant application"
+      >
+        <div className="space-y-6">
+          <div className="space-y-4 bg-afri-bg border border-afri-border p-5 rounded-2xl">
+            <div className="flex justify-between items-center text-xs font-mono">
+              <span className="text-afri-text-sec uppercase">Standard :</span>
+              <div className="flex items-center gap-3">
+                <span className="text-red-400 line-through opacity-50">
                   {(pricing.standardCommissionRate * 100).toFixed(1)} %
                 </span>
-                <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
+                <span className="text-emerald-400 font-black bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">
                   {(sheetNewStandard * 100).toFixed(1)} %
                 </span>
               </div>
-              <div className="flex justify-between items-center text-xs font-mono">
-                <span className="text-afri-text-sec">Premium :</span>
-                <span className="text-red-400 line-through">
+            </div>
+            <div className="flex justify-between items-center text-xs font-mono">
+              <span className="text-afri-text-sec uppercase">Premium :</span>
+              <div className="flex items-center gap-3">
+                <span className="text-red-400 line-through opacity-50">
                   {(pricing.premiumCommissionRate * 100).toFixed(1)} %
                 </span>
-                <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
+                <span className="text-emerald-400 font-black bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">
                   {(sheetNewPremium * 100).toFixed(1)} %
                 </span>
               </div>
             </div>
+          </div>
 
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => setSheetOpen(false)}
-                className="flex-1 py-3 bg-afri-bg border border-afri-border rounded-xl text-xs font-mono font-bold text-afri-text-sec hover:text-white"
-              >
-                ANNULER
-              </button>
-              <button
-                onClick={handleConfirmSave}
-                disabled={isSaving}
-                className="flex-1 py-3 bg-[#D4AF37] text-black rounded-xl text-xs font-mono font-black uppercase hover:opacity-90 disabled:opacity-50"
-              >
-                {isSaving ? "ENREGISTREMENT..." : "ENREGISTRER"}
-              </button>
+          <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-2xl flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold text-amber-400 uppercase">Avertissement Fiscal</p>
+              <p className="text-[9px] text-amber-500/80 leading-relaxed font-mono">
+                Ces modifications affecteront toutes les transactions futures sur la plateforme.
+              </p>
             </div>
           </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={handleConfirmSave}
+              disabled={isSaving}
+              className="flex-1 py-4 bg-[#D4AF37] text-black rounded-2xl text-xs font-black uppercase shadow-lg shadow-[#D4AF37]/20 transition hover:bg-amber-400 active:scale-95 disabled:opacity-50"
+            >
+              {isSaving ? "Enregistrement..." : "Appliquer les Changements"}
+            </button>
+            <button
+              onClick={() => setSheetOpen(false)}
+              className="py-4 px-8 bg-afri-bg-sec border border-afri-border rounded-2xl text-xs font-bold uppercase text-afri-text-sec transition hover:text-white"
+            >
+              Annuler
+            </button>
+          </div>
         </div>
-      )}
+      </FounderBottomSheet>
     </div>
   );
 }

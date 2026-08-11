@@ -16,6 +16,8 @@ import { logAdminAction } from "../../lib/auditLogger";
 import { safeStringify } from "../../lib/jsonUtils";
 import FounderFeesVault from "./FounderFeesVault";
 
+import FounderBottomSheet from "./FounderBottomSheet";
+
 interface AdminWalletManagementProps {
   currentUser?: any;
 }
@@ -852,190 +854,146 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
       </div>
 
       {/* MODAL: ACTION SUR UN UTILISATEUR (CRÉDIT / DÉBIT / CORRECTION / BLOCAGE) */}
-      <AnimatePresence>
-        {selectedUser && actionType && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-md">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-afri-bg border border-[#D4AF37]/50 rounded-3xl p-6 shadow-2xl text-left space-y-5"
-            >
-              <button
-                onClick={() => setActionType(null)}
-                className="absolute top-4 right-4 p-1 rounded-full text-afri-text-sec hover:text-afri-text bg-afri-bg-sec border border-afri-border"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="text-center space-y-2">
-                <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mx-auto">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-                <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-sans">
-                  {actionType === "credit" ? "Créditer le Wallet" :
-                   actionType === "debit" ? "Débiter le Wallet" :
-                   actionType === "correction" ? "Correction de Solde" :
-                   actionType === "block" ? "Verrouiller le Wallet" : 
-                   actionType === "unblock" ? "Déverrouiller le Wallet" :
-                   actionType === "freeze" ? "Geler le Compte" : "Dégeler le Compte"}
-                </h3>
-                <p className="text-xs text-afri-text-sec font-mono">
-                  Bénéficiaire : <span className="text-afri-text font-bold">{selectedUser.displayName || selectedUser.artistName || "Membre Gombo"}</span>
-                </p>
-              </div>
-
-              <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-3.5 space-y-1 font-mono text-xs">
-                <div className="flex justify-between text-afri-text-sec">
-                  <span>Solde actuel :</span>
-                  <span className="font-bold text-[#D4AF37]">
-                    {(selectedUser.wallet?.soldeDisponible ?? selectedUser.walletBalance ?? 0).toLocaleString("fr-FR")} FCFA
-                  </span>
-                </div>
-                <div className="flex justify-between text-afri-text-sec">
-                  <span>UID :</span>
-                  <span className="text-afri-text-muted">{selectedUser.uid || selectedUser.id}</span>
-                </div>
-              </div>
-
-              {(actionType === "credit" || actionType === "debit" || actionType === "correction") && (
-                <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
-                    {actionType === "correction" ? "Nouveau Solde Exact (FCFA)" : "Montant de l'opération (FCFA)"}
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={amountInput}
-                    onChange={(e) => setAmountInput(e.target.value)}
-                    placeholder="Ex: 5000"
-                    className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-3 text-afri-text font-mono text-sm outline-none"
-                  />
-                </div>
-              )}
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
-                  Motif Souverain Obligatoire
-                </label>
-                <textarea
-                  value={reasonInput}
-                  onChange={(e) => setReasonInput(e.target.value)}
-                  placeholder="Ex: Régularisation de paiement, bonus exceptionnel..."
-                  className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-afri-text font-mono text-xs outline-none h-20 resize-none"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  onClick={handleExecuteAdjustment}
-                  disabled={processing}
-                  className="flex-1 py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-xs tracking-wider rounded-xl transition cursor-pointer disabled:opacity-50"
-                >
-                  {processing ? "Traitement..." : "Exécuter l'action"}
-                </button>
-                <button
-                  onClick={() => setActionType(null)}
-                  disabled={processing}
-                  className="py-3 px-4 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold uppercase text-xs tracking-wider rounded-xl border border-afri-border transition cursor-pointer"
-                >
-                  Annuler
-                </button>
-              </div>
-            </motion.div>
+      <FounderBottomSheet
+        isOpen={!!(selectedUser && actionType)}
+        onClose={() => setActionType(null)}
+        title={
+          actionType === "credit" ? "Créditer le Wallet" :
+          actionType === "debit" ? "Débiter le Wallet" :
+          actionType === "correction" ? "Correction de Solde" :
+          actionType === "block" ? "Verrouiller le Wallet" : 
+          actionType === "unblock" ? "Déverrouiller le Wallet" :
+          actionType === "freeze" ? "Geler le Compte" : "Dégeler le Compte"
+        }
+        subtitle={selectedUser ? `Bénéficiaire : ${selectedUser.displayName || selectedUser.artistName || "Membre Gombo"}` : ""}
+      >
+        <div className="space-y-5">
+          <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-3.5 space-y-1 font-mono text-xs">
+            <div className="flex justify-between text-afri-text-sec">
+              <span>Solde actuel :</span>
+              <span className="font-bold text-[#D4AF37]">
+                {(selectedUser?.wallet?.soldeDisponible ?? selectedUser?.walletBalance ?? 0).toLocaleString("fr-FR")} FCFA
+              </span>
+            </div>
+            <div className="flex justify-between text-afri-text-sec">
+              <span>UID :</span>
+              <span className="text-afri-text-muted">{selectedUser?.uid || selectedUser?.id}</span>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+
+          {(actionType === "credit" || actionType === "debit" || actionType === "correction") && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
+                {actionType === "correction" ? "Nouveau Solde Exact (FCFA)" : "Montant de l'opération (FCFA)"}
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={amountInput}
+                onChange={(e) => setAmountInput(e.target.value)}
+                placeholder="Ex: 5000"
+                className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-3 text-afri-text font-mono text-sm outline-none"
+              />
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
+              Motif Souverain Obligatoire
+            </label>
+            <textarea
+              value={reasonInput}
+              onChange={(e) => setReasonInput(e.target.value)}
+              placeholder="Ex: Régularisation de paiement, bonus exceptionnel..."
+              className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-afri-text font-mono text-xs outline-none h-20 resize-none"
+            />
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={handleExecuteAdjustment}
+              disabled={processing}
+              className="flex-1 py-4 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-xs tracking-wider rounded-xl transition cursor-pointer disabled:opacity-50 shadow-lg shadow-[#D4AF37]/20"
+            >
+              {processing ? "Traitement..." : "Exécuter l'action impériale"}
+            </button>
+            <button
+              onClick={() => setActionType(null)}
+              disabled={processing}
+              className="py-4 px-6 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold uppercase text-xs tracking-wider rounded-xl border border-afri-border transition cursor-pointer"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      </FounderBottomSheet>
 
       {/* MODAL: REMBOURSER UNE TRANSACTION */}
-      <AnimatePresence>
-        {selectedTxForRefund && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-md">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-afri-bg border border-rose-500/50 rounded-3xl p-6 shadow-2xl text-left space-y-5"
-            >
-              <button
-                onClick={() => setSelectedTxForRefund(null)}
-                className="absolute top-4 right-4 p-1 rounded-full text-afri-text-sec hover:text-afri-text bg-afri-bg-sec border border-afri-border"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="text-center space-y-2">
-                <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 mx-auto">
-                  <RotateCcw className="w-6 h-6" />
-                </div>
-                <h3 className="text-base font-black text-afri-text uppercase tracking-wider font-sans">
-                  Rembourser la Transaction
-                </h3>
-                <p className="text-xs text-afri-text-sec font-mono">
-                  Réf : <span className="text-afri-text font-bold">{selectedTxForRefund.id}</span>
-                </p>
-              </div>
-
-              <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-3.5 space-y-1 font-mono text-xs">
-                <div className="flex justify-between text-afri-text-sec">
-                  <span>Montant maximum d'origine :</span>
-                  <span className="font-bold text-[#D4AF37]">
-                    {(selectedTxForRefund.amount || selectedTxForRefund.montant || 0).toLocaleString("fr-FR")} FCFA
-                  </span>
-                </div>
-                <div className="flex justify-between text-afri-text-sec">
-                  <span>Bénéficiaire :</span>
-                  <span className="text-afri-text font-bold">{selectedTxForRefund.userName || selectedTxForRefund.userId}</span>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
-                  Montant à recréditer (FCFA)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max={selectedTxForRefund.amount || selectedTxForRefund.montant || 0}
-                  value={refundAmountInput}
-                  onChange={(e) => setRefundAmountInput(e.target.value)}
-                  placeholder="Montant du remboursement..."
-                  className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-3 text-afri-text font-mono text-sm outline-none"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
-                  Motif du Remboursement
-                </label>
-                <textarea
-                  value={refundReason}
-                  onChange={(e) => setRefundReason(e.target.value)}
-                  placeholder="Ex: Annulation d'achat suite à incident technique..."
-                  className="w-full bg-afri-bg-sec border border-afri-border focus:border-rose-500 rounded-xl px-4 py-2.5 text-afri-text font-mono text-xs outline-none h-20 resize-none"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  onClick={handleExecuteRefund}
-                  disabled={processing}
-                  className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-afri-text font-black uppercase text-xs tracking-wider rounded-xl transition cursor-pointer disabled:opacity-50"
-                >
-                  {processing ? "Remboursement..." : "Confirmer le Remboursement"}
-                </button>
-                <button
-                  onClick={() => setSelectedTxForRefund(null)}
-                  disabled={processing}
-                  className="py-3 px-4 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold uppercase text-xs tracking-wider rounded-xl border border-afri-border transition cursor-pointer"
-                >
-                  Annuler
-                </button>
-              </div>
-            </motion.div>
+      <FounderBottomSheet
+        isOpen={!!selectedTxForRefund}
+        onClose={() => setSelectedTxForRefund(null)}
+        title="Rembourser la Transaction"
+        subtitle={selectedTxForRefund ? `Réf : ${selectedTxForRefund.id}` : ""}
+      >
+        <div className="space-y-5">
+          <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-3.5 space-y-1 font-mono text-xs">
+            <div className="flex justify-between text-afri-text-sec">
+              <span>Montant maximum d'origine :</span>
+              <span className="font-bold text-[#D4AF37]">
+                {(selectedTxForRefund?.amount || selectedTxForRefund?.montant || 0).toLocaleString("fr-FR")} FCFA
+              </span>
+            </div>
+            <div className="flex justify-between text-afri-text-sec">
+              <span>Bénéficiaire :</span>
+              <span className="text-afri-text font-bold">{selectedTxForRefund?.userName || selectedTxForRefund?.userId}</span>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
+              Montant à recréditer (FCFA)
+            </label>
+            <input
+              type="number"
+              min="1"
+              max={selectedTxForRefund?.amount || selectedTxForRefund?.montant || 0}
+              value={refundAmountInput}
+              onChange={(e) => setRefundAmountInput(e.target.value)}
+              placeholder="Montant du remboursement..."
+              className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-3 text-afri-text font-mono text-sm outline-none"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
+              Motif du Remboursement
+            </label>
+            <textarea
+              value={refundReason}
+              onChange={(e) => setRefundReason(e.target.value)}
+              placeholder="Ex: Annulation d'achat suite à incident technique..."
+              className="w-full bg-afri-bg-sec border border-afri-border focus:border-rose-500 rounded-xl px-4 py-2.5 text-afri-text font-mono text-xs outline-none h-20 resize-none"
+            />
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={handleExecuteRefund}
+              disabled={processing}
+              className="flex-1 py-4 bg-rose-500 hover:bg-rose-600 text-afri-text font-black uppercase text-xs tracking-wider rounded-xl transition cursor-pointer disabled:opacity-50 shadow-lg shadow-rose-900/20"
+            >
+              {processing ? "Remboursement..." : "Confirmer le Remboursement"}
+            </button>
+            <button
+              onClick={() => setSelectedTxForRefund(null)}
+              disabled={processing}
+              className="py-4 px-6 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold uppercase text-xs tracking-wider rounded-xl border border-afri-border transition cursor-pointer"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      </FounderBottomSheet>
         </>
       )}
 
