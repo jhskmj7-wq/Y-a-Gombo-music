@@ -94,22 +94,44 @@ export default function AdminDeploymentCenter({
 
   // 1. DEFAULT FEATURE FLAGS INITIALIZER
   const defaultFlags: FeatureFlagItem[] = [
-    { id: "grandMarket", name: "Grand Marché & Annonces", category: "Économie", enabled: true, status: "validated", description: "Plateforme de transactions et petites annonces" },
-    { id: "updateJournal", name: "Journal des mises à jour", category: "Système", enabled: true, status: "validated", description: "Registre de modifications et notes de version" },
-    { id: "downloads", name: "Téléchargements de documents", category: "Média", enabled: true, status: "validated", description: "Téléchargement sécurisé des reçus et documents" },
-    { id: "backups", name: "Sauvegardes du Système", category: "Sécurité", enabled: true, status: "validated", description: "Sauvegardes de sécurité automatiques" },
-    { id: "avatar", name: "Avatar Personnalisé", category: "Profil", enabled: true, status: "validated", description: "Système de personnalisation d'avatars et boutiques" },
-    { id: "wallet", name: "Wallet Souverain AFRIPAY", category: "Finance", enabled: true, status: "validated", description: "Solde rechargeable et virements sécurisés" },
-    { id: "chat", name: "Messagerie Instantanée V2", category: "Communication", enabled: true, status: "validated", description: "Messages cryptés et notifications" },
-    { id: "radar", name: "Radar Géolocalisé Nearby", category: "Navigation", enabled: true, status: "validated", description: "Cartographie et proximité des membres" },
-    { id: "cahier", name: "Cahier Numérique du Fondateur", category: "Gouvernance", enabled: true, status: "validated", description: "Carnet de notes Firestore professionnel" },
-    { id: "appels", name: "Appels Audio/Vidéo WebRTC", category: "Communication", enabled: true, status: "experimental", description: "Flux direct peer-to-peer en temps réel" },
-    { id: "academie", name: "Académie AFRIGOMBO ELITE", category: "Formation", enabled: false, status: "pending", description: "Tutoriels et certifications professionnelles" },
-    { id: "podcasts", name: "Podcasts & Multimédia", category: "Média", enabled: true, status: "validated", description: "Lecteur audio kora et diffusions résonantes" },
-    { id: "events", name: "Événements & Billetterie", category: "Communauté", enabled: true, status: "experimental", description: "Création et reservation d'événements" },
-    { id: "gombo_id", name: "Gombo ID Souverain", category: "Sécurité", enabled: true, status: "validated", description: "Système de badges d'accréditation" },
-    { id: "verification", name: "Vérification KYC Biométrique", category: "Sécurité", enabled: false, status: "pending", description: "Contrôle d'identité par IA" },
-    { id: "notifications", name: "Diffusions Mégaphoniques", category: "Communication", enabled: true, status: "validated", description: "Pousse de notifications en masse" }
+    // APPLICATION & NAVIGATION
+    { id: "home", name: "🏠 Accueil & Le Terrain", category: "Application", enabled: true, status: "validated", description: "Fil d'actualité principal et espace d'accueil" },
+    { id: "gombos", name: "📢 Fil des Gombos & Publications", category: "Application", enabled: true, status: "validated", description: "Gestion et publication des Gombos" },
+    { id: "nearby", name: "📍 Près de moi", category: "Navigation", enabled: true, status: "validated", description: "Module général de découverte locale" },
+    { id: "nearbyOpportunities", name: "🧭 Opportunités proches", category: "Navigation", enabled: true, status: "validated", description: "Découverte des Gombos et opportunités à proximité" },
+    { id: "radar", name: "📡 Radar Géolocalisé Nearby", category: "Navigation", enabled: true, status: "validated", description: "Cartographie et proximité des membres" },
+    { id: "reels", name: "🎬 Reels & Flex Multimédia", category: "Application", enabled: true, status: "validated", description: "Shorts vidéo et créations multimédia" },
+    { id: "renforts", name: "⚡ Renfort Express", category: "Application", enabled: true, status: "validated", description: "Mobilisation rapide de talents en urgence" },
+    { id: "podcasts", name: "🎙️ Podcasts & Resonances", category: "Média", enabled: true, status: "validated", description: "Lecteur audio kora et diffusions résonantes" },
+    { id: "events", name: "🎟️ Événements & Billetterie", category: "Communauté", enabled: true, status: "experimental", description: "Création et réservation d'événements" },
+    { id: "mes_groupes", name: "👥 Groupes & Communautés", category: "Communauté", enabled: true, status: "validated", description: "Groupes de discussion et réseaux de talents" },
+    { id: "favorites", name: "⭐ Favoris & Enregistrements", category: "Application", enabled: true, status: "validated", description: "Gestion des annonces et profils enregistrés" },
+
+    // FINANCES
+    { id: "wallet", name: "💳 Wallet Souverain AFRIPAY", category: "Finance", enabled: true, status: "validated", description: "Solde rechargeable et virements sécurisés" },
+    { id: "escrow", name: "🔐 Séquestre & Contrats Dépôt", category: "Finance", enabled: true, status: "validated", description: "Système de séquestre de cachets et contrats" },
+    { id: "premium", name: "💎 Adhésion Premium ELITE", category: "Finance", enabled: true, status: "validated", description: "Abonnements Gold Prestige, Silver et VIP" },
+    { id: "monetisation", name: "📈 Programme de Monétisation", category: "Finance", enabled: true, status: "validated", description: "Fonds créateurs et revenus partagés" },
+
+    // UNIVERS
+    { id: "grandMarket", name: "🛒 Grand Marché AFRIGOMBO", category: "Économie", enabled: true, status: "validated", description: "Plateforme de transactions et petites annonces" },
+    { id: "academie", name: "🎓 Académie AFRIGOMBO ELITE", category: "Formation", enabled: false, status: "pending", description: "Tutoriels et certifications professionnelles" },
+    { id: "gombo_id", name: "🪪 Gombo ID Souverain", category: "Sécurité", enabled: true, status: "validated", description: "Système de badges d'accréditation" },
+    { id: "avatar", name: "🎭 Avatar Personnalisé", category: "Profil", enabled: true, status: "validated", description: "Système de personnalisation d'avatars et boutiques" },
+    { id: "heritage", name: "👑 Mon Héritage & Portfolio", category: "Profil", enabled: true, status: "validated", description: "Portfolio artistique et palmarès du membre" },
+
+    // COMMUNICATION
+    { id: "chat", name: "💬 Messagerie Instantanée V2", category: "Communication", enabled: true, status: "validated", description: "Messages cryptés et notifications directes" },
+    { id: "appels", name: "📞 Appels Audio/Vidéo WebRTC", category: "Communication", enabled: true, status: "experimental", description: "Flux direct peer-to-peer en temps réel" },
+    { id: "notifications", name: "📣 Diffusions Mégaphoniques", category: "Communication", enabled: true, status: "validated", description: "Pousse de notifications en masse" },
+
+    // SYSTÈME
+    { id: "downloads", name: "📥 Téléchargements de documents", category: "Média", enabled: true, status: "validated", description: "Téléchargement sécurisé des reçus et documents" },
+    { id: "backups", name: "🛡️ Sauvegardes du Système", category: "Sécurité", enabled: true, status: "validated", description: "Sauvegardes de sécurité automatiques" },
+    { id: "updateJournal", name: "📰 Journal des Mises à jour", category: "Système", enabled: true, status: "validated", description: "Registre de modifications et notes de version" },
+    { id: "cahier", name: "📓 Cahier Numérique du Fondateur", category: "Gouvernance", enabled: true, status: "validated", description: "Carnet de notes Firestore professionnel" },
+    { id: "verification", name: "🆔 Vérification KYC Biométrique", category: "Sécurité", enabled: false, status: "pending", description: "Contrôle d'identité par IA" },
+    { id: "support", name: "🛟 Support Client & Aide", category: "Système", enabled: true, status: "validated", description: "Signalements de bugs et assistance" }
   ];
 
   // 2. LISTEN TO FIRESTORE REAL DEPLOYMENTS & FEATURE FLAGS & BUG REPORTS
@@ -138,7 +160,7 @@ export default function AdminDeploymentCenter({
     }, (err) => console.error("Err deployment stream:", err));
 
     // Combined feature flags streams
-    const targetKeys = ["grandMarket", "updateJournal", "downloads", "backups", "avatar"];
+    const targetKeys = defaultFlags.map(f => f.id);
     const flagsRef = doc(db, "settings", "feature_flags");
     const sysConfigRef = doc(db, "systemConfig", "features");
 
@@ -150,23 +172,19 @@ export default function AdminDeploymentCenter({
       sysFlags: Record<string, { enabled: boolean; updatedAt?: any }>
     ) => {
       const combined = defaultFlags.map(f => {
-        if (targetKeys.includes(f.id)) {
-          const sysValue = sysFlags[f.id];
-          if (sysValue !== undefined) {
-            return {
-              ...f,
-              enabled: sysValue.enabled,
-              status: sysValue.enabled ? "validated" : "disabled" as any
-            };
-          }
-          return f;
-        } else {
-          const settingsMatch = settingsFlags.find(sf => sf.id === f.id);
-          if (settingsMatch) {
-            return settingsMatch;
-          }
-          return f;
+        const sysValue = sysFlags[f.id];
+        if (sysValue !== undefined) {
+          return {
+            ...f,
+            enabled: sysValue.enabled,
+            status: sysValue.enabled ? "validated" : ("disabled" as any)
+          };
         }
+        const settingsMatch = settingsFlags.find(sf => sf.id === f.id);
+        if (settingsMatch) {
+          return settingsMatch;
+        }
+        return f;
       });
       setFeatureFlags(combined);
     };
@@ -188,13 +206,14 @@ export default function AdminDeploymentCenter({
         const data = docSnap.data() as Record<string, { enabled: boolean; updatedAt?: any }>;
         lastSysFlags = data;
         
-        // Auto-initialize any missing keys in systemConfig/features to true
+        // Auto-initialize any missing keys in systemConfig/features
         const missingKeys = targetKeys.filter(k => data[k] === undefined);
         if (missingKeys.length > 0) {
           const updates: Record<string, any> = {};
           missingKeys.forEach(k => {
+            const defaultObj = defaultFlags.find(f => f.id === k);
             updates[k] = {
-              enabled: true,
+              enabled: defaultObj ? defaultObj.enabled : true,
               updatedAt: serverTimestamp()
             };
           });
@@ -206,13 +225,10 @@ export default function AdminDeploymentCenter({
         }
       } else {
         lastSysFlags = {};
-        const initialData = {
-          grandMarket: { enabled: true, updatedAt: serverTimestamp() },
-          updateJournal: { enabled: true, updatedAt: serverTimestamp() },
-          downloads: { enabled: true, updatedAt: serverTimestamp() },
-          backups: { enabled: true, updatedAt: serverTimestamp() },
-          avatar: { enabled: true, updatedAt: serverTimestamp() }
-        };
+        const initialData: Record<string, any> = {};
+        defaultFlags.forEach(f => {
+          initialData[f.id] = { enabled: f.enabled, updatedAt: serverTimestamp() };
+        });
         try {
           await setDoc(sysConfigRef, initialData);
         } catch (e) {
@@ -249,9 +265,6 @@ export default function AdminDeploymentCenter({
 
   // TOGGLE FEATURE FLAG IN FIRESTORE
   const handleToggleFlag = async (flagId: string) => {
-    const targetKeys = ["grandMarket", "updateJournal", "downloads", "backups", "avatar"];
-    const isTarget = targetKeys.includes(flagId);
-
     const currentFlag = featureFlags.find((f) => f.id === flagId);
     if (!currentFlag) return;
 
@@ -265,38 +278,33 @@ export default function AdminDeploymentCenter({
           enabled: newEnabled,
           status: newEnabled
             ? (f.status === "disabled" ? "experimental" : f.status)
-            : "disabled" as any
+            : ("disabled" as any)
         };
       }
       return f;
     });
     setFeatureFlags(updatedFlags);
 
-    if (isTarget) {
-      try {
-        const sysConfigRef = doc(db, "systemConfig", "features");
-        await setDoc(sysConfigRef, {
-          [flagId]: {
-            enabled: newEnabled,
-            updatedAt: serverTimestamp()
-          }
-        }, { merge: true });
-        try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
-      } catch (err) {
-        console.error("Erreur systemConfig update:", err);
-      }
-    } else {
-      try {
-        const flagsRef = doc(db, "settings", "feature_flags");
-        await setDoc(flagsRef, {
-          flags: updatedFlags,
-          updatedAt: new Date().toISOString(),
-          updatedBy: founderEmail
-        }, { merge: true });
-        try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
-      } catch (err) {
-        console.error("Erreur mise à jour feature flag:", err);
-      }
+    try {
+      const sysConfigRef = doc(db, "systemConfig", "features");
+      await setDoc(sysConfigRef, {
+        [flagId]: {
+          enabled: newEnabled,
+          updatedAt: serverTimestamp(),
+          updatedBy: founderEmail || "Fondateur"
+        }
+      }, { merge: true });
+
+      const flagsRef = doc(db, "settings", "feature_flags");
+      await setDoc(flagsRef, {
+        flags: updatedFlags,
+        updatedAt: new Date().toISOString(),
+        updatedBy: founderEmail || "Fondateur"
+      }, { merge: true });
+
+      try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
+    } catch (err) {
+      console.error("Erreur feature flag update:", err);
     }
   };
 

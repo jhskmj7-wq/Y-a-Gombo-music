@@ -21,6 +21,9 @@ import { db, storage } from "../lib/firebase";
 import { safeStringify, getCircularReplacer, safeJsonClone } from "../lib/jsonUtils";
 import { getEffectiveGomboId, generateGomboId, formatGomboIdDisplay, formatGomboRefDisplay } from "../lib/gomboIdHelper";
 import { PremiumEngine } from "../lib/premiumEngine";
+import { SecurityService } from "../lib/SecurityService";
+import { isFeatureEnabled as checkIsFeatureEnabled, subscribeToFeatureFlags } from "../lib/featureFlags";
+import { FeatureUnavailable } from "./FeatureUnavailable";
 import { getEffectiveCommissionRate, calculatePublicationFinancials, recordWalletTransaction, getCanonicalWalletBalance } from "../lib/financial";
 import { useNavigate } from "react-router-dom";
 import { lazyWithRetry } from "../lib/lazyWithRetry";
@@ -1073,6 +1076,62 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     });
     return () => unsub();
   }, [adminEmail]);
+
+  // REAL-TIME GLOBAL FEATURE FLAGS ENGINE
+  const [systemFeatureFlags, setSystemFeatureFlags] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const unsubSys = subscribeToFeatureFlags((updatedFlags) => {
+      setSystemFeatureFlags(updatedFlags);
+    });
+    return () => unsubSys();
+  }, []);
+
+  const isFeatureEnabled = (flagId: string): boolean => {
+    return checkIsFeatureEnabled(flagId, currentUser, profile, systemFeatureFlags);
+  };
+
+  const getFlagForMenu = (menu: string): string | null => {
+    // ÉTAPE 5: ONLY map the 7 specified features
+    const map: Record<string, string> = {
+      user_grand_marche: "grandMarket",
+      user_grandMarket: "grandMarket",
+      user_ecosystem: "grandMarket",
+      user_whats_new: "updateJournal",
+      user_downloads: "downloads",
+      user_backups: "backups",
+      user_avatar: "avatar",
+      nearby: "nearby",
+      nearbyOpportunities: "nearbyOpportunities",
+      user_opportunities: "nearbyOpportunities"
+    };
+    return map[menu] || null;
+  };
+
+  const getFeatureNameForMenu = (menu: string): string => {
+    switch (menu) {
+      case "user_grand_marche":
+      case "user_grandMarket":
+      case "user_ecosystem":
+        return "Grand Marché";
+      case "user_whats_new":
+        return "Journal des Mises à jour";
+      case "user_downloads":
+        return "Téléchargements";
+      case "user_backups":
+        return "Sauvegardes";
+      case "user_avatar":
+        return "Avatar";
+      case "nearby":
+        return "Près de moi";
+      case "user_opportunities":
+      case "nearbyOpportunities":
+        return "Opportunités Proches";
+      default:
+        return "Fonctionnalité";
+    }
+  };
+
   const [isSuperWelcomeOpen, setIsSuperWelcomeOpen] = useState<boolean>(false);
   const [showThroneCinematic, setShowThroneCinematic] = useState<boolean>(false);
   const hasSeenThroneCinematic = useRef<boolean>(false);
@@ -2926,15 +2985,22 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           <div 
             className={activeMenu === "nearby" ? "w-full h-full animate-fadeIn text-left overflow-hidden" : "hidden"}
           >
-            <NearbyPageView
-              gombos={gombos}
-              users={users}
-              currentUser={currentUser}
-              onBack={() => setActiveMenu("user_terrain")}
-              onSelectGombo={(g) => setSelectedGomboDetails(g)}
-              onApplyGombo={(g) => setSelectedGomboDetails(g)}
-              geo={geo}
-            />
+            {!isFeatureEnabled("nearby") ? (
+              <FeatureUnavailable 
+                featureName="Près de moi" 
+                onBack={() => setActiveMenu("user_terrain")} 
+              />
+            ) : (
+              <NearbyPageView
+                gombos={gombos}
+                users={users}
+                currentUser={currentUser}
+                onBack={() => setActiveMenu("user_terrain")}
+                onSelectGombo={(g) => setSelectedGomboDetails(g)}
+                onApplyGombo={(g) => setSelectedGomboDetails(g)}
+                geo={geo}
+              />
+            )}
           </div>
 
           {/* 1. LE TERRAIN - CENTRAL HUB FEED */}
@@ -3017,6 +3083,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 }`}
                 style={{ overscrollBehaviorY: "contain" }}
               >
+                {getFlagForMenu(activeMenu) && !isFeatureEnabled(getFlagForMenu(activeMenu)!) ? (
+                  <FeatureUnavailable 
+                    featureName={getFeatureNameForMenu(activeMenu)}
+                    onBack={() => setActiveMenu("user_terrain")} 
+                  />
+                ) : (
+                  <>
                 
                 {/* ----------------------------------------------------
                                   STEP I: TABLEAU UTILISATEUR (10 CORE SECTIONS)
@@ -7998,6 +8071,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 );
               })()}
 
+                  </>
+                )}
+
             </motion.div>
             )}
           </AnimatePresence>
@@ -9159,7 +9235,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
       {isChangelogModalOpen && (
         <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-afri-bg border border-afri-gold/20 rounded-2xl p-6 w-full max-w-lg shadow-2xl relative max-h-[85vh] flex flex-col">
+          {!isFeatureEnabled("updateJournal") ? (
+            <div className="bg-afri-bg border border-afri-gold/20 rounded-2xl p-6 w-full max-w-lg shadow-2xl relative">
+              <FeatureUnavailable featureName="Journal des Mises à jour" onBack={() => setIsChangelogModalOpen(false)} />
+            </div>
+          ) : (
+            <div className="bg-afri-bg border border-afri-gold/20 rounded-2xl p-6 w-full max-w-lg shadow-2xl relative max-h-[85vh] flex flex-col">
             <button 
               onClick={() => setIsChangelogModalOpen(false)}
               className="absolute top-4 right-4 p-2 text-afri-text-sec hover:text-afri-text rounded-lg transition-colors cursor-pointer"
@@ -9200,8 +9281,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+    )}
 
       {isBugModalOpen && (
         <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
@@ -10177,12 +10259,28 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       {/* Avatar Modals */}
       {isAvatarEditorOpen && (
         <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin"></div></div>}>
-          <AvatarEditor onClose={() => setIsAvatarEditorOpen(false)} />
+          {!isFeatureEnabled("avatar") ? (
+            <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+              <div className="bg-afri-bg border border-afri-border rounded-2xl p-6 max-w-md w-full">
+                <FeatureUnavailable featureName="Avatar" onBack={() => setIsAvatarEditorOpen(false)} />
+              </div>
+            </div>
+          ) : (
+            <AvatarEditor onClose={() => setIsAvatarEditorOpen(false)} />
+          )}
         </Suspense>
       )}
       {isAvatarStoreOpen && (
         <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin"></div></div>}>
-          <AvatarStore onClose={() => setIsAvatarStoreOpen(false)} inventory={[]} />
+          {!isFeatureEnabled("avatar") ? (
+            <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+              <div className="bg-afri-bg border border-afri-border rounded-2xl p-6 max-w-md w-full">
+                <FeatureUnavailable featureName="Avatar" onBack={() => setIsAvatarStoreOpen(false)} />
+              </div>
+            </div>
+          ) : (
+            <AvatarStore onClose={() => setIsAvatarStoreOpen(false)} inventory={[]} />
+          )}
         </Suspense>
       )}
 
