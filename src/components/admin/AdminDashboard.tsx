@@ -96,7 +96,8 @@ export default function AdminDashboard({
   saveToFirestore,
   setUsers,
   setPosts,
-  setGombos
+  setGombos,
+  onEnterThrone
 }: any) {
   
   const handleQuickApproveKyc = async (userId: string) => {
@@ -466,7 +467,11 @@ export default function AdminDashboard({
 
           <button
             onClick={() => {
-              setActiveMenu("super_admin");
+              if (onEnterThrone) {
+                onEnterThrone();
+              } else {
+                setActiveMenu("super_admin");
+              }
               addToTerminal("👑 [SOUVERAINETÉ] Entrée dans le Trône demandée.");
               try { audioSynth.playTamTam(true); } catch (err) {}
             }}

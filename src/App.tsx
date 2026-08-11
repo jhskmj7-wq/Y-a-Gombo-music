@@ -29,6 +29,7 @@ const LivingInteractions = lazyWithRetry(() => import("./components/LivingIntera
 const PWAHandler = lazyWithRetry(() => import("./components/PWAHandler"));
 const PWADiagnosticPage = lazyWithRetry(() => import("./components/PWADiagnosticPage"));
 const TheThroneOfTheFounder = lazyWithRetry(() => import("./components/TheThroneOfTheFounder"));
+const FounderThronePage = lazyWithRetry(() => import("./components/FounderThronePage"));
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
   try {
@@ -270,6 +271,26 @@ function App() {
               <AuthGuard>
                 <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg animate-pulse" />}>
                   <TheThroneOfTheFounder />
+                </Suspense>
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/Le-Trone-Du-Fondateur" 
+            element={
+              <AuthGuard>
+                <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg animate-pulse" />}>
+                  <FounderThronePage />
+                </Suspense>
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/founder-throne" 
+            element={
+              <AuthGuard>
+                <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg animate-pulse" />}>
+                  <FounderThronePage />
                 </Suspense>
               </AuthGuard>
             } 
