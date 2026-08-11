@@ -5,9 +5,9 @@
     ],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.afrigombo.elite",
+      "package_name": "À_DÉFINIR",
       "sha256_cert_fingerprints": [
-        "SHA256_CERTIFICATE_FINGERPRINT_REQUIRED"
+        "À_REMPLACER_PAR_LA_VRAIE_EMPREINTE_SHA256"
       ]
     }
   }

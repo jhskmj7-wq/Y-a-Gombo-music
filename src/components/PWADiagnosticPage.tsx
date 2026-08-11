@@ -494,7 +494,8 @@ export default function PWADiagnosticPage() {
       "/manifest.webmanifest",
       "/sw.js",
       "/pwa-192x192.png",
-      "/pwa-512x512.png"
+      "/pwa-512x512.png",
+      "/pwa-512x512-maskable.png"
     ];
 
     const resTests: ResourceTestResult[] = [];
@@ -660,7 +661,7 @@ export default function PWADiagnosticPage() {
       causeDetailResult = "Sur iOS Safari, l'événement beforeinstallprompt n'est pas supporté. L'installation est uniquement manuelle.";
     } else if (!beforeInstallPromptReceived) {
       causeTypeResult = "NON DÉTERMINABLE";
-      causeDetailResult = "Chrome n'a pas fourni beforeinstallprompt malgré une configuration techniquement valide. Le navigateur peut appliquer ses propres conditions d'installation (score d'engagement heuristique de l'utilisateur, ou l'application est déjà installée sur un autre profil utilisateur de l'appareil).";
+      causeDetailResult = "Les prérequis techniques sont satisfaits. Le navigateur n'a pas encore fourni l'événement d'installation.";
     } else {
       causeTypeResult = "CONFIRMÉE";
       causeDetailResult = "Aucune anomalie détectée : beforeinstallprompt est disponible et l'installation est prête à être testée.";
