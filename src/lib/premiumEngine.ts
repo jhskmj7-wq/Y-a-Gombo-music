@@ -31,20 +31,30 @@ export const PremiumEngine = {
   isPremium(userData: any): boolean {
     if (!userData) return false;
 
-    // Check modern field or fallback field
-    const hasPremiumField = userData.premium === true;
-    const hasFallbackPremium = userData.isPremium === true || userData.premiumStatus === "active" || userData.status === "premium";
+    // Check modern fields, fallback fields, badges, subscriptionPlan, isVip, isPro, isFounder, role, niveauWallet
+    const hasPremiumField = userData.premium === true || userData.isPremium === true;
+    const hasStatusActive = userData.premiumStatus === "active" || userData.status === "premium" || userData.wallet?.niveauWallet === "PREMIUM" || userData.wallet?.niveauWallet === "ELITE" || userData.wallet?.niveauWallet === "PRO" || userData.wallet?.niveauWallet === "VIP";
+    const hasVipOrPro = userData.isVip === true || userData.isPro === true || userData.isFounder === true || userData.role === "admin";
+    const hasSubscription = !!(userData.subscriptionPlan || userData.subscriptionType || userData.premiumPlan);
+    const hasBadge = Array.isArray(userData.badges) && userData.badges.some((b: string) => {
+      const lb = (b || "").toLowerCase();
+      return lb.includes("premium") || lb.includes("elite") || lb.includes("pro") || lb.includes("vip");
+    });
 
-    if (!hasPremiumField && !hasFallbackPremium) {
+    const isExplicitlyPremium = hasPremiumField || hasStatusActive || hasVipOrPro || hasSubscription || hasBadge;
+
+    if (!isExplicitlyPremium) {
       return false;
     }
 
-    // Check expiration date
+    // Check expiration date if present
     const until = userData.premiumUntil || userData.premiumExpiresAt;
     if (until) {
       const expiryDate = new Date(until);
       if (!isNaN(expiryDate.getTime()) && expiryDate <= new Date()) {
-        return false; // Expired
+        if (!userData.isFounder && userData.role !== "admin") {
+          return false; // Expired
+        }
       }
     }
 

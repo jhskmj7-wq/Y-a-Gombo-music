@@ -87,6 +87,7 @@ export async function activatePremiumForUser(
       new Set([...currentBadges, "💎 Adhérent Premium", planBadge])
     );
 
+    const existingWallet = userSnap.exists() ? (userSnap.data().wallet || {}) : {};
     await updateDoc(userRef, {
       premium: true,
       isPremium: true,
@@ -99,6 +100,10 @@ export async function activatePremiumForUser(
       subscriptionType: isElite ? "elite" : "pro",
       commissionRate: 0.015,
       badges: updatedBadges,
+      wallet: {
+        ...existingWallet,
+        niveauWallet: "PREMIUM"
+      },
       updatedAt: activatedAtIso
     });
 
