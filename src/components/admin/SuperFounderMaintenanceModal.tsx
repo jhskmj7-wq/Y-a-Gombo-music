@@ -68,6 +68,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
   const [endAt, setEndAt] = useState<string>("");
   const [alertBeforeMinutes, setAlertBeforeMinutes] = useState<number | null>(15);
   const [modules, setModules] = useState<Record<string, boolean>>({});
+  const [schedules, setSchedules] = useState<any[]>([]);
 
   // UI Local States
   const [loading, setLoading] = useState<boolean>(false);
@@ -105,6 +106,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
         setEndAt(data.endAt || "");
         setAlertBeforeMinutes(data.alertBeforeMinutes ?? 15);
         setModules(data.modules || {});
+        setSchedules(data.schedules || []);
       }
     }, (err) => {
       console.warn("⚠️ [MAINTENANCE_MODAL] Firestore read error:", err);
@@ -119,7 +121,24 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
   const endTime = endAt ? new Date(endAt).getTime() : 0;
   const isCurrentlyInScheduledWindow = scheduled && startTime > 0 && endTime > 0 && now >= startTime && now < endTime;
   const isScheduledInFuture = scheduled && startTime > now;
-  const isMaintenanceActive = globalMode || isCurrentlyInScheduledWindow;
+  
+  // Calculate if any of the multi-schedules are active or future
+  const activeSchedulesList = schedules.filter((sched: any) => {
+    const s = sched.startAt ? new Date(sched.startAt).getTime() : 0;
+    const e = sched.endAt ? new Date(sched.endAt).getTime() : 0;
+    return s > 0 && e > 0 && now >= s && now < e;
+  });
+
+  const futureSchedulesList = schedules.filter((sched: any) => {
+    const s = sched.startAt ? new Date(sched.startAt).getTime() : 0;
+    return s > now;
+  });
+
+  const isAnyScheduleActive = isCurrentlyInScheduledWindow || activeSchedulesList.length > 0;
+  const isAnyScheduleInFuture = isScheduledInFuture || futureSchedulesList.length > 0;
+
+  // Single source of truth live status
+  const isSystemActive = globalMode || isAnyScheduleActive;
 
   // Real-time Save Maintenance Settings
   const saveMaintenanceSettings = async (overrideData: Partial<any> = {}) => {
@@ -135,18 +154,29 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
     try {
       const payload = {
         globalMode: overrideData.globalMode !== undefined ? overrideData.globalMode : globalMode,
-        status: (overrideData.globalMode ?? globalMode) ? "maintenance" : "operational",
+        status: (overrideData.globalMode !== undefined ? overrideData.globalMode : globalMode) ? "maintenance" : "operational",
         globalMessage: overrideData.globalMessage !== undefined ? overrideData.globalMessage : globalMessage,
         scheduled: overrideData.scheduled !== undefined ? overrideData.scheduled : scheduled,
         startAt: overrideData.startAt !== undefined ? overrideData.startAt : startAt,
         endAt: overrideData.endAt !== undefined ? overrideData.endAt : endAt,
         alertBeforeMinutes: overrideData.alertBeforeMinutes !== undefined ? overrideData.alertBeforeMinutes : alertBeforeMinutes,
         modules: overrideData.modules !== undefined ? overrideData.modules : modules,
+        schedules: overrideData.schedules !== undefined ? overrideData.schedules : schedules,
         updatedAt: new Date().toISOString(),
         updatedBy: currentUser?.email || profile?.email || "Super Fondateur"
       };
 
-      // Atomic update across all 3 configuration collections to guarantee consistency
+      // Set exact live status
+      const hasActive = payload.globalMode || 
+                        (payload.scheduled && payload.startAt && payload.endAt && now >= new Date(payload.startAt).getTime() && now < new Date(payload.endAt).getTime()) ||
+                        (Array.isArray(payload.schedules) && payload.schedules.some((sched: any) => {
+                          const s = new Date(sched.startAt).getTime();
+                          const e = new Date(sched.endAt).getTime();
+                          return s > 0 && e > 0 && now >= s && now < e;
+                        }));
+
+      payload.status = hasActive ? "maintenance" : "operational";
+
       try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
       console.log("Saving maintenance payload:", payload);
       await setDoc(doc(db, "settings", "maintenance"), payload, { merge: true });
@@ -157,17 +187,10 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
         let title = "Maintenance de l'application";
         let message = payload.globalMessage || "Mise à jour du statut de la plateforme.";
         
-        const isStarted = payload.globalMode === true || payload.status === "maintenance";
-        const isEnded = payload.globalMode === false || payload.status === "operational";
-        const isScheduled = payload.scheduled === true && payload.startAt && payload.endAt;
-
-        if (isStarted) {
+        if (hasActive) {
           title = "Maintenance En Cours ⚠️";
           message = payload.globalMessage || "L'application est actuellement en maintenance. Merci de patienter !";
-        } else if (isScheduled) {
-          title = "Maintenance Programmée ⚙️";
-          message = `Une maintenance est planifiée du ${new Date(payload.startAt).toLocaleString('fr-FR')} au ${new Date(payload.endAt).toLocaleString('fr-FR')}.`;
-        } else if (isEnded) {
+        } else {
           title = "Maintenance Terminée ✅";
           message = "La maintenance est terminée ! L'application est entièrement opérationnelle.";
         }
@@ -198,9 +221,31 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
 
   // Toggle Global Maintenance
   const handleToggleGlobal = async () => {
-    const nextMode = !globalMode;
-    // Don't call setGlobalMode here, let onSnapshot handle it
-    await saveMaintenanceSettings({ globalMode: nextMode });
+    if (isSystemActive) {
+      // Deactivate all active maintenances immediately
+      const nowISO = new Date().toISOString();
+      const updatedSchedules = schedules.map((sched: any) => {
+        const s = sched.startAt ? new Date(sched.startAt).getTime() : 0;
+        const e = sched.endAt ? new Date(sched.endAt).getTime() : 0;
+        const isActive = s > 0 && e > 0 && now >= s && now < e;
+        if (isActive) {
+          return { ...sched, endAt: nowISO }; // Truncate to now
+        }
+        return sched;
+      });
+
+      await saveMaintenanceSettings({
+        globalMode: false,
+        scheduled: isCurrentlyInScheduledWindow ? false : scheduled,
+        endAt: isCurrentlyInScheduledWindow ? nowISO : endAt,
+        schedules: updatedSchedules
+      });
+    } else {
+      // Activate maintenance immediately
+      await saveMaintenanceSettings({
+        globalMode: true
+      });
+    }
   };
 
   // Cancel Scheduled Maintenance
@@ -216,7 +261,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
     });
   };
 
-  // Save Schedule Form
+  // Save Schedule Form (Add a new schedule to the list)
   const handleSaveSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!startAt || !endAt) {
@@ -228,14 +273,36 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
       return;
     }
 
-    setScheduled(true);
+    const newSchedule = {
+      id: "sched_" + Date.now(),
+      name: `Maintenance #${schedules.length + 1}`,
+      startAt,
+      endAt,
+      globalMessage,
+      alertBeforeMinutes
+    };
+
+    const updatedSchedules = [...schedules, newSchedule];
+    setSchedules(updatedSchedules);
     setShowScheduleForm(false);
+
+    // Keep legacy start/end for top-level backward compatibility
     await saveMaintenanceSettings({
       scheduled: true,
       startAt,
       endAt,
       globalMessage,
-      alertBeforeMinutes
+      alertBeforeMinutes,
+      schedules: updatedSchedules
+    });
+  };
+
+  // Delete specific schedule from list
+  const handleDeleteSchedule = async (id: string) => {
+    const updatedSchedules = schedules.filter((s) => s.id !== id);
+    setSchedules(updatedSchedules);
+    await saveMaintenanceSettings({
+      schedules: updatedSchedules
     });
   };
 
@@ -346,25 +413,25 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
           <div className="flex items-center justify-between bg-black/40 p-3.5 rounded-xl border border-white/5">
             <div className="flex items-center gap-3">
               <div className={`w-3.5 h-3.5 rounded-full ${
-                isMaintenanceActive
+                isSystemActive
                   ? "bg-rose-500 shadow-lg shadow-rose-500/50 animate-pulse"
-                  : isScheduledInFuture
+                  : isAnyScheduleInFuture
                   ? "bg-amber-500 shadow-lg shadow-amber-500/50"
                   : "bg-emerald-500 shadow-lg shadow-emerald-500/50"
               }`} />
               <div>
                 <h3 className="text-sm font-black uppercase tracking-wide">
-                  {isMaintenanceActive
+                  {isSystemActive
                     ? "🔴 MAINTENANCE ACTIVE"
-                    : isScheduledInFuture
+                    : isAnyScheduleInFuture
                     ? "🟠 MAINTENANCE PROGRAMMÉE"
                     : "🟢 APPLICATION EN LIGNE"}
                 </h3>
                 <p className="text-[10px] font-mono text-zinc-400 mt-0.5">
-                  {isMaintenanceActive
+                  {isSystemActive
                     ? "L'accès public est restreint aux utilisateurs réguliers."
-                    : isScheduledInFuture
-                    ? `Prochaine maintenance prévue le ${new Date(startAt).toLocaleString()}`
+                    : isAnyScheduleInFuture
+                    ? "Une ou plusieurs maintenances sont programmées prochainement."
                     : "Tous les services et modules fonctionnent à 100%."}
                 </p>
               </div>
@@ -377,20 +444,20 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
             onClick={handleToggleGlobal}
             disabled={loading}
             className={`w-full min-h-[48px] py-3 px-4 rounded-xl font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg ${
-              globalMode
+              isSystemActive
                 ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
                 : "bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/20"
             }`}
           >
             {loading ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : globalMode ? (
+            ) : isSystemActive ? (
               <>
-                <span>❌ Désactiver la maintenance</span>
+                <span>❌ Désactiver la maintenance (MAINTENANCE ACTIVÉE)</span>
               </>
             ) : (
               <>
-                <span>✅ Activer la maintenance</span>
+                <span>✅ Activer la maintenance (MAINTENANCE DÉSACTIVÉE)</span>
               </>
             )}
           </button>
@@ -399,67 +466,130 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
         {/* ===================================================
             SECTION 2: MAINTENANCE PROGRAMMÉE
             =================================================== */}
-        <div className="bg-afri-bg-sec/90 border border-zinc-800 rounded-2xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
+        <div className="bg-afri-bg-sec/90 border border-zinc-800 rounded-2xl p-4 space-y-4">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
             <span className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              Maintenance Programmée
+              Maintenance Programmée ({schedules.length + (scheduled ? 1 : 0)})
             </span>
-            {scheduled && (
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                Active dans la file
+            {isSystemActive && (
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-rose-500/10 text-rose-400 border border-rose-500/30 animate-pulse">
+                Système sous maintenance
               </span>
             )}
           </div>
 
-          {scheduled && !showScheduleForm ? (
-            <div className="bg-black/40 border border-amber-500/20 rounded-xl p-3.5 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
-                <div>
-                  <span className="text-zinc-500 block text-[9px] uppercase">Début :</span>
-                  <span className="text-amber-300 font-bold">{startAt ? new Date(startAt).toLocaleString() : "Non définie"}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block text-[9px] uppercase">Fin :</span>
-                  <span className="text-amber-300 font-bold">{endAt ? new Date(endAt).toLocaleString() : "Non définie"}</span>
+          {/* List of current schedules */}
+          <div className="space-y-2.5">
+            {/* Render legacy schedule if active/future */}
+            {scheduled && (
+              <div className="bg-black/40 border border-amber-500/20 rounded-xl p-3 space-y-2 relative">
+                <div className="flex justify-between items-start gap-2">
+                  <div>
+                    <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wide">📅 Maintenance Standard</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] font-mono text-zinc-300 mt-1">
+                      <div>
+                        <span className="text-zinc-500">Début:</span> {startAt ? new Date(startAt).toLocaleString() : "Non définie"}
+                      </div>
+                      <div>
+                        <span className="text-zinc-500">Fin:</span> {endAt ? new Date(endAt).toLocaleString() : "Non définie"}
+                      </div>
+                    </div>
+                    {globalMessage && (
+                      <p className="text-[10px] text-zinc-400 italic mt-1 bg-zinc-900/50 p-1.5 rounded border border-zinc-800">
+                        "{globalMessage}"
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold ${
+                      isCurrentlyInScheduledWindow 
+                        ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" 
+                        : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                    }`}>
+                      {isCurrentlyInScheduledWindow ? "En Cours" : "Planifié"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCancelScheduled}
+                      className="p-1 hover:bg-rose-500/10 rounded text-rose-400 transition"
+                      title="Annuler cette maintenance"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
+            )}
 
-              {globalMessage && (
-                <div className="text-[11px] bg-amber-500/5 p-2 rounded-lg border border-amber-500/10 text-zinc-300 italic">
-                  "{globalMessage}"
-                </div>
-              )}
+            {/* Render new schedules */}
+            {schedules.map((sched: any) => {
+              const start = sched.startAt ? new Date(sched.startAt).getTime() : 0;
+              const end = sched.endAt ? new Date(sched.endAt).getTime() : 0;
+              const isSchedActive = start > 0 && end > 0 && now >= start && now < end;
+              const isSchedFuture = start > now;
 
-              {alertBeforeMinutes && (
-                <div className="text-[10px] text-zinc-400 font-mono flex items-center gap-1">
-                  <Bell className="w-3 h-3 text-amber-400" />
-                  <span>Alerte automatique préventive : <strong>{alertBeforeMinutes} minutes avant</strong></span>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowScheduleForm(true)}
-                  className="flex-1 min-h-[44px] py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-xl text-xs font-bold uppercase flex items-center justify-center gap-1.5 cursor-pointer"
+              return (
+                <div 
+                  key={sched.id} 
+                  className={`bg-black/40 border rounded-xl p-3 space-y-2 relative ${
+                    isSchedActive ? "border-rose-500/30" : isSchedFuture ? "border-amber-500/20" : "border-zinc-800"
+                  }`}
                 >
-                  <Edit3 className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Modifier</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCancelScheduled}
-                  disabled={loading}
-                  className="flex-1 min-h-[44px] py-2 px-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold uppercase flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Annuler</span>
-                </button>
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-wide">
+                        ⚙️ {sched.name || "Maintenance Programmée"}
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] font-mono text-zinc-300 mt-1">
+                        <div>
+                          <span className="text-zinc-500">Début:</span> {sched.startAt ? new Date(sched.startAt).toLocaleString() : "Non définie"}
+                        </div>
+                        <div>
+                          <span className="text-zinc-500">Fin:</span> {sched.endAt ? new Date(sched.endAt).toLocaleString() : "Non définie"}
+                        </div>
+                      </div>
+                      {sched.globalMessage && (
+                        <p className="text-[10px] text-zinc-400 italic mt-1 bg-zinc-900/50 p-1.5 rounded border border-zinc-800">
+                          "{sched.globalMessage}"
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold ${
+                        isSchedActive 
+                          ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" 
+                          : isSchedFuture 
+                          ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                          : "bg-zinc-800 text-zinc-500 border border-zinc-700"
+                      }`}>
+                        {isSchedActive ? "En Cours" : isSchedFuture ? "Planifié" : "Terminé"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteSchedule(sched.id)}
+                        className="p-1 hover:bg-rose-500/10 rounded text-rose-400 transition"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {!scheduled && schedules.length === 0 && (
+              <div className="text-center py-4 text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl">
+                Aucune maintenance programmée en cours.
               </div>
-            </div>
-          ) : showScheduleForm ? (
-            <form onSubmit={handleSaveSchedule} className="bg-black/40 border border-zinc-800 p-3.5 rounded-xl space-y-3">
+            )}
+          </div>
+
+          {showScheduleForm ? (
+            <form onSubmit={handleSaveSchedule} className="bg-black/60 border border-zinc-800 p-3.5 rounded-xl space-y-3 mt-2 animate-fadeIn">
+              <h4 className="text-xs font-black text-amber-400 uppercase tracking-wide">Nouvelle Programmation</h4>
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[10px] font-mono text-zinc-400 font-bold uppercase">Début (Date & Heure)</label>
@@ -536,11 +666,15 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
           ) : (
             <button
               type="button"
-              onClick={() => setShowScheduleForm(true)}
+              onClick={() => {
+                setStartAt("");
+                setEndAt("");
+                setShowScheduleForm(true);
+              }}
               className="w-full min-h-[48px] py-3 px-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl font-bold uppercase text-xs text-amber-300 flex items-center justify-center gap-2 cursor-pointer transition"
             >
               <Clock className="w-4 h-4 text-amber-400" />
-              <span>🕐 PROGRAMMER UNE MAINTENANCE TECHNIQUE</span>
+              <span>🕐 PROGRAMMER UNE NOUVELLE MAINTENANCE</span>
             </button>
           )}
         </div>

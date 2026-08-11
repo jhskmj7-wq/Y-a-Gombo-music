@@ -1,9 +1,3 @@
-declare global {
-  interface ImportMeta {
-    readonly env: Record<string, string>;
-  }
-}
-
 export type AdminMenu =
   | "dashboard"
   | "gombos"

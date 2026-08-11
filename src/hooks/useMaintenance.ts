@@ -4,6 +4,15 @@ import { db } from "../firebase";
 import { useAuth } from "../AuthContext";
 import { SecurityService } from "../lib/SecurityService";
 
+export interface MaintenanceSchedule {
+  id: string;
+  name?: string;
+  startAt: string;
+  endAt: string;
+  globalMessage?: string;
+  alertBeforeMinutes?: number | null;
+}
+
 export interface MaintenanceSettings {
   globalMode?: boolean;
   status?: string;
@@ -14,6 +23,7 @@ export interface MaintenanceSettings {
   endAt?: string | null;
   alertBeforeMinutes?: number | null;
   modules?: Record<string, boolean>;
+  schedules?: MaintenanceSchedule[];
   updatedAt?: string;
   updatedBy?: string;
 }
@@ -23,7 +33,8 @@ export function useMaintenance() {
   const [maintenance, setMaintenance] = useState<MaintenanceSettings>({
     globalMode: false,
     scheduled: false,
-    modules: {}
+    modules: {},
+    schedules: []
   });
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +55,8 @@ export function useMaintenance() {
         setMaintenance({
           globalMode: false,
           scheduled: false,
-          modules: {}
+          modules: {},
+          schedules: []
         });
       }
       setLoading(false);
@@ -60,16 +72,26 @@ export function useMaintenance() {
   const startTime = maintenance.startAt ? new Date(maintenance.startAt).getTime() : 0;
   const endTime = maintenance.endAt ? new Date(maintenance.endAt).getTime() : 0;
   
-  const isScheduledWindowActive = 
+  const isLegacyScheduledActive = 
     !!maintenance.scheduled && 
     startTime > 0 && 
     endTime > 0 && 
     now >= startTime && 
     now < endTime;
 
+  const activeSchedules = (maintenance.schedules || []).filter((sched: any) => {
+    const start = sched.startAt ? new Date(sched.startAt).getTime() : 0;
+    const end = sched.endAt ? new Date(sched.endAt).getTime() : 0;
+    return start > 0 && end > 0 && now >= start && now < end;
+  });
+
+  const isAnyScheduleActive = isLegacyScheduledActive || activeSchedules.length > 0;
+
+  const isSystemMaintenanceActive = 
+    !!maintenance.globalMode || maintenance.status === "maintenance" || isAnyScheduleActive;
+
   const isGlobalMaintenance = 
-    (!isSuperUser) && 
-    (!!maintenance.globalMode || maintenance.status === "maintenance" || isScheduledWindowActive);
+    (!isSuperUser) && isSystemMaintenanceActive;
 
   const isModuleUnderMaintenance = (moduleKey: string) => {
     if (isSuperUser) return false;
@@ -81,7 +103,8 @@ export function useMaintenance() {
     maintenance,
     loading,
     isSuperUser,
-    isScheduledWindowActive,
+    isScheduledWindowActive: isAnyScheduleActive,
+    isSystemMaintenanceActive,
     isGlobalMaintenance,
     isModuleUnderMaintenance
   };

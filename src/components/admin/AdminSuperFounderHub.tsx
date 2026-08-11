@@ -38,10 +38,8 @@ const AdminDeploymentCenter = lazyWithRetry(() => import("./AdminDeploymentCente
 
 export type AdminModuleType = 
   | "throne"
-  | "dashboard"
   | "contracts"
   | "wallet_management"
-  | "coffre_frais"
   | "transactions"
   | "messaging"
   | "geolocation"
@@ -135,12 +133,10 @@ export default function AdminSuperFounderHub({
   }
 
   const modulesNav = [
-    { key: "dashboard" as AdminModuleType, label: "👑 CENTRE DE COMMANDEMENT", icon: LayoutDashboard, badge: "Live" },
     { key: "throne" as AdminModuleType, label: "✨ TABLEAU FONDATEUR", icon: Crown, badge: "Fondateur" },
     { key: "security" as AdminModuleType, label: "🛡 Sécurité", icon: ShieldCheck, badge: "Pro" },
     { key: "strategic_decisions" as AdminModuleType, label: "📋 Décisions Stratégiques", icon: ShieldCheck, badge: "Gouvernance" },
     { key: "wallet_management" as AdminModuleType, label: "💰 Gestion Wallet", icon: ShieldCheck, badge: "Souverain" },
-    { key: "coffre_frais" as AdminModuleType, label: "🏛 Coffre des Frais", icon: Landmark, badge: "Fondateur" },
     { key: "transactions" as AdminModuleType, label: "💳 Transactions", icon: CreditCard, badge: undefined },
     { key: "contracts" as AdminModuleType, label: "📜 Contrats (Escrow)", icon: ShieldCheck, badge: "Séquestre" },
     { key: "users" as AdminModuleType, label: "👥 Utilisateurs", icon: Users, badge: undefined },
@@ -275,21 +271,6 @@ export default function AdminSuperFounderHub({
             )}
           </ErrorBoundary>
 
-          <ErrorBoundary moduleName="Dashboard">
-            {activeModule === "dashboard" && (
-              <AdminDashboard
-                users={users}
-                gombos={gombos}
-                posts={posts}
-                transactions={transactions}
-                alerts={alerts}
-                currentUser={currentUser}
-                userEmail={userEmail}
-                audioSynth={audioSynth}
-              />
-            )}
-          </ErrorBoundary>
-
           <ErrorBoundary moduleName="Strategic Decisions">
             {activeModule === "strategic_decisions" && (
               <StrategicDecisionsManager />
@@ -311,12 +292,6 @@ export default function AdminSuperFounderHub({
           <ErrorBoundary moduleName="Wallet Management">
             {activeModule === "wallet_management" && (
               <AdminWalletManagement currentUser={currentUser} />
-            )}
-          </ErrorBoundary>
-
-          <ErrorBoundary moduleName="Coffre des Frais">
-            {activeModule === "coffre_frais" && (
-              <FounderFeesVault currentUser={currentUser} userEmail={userEmail} />
             )}
           </ErrorBoundary>
 

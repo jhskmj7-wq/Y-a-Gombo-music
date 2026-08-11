@@ -1,4 +1,6 @@
 /* AFRIGOMBO PWA SERVICE WORKER */
+importScripts('/sw-push.js');
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });

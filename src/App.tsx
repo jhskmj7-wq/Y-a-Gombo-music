@@ -102,6 +102,7 @@ function CompleteProfileView() {
 function App() {
   const { currentUser, profile } = useAuth();
   const [isMaintenance, setIsMaintenance] = useState(false);
+  const [loadingMaintenance, setLoadingMaintenance] = useState(true);
   const [maintenanceMessage, setMaintenanceMessage] = useState("L'application est actuellement en maintenance. Veuillez patienter.");
 
   // Clean up any stale obsolete maintenance cache key in localStorage/sessionStorage
@@ -123,11 +124,22 @@ function App() {
         return true;
       }
       // 2. Scheduled maintenance window check
+      const now = Date.now();
       if (data.scheduled === true && data.startAt && data.endAt) {
-        const now = Date.now();
         const start = new Date(data.startAt).getTime();
         const end = new Date(data.endAt).getTime();
         if (!isNaN(start) && !isNaN(end) && now >= start && now < end) {
+          return true;
+        }
+      }
+      // 3. Multi-maintenance check
+      if (Array.isArray(data.schedules)) {
+        const hasActiveSchedule = data.schedules.some((sched: any) => {
+          const start = sched.startAt ? new Date(sched.startAt).getTime() : 0;
+          const end = sched.endAt ? new Date(sched.endAt).getTime() : 0;
+          return start > 0 && end > 0 && now >= start && now < end;
+        });
+        if (hasActiveSchedule) {
           return true;
         }
       }
@@ -139,8 +151,27 @@ function App() {
       
       setIsMaintenance(isM);
 
-      // Pick custom message if available
-      const customMsg = securityData?.globalMessage;
+      // Pick custom message if available from active schedule or global
+      let customMsg = "";
+      if (securityData) {
+        const now = Date.now();
+        // Check schedules for custom message first
+        if (Array.isArray(securityData.schedules)) {
+          const activeSched = securityData.schedules.find((sched: any) => {
+            const start = sched.startAt ? new Date(sched.startAt).getTime() : 0;
+            const end = sched.endAt ? new Date(sched.endAt).getTime() : 0;
+            return start > 0 && end > 0 && now >= start && now < end;
+          });
+          if (activeSched && activeSched.globalMessage) {
+            customMsg = activeSched.globalMessage;
+          }
+        }
+        
+        if (!customMsg && securityData.globalMessage) {
+          customMsg = securityData.globalMessage;
+        }
+      }
+
       if (customMsg) {
         setMaintenanceMessage(customMsg);
       } else {
@@ -152,14 +183,16 @@ function App() {
       securityData = snap.exists() ? snap.data() : null;
       console.log("Maintenance doc updated:", securityData);
       updateMaintenanceState();
+      setLoadingMaintenance(false);
     }, (err) => {
       console.warn("Error listening to security maintenance status:", err);
+      setLoadingMaintenance(false);
     });
 
-    // 10-second interval check to auto-activate/deactivate scheduled maintenance window dynamically
+    // 5-second interval check to auto-activate/deactivate scheduled maintenance window dynamically (faster check)
     const intervalId = setInterval(() => {
       updateMaintenanceState();
-    }, 10000);
+    }, 5000);
 
     return () => {
       unsubSecurity();
@@ -207,6 +240,14 @@ function App() {
                       profile?.isFounder === true ||
                       currentUser?.email === "jhs.kmj7@gmail.com" ||
                       profile?.email === "jhs.kmj7@gmail.com";
+
+  if (loadingMaintenance) {
+    return (
+      <div className="h-[100dvh] w-full bg-[#030303] flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (isMaintenance && !isSuperUser) {
     return (
