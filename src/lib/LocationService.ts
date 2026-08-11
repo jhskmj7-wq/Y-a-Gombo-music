@@ -1,6 +1,7 @@
 import { 
   collection, 
   doc, 
+  getDoc,
   getDocs, 
   setDoc, 
   updateDoc, 
@@ -223,39 +224,79 @@ export class LocationService {
    */
   static async approveProposal(
     proposal: LocationProposal, 
+    founderUid: string,
     customLocationData?: Partial<AfriGomboLocation>
   ): Promise<void> {
-    // 1. Create official location
-    await this.addLocation({
-      name: customLocationData?.name || proposal.name,
-      type: customLocationData?.type || proposal.type,
-      countryName: customLocationData?.countryName || proposal.countryName || "Côte d'Ivoire",
-      regionName: customLocationData?.regionName || proposal.regionName || "",
-      cityName: customLocationData?.cityName || proposal.cityName || "",
-      communeName: customLocationData?.communeName || proposal.communeName || "",
-      parentName: customLocationData?.parentName || proposal.parentName || "",
-      description: customLocationData?.description || `Proposé par ${proposal.submittedByName} (${proposal.details || ""})`,
-      status: "ACTIF",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      createdBy: `Proposal:${proposal.submittedByName}`
+    const propRef = doc(db, PROPOSALS_COLLECTION, proposal.id);
+    const snap = await getDoc(propRef);
+    if (!snap.exists()) {
+      throw new Error("La proposition n'existe pas.");
+    }
+    const currentData = snap.data() as LocationProposal;
+    if (currentData.status !== "PENDING") {
+      throw new Error("Cette proposition a déjà été traitée.");
+    }
+
+    // Check if the place already exists in the official collection
+    const officialSnap = await getDocs(collection(db, LOCATIONS_COLLECTION));
+    let existingLocationId = "";
+    const nameToCompare = (customLocationData?.name || proposal.name).trim().toLowerCase();
+    const typeToCompare = customLocationData?.type || proposal.type;
+
+    officialSnap.forEach((d) => {
+      const loc = d.data() as AfriGomboLocation;
+      if (loc.name.trim().toLowerCase() === nameToCompare && loc.type === typeToCompare) {
+        existingLocationId = d.id;
+      }
     });
 
-    // 2. Update proposal status
-    const propRef = doc(db, PROPOSALS_COLLECTION, proposal.id);
+    let officialPlaceId = existingLocationId;
+    if (!existingLocationId) {
+      // Create official location if not duplicate
+      officialPlaceId = await this.addLocation({
+        name: customLocationData?.name || proposal.name,
+        type: customLocationData?.type || proposal.type,
+        countryName: customLocationData?.countryName || proposal.countryName || "Côte d'Ivoire",
+        regionName: customLocationData?.regionName || proposal.regionName || "",
+        cityName: customLocationData?.cityName || proposal.cityName || "",
+        communeName: customLocationData?.communeName || proposal.communeName || "",
+        parentName: customLocationData?.parentName || proposal.parentName || "",
+        description: customLocationData?.description || `Proposé par ${proposal.submittedByName} (${proposal.details || ""})`,
+        status: "ACTIF",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        createdBy: `Proposal:${proposal.submittedByName}`
+      });
+    }
+
+    // Update proposal status
     await updateDoc(propRef, {
       status: "APPROVED",
-      updatedAt: new Date().toISOString()
+      approvedBy: founderUid,
+      approvedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...(officialPlaceId ? { officialPlaceId } : {})
     });
   }
 
   /**
    * Reject proposal
    */
-  static async rejectProposal(proposalId: string): Promise<void> {
+  static async rejectProposal(proposalId: string, founderUid: string): Promise<void> {
     const propRef = doc(db, PROPOSALS_COLLECTION, proposalId);
+    const snap = await getDoc(propRef);
+    if (!snap.exists()) {
+      throw new Error("La proposition n'existe pas.");
+    }
+    const currentData = snap.data() as LocationProposal;
+    if (currentData.status !== "PENDING") {
+      throw new Error("Cette proposition a déjà été traitée.");
+    }
+
     await updateDoc(propRef, {
       status: "REJECTED",
+      rejectedBy: founderUid,
+      rejectedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });
   }

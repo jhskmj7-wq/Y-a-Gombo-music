@@ -28,6 +28,7 @@ export default function AdminLocationsCenter({ audioSynth, currentUser }: AdminL
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIF" | "INACTIF">("ALL");
+  const [proposalStatusFilter, setProposalStatusFilter] = useState<"PENDING" | "APPROVED" | "REJECTED" | "ALL">("PENDING");
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -112,7 +113,7 @@ export default function AdminLocationsCenter({ audioSynth, currentUser }: AdminL
 
     try {
       if (approvingProposal) {
-        await approveProposal(approvingProposal, {
+        await approveProposal(approvingProposal, currentUser?.uid || "unknown_founder", {
           name: formData.name,
           type: formData.type,
           countryName: formData.countryName,
@@ -175,9 +176,10 @@ export default function AdminLocationsCenter({ audioSynth, currentUser }: AdminL
 
   const handleDirectApprove = async (prop: LocationProposal) => {
     try {
-      await approveProposal(prop);
+      await approveProposal(prop, currentUser?.uid || "unknown_founder");
       if (audioSynth?.playValidationSuccess) audioSynth.playValidationSuccess();
-    } catch (err) {
+    } catch (err: any) {
+      alert(err?.message || "Erreur lors de l'approbation");
       console.error("Erreur approbation proposition:", err);
     }
   };
@@ -185,9 +187,10 @@ export default function AdminLocationsCenter({ audioSynth, currentUser }: AdminL
   const handleReject = async (propId: string) => {
     if (!window.confirm("Voulez-vous vraiment refuser cette proposition ?")) return;
     try {
-      await rejectProposal(propId);
+      await rejectProposal(propId, currentUser?.uid || "unknown_founder");
       if (audioSynth?.playValidationSuccess) audioSynth.playValidationSuccess();
-    } catch (err) {
+    } catch (err: any) {
+      alert(err?.message || "Erreur lors du refus");
       console.error("Erreur refus proposition:", err);
     }
   };
@@ -204,8 +207,10 @@ export default function AdminLocationsCenter({ audioSynth, currentUser }: AdminL
 
   // Filtered Proposals
   const filteredProposals = proposals.filter(p => {
-    return p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           (p.submittedByName && p.submittedByName.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (p.submittedByName && p.submittedByName.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesStatus = proposalStatusFilter === "ALL" || p.status === proposalStatusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   // Stats
@@ -337,6 +342,30 @@ export default function AdminLocationsCenter({ audioSynth, currentUser }: AdminL
                   }`}
                 >
                   {st === "ALL" ? "Tous" : st}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "proposals" && (
+            <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto scrollbar-none">
+              <span className="text-[10px] font-mono text-afri-text-sec uppercase font-bold shrink-0">Filtrer :</span>
+              {([
+                { key: "PENDING", label: "En attente" },
+                { key: "APPROVED", label: "Approuvés" },
+                { key: "REJECTED", label: "Refusés" },
+                { key: "ALL", label: "Tous" }
+              ] as const).map(filterItem => (
+                <button
+                  key={filterItem.key}
+                  onClick={() => setProposalStatusFilter(filterItem.key)}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-mono font-bold uppercase cursor-pointer border shrink-0 ${
+                    proposalStatusFilter === filterItem.key
+                      ? "bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]"
+                      : "bg-afri-bg-sec text-afri-text-sec border-afri-border"
+                  }`}
+                >
+                  {filterItem.label}
                 </button>
               ))}
             </div>
@@ -508,6 +537,16 @@ export default function AdminLocationsCenter({ audioSynth, currentUser }: AdminL
                     <div className="text-left sm:text-right text-xs font-mono text-zinc-400">
                       <div>Proposé par : <span className="text-afri-text font-bold">{prop.submittedByName}</span></div>
                       <div className="text-[10px] text-zinc-500">{new Date(prop.createdAt).toLocaleDateString()}</div>
+                      {prop.status === "APPROVED" && prop.approvedAt && (
+                        <div className="text-[10px] text-emerald-400 font-bold mt-1">
+                          Approuvé le : {new Date(prop.approvedAt).toLocaleDateString()}
+                        </div>
+                      )}
+                      {prop.status === "REJECTED" && prop.rejectedAt && (
+                        <div className="text-[10px] text-rose-400 font-bold mt-1">
+                          Refusé le : {new Date(prop.rejectedAt).toLocaleDateString()}
+                        </div>
+                      )}
                     </div>
                   </div>
 

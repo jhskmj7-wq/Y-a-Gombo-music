@@ -11,6 +11,7 @@ import { SecurityService } from "../../lib/SecurityService";
 import StrategicDecisionsManager from "./StrategicDecisionsManager";
 import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";
 import { useMaintenance } from "../../hooks/useMaintenance";
+import { useAdminLocations } from "../../hooks/useLocations";
 
 import AdminFounderThrone from "./AdminFounderThrone";
 
@@ -85,6 +86,7 @@ export default function AdminSuperFounderHub({
   const [activeModule, setActiveModule] = useState<AdminModuleType>(initialModule);
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState<boolean>(false);
   const { maintenance, isScheduledWindowActive } = useMaintenance();
+  const { pendingProposalsCount } = useAdminLocations();
 
   const isMaintActive = !!maintenance.globalMode || maintenance.status === "maintenance" || isScheduledWindowActive;
 
@@ -144,7 +146,7 @@ export default function AdminSuperFounderHub({
     { key: "notifications" as AdminModuleType, label: "📣 Diffusions", icon: Bell, badge: undefined },
     { key: "cagnottes" as AdminModuleType, label: "💰 Cagnottes", icon: Sparkles, badge: undefined },
     { key: "geolocation" as AdminModuleType, label: "📍 Géolocalisation", icon: MapPin, badge: undefined },
-    { key: "locations" as AdminModuleType, label: "🌍 Lieux & Territoires", icon: Globe, badge: "Territoires" },
+    { key: "locations" as AdminModuleType, label: "📍 Lieux proposés", icon: MapPin, badge: pendingProposalsCount > 0 ? `${pendingProposalsCount} en attente` : undefined },
     { key: "stats" as AdminModuleType, label: "📈 Statistiques", icon: TrendingUp, badge: undefined },
     { key: "avatar_store" as AdminModuleType, label: "🎭 Avatar Store", icon: User, badge: "Économie" },
     { key: "labs" as AdminModuleType, label: "🧠 AFRIGOMBO ELITE Labs", icon: FlaskConical, badge: "Bêta" },

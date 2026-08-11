@@ -247,6 +247,41 @@ export default function AdminFounderThrone({
   ]);
   const [terminalInput, setTerminalInput] = useState("");
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [weatherData, setWeatherData] = useState<{ temp: number; desc: string }>({ temp: 28, desc: "Ensoleillé" });
+
+  useEffect(() => {
+    let active = true;
+    const fetchWeather = async () => {
+      try {
+        const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=5.36&longitude=-4.008&current=temperature_2m,weather_code");
+        if (!res.ok) throw new Error("Weather API failed");
+        const json = await res.json();
+        if (active && json.current) {
+          const temp = Math.round(json.current.temperature_2m);
+          const code = json.current.weather_code;
+          let desc = "Ensoleillé";
+          if (code === 0) desc = "Ensoleillé";
+          else if (code >= 1 && code <= 3) desc = "Partiellement Nuageux";
+          else if (code === 45 || code === 48) desc = "Brouillard";
+          else if (code >= 51 && code <= 55) desc = "Bruine";
+          else if (code >= 61 && code <= 65) desc = "Pluie";
+          else if (code >= 71 && code <= 75) desc = "Neige";
+          else if (code >= 80 && code <= 82) desc = "Averses de Pluie";
+          else if (code >= 95 && code <= 99) desc = "Orageux";
+          else desc = "Nuageux";
+          setWeatherData({ temp, desc });
+        }
+      } catch (err) {
+        console.warn("Could not fetch real-time Abidjan weather:", err);
+      }
+    };
+    fetchWeather();
+    const interval = setInterval(fetchWeather, 10 * 60 * 1000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Grouped Effect Hooks
   useEffect(() => {
@@ -1671,7 +1706,7 @@ export default function AdminFounderThrone({
 
                   <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
                     <Sun className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
-                    <strong>28°C — Ensoleillé</strong>
+                    <strong>{weatherData.temp}°C — {weatherData.desc}</strong>
                   </span>
                 </div>
 

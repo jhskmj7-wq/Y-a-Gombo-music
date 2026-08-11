@@ -1019,4 +1019,9 @@ export interface LocationProposal {
   status: "PENDING" | "APPROVED" | "REJECTED";
   createdAt: string;
   updatedAt?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  officialPlaceId?: string;
 }
