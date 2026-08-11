@@ -7923,19 +7923,30 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   </div>
 
                   {/* SUPREME PALACE SECRET ACCESS FOR FOUNDER ONLY */}
-                  {userEmail === "jhs.kmj7@gmail.com" && (
-                    <div className="pt-6 mt-6 border-t border-afri-border flex justify-center">
-                      <button
-                        onClick={() => {
-                          setActiveMenu("super_admin");
-                          addToTerminal("👑 [SOUVERAINETÉ] Entrée dans le Trône demandée.");
-                          try { audioSynth.playTamTam(true); } catch (err) {}
-                        }}
-                        className="group w-full max-w-sm p-4 bg-afri-bg border border-afri-gold/20 hover:border-afri-gold text-afri-gold font-display font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-500 flex items-center justify-center gap-3 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.05)] hover:shadow-[0_0_30px_rgba(212,175,55,0.2)]"
-                      >
-                        <Crown className="w-4 h-4 text-afri-gold animate-pulse" />
-                        👑 Entrer dans le Trône
-                      </button>
+                  {(isAuthorizedSuperFounder || userEmail === "jhs.kmj7@gmail.com") && (
+                    <div className="pt-6 mt-6 border-t border-afri-border/60 flex justify-center">
+                      <div className="w-full max-w-lg p-5 bg-gradient-to-b from-afri-bg-sec to-afri-bg border border-afri-gold/30 rounded-2xl shadow-[0_0_25px_rgba(212,175,55,0.08)] text-center space-y-3">
+                        <div className="flex items-center justify-center gap-2">
+                          <Crown className="w-5 h-5 text-afri-gold animate-pulse" />
+                          <h4 className="text-xs font-mono font-black text-afri-gold uppercase tracking-widest">
+                            ACCÉDER AU TRÔNE DU FONDATEUR
+                          </h4>
+                        </div>
+                        <p className="text-[10px] text-afri-text-sec max-w-md mx-auto leading-relaxed">
+                          Cabinet Suprême du Fondateur / Niveau Super Fondateur : Centre de Commandement, Tableau Fondateur &amp; Gouvernance Impériale.
+                        </p>
+                        <button
+                          onClick={() => {
+                            setActiveMenu("super_admin");
+                            addToTerminal("👑 [SOUVERAINETÉ] Entrée dans le Trône demandée.");
+                            try { audioSynth.playTamTam(true); } catch (err) {}
+                          }}
+                          className="group w-full p-3.5 bg-gradient-to-r from-[#D4AF37] via-[#F1C40F] to-[#D4AF37] hover:from-[#F1C40F] hover:to-[#D4AF37] text-black font-display font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:shadow-[0_0_35px_rgba(212,175,55,0.45)]"
+                        >
+                          <Crown className="w-4 h-4 text-black animate-bounce" />
+                          <span>👑 ENTRER DANS LE TRÔNE</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -8756,7 +8767,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             <button
               id="admin-nav-super_admin"
               onClick={() => {
-                navigate("/Le-Throne-Of-The-Founder?tab=founder");
+                setActiveMenu("super_admin");
+                addToTerminal("👑 [SOUVERAINETÉ] Entrée dans le Trône demandée.");
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               }}
               className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${

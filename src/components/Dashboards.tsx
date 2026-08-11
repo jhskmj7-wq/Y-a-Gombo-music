@@ -104,11 +104,17 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           // 2. Live Applications
           unsubApps = gomboDB.listenApplications(async (applications) => {
             
-            if (currentUserProfile.role === "client") {
-              const clientGombos = gombos.filter(g => g.clientId === userUid);
-              setMyGombos(clientGombos);
+            const myGombosList = gombos.filter(g => 
+              g.clientId === userUid || 
+              g.userId === userUid || 
+              g.organizerId === userUid || 
+              g.authorId === userUid || 
+              (g as any).uid === userUid
+            );
+            setMyGombos(myGombosList);
 
-              const clientGomboIDs = clientGombos.map(g => g.id);
+            if (currentUserProfile.role === "client") {
+              const clientGomboIDs = myGombosList.map(g => g.id);
               const appsReceived = applications.filter(app => clientGomboIDs.includes(app.gomboId));
               setReceivedApplications(appsReceived);
 

@@ -702,13 +702,24 @@ export const gomboDB = {
 
   listenAllGombos(callback: (gombos: Gombo[]) => void) {
     if (db) {
-      const q = query(collection(db, "gombos"), orderBy("createdAt", "desc"));
-      return onSnapshot(q, (snapshot) => {
-        const publicGombos = snapshot.docs
-          .map(d => ({ id: d.id, ...d.data() } as Gombo))
-          .filter(g => g.status !== "pending_deposit" && g.visible !== false && g.adminValidated !== false && g.status !== "draft" && g.status !== "cancelled" && g.status !== "refuse" && g.status !== "rejected");
-        callback(publicGombos);
-      });
+      try {
+        const q = collection(db, "gombos");
+        return onSnapshot(q, (snapshot) => {
+          const publicGombos = snapshot.docs
+            .map(d => ({ id: d.id, ...d.data() } as Gombo))
+            .filter(g => g.status !== "pending_deposit" && g.visible !== false && g.adminValidated !== false && g.status !== "draft" && g.status !== "cancelled" && g.status !== "refuse" && g.status !== "rejected")
+            .sort((a, b) => {
+              const timeA = new Date(a.createdAt || a.publishedAt || a.timestamp || 0).getTime();
+              const timeB = new Date(b.createdAt || b.publishedAt || b.timestamp || 0).getTime();
+              return timeB - timeA;
+            });
+          callback(publicGombos);
+        }, (err) => {
+          console.warn("⚠️ [GOMBO_LISTEN_ALL] Firestore snapshot listener warning:", err);
+        });
+      } catch (err) {
+        console.error("❌ [GOMBO_LISTEN_ALL] Exception setting up listener:", err);
+      }
     }
     return () => {};
   },
@@ -1042,13 +1053,24 @@ export const gomboDB = {
   // SOCIAL POSTS
   listenSocialPosts(callback: (posts: SocialPost[]) => void) {
     if (db) {
-      const q = query(collection(db, "social_posts"), orderBy("createdAt", "desc"), limit(50));
-      return onSnapshot(q, (snapshot) => {
-        const publicPosts = snapshot.docs
-          .map(d => ({ id: d.id, ...d.data() } as SocialPost))
-          .filter(p => p.status !== "pending_deposit" && (p as any).visible !== false && (p as any).adminValidated !== false && p.status !== "draft" && p.status !== "cancelled" && (p as any).status !== "refuse" && (p as any).status !== "rejected");
-        callback(publicPosts);
-      });
+      try {
+        const q = collection(db, "social_posts");
+        return onSnapshot(q, (snapshot) => {
+          const publicPosts = snapshot.docs
+            .map(d => ({ id: d.id, ...d.data() } as SocialPost))
+            .filter(p => p.status !== "pending_deposit" && (p as any).visible !== false && (p as any).adminValidated !== false && p.status !== "draft" && p.status !== "cancelled" && (p as any).status !== "refuse" && (p as any).status !== "rejected")
+            .sort((a, b) => {
+              const timeA = new Date((a as any).createdAt || (a as any).publishedAt || (a as any).timestamp || 0).getTime();
+              const timeB = new Date((b as any).createdAt || (b as any).publishedAt || (b as any).timestamp || 0).getTime();
+              return timeB - timeA;
+            });
+          callback(publicPosts);
+        }, (err) => {
+          console.warn("⚠️ [SOCIAL_POSTS_LISTEN] Firestore snapshot listener warning:", err);
+        });
+      } catch (err) {
+        console.error("❌ [SOCIAL_POSTS_LISTEN] Exception setting up listener:", err);
+      }
     }
     return () => {};
   },

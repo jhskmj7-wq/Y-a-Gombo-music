@@ -70,8 +70,8 @@ export function calculatePublicationFinancials(cachet: number, feeRate?: number)
   const cachetVal = Math.max(0, cachet);
   const rate = typeof feeRate === "number" ? feeRate : currentFeeRate;
   const feeAmount = Math.round(cachetVal * rate);
-  const montantSequestre = Math.max(0, cachetVal - feeAmount);
-  const totalDebite = cachetVal;
+  const montantSequestre = cachetVal;
+  const totalDebite = cachetVal + feeAmount;
   return {
     cachet: cachetVal,
     fee: feeAmount,

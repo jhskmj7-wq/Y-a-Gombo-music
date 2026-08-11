@@ -133,10 +133,10 @@ export default function AdminSuperFounderHub({
   }
 
   const modulesNav = [
-    { key: "throne" as AdminModuleType, label: "🏛 Tableau", icon: Crown, badge: "Fondateur" },
+    { key: "dashboard" as AdminModuleType, label: "👑 CENTRE DE COMMANDEMENT", icon: LayoutDashboard, badge: "Live" },
+    { key: "throne" as AdminModuleType, label: "✨ TABLEAU FONDATEUR", icon: Crown, badge: "Fondateur" },
     { key: "security" as AdminModuleType, label: "🛡 Sécurité", icon: ShieldCheck, badge: "Pro" },
     { key: "strategic_decisions" as AdminModuleType, label: "📋 Décisions Stratégiques", icon: ShieldCheck, badge: "Gouvernance" },
-    { key: "dashboard" as AdminModuleType, label: "🛰 Supervision", icon: LayoutDashboard, badge: "Live" },
     { key: "wallet_management" as AdminModuleType, label: "💰 Gestion Wallet", icon: ShieldCheck, badge: "Souverain" },
     { key: "transactions" as AdminModuleType, label: "💳 Transactions", icon: CreditCard, badge: undefined },
     { key: "contracts" as AdminModuleType, label: "📜 Contrats (Escrow)", icon: ShieldCheck, badge: "Séquestre" },

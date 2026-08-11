@@ -10,7 +10,7 @@ import { db, gomboDB } from "../firebase";
 import { doc, getDoc, setDoc, addDoc, collection, runTransaction } from "firebase/firestore";
 import { UserProfile, SocialPost } from "../types";
 import GomboSecureModal from "./GomboSecureModal";
-import { calculatePlatformFee, calculatePublicationFinancials, recordWalletTransaction, getEffectiveCommissionRate } from "../lib/financial";
+import { calculatePlatformFee, calculatePublicationFinancials, recordWalletTransaction, getEffectiveCommissionRate, getCanonicalWalletBalance } from "../lib/financial";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 import { PremiumEngine } from "../lib/premiumEngine";
 import { getGomboRef } from "../lib/gomboIdHelper";
@@ -97,6 +97,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
   // States
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const [publishOutcome, setPublishOutcome] = useState<"idle" | "success_published" | "insufficient_funds">("idle");
   const [depositDetails, setDepositDetails] = useState<{
@@ -211,6 +212,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   };
 
   const executePublish = async () => {
+    if (loading || isSubmitting) return;
+    setIsSubmitting(true);
     setShowConfirmModal(false);
     setLoading(true);
 
@@ -230,6 +233,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       }
 
       let finalNewSolde = 0;
+      const nowIso = new Date().toISOString();
+      const currentTimestamp = Date.now();
       
       await runTransaction(db, async (transaction) => {
         const userRef = doc(db, "users", currentUserProfile.uid);
@@ -237,7 +242,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         if (!userSnap.exists()) throw new Error("Utilisateur introuvable");
         const userData = userSnap.data();
 
-        const liveSolde = userData.walletBalance ?? userData?.wallet?.soldeDisponible ?? 0;
+        const liveSolde = getCanonicalWalletBalance(userData);
         const liveBloque = userData?.wallet?.soldeBloque ?? 0;
 
         const dynamicFeeRate = getEffectiveCommissionRate(userData);
@@ -256,98 +261,173 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           wallet: { ...(userData.wallet || {}), soldeDisponible: finalNewSolde, soldeBloque: newBloque }
         });
 
-        const nowIso = new Date().toISOString();
-
-        // Record Publication Transaction
-        const txDebitId = `tx_pub_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        // Record Publication Transaction with complete audit trail
+        const txDebitId = `tx_pub_${currentTimestamp}_${Math.random().toString(36).substring(2, 6)}`;
         const pubTxData = {
           id: txDebitId,
           reference: txDebitId,
+          transactionId: txDebitId,
           uid: currentUserProfile.uid,
           userId: currentUserProfile.uid,
           userName: authorName,
-          type: "publication",
+          type: "debit_publication",
+          typeTransaction: "publication_gombo",
+          publicationId: "", // Will update after ref creation
+          gomboId: "",
+          montantGombo: cachetVal,
+          gomboAmount: cachetVal,
+          frais: freshFinancials.fee,
+          fee: freshFinancials.fee,
+          totalDebite: freshFinancials.total,
           amount: freshFinancials.total,
           montant: freshFinancials.total,
-          fee: freshFinancials.fee,
+          soldeAvant: liveSolde,
+          balanceBefore: liveSolde,
+          soldeApres: finalNewSolde,
+          balanceAfter: finalNewSolde,
           status: "success",
           statut: "success",
-          description: `Publication Gombo : "${title.trim()}"`,
+          description: `Publication Gombo : "${title.trim()}" (${cachetVal.toLocaleString('fr-FR')} FCFA + ${freshFinancials.fee.toLocaleString('fr-FR')} FCFA frais)`,
           createdAt: nowIso,
-          timestamp: Date.now()
+          timestamp: currentTimestamp
         };
+
+        // Create Gombo/Post Document Ref
+        const postRef = doc(collection(db, "social_posts"));
+        const gomboRefVal = getGomboRef(postRef.id);
+
+        pubTxData.publicationId = postRef.id;
+        pubTxData.gomboId = postRef.id;
+
         transaction.set(doc(db, "transactions", txDebitId), pubTxData);
         transaction.set(doc(db, "walletTransactions", txDebitId), pubTxData);
 
         // Record Commission Transaction
         if (freshFinancials.fee > 0) {
-          const commTxId = `tx_comm_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+          const commTxId = `tx_comm_${currentTimestamp}_${Math.random().toString(36).substring(2, 6)}`;
           const commTxData = {
             id: commTxId,
             reference: commTxId,
+            transactionId: commTxId,
             uid: currentUserProfile.uid,
             userId: currentUserProfile.uid,
             userName: authorName,
             type: "commission",
+            typeTransaction: "commission_plateforme",
+            publicationId: postRef.id,
+            gomboId: postRef.id,
             amount: freshFinancials.fee,
             montant: freshFinancials.fee,
             status: "success",
             statut: "success",
             description: `Commission publication Gombo (${(dynamicFeeRate * 100).toFixed(1)}%)`,
             createdAt: nowIso,
-            timestamp: Date.now()
+            timestamp: currentTimestamp
           };
           transaction.set(doc(db, "transactions", commTxId), commTxData);
           transaction.set(doc(db, "walletTransactions", commTxId), commTxData);
         }
 
         // Commission reporting collection
-        const commId = `comm_${Date.now()}`;
+        const commId = `comm_${currentTimestamp}`;
         transaction.set(doc(db, "commissions", commId), {
           userId: currentUserProfile.uid,
           amount: freshFinancials.fee,
           rate: dynamicFeeRate,
+          publicationId: postRef.id,
           createdAt: nowIso
         });
 
-        // Create Gombo/Post
-        const postRef = doc(collection(db, "social_posts"));
-        const gomboRefVal = getGomboRef(postRef.id);
+        // Canonical Payload with all alias fields and real statistics initialized to zero
+        const authorAvatar = currentUserProfile.photoURL || currentUserProfile.avatarUrl || currentUserProfile.avatar || "";
 
         const gomboPayload = {
           id: postRef.id,
+          gomboId: postRef.id,
+          postId: postRef.id,
           gomboRef: gomboRefVal,
           reference: gomboRefVal,
+
+          // User / Owner Aliases
           userId: currentUserProfile.uid,
+          clientId: currentUserProfile.uid,
+          organizerId: currentUserProfile.uid,
+          authorId: currentUserProfile.uid,
+          uid: currentUserProfile.uid,
+
+          // Author / Client Info
           authorName,
-          authorPhoto: currentUserProfile.photoURL || currentUserProfile.avatar || "",
+          clientName: authorName,
+          organizerName: authorName,
+          authorArtisticName: title.trim(),
+          authorPhoto: authorAvatar,
+          authorAvatar: authorAvatar,
+          organizerAvatar: authorAvatar,
+          userAvatar: authorAvatar,
+
+          // Content
           title: title.trim(),
           description: description.trim(),
+          content: description.trim(),
+          caption: description.trim(),
           type: selectedType,
+          category: selectedType,
+
+          // Location
           commune: effectiveCommune,
+          location: effectiveCommune,
           communeCustom: commune === "📍 Autre commune" ? customCommune.trim() : "",
           quartier: quartier.trim(),
           locationDetail: locationDetail.trim(),
           date: date,
-          budget: cachetVal,
-          fee: freshFinancials.fee,
-          totalDebit: freshFinancials.total,
-          status: "PUBLISHED",
-          visible: true,
-          adminValidated: true,
-          imageUrl: uploadedImageUrl,
-          audioUrl: uploadedAudioUrl,
+          city: currentUserProfile.city || "Abidjan",
+          country: currentUserProfile.country || "Côte d'Ivoire",
           latitude: latitude,
           longitude: longitude,
           searchRadius: searchRadius,
           locationPrivacy: locationPrivacy,
-          city: currentUserProfile.city || "Abidjan",
-          country: currentUserProfile.country || "Côte d'Ivoire",
-          createdAt: new Date().toISOString()
+
+          // Financials & Payment
+          budget: cachetVal,
+          cachet: cachetVal,
+          fee: freshFinancials.fee,
+          frais: freshFinancials.fee,
+          totalDebit: freshFinancials.total,
+          paymentStatus: "paid",
+          paymentMethod: "wallet_autonomus",
+
+          // Status & Visibility
+          status: "PUBLISHED",
+          statut: "PUBLISHED",
+          visible: true,
+          adminValidated: true,
+          isPublished: true,
+          isPaid: true,
+
+          // Media
+          imageUrl: uploadedImageUrl,
+          mediaUrl: uploadedImageUrl,
+          audioUrl: uploadedAudioUrl,
+
+          // Real Timestamps
+          createdAt: nowIso,
+          timestamp: currentTimestamp,
+          publishedAt: nowIso,
+
+          // REAL Statistics initialized to ZERO (No fake metrics)
+          views: 0,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          applicantsCount: 0,
+          likedBy: [],
+          savedBy: []
         };
 
+        // Write to all primary feed collections
         transaction.set(postRef, gomboPayload);
         transaction.set(doc(db, "gombos", postRef.id), gomboPayload);
+        transaction.set(doc(db, "posts", postRef.id), gomboPayload);
       });
 
       window.dispatchEvent(new CustomEvent("wallet_balance_updated", { detail: { newBalance: finalNewSolde } }));
@@ -365,6 +445,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       }
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
