@@ -132,7 +132,7 @@ service cloud.firestore {
     }
     match /walletRequests/{id} {
       allow read: if isOwner(resource.data.userId) || isOwner(resource.data.uid) || isAdmin();
-      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid);
+      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || incoming().uid == request.auth.uid || isAdmin());
       allow update, delete: if isAdmin();
     }
     match /betaTransactions/{id} {

@@ -359,7 +359,7 @@ export default function AdminSuperFounderHub({
 
           <ErrorBoundary moduleName="Stats">
             {activeModule === "stats" && (
-              <AdminRevenue transactions={transactions} systemCommissionRate={1.5} audioSynth={audioSynth} />
+              <AdminRevenue transactions={transactions} audioSynth={audioSynth} />
             )}
           </ErrorBoundary>
 
@@ -377,7 +377,7 @@ export default function AdminSuperFounderHub({
 
           <ErrorBoundary moduleName="Settings">
             {activeModule === "settings" && (
-              <AdminSettings systemCommissionRate={1.5} audioSynth={audioSynth} />
+              <AdminSettings audioSynth={audioSynth} />
             )}
           </ErrorBoundary>
         </Suspense>

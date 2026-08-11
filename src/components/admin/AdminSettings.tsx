@@ -1,28 +1,37 @@
 import React, { useState, useEffect } from "react";
-import { Settings, Save, Sliders, RefreshCw, CheckCircle, Play, Pause, Square } from "lucide-react";
+import { Settings, Save, Sliders, RefreshCw, CheckCircle, Play, Pause, Square, AlertTriangle, X } from "lucide-react";
 import { globalAudioManager, AudioState } from "../../lib/audioManager";
-
 import AfrigomboGlobalSettings from "./AfrigomboGlobalSettings";
+import { fetchPlatformPricing, updatePlatformPricing, PricingConfig } from "../../lib/financial";
+import { useAuth } from "../../AuthContext";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "../../firebase";
 
 interface AdminSettingsProps {
-  systemCommissionRate?: number;
-  onUpdateCommissionRate?: (rate: number) => void;
   audioSynth?: any;
 }
 
 export default function AdminSettings({
-  systemCommissionRate = 1.5,
-  onUpdateCommissionRate,
   audioSynth
 }: AdminSettingsProps) {
-  useEffect(() => {
-    console.log("[MODULE: AdminSettings] Mounted");
-    return () => console.log("[MODULE: AdminSettings] Unmounted");
-  }, []);
-  const [commissionRate, setCommissionRate] = useState(systemCommissionRate);
+  const { currentUser } = useAuth();
+  
+  const [pricing, setPricing] = useState<PricingConfig>({
+    standardCommissionRate: 0.025,
+    premiumCommissionRate: 0.015
+  });
+  
+  const [loadingPricing, setLoadingPricing] = useState(true);
+  
+  const [draftStandard, setDraftStandard] = useState("2.5");
+  const [draftPremium, setDraftPremium] = useState("1.5");
+  
+  // Sheet states
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetType, setSheetType] = useState<"STANDARD" | "PREMIUM">("STANDARD");
+  const [sheetNewRate, setSheetNewRate] = useState<number>(0);
   const [isSaving, setIsSaving] = useState(false);
-  const [success, setSuccess] = useState(false);
-
+  
   // Global Audio states
   const [audioState, setAudioState] = useState<AudioState>(globalAudioManager.getState());
 
@@ -33,23 +42,71 @@ export default function AdminSettings({
     return () => unsub();
   }, []);
 
+  useEffect(() => {
+    const loadPricing = async () => {
+      const p = await fetchPlatformPricing();
+      setPricing(p);
+      setDraftStandard((p.standardCommissionRate * 100).toString());
+      setDraftPremium((p.premiumCommissionRate * 100).toString());
+      setLoadingPricing(false);
+    };
+    loadPricing();
+  }, []);
+
   const musicVolume = audioState.volume;
   const musicMuted = audioState.isMuted;
   const activeMusicPlay = audioState.currentPlaying;
   const isPaused = audioState.isPaused;
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleOpenSheet = (type: "STANDARD" | "PREMIUM") => {
+    const valStr = type === "STANDARD" ? draftStandard : draftPremium;
+    let val = parseFloat(valStr);
+    
+    if (isNaN(val) || val < 0 || val > 100) {
+      alert("Valeur invalide pour le taux de commission.");
+      return;
+    }
+    
+    setSheetType(type);
+    setSheetNewRate(val / 100);
+    setSheetOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
     setIsSaving(true);
-    setTimeout(() => {
-      if (onUpdateCommissionRate) {
-        onUpdateCommissionRate(commissionRate);
+    
+    const oldRate = sheetType === "STANDARD" ? pricing.standardCommissionRate : pricing.premiumCommissionRate;
+    
+    try {
+      const updates: Partial<PricingConfig> = {};
+      if (sheetType === "STANDARD") {
+        updates.standardCommissionRate = sheetNewRate;
+      } else {
+        updates.premiumCommissionRate = sheetNewRate;
       }
-      setIsSaving(false);
-      setSuccess(true);
+      
+      await updatePlatformPricing(updates);
+      setPricing(prev => ({ ...prev, ...updates }));
+      
+      // Audit entry
+      await addDoc(collection(db, "admin_audit_logs"), {
+        adminId: currentUser?.uid || "unknown",
+        adminEmail: currentUser?.email || "unknown",
+        actionType: "UPDATE_COMMISSION_RATE",
+        targetType: sheetType,
+        oldRate: oldRate,
+        newRate: sheetNewRate,
+        timestamp: new Date().toISOString()
+      });
+      
       try { audioSynth?.playValidationSuccess(); } catch (err) {}
-      setTimeout(() => setSuccess(false), 3000);
-    }, 800);
+      setSheetOpen(false);
+    } catch (e) {
+      console.error(e);
+      alert("Erreur lors de l'enregistrement du taux.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -75,43 +132,72 @@ export default function AdminSettings({
         <div className="col-span-1 md:col-span-2 p-6 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-6 relative overflow-hidden">
           <h4 className="text-xs font-mono uppercase font-black tracking-wider text-[#D4AF37] flex items-center gap-1.5">
             <Sliders className="w-4 h-4" />
-            Règles Financières Globales
+            Tarification et Commissions
           </h4>
-
-          <form onSubmit={handleSave} className="space-y-4">
-            <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider text-afri-text-sec block font-bold mb-2">
-                Taux de commission de plateforme (%)
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="number"
-                  min="0"
-                  max="50"
-                  value={commissionRate}
-                  onChange={(e) => setCommissionRate(Number(e.target.value))}
-                  className="bg-afri-bg border border-[#D4AF37]/20 rounded-xl p-3 text-sm font-mono text-afri-text focus:outline-none focus:border-[#D4AF37] w-28 text-center transition-all"
-                />
-                <span className="text-sm text-afri-text-sec">% prélevé sur les cachets de Gombos</span>
+          
+          {loadingPricing ? (
+            <div className="text-xs font-mono text-afri-text-sec animate-pulse">Chargement des données...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* STANDARD */}
+              <div className="bg-afri-bg p-4 rounded-xl border border-afri-border space-y-3">
+                <h5 className="text-[10px] font-mono uppercase font-black text-afri-text">Compte Standard</h5>
+                <p className="text-[9px] text-afri-text-sec font-mono">Commission prélevée sur chaque Gombo</p>
+                
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={draftStandard}
+                    onChange={(e) => setDraftStandard(e.target.value)}
+                    className="bg-zinc-900 border border-[#D4AF37]/30 rounded-lg p-2 text-sm font-mono text-afri-text focus:outline-none focus:border-[#D4AF37] w-full text-center"
+                  />
+                  <span className="text-sm font-mono font-bold text-afri-text-sec">%</span>
+                </div>
+                
+                {Number(draftStandard) / 100 !== pricing.standardCommissionRate && (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenSheet("STANDARD")}
+                    className="w-full py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg text-[9px] font-mono font-bold uppercase transition hover:bg-emerald-500/20"
+                  >
+                    Mettre à jour
+                  </button>
+                )}
               </div>
-            </div>
 
-            <div className="flex justify-end pt-4 border-t border-afri-border">
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="px-5 py-2.5 rounded-xl bg-afri-bg-sec text-black font-black text-xs uppercase flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all cursor-pointer"
-              >
-                <Save className="w-4 h-4" />
-                {isSaving ? "Sauvegarde..." : "Enregistrer"}
-              </button>
-            </div>
-          </form>
+              {/* PREMIUM */}
+              <div className="bg-afri-bg p-4 rounded-xl border border-[#D4AF37]/20 shadow-[0_0_15px_rgba(212,175,55,0.05)] space-y-3">
+                <h5 className="text-[10px] font-mono uppercase font-black text-[#D4AF37]">Compte Premium / Elite</h5>
+                <p className="text-[9px] text-afri-text-sec font-mono">Commission réduite (Avantage VIP)</p>
+                
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={draftPremium}
+                    onChange={(e) => setDraftPremium(e.target.value)}
+                    className="bg-zinc-900 border border-[#D4AF37]/30 rounded-lg p-2 text-sm font-mono text-[#D4AF37] focus:outline-none focus:border-[#D4AF37] w-full text-center"
+                  />
+                  <span className="text-sm font-mono font-bold text-[#D4AF37]">%</span>
+                </div>
 
-          {success && (
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs flex items-center gap-2 animate-fadeIn">
-              <CheckCircle className="w-4 h-4" />
-              <span>Paramètres financiers mis à jour sur la base de données centrale.</span>
+                {Number(draftPremium) / 100 !== pricing.premiumCommissionRate && (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenSheet("PREMIUM")}
+                    className="w-full py-2 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 rounded-lg text-[9px] font-mono font-bold uppercase transition hover:bg-[#D4AF37]/20"
+                  >
+                    Mettre à jour
+                  </button>
+                )}
+              </div>
+
             </div>
           )}
         </div>
@@ -121,10 +207,10 @@ export default function AdminSettings({
           <div className="space-y-3">
             <h5 className="text-[10px] font-mono uppercase tracking-wider text-afri-text-sec font-bold">Rappel des Directives</h5>
             <p className="text-xs text-afri-text-sec leading-relaxed font-sans">
-              Le taux de commission d'AFRIGOMBO ELITE garantit la stabilité des serveurs, la production de jetons Gombo ID certifiés par l'Administration, et le fonctionnement offline sécurisé.
+              La tarification configurée ici est appliquée immédiatement à toutes les NOUVELLES transactions.
+              Les transactions existantes conservent le taux appliqué lors de leur création.
             </p>
           </div>
-
           <div className="border-t border-afri-border pt-4 mt-6">
             <span className="text-[9px] font-mono uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded px-2.5 py-1 inline-block">
               Statut: ACTIF
@@ -137,11 +223,9 @@ export default function AdminSettings({
           <h4 className="text-xs font-mono uppercase font-black tracking-wider text-[#D4AF37] flex items-center gap-1.5">
             🎵 Gestion de la Musique Officielle
           </h4>
-
           <p className="text-xs text-afri-text-sec">
             Contrôlez les pistes officielles et hymnes d'AFRIGOMBO ELITE intégrés à l'application.
           </p>
-
           <div className="space-y-4">
             {/* BUTTONS ROW */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -179,7 +263,6 @@ export default function AdminSettings({
                 Hymne officiel
               </button>
             </div>
-
             {/* STOP BUTTON */}
             {activeMusicPlay !== "none" && (
               <button
@@ -241,15 +324,80 @@ export default function AdminSettings({
               L'introduction se lance automatiquement lors de la toute première visite d'un nouvel utilisateur sur l'écosystème. L'hymne peut être déclenché manuellement depuis le Terrain ou depuis l'Espace Administration.
             </p>
           </div>
-
           <div className="border-t border-afri-border pt-4 mt-6">
             <span className="text-[9px] font-mono uppercase tracking-wider text-[#D4AF37] bg-afri-bg-sec/10 border border-[#D4AF37]/20 rounded px-2.5 py-1 inline-block">
               Audio: STABLE
             </span>
           </div>
         </div>
-
       </div>
+
+      {/* CONFIRMATION BOTTOM SHEET */}
+      {sheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-afri-bg-sec border border-afri-border w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative animate-slideUp">
+            <button 
+              onClick={() => setSheetOpen(false)}
+              className="absolute top-4 right-4 p-2 bg-afri-bg rounded-full text-afri-text-sec hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            
+            <div className="mb-4">
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mb-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+              </div>
+              <h2 className="text-sm font-mono font-black uppercase text-afri-text">Modifier la Commission</h2>
+              <p className="text-xs text-afri-text-sec font-mono mt-1">
+                Type : <strong className="text-[#D4AF37]">{sheetType}</strong>
+              </p>
+            </div>
+
+            <div className="space-y-4 bg-afri-bg border border-afri-border p-4 rounded-xl">
+              <div className="flex justify-between items-center text-xs font-mono">
+                <span className="text-afri-text-sec">Ancien taux :</span>
+                <span className="text-red-400 line-through">
+                  {(sheetType === "STANDARD" ? pricing.standardCommissionRate * 100 : pricing.premiumCommissionRate * 100).toFixed(1)} %
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs font-mono">
+                <span className="text-afri-text">Nouveau taux :</span>
+                <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
+                  {(sheetNewRate * 100).toFixed(1)} %
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-2 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
+              <p className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest mb-2">Prévisualisation (sur 50 000 FCFA)</p>
+              <div className="flex justify-between text-[11px] font-mono">
+                <span className="text-afri-text-sec">Commission actuelle :</span>
+                <span>{Math.round(50000 * (sheetType === "STANDARD" ? pricing.standardCommissionRate : pricing.premiumCommissionRate))} FCFA</span>
+              </div>
+              <div className="flex justify-between text-[11px] font-mono font-bold text-emerald-400">
+                <span>Nouvelle commission :</span>
+                <span>{Math.round(50000 * sheetNewRate)} FCFA</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setSheetOpen(false)}
+                className="flex-1 py-3 bg-afri-bg border border-afri-border rounded-xl text-xs font-mono font-bold text-afri-text-sec hover:text-white"
+              >
+                ANNULER
+              </button>
+              <button
+                onClick={handleConfirmSave}
+                disabled={isSaving}
+                className="flex-1 py-3 bg-[#D4AF37] text-black rounded-xl text-xs font-mono font-black uppercase hover:opacity-90 disabled:opacity-50"
+              >
+                {isSaving ? "ENREGISTREMENT..." : "ENREGISTRER"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

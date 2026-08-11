@@ -12,6 +12,7 @@ import {
   collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, where, getDocs 
 } from "firebase/firestore";
 import { PaymentEngine } from "../../lib/paymentEngine";
+import { logAdminAction } from "../../lib/auditLogger";
 import { safeStringify } from "../../lib/jsonUtils";
 import FounderFeesVault from "./FounderFeesVault";
 
@@ -32,7 +33,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
   // Selected User Modal / Action state
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
-  const [actionType, setActionType] = useState<"credit" | "debit" | "correction" | "block" | "unblock" | null>(null);
+  const [actionType, setActionType] = useState<"credit" | "debit" | "correction" | "block" | "unblock" | "freeze" | "unfreeze" | null>(null);
   const [amountInput, setAmountInput] = useState<string>("");
   const [reasonInput, setReasonInput] = useState<string>("");
   const [processing, setProcessing] = useState<boolean>(false);
@@ -40,6 +41,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
   // Selected Transaction for Refund
   const [selectedTxForRefund, setSelectedTxForRefund] = useState<any | null>(null);
   const [refundReason, setRefundReason] = useState<string>("");
+  const [refundAmountInput, setRefundAmountInput] = useState<string>("");
 
   // Notifications / Toast
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -173,10 +175,40 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
         if (success) {
           showToast(isBlocked ? "🔒 Wallet verrouillé avec succès." : "🔓 Wallet déverrouillé avec succès.");
+          await logAdminAction({
+            adminUid: currentUser?.uid || "unknown",
+            adminEmail: adminEmail,
+            action: isBlocked ? "ACCOUNT_BLOCK" : "ACCOUNT_UNBLOCK",
+            targetUserId: targetUserId,
+            reason: reasonInput,
+          });
           setActionType(null);
           setReasonInput("");
         } else {
           showToast("Erreur lors de la modification du statut du Wallet.", "error");
+        }
+      } else if (actionType === "freeze" || actionType === "unfreeze") {
+        const isFrozen = actionType === "freeze";
+        const success = await PaymentEngine.setAccountFrozenStatus(
+          targetUserId,
+          isFrozen,
+          reasonInput,
+          adminEmail
+        );
+
+        if (success) {
+          showToast(isFrozen ? "❄️ Compte gelé avec succès." : "🔥 Compte dégelé avec succès.");
+          await logAdminAction({
+            adminUid: currentUser?.uid || "unknown",
+            adminEmail: adminEmail,
+            action: isFrozen ? "ACCOUNT_FREEZE" : "ACCOUNT_UNFREEZE",
+            targetUserId: targetUserId,
+            reason: reasonInput,
+          });
+          setActionType(null);
+          setReasonInput("");
+        } else {
+          showToast("Erreur lors de la modification du statut du compte.", "error");
         }
       } else {
         const actionMapped = actionType === "correction" ? "set" : actionType;
@@ -190,6 +222,14 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
         if (res.success) {
           showToast(`✅ Opération ${actionType.toUpperCase()} exécutée avec succès !`);
+          await logAdminAction({
+            adminUid: currentUser?.uid || "unknown",
+            adminEmail: adminEmail,
+            action: actionMapped === "credit" ? "WALLET_CREDIT" : actionMapped === "debit" ? "WALLET_DEBIT" : "WALLET_ADJUSTMENT",
+            targetUserId: targetUserId,
+            reason: reasonInput,
+            newValue: Number(amountInput)
+          });
           setActionType(null);
           setAmountInput("");
           setReasonInput("");
@@ -206,8 +246,16 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
   // Handle Transaction Refund
   const handleExecuteRefund = async () => {
+    const refundAmount = Number(refundAmountInput);
+    const maxAmount = Number(selectedTxForRefund?.amount || selectedTxForRefund?.montant || 0);
+
     if (!selectedTxForRefund || !refundReason.trim()) {
       showToast("Un motif de remboursement est obligatoire.", "error");
+      return;
+    }
+
+    if (!refundAmount || refundAmount <= 0 || refundAmount > maxAmount) {
+      showToast(`Le montant doit être compris entre 1 et ${maxAmount} FCFA.`, "error");
       return;
     }
 
@@ -215,7 +263,6 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
     try {
       const adminEmail = currentUser?.email || currentUser?.displayName || "SuperFondateur";
       const targetUserId = selectedTxForRefund.userId || selectedTxForRefund.uid;
-      const refundAmount = Number(selectedTxForRefund.amount || selectedTxForRefund.montant || 0);
 
       const res = await PaymentEngine.refundPayment({
         userId: targetUserId,
@@ -227,8 +274,18 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
       if (res.success) {
         showToast(`🔄 Remboursement de ${refundAmount} FCFA effectué !`);
+        await logAdminAction({
+          adminUid: currentUser?.uid || "unknown",
+          adminEmail: adminEmail,
+          action: "TRANSACTION_REFUND",
+          targetUserId: targetUserId,
+          reason: refundReason,
+          newValue: refundAmount,
+          transactionId: selectedTxForRefund.id
+        });
         setSelectedTxForRefund(null);
         setRefundReason("");
+        setRefundAmountInput("");
       } else {
         showToast(res.error || "Erreur lors du remboursement.", "error");
       }
@@ -550,13 +607,16 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
             filteredUsers.map((usr) => {
               const solde = usr.wallet?.soldeDisponible ?? usr.walletBalance ?? 0;
               const isBlocked = usr.walletBlocked === true;
+              const isFrozen = usr.accountFrozen === true;
               const name = usr.displayName || usr.artistName || usr.artisticName || usr.name || "Membre Gombo";
 
               return (
                 <div
                   key={usr.id}
                   className={`p-4 rounded-2xl border transition-all text-left space-y-3 ${
-                    isBlocked 
+                    isFrozen
+                      ? "bg-amber-950/25 border-amber-500/50"
+                      : isBlocked 
                       ? "bg-rose-950/20 border-rose-500/40" 
                       : "bg-zinc-900/60 border-zinc-800/80 hover:border-[#D4AF37]/50"
                   }`}
@@ -568,6 +628,11 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                         {isBlocked && (
                           <span className="px-1.5 py-0.2 bg-rose-500/20 text-rose-400 text-[8px] font-mono border border-rose-500/40 rounded uppercase font-black">
                             Bloqué
+                          </span>
+                        )}
+                        {isFrozen && (
+                          <span className="px-1.5 py-0.2 bg-amber-550/20 text-amber-400 text-[8px] font-mono border border-amber-500/40 rounded uppercase font-black">
+                            Gelé
                           </span>
                         )}
                       </h4>
@@ -584,7 +649,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                   </div>
 
                   {/* Actions buttons for user */}
-                  <div className="pt-2 border-t border-zinc-800/60 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="pt-2 border-t border-zinc-800/60 grid grid-cols-2 xs:grid-cols-5 sm:grid-cols-5 gap-2">
                     <button
                       onClick={() => { setSelectedUser(usr); setActionType("credit"); setAmountInput(""); setReasonInput(""); }}
                       className="py-1.5 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-lg text-[9px] font-mono font-bold uppercase transition text-center cursor-pointer flex items-center justify-center gap-1"
@@ -623,6 +688,19 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                     >
                       {isBlocked ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                       <span>{isBlocked ? "Débloq." : "Bloquer"}</span>
+                    </button>
+
+                    <button
+                      onClick={() => { setSelectedUser(usr); setActionType(isFrozen ? "unfreeze" : "freeze"); setAmountInput(""); setReasonInput(""); }}
+                      className={`py-1.5 px-2 border rounded-lg text-[9px] font-mono font-bold uppercase transition text-center cursor-pointer flex items-center justify-center gap-1 ${
+                        isFrozen
+                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                          : "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                      }`}
+                      title={isFrozen ? "Dégeler le Compte" : "Geler le Compte"}
+                    >
+                      {isFrozen ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                      <span>{isFrozen ? "Dégeler" : "Geler"}</span>
                     </button>
                   </div>
                 </div>
@@ -754,7 +832,11 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
                     {!tx.refunded && tx.type !== "refund" && (
                       <button
-                        onClick={() => { setSelectedTxForRefund(tx); setRefundReason(""); }}
+                        onClick={() => { 
+                          setSelectedTxForRefund(tx); 
+                          setRefundReason(""); 
+                          setRefundAmountInput(String(tx.amount || tx.montant || 0));
+                        }}
                         className="py-1 px-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 rounded text-[9px] font-mono font-bold uppercase transition cursor-pointer inline-flex items-center gap-1"
                       >
                         <RotateCcw className="w-2.5 h-2.5" />
@@ -794,7 +876,9 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                   {actionType === "credit" ? "Créditer le Wallet" :
                    actionType === "debit" ? "Débiter le Wallet" :
                    actionType === "correction" ? "Correction de Solde" :
-                   actionType === "block" ? "Verrouiller le Wallet" : "Déverrouiller le Wallet"}
+                   actionType === "block" ? "Verrouiller le Wallet" : 
+                   actionType === "unblock" ? "Déverrouiller le Wallet" :
+                   actionType === "freeze" ? "Geler le Compte" : "Dégeler le Compte"}
                 </h3>
                 <p className="text-xs text-afri-text-sec font-mono">
                   Bénéficiaire : <span className="text-afri-text font-bold">{selectedUser.displayName || selectedUser.artistName || "Membre Gombo"}</span>
@@ -894,15 +978,30 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
               <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-3.5 space-y-1 font-mono text-xs">
                 <div className="flex justify-between text-afri-text-sec">
-                  <span>Montant à créditer :</span>
-                  <span className="font-bold text-rose-400">
-                    +{(selectedTxForRefund.amount || selectedTxForRefund.montant || 0).toLocaleString("fr-FR")} FCFA
+                  <span>Montant maximum d'origine :</span>
+                  <span className="font-bold text-[#D4AF37]">
+                    {(selectedTxForRefund.amount || selectedTxForRefund.montant || 0).toLocaleString("fr-FR")} FCFA
                   </span>
                 </div>
                 <div className="flex justify-between text-afri-text-sec">
                   <span>Bénéficiaire :</span>
                   <span className="text-afri-text font-bold">{selectedTxForRefund.userName || selectedTxForRefund.userId}</span>
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
+                  Montant à recréditer (FCFA)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max={selectedTxForRefund.amount || selectedTxForRefund.montant || 0}
+                  value={refundAmountInput}
+                  onChange={(e) => setRefundAmountInput(e.target.value)}
+                  placeholder="Montant du remboursement..."
+                  className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-3 text-afri-text font-mono text-sm outline-none"
+                />
               </div>
 
               <div className="space-y-1">

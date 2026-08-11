@@ -1,18 +1,23 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Landmark, TrendingUp, DollarSign, ArrowUpRight, List } from "lucide-react";
 import { Transaction } from "../../types";
+import { fetchPlatformPricing, PricingConfig } from "../../lib/financial";
 
 interface AdminRevenueProps {
   transactions: Transaction[];
-  systemCommissionRate: number;
   audioSynth?: any;
 }
 
 export default function AdminRevenue({
   transactions = [],
-  systemCommissionRate,
   audioSynth
 }: AdminRevenueProps) {
+  const [pricing, setPricing] = useState<PricingConfig | null>(null);
+
+  useEffect(() => {
+    fetchPlatformPricing().then(setPricing);
+  }, []);
+
   // Sum up all platform commissions
   const totalCommissionGenerated = transactions
     .filter((tx) => tx.type === "commission")
@@ -48,9 +53,14 @@ export default function AdminRevenue({
         <div className="p-5 rounded-2xl bg-gradient-to-br from-afri-bg-ter to-afri-bg border border-afri-border flex justify-between items-center">
           <div>
             <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest font-bold">Taux de commission de caisse</span>
-            <strong className="text-2xl font-display font-black text-[#D4AF37] block mt-2">
-              {systemCommissionRate} %
-            </strong>
+            <div className="mt-2 space-y-1">
+              <span className="text-xl font-display font-black text-[#D4AF37] block">
+                Standard : {pricing ? (pricing.standardCommissionRate * 100).toFixed(1) : "2.5"} %
+              </span>
+              <span className="text-xs font-display font-black text-afri-text block">
+                Premium : {pricing ? (pricing.premiumCommissionRate * 100).toFixed(1) : "1.5"} %
+              </span>
+            </div>
           </div>
           <div className="w-10 h-10 bg-afri-bg-sec/10 border border-[#D4AF37]/20 rounded-xl flex items-center justify-center text-[#D4AF37]">
             <DollarSign className="w-5 h-5" />

@@ -62,12 +62,12 @@ export const PremiumEngine = {
   },
 
   /**
-   * Calculates the commission rate.
-   * Compte Standard: 2.5%
-   * Compte Premium: 1.5%
+   * Calculates the commission rate dynamically from global pricing configuration.
    */
   getCommissionRate(userData: any): number {
-    return this.isPremium(userData) ? 0.015 : 0.025;
+    const { getPlatformPricing } = require("./financial");
+    const pricing = getPlatformPricing();
+    return this.isPremium(userData) ? pricing.premiumCommissionRate : pricing.standardCommissionRate;
   },
 
   /**

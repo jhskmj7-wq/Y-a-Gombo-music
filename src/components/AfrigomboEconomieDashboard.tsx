@@ -20,7 +20,7 @@ import { Sliders } from "lucide-react";
 import { motion } from "motion/react";
 import { db } from "../firebase";
 import { collection, onSnapshot, doc, setDoc, getDoc } from "firebase/firestore";
-import { fetchPlatformFeeRate, updatePlatformFeeRate } from "../lib/financial";
+import { fetchPlatformPricing, updatePlatformPricing } from "../lib/financial";
 
 interface AfrigomboEconomieDashboardProps {
   onBack?: () => void;
@@ -63,8 +63,8 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
 
   // Fetch initial commission rate
   useEffect(() => {
-    fetchPlatformFeeRate().then(rate => {
-      setCurrentRatePct(rate * 100);
+    fetchPlatformPricing().then(pricing => {
+      setCurrentRatePct(pricing.standardCommissionRate * 100);
     });
   }, []);
 
@@ -73,7 +73,7 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
     setRateSavedMsg("");
     try {
       const rateVal = newPct / 100;
-      await updatePlatformFeeRate(rateVal);
+      await updatePlatformPricing({ standardCommissionRate: rateVal });
       setCurrentRatePct(newPct);
       setRateSavedMsg(`Taux de commission mis à jour avec succès : ${newPct}%`);
       setTimeout(() => setRateSavedMsg(""), 3000);

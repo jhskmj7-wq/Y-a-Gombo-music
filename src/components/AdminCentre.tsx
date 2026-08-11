@@ -7791,7 +7791,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 <Suspense fallback={<div className="p-10 text-center text-[#D4A017] font-mono animate-pulse">Chargement revenus...</div>}>
                   <AdminRevenue
                     transactions={transactions}
-                    systemCommissionRate={systemCommissionRate}
                     audioSynth={audioSynth}
                   />
                 </Suspense>
@@ -7803,8 +7802,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "settings" && (
                 <Suspense fallback={<div className="p-10 text-center text-[#D4A017] font-mono animate-pulse">Chargement paramètres...</div>}>
                   <AdminSettings
-                    systemCommissionRate={systemCommissionRate}
-                    onUpdateCommissionRate={handleUpdateCommissionRate}
                     audioSynth={audioSynth}
                   />
                 </Suspense>

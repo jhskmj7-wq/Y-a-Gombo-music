@@ -6,6 +6,7 @@ import { serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { UserProfile } from "./types";
 import { PremiumEngine } from "./lib/premiumEngine";
+import { fetchPlatformPricing } from "./lib/financial";
 import { safeStringify } from "./lib/jsonUtils";
 
 interface AuthContextType {
@@ -74,6 +75,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [showAuthPopup, setShowAuthPopup] = useState(false);
 
   useEffect(() => {
+    // Fetch global platform pricing on mount
+    fetchPlatformPricing().catch(console.error);
+
     let profileUnsub: (() => void) | null = null;
 
     // Safety timeout to prevent blocking if Firebase Auth hangs or network is slow

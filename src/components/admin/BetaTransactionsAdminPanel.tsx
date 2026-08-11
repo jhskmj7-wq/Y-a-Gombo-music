@@ -803,13 +803,13 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
       if (pendingAction === "VALIDATE") {
         showToast(req.type === "deposit" ? "✅ Dépôt validé et synchronisé !" : "✅ Retrait validé et synchronisé !");
         try { audioSynth.playValidationSuccess(); } catch (_) {}
-        setSelectedRequest(prev => prev ? { ...prev, status: "validated" } : null);
+        setSelectedRequest(null);
       } else if (pendingAction === "REFUSE") {
         showToast("❌ Demande refusée et membre notifié.");
-        setSelectedRequest(prev => prev ? { ...prev, status: "refused" } : null);
+        setSelectedRequest(null);
       } else if (pendingAction === "PENDING") {
         showToast("⏳ Transaction remise en attente.");
-        setSelectedRequest(prev => prev ? { ...prev, status: "pending" } : null);
+        setSelectedRequest(null);
       }
 
       // Automatically send support message to user's support conversation

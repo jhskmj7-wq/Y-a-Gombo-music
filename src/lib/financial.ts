@@ -24,42 +24,50 @@ export function getCanonicalWalletBalance(userData: any): number {
   return 0;
 }
 
-// Global in-memory cache for platform fee rate (default 2.5% during Beta)
-let currentFeeRate = 0.025;
+// Global in-memory cache for platform pricing configuration
+export interface PricingConfig {
+  standardCommissionRate: number; // e.g. 0.05
+  premiumCommissionRate: number; // e.g. 0.015
+}
+
+let currentPricing: PricingConfig = {
+  standardCommissionRate: 0.025,
+  premiumCommissionRate: 0.015
+};
 
 /**
- * Fetch configured platform fee rate from Firestore configs/commission document.
+ * Fetch configured platform pricing from Firestore configs/pricing document.
  */
-export async function fetchPlatformFeeRate(): Promise<number> {
+export async function fetchPlatformPricing(): Promise<PricingConfig> {
   try {
-    const snap = await getDoc(doc(db, "configs", "commission"));
+    const snap = await getDoc(doc(db, "system_settings", "economy"));
     if (snap.exists()) {
       const data = snap.data();
-      if (typeof data?.rate === "number") {
-        currentFeeRate = data.rate;
+      if (typeof data?.commissionBase === "number") {
+        currentPricing.standardCommissionRate = data.commissionBase / 100;
+      }
+      if (typeof data?.commissionPremium === "number") {
+        currentPricing.premiumCommissionRate = data.commissionPremium / 100;
       }
     }
   } catch (err) {
-    console.warn("Failed to fetch platform fee rate, using fallback 2.5%:", err);
+    console.warn("Failed to fetch platform pricing, using fallback:", err);
   }
-  return currentFeeRate;
+  return currentPricing;
 }
 
-/**
- * Get currently cached fee rate.
- */
-export function getPlatformFeeRate(): number {
-  return currentFeeRate;
+export function getPlatformPricing(): PricingConfig {
+  return currentPricing;
 }
 
 /**
  * SINGLE UNIQUE FUNCTION to calculate platform fee.
  * @param amount - Cachet amount in FCFA
- * @param feeRate - Optional custom fee rate (defaults to configured rate e.g. 0.025 for 2.5%)
+ * @param feeRate - Optional custom fee rate
  */
 export function calculatePlatformFee(amount: number, feeRate?: number): number {
   if (!amount || amount <= 0) return 0;
-  const rate = typeof feeRate === "number" ? feeRate : currentFeeRate;
+  const rate = typeof feeRate === "number" ? feeRate : currentPricing.standardCommissionRate;
   return Math.round(amount * rate);
 }
 
@@ -68,40 +76,42 @@ export function calculatePlatformFee(amount: number, feeRate?: number): number {
  */
 export function calculatePublicationFinancials(cachet: number, feeRate?: number) {
   const cachetVal = Math.max(0, cachet);
-  const rate = typeof feeRate === "number" ? feeRate : currentFeeRate;
+  const rate = typeof feeRate === "number" ? feeRate : currentPricing.standardCommissionRate;
   const feeAmount = Math.round(cachetVal * rate);
   const montantSequestre = cachetVal;
   const totalDebite = cachetVal + feeAmount;
+
   return {
     cachet: cachetVal,
     fee: feeAmount,
     sequestre: montantSequestre,
     total: totalDebite,
     rate: rate,
-    isPremium: rate === 0.015
+    isPremium: rate === currentPricing.premiumCommissionRate
   };
 }
 
 /**
- * Update platform fee rate in Firestore (for Admin Centre).
+ * Update platform pricing in Firestore (for Admin Centre).
  */
-export async function updatePlatformFeeRate(newRate: number): Promise<void> {
-  currentFeeRate = newRate;
+export async function updatePlatformPricing(newPricing: Partial<PricingConfig>): Promise<void> {
+  currentPricing = { ...currentPricing, ...newPricing };
   try {
-    await setDoc(doc(db, "configs", "commission"), {
-      rate: newRate,
-      ratePercentage: newRate * 100,
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
+    const payload: any = { updatedAt: new Date().toISOString() };
+    if (newPricing.standardCommissionRate !== undefined) {
+      payload.commissionBase = newPricing.standardCommissionRate * 100;
+    }
+    if (newPricing.premiumCommissionRate !== undefined) {
+      payload.commissionPremium = newPricing.premiumCommissionRate * 100;
+    }
+    await setDoc(doc(db, "system_settings", "economy"), payload, { merge: true });
   } catch (err) {
-    console.error("Failed to update platform fee rate in Firestore:", err);
+    console.error("Failed to update platform pricing in Firestore:", err);
   }
 }
 
 /**
  * Calculate effective commission rate based on user's Firestore profile.
- * IF premium == true AND premiumExpiresAt > now => 0.015 (1.5%)
- * ELSE => 0.025 (2.5%)
  */
 export function getEffectiveCommissionRate(userData: any): number {
   return PremiumEngine.getCommissionRate(userData);

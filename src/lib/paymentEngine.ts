@@ -251,6 +251,27 @@ export class PaymentEngineClass {
       await setDoc(doc(db, "walletTransactions", refundId), refundRecord);
       await setDoc(doc(db, "transactions", refundId), refundRecord);
 
+      if (txId) {
+        try {
+          await updateDoc(doc(db, "transactions", txId), {
+            refunded: true,
+            refundId: refundId,
+            updatedAt: now.toISOString()
+          });
+        } catch (e) {
+          console.warn("Could not mark original tx as refunded in transactions:", e);
+        }
+        try {
+          await updateDoc(doc(db, "walletTransactions", txId), {
+            refunded: true,
+            refundId: refundId,
+            updatedAt: now.toISOString()
+          });
+        } catch (e) {
+          console.warn("Could not mark original tx as refunded in walletTransactions:", e);
+        }
+      }
+
       return { success: true, balanceAfter };
     } catch (err: any) {
       console.error("PaymentEngine.refundPayment error:", err);
@@ -341,6 +362,25 @@ export class PaymentEngineClass {
       return true;
     } catch (err) {
       console.error("PaymentEngine.setWalletBlockStatus error:", err);
+      return false;
+    }
+  }
+
+  /**
+   * Freeze / Unfreeze user account.
+   */
+  async setAccountFrozenStatus(userId: string, frozen: boolean, reason: string, adminEmail?: string): Promise<boolean> {
+    try {
+      const userRef = doc(db, "users", userId);
+      await updateDoc(userRef, {
+        accountFrozen: frozen,
+        accountFrozenReason: frozen ? reason : "",
+        accountFrozenAt: frozen ? new Date().toISOString() : null,
+        updatedAt: new Date().toISOString()
+      });
+      return true;
+    } catch (err) {
+      console.error("PaymentEngine.setAccountFrozenStatus error:", err);
       return false;
     }
   }
