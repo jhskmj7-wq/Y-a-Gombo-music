@@ -87,9 +87,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'logo.svg', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-512x512-maskable.png'],
       manifest: {
-        name: 'AFRIGOMBO',
+        id: '/',
+        name: 'AFRIGOMBO ELITE',
         short_name: 'AFRIGOMBO',
-        description: 'Réseau Social & Écosystème Créatif Africain',
+        description: 'La plateforme souveraine des talents, gombos et de la culture d\'Afrique',
         theme_color: '#050505',
         background_color: '#050505',
         display: 'standalone',
@@ -100,12 +101,14 @@ export default defineConfig({
           {
             src: '/pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: '/pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: '/pwa-512x512-maskable.png',
