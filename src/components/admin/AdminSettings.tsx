@@ -28,8 +28,8 @@ export default function AdminSettings({
   
   // Sheet states
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [sheetType, setSheetType] = useState<"STANDARD" | "PREMIUM">("STANDARD");
-  const [sheetNewRate, setSheetNewRate] = useState<number>(0);
+  const [sheetNewStandard, setSheetNewStandard] = useState<number>(0);
+  const [sheetNewPremium, setSheetNewPremium] = useState<number>(0);
   const [isSaving, setIsSaving] = useState(false);
   
   // Global Audio states
@@ -58,32 +58,28 @@ export default function AdminSettings({
   const activeMusicPlay = audioState.currentPlaying;
   const isPaused = audioState.isPaused;
 
-  const handleOpenSheet = (type: "STANDARD" | "PREMIUM") => {
-    const valStr = type === "STANDARD" ? draftStandard : draftPremium;
-    let val = parseFloat(valStr);
+  const handleOpenSheet = () => {
+    const sRate = parseFloat(draftStandard);
+    const pRate = parseFloat(draftPremium);
     
-    if (isNaN(val) || val < 0 || val > 100) {
-      alert("Valeur invalide pour le taux de commission.");
+    if (isNaN(sRate) || sRate < 0 || sRate > 100 || isNaN(pRate) || pRate < 0 || pRate > 100) {
+      alert("Valeurs invalides pour les taux de commission.");
       return;
     }
     
-    setSheetType(type);
-    setSheetNewRate(val / 100);
+    setSheetNewStandard(sRate / 100);
+    setSheetNewPremium(pRate / 100);
     setSheetOpen(true);
   };
 
   const handleConfirmSave = async () => {
     setIsSaving(true);
     
-    const oldRate = sheetType === "STANDARD" ? pricing.standardCommissionRate : pricing.premiumCommissionRate;
-    
     try {
-      const updates: Partial<PricingConfig> = {};
-      if (sheetType === "STANDARD") {
-        updates.standardCommissionRate = sheetNewRate;
-      } else {
-        updates.premiumCommissionRate = sheetNewRate;
-      }
+      const updates: Partial<PricingConfig> = {
+        standardCommissionRate: sheetNewStandard,
+        premiumCommissionRate: sheetNewPremium
+      };
       
       await updatePlatformPricing(updates);
       setPricing(prev => ({ ...prev, ...updates }));
@@ -92,10 +88,15 @@ export default function AdminSettings({
       await addDoc(collection(db, "admin_audit_logs"), {
         adminId: currentUser?.uid || "unknown",
         adminEmail: currentUser?.email || "unknown",
-        actionType: "UPDATE_COMMISSION_RATE",
-        targetType: sheetType,
-        oldRate: oldRate,
-        newRate: sheetNewRate,
+        actionType: "UPDATE_COMMISSION_RATES_BATCH",
+        oldRates: {
+            standard: pricing.standardCommissionRate,
+            premium: pricing.premiumCommissionRate
+        },
+        newRates: {
+            standard: sheetNewStandard,
+            premium: sheetNewPremium
+        },
         timestamp: new Date().toISOString()
       });
       
@@ -103,7 +104,7 @@ export default function AdminSettings({
       setSheetOpen(false);
     } catch (e) {
       console.error(e);
-      alert("Erreur lors de l'enregistrement du taux.");
+      alert("Impossible d'enregistrer la configuration");
     } finally {
       setIsSaving(false);
     }
@@ -158,47 +159,16 @@ export default function AdminSettings({
                   <span className="text-sm font-mono font-bold text-afri-text-sec">%</span>
                 </div>
                 
-                {Number(draftStandard) / 100 !== pricing.standardCommissionRate && (
-                  <button
+                {/* UPDATE BUTTON - ONLY ONE FOR BOTH */}
+                <button
                     type="button"
-                    onClick={() => handleOpenSheet("STANDARD")}
-                    className="w-full py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg text-[9px] font-mono font-bold uppercase transition hover:bg-emerald-500/20"
-                  >
-                    Mettre à jour
-                  </button>
-                )}
-              </div>
-
-              {/* PREMIUM */}
-              <div className="bg-afri-bg p-4 rounded-xl border border-[#D4AF37]/20 shadow-[0_0_15px_rgba(212,175,55,0.05)] space-y-3">
-                <h5 className="text-[10px] font-mono uppercase font-black text-[#D4AF37]">Compte Premium / Elite</h5>
-                <p className="text-[9px] text-afri-text-sec font-mono">Commission réduite (Avantage VIP)</p>
-                
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={draftPremium}
-                    onChange={(e) => setDraftPremium(e.target.value)}
-                    className="bg-zinc-900 border border-[#D4AF37]/30 rounded-lg p-2 text-sm font-mono text-[#D4AF37] focus:outline-none focus:border-[#D4AF37] w-full text-center"
-                  />
-                  <span className="text-sm font-mono font-bold text-[#D4AF37]">%</span>
-                </div>
-
-                {Number(draftPremium) / 100 !== pricing.premiumCommissionRate && (
-                  <button
-                    type="button"
-                    onClick={() => handleOpenSheet("PREMIUM")}
-                    className="w-full py-2 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 rounded-lg text-[9px] font-mono font-bold uppercase transition hover:bg-[#D4AF37]/20"
-                  >
-                    Mettre à jour
-                  </button>
-                )}
-              </div>
-
+                    onClick={handleOpenSheet}
+                    className="w-full py-2 bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 rounded-lg text-[10px] font-mono font-bold uppercase transition hover:bg-[#D4AF37]/30"
+                >
+                    Enregistrer les taux
+                </button>
             </div>
+          </div>
           )}
         </div>
 
@@ -347,36 +317,30 @@ export default function AdminSettings({
               <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mb-3">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
               </div>
-              <h2 className="text-sm font-mono font-black uppercase text-afri-text">Modifier la Commission</h2>
+              <h2 className="text-sm font-mono font-black uppercase text-afri-text">Modifier les Commissions</h2>
               <p className="text-xs text-afri-text-sec font-mono mt-1">
-                Type : <strong className="text-[#D4AF37]">{sheetType}</strong>
+                Résumé des changements
               </p>
             </div>
 
             <div className="space-y-4 bg-afri-bg border border-afri-border p-4 rounded-xl">
               <div className="flex justify-between items-center text-xs font-mono">
-                <span className="text-afri-text-sec">Ancien taux :</span>
+                <span className="text-afri-text-sec">Standard :</span>
                 <span className="text-red-400 line-through">
-                  {(sheetType === "STANDARD" ? pricing.standardCommissionRate * 100 : pricing.premiumCommissionRate * 100).toFixed(1)} %
+                  {(pricing.standardCommissionRate * 100).toFixed(1)} %
+                </span>
+                <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
+                  {(sheetNewStandard * 100).toFixed(1)} %
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs font-mono">
-                <span className="text-afri-text">Nouveau taux :</span>
-                <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
-                  {(sheetNewRate * 100).toFixed(1)} %
+                <span className="text-afri-text-sec">Premium :</span>
+                <span className="text-red-400 line-through">
+                  {(pricing.premiumCommissionRate * 100).toFixed(1)} %
                 </span>
-              </div>
-            </div>
-
-            <div className="mt-4 space-y-2 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
-              <p className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest mb-2">Prévisualisation (sur 50 000 FCFA)</p>
-              <div className="flex justify-between text-[11px] font-mono">
-                <span className="text-afri-text-sec">Commission actuelle :</span>
-                <span>{Math.round(50000 * (sheetType === "STANDARD" ? pricing.standardCommissionRate : pricing.premiumCommissionRate))} FCFA</span>
-              </div>
-              <div className="flex justify-between text-[11px] font-mono font-bold text-emerald-400">
-                <span>Nouvelle commission :</span>
-                <span>{Math.round(50000 * sheetNewRate)} FCFA</span>
+                <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
+                  {(sheetNewPremium * 100).toFixed(1)} %
+                </span>
               </div>
             </div>
 

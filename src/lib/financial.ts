@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 
 import { PremiumEngine } from "./premiumEngine";
 
@@ -34,6 +34,19 @@ let currentPricing: PricingConfig = {
   standardCommissionRate: 0.025,
   premiumCommissionRate: 0.015
 };
+
+// Setup real-time listener
+onSnapshot(doc(db, "system_settings", "economy"), (snap) => {
+  if (snap.exists()) {
+    const data = snap.data();
+    if (typeof data?.commissionBase === "number") {
+      currentPricing.standardCommissionRate = data.commissionBase / 100;
+    }
+    if (typeof data?.commissionPremium === "number") {
+      currentPricing.premiumCommissionRate = data.commissionPremium / 100;
+    }
+  }
+});
 
 /**
  * Fetch configured platform pricing from Firestore configs/pricing document.

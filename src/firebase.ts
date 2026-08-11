@@ -68,6 +68,7 @@ import {
   NotificationStatus
 } from "./types";
 import { ReputationEngine } from "./lib/ReputationEngine";
+import { getPlatformPricing } from "./lib/financial";
 
 // Setup and determine if using Real Firebase
 export const isFirebaseMock = false; 
@@ -2381,19 +2382,21 @@ export const gomboDB = {
         }
 
         // Apply Premium Economic Rules:
-        // Client rate: 1.5% if Premium, else 2.5%
-        // Artist rate: 1.5% if Premium, else 2.5%
-        commissionClientRate = isClientPremium ? 0.015 : 0.025;
-        commissionArtistRate = isArtistPremium ? 0.015 : 0.025;
+        // Client rate: Premium rate if Premium, else Standard rate
+        // Artist rate: Premium rate if Premium, else Standard rate
+        const pricing = getPlatformPricing();
+        
+        commissionClientRate = isClientPremium ? pricing.premiumCommissionRate : pricing.standardCommissionRate;
+        commissionArtistRate = isArtistPremium ? pricing.premiumCommissionRate : pricing.standardCommissionRate;
 
         commissionClient = Math.round(amount * commissionClientRate);
         commissionArtist = Math.round(amount * commissionArtistRate);
         totalClientPaid = amount + commissionClient;
         totalArtistReceives = amount - commissionArtist;
 
-        // Premium savings compared to the standard 2.5% rate
-        savingsClient = isClientPremium ? Math.round(amount * 0.01) : 0;
-        savingsArtist = isArtistPremium ? Math.round(amount * 0.01) : 0;
+        // Premium savings compared to the standard rate
+        savingsClient = isClientPremium ? Math.round(amount * (pricing.standardCommissionRate - pricing.premiumCommissionRate)) : 0;
+        savingsArtist = isArtistPremium ? Math.round(amount * (pricing.standardCommissionRate - pricing.premiumCommissionRate)) : 0;
       }
 
       const initialHistory = [
