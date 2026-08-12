@@ -1,7 +1,17 @@
 /* AFRIGOMBO PWA SERVICE WORKER */
-importScripts('/sw-push.js');
+try {
+  importScripts('/sw-push.js');
+} catch (e) {
+  console.log('[SW] Push script import omitted or not found');
+}
+
+const CACHE_NAME = 'afrigombo-pwa-v1';
+const ASSETS_TO_CACHE = ['/', '/index.html', '/manifest.webmanifest', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
+  );
   self.skipWaiting();
 });
 
@@ -10,6 +20,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass-through fetch handler for development fallback.
-  // In production build, vite-plugin-pwa / Workbox handles caching strategies.
+  event.respondWith(
+    caches.match(event.request).then((response) => response || fetch(event.request))
+  );
 });
