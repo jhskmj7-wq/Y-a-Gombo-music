@@ -10,6 +10,7 @@ import { safeStringify } from "../lib/jsonUtils";
 import { UserProfile, Gombo, Application, Reservation, Renfort, RenfortApplication, MusicGroup, ActivityFeedEntry } from "../types";
 import GriotIA from "./GriotIA";
 import MobileMoneyPayment from "./MobileMoneyPayment";
+import AdminMaintenancePanel from "./admin/AdminMaintenancePanel";
 import { audioSynth } from "../lib/audio";
 
 interface DashboardsProps {
@@ -22,16 +23,16 @@ interface DashboardsProps {
 
 export default function Dashboards({ currentUserProfile, onRefreshProfile, initialTab, onBackToAdmin, onNavigateView }: DashboardsProps) {
   const [activeTab, setActiveTab] = useState<
-    "applications" | "gombos" | "renfort_express" | "favoris" | "groupes" | "historique" | "reservations" | "admin" | "waiting"
+    "applications" | "gombos" | "renfort_express" | "favoris" | "groupes" | "historique" | "reservations" | "admin" | "waiting" | "maintenance"
   >(() => {
-    if (initialTab && ["applications", "gombos", "renfort_express", "favoris", "groupes", "historique", "reservations", "admin", "waiting"].includes(initialTab)) {
+    if (initialTab && ["applications", "gombos", "renfort_express", "favoris", "groupes", "historique", "reservations", "admin", "waiting", "maintenance"].includes(initialTab)) {
       return initialTab as any;
     }
     return "applications";
   });
 
   useEffect(() => {
-    if (initialTab && ["applications", "gombos", "renfort_express", "favoris", "groupes", "historique", "reservations", "admin", "waiting"].includes(initialTab)) {
+    if (initialTab && ["applications", "gombos", "renfort_express", "favoris", "groupes", "historique", "reservations", "admin", "waiting", "maintenance"].includes(initialTab)) {
       setActiveTab(initialTab as any);
     }
   }, [initialTab]);
@@ -834,6 +835,18 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
               >
                 ⏳ Listes d'Attente ({waitingAnalytics.length})
               </button>
+              {(currentUserProfile.isFounder || currentUserProfile.role === "admin") && (
+                <button
+                  onClick={() => setActiveTab("maintenance")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    activeTab === "maintenance"
+                      ? "bg-red-600 text-white"
+                      : "bg-gray-100 dark:bg-afri-bg-ter text-red-500 hover:bg-red-50"
+                  }`}
+                >
+                  🛠️ Maintenance
+                </button>
+              )}
             </>
           )}
         </div>
@@ -1457,6 +1470,13 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* 10. MAINTENANCE PANEL (Super Admin only) */}
+          {activeTab === "maintenance" && (currentUserProfile.isFounder || currentUserProfile.role === "admin") && (
+            <div className="animate-fadeIn">
+              <AdminMaintenancePanel />
             </div>
           )}
 

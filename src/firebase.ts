@@ -475,21 +475,48 @@ export const gomboAuth = {
 // ==========================================
 
 export const gomboDB = {
-  // USERS
+// USERS
+  async getCanonicalWalletBalance(uid: string): Promise<number> {
+    if (!db) return 0;
+    try {
+      const docSnap = await getDoc(doc(db, "users", uid));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // Canonical source is wallet.soldeDisponible
+        if (data.wallet && typeof data.wallet.soldeDisponible === 'number') {
+          return data.wallet.soldeDisponible;
+        }
+        // Fallback to legacy fields WITHOUT writing back (Read-Only)
+        return typeof data.walletBalance === 'number' 
+          ? data.walletBalance 
+          : (typeof data.balance === 'number' ? data.balance : 0);
+      }
+    } catch (err) {
+      console.error("[WALLET-ERROR] Failed to fetch canonical balance:", err);
+    }
+    return 0;
+  },
+
   async getUserProfile(uid: string): Promise<UserProfile | null> {
     if (!db) return null;
     try {
       const docSnap = await getDoc(doc(db, "users", uid));
       if (docSnap.exists()) {
         let profile = docSnap.data() as UserProfile;
+        
+        // Audit existing balances
+        const canonicalBalance = profile.wallet?.soldeDisponible;
+        const legacyBalance = typeof profile.walletBalance === "number" 
+          ? profile.walletBalance 
+          : (typeof profile.balance === "number" ? profile.balance : 0);
+
+        console.log(`[WALLET-HYDRATION] uid=${uid} canonicalBalance=${canonicalBalance ?? 'undefined'} legacyBalance=${legacyBalance}`);
+
         let needsSync = false;
         
+        // If wallet object is missing or soldeDisponible is not set, initialize it SAFELY
         if (!profile.wallet || typeof profile.wallet.soldeDisponible !== "number") {
-          // Identify the best legacy balance available to prevent zeroing out existing funds
-          const legacyBalance = typeof profile.walletBalance === "number" 
-            ? profile.walletBalance 
-            : (typeof profile.balance === "number" ? profile.balance : 0);
-
+          console.warn(`[WALLET-SYNC] Initializing missing wallet for ${uid}. Using legacyBalance: ${legacyBalance}`);
           profile.wallet = {
             ...(profile.wallet || {}),
             soldeDisponible: legacyBalance,
@@ -502,11 +529,22 @@ export const gomboDB = {
             retraits: profile.wallet?.retraits ?? 0,
             gainsMensuels: profile.wallet?.gainsMensuels ?? 0
           };
+          // Also sync top-level legacy fields to match
+          profile.walletBalance = legacyBalance;
+          profile.balance = legacyBalance;
           needsSync = true;
         }
+
         if (needsSync) {
-          await setDoc(doc(db, "users", uid), profile, { merge: true });
+          // Perform a safe merge write ONLY if we initialized something new
+          await updateDoc(doc(db, "users", uid), {
+            wallet: profile.wallet,
+            walletBalance: profile.walletBalance,
+            balance: profile.balance,
+            updatedAt: serverTimestamp()
+          });
         }
+        
         return profile;
       }
     } catch (err) {
@@ -4170,5 +4208,5 @@ export const gomboDB = {
   }
 };
 
-export { db, storage };
+export { app, auth, db, storage };
 
