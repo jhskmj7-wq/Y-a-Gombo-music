@@ -300,7 +300,10 @@ export const gomboAuth = {
             }
             
             await setDoc(userRef, newUserData);
+            await restoreFounderIfNeeded(userRef, newUserData, res.user.email || "");
           } else {
+            const currentData = uDoc.data();
+            await restoreFounderIfNeeded(userRef, currentData, res.user.email || "");
             if (isFounder && !uDoc.data().isFounder) {
               await updateDoc(userRef, {
                 isFounder: true,
@@ -372,8 +375,10 @@ export const gomboAuth = {
               isPro: isFounder
             };
             await setDoc(userRef, userProfile);
+            await restoreFounderIfNeeded(userRef, userProfile, res.user.email || "");
           } else {
             const currentData = uDoc.data();
+            await restoreFounderIfNeeded(userRef, currentData, res.user.email || "");
             const updates: any = {};
             if (!currentData.displayName && res.user.displayName) updates.displayName = res.user.displayName;
             if (!currentData.photoURL && res.user.photoURL) updates.photoURL = res.user.photoURL;

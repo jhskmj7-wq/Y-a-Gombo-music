@@ -860,6 +860,114 @@ export default function AdminFounderThrone({
     }
   };
 
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleGlobalReset = async () => {
+    const firstConfirm = window.confirm(
+      "⚠️ DANGER SUPRÊME : Êtes-vous absolument sûr de vouloir réinitialiser l'intégralité des comptes utilisateurs, profils, publications, gombos, contrats et transactions de la plateforme ?\n\nCette action supprimera définitivement toutes les données sans possibilité de retour."
+    );
+    if (!firstConfirm) return;
+
+    const secondConfirm = window.confirm(
+      "🔥 CONFIRMATION ULTIME : Saisissez 'OUI' pour valider définitivement la réinitialisation et le nettoyage complet. Seul votre compte Fondateur (jhs.kmj7@gmail.com) et les configurations impériales seront conservés."
+    );
+    if (!secondConfirm) return;
+
+    setIsResetting(true);
+    setSuccessMsg("Initialisation de la grande purge impériale...");
+    setErrorMsg("");
+
+    try {
+      const collectionsToWipe = [
+        "gombos",
+        "applications",
+        "notifications",
+        "reservations",
+        "waiting_features",
+        "admin_logs",
+        "renforts",
+        "renfortApplications",
+        "subscriptions",
+        "payments",
+        "contracts",
+        "escrow",
+        "transactions",
+        "withdrawals",
+        "commissions",
+        "litiges",
+        "boosts",
+        "certifications",
+        "certificationRequests",
+        "verificationRequests",
+        "conversations",
+        "messages",
+        "reports",
+        "tickets_support",
+        "disputes",
+        "kyc_requests",
+        "media_logs",
+        "afri_ids",
+        "afri_sessions",
+        "linked_apps",
+        "music_groups",
+        "security_logs",
+        "walletTransactions",
+        "walletDepositRequests",
+        "walletWithdrawalRequests",
+        "walletRequests",
+        "betaTransactions",
+        "transactionHistory",
+        "adminAuditLogs",
+        "gawaHistory",
+        "userMissions",
+        "avatarPurchases",
+        "avatarGifts",
+        "avatarRewardsLog"
+      ];
+
+      const FOUNDER_EMAIL = "jhs.kmj7@gmail.com";
+
+      // 1. Purge all standard transactional collections
+      for (const collName of collectionsToWipe) {
+        setSuccessMsg(`Purge de la collection : ${collName}...`);
+        const qSnap = await getDocs(collection(db, collName));
+        for (const docItem of qSnap.docs) {
+          await deleteDoc(docItem.ref);
+        }
+      }
+
+      // 2. Purge users collection except the founder
+      setSuccessMsg("Purge des comptes utilisateurs...");
+      const usersSnap = await getDocs(collection(db, "users"));
+      let deletedProfiles = 0;
+      for (const docItem of usersSnap.docs) {
+        const uData = docItem.data();
+        const email = uData.email || "";
+        const uid = docItem.id;
+
+        if (email === FOUNDER_EMAIL || uid === currentUser?.uid) {
+          console.log(`Preserving founder account in Firestore: ${email}`);
+          continue;
+        }
+
+        await deleteDoc(docItem.ref);
+        deletedProfiles++;
+      }
+
+      await logImperialAction("Réinitialisation Générale", "Purge complète des comptes et données de l'empire réalisée par le Super Fondateur.");
+
+      setSuccessMsg(`Purge accomplie avec succès ! ${deletedProfiles} profils supprimés.`);
+      setTimeout(() => setSuccessMsg(""), 5000);
+      try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
+    } catch (err: any) {
+      console.error("Error during global reset:", err);
+      setErrorMsg(`Erreur lors du nettoyage : ${err.message}`);
+      setTimeout(() => setErrorMsg(""), 5000);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const toggleRegistrations = async () => {
     const nextVal = !registrationsEnabled;
     try {
@@ -5401,6 +5509,42 @@ export default function AdminFounderThrone({
                         )}
                       </button>
                     </div>
+                  </div>
+                </div>
+
+                <div className="bg-afri-bg border border-red-500/25 rounded-3xl p-6 space-y-4 shadow-[0_0_20px_rgba(239,68,68,0.05)]">
+                  <div className="flex items-center gap-3 border-b border-red-500/10 pb-3">
+                    <Trash2 className="w-5 h-5 text-red-500 animate-pulse" />
+                    <h3 className="text-sm font-sans font-black text-red-500 uppercase tracking-wider">
+                      Purge et Réinitialisation Complète de l'Empire
+                    </h3>
+                  </div>
+
+                  <p className="text-[11px] text-afri-text-muted dark:text-afri-text-sec font-mono leading-relaxed">
+                    Cette action réinitialisera l'intégralité des données de l'application AFRIGOMBO ELITE, y compris tous les comptes d'utilisateurs/membres, leurs profils, leurs publications, leurs gombos, leurs contrats et leur historique de transactions.
+                    <br />
+                    <strong className="text-red-400 font-bold">⚠️ SEUL VOTRE COMPTE FONDATEUR ET LES DOCUMENTS DE CONFIGURATION SYSTÈME RESTERONT DEBOUT.</strong>
+                  </p>
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      disabled={isResetting}
+                      onClick={handleGlobalReset}
+                      className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-xs font-mono font-bold tracking-wider transition-all duration-200 border border-red-500 shadow-md flex items-center justify-center gap-2 hover:scale-[1.02] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isResetting ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>PURGE EN COURS...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4" />
+                          <span>DÉCLENCHER LA PURGE GLOBALE DES DONNÉES</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
