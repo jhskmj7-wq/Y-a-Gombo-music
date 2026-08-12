@@ -15,6 +15,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, role: "musicien" | "client", details: { firstName: string; lastName: string; phone: string; commune: string }) => Promise<any>;
+  loginWithApple: () => Promise<any>;
   loginWithGoogle: () => Promise<any>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -246,6 +247,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return await gomboAuth.signUp(email, password, role, details);
   };
 
+  const loginWithApple = async () => {
+    try {
+      const res = await gomboAuth.loginWithApple();
+      setShowAuthPopup(false);
+      return res;
+    } catch (error) {
+      console.error("❌ Apple Login Error:", error);
+      throw error;
+    }
+  };
+
   const loginWithGoogle = async () => {
     try {
       const res = await gomboAuth.loginWithGoogle();
@@ -287,6 +299,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading: authLoading, 
     signIn, 
     signUp, 
+    loginWithApple,
     loginWithGoogle, 
     logout, 
     refreshProfile, 

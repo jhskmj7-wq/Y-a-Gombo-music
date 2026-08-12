@@ -30,7 +30,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
     img.onload = () => setIsLogoLoaded(true);
     img.onerror = () => setIsLogoFailed(true);
   }, []);
-  const { loginWithGoogle } = useAuth();
+  const { loginWithApple, loginWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
   
   // Feedback states
@@ -243,6 +243,24 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
     );
   }
 
+  // Apple SSO Click Action
+  const handleAppleLogin = async () => {
+    setErrorMSG("");
+    setLoading(true);
+    try {
+      await loginWithApple();
+      onSuccess();
+    } catch (err: any) {
+      console.error("Apple SSO Failure:", err);
+      if (err?.code === "auth/account-exists-with-different-credential") {
+        setErrorMSG("Un compte existe déjà avec cet email mais via une autre méthode de connexion (ex: Google). Veuillez utiliser l'autre méthode.");
+      } else {
+        setErrorMSG("Connexion impossible. Veuillez réessayer.");
+      }
+      setLoading(false);
+    }
+  };
+
   // Google SSO Click Action
   const handleGoogleLogin = async () => {
     setErrorMSG("");
@@ -421,6 +439,19 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                   />
                 </svg>
                 <span>{loading ? "Vérification..." : "Continuer avec Google"}</span>
+              </button>
+
+              {/* Apple Button */}
+              <button
+                type="button"
+                onClick={handleAppleLogin}
+                disabled={loading}
+                className="w-full h-14 flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-black rounded-2xl transition-all duration-300 font-bold text-xs uppercase tracking-widest active:scale-[0.98] cursor-pointer shadow-[0_4px_20px_rgba(255,255,255,0.1)] border border-gray-300"
+              >
+                <svg className="w-5.5 h-5.5 shrink-0" viewBox="0 0 24 24" fill="black">
+                  <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.62-1.48 3.608-2.926 1.147-1.674 1.616-3.298 1.636-3.383-.037-.015-3.17-1.22-3.199-4.858-.024-3.045 2.482-4.512 2.597-4.582-1.423-2.083-3.626-2.366-4.417-2.404-1.921-.192-3.874 1.1-4.86 1.1zm2.535-3.313c.834-1.012 1.396-2.42 1.242-3.818-1.196.048-2.658.796-3.522 1.837-.686.82-1.353 2.259-1.168 3.628 1.341.104 2.614-.633 3.448-1.647z"/>
+                </svg>
+                <span>{loading ? "Vérification..." : "Continuer avec Apple"}</span>
               </button>
 
               {/* Facebook Button - Retained but disabled with 'Bientôt disponible' */}

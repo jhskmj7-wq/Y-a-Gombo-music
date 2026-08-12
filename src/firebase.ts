@@ -11,6 +11,7 @@ import {
   GoogleAuthProvider,
   FacebookAuthProvider,
   GithubAuthProvider,
+  OAuthProvider,
   User as FirebaseUser,
   RecaptchaVerifier
 } from "firebase/auth";
@@ -77,6 +78,10 @@ export let pendingSignUpProfile: UserProfile | null = null;
 const GOOGLE_PROVIDER = new GoogleAuthProvider();
 const FACEBOOK_PROVIDER = new FacebookAuthProvider();
 const GITHUB_PROVIDER = new GithubAuthProvider();
+const APPLE_PROVIDER = new OAuthProvider('apple.com');
+APPLE_PROVIDER.addScope('email');
+APPLE_PROVIDER.addScope('name');
+
 
 // ========================================================
 // --- Unified GomboAuth Engine ---
@@ -232,6 +237,19 @@ export const gomboAuth = {
         }
       } catch (error) {
         console.error("Auth redirect error:", error);
+      }
+    }
+    return null;
+  },
+
+  async loginWithApple() {
+    if (auth && db) {
+      try {
+        await signInWithRedirect(auth, APPLE_PROVIDER);
+        return null;
+      } catch (error: any) {
+        console.error("Firebase Apple Login Error:", error);
+        throw error;
       }
     }
     return null;
