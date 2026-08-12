@@ -94,14 +94,14 @@ export default function AdminLocationsCenter({ audioSynth, currentUser }: AdminL
     setEditingLocation(null);
     setFormData({
       name: prop.name,
-      type: prop.type,
+      type: prop.type || "Commune",
       countryName: prop.countryName || "Côte d'Ivoire",
       regionName: prop.regionName || "",
       districtName: "",
-      cityName: prop.cityName || "Abidjan",
-      communeName: prop.communeName || "",
+      cityName: prop.cityName || prop.city || "Abidjan",
+      communeName: prop.communeName || prop.name,
       quartierName: "",
-      description: `Proposé par ${prop.submittedByName} (${prop.details || ""})`,
+      description: `Proposé par ${prop.submittedByName || prop.createdBy} (${prop.details || prop.description || ""})`,
       status: "ACTIF"
     });
     setIsModalOpen(true);
@@ -175,6 +175,7 @@ export default function AdminLocationsCenter({ audioSynth, currentUser }: AdminL
   };
 
   const handleDirectApprove = async (prop: LocationProposal) => {
+    if (!window.confirm("Ajouter ce lieu aux lieux officiels AFRIGOMBO ?")) return;
     try {
       await approveProposal(prop, currentUser?.uid || "unknown_founder");
       if (audioSynth?.playValidationSuccess) audioSynth.playValidationSuccess();
@@ -207,9 +208,12 @@ export default function AdminLocationsCenter({ audioSynth, currentUser }: AdminL
 
   // Filtered Proposals
   const filteredProposals = proposals.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (p.submittedByName && p.submittedByName.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesStatus = proposalStatusFilter === "ALL" || p.status === proposalStatusFilter;
+    const searchStr = (p.name + (p.submittedByName || p.createdBy || "")).toLowerCase();
+    const matchesSearch = searchStr.includes(searchQuery.toLowerCase());
+    const matchesStatus = proposalStatusFilter === "ALL" || 
+                          (proposalStatusFilter === "PENDING" && (p.status === "PENDING" || p.status === "pending")) ||
+                          (proposalStatusFilter === "APPROVED" && (p.status === "APPROVED" || p.status === "approved")) ||
+                          (proposalStatusFilter === "REJECTED" && (p.status === "REJECTED" || p.status === "rejected"));
     return matchesSearch && matchesStatus;
   });
 
@@ -511,38 +515,45 @@ export default function AdminLocationsCenter({ audioSynth, currentUser }: AdminL
                           {prop.type}
                         </span>
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-black uppercase border ${
-                          prop.status === "PENDING" ? "bg-amber-500/10 text-amber-400 border-amber-500/30" :
-                          prop.status === "APPROVED" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
+                          (prop.status === "PENDING" || prop.status === "pending") ? "bg-amber-500/10 text-amber-400 border-amber-500/30" :
+                          (prop.status === "APPROVED" || prop.status === "approved") ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
                           "bg-rose-500/10 text-rose-400 border-rose-500/30"
                         }`}>
-                          {prop.status === "PENDING" ? "En Attente" : prop.status === "APPROVED" ? "Approuvé" : "Refusé"}
+                          {(prop.status === "PENDING" || prop.status === "pending") ? "En Attente" : (prop.status === "APPROVED" || prop.status === "approved") ? "Approuvé" : "Refusé"}
                         </span>
                       </div>
                       <h3 className="font-bold text-sm text-afri-text font-mono mt-1 flex items-center gap-1.5">
                         <MapPin className="w-4 h-4 text-[#D4AF37]" />
                         <span>{prop.name}</span>
                       </h3>
-                      {(prop.cityName || prop.countryName) && (
+                      {(prop.cityName || prop.city || prop.countryName) && (
                         <p className="text-xs text-afri-text-sec font-mono mt-0.5">
-                          📍 Parent: {[prop.cityName, prop.countryName].filter(Boolean).join(", ")}
+                          📍 Parent: {[prop.cityName || prop.city, prop.countryName].filter(Boolean).join(", ")}
                         </p>
                       )}
-                      {prop.details && (
+                      {typeof prop.latitude === "number" && typeof prop.longitude === "number" && (
+                        <div className="text-[10px] text-emerald-400 font-mono font-bold mt-1 flex items-center gap-1">
+                          <span>📍 Coordonnées GPS :</span>
+                          <span>{prop.latitude.toFixed(4)}, {prop.longitude.toFixed(4)}</span>
+                        </div>
+                      )}
+                      {(prop.details || prop.description || prop.address) && (
                         <p className="text-xs text-zinc-300 font-mono mt-1 bg-afri-bg-sec p-2 rounded-xl border border-afri-border/50">
-                          {prop.details}
+                          {prop.details || prop.description}
+                          {prop.address && <div className="mt-1 text-[10px] text-zinc-400 italic">Adresse: {prop.address}</div>}
                         </p>
                       )}
                     </div>
 
                     <div className="text-left sm:text-right text-xs font-mono text-zinc-400">
-                      <div>Proposé par : <span className="text-afri-text font-bold">{prop.submittedByName}</span></div>
+                      <div>Proposé par : <span className="text-afri-text font-bold">{prop.submittedByName || prop.createdBy}</span></div>
                       <div className="text-[10px] text-zinc-500">{new Date(prop.createdAt).toLocaleDateString()}</div>
-                      {prop.status === "APPROVED" && prop.approvedAt && (
+                      {(prop.status === "APPROVED" || prop.status === "approved") && prop.approvedAt && (
                         <div className="text-[10px] text-emerald-400 font-bold mt-1">
                           Approuvé le : {new Date(prop.approvedAt).toLocaleDateString()}
                         </div>
                       )}
-                      {prop.status === "REJECTED" && prop.rejectedAt && (
+                      {(prop.status === "REJECTED" || prop.status === "rejected") && prop.rejectedAt && (
                         <div className="text-[10px] text-rose-400 font-bold mt-1">
                           Refusé le : {new Date(prop.rejectedAt).toLocaleDateString()}
                         </div>
@@ -550,7 +561,7 @@ export default function AdminLocationsCenter({ audioSynth, currentUser }: AdminL
                     </div>
                   </div>
 
-                  {prop.status === "PENDING" && (
+                  {(prop.status === "PENDING" || prop.status === "pending") && (
                     <div className="flex items-center justify-end gap-2 pt-2 border-t border-afri-border/60">
                       <button
                         onClick={() => handleReject(prop.id)}

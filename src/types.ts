@@ -997,6 +997,9 @@ export interface AfriGomboLocation {
   parentId?: string;
   parentName?: string;
   description?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
   status: "ACTIF" | "INACTIF";
   createdAt: string;
   updatedAt: string;
@@ -1010,13 +1013,21 @@ export interface LocationProposal {
   countryName?: string;
   regionName?: string;
   cityName?: string;
+  city?: string;
   communeName?: string;
   parentName?: string;
+  address?: string;
   details?: string;
+  description?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
   submittedByUid?: string;
   submittedByName?: string;
   submittedByEmail?: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  createdBy?: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "pending" | "approved" | "rejected";
+  source?: "user" | "admin";
   createdAt: string;
   updatedAt?: string;
   approvedBy?: string;
@@ -1025,3 +1036,131 @@ export interface LocationProposal {
   rejectedAt?: string;
   officialPlaceId?: string;
 }
+
+export interface ProposedPlace {
+  id: string;
+  name: string;
+  city: string;
+  address?: string;
+  description?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
+  createdBy: string;
+  createdAt: string;
+  status: "pending" | "approved" | "rejected";
+  source: "user";
+}
+
+export type RevenueFeatureType = 
+  | "wheel"
+  | "premium_rewards"
+  | "boosts"
+  | "promotions"
+  | "other_revenue";
+
+export interface RevenueFeatureItem {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  visible: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  type: RevenueFeatureType;
+  category?: string;
+  stats?: {
+    participations?: number;
+    rewardsDistributed?: number;
+    [key: string]: any;
+  };
+  allowedAccountTypes?: ("standard" | "premium" | "vip" | "all")[];
+  config?: Record<string, any>;
+}
+
+export type WheelType = "CLASSIQUE" | "PREMIUM" | "ELITE";
+
+export type WheelRewardType =
+  | "PREMIUM_CODE"
+  | "PREMIUM_DAYS"
+  | "PREMIUM_BOOST"
+  | "VISIBILITY_BOOST"
+  | "GOMBO_BOOST"
+  | "PROFILE_BOOST"
+  | "PUBLICATION_BOOST"
+  | "EXTRA_SPIN"
+  | "SMALL_BONUS"
+  | "NO_REWARD"
+  | string;
+
+export interface WheelSegment {
+  id: string;
+  label: string;
+  type: WheelRewardType;
+  rewardValue: number | string;
+  rewardDuration?: number; // duration in days or hours
+  probability: number; // weight e.g. 20 (for 20%)
+  enabled: boolean;
+  color?: string;
+}
+
+export interface AfriGomboWheel {
+  id: string;
+  name: string;
+  description: string;
+  type: WheelType;
+  enabled: boolean;
+  cost: number;
+  currency: string;
+  segments: WheelSegment[];
+  maxDailyParticipations: number;
+  maxParticipationsPerUser: number;
+  allowedAccountTypes?: ("standard" | "premium" | "vip" | "all")[];
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  rulesText?: string;
+}
+
+export interface WheelSpinRecord {
+  spinId: string;
+  userId: string;
+  userName?: string;
+  userAccountType?: "standard" | "premium" | string;
+  wheelId: string;
+  wheelType: WheelType | string;
+  cost: number;
+  currency: string;
+  rewardType: WheelRewardType;
+  rewardLabel: string;
+  rewardValue: number | string;
+  rewardDuration?: number;
+  createdAt: string;
+  status: "SUCCESS" | "FAILED" | "CANCELLED";
+  isExtraSpinUsed?: boolean;
+}
+
+export interface UserBoostRecord {
+  id: string;
+  userId: string;
+  type: "VISIBILITY_BOOST" | "GOMBO_BOOST" | "PROFILE_BOOST" | "PUBLICATION_BOOST" | string;
+  targetId?: string;
+  startAt: string;
+  expiresAt: string;
+  source: "wheel_reward" | "admin" | "purchase" | string;
+  status: "ACTIVE" | "EXPIRED" | "CONSUMED";
+  durationDays?: number;
+  createdAt: string;
+}
+
+export interface UserExtraSpinRecord {
+  id: string;
+  userId: string;
+  wheelId?: string;
+  source: "wheel_reward" | "admin" | string;
+  used: boolean;
+  usedAt?: string;
+  createdAt: string;
+}
+

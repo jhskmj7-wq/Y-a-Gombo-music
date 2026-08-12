@@ -36,6 +36,7 @@ const AdminWalletManagement = lazyWithRetry(() => import("./AdminWalletManagemen
 const FounderFeesVault = lazyWithRetry(() => import("./FounderFeesVault"));
 const AdminContracts = lazyWithRetry(() => import("./AdminContracts"));
 const AdminDeploymentCenter = lazyWithRetry(() => import("./AdminDeploymentCenter"));
+const AdminRevenueFeatures = lazyWithRetry(() => import("./AdminRevenueFeatures"));
 
 export type AdminModuleType = 
   | "throne"
@@ -56,7 +57,8 @@ export type AdminModuleType =
   | "settings"
   | "multimedia"
   | "deployment"
-  | "strategic_decisions";
+  | "strategic_decisions"
+  | "revenue_features";
 
 interface AdminSuperFounderHubProps {
   initialModule?: AdminModuleType;
@@ -153,6 +155,7 @@ export default function AdminSuperFounderHub({
     { key: "polls" as AdminModuleType, label: "📊 Sondages", icon: BarChart3, badge: undefined },
     { key: "multimedia" as AdminModuleType, label: "🎵 Multimédia", icon: Music, badge: undefined },
     { key: "settings" as AdminModuleType, label: "⚙ Paramètres", icon: Settings, badge: undefined },
+    { key: "revenue_features" as AdminModuleType, label: "💎 Revenus & Avantages", icon: Landmark, badge: "Commercial" },
     { key: "deployment" as AdminModuleType, label: "🚀 Déploiement", icon: Rocket, badge: "Android" },
   ];
 
@@ -372,6 +375,12 @@ export default function AdminSuperFounderHub({
           <ErrorBoundary moduleName="Deployment">
             {activeModule === "deployment" && (
               <AdminDeploymentCenter currentUser={currentUser} userEmail={userEmail} />
+            )}
+          </ErrorBoundary>
+
+          <ErrorBoundary moduleName="Revenue Features">
+            {activeModule === "revenue_features" && (
+              <AdminRevenueFeatures currentUser={currentUser} userEmail={userEmail} audioSynth={audioSynth} />
             )}
           </ErrorBoundary>
 

@@ -58,7 +58,7 @@ export function useAdminLocations() {
     };
   }, []);
 
-  const pendingProposalsCount = proposals.filter(p => p.status === "PENDING").length;
+  const pendingProposalsCount = proposals.filter(p => p.status === "PENDING" || p.status === "pending").length;
 
   return {
     locations,

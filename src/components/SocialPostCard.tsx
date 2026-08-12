@@ -2,11 +2,13 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Heart, MessageSquare, Share2, Bookmark, Play, Pause, 
-  Volume2, Music, Check, User, Send, Sparkles, Star, Briefcase, Flag
+  Volume2, Music, Check, User, Send, Sparkles, Star, Briefcase, Flag,
+  Navigation, Map, MapPin
 } from "lucide-react";
 import { SocialPost, PostComment, UserProfile } from "../types";
 import { gomboDB } from "../firebase";
 import { safeStringify } from "../lib/jsonUtils";
+import GomboMapViewModal from "./common/GomboMapViewModal";
 
 const calculateDistanceKm = (lat1?: number, lon1?: number, lat2?: number, lon2?: number) => {
   if (!lat1 || !lon1 || !lat2 || !lon2) return null;
@@ -67,6 +69,7 @@ export default function SocialPostCard({
   });
 
   const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
+  const [isMapViewOpen, setIsMapViewOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -641,6 +644,36 @@ export default function SocialPostCard({
                <span className="text-gray-450 font-semibold uppercase text-[9px]">Commune:</span>
                <span className="font-extrabold">{post.commune || "Abidjan"}</span>
              </div>
+
+             {/* GPS Actions if coordinates are present (Requirement 6 & 8) */}
+             {typeof post.latitude === "number" && typeof post.longitude === "number" && !isNaN(post.latitude) && !isNaN(post.longitude) && (
+               <div className="col-span-2 flex items-center gap-2 pt-2 border-t border-[#D4AF37]/20 mt-1">
+                 <button
+                   type="button"
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     setIsMapViewOpen(true);
+                   }}
+                   className="flex-1 py-1.5 px-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 transition cursor-pointer min-h-[36px]"
+                 >
+                   <MapPin className="w-3.5 h-3.5" />
+                   <span>📍 Voir l'emplacement</span>
+                 </button>
+
+                 <button
+                   type="button"
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     handleOpenItinerary();
+                   }}
+                   className="flex-1 py-1.5 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 transition cursor-pointer min-h-[36px]"
+                 >
+                   <Navigation className="w-3.5 h-3.5" />
+                   <span>🧭 Itinéraire</span>
+                 </button>
+               </div>
+             )}
+
              {post.urgent && (
                <div className="col-span-2 flex items-center gap-1 text-[9px] font-black text-[#D4AF37] bg-afri-bg-sec/10 w-fit px-2 py-0.5 rounded-md uppercase tracking-widest mt-1 animate-pulse">
                  🔥 Urgent
@@ -930,6 +963,20 @@ export default function SocialPostCard({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Gombo Venue Map Modal */}
+      {typeof post.latitude === "number" && typeof post.longitude === "number" && (
+        <GomboMapViewModal
+          isOpen={isMapViewOpen}
+          onClose={() => setIsMapViewOpen(false)}
+          title={post.title || "Gombo AFRIGOMBO"}
+          commune={post.commune || "Abidjan"}
+          address={post.locationDetail}
+          latitude={post.latitude}
+          longitude={post.longitude}
+          onOpenItinerary={handleOpenItinerary}
+        />
+      )}
 
     </motion.div>
   );

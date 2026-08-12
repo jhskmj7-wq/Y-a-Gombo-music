@@ -17,7 +17,7 @@ import { db } from "./firebase";
 import { AfriGomboLocation, LocationProposal, LocationType } from "../types";
 
 const LOCATIONS_COLLECTION = "locations";
-const PROPOSALS_COLLECTION = "location_proposals";
+const PROPOSALS_COLLECTION = "proposedPlaces";
 
 export const DEFAULT_INITIAL_LOCATIONS: Omit<AfriGomboLocation, "id">[] = [
   // Country
@@ -196,24 +196,47 @@ export class LocationService {
   /**
    * Submit user location proposal (User feature)
    */
-  static async submitProposal(proposal: Omit<LocationProposal, "id" | "status" | "createdAt">): Promise<string> {
+  static async submitProposal(proposal: {
+    name: string;
+    city: string;
+    address?: string;
+    description?: string;
+    latitude?: number;
+    longitude?: number;
+    accuracy?: number;
+    createdBy: string;
+  }): Promise<string> {
+    // Duplicate check
+    const officialSnap = await getDocs(collection(db, LOCATIONS_COLLECTION));
+    let duplicate = false;
+    officialSnap.forEach((d) => {
+      const loc = d.data() as AfriGomboLocation;
+      if (loc.name.trim().toLowerCase() === proposal.name.trim().toLowerCase() && 
+          loc.cityName?.toLowerCase() === proposal.city.toLowerCase()) {
+        duplicate = true;
+      }
+    });
+
+    if (duplicate) {
+      throw new Error("Ce lieu existe déjà dans AFRIGOMBO.");
+    }
+
     const docRef = doc(collection(db, PROPOSALS_COLLECTION));
-    const payload: LocationProposal = {
+    const payload: any = {
       id: docRef.id,
       name: proposal.name.trim(),
-      type: proposal.type,
-      countryName: proposal.countryName || "Côte d'Ivoire",
-      regionName: proposal.regionName || "",
-      cityName: proposal.cityName || "",
-      communeName: proposal.communeName || "",
-      parentName: proposal.parentName || "",
-      details: proposal.details || "",
-      submittedByUid: proposal.submittedByUid || "",
-      submittedByName: proposal.submittedByName || "Utilisateur",
-      submittedByEmail: proposal.submittedByEmail || "",
-      status: "PENDING",
-      createdAt: new Date().toISOString()
+      city: proposal.city,
+      address: proposal.address || "",
+      description: proposal.description || "",
+      createdBy: proposal.createdBy,
+      createdAt: new Date().toISOString(),
+      status: "pending",
+      source: "user"
     };
+
+    if (typeof proposal.latitude === "number") payload.latitude = proposal.latitude;
+    if (typeof proposal.longitude === "number") payload.longitude = proposal.longitude;
+    if (typeof proposal.accuracy === "number") payload.accuracy = proposal.accuracy;
 
     await setDoc(docRef, payload);
     return docRef.id;
@@ -223,7 +246,7 @@ export class LocationService {
    * Approve proposal -> Add to official locations & mark proposal approved
    */
   static async approveProposal(
-    proposal: LocationProposal, 
+    proposal: any, 
     founderUid: string,
     customLocationData?: Partial<AfriGomboLocation>
   ): Promise<void> {
@@ -232,46 +255,53 @@ export class LocationService {
     if (!snap.exists()) {
       throw new Error("La proposition n'existe pas.");
     }
-    const currentData = snap.data() as LocationProposal;
-    if (currentData.status !== "PENDING") {
-      throw new Error("Cette proposition a déjà été traitée.");
+    const currentData = snap.data() as any;
+    if (currentData.status === "approved") {
+      throw new Error("Cette proposition a déjà été approuvée.");
     }
 
-    // Check if the place already exists in the official collection
+    // 1. DUPLICATE CHECK (Strictly requested in Requirement 7)
+    const normalizedName = (customLocationData?.name || currentData.name).trim().toLowerCase();
+    const city = (customLocationData?.cityName || currentData.city || "").toLowerCase();
+    
     const officialSnap = await getDocs(collection(db, LOCATIONS_COLLECTION));
-    let existingLocationId = "";
-    const nameToCompare = (customLocationData?.name || proposal.name).trim().toLowerCase();
-    const typeToCompare = customLocationData?.type || proposal.type;
-
+    let existingPlaceId = "";
     officialSnap.forEach((d) => {
       const loc = d.data() as AfriGomboLocation;
-      if (loc.name.trim().toLowerCase() === nameToCompare && loc.type === typeToCompare) {
-        existingLocationId = d.id;
+      if (loc.name.trim().toLowerCase() === normalizedName && 
+          (loc.cityName?.toLowerCase() === city || loc.name?.toLowerCase() === city || !city)) {
+        existingPlaceId = d.id;
       }
     });
 
-    let officialPlaceId = existingLocationId;
-    if (!existingLocationId) {
-      // Create official location if not duplicate
+    let officialPlaceId = existingPlaceId;
+
+    if (!existingPlaceId) {
+      // 2. CREATE OFFICIAL LOCATION ONLY IF NOT DUPLICATE (Preserving GPS coordinates)
+      const lat = customLocationData?.latitude ?? currentData.latitude;
+      const lng = customLocationData?.longitude ?? currentData.longitude;
+      const acc = customLocationData?.accuracy ?? currentData.accuracy;
+
       officialPlaceId = await this.addLocation({
-        name: customLocationData?.name || proposal.name,
-        type: customLocationData?.type || proposal.type,
-        countryName: customLocationData?.countryName || proposal.countryName || "Côte d'Ivoire",
-        regionName: customLocationData?.regionName || proposal.regionName || "",
-        cityName: customLocationData?.cityName || proposal.cityName || "",
-        communeName: customLocationData?.communeName || proposal.communeName || "",
-        parentName: customLocationData?.parentName || proposal.parentName || "",
-        description: customLocationData?.description || `Proposé par ${proposal.submittedByName} (${proposal.details || ""})`,
+        name: customLocationData?.name || currentData.name,
+        type: customLocationData?.type || "Commune",
+        countryName: "Côte d'Ivoire",
+        cityName: customLocationData?.cityName || currentData.city,
+        communeName: customLocationData?.name || currentData.name,
+        description: customLocationData?.description || currentData.description || `Approuvé depuis proposition de ${currentData.createdBy || currentData.submittedByName}`,
+        ...(typeof lat === "number" ? { latitude: lat } : {}),
+        ...(typeof lng === "number" ? { longitude: lng } : {}),
+        ...(typeof acc === "number" ? { accuracy: acc } : {}),
         status: "ACTIF",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        createdBy: `Proposal:${proposal.submittedByName}`
+        createdBy: founderUid
       });
     }
 
-    // Update proposal status
+    // 3. UPDATE PROPOSAL STATUS TO APPROVED
     await updateDoc(propRef, {
-      status: "APPROVED",
+      status: "approved",
       approvedBy: founderUid,
       approvedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -288,13 +318,13 @@ export class LocationService {
     if (!snap.exists()) {
       throw new Error("La proposition n'existe pas.");
     }
-    const currentData = snap.data() as LocationProposal;
-    if (currentData.status !== "PENDING") {
+    const currentData = snap.data() as any;
+    if (currentData.status !== "pending") {
       throw new Error("Cette proposition a déjà été traitée.");
     }
 
     await updateDoc(propRef, {
-      status: "REJECTED",
+      status: "rejected",
       rejectedBy: founderUid,
       rejectedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()

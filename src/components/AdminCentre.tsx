@@ -36,6 +36,7 @@ import AdminDashboard from "./admin/AdminDashboard";
 const AdminUsers = lazyWithRetry(() => import("./admin/AdminUsers"));
 const AdminNotifications = lazyWithRetry(() => import("./admin/AdminNotifications"));
 const AdminRevenue = lazyWithRetry(() => import("./admin/AdminRevenue"));
+const AdminRevenueFeatures = lazyWithRetry(() => import("./admin/AdminRevenueFeatures"));
 const AdminSettings = lazyWithRetry(() => import("./admin/AdminSettings"));
 const AdminSecurity = lazyWithRetry(() => import("./admin/AdminSecurity"));
 import AdminFounderThrone from "./admin/AdminFounderThrone";
@@ -7791,6 +7792,16 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 <Suspense fallback={<div className="p-10 text-center text-[#D4A017] font-mono animate-pulse">Chargement revenus...</div>}>
                   <AdminRevenue
                     transactions={transactions}
+                    audioSynth={audioSynth}
+                  />
+                </Suspense>
+              )}
+
+              {(activeMenu === "revenue_features" || activeMenu === "revenus_avantages") && (
+                <Suspense fallback={<div className="p-10 text-center text-[#D4A017] font-mono animate-pulse">Chargement Revenus & Avantages...</div>}>
+                  <AdminRevenueFeatures
+                    currentUser={currentUser}
+                    userEmail={userEmail}
                     audioSynth={audioSynth}
                   />
                 </Suspense>
