@@ -47,7 +47,7 @@ const MultimediaCenter = lazyWithRetry(() => import("./admin/MultimediaCenter"))
 const AfrigomboEconomieDashboard = lazyWithRetry(() => import("./AfrigomboEconomieDashboard"));
 const AfrigomboBuilders = lazyWithRetry(() => import("./AfrigomboBuilders"));
 const AfrigomboBuildersAdminDashboard = lazyWithRetry(() => import("./AfrigomboBuildersAdminDashboard"));
-const BetaTransactionsAdminPanel = lazyWithRetry(() => import("./admin/BetaTransactionsAdminPanel"));
+import BetaTransactionsAdminPanel from "./admin/BetaTransactionsAdminPanel";
 const GeoLocationCenter = lazyWithRetry(() => import("./admin/GeoLocationCenter"));
 const UserCommentsView = lazyWithRetry(() => import("./UserCommentsView"));
 const GomboMusikEcosystem = lazyWithRetry(() => import("./GomboMusikEcosystem"));
@@ -63,7 +63,7 @@ const FirebaseDiagnostic = lazyWithRetry(() => import("./FirebaseDiagnostic"));
 const AboutAfrigombo = lazyWithRetry(() => import("./AboutAfrigombo"));
 const SupportAfrigombo = lazyWithRetry(() => import("./SupportAfrigombo"));
 const WhatsNew = lazyWithRetry(() => import("./WhatsNew"));
-const AfrigomboHelpCenter = lazyWithRetry(() => import("./AfrigomboHelpCenter"));
+import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
 import AvatarEditor from "./avatar/AvatarEditor";
 import AvatarStore from "./avatar/AvatarStore";
 import EventsView from "./EventsView";
@@ -87,7 +87,7 @@ const ReelsPlayer = lazyWithRetry(() => import("./ReelsPlayer").then(m => ({ def
 const AfrigomboVibeWaves = lazyWithRetry(() => import("./AfrigomboVibeWaves").then(m => ({ default: m.AfrigomboVibeWaves })));
 const Carousel = lazyWithRetry(() => import("./Carousel").then(m => ({ default: m.Carousel })));
 import WakandaTechBackground from "./WakandaTechBackground";
-const AfrigomboFooter = lazyWithRetry(() => import("./AfrigomboFooter"));
+import AfrigomboFooter from "./AfrigomboFooter";
 import AuthScreen from "./AuthScreen";
 const PremiumEmptyState = lazyWithRetry(() => import("./PremiumEmptyState"));
 const PendingPaymentModal = lazyWithRetry(() => import("./PendingPaymentModal").then(m => ({ default: m.PendingPaymentModal })));

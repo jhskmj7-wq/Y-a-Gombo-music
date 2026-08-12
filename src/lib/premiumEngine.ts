@@ -1,3 +1,4 @@
+import { recordWalletTransaction } from "./financial";
 import { db } from "./firebase";
 import { doc, updateDoc, getDoc, collection, addDoc } from "firebase/firestore";
 
@@ -144,7 +145,7 @@ export const PremiumEngine = {
             await updateDoc(userRef, updatedFields);
 
             // Record transaction
-            const { recordWalletTransaction } = await import("./financial");
+            
             await recordWalletTransaction({
               userId,
               userName: userData.displayName || userData.artistName || "Membre Gombo",

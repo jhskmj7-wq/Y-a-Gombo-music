@@ -273,15 +273,15 @@ export default function GomboWheelUserModal({
           )}
 
           {/* Visual Interactive Wheel Stage */}
-          <div className="relative flex flex-col items-center justify-center my-4 py-4">
+          <div className="relative flex flex-col items-center justify-center my-4 py-4 w-full overflow-hidden">
             
             {/* Wheel Indicator Pointer */}
-            <div className="absolute top-0 z-20 w-0 h-0 border-l-[13px] border-l-transparent border-r-[13px] border-r-transparent border-t-[24px] border-t-[#D4AF37] drop-shadow-[0_4px_10px_rgba(212,175,55,0.7)]" />
+            <div className="absolute top-0 z-20 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[18px] border-t-[#D4AF37] drop-shadow-[0_4px_10px_rgba(212,175,55,0.7)]" />
 
             {/* Rotating Wheel Circle */}
             <div 
-              className="w-72 h-72 sm:w-80 sm:h-80 rounded-full border-4 border-[#D4AF37] shadow-[0_0_50px_rgba(212,175,55,0.2)] relative overflow-hidden flex items-center justify-center transition-transform duration-[3500ms] cubic-bezier(0.15, 0.9, 0.25, 1)"
-              style={{ transform: `rotate(${spinDegree}deg)` }}
+              className="w-[260px] h-[260px] sm:w-[300px] sm:h-[300px] rounded-full border-[3px] border-[#D4AF37] shadow-[0_0_50px_rgba(212,175,55,0.2)] relative overflow-hidden flex items-center justify-center transition-transform duration-[3500ms]"
+              style={{ transform: `rotate(${spinDegree}deg)`, transitionTimingFunction: "cubic-bezier(0.15, 0.9, 0.25, 1)" }}
             >
               {(currentWheel?.segments || []).filter((s) => s.enabled).map((seg, idx, arr) => {
                 const totalSegs = arr.length || 1;
@@ -295,7 +295,7 @@ export default function GomboWheelUserModal({
                     }}
                   >
                     <div 
-                      className="absolute top-4 text-[10px] font-black uppercase tracking-tight text-black px-2 py-0.5 rounded-md shadow-md text-center max-w-[95px] truncate"
+                      className="absolute top-3 sm:top-4 text-[9px] font-black uppercase tracking-tight text-black px-1.5 py-0.5 rounded shadow-md text-center max-w-[80px] sm:max-w-[90px] truncate"
                       style={{ backgroundColor: seg.color || "#D4AF37" }}
                     >
                       {formatWheelLabel(seg.label)}
@@ -305,16 +305,16 @@ export default function GomboWheelUserModal({
               })}
 
               {/* Wheel Center Hub */}
-              <div className="w-20 h-20 rounded-full bg-[#121214] border-2 border-[#D4AF37] z-10 flex flex-col items-center justify-center shadow-2xl">
-                <Crown className="w-6 h-6 text-[#D4AF37] animate-pulse" />
-                <span className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest mt-0.5">AFRI</span>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#121214] border-2 border-[#D4AF37] z-10 flex flex-col items-center justify-center shadow-2xl">
+                <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-[#D4AF37] animate-pulse" />
+                <span className="text-[7px] sm:text-[8px] font-black text-[#D4AF37] uppercase tracking-widest mt-0.5">AFRI</span>
               </div>
             </div>
 
             {/* Spinning Indicator Text */}
             {isSpinning && (
-              <div className="mt-5 flex items-center gap-2.5 text-xs font-black text-[#D4AF37] animate-pulse font-mono bg-zinc-900 px-5 py-2.5 rounded-2xl border border-[#D4AF37]/30 shadow-xl">
-                <RefreshCw className="w-4 h-4 animate-spin" />
+              <div className="mt-5 flex items-center gap-2.5 text-[10px] sm:text-xs font-black text-[#D4AF37] animate-pulse font-mono bg-zinc-900 px-5 py-2.5 rounded-2xl border border-[#D4AF37]/30 shadow-xl">
+                <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                 <span>Tirage souverain en cours...</span>
               </div>
             )}

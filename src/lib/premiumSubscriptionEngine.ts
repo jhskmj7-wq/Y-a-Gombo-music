@@ -1,3 +1,4 @@
+import { recordWalletTransaction } from "./financial";
 import { db } from "./firebase";
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, getDoc } from "firebase/firestore";
 
@@ -335,7 +336,7 @@ export async function checkAndProcessPremiumAutoRenewal(
       });
 
       // Record transaction
-      const { recordWalletTransaction } = await import("./financial");
+      
       await recordWalletTransaction({
         userId: profile.uid,
         userName: profile.displayName || profile.artistName || "Membre Gombo",

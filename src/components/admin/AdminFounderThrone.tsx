@@ -450,17 +450,13 @@ export default function AdminFounderThrone({
     });
     return () => unsub();
   }, []);
-
   useEffect(() => {
     if (selectedSection === "economy") {
-      import("../../firebase").then(({ gomboDB }) => {
-        gomboDB.getEconomySettings().then(settings => {
-          setEconomySettings(settings);
-        });
+      gomboDB.getEconomySettings().then(settings => {
+        setEconomySettings(settings);
       });
     }
   }, [selectedSection]);
-
   useEffect(() => {
     if (!db) return;
     const docRef = doc(db, "throne", "governance");
@@ -4238,13 +4234,12 @@ export default function AdminFounderThrone({
                         <div className="md:col-span-2 flex justify-end mt-4">
                           <button 
                             onClick={() => {
-                              import("../../firebase").then(({ gomboDB }) => {
+                              
                                 gomboDB.updateEconomySettings(economySettings).then(() => {
                                   setSuccessMsg("Paramètres économiques mis à jour avec succès !");
                                   setTimeout(() => setSuccessMsg(""), 3000);
                                   try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
                                 });
-                              });
                             }}
                             className="bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text px-6 py-2.5 rounded-xl font-bold font-mono text-[10px] uppercase transition-colors cursor-pointer"
                           >
