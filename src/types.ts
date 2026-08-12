@@ -1194,4 +1194,26 @@ export interface GawaHistoryRecord {
   transactionId: string;
 }
 
+export interface Mission {
+  id: string;
+  title: string;
+  description: string;
+  rewardGawa: number;
+  type: "PROFILE" | "FIRST_GOMBO" | "PARTICIPATE" | "LOGIN_3DAYS" | "SPECIAL";
+  enabled: boolean;
+  maxCompletions?: number;
+  currentCompletions?: number;
+  startAt?: string;
+  endAt?: string;
+}
+
+export interface UserMission {
+  id: string; // userId_missionId
+  userId: string;
+  missionId: string;
+  completedAt: string;
+  rewardGawa: number;
+  status: string; // "completed"
+}
+
 

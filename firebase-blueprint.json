@@ -759,6 +759,38 @@
         "createdAt": { "type": "string" }
       },
       "required": ["userId", "amount", "createdAt"]
+    },
+    "Mission": {
+      "title": "Gawa Mission",
+      "description": "Configurable gamified mission for earning free Gawa coins",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "rewardGawa": { "type": "number" },
+        "type": { "type": "string", "enum": ["PROFILE", "FIRST_GOMBO", "PARTICIPATE", "LOGIN_3DAYS", "SPECIAL"] },
+        "enabled": { "type": "boolean" },
+        "maxCompletions": { "type": "number" },
+        "currentCompletions": { "type": "number" },
+        "startAt": { "type": "string" },
+        "endAt": { "type": "string" }
+      },
+      "required": ["id", "title", "description", "rewardGawa", "type", "enabled"]
+    },
+    "UserMission": {
+      "title": "User Completed Mission",
+      "description": "Tracking user completions of Gawa missions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "missionId": { "type": "string" },
+        "completedAt": { "type": "string" },
+        "rewardGawa": { "type": "number" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "userId", "missionId", "completedAt", "rewardGawa"]
     }
   },
   "firestore": {
@@ -945,6 +977,14 @@
     "/avatarEconomy/{docId}": {
       "schema": "AvatarRewardLog",
       "description": "Global Avatar economy config and metrics"
+    },
+    "/missions/{missionId}": {
+      "schema": "Mission",
+      "description": "Configurable gamified missions for earning free Gawa coins"
+    },
+    "/userMissions/{userMissionId}": {
+      "schema": "UserMission",
+      "description": "User completed missions tracking and claims"
     }
   }
 }

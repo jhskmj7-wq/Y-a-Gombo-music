@@ -62,6 +62,15 @@ service cloud.firestore {
              data.createdAt == request.time;
     }
 
+    function isValidMission(data) {
+      return data.id is string &&
+             data.title is string && data.title.size() <= 100 &&
+             data.description is string && data.description.size() <= 1000 &&
+             data.rewardGawa is int && data.rewardGawa >= 0 &&
+             data.type in ["PROFILE", "FIRST_GOMBO", "PARTICIPATE", "LOGIN_3DAYS", "SPECIAL"] &&
+             data.enabled is bool;
+    }
+
     // --- COLLECTION RULES ---
 
     // Default deny
@@ -74,8 +83,9 @@ service cloud.firestore {
       allow read: if isSignedIn(); // Allow users to see each other's basic profile
       allow create: if isOwner(userId) && isValidUser(incoming());
       allow update: if (isOwner(userId) && (
-        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'firstName', 'lastName', 'photoURL', 'avatarUrl', 'bio', 'phone', 'commune', 'orangeMoneyNumber', 'moovMoneyNumber', 'waveNumber', 'paymentMethods'])
-      )) || isFounder();
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'firstName', 'lastName', 'photoURL', 'avatarUrl', 'bio', 'phone', 'commune', 'orangeMoneyNumber', 'moovMoneyNumber', 'waveNumber', 'paymentMethods']) ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['walletBalance', 'balance', 'wallet', 'gawaBalance', 'updatedAt'])
+      )) || isFounder() || isAdmin();
       allow delete: if isFounder();
     }
 
@@ -163,6 +173,27 @@ service cloud.firestore {
     match /gawaHistory/{id} {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isSignedIn() && (incoming().userId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
+    match /missions/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /userMissions/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() &&
+                    id == request.auth.uid + "_" + incoming().missionId &&
+                    incoming().userId == request.auth.uid &&
+                    incoming().completedAt == request.time &&
+                    incoming().rewardGawa is int &&
+                    incoming().rewardGawa >= 0 &&
+                    exists(/databases/$(database)/documents/missions/$(incoming().missionId)) &&
+                    get(/databases/$(database)/documents/missions/$(incoming().missionId)).data.enabled == true &&
+                    incoming().rewardGawa == get(/databases/$(database)/documents/missions/$(incoming().missionId)).data.rewardGawa &&
+                    getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.gawaBalance == 
+                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.gawaBalance + incoming().rewardGawa;
       allow update, delete: if isAdmin();
     }
 

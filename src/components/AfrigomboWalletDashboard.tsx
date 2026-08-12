@@ -50,7 +50,8 @@ import { SecurityService } from "../lib/SecurityService";
 import { useMaintenance } from "../hooks/useMaintenance";
 import ModuleMaintenanceNotice from "./common/ModuleMaintenanceNotice";
 import { GawaEngineService } from "../lib/GawaEngineService";
-import { GawaPack, GawaHistoryRecord } from "../types";
+import { MissionService } from "../lib/MissionService";
+import { GawaPack, GawaHistoryRecord, Mission, UserMission } from "../types";
 
 
 interface AfrigomboWalletDashboardProps {
@@ -104,9 +105,16 @@ export default function AfrigomboWalletDashboard({
   const [gawaHistory, setGawaHistory] = useState<GawaHistoryRecord[]>([]);
   const [showGawaModal, setShowGawaModal] = useState(false);
   const [purchasingGawa, setPurchasingGawa] = useState(false);
-  const [gawaActiveTab, setGawaActiveTab] = useState<"buy" | "history" | "admin">("buy");
+  const [gawaActiveTab, setGawaActiveTab] = useState<"buy" | "history" | "admin" | "missions">("buy");
   const [selectedPackForConfirm, setSelectedPackForConfirm] = useState<GawaPack | null>(null);
   const [purchaseSuccessDetails, setPurchaseSuccessDetails] = useState<{ packName: string; amount: number; price: number; newGawa: number; newFCFA: number } | null>(null);
+
+  // Gawa Missions States
+  const [missions, setMissions] = useState<Mission[]>([]);
+  const [userMissions, setUserMissions] = useState<UserMission[]>([]);
+  const [claimingMissionId, setClaimingMissionId] = useState<string | null>(null);
+  const [evaluatingMissions, setEvaluatingMissions] = useState<Record<string, boolean>>({});
+  const [missionToast, setMissionToast] = useState<{ success: boolean; message: string } | null>(null);
   
   // Gawa Admin / Founder Tool States
   const [adminSelectedUserId, setAdminSelectedUserId] = useState("");
@@ -324,9 +332,12 @@ export default function AfrigomboWalletDashboard({
 
     // 4. Initialize Gawa and subscribe
     GawaEngineService.initializeDefaultPacksIfNeeded();
+    MissionService.initializeDefaultMissionsIfNeeded();
     const unsubGawaBalance = GawaEngineService.subscribeUserGawaBalance(uid, (bal) => setGawaBalance(bal));
     const unsubGawaPacks = GawaEngineService.subscribeGawaPacks((packs) => setGawaPacks(packs));
     const unsubGawaHistory = GawaEngineService.subscribeUserGawaHistory(uid, (hist) => setGawaHistory(hist));
+    const unsubMissions = MissionService.subscribeMissions((list) => setMissions(list));
+    const unsubUserMissions = MissionService.subscribeUserMissions(uid, (list) => setUserMissions(list));
 
     return () => {
       unsubProfile();
@@ -338,6 +349,8 @@ export default function AfrigomboWalletDashboard({
       unsubGawaBalance();
       unsubGawaPacks();
       unsubGawaHistory();
+      unsubMissions();
+      unsubUserMissions();
     };
   }, [uid]);
 
@@ -1495,6 +1508,39 @@ export default function AfrigomboWalletDashboard({
       alert(`⚠️ Une erreur est survenue : ${err.message}`);
     } finally {
       setPurchasingGawa(false);
+    }
+  };
+
+  const handleEvaluateAndClaimMission = async (mission: Mission) => {
+    if (!uid) return;
+    setEvaluatingMissions(prev => ({ ...prev, [mission.id]: true }));
+    try {
+      // 1. Evaluate technical completion
+      const evalRes = await MissionService.evaluateMissionCompletion(uid, mission.type);
+      if (!evalRes.completed) {
+        setMissionToast({ success: false, message: evalRes.reason || "Vous ne remplissez pas encore les conditions de cette mission." });
+        return;
+      }
+
+      // 2. Claim reward Gawa
+      setClaimingMissionId(mission.id);
+      const claimRes = await MissionService.claimMissionReward(uid, mission.id);
+      if (claimRes.success) {
+        setMissionToast({ success: true, message: `Félicitations ! Vous avez gagné +${mission.rewardGawa} Gawa pour la mission "${mission.title}" !` });
+        playSound("success");
+        addToTerminal(`[MISSION] Mission "${mission.title}" réclamée avec succès ! +${mission.rewardGawa} Gawa ajoutés.`);
+      } else {
+        playSound("error");
+        setMissionToast({ success: false, message: claimRes.error || "Une erreur est survenue lors de la réclamation." });
+        addToTerminal(`[MISSION] Échec de la réclamation de "${mission.title}" : ${claimRes.error}`);
+      }
+    } catch (err: any) {
+      playSound("error");
+      setMissionToast({ success: false, message: err.message || "Erreur de réclamation." });
+      addToTerminal(`[MISSION] Erreur inattendue : ${err.message}`);
+    } finally {
+      setEvaluatingMissions(prev => ({ ...prev, [mission.id]: false }));
+      setClaimingMissionId(null);
     }
   };
 
@@ -2673,6 +2719,15 @@ export default function AfrigomboWalletDashboard({
             >
               📜 Historique G
             </button>
+            <button
+              type="button"
+              onClick={() => { setGawaActiveTab("missions"); playSound("click"); }}
+              className={`flex-1 py-2 text-center text-[10px] font-black uppercase font-mono tracking-wider border-b-2 transition-all cursor-pointer ${
+                gawaActiveTab === "missions" ? "border-[#D4AF37] text-[#D4AF37]" : "border-transparent text-zinc-400 hover:text-zinc-300"
+              }`}
+            >
+              🎯 Missions G
+            </button>
             {isAuthorizedSuperFounder && (
               <button
                 type="button"
@@ -2792,6 +2847,98 @@ export default function AfrigomboWalletDashboard({
                   })}
                 </div>
               )}
+            </div>
+          )}
+
+          {gawaActiveTab === "missions" && (
+            <div className="space-y-4 pt-1">
+              <div className="text-center space-y-1.5">
+                <span className="text-[10px] font-mono text-[#D4AF37] block uppercase font-bold tracking-widest">
+                  🎯 Gagner des Gawa Gratuits
+                </span>
+                <p className="text-[10px] text-zinc-400 leading-relaxed max-w-xs mx-auto">
+                  Accomplissez des actions simples pour accumuler des Gawa gratuitement et débloquer toutes les fonctionnalités d'AFRIGOMBO !
+                </p>
+              </div>
+
+              {missionToast && (
+                <div className={`p-2.5 rounded-xl border text-[10px] font-mono flex items-center justify-between gap-3 ${
+                  missionToast.success 
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
+                    : "bg-red-500/10 border-red-500/30 text-red-400"
+                }`}>
+                  <span className="flex-1 leading-normal">{missionToast.message}</span>
+                  <button 
+                    type="button"
+                    onClick={() => setMissionToast(null)}
+                    className="text-zinc-500 hover:text-zinc-300 font-bold px-1.5 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {missions.length === 0 ? (
+                  <div className="text-center py-6 text-xs font-mono text-zinc-500 bg-zinc-950/40 rounded-xl border border-zinc-900">
+                    🔄 Chargement des missions gombo...
+                  </div>
+                ) : (
+                  missions.map((m) => {
+                    const isCompleted = userMissions.some(um => um.missionId === m.id);
+                    const isEvaluating = !!evaluatingMissions[m.id];
+                    
+                    return (
+                      <div 
+                        key={m.id}
+                        className={`p-3 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all ${
+                          isCompleted
+                            ? "bg-zinc-950/60 border-zinc-900/60 opacity-60"
+                            : "bg-zinc-900/40 border-zinc-800 hover:border-[#D4AF37]/30"
+                        }`}
+                      >
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[11px] font-black text-zinc-100 uppercase tracking-wide flex items-center gap-1">
+                              {isCompleted ? "✅" : "🎯"} {m.title}
+                            </span>
+                            <span className="px-1.5 py-0.5 text-[8px] font-mono font-black uppercase rounded bg-[#D4AF37]/10 text-[#D4AF37]">
+                              +{m.rewardGawa} G
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-zinc-400 leading-normal">{m.description}</p>
+                        </div>
+
+                        <div className="shrink-0 text-right w-full sm:w-auto">
+                          {isCompleted ? (
+                            <span className="inline-block w-full text-center px-3 py-1 text-[9px] font-black uppercase font-mono text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                              Terminé ✓
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={isEvaluating}
+                              onClick={() => {
+                                playSound("click");
+                                handleEvaluateAndClaimMission(m);
+                              }}
+                              className="w-full sm:w-auto px-3.5 py-1.5 text-[9px] font-black uppercase font-mono tracking-wider rounded-lg transition-all shadow cursor-pointer bg-[#D4AF37] hover:bg-amber-500 text-black active:scale-95 disabled:opacity-50"
+                            >
+                              {isEvaluating ? (
+                                <span className="flex items-center gap-1 justify-center">
+                                  <Loader2 className="w-3 h-3 animate-spin" /> Vérification...
+                                </span>
+                              ) : (
+                                "Réclamer"
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
           )}
 
