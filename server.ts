@@ -2,6 +2,8 @@ import express from "express";
 import path from "path";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 
 dotenv.config();
 
@@ -94,7 +96,56 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    startMaintenanceBackgroundChecker();
   });
+}
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC3eJm2GfUMxGUNGu7uZeIP9-rtcLRljNk",
+  authDomain: "afrigombo.firebaseapp.com",
+  databaseURL: "https://afrigombo-default-rtdb.firebaseio.com",
+  projectId: "afrigombo",
+  storageBucket: "afrigombo.firebasestorage.app",
+  messagingSenderId: "558547758112",
+  appId: "1:558547758112:web:d84cbcb8fb0e0670c5a045",
+  measurementId: "G-27498CNQX0"
+};
+
+// Initialize server-side firebase
+const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+
+async function runMaintenanceCheck() {
+  try {
+    const maintenanceRef = doc(db, "settings", "maintenance");
+    const snap = await getDoc(maintenanceRef);
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+    const isMaintenanceActive = data.globalMode === true || data.status === "maintenance";
+    console.log(`[BACKEND MAINTENANCE CHECK] Current state read successfully. Active: ${isMaintenanceActive}`);
+  } catch (error: any) {
+    // Gracefully handle permission-denied errors from unauthenticated reads without raising noisy red exceptions
+    const isPermissionDenied = error && (
+      error.code === "permission-denied" || 
+      (error.message && error.message.toLowerCase().includes("permission-denied")) ||
+      (error.message && error.message.toLowerCase().includes("missing or insufficient permissions"))
+    );
+
+    if (isPermissionDenied) {
+      console.log("[BACKEND MAINTENANCE CHECK] Quietly handled: Read permission is restricted or requires auth.");
+    } else {
+      console.error("❌ Error running background maintenance check:", error);
+    }
+  }
+}
+
+function startMaintenanceBackgroundChecker() {
+  console.log("🚀 Starting background maintenance window checker (running every 10s)...");
+  // Run once immediately on startup
+  runMaintenanceCheck();
+  // Set interval to run every 10 seconds
+  setInterval(runMaintenanceCheck, 10000);
 }
 
 startServer();

@@ -30,7 +30,8 @@ import {
   Send,
   RefreshCw,
   Edit3,
-  Check
+  Check,
+  Scroll
 } from "lucide-react";
 import { audioSynth } from "../../lib/audio";
 
@@ -70,6 +71,9 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
   const [modules, setModules] = useState<Record<string, boolean>>({});
   const [schedules, setSchedules] = useState<any[]>([]);
 
+  const activeOrFutureSchedules = (schedules || []).filter((sched: any) => !sched.archived && sched.status !== "COMPLETED");
+  const archivedSchedules = (schedules || []).filter((sched: any) => !!sched.archived || sched.status === "COMPLETED");
+
   // UI Local States
   const [loading, setLoading] = useState<boolean>(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -96,6 +100,23 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
     const h = date.getHours().toString().padStart(2, "0");
     const m = date.getMinutes().toString().padStart(2, "0");
     return `${h}h${m}`;
+  };
+
+  const calculateDuration = (start: string, end: string) => {
+    if (!start || !end) return "N/A";
+    const startTime = new Date(start).getTime();
+    const endTime = new Date(end).getTime();
+    const diffMs = endTime - startTime;
+    if (isNaN(diffMs) || diffMs <= 0) return "N/A";
+    
+    const diffMins = Math.round(diffMs / 60000);
+    const h = Math.floor(diffMins / 60);
+    const m = diffMins % 60;
+    
+    if (h > 0) {
+      return m > 0 ? `${h}h${m.toString().padStart(2, "0")}` : `${h}h`;
+    }
+    return `${m} min`;
   };
 
   const generateMaintenanceMessage = (start: string, end: string) => {
@@ -328,6 +349,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
     }
 
     const generatedMsg = generateMaintenanceMessage(startAt, endAt);
+    const creatorEmail = currentUser?.email || profile?.email || "Super Fondateur";
     
     const newSchedule = {
       id: "sched_" + Date.now(),
@@ -335,12 +357,36 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
       startAt,
       endAt,
       globalMessage: generatedMsg || globalMessage,
-      alertBeforeMinutes
+      alertBeforeMinutes,
+      status: "SCHEDULED",
+      createdAt: new Date().toISOString(),
+      createdBy: creatorEmail,
+      initialNotificationSent: true,
+      startNotificationSent: false,
+      endNotificationSent: false,
+      archived: false
     };
 
     const updatedSchedules = [...schedules, newSchedule];
     setSchedules(updatedSchedules);
     setShowScheduleForm(false);
+
+    // Send immediate real-time notification to the users (Requirement 1 & 2)
+    try {
+      await addDoc(collection(db, "notifications"), {
+        title: "🛠️ MAINTENANCE PROGRAMMÉE",
+        message: generatedMsg || globalMessage,
+        type: "app_update",
+        audience: "Tous",
+        status: "published",
+        read: false,
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      console.log("Initial real-time notification sent successfully via handleSaveSchedule.");
+    } catch (errNotif) {
+      console.warn("Could not send immediate maintenance notification:", errNotif);
+    }
 
     // Keep legacy start/end for top-level backward compatibility
     await saveMaintenanceSettings({
@@ -526,7 +572,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
             <span className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              Maintenance Programmée ({schedules.length + (scheduled ? 1 : 0)})
+              Maintenance Programmée ({activeOrFutureSchedules.length + (scheduled ? 1 : 0)})
             </span>
             {isSystemActive && (
               <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-rose-500/10 text-rose-400 border border-rose-500/30 animate-pulse">
@@ -579,7 +625,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
             )}
 
             {/* Render new schedules */}
-            {schedules.map((sched: any) => {
+            {activeOrFutureSchedules.map((sched: any) => {
               const start = sched.startAt ? new Date(sched.startAt).getTime() : 0;
               const end = sched.endAt ? new Date(sched.endAt).getTime() : 0;
               const isSchedActive = start > 0 && end > 0 && now >= start && now < end;
@@ -635,7 +681,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
               );
             })}
 
-            {!scheduled && schedules.length === 0 && (
+            {!scheduled && activeOrFutureSchedules.length === 0 && (
               <div className="text-center py-4 text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl">
                 Aucune maintenance programmée en cours.
               </div>
@@ -751,6 +797,91 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
               <span>🕐 PROGRAMMER UNE NOUVELLE MAINTENANCE</span>
             </button>
           )}
+        </div>
+
+        {/* ===================================================
+            SECTION 2.5: 📜 HISTORIQUE DES MAINTENANCES
+            =================================================== */}
+        <div className="bg-afri-bg-sec/90 border border-zinc-800 rounded-2xl p-4 space-y-4">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+            <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+              <Scroll className="w-3.5 h-3.5 text-emerald-400" />
+              📜 Historique des Maintenances ({archivedSchedules.length})
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              Données réelles
+            </span>
+          </div>
+
+          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+            {archivedSchedules.map((sched: any) => {
+              const startFormatted = sched.startAt ? new Date(sched.startAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "";
+              const startTime = sched.startAt ? formatMaintenanceTime(sched.startAt) : "";
+              const endTime = sched.endAt ? formatMaintenanceTime(sched.endAt) : "";
+              const duration = calculateDuration(sched.startAt, sched.endAt);
+
+              return (
+                <div 
+                  key={sched.id} 
+                  className="bg-zinc-950/40 border border-zinc-800/85 rounded-xl p-3 space-y-2 relative"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-black text-emerald-400 uppercase tracking-wide">
+                          ✅ MAINTENANCE TERMINÉE
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-zinc-300">
+                        AFRIGOMBO ELITE
+                      </h4>
+                      <p className="text-[11px] text-zinc-400">
+                        Le {startFormatted || "Date inconnue"} de <span className="font-mono font-bold text-zinc-200">{startTime}</span> à <span className="font-mono font-bold text-zinc-200">{endTime}</span>
+                      </p>
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-mono text-zinc-500 pt-0.5">
+                        <div>
+                          <span className="text-zinc-600">Durée :</span> <span className="text-emerald-400 font-bold">{duration}</span>
+                        </div>
+                        <div>
+                          <span className="text-zinc-600">Créateur :</span> <span className="text-zinc-400">{sched.createdBy || "Système"}</span>
+                        </div>
+                        <div>
+                          <span className="text-zinc-600">Le :</span> <span className="text-zinc-400">{sched.createdAt ? new Date(sched.createdAt).toLocaleDateString("fr-FR") : "N/A"}</span>
+                        </div>
+                      </div>
+
+                      {sched.globalMessage && (
+                        <p className="text-[10px] text-zinc-400 italic mt-1 bg-zinc-900/50 p-1.5 rounded border border-zinc-800/50">
+                          "{sched.globalMessage}"
+                        </p>
+                      )}
+
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-zinc-900/60 text-zinc-400 border border-zinc-800/80 flex items-center gap-1">
+                          📢 Notif. Initiale : <span className="text-emerald-400 font-bold">Envoyée</span>
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-zinc-900/60 text-zinc-400 border border-zinc-800/80 flex items-center gap-1">
+                          📢 Notif. Fin : <span className={sched.endNotificationSent ? "text-emerald-400 font-bold" : "text-amber-400 font-bold"}>
+                            {sched.endNotificationSent ? "Envoyée" : "Non envoyée"}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      Terminée
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {archivedSchedules.length === 0 && (
+              <div className="text-center py-4 text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl">
+                Aucune maintenance archivée dans l'historique.
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ===================================================

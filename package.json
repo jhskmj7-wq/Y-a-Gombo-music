@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.10.0",
+    "@resvg/resvg-js": "^2.6.2",
     "@types/maplibre-gl": "^1.14.0",
     "@types/three": "^0.185.4",
     "dotenv": "^17.4.2",

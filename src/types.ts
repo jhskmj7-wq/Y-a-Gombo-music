@@ -148,7 +148,9 @@ export interface User {
     retraits?: number;
     revenus?: number;
     gainsMensuels?: number;
+    soldeGawa?: number;
   };
+  gawaBalance?: number;
   builderData?: {
     totalAmount: number;
     count: number;
@@ -1104,6 +1106,8 @@ export interface WheelSegment {
   probability: number; // weight e.g. 20 (for 20%)
   enabled: boolean;
   color?: string;
+  promoValueFCFA?: number;
+  minAccountLevel?: "standard" | "premium" | "vip" | "all" | string;
 }
 
 export interface AfriGomboWheel {
@@ -1168,4 +1172,26 @@ export interface UserExtraSpinRecord {
   usedAt?: string;
   createdAt: string;
 }
+
+export interface GawaPack {
+  id: string;
+  name: string;
+  priceFCFA: number;
+  gawaAmount: number;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface GawaHistoryRecord {
+  id: string;
+  userId: string;
+  amount: number;
+  type: "PURCHASE" | "MISSION" | "BONUS" | "SPEND" | "ADMIN_GRANT" | "ADMIN_ADJUSTMENT" | string;
+  description: string;
+  createdAt: string;
+  source: string;
+  transactionId: string;
+}
+
 

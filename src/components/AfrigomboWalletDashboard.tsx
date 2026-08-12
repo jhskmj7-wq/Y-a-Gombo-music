@@ -49,6 +49,9 @@ import { getGomboRef, formatGomboRefDisplay } from "../lib/gomboIdHelper";
 import { SecurityService } from "../lib/SecurityService";
 import { useMaintenance } from "../hooks/useMaintenance";
 import ModuleMaintenanceNotice from "./common/ModuleMaintenanceNotice";
+import { GawaEngineService } from "../lib/GawaEngineService";
+import { GawaPack, GawaHistoryRecord } from "../types";
+
 
 interface AfrigomboWalletDashboardProps {
   currentUserProfile: any;
@@ -94,6 +97,24 @@ export default function AfrigomboWalletDashboard({
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [selectedTxDetails, setSelectedTxDetails] = useState<any | null>(null);
   const [showFounderVaultView, setShowFounderVaultView] = useState(false);
+
+  // Gawa System States
+  const [gawaBalance, setGawaBalance] = useState(0);
+  const [gawaPacks, setGawaPacks] = useState<GawaPack[]>([]);
+  const [gawaHistory, setGawaHistory] = useState<GawaHistoryRecord[]>([]);
+  const [showGawaModal, setShowGawaModal] = useState(false);
+  const [purchasingGawa, setPurchasingGawa] = useState(false);
+  const [gawaActiveTab, setGawaActiveTab] = useState<"buy" | "history" | "admin">("buy");
+  const [selectedPackForConfirm, setSelectedPackForConfirm] = useState<GawaPack | null>(null);
+  const [purchaseSuccessDetails, setPurchaseSuccessDetails] = useState<{ packName: string; amount: number; price: number; newGawa: number; newFCFA: number } | null>(null);
+  
+  // Gawa Admin / Founder Tool States
+  const [adminSelectedUserId, setAdminSelectedUserId] = useState("");
+  const [adminGawaAmount, setAdminGawaAmount] = useState<number | "">("");
+  const [adminGawaType, setAdminGawaType] = useState<"MISSION" | "BONUS" | "ADMIN_GRANT" | "ADMIN_ADJUSTMENT">("ADMIN_GRANT");
+  const [adminGawaDesc, setAdminGawaDesc] = useState("");
+  const [adminProcessing, setAdminProcessing] = useState(false);
+
 
   const isAuthorizedSuperFounder = 
     (currentUserProfile?.email || "").toLowerCase() === "jhs.kmj7@gmail.com" || 
@@ -301,6 +322,12 @@ export default function AfrigomboWalletDashboard({
       setLoading(false);
     });
 
+    // 4. Initialize Gawa and subscribe
+    GawaEngineService.initializeDefaultPacksIfNeeded();
+    const unsubGawaBalance = GawaEngineService.subscribeUserGawaBalance(uid, (bal) => setGawaBalance(bal));
+    const unsubGawaPacks = GawaEngineService.subscribeGawaPacks((packs) => setGawaPacks(packs));
+    const unsubGawaHistory = GawaEngineService.subscribeUserGawaHistory(uid, (hist) => setGawaHistory(hist));
+
     return () => {
       unsubProfile();
       unsubTx1();
@@ -308,6 +335,9 @@ export default function AfrigomboWalletDashboard({
       unsubTx3();
       unsubTx4();
       unsubContracts();
+      unsubGawaBalance();
+      unsubGawaPacks();
+      unsubGawaHistory();
     };
   }, [uid]);
 
@@ -1067,6 +1097,10 @@ export default function AfrigomboWalletDashboard({
     })
     .reduce((sum, tx) => sum + Math.abs(Number(tx.amount || tx.montant || 0)), 0);
 
+  const gawaPurchased = gawaHistory.filter(r => r.type === "PURCHASE").reduce((acc, r) => acc + r.amount, 0);
+  const gawaMissions = gawaHistory.filter(r => r.type === "MISSION").reduce((acc, r) => acc + r.amount, 0);
+  const gawaBonus = gawaHistory.filter(r => r.type !== "PURCHASE" && r.type !== "MISSION").reduce((acc, r) => acc + r.amount, 0);
+
   if (showWalletSettings) {
     return (
       <AndroidPageLayout
@@ -1420,6 +1454,108 @@ export default function AfrigomboWalletDashboard({
     );
   }
 
+  // --- GAWA LOGIC HANDLERS ---
+  const handleBuyGawaPack = async (pack: GawaPack) => {
+    if (purchasingGawa) return;
+    
+    // Safety check solde
+    if (wallet.soldeDisponible < pack.priceFCFA) {
+      playSound("error");
+      alert("⚠️ Solde insuffisant pour acheter ce pack.");
+      return;
+    }
+
+    setPurchasingGawa(true);
+    addToTerminal(`[GAWA] Lancement de l'achat de "${pack.name}" pour ${pack.priceFCFA} FCFA...`);
+    
+    try {
+      const res = await GawaEngineService.purchaseGawaPack(uid, pack.id);
+      if (res.success) {
+        playSound("success");
+        addToTerminal(`[GAWA] Achat réussi ! Nouveau solde Gawa : ${res.balanceAfterGawa} G. Débit de ${pack.priceFCFA} FCFA.`);
+        
+        // Show lightweight success confirmation screen
+        setPurchaseSuccessDetails({
+          packName: pack.name,
+          amount: pack.gawaAmount,
+          price: pack.priceFCFA,
+          newGawa: res.balanceAfterGawa || gawaBalance + pack.gawaAmount,
+          newFCFA: res.balanceAfterFCFA ?? (wallet.soldeDisponible - pack.priceFCFA)
+        });
+        
+        showToast(`🪙 Pack acheté avec succès ! +${pack.gawaAmount} Gawa ajoutés.`);
+      } else {
+        playSound("error");
+        addToTerminal(`[GAWA] Échec de l'achat : ${res.error}`);
+        alert(`⚠️ Échec de l'achat : ${res.error}`);
+      }
+    } catch (err: any) {
+      playSound("error");
+      addToTerminal(`[GAWA] Erreur inattendue : ${err.message}`);
+      alert(`⚠️ Une erreur est survenue : ${err.message}`);
+    } finally {
+      setPurchasingGawa(false);
+    }
+  };
+
+  const handleAdminAdjustGawa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminProcessing) return;
+    if (!adminSelectedUserId || !adminGawaAmount || !adminGawaDesc) {
+      alert("Veuillez remplir tous les champs de l'ajustement Gawa.");
+      return;
+    }
+    setAdminProcessing(true);
+    addToTerminal(`[ADMIN GAWA] Ajustement de solde de l'utilisateur ${adminSelectedUserId} de ${adminGawaAmount} G...`);
+    
+    try {
+      const res = await GawaEngineService.grantGawaException(
+        adminSelectedUserId,
+        Number(adminGawaAmount),
+        adminGawaType,
+        adminGawaDesc,
+        currentUserProfile?.email || "Founder"
+      );
+      if (res.success) {
+        playSound("success");
+        addToTerminal(`[ADMIN GAWA] Ajustement effectué avec succès ! Nouveau solde : ${res.balanceAfterGawa} G.`);
+        showToast("✅ Ajustement du solde Gawa effectué !");
+        setAdminSelectedUserId("");
+        setAdminGawaAmount("");
+        setAdminGawaDesc("");
+      } else {
+        playSound("error");
+        addToTerminal(`[ADMIN GAWA] Échec : ${res.error}`);
+        alert(`⚠️ Échec de l'ajustement : ${res.error}`);
+      }
+    } catch (err: any) {
+      playSound("error");
+      addToTerminal(`[ADMIN GAWA] Erreur : ${err.message}`);
+      alert(`⚠️ Erreur : ${err.message}`);
+    } finally {
+      setAdminProcessing(false);
+    }
+  };
+
+  const handleAdminUpdatePackConfig = async (pack: GawaPack, newPrice: number, newGawa: number, newEnabled: boolean) => {
+    addToTerminal(`[ADMIN GAWA] Mise à jour du pack ${pack.id} (Prix: ${newPrice}, Gawa: ${newGawa}, Actif: ${newEnabled})...`);
+    try {
+      await GawaEngineService.createOrUpdateGawaPack({
+        ...pack,
+        priceFCFA: newPrice,
+        gawaAmount: newGawa,
+        enabled: newEnabled
+      });
+      playSound("success");
+      addToTerminal(`[ADMIN GAWA] Pack ${pack.id} mis à jour avec succès dans Firestore !`);
+      showToast("💾 Configuration du pack enregistrée !");
+    } catch (err: any) {
+      playSound("error");
+      addToTerminal(`[ADMIN GAWA] Échec de mise à jour du pack : ${err.message}`);
+      alert(`⚠️ Erreur de mise à jour : ${err.message}`);
+    }
+  };
+
   const customHeader = (
     <header className="flex-none bg-afri-bg/95 backdrop-blur-md border-b border-afri-border/60 px-3 py-2.5 flex items-center justify-between gap-2 z-35 shrink-0" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))', paddingLeft: 'max(12px, env(safe-area-inset-left))', paddingRight: 'max(12px, env(safe-area-inset-right))' }}>
       <div className="flex items-center gap-2.5 min-w-0">
@@ -1522,6 +1658,20 @@ export default function AfrigomboWalletDashboard({
                 Gains : +{computedGains.toLocaleString('fr-FR')} FCFA
               </span>
             </div>
+
+            <div className="pt-2.5 mt-2.5 border-t border-afri-border/40 space-y-1">
+              <span className="text-[10px] font-mono text-amber-400 uppercase tracking-[0.2em] font-black flex items-center gap-1.5">
+                🎟️ GAWA
+              </span>
+              <div className="flex items-baseline gap-1">
+                <h2 className="text-xl xs:text-2xl font-black text-afri-text font-mono tracking-tight">
+                  {gawaBalance.toLocaleString('fr-FR')}
+                </h2>
+                <span className="text-xs font-black text-amber-400 font-mono uppercase">
+                  G
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Quick Level Badge */}
@@ -1531,6 +1681,52 @@ export default function AfrigomboWalletDashboard({
               👑 {wallet.niveauWallet || "SOUVERAIN"}
             </span>
           </div>
+        </div>
+      </AndroidCard>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          1.5 🪙 SOLDE GAWA INDÉPENDANT (GAWA VIRTUAL CURRENCY COIN)
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <AndroidCard className="w-full relative overflow-hidden shadow-2xl group border-[#D4AF37]/30 p-4 rounded-[18px] bg-gradient-to-br from-zinc-900 via-zinc-900 to-[#D4AF37]/10">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-[#D4AF37]/5 rounded-full blur-[60px] -mr-12 -mt-12 pointer-events-none"></div>
+        
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-mono text-amber-400 uppercase tracking-[0.2em] font-black flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                🪙 Mon Solde Gawa
+              </span>
+              <span className="px-2 py-0.5 text-[8px] font-bold bg-amber-500/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded uppercase font-mono">
+                Virtuel non-retirable
+              </span>
+            </div>
+
+            <div className="flex items-baseline gap-1.5 flex-wrap">
+              <h2 className="text-2xl xs:text-3xl sm:text-4xl font-black text-afri-text font-mono tracking-tight text-shadow-sm">
+                {gawaBalance.toLocaleString('fr-FR')}
+              </h2>
+              <span className="text-sm xs:text-base font-black text-amber-400 font-mono uppercase">
+                Gawa (G)
+              </span>
+            </div>
+
+            <p className="text-[9px] text-zinc-400 leading-tight">
+              Monnaie interne exclusive d'AFRIGOMBO pour activer les roues, missions et avantages.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              playSound("click");
+              setGawaActiveTab("buy");
+              setShowGawaModal(true);
+            }}
+            className="py-2.5 px-4 min-h-[44px] rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black text-[10px] uppercase transition-all shadow-md active:scale-98 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            🎟️ Acheter des Gawa
+          </button>
         </div>
       </AndroidCard>
 
@@ -2413,7 +2609,508 @@ export default function AfrigomboWalletDashboard({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          MODAL GAWA: ACHETER & GÉRER LES GAWA
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <AndroidBottomSheet
+        isOpen={showGawaModal}
+        onClose={() => { setShowGawaModal(false); playSound("click"); }}
+        title="CENTRE GAWA AFRIGOMBO"
+        subtitle="Monnaie virtuelle exclusive d'AFRIGOMBO"
+      >
+        <div className="space-y-4">
+          {/* Header Balance Info Block */}
+          <div className="grid grid-cols-2 gap-3 p-3 bg-afri-bg rounded-xl border border-afri-border">
+            <div className="space-y-1">
+              <span className="text-[8px] font-mono text-zinc-400 block uppercase font-bold">Solde Wallet</span>
+              <p className="text-sm font-black font-mono text-[#D4AF37]">{wallet.soldeDisponible.toLocaleString('fr-FR')} FCFA</p>
+            </div>
+            <div className="space-y-1 border-l border-afri-border/60 pl-3">
+              <span className="text-[8px] font-mono text-zinc-400 block uppercase font-bold">Solde Gawa</span>
+              <p className="text-sm font-black font-mono text-amber-400">{gawaBalance.toLocaleString('fr-FR')} G</p>
+            </div>
+          </div>
+
+          {/* Gawa Breakdown Details (Requirement 12) */}
+          <div className="p-3 bg-zinc-950/40 rounded-xl border border-afri-border/50 text-[10px] font-mono space-y-1.5">
+            <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider block font-bold">
+              Détail de mon solde Gawa
+            </span>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="p-1.5 bg-afri-bg rounded border border-zinc-800">
+                <span className="text-xs font-black text-amber-400 block">{gawaPurchased.toLocaleString('fr-FR')} G</span>
+                <span className="text-[7.5px] text-zinc-400 uppercase">achetés</span>
+              </div>
+              <div className="p-1.5 bg-afri-bg rounded border border-zinc-800">
+                <span className="text-xs font-black text-sky-400 block">{gawaMissions.toLocaleString('fr-FR')} G</span>
+                <span className="text-[7.5px] text-zinc-400 uppercase">missions</span>
+              </div>
+              <div className="p-1.5 bg-afri-bg rounded border border-zinc-800">
+                <span className="text-xs font-black text-[#D4AF37] block">{gawaBonus.toLocaleString('fr-FR')} G</span>
+                <span className="text-[7.5px] text-zinc-400 uppercase">bonus</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Tabs within Modal */}
+          <div className="flex border-b border-afri-border/60 pb-1 gap-2">
+            <button
+              type="button"
+              onClick={() => { setGawaActiveTab("buy"); playSound("click"); }}
+              className={`flex-1 py-2 text-center text-[10px] font-black uppercase font-mono tracking-wider border-b-2 transition-all cursor-pointer ${
+                gawaActiveTab === "buy" ? "border-[#D4AF37] text-[#D4AF37]" : "border-transparent text-zinc-400 hover:text-zinc-300"
+              }`}
+            >
+              🛒 Packs Gawa
+            </button>
+            <button
+              type="button"
+              onClick={() => { setGawaActiveTab("history"); playSound("click"); }}
+              className={`flex-1 py-2 text-center text-[10px] font-black uppercase font-mono tracking-wider border-b-2 transition-all cursor-pointer ${
+                gawaActiveTab === "history" ? "border-[#D4AF37] text-[#D4AF37]" : "border-transparent text-zinc-400 hover:text-zinc-300"
+              }`}
+            >
+              📜 Historique G
+            </button>
+            {isAuthorizedSuperFounder && (
+              <button
+                type="button"
+                onClick={() => { setGawaActiveTab("admin"); playSound("click"); }}
+                className={`flex-1 py-2 text-center text-[10px] font-black uppercase font-mono tracking-wider border-b-2 transition-all cursor-pointer ${
+                  gawaActiveTab === "admin" ? "border-amber-500 text-amber-400 font-extrabold" : "border-transparent text-zinc-400"
+                }`}
+              >
+                👑 Founder Console
+              </button>
+            )}
+          </div>
+
+          {/* Content sections */}
+          {gawaActiveTab === "buy" && (
+            <div className="space-y-4 pt-1">
+              <p className="text-[10px] text-zinc-400 leading-relaxed text-center">
+                Les Gawa sont utilisables uniquement au sein d'AFRIGOMBO pour tourner les roues de la fortune, participer à des missions exclusives ou débloquer des bonus spéciaux. Ils ne sont pas de l'argent réel et ne peuvent pas être retirés.
+              </p>
+
+              <div className="space-y-3">
+                {gawaPacks.length === 0 ? (
+                  <div className="text-center py-6 text-xs font-mono text-zinc-500">
+                    🔄 Chargement des packs Gawa...
+                  </div>
+                ) : (
+                  gawaPacks.map((pack) => {
+                    const canAfford = wallet.soldeDisponible >= pack.priceFCFA;
+                    return (
+                      <div
+                        key={pack.id}
+                        className={`p-3.5 rounded-xl border transition-all flex items-center justify-between gap-4 ${
+                          pack.enabled 
+                            ? "bg-zinc-900/60 border-zinc-800 hover:border-amber-500/30" 
+                            : "bg-zinc-950/40 border-zinc-900 opacity-50"
+                        }`}
+                      >
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-black text-afri-text uppercase tracking-wide">{pack.name}</span>
+                            {!pack.enabled && (
+                              <span className="px-1.5 py-0.5 text-[7px] font-black uppercase bg-red-500/10 text-red-400 rounded">Inactif</span>
+                            )}
+                          </div>
+                          <p className="text-lg font-black font-mono text-amber-400">
+                            +{pack.gawaAmount} G
+                          </p>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <button
+                            type="button"
+                            disabled={purchasingGawa || !pack.enabled}
+                            onClick={() => {
+                              playSound("click");
+                              setSelectedPackForConfirm(pack);
+                            }}
+                            className={`px-3 py-2 text-[10px] font-black uppercase font-mono tracking-wider rounded-lg transition-all shadow cursor-pointer min-h-[36px] ${
+                              canAfford 
+                                ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black active:scale-97" 
+                                : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 active:scale-97"
+                            }`}
+                          >
+                            {purchasingGawa ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" />
+                            ) : (
+                              `${pack.priceFCFA.toLocaleString('fr-FR')} FCFA`
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+
+          {gawaActiveTab === "history" && (
+            <div className="space-y-3 pt-1">
+              <span className="text-[9px] font-mono text-zinc-400 block uppercase font-bold tracking-widest text-center">
+                Historique exclusif des Gawa
+              </span>
+
+              {gawaHistory.length === 0 ? (
+                <div className="text-center py-12 text-xs font-mono text-zinc-500 bg-afri-bg/40 rounded-xl border border-afri-border/60">
+                  📭 Aucun mouvement Gawa enregistré pour votre compte.
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1 [-webkit-overflow-scrolling:touch]">
+                  {gawaHistory.map((rec) => {
+                    const isCredit = rec.amount > 0;
+                    return (
+                      <div 
+                        key={rec.id} 
+                        className="p-3 bg-afri-bg border border-afri-border/80 rounded-xl flex items-center justify-between gap-3 text-left"
+                      >
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <p className="text-[11px] font-bold text-afri-text leading-tight">{rec.description}</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="px-1.5 py-0.5 text-[7px] font-mono font-black rounded uppercase bg-zinc-900 border border-zinc-800 text-zinc-400">
+                              {rec.type}
+                            </span>
+                            <span className="text-[8px] font-mono text-zinc-500">
+                              {new Date(rec.createdAt).toLocaleDateString("fr-FR")} à {new Date(rec.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0 font-mono">
+                          <span className={`text-xs font-black block ${isCredit ? "text-emerald-400" : "text-amber-400"}`}>
+                            {isCredit ? "+" : "-"}{Math.abs(rec.amount)} G
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {gawaActiveTab === "admin" && isAuthorizedSuperFounder && (
+            <div className="space-y-4 pt-1">
+              {/* 1. Ajuster le solde d'un Membre */}
+              <div className="p-4 bg-zinc-950 border border-amber-500/20 rounded-xl space-y-3">
+                <span className="text-[10px] font-mono text-amber-400 uppercase tracking-widest font-black block border-b border-zinc-800 pb-1.5">
+                  🛠️ Ajustement Exceptionnel Gawa
+                </span>
+
+                <form onSubmit={handleAdminAdjustGawa} className="space-y-3.5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-mono text-zinc-400 block font-bold">ID Utilisateur cible</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: u_12345"
+                        value={adminSelectedUserId}
+                        onChange={(e) => setAdminSelectedUserId(e.target.value)}
+                        className="w-full bg-afri-bg border border-afri-border rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-afri-text focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-mono text-zinc-400 block font-bold">Montant (+ / - G)</label>
+                      <input
+                        type="number"
+                        required
+                        placeholder="Ex: 50"
+                        value={adminGawaAmount}
+                        onChange={(e) => setAdminGawaAmount(e.target.value === "" ? "" : Number(e.target.value))}
+                        className="w-full bg-afri-bg border border-afri-border rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-afri-text focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-mono text-zinc-400 block font-bold">Catégorie</label>
+                      <select
+                        value={adminGawaType}
+                        onChange={(e) => setAdminGawaType(e.target.value as any)}
+                        className="w-full bg-afri-bg border border-afri-border rounded-lg px-2 py-1.5 text-[11px] text-afri-text focus:outline-none focus:border-amber-500 font-mono"
+                      >
+                        <option value="ADMIN_GRANT">Don direct (ADMIN_GRANT)</option>
+                        <option value="BONUS">Bonus exceptionnel (BONUS)</option>
+                        <option value="MISSION">Gagné via mission (MISSION)</option>
+                        <option value="ADMIN_ADJUSTMENT">Correction (ADMIN_ADJUSTMENT)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-mono text-zinc-400 block font-bold">Description du mouvement</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: Récompense événement"
+                        value={adminGawaDesc}
+                        onChange={(e) => setAdminGawaDesc(e.target.value)}
+                        className="w-full bg-afri-bg border border-afri-border rounded-lg px-2.5 py-1.5 text-[11px] text-afri-text focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={adminProcessing}
+                    className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-black text-[10px] font-black uppercase font-mono tracking-wider rounded-lg transition-all active:scale-98 cursor-pointer shadow-md min-h-[36px] flex items-center justify-center"
+                  >
+                    {adminProcessing ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Appliquer l'ajustement Gawa"}
+                  </button>
+                </form>
+              </div>
+
+              {/* 2. Modifier les prix & configurations des packs */}
+              <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl space-y-3">
+                <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest font-black block border-b border-zinc-800 pb-1.5">
+                  📈 Grille des Tarifs Gawa Packs
+                </span>
+
+                <div className="space-y-3">
+                  {gawaPacks.map((p) => (
+                    <AdminGawaPackConfigRow 
+                      key={p.id} 
+                      pack={p} 
+                      onSave={handleAdminUpdatePackConfig} 
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </AndroidBottomSheet>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          MODAL DE CONFIRMATION D'ACHAT GAWA (Requirement 3)
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <AnimatePresence>
+        {selectedPackForConfirm && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-sm bg-zinc-900 border border-[#D4AF37]/40 rounded-[20px] p-5 space-y-4 text-center shadow-2xl"
+            >
+              <h3 className="text-sm font-black text-amber-400 font-mono uppercase tracking-wider">
+                🎟️ ACHETER DES GAWA ?
+              </h3>
+              
+              <div className="space-y-3 py-2 text-left border-y border-zinc-800 font-mono text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-400">Pack :</span>
+                  <span className="font-black text-afri-text text-sm">{selectedPackForConfirm.gawaAmount} Gawa</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-400">Prix :</span>
+                  <span className="font-black text-[#D4AF37] text-sm">{selectedPackForConfirm.priceFCFA.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+                <div className="flex justify-between items-center border-t border-zinc-800/60 pt-2">
+                  <span className="text-zinc-400">Solde actuel :</span>
+                  <span className="font-bold text-zinc-300">{wallet.soldeDisponible.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-400">Après achat :</span>
+                  <span className={`font-black ${wallet.soldeDisponible >= selectedPackForConfirm.priceFCFA ? "text-emerald-400" : "text-red-400"}`}>
+                    {(wallet.soldeDisponible - selectedPackForConfirm.priceFCFA).toLocaleString('fr-FR')} FCFA
+                  </span>
+                </div>
+              </div>
+
+              {wallet.soldeDisponible < selectedPackForConfirm.priceFCFA ? (
+                <div className="space-y-3">
+                  <p className="text-[11px] font-bold text-red-400 font-mono leading-relaxed bg-red-500/10 p-2 rounded-lg border border-red-500/20">
+                    ⚠️ Solde insuffisant. Il vous manque {(selectedPackForConfirm.priceFCFA - wallet.soldeDisponible).toLocaleString('fr-FR')} FCFA.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playSound("click");
+                        setSelectedPackForConfirm(null);
+                      }}
+                      className="flex-1 py-2.5 rounded-xl bg-zinc-800 text-zinc-400 text-[10px] font-black uppercase font-mono tracking-wider active:scale-98"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playSound("click");
+                        setSelectedPackForConfirm(null);
+                        setShowGawaModal(false);
+                        openDeposit();
+                      }}
+                      className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-black text-[10px] font-black uppercase font-mono tracking-wider active:scale-98 shadow"
+                    >
+                      💵 Recharger
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={purchasingGawa}
+                    onClick={() => {
+                      playSound("click");
+                      setSelectedPackForConfirm(null);
+                    }}
+                    className="flex-1 py-2.5 rounded-xl bg-zinc-800 text-zinc-400 text-[10px] font-black uppercase font-mono tracking-wider active:scale-98"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    disabled={purchasingGawa}
+                    onClick={async () => {
+                      playSound("click");
+                      const pack = selectedPackForConfirm;
+                      setSelectedPackForConfirm(null);
+                      await handleBuyGawaPack(pack);
+                    }}
+                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black text-[10px] font-black uppercase font-mono tracking-wider active:scale-98 shadow"
+                  >
+                    {purchasingGawa ? "Traitement..." : "Confirmer"}
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          MODAL DE RÉUSSITE D'ACHAT GAWA (Requirement 8)
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <AnimatePresence>
+        {purchaseSuccessDetails && (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-sm bg-zinc-900 border border-emerald-500/40 rounded-[22px] p-6 text-center space-y-4 shadow-2xl"
+            >
+              <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-emerald-400">
+                <Check className="w-6 h-6 stroke-[3]" />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-base font-black text-emerald-400 font-mono uppercase tracking-wider">
+                  ✓ ACHAT RÉUSSI
+                </h3>
+                <p className="text-xs text-zinc-300">
+                  Vous avez reçu <span className="font-bold text-amber-400">{purchaseSuccessDetails.amount} Gawa</span>.
+                </p>
+              </div>
+
+              <div className="p-3 bg-afri-bg rounded-xl border border-afri-border space-y-2 text-left font-mono text-xs">
+                <div className="flex justify-between items-center text-zinc-400">
+                  <span>Pack :</span>
+                  <span className="font-bold text-afri-text">{purchaseSuccessDetails.packName}</span>
+                </div>
+                <div className="flex justify-between items-center text-zinc-400">
+                  <span>Débité :</span>
+                  <span className="font-bold text-red-400">-{purchaseSuccessDetails.price.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+                <div className="flex justify-between items-center border-t border-zinc-800/80 pt-2 font-black">
+                  <span className="text-[#D4AF37]">Nouveau solde FCFA :</span>
+                  <span className="text-[#D4AF37]">{purchaseSuccessDetails.newFCFA.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+                <div className="flex justify-between items-center font-black">
+                  <span className="text-amber-400">Nouveau solde Gawa :</span>
+                  <span className="text-amber-400">{purchaseSuccessDetails.newGawa.toLocaleString('fr-FR')} G</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playSound("click");
+                  setPurchaseSuccessDetails(null);
+                }}
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-black text-[11px] font-black uppercase font-mono tracking-wider active:scale-98 shadow cursor-pointer"
+              >
+                D'accord
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   </AndroidPageLayout>
   );
 }
+
+interface AdminGawaPackConfigRowProps {
+  pack: GawaPack;
+  onSave: (pack: GawaPack, newPrice: number, newGawa: number, newEnabled: boolean) => Promise<void>;
+}
+
+function AdminGawaPackConfigRow({ pack, onSave }: AdminGawaPackConfigRowProps) {
+  const [price, setPrice] = useState(pack.priceFCFA);
+  const [amount, setAmount] = useState(pack.gawaAmount);
+  const [enabled, setEnabled] = useState(pack.enabled);
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <div className="p-3 bg-afri-bg border border-afri-border rounded-lg space-y-2 text-xs font-mono">
+      <div className="flex justify-between items-center">
+        <span className="font-bold text-afri-text uppercase text-[10px]">{pack.name}</span>
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          <input 
+            type="checkbox" 
+            checked={enabled} 
+            onChange={(e) => setEnabled(e.target.checked)}
+            className="rounded border-zinc-700 bg-zinc-900 text-amber-500 focus:ring-amber-500"
+          />
+          <span className="text-[9px] text-zinc-400 uppercase font-bold">Actif</span>
+        </label>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-0.5">
+          <span className="text-[8px] text-zinc-500 uppercase">Prix (FCFA)</span>
+          <input 
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(Number(e.target.value))}
+            className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[11px] text-afri-text focus:outline-none focus:border-amber-500"
+          />
+        </div>
+        <div className="space-y-0.5">
+          <span className="text-[8px] text-zinc-500 uppercase font-bold">Quantité Gawa</span>
+          <input 
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[11px] text-afri-text focus:outline-none focus:border-amber-500"
+          />
+        </div>
+      </div>
+
+      <button
+        type="button"
+        disabled={saving}
+        onClick={async () => {
+          setSaving(true);
+          await onSave(pack, price, amount, enabled);
+          setSaving(false);
+        }}
+        className="w-full py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded text-[9px] font-black uppercase text-[#D4AF37] hover:text-amber-400 transition-colors cursor-pointer min-h-[26px]"
+      >
+        {saving ? "Enregistrement..." : "Enregistrer"}
+      </button>
+    </div>
+  );
+}
+

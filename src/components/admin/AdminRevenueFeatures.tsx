@@ -4,7 +4,7 @@ import {
   Award, Zap, DollarSign, Settings, Check, X, Sparkles, 
   SlidersHorizontal, Radio, Layers, Info, RefreshCw, ChevronRight, Eye, EyeOff,
   Plus, Edit3, Trash2, History, TrendingUp, Users, PlayCircle, BarChart2,
-  Clock, Shield, AlertTriangle
+  Clock, Shield, AlertTriangle, Save
 } from "lucide-react";
 import { SecurityService } from "../../lib/SecurityService";
 import { RevenueFeaturesService } from "../../lib/RevenueFeaturesService";
@@ -37,6 +37,11 @@ export default function AdminRevenueFeatures({
   const [isUserViewOpen, setIsUserViewOpen] = useState(false);
   const [spinHistorySearch, setSpinHistorySearch] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Wheel Pricing State Engine
+  const [priceLogs, setPriceLogs] = useState<any[]>([]);
+  const [inputPrices, setInputPrices] = useState<Record<string, string>>({});
+  const [pendingPriceChange, setPendingPriceChange] = useState<{ wheelId: string; oldPrice: number; newPrice: number; name: string } | null>(null);
 
   // Simulation State
   const [showSimulationModal, setShowSimulationModal] = useState(false);
@@ -72,18 +77,72 @@ export default function AdminRevenueFeatures({
 
     const unsubWheels = WheelEngineService.subscribeWheels((data) => {
       setWheels(data);
+      // Initialize pricing inputs with exact Firestore values dynamically
+      setInputPrices(prev => {
+        const next = { ...prev };
+        data.forEach(w => {
+          if (!(w.id in next)) {
+            next[w.id] = String(w.cost);
+          }
+        });
+        return next;
+      });
     });
 
     const unsubSpins = WheelEngineService.subscribeSpinHistory((data) => {
       setSpins(data);
     });
 
+    const unsubPriceLogs = WheelEngineService.subscribeWheelPriceHistory((data) => {
+      setPriceLogs(data);
+    });
+
     return () => {
       unsubFeats();
       unsubWheels();
       unsubSpins();
+      unsubPriceLogs();
     };
   }, [isFounder, currentUser, userEmail]);
+
+  // Handle click on ENREGISTRER for price changes
+  const handleSavePriceClick = (wheel: AfriGomboWheel) => {
+    const rawVal = inputPrices[wheel.id];
+    const parsed = parseInt(rawVal, 10);
+    
+    if (!rawVal || isNaN(parsed) || parsed.toString() !== rawVal.trim()) {
+      setNotice("⚠️ Erreur : Le prix doit être un nombre entier valide.");
+      return;
+    }
+    
+    if (parsed <= 0) {
+      setNotice("⚠️ Erreur : Le prix doit être strictement supérieur à 0 FCFA.");
+      return;
+    }
+
+    setPendingPriceChange({
+      wheelId: wheel.id,
+      oldPrice: wheel.cost,
+      newPrice: parsed,
+      name: wheel.name
+    });
+  };
+
+  const handleConfirmPriceChange = async () => {
+    if (!pendingPriceChange) return;
+    const { wheelId, oldPrice, newPrice } = pendingPriceChange;
+    try {
+      await WheelEngineService.updateWheelPrice(wheelId, oldPrice, newPrice, userEmail || "jhs.kmj7@gmail.com");
+      try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
+      setNotice(`✅ Tarif de la "${pendingPriceChange.name}" mis à jour : ${newPrice} FCFA !`);
+      setPendingPriceChange(null);
+      setTimeout(() => setNotice(null), 4000);
+    } catch (err) {
+      console.error("Error updating price:", err);
+      setNotice("❌ Erreur lors de la mise à jour du prix.");
+      setPendingPriceChange(null);
+    }
+  };
 
   if (!isFounder) {
     return (
@@ -480,6 +539,136 @@ export default function AdminRevenueFeatures({
                 </span>
               </div>
             </div>
+
+            {/* CENTRE DE MODIFICATION TARIFAIRE DES ROUES */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-2.5 pb-2">
+              {/* Tarifs Editor Column */}
+              <div className="lg:col-span-7 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 space-y-3.5 shadow-lg">
+                <div className="flex items-center gap-2 border-b border-zinc-800 pb-2.5">
+                  <DollarSign className="w-4 h-4 text-[#D4AF37]" />
+                  <h3 className="text-xs font-black uppercase text-[#D4AF37] tracking-wider font-mono">
+                    ⚖️ Centre de Tarification des Tirages
+                  </h3>
+                </div>
+                <p className="text-[11px] text-zinc-400 font-mono leading-relaxed">
+                  Modifiez instantanément les tarifs des tirages de chaque roue. Les changements sont appliqués en temps réel côté serveur et synchronisés pour tous les membres actifs.
+                </p>
+
+                <div className="space-y-3 pt-1">
+                  {wheels.map((wheel, index) => {
+                    const priceVal = inputPrices[wheel.id] || "";
+                    return (
+                      <div key={wheel.id} className="p-3 bg-zinc-950 border border-zinc-850 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono">
+                        <div className="space-y-1">
+                          <span className="text-[9px] font-bold text-zinc-500 uppercase">ROUE {index + 1}</span>
+                          <h4 className="text-xs font-black text-white">{wheel.name}</h4>
+                          <div className="text-[10px] text-[#D4AF37] font-semibold">Prix actuel : {wheel.cost} FCFA</div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={priceVal}
+                              onChange={(e) => setInputPrices(prev => ({ ...prev, [wheel.id]: e.target.value }))}
+                              className="w-24 px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-bold text-white text-right focus:outline-none focus:border-[#D4AF37] pr-7"
+                              placeholder={`${wheel.cost}`}
+                            />
+                            <span className="absolute right-2 top-1.5 text-[9px] text-zinc-500 font-bold">FCFA</span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSavePriceClick(wheel)}
+                            className="px-3 py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black rounded-lg text-[10px] font-black uppercase transition cursor-pointer flex items-center gap-1 shadow-md shadow-[#D4AF37]/10"
+                          >
+                            <Save className="w-3.5 h-3.5 text-black" />
+                            <span>Enregistrer</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Price Log Audit History Column */}
+              <div className="lg:col-span-5 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 space-y-3.5 flex flex-col shadow-lg">
+                <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <History className="w-4 h-4 text-amber-500" />
+                    <h3 className="text-xs font-black uppercase text-zinc-300 tracking-wider font-mono">
+                      📜 Historique d'Audit des Tarifs
+                    </h3>
+                  </div>
+                  <span className="px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded text-[9px] font-mono font-bold">
+                    {priceLogs.length} logs
+                  </span>
+                </div>
+
+                <div className="flex-1 overflow-y-auto max-h-[220px] pr-1 space-y-2 scrollbar-thin scrollbar-thumb-zinc-800">
+                  {priceLogs.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-zinc-600 text-[10px] py-8 text-center font-mono">
+                      Aucune modification de tarif enregistrée pour le moment.
+                    </div>
+                  ) : (
+                    priceLogs.map((log) => {
+                      const wheelObj = wheels.find(w => w.id === log.wheelId);
+                      const wheelLabel = wheelObj ? wheelObj.name : log.wheelId;
+                      return (
+                        <div key={log.logId} className="p-2.5 bg-zinc-950 border border-zinc-900 rounded-xl space-y-1 font-mono text-[10px] leading-relaxed">
+                          <div className="flex justify-between items-center text-zinc-400">
+                            <span className="font-bold text-white truncate max-w-[150px]">{wheelLabel}</span>
+                            <span className="text-zinc-500">{new Date(log.timestamp).toLocaleDateString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>
+                          </div>
+                          <div className="flex justify-between items-center pt-0.5 border-t border-zinc-900/60 text-[9px]">
+                            <span className="text-rose-400 line-through">{log.oldPrice} FCFA</span>
+                            <span className="text-zinc-500">→</span>
+                            <span className="text-emerald-400 font-black">{log.newPrice} FCFA</span>
+                          </div>
+                          <div className="text-[9px] text-zinc-500 text-right">
+                            Modifié par : <span className="text-[#D4AF37]">{log.adminId || "Fondateur"}</span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* CONFIRMATION OVERLAY FOR PRICE MODIFICATIONS */}
+            {pendingPriceChange && (
+              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="bg-[#0c0c0d] border-2 border-[#D4AF37] p-6 rounded-3xl max-w-sm w-full space-y-4 text-center shadow-2xl animate-scaleIn">
+                  <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 border-2 border-[#D4AF37] flex items-center justify-center mx-auto text-[#D4AF37]">
+                    <DollarSign className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-[#D4AF37] font-mono">Confirmation de Tarif</h3>
+                  <p className="text-[11px] text-zinc-300 leading-relaxed font-mono">
+                    Modifier le prix de la <strong className="text-white font-bold">{pendingPriceChange.name}</strong> de{" "}
+                    <strong className="text-rose-400 font-bold line-through">{pendingPriceChange.oldPrice} FCFA</strong> à{" "}
+                    <strong className="text-emerald-400 font-black">{pendingPriceChange.newPrice} FCFA</strong> ?
+                  </p>
+                  <div className="flex gap-3 pt-2 font-mono text-xs font-black uppercase">
+                    <button
+                      type="button"
+                      onClick={() => setPendingPriceChange(null)}
+                      className="flex-1 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 rounded-xl transition border border-zinc-800 cursor-pointer"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirmPriceChange}
+                      className="flex-1 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black rounded-xl transition border border-[#D4AF37] cursor-pointer"
+                    >
+                      Confirmer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Active Wheels Configuration Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-2">
@@ -1031,103 +1220,153 @@ export default function AdminRevenueFeatures({
                 </div>
 
                 {/* Segments Configuration Table / Cards */}
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {editingWheel.segments.map((seg) => (
                     <div
                       key={seg.id}
-                      className={`p-3 bg-zinc-900 border rounded-2xl grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center transition ${
+                      className={`p-4 bg-zinc-900 border rounded-2xl space-y-3 transition ${
                         seg.enabled ? "border-zinc-800" : "border-zinc-800/40 opacity-60 bg-zinc-950"
                       }`}
                     >
-                      <div className="sm:col-span-3 space-y-0.5">
-                        <label className="text-[9px] text-zinc-500 uppercase font-bold block">Libellé Gain</label>
-                        <input
-                          type="text"
-                          value={seg.label}
-                          onChange={(e) => handleSegmentChange(seg.id, "label", e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px]"
-                        />
-                      </div>
+                      {/* Row 1: Core Fields */}
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                        <div className="sm:col-span-3 space-y-1">
+                          <label className="text-[9px] text-zinc-500 uppercase font-black block">Libellé Gain</label>
+                          <input
+                            type="text"
+                            value={seg.label}
+                            onChange={(e) => handleSegmentChange(seg.id, "label", e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px] font-mono"
+                          />
+                        </div>
 
-                      <div className="sm:col-span-2 space-y-0.5">
-                        <label className="text-[9px] text-zinc-500 uppercase font-bold block">Type Gain</label>
-                        <select
-                          value={seg.type}
-                          onChange={(e) => handleSegmentChange(seg.id, "type", e.target.value)}
-                          className="w-full px-2 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[10px]"
-                        >
-                          <option value="PREMIUM_DAYS">PREMIUM_DAYS</option>
-                          <option value="PREMIUM_CODE">PREMIUM_CODE</option>
-                          <option value="PREMIUM_BOOST">PREMIUM_BOOST</option>
-                          <option value="VISIBILITY_BOOST">VISIBILITY_BOOST</option>
-                          <option value="GOMBO_BOOST">GOMBO_BOOST</option>
-                          <option value="PROFILE_BOOST">PROFILE_BOOST</option>
-                          <option value="PUBLICATION_BOOST">PUBLICATION_BOOST</option>
-                          <option value="EXTRA_SPIN">EXTRA_SPIN</option>
-                          <option value="SMALL_BONUS">SMALL_BONUS</option>
-                          <option value="NO_REWARD">NO_REWARD</option>
-                        </select>
-                      </div>
+                        <div className="sm:col-span-3 space-y-1">
+                          <label className="text-[9px] text-zinc-500 uppercase font-black block">Type Gain</label>
+                          <select
+                            value={seg.type}
+                            onChange={(e) => handleSegmentChange(seg.id, "type", e.target.value)}
+                            className="w-full px-2 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[10px] font-mono"
+                          >
+                            <option value="PREMIUM_DAYS">👑 PREMIUM_DAYS (Premium Temp)</option>
+                            <option value="SURPRISE_BOX">🎁 SURPRISE_BOX (Boîte Surprise)</option>
+                            <option value="VISIBILITY_BOOST">⚡ VISIBILITY_BOOST (Boost Visibilité)</option>
+                            <option value="PUBLICATION_BOOST">📈 PUBLICATION_BOOST (Boost Post)</option>
+                            <option value="PROFILE_BOOST">⭐ PROFILE_BOOST (Mise en avant Profil)</option>
+                            <option value="GOMBO_BOOST">🚀 GOMBO_BOOST (Mise en avant Gombo)</option>
+                            <option value="PREMIUM_BOOST">🎧 PREMIUM_BOOST (Avantage Créateur)</option>
+                            <option value="PREMIUM_CODE">🎟️ PREMIUM_CODE (Code Promotionnel)</option>
+                            <option value="PROFILE_BADGE">🏷️ PROFILE_BADGE (Badge Temporaire)</option>
+                            <option value="EXTRA_SPIN">🎟️ EXTRA_SPIN (Spin Bonus)</option>
+                            <option value="NO_REWARD">🛑 NO_REWARD (Perte / Pas de gain)</option>
+                          </select>
+                        </div>
 
-                      <div className="sm:col-span-2 space-y-0.5">
-                        <label className="text-[9px] text-zinc-500 uppercase font-bold block">Probabilité (%)</label>
-                        <input
-                          type="number"
-                          value={seg.probability}
-                          onChange={(e) => handleSegmentChange(seg.id, "probability", Number(e.target.value) || 0)}
-                          className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px] font-bold text-[#D4AF37]"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2 space-y-0.5">
-                        <label className="text-[9px] text-zinc-500 uppercase font-bold block">Durée + Unité</label>
-                        <div className="flex items-center gap-1">
+                        <div className="sm:col-span-2 space-y-1">
+                          <label className="text-[9px] text-zinc-500 uppercase font-black block">Probabilité (%)</label>
                           <input
                             type="number"
-                            value={seg.rewardDuration || 1}
-                            onChange={(e) => handleSegmentChange(seg.id, "rewardDuration", Number(e.target.value) || 0)}
-                            className="w-14 px-2 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px]"
+                            value={seg.probability}
+                            onChange={(e) => handleSegmentChange(seg.id, "probability", Number(e.target.value) || 0)}
+                            className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px] font-mono font-bold text-[#D4AF37]"
                           />
-                          <select
-                            value={seg.durationUnit || "days"}
-                            onChange={(e) => handleSegmentChange(seg.id, "durationUnit", e.target.value)}
-                            className="flex-1 px-1 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[9px]"
+                        </div>
+
+                        <div className="sm:col-span-2 space-y-1">
+                          <label className="text-[9px] text-zinc-500 uppercase font-black block">Durée + Unité</label>
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              value={seg.rewardDuration || 1}
+                              onChange={(e) => handleSegmentChange(seg.id, "rewardDuration", Number(e.target.value) || 0)}
+                              className="w-12 px-2 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px] font-mono"
+                            />
+                            <select
+                              value={seg.durationUnit || "days"}
+                              onChange={(e) => handleSegmentChange(seg.id, "durationUnit", e.target.value)}
+                              className="flex-1 px-1 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[9px] font-mono"
+                            >
+                              <option value="hours">h (heures)</option>
+                              <option value="days">j (jours)</option>
+                              <option value="weeks">s (semaines)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-2 flex items-center justify-end gap-1.5 pt-3 sm:pt-4">
+                          <button
+                            type="button"
+                            onClick={() => handleSegmentChange(seg.id, "enabled", !seg.enabled)}
+                            className={`px-3 py-1.5 rounded-lg text-[9px] font-mono font-black uppercase transition cursor-pointer ${
+                              seg.enabled ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20" : "bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20"
+                            }`}
                           >
-                            <option value="hours">h (heures)</option>
-                            <option value="days">j (jours)</option>
-                            <option value="weeks">s (semaines)</option>
-                          </select>
+                            {seg.enabled ? "Activé" : "Désactivé"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSegmentFromEditingWheel(seg.id)}
+                            className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-lg transition"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
 
-                      <div className="sm:col-span-1 space-y-0.5">
-                        <label className="text-[9px] text-zinc-500 uppercase font-bold block">Couleur</label>
-                        <input
-                          type="color"
-                          value={seg.color || "#D4AF37"}
-                          onChange={(e) => handleSegmentChange(seg.id, "color", e.target.value)}
-                          className="w-full h-8 bg-zinc-950 border border-zinc-800 rounded-lg cursor-pointer"
-                        />
-                      </div>
+                      {/* Row 2: Secondary / Commercial Parameters */}
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center pt-2.5 border-t border-zinc-800/50">
+                        <div className="sm:col-span-4 space-y-1">
+                          <label className="text-[9px] text-zinc-500 uppercase font-black block">Valeur Promotionnelle Indicative (FCFA)</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={seg.promoValueFCFA || 0}
+                              onChange={(e) => handleSegmentChange(seg.id, "promoValueFCFA", Number(e.target.value) || 0)}
+                              className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px] font-mono focus:outline-none focus:border-[#D4AF37] pr-10"
+                              placeholder="0"
+                            />
+                            <span className="absolute right-2.5 top-1.5 text-[9px] text-zinc-500 font-bold">FCFA</span>
+                          </div>
+                        </div>
 
-                      <div className="sm:col-span-2 flex items-center justify-end gap-1.5 pt-2 sm:pt-0">
-                        <button
-                          type="button"
-                          onClick={() => handleSegmentChange(seg.id, "enabled", !seg.enabled)}
-                          className={`px-2.5 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition ${
-                            seg.enabled ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                          }`}
-                        >
-                          {seg.enabled ? "Actif" : "Inactif"}
-                        </button>
+                        <div className="sm:col-span-4 space-y-1">
+                          <label className="text-[9px] text-zinc-500 uppercase font-black block">Niveau Minimum Requis</label>
+                          <select
+                            value={seg.minAccountLevel || "all"}
+                            onChange={(e) => handleSegmentChange(seg.id, "minAccountLevel", e.target.value)}
+                            className="w-full px-2 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[10px] font-mono"
+                          >
+                            <option value="all">Tous les Membres (Standard & Premium)</option>
+                            <option value="standard">Membres Standards uniquement</option>
+                            <option value="premium">Membres Premium uniquement</option>
+                            <option value="vip">Membres VIP uniquement</option>
+                          </select>
+                        </div>
 
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveSegmentFromEditingWheel(seg.id)}
-                          className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg transition border border-rose-500/20"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="sm:col-span-2 space-y-1">
+                          <label className="text-[9px] text-zinc-500 uppercase font-black block">Couleur</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={seg.color || "#D4AF37"}
+                              onChange={(e) => handleSegmentChange(seg.id, "color", e.target.value)}
+                              className="w-8 h-8 bg-zinc-950 border border-zinc-800 rounded-lg cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={seg.color || "#D4AF37"}
+                              onChange={(e) => handleSegmentChange(seg.id, "color", e.target.value)}
+                              className="w-16 px-1 py-1 bg-zinc-950 border border-zinc-800 rounded text-[9px] text-zinc-300 font-mono text-center uppercase"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-2 text-right">
+                          {/* Segment Summary Badge */}
+                          <div className="inline-block p-1.5 bg-zinc-950 border border-zinc-850 rounded-xl text-[9px] text-zinc-400 font-mono">
+                            <div>Val: <span className="text-[#D4AF37] font-bold">{seg.promoValueFCFA || 0} FCFA</span></div>
+                            <div>Lvl: <span className="text-white uppercase">{seg.minAccountLevel || "all"}</span></div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}

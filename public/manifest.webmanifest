@@ -1,6 +1,6 @@
 {
   "id": "/",
-  "name": "AFRIGOMBO ELITE",
+  "name": "AFRIGOMBO",
   "short_name": "AFRIGOMBO",
   "description": "La plateforme souveraine des talents, gombos et de la culture d'Afrique",
   "start_url": "/",
@@ -9,6 +9,10 @@
   "orientation": "portrait",
   "background_color": "#050505",
   "theme_color": "#050505",
+  "lang": "fr-FR",
+  "dir": "ltr",
+  "categories": ["social", "entertainment", "lifestyle"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/pwa-192x192.png",
@@ -27,6 +31,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Radar Gombos",
+      "short_name": "Radar",
+      "description": "Trouver des gombos à proximité",
+      "url": "/nearby",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Messagerie",
+      "short_name": "Messages",
+      "description": "Voir mes discussions",
+      "url": "/messaging",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
     }
   ]
 }
