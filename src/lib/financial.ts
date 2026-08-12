@@ -12,16 +12,27 @@ import { PremiumEngine } from "./premiumEngine";
  */
 export function getCanonicalWalletBalance(userData: any): number {
   if (!userData) return 0;
-  if (typeof userData.wallet?.soldeDisponible === "number") {
-    return userData.wallet.soldeDisponible;
+  
+  const solde = userData.wallet?.soldeDisponible;
+  const walletBalance = userData.walletBalance;
+  const balance = userData.balance;
+
+  // If we have a canonical solde that is non-zero, it's the priority
+  if (typeof solde === "number" && solde > 0) {
+    return solde;
   }
-  if (typeof userData.walletBalance === "number") {
-    return userData.walletBalance;
+
+  // If canonical solde is 0 or missing, but we have legacy funds, prioritize those
+  // This handles the "initialization error" where wallet was created with 0 while legacy had funds
+  if (typeof walletBalance === "number" && walletBalance > 0) {
+    return walletBalance;
   }
-  if (typeof userData.balance === "number") {
-    return userData.balance;
+  if (typeof balance === "number" && balance > 0) {
+    return balance;
   }
-  return 0;
+
+  // Final fallback: if everything is 0 or missing, return whatever canonical value we have (likely 0)
+  return typeof solde === "number" ? solde : 0;
 }
 
 // Global in-memory cache for platform pricing configuration

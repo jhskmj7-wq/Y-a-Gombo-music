@@ -484,17 +484,23 @@ export const gomboDB = {
         let profile = docSnap.data() as UserProfile;
         let needsSync = false;
         
-        if (!profile.wallet) {
+        if (!profile.wallet || typeof profile.wallet.soldeDisponible !== "number") {
+          // Identify the best legacy balance available to prevent zeroing out existing funds
+          const legacyBalance = typeof profile.walletBalance === "number" 
+            ? profile.walletBalance 
+            : (typeof profile.balance === "number" ? profile.balance : 0);
+
           profile.wallet = {
-            soldeDisponible: 0,
-            soldeBloque: 0,
-            revenusMois: 0,
-            economiesPremium: 0,
-            niveauWallet: "Standard",
-            revenus: 0,
-            depots: 0,
-            retraits: 0,
-            gainsMensuels: 0
+            ...(profile.wallet || {}),
+            soldeDisponible: legacyBalance,
+            soldeBloque: profile.wallet?.soldeBloque ?? 0,
+            revenusMois: profile.wallet?.revenusMois ?? 0,
+            economiesPremium: profile.wallet?.economiesPremium ?? 0,
+            niveauWallet: profile.wallet?.niveauWallet ?? "Standard",
+            revenus: profile.wallet?.revenus ?? 0,
+            depots: profile.wallet?.depots ?? 0,
+            retraits: profile.wallet?.retraits ?? 0,
+            gainsMensuels: profile.wallet?.gainsMensuels ?? 0
           };
           needsSync = true;
         }
