@@ -8,7 +8,7 @@ import { db } from "../firebase";
 import { doc, getDoc, setDoc, addDoc, collection } from "firebase/firestore";
 import { recordWalletTransaction } from "../lib/financial";
 import { safeStringify } from "../lib/jsonUtils";
-import GomboWheelSection from "./common/GomboWheelSection";
+
 
 interface AfrigomboPlusProps {
   onBack: () => void;
@@ -528,11 +528,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
           </div>
         </div>
 
-        {/* SECTION ROUE AFRIGOMBO (ACCESSIBLE TOUS MEMBRES) */}
-        <GomboWheelSection 
-          currentUserProfile={currentUserProfile} 
-          onRefreshProfile={onRefreshProfile} 
-        />
+
       </div>
 
       {/* ========================================================= */}

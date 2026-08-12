@@ -17,7 +17,7 @@ export const DEFAULT_WHEELS: AfriGomboWheel[] = [
   {
     id: "wheel_classique",
     name: "🎡 Roue Classique AFRIGOMBO",
-    description: "Roue de fidélité accessible à tous les membres. Permet de gagner du Premium, des Boosts et des extras.",
+    description: "Roue de fidélité accessible à tous les membres. Permet de gagner du Premium, des Boosts et des Boîtes Surprise.",
     type: "CLASSIQUE",
     enabled: true,
     cost: 300,
@@ -28,72 +28,28 @@ export const DEFAULT_WHEELS: AfriGomboWheel[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     createdBy: "jhs.kmj7@gmail.com",
-    rulesText: "Chaque tirage coûte 300 FCFA. Vous pouvez jouer jusqu'à 3 fois par jour. Les récompenses Premium s'ajoutent automatiquement à votre abonnement existant sans perte de jours.",
+    rulesText: "Chaque tirage coûte 300 FCFA. Alternance de gains et de pertes. Les boîtes surprise révèlent des bonus exclusifs. Probabilités contrôlées côté serveur.",
     segments: [
-      {
-        id: "seg_p7",
-        label: "👑 7 Jours Premium",
-        type: "PREMIUM_DAYS",
-        rewardValue: 7,
-        rewardDuration: 7,
-        probability: 15,
-        enabled: true,
-        color: "#D4AF37"
-      },
-      {
-        id: "seg_vis24",
-        label: "⚡ Boost Visibilité 24h",
-        type: "VISIBILITY_BOOST",
-        rewardValue: "Radar 24h",
-        rewardDuration: 1,
-        probability: 20,
-        enabled: true,
-        color: "#10B981"
-      },
-      {
-        id: "seg_gombo48",
-        label: "🚀 Boost Gombo 48h",
-        type: "GOMBO_BOOST",
-        rewardValue: "Gombo Express",
-        rewardDuration: 2,
-        probability: 15,
-        enabled: true,
-        color: "#3B82F6"
-      },
-      {
-        id: "seg_extra",
-        label: "🎁 Spin Gratuit",
-        type: "EXTRA_SPIN",
-        rewardValue: 1,
-        probability: 15,
-        enabled: true,
-        color: "#8B5CF6"
-      },
-      {
-        id: "seg_code",
-        label: "🎟️ Code Pass Premium",
-        type: "PREMIUM_CODE",
-        rewardValue: "AFRI-PROMO-2026",
-        rewardDuration: 3,
-        probability: 10,
-        enabled: true,
-        color: "#F59E0B"
-      },
-      {
-        id: "seg_zero",
-        label: "🎯 Essayez encore",
-        type: "NO_REWARD",
-        rewardValue: 0,
-        probability: 25,
-        enabled: true,
-        color: "#4B5563"
-      }
+      { id: "c_1", label: "👑 Premium 1j", type: "PREMIUM_DAYS", rewardValue: 1, rewardDuration: 1, probability: 8, enabled: true, color: "#D4AF37" },
+      { id: "c_2", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#4B5563" },
+      { id: "c_3", label: "⚡ Boost 24h", type: "VISIBILITY_BOOST", rewardValue: "Boost 24h", rewardDuration: 1, probability: 8, enabled: true, color: "#10B981" },
+      { id: "c_4", label: "❌ Pas de gain", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#3F3F46" },
+      { id: "c_5", label: "⭐ Profil 24h", type: "PROFILE_BOOST", rewardValue: "Profil 24h", rewardDuration: 1, probability: 8, enabled: true, color: "#EC4899" },
+      { id: "c_6", label: "🛑 Cette fois non", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#27272A" },
+      { id: "c_7", label: "🎁 Boîte Surprise", type: "SURPRISE_BOX", rewardValue: "Mystery Box", rewardDuration: 1, probability: 8, enabled: true, color: "#F59E0B" },
+      { id: "c_8", label: "⏳ À la prochaine", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#18181B" },
+      { id: "c_9", label: "📈 Post 24h", type: "PUBLICATION_BOOST", rewardValue: "Post 24h", rewardDuration: 1, probability: 8, enabled: true, color: "#3B82F6" },
+      { id: "c_10", label: "🚫 Pas de récompense", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#52525B" },
+      { id: "c_11", label: "🎧 Créateur 24h", type: "PREMIUM_BOOST", rewardValue: "Creator Kit", rewardDuration: 1, probability: 8, enabled: true, color: "#06B6D4" },
+      { id: "c_12", label: "💨 Chance manquée", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#71717A" },
+      { id: "c_13", label: "🎟️ Spin Bonus", type: "EXTRA_SPIN", rewardValue: 1, probability: 10, enabled: true, color: "#8B5CF6" },
+      { id: "c_14", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 9, enabled: true, color: "#4B5563" }
     ]
   },
   {
     id: "wheel_premium",
     name: "👑 Roue Premium Prestige",
-    description: "Roue haut de gamme offrant des périodes Premium prolongées et des amplificateurs de profil V.I.P.",
+    description: "Roue haut de gamme offrant des périodes Premium prolongées, des boosts supérieurs et des boîtes surprise de prestige.",
     type: "PREMIUM",
     enabled: true,
     cost: 500,
@@ -104,72 +60,25 @@ export const DEFAULT_WHEELS: AfriGomboWheel[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     createdBy: "jhs.kmj7@gmail.com",
-    rulesText: "Chaque tirage coûte 500 FCFA. Tentez de remporter jusqu'à 14 jours de Premium offerts et des Boosts Profil 72h.",
+    rulesText: "Chaque tirage coûte 500 FCFA. Récompenses plus élevées et boîtes surprise prestige.",
     segments: [
-      {
-        id: "seg_p14",
-        label: "👑 14 Jours Premium",
-        type: "PREMIUM_DAYS",
-        rewardValue: 14,
-        rewardDuration: 14,
-        probability: 20,
-        enabled: true,
-        color: "#D4AF37"
-      },
-      {
-        id: "seg_prof72",
-        label: "⭐ Boost Profil 72h",
-        type: "PROFILE_BOOST",
-        rewardValue: "Artiste Vedette",
-        rewardDuration: 3,
-        probability: 20,
-        enabled: true,
-        color: "#EC4899"
-      },
-      {
-        id: "seg_pub3",
-        label: "📢 Boost Sponsoring Post",
-        type: "PUBLICATION_BOOST",
-        rewardValue: "Sponsoring Post 3j",
-        rewardDuration: 3,
-        probability: 20,
-        enabled: true,
-        color: "#3B82F6"
-      },
-      {
-        id: "seg_extra2",
-        label: "🎁 2 Spins Gratuits",
-        type: "EXTRA_SPIN",
-        rewardValue: 2,
-        probability: 15,
-        enabled: true,
-        color: "#8B5CF6"
-      },
-      {
-        id: "seg_pre_boost",
-        label: "🌟 Badge VIP & Multiplicateur",
-        type: "PREMIUM_BOOST",
-        rewardValue: "VIP Gold",
-        rewardDuration: 7,
-        probability: 10,
-        enabled: true,
-        color: "#F59E0B"
-      },
-      {
-        id: "seg_p_zero",
-        label: "🎯 Recommencer",
-        type: "NO_REWARD",
-        rewardValue: 0,
-        probability: 15,
-        enabled: true,
-        color: "#4B5563"
-      }
+      { id: "p_1", label: "👑 Premium 7j", type: "PREMIUM_DAYS", rewardValue: 7, rewardDuration: 7, probability: 12, enabled: true, color: "#D4AF37" },
+      { id: "p_2", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#4B5563" },
+      { id: "p_3", label: "⭐ Profil 72h", type: "PROFILE_BOOST", rewardValue: "Vedette 72h", rewardDuration: 3, probability: 10, enabled: true, color: "#EC4899" },
+      { id: "p_4", label: "❌ Pas de gain", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#3F3F46" },
+      { id: "p_5", label: "🎁 Boîte Surprise", type: "SURPRISE_BOX", rewardValue: "Box Prestige", rewardDuration: 3, probability: 12, enabled: true, color: "#F59E0B" },
+      { id: "p_6", label: "🛑 Cette fois non", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#27272A" },
+      { id: "p_7", label: "📢 Sponsoring 3j", type: "PUBLICATION_BOOST", rewardValue: "Sponsoring 3j", rewardDuration: 3, probability: 10, enabled: true, color: "#3B82F6" },
+      { id: "p_8", label: "⏳ À la prochaine", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#18181B" },
+      { id: "p_9", label: "🎁 2 Spins", type: "EXTRA_SPIN", rewardValue: 2, probability: 10, enabled: true, color: "#8B5CF6" },
+      { id: "p_10", label: "🚫 Pas de récompense", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#52525B" },
+      { id: "p_11", label: "🔥 Super Boost", type: "GOMBO_BOOST", rewardValue: "Super Boost", rewardDuration: 3, probability: 10, enabled: true, color: "#F97316" }
     ]
   },
   {
     id: "wheel_elite",
     name: "💎 Roue Élite Souveraine",
-    description: "Le sommet du privilège commercial AFRIGOMBO. Réservée aux chercheurs d'opportunités majeures.",
+    description: "Le sommet du privilège commercial AFRIGOMBO. Récompenses d'élite garanties et boîtes surprise souveraines.",
     type: "ELITE",
     enabled: true,
     cost: 1000,
@@ -180,57 +89,15 @@ export const DEFAULT_WHEELS: AfriGomboWheel[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     createdBy: "jhs.kmj7@gmail.com",
-    rulesText: "Tirage souverain à 1 000 FCFA. Récompenses garanties de haut niveau : 30 jours Premium, Super Boost Gombo 7 jours et Visibilité nationale.",
+    rulesText: "Tirage souverain à 1 000 FCFA. Récompenses majeures de haut niveau et boîtes surprise d'élite.",
     segments: [
-      {
-        id: "seg_p30",
-        label: "🏆 30 Jours Premium",
-        type: "PREMIUM_DAYS",
-        rewardValue: 30,
-        rewardDuration: 30,
-        probability: 20,
-        enabled: true,
-        color: "#D4AF37"
-      },
-      {
-        id: "seg_super_gombo",
-        label: "🚀 Super Boost Gombo 7j",
-        type: "GOMBO_BOOST",
-        rewardValue: "Gombo Élite 7j",
-        rewardDuration: 7,
-        probability: 25,
-        enabled: true,
-        color: "#10B981"
-      },
-      {
-        id: "seg_elite_pass",
-        label: "🎟️ Passport Élite Pass",
-        type: "PREMIUM_CODE",
-        rewardValue: "ELITE-PASSPORT-2026",
-        rewardDuration: 14,
-        probability: 15,
-        enabled: true,
-        color: "#F59E0B"
-      },
-      {
-        id: "seg_extra3",
-        label: "🎁 3 Spins Gratuits",
-        type: "EXTRA_SPIN",
-        rewardValue: 3,
-        probability: 20,
-        enabled: true,
-        color: "#8B5CF6"
-      },
-      {
-        id: "seg_vis_nat",
-        label: "🌍 Radar National 7j",
-        type: "VISIBILITY_BOOST",
-        rewardValue: "Radar National 7j",
-        rewardDuration: 7,
-        probability: 20,
-        enabled: true,
-        color: "#3B82F6"
-      }
+      { id: "e_1", label: "🏆 30j Premium", type: "PREMIUM_DAYS", rewardValue: 30, rewardDuration: 30, probability: 20, enabled: true, color: "#D4AF37" },
+      { id: "e_2", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 10, enabled: true, color: "#4B5563" },
+      { id: "e_3", label: "🚀 Super Gombo", type: "GOMBO_BOOST", rewardValue: "Gombo Élite", rewardDuration: 7, probability: 20, enabled: true, color: "#10B981" },
+      { id: "e_4", label: "❌ Pas de gain", type: "NO_REWARD", rewardValue: 0, probability: 5, enabled: true, color: "#3F3F46" },
+      { id: "e_5", label: "🎁 Boîte Élite", type: "SURPRISE_BOX", rewardValue: "Box Élite", rewardDuration: 7, probability: 20, enabled: true, color: "#F59E0B" },
+      { id: "e_6", label: "🌍 National 7j", type: "VISIBILITY_BOOST", rewardValue: "National 7j", rewardDuration: 7, probability: 15, enabled: true, color: "#3B82F6" },
+      { id: "e_7", label: "🎟️ Pass Élite", type: "PREMIUM_CODE", rewardValue: "ELITE-PASS", rewardDuration: 14, probability: 10, enabled: true, color: "#8B5CF6" }
     ]
   }
 ];
@@ -762,6 +629,31 @@ export class WheelEngineService {
         }
       } catch (err) {
         console.error("Error granting extra spin tokens:", err);
+      }
+    } else if (segment.type === "SURPRISE_BOX") {
+      // Mystery box reward: grant 3 days Premium or higher as surprise
+      const surpriseDays = params.wheel.type === "ELITE" ? 14 : params.wheel.type === "PREMIUM" ? 7 : 3;
+      try {
+        const userRef = doc(db, "users", userId);
+        const userSnap = await getDoc(userRef);
+        let currentExpTime = Date.now();
+        if (userSnap.exists()) {
+          const uData = userSnap.data();
+          if (uData.premiumExpiresAt) {
+            const expParsed = new Date(uData.premiumExpiresAt).getTime();
+            if (expParsed > currentExpTime) currentExpTime = expParsed;
+          }
+        }
+        const newExpTime = currentExpTime + surpriseDays * 24 * 60 * 60 * 1000;
+        await updateDoc(userRef, {
+          isPremium: true,
+          accountType: "premium",
+          premiumExpiresAt: new Date(newExpTime).toISOString(),
+          updatedAt: nowISO
+        });
+        console.log(`Mystery Box opened for user ${userId}: granted ${surpriseDays} days Premium!`);
+      } catch (err) {
+        console.error("Error granting Surprise Box reward:", err);
       }
     } else if (
       segment.type === "VISIBILITY_BOOST" || 

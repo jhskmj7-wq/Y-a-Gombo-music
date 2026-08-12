@@ -68,6 +68,7 @@ import AvatarEditor from "./avatar/AvatarEditor";
 import AvatarStore from "./avatar/AvatarStore";
 import EventsView from "./EventsView";
 import HeritagePage from "./HeritagePage";
+import PremiumWheelPage from "./common/PremiumWheelPage";
 import GomboIdUserDashboard from "./GomboIdUserDashboard";
 const AfrigomboLabs = lazyWithRetry(() => import("./admin/AfrigomboLabs"));
 const BetaCheckPanel = lazyWithRetry(() => import("./admin/BetaCheckPanel"));
@@ -6204,6 +6205,17 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       onViewPublicPortfolio={(userId) => setPublicProfileTargetUserId(userId)}
                     />
                   </Suspense>
+                </div>
+              )}
+
+              {activeMenu === "premium_wheel" && (
+                <div className="w-full animate-fadeIn">
+                  <PremiumWheelPage
+                    currentUserProfile={profile}
+                    onRefreshProfile={refreshProfile}
+                    onBack={() => goBackMenu()}
+                    audioSynth={audioSynth}
+                  />
                 </div>
               )}
 

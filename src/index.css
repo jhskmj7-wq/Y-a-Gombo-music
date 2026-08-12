@@ -127,6 +127,7 @@ html.text-size-grand {
   --color-afri-border: var(--afri-border);
 
   --animate-fadeIn: fadeIn 0.25s ease-out forwards;
+  --animate-slideUp: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   
   @keyframes fadeIn {
     from {
@@ -136,6 +137,17 @@ html.text-size-grand {
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0.5;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
     }
   }
 }

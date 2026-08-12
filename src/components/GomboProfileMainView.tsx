@@ -259,7 +259,29 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         </motion.div>
       )}
 
-      {/* 1. GRANDE CARTE PROFIL PREMIUM */}
+      {/* ACCÈS ROUE DES AVANTAGES PREMIUM (VISIBLE POUR TOUS) */}
+      <button
+        type="button"
+        onClick={() => onNavigateView("premium_wheel")}
+        className={`w-full p-4 rounded-[18px] border transition-all active:scale-98 flex items-center justify-between gap-3 text-left cursor-pointer shadow-sm group ${
+          isLight
+            ? "bg-[#FDFBF7] border-amber-400/50 hover:border-amber-500 text-gray-900"
+            : "bg-afri-bg-sec border-amber-500/30 hover:border-amber-400 text-afri-text"
+        }`}
+      >
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform">
+            🎁
+          </div>
+          <div className="min-w-0">
+            <h4 className="text-xs font-black uppercase text-afri-text tracking-wide truncate">Tente ta chance pour des avantages Premium</h4>
+            <p className="text-[10px] text-afri-text-sec truncate font-mono">Tirage au sort souverain & récompenses exclusives</p>
+          </div>
+        </div>
+        <div className="text-amber-500 font-bold shrink-0 text-sm group-hover:translate-x-1 transition-transform">
+          →
+        </div>
+      </button>
       <div className={`w-full relative  rounded-[18px] border shadow-sm p-4 ${
         isLight 
           ? "bg-[#FDFBF7] border-[#D4AF37]/60" 
