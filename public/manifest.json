@@ -11,8 +11,7 @@
   "theme_color": "#050505",
   "lang": "fr-FR",
   "dir": "ltr",
-  "categories": ["social", "entertainment", "lifestyle"],
-  "prefer_related_applications": false,
+  "categories": ["social", "lifestyle"],
   "icons": [
     {
       "src": "/pwa-192x192.png",
@@ -31,22 +30,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Radar Gombos",
-      "short_name": "Radar",
-      "description": "Trouver des gombos à proximité",
-      "url": "/nearby",
-      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Messagerie",
-      "short_name": "Messages",
-      "description": "Voir mes discussions",
-      "url": "/messaging",
-      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
     }
   ]
 }

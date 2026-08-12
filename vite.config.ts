@@ -88,7 +88,7 @@ export default defineConfig({
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'logo.svg', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-512x512-maskable.png'],
       manifest: {
         id: '/',
-        name: 'AFRIGOMBO ELITE',
+        name: 'AFRIGOMBO',
         short_name: 'AFRIGOMBO',
         description: 'La plateforme souveraine des talents, gombos et de la culture d\'Afrique',
         theme_color: '#050505',
@@ -97,6 +97,9 @@ export default defineConfig({
         orientation: 'portrait',
         start_url: '/',
         scope: '/',
+        lang: 'fr-FR',
+        dir: 'ltr',
+        categories: ['social', 'lifestyle'],
         icons: [
           {
             src: '/pwa-192x192.png',
