@@ -6,6 +6,7 @@ import {
   AfriGomboWheel, WheelSegment, WheelSpinRecord, UserBoostRecord, UserExtraSpinRecord, WheelType 
 } from "../types";
 import { PaymentEngine } from "./paymentEngine";
+import { SecurityService } from "./SecurityService";
 
 const WHEELS_COLLECTION = "revenueFeatures_wheels";
 const SPINS_COLLECTION = "wheelSpins";
@@ -301,13 +302,16 @@ export class WheelEngineService {
   }
 
   /**
-   * Save or update wheel configuration in Firestore
+   * Save or update wheel configuration in Firestore with versioning
    */
   static async saveWheel(wheel: AfriGomboWheel, updatedBy = "jhs.kmj7@gmail.com"): Promise<void> {
     const docRef = doc(db, WHEELS_COLLECTION, wheel.id);
+    const newVersion = (wheel.version || 0) + 1;
     const payload: AfriGomboWheel = {
       ...wheel,
+      version: newVersion,
       updatedAt: new Date().toISOString(),
+      updatedBy,
       createdBy: wheel.createdBy || updatedBy
     };
     await setDoc(docRef, payload, { merge: true });
@@ -320,7 +324,8 @@ export class WheelEngineService {
     const docRef = doc(db, WHEELS_COLLECTION, wheelId);
     await updateDoc(docRef, {
       enabled,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      updatedBy
     });
   }
 
@@ -333,7 +338,7 @@ export class WheelEngineService {
   }
 
   /**
-   * Validate wheel segment probabilities
+   * Validate wheel segment probabilities strictly (must sum to 100%, no negative, valid rewards)
    */
   static validateWheelProbabilities(segments: WheelSegment[]): { 
     isValid: boolean; 
@@ -341,7 +346,29 @@ export class WheelEngineService {
     enabledCount: number; 
     error?: string 
   } {
-    const activeSegments = (segments || []).filter((s) => s.enabled);
+    if (!segments || segments.length === 0) {
+      return {
+        isValid: false,
+        totalProbability: 0,
+        enabledCount: 0,
+        error: "Roue sans segments configurés."
+      };
+    }
+
+    // Check for negative probabilities
+    for (const s of segments) {
+      const prob = Number(s.probability);
+      if (isNaN(prob) || prob < 0) {
+        return {
+          isValid: false,
+          totalProbability: 0,
+          enabledCount: 0,
+          error: `Le segment "${s.label || 'Sans nom'}" possède une probabilité négative ou invalide (${s.probability}).`
+        };
+      }
+    }
+
+    const activeSegments = segments.filter((s) => s.enabled);
     if (activeSegments.length === 0) {
       return {
         isValid: false,
@@ -351,20 +378,107 @@ export class WheelEngineService {
       };
     }
 
+    // Check if any active segment lacks a label or valid reward type
+    for (const s of activeSegments) {
+      if (!s.label || !s.label.trim()) {
+        return {
+          isValid: false,
+          totalProbability: 0,
+          enabledCount: activeSegments.length,
+          error: "Un segment actif n'a pas de libellé/nom valide."
+        };
+      }
+      if (!s.type) {
+        return {
+          isValid: false,
+          totalProbability: 0,
+          enabledCount: activeSegments.length,
+          error: `Le segment "${s.label}" n'a aucun type de récompense sélectionné.`
+        };
+      }
+    }
+
     const totalProbability = activeSegments.reduce((sum, s) => sum + (Number(s.probability) || 0), 0);
-    if (totalProbability <= 0) {
+    const roundedTotal = Math.round(totalProbability * 100) / 100;
+
+    if (Math.abs(roundedTotal - 100) > 0.01) {
       return {
         isValid: false,
-        totalProbability,
+        totalProbability: roundedTotal,
         enabledCount: activeSegments.length,
-        error: "La somme des probabilités des segments doit être strictement supérieure à 0."
+        error: `La somme des probabilités est de ${roundedTotal} %. Elle doit être exactement égale à 100 %.`
       };
     }
 
     return {
       isValid: true,
-      totalProbability,
+      totalProbability: 100,
       enabledCount: activeSegments.length
+    };
+  }
+
+  /**
+   * Determine wheel configuration status badge (🟢 Valide, 🟠 Incomplète, 🔴 Invalide)
+   */
+  static getWheelConfigStatus(wheel: AfriGomboWheel): {
+    code: "VALID" | "INCOMPLETE" | "INVALID";
+    label: string;
+    colorClass: string;
+    bgClass: string;
+    borderClass: string;
+    message: string;
+  } {
+    if (!wheel) {
+      return {
+        code: "INVALID",
+        label: "Configuration invalide",
+        colorClass: "text-rose-400",
+        bgClass: "bg-rose-500/10",
+        borderClass: "border-rose-500/30",
+        message: "Roue inexistante"
+      };
+    }
+
+    if (wheel.cost < 0) {
+      return {
+        code: "INVALID",
+        label: "Configuration invalide",
+        colorClass: "text-rose-400",
+        bgClass: "bg-rose-500/10",
+        borderClass: "border-rose-500/30",
+        message: "Prix du tirage invalide (négatif)"
+      };
+    }
+
+    const probVal = this.validateWheelProbabilities(wheel.segments);
+    if (!probVal.isValid) {
+      if (probVal.enabledCount > 0 && probVal.totalProbability > 0 && probVal.totalProbability !== 100) {
+        return {
+          code: "INCOMPLETE",
+          label: "Configuration incomplète",
+          colorClass: "text-amber-400",
+          bgClass: "bg-amber-500/10",
+          borderClass: "border-amber-500/30",
+          message: probVal.error || `Somme = ${probVal.totalProbability}%`
+        };
+      }
+      return {
+        code: "INVALID",
+        label: "Configuration invalide",
+        colorClass: "text-rose-400",
+        bgClass: "bg-rose-500/10",
+        borderClass: "border-rose-500/30",
+        message: probVal.error || "Problème de segments"
+      };
+    }
+
+    return {
+      code: "VALID",
+      label: "Configuration valide",
+      colorClass: "text-emerald-400",
+      bgClass: "bg-emerald-500/10",
+      borderClass: "border-emerald-500/30",
+      message: "Roue conforme à 100%"
     };
   }
 
@@ -408,14 +522,33 @@ export class WheelEngineService {
       return { success: false, error: "Identifiant utilisateur requis pour jouer." };
     }
 
+    // 0. CHECK GLOBAL DEPLOYMENT CENTER FEATURE FLAG (wheel)
+    const isRealFounder = isFounder || SecurityService.isFounder(userId);
+    try {
+      const sysConfigRef = doc(db, "systemConfig", "features");
+      const sysConfigSnap = await getDoc(sysConfigRef);
+      if (sysConfigSnap.exists()) {
+        const sysFlags = sysConfigSnap.data();
+        const wheelFlag = sysFlags["wheel"];
+        if (wheelFlag && wheelFlag.enabled === false && !isRealFounder) {
+          return {
+            success: false,
+            error: "🎡 Roue temporairement indisponible"
+          };
+        }
+      }
+    } catch (err) {
+      console.warn("Could not verify global feature flag in spinWheel:", err);
+    }
+
     // 1. Fetch Wheel
     const wheel = await this.getWheelById(wheelId);
     if (!wheel) {
       return { success: false, error: "Roue introuvable." };
     }
 
-    // 2. Check Activation
-    if (!wheel.enabled && !isFounder) {
+    // 2. Check Local Activation
+    if (!wheel.enabled && !isRealFounder) {
       return { success: false, error: "Cette roue est actuellement désactivée." };
     }
 

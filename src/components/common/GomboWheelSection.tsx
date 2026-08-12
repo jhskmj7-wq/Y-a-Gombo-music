@@ -6,6 +6,7 @@ import {
 import { AfriGomboWheel, WheelSegment, WheelSpinRecord, UserExtraSpinRecord } from "../../types";
 import { WheelEngineService } from "../../lib/WheelEngineService";
 import { SecurityService } from "../../lib/SecurityService";
+import { subscribeToFeatureFlags } from "../../lib/featureFlags";
 
 interface GomboWheelSectionProps {
   currentUserProfile?: any;
@@ -23,6 +24,10 @@ export default function GomboWheelSection({
   const [selectedWheelId, setSelectedWheelId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // Global Feature Flag state
+  const [flagsLoading, setFlagsLoading] = useState<boolean>(true);
+  const [isWheelGlobalEnabled, setIsWheelGlobalEnabled] = useState<boolean>(true);
 
   // User Spin History & Extra Spins
   const [userSpins, setUserSpins] = useState<WheelSpinRecord[]>([]);
@@ -45,6 +50,18 @@ export default function GomboWheelSection({
   const userEmail = currentUserProfile?.email || "";
   const userAccountType = currentUserProfile?.isPremium ? "premium" : "standard";
   const isFounder = SecurityService.isFounder(currentUserProfile) || userEmail.toLowerCase() === "jhs.kmj7@gmail.com";
+
+  // 0. Subscribe to Global Feature Flags
+  useEffect(() => {
+    setFlagsLoading(true);
+    const unsubFlags = subscribeToFeatureFlags((flags) => {
+      const enabled = flags["wheel"] !== undefined ? flags["wheel"] : true;
+      setIsWheelGlobalEnabled(enabled);
+      setFlagsLoading(false);
+    });
+
+    return () => unsubFlags();
+  }, []);
 
   // 1. Subscribe to Wheels Collection
   useEffect(() => {
@@ -194,15 +211,32 @@ export default function GomboWheelSection({
         </div>
 
         {/* STATE 1: LOADING */}
-        {loading && (
+        {(loading || flagsLoading) && (
           <div className="p-8 bg-zinc-950 border border-zinc-800 rounded-3xl text-center space-y-3 shadow-xl">
             <RefreshCw className="w-8 h-8 text-[#D4AF37] animate-spin mx-auto" />
             <p className="text-xs font-mono font-bold text-zinc-400">Chargement de la roue...</p>
           </div>
         )}
 
+        {/* STATE 1.5: GLOBAL WHEEL FEATURE FLAG DISABLED (NOT FOUNDER) */}
+        {!loading && !flagsLoading && !isWheelGlobalEnabled && !isFounder && (
+          <div className="p-8 bg-zinc-950 border border-rose-500/30 rounded-3xl text-center space-y-4 shadow-2xl font-mono">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto">
+              <Disc className="w-6 h-6 animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-sm font-black text-rose-400 uppercase tracking-wider">
+                🎡 ROUE TEMPORAIREMENT INDISPONIBLE
+              </h3>
+              <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
+                La Roue AFRIGOMBO est actuellement désactivée dans le Centre de Déploiement. Aucun tirage n'est disponible pour le moment.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* STATE 2: NO WHEELS CONFIGURED (BIENTÔT DISPONIBLE) */}
-        {!loading && wheels.length === 0 && (
+        {!loading && !flagsLoading && (isWheelGlobalEnabled || isFounder) && wheels.length === 0 && (
           <div className="p-8 bg-zinc-950 border border-zinc-800 rounded-3xl text-center space-y-3 shadow-xl">
             <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] flex items-center justify-center mx-auto text-xl">
               🎡
@@ -214,8 +248,8 @@ export default function GomboWheelSection({
           </div>
         )}
 
-        {/* STATE 3: WHEEL DISABLED (INDISPONIBLE) */}
-        {!loading && currentWheel && !currentWheel.enabled && (
+        {/* STATE 3: WHEEL DISABLED LOCALLY (INDISPONIBLE) */}
+        {!loading && !flagsLoading && (isWheelGlobalEnabled || isFounder) && currentWheel && !currentWheel.enabled && !isFounder && (
           <div className="p-8 bg-zinc-950 border border-zinc-800 rounded-3xl text-center space-y-3 shadow-xl">
             <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto text-xl">
               🛑
@@ -227,7 +261,7 @@ export default function GomboWheelSection({
             <div className="pt-2">
               <button
                 onClick={() => setShowRulesModal(true)}
-                className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-xs font-mono hover:text-white transition"
+                className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-xs font-mono hover:text-white transition cursor-pointer"
               >
                 Voir les règles
               </button>
@@ -235,10 +269,21 @@ export default function GomboWheelSection({
           </div>
         )}
 
-        {/* STATE 4: WHEEL ACTIVE & AVAILABLE */}
-        {!loading && currentWheel && currentWheel.enabled && (
+        {/* STATE 4: WHEEL ACTIVE & AVAILABLE (OR FOUNDER BYPASS) */}
+        {!loading && !flagsLoading && (isWheelGlobalEnabled || isFounder) && currentWheel && (currentWheel.enabled || isFounder) && (
           <div className="bg-zinc-950 border border-[#D4AF37]/40 rounded-3xl p-4 sm:p-6 space-y-6 shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+
+            {/* FOUNDER BYPASS BANNER WHEN GLOBAL OR LOCAL WHEEL IS DISABLED */}
+            {(!isWheelGlobalEnabled || !currentWheel.enabled) && isFounder && (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-400 text-xs font-mono flex items-center justify-between">
+                <span className="flex items-center gap-2 font-bold">
+                  <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+                  🔴 ROUE DÉSACTIVÉE EN PRODUCTION (MODE FONDATEUR / TEST SEULEMENT)
+                </span>
+                <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded font-mono font-bold uppercase">Bypass Fondateur</span>
+              </div>
+            )}
 
             {/* Wheels Selection Tabs if multiple active wheels exist */}
             {wheels.length > 1 && (

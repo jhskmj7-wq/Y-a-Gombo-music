@@ -10,6 +10,7 @@ import { gomboDB, db } from "../../firebase";
 import {
   collection, doc, onSnapshot, setDoc, updateDoc, addDoc, query, orderBy, limit, serverTimestamp
 } from "firebase/firestore";
+import { SecurityService } from "../../lib/SecurityService";
 
 export interface AdminDeploymentCenterProps {
   currentUser?: any;
@@ -35,6 +36,8 @@ export interface FeatureFlagItem {
   enabled: boolean;
   status: "validated" | "experimental" | "pending" | "disabled";
   description?: string;
+  updatedAt?: string;
+  updatedBy?: string;
 }
 
 export default function AdminDeploymentCenter({
@@ -89,8 +92,10 @@ export default function AdminDeploymentCenter({
   const [deployNotes, setDeployNotes] = useState("");
   const [isSubmittingDeploy, setIsSubmittingDeploy] = useState(false);
 
-  // Filter for Feature Flags
+  // Filter & Saving states for Feature Flags
   const [activeFlagFilter, setActiveFlagFilter] = useState<"all" | "validated" | "experimental" | "pending" | "disabled">("all");
+  const [savingFlagId, setSavingFlagId] = useState<string | null>(null);
+  const [flagError, setFlagError] = useState<string | null>(null);
 
   // 1. DEFAULT FEATURE FLAGS INITIALIZER
   const defaultFlags: FeatureFlagItem[] = [
@@ -106,6 +111,9 @@ export default function AdminDeploymentCenter({
     { id: "events", name: "🎟️ Événements & Billetterie", category: "Communauté", enabled: true, status: "experimental", description: "Création et réservation d'événements" },
     { id: "mes_groupes", name: "👥 Groupes & Communautés", category: "Communauté", enabled: true, status: "validated", description: "Groupes de discussion et réseaux de talents" },
     { id: "favorites", name: "⭐ Favoris & Enregistrements", category: "Application", enabled: true, status: "validated", description: "Gestion des annonces et profils enregistrés" },
+
+    // REVENUS & MONÉTISATION
+    { id: "wheel", name: "🎡 Roue AFRIGOMBO", category: "Monétisation", enabled: true, status: "validated", description: "Permet aux utilisateurs éligibles d'accéder à la Roue AFRIGOMBO et à ses récompenses." },
 
     // FINANCES
     { id: "wallet", name: "💳 Wallet Souverain AFRIPAY", category: "Finance", enabled: true, status: "validated", description: "Solde rechargeable et virements sécurisés" },
@@ -165,19 +173,26 @@ export default function AdminDeploymentCenter({
     const sysConfigRef = doc(db, "systemConfig", "features");
 
     let lastSettingsFlags: FeatureFlagItem[] = [];
-    let lastSysFlags: Record<string, { enabled: boolean; updatedAt?: any }> = {};
+    let lastSysFlags: Record<string, { enabled: boolean; updatedAt?: any; updatedBy?: string }> = {};
 
     const updateCombinedFlags = (
       settingsFlags: FeatureFlagItem[],
-      sysFlags: Record<string, { enabled: boolean; updatedAt?: any }>
+      sysFlags: Record<string, { enabled: boolean; updatedAt?: any; updatedBy?: string }>
     ) => {
       const combined = defaultFlags.map(f => {
         const sysValue = sysFlags[f.id];
         if (sysValue !== undefined) {
+          let formattedDate: string | undefined = undefined;
+          if (sysValue.updatedAt) {
+            if (typeof sysValue.updatedAt === "string") formattedDate = sysValue.updatedAt;
+            else if (sysValue.updatedAt?.toDate) formattedDate = sysValue.updatedAt.toDate().toISOString();
+          }
           return {
             ...f,
             enabled: sysValue.enabled,
-            status: sysValue.enabled ? "validated" : ("disabled" as any)
+            status: sysValue.enabled ? (f.status === "disabled" ? "validated" : f.status) : ("disabled" as any),
+            updatedAt: formattedDate,
+            updatedBy: sysValue.updatedBy
           };
         }
         const settingsMatch = settingsFlags.find(sf => sf.id === f.id);
@@ -265,25 +280,16 @@ export default function AdminDeploymentCenter({
 
   // TOGGLE FEATURE FLAG IN FIRESTORE
   const handleToggleFlag = async (flagId: string) => {
+    if (savingFlagId) return; // double-click protection
+
     const currentFlag = featureFlags.find((f) => f.id === flagId);
     if (!currentFlag) return;
 
-    const newEnabled = !currentFlag.enabled;
+    setSavingFlagId(flagId);
+    setFlagError(null);
 
-    // Optimistically update React state
-    const updatedFlags = featureFlags.map((f) => {
-      if (f.id === flagId) {
-        return {
-          ...f,
-          enabled: newEnabled,
-          status: newEnabled
-            ? (f.status === "disabled" ? "experimental" : f.status)
-            : ("disabled" as any)
-        };
-      }
-      return f;
-    });
-    setFeatureFlags(updatedFlags);
+    const newEnabled = !currentFlag.enabled;
+    const nowIso = new Date().toISOString();
 
     try {
       const sysConfigRef = doc(db, "systemConfig", "features");
@@ -295,16 +301,45 @@ export default function AdminDeploymentCenter({
         }
       }, { merge: true });
 
+      const updatedFlags = featureFlags.map((f) => {
+        if (f.id === flagId) {
+          return {
+            ...f,
+            enabled: newEnabled,
+            updatedAt: nowIso,
+            updatedBy: founderEmail || "Fondateur",
+            status: newEnabled
+              ? (f.status === "disabled" ? "validated" : f.status)
+              : ("disabled" as any)
+          };
+        }
+        return f;
+      });
+
       const flagsRef = doc(db, "settings", "feature_flags");
       await setDoc(flagsRef, {
         flags: updatedFlags,
-        updatedAt: new Date().toISOString(),
+        updatedAt: nowIso,
         updatedBy: founderEmail || "Fondateur"
       }, { merge: true });
 
+      // Audit Log (Requirement 12)
+      await SecurityService.logSecurityEvent({
+        userId: founderEmail,
+        userEmail: founderEmail,
+        action: "feature_flag_toggle",
+        severity: "medium",
+        details: `Feature Flag '${flagId}' changed to ${newEnabled ? 'ENABLED' : 'DISABLED'} by ${founderEmail}`,
+        result: "allowed"
+      });
+
+      setFeatureFlags(updatedFlags);
       try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
     } catch (err) {
       console.error("Erreur feature flag update:", err);
+      setFlagError("Impossible de modifier l'état de la fonctionnalité.");
+    } finally {
+      setSavingFlagId(null);
     }
   };
 
@@ -747,15 +782,21 @@ export default function AdminDeploymentCenter({
           </div>
         </div>
 
+        {flagError && (
+          <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs font-mono flex items-center justify-between animate-fadeIn">
+            <span>⚠️ {flagError}</span>
+            <button onClick={() => setFlagError(null)} className="text-rose-400 hover:text-white font-bold cursor-pointer">✕</button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredFlags.map((flag) => (
             <div
               key={flag.id}
-              onClick={() => handleToggleFlag(flag.id)}
-              className={`p-4 rounded-2xl border transition cursor-pointer flex flex-col justify-between space-y-3 ${
+              className={`p-4 rounded-2xl border transition flex flex-col justify-between space-y-3 ${
                 flag.enabled
-                  ? "bg-afri-bg-sec border-[#D4AF37]/40 hover:border-[#D4AF37]"
-                  : "bg-afri-bg/50 border-afri-border hover:border-afri-border opacity-70"
+                  ? "bg-afri-bg-sec border-[#D4AF37]/40"
+                  : "bg-afri-bg/50 border-afri-border opacity-70"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -764,10 +805,36 @@ export default function AdminDeploymentCenter({
                   <h4 className="text-xs font-bold text-white leading-tight">{flag.name}</h4>
                 </div>
 
-                {/* Toggle switch visual */}
-                <div className={`w-9 h-5 rounded-full p-0.5 transition-colors shrink-0 ${flag.enabled ? "bg-[#D4AF37]" : "bg-zinc-700"}`}>
-                  <div className={`w-4 h-4 bg-afri-bg rounded-full transition-transform ${flag.enabled ? "translate-x-4" : "translate-x-0"}`} />
-                </div>
+                {/* Status Toggle Button with explicit status */}
+                <button
+                  type="button"
+                  disabled={savingFlagId === flag.id}
+                  onClick={() => handleToggleFlag(flag.id)}
+                  className={`px-3 py-1.5 rounded-xl font-mono text-[10px] font-bold uppercase transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-md ${
+                    savingFlagId === flag.id
+                      ? "bg-zinc-800 text-zinc-400 border border-zinc-700 cursor-not-allowed"
+                      : flag.enabled
+                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500/30"
+                      : "bg-rose-500/20 text-rose-400 border border-rose-500/50 hover:bg-rose-500/30"
+                  }`}
+                >
+                  {savingFlagId === flag.id ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin text-amber-400" />
+                      <span>Sauvegarde...</span>
+                    </>
+                  ) : flag.enabled ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>🟢 ACTIVÉ</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-rose-400" />
+                      <span>🔴 DÉSACTIVÉ</span>
+                    </>
+                  )}
+                </button>
               </div>
 
               <p className="text-[11px] text-afri-text-sec font-mono line-clamp-2 leading-tight">
@@ -783,7 +850,11 @@ export default function AdminDeploymentCenter({
                   {flag.status}
                 </span>
 
-                <span className="text-afri-text-muted">{flag.enabled ? "Actif" : "Inactif"}</span>
+                <span className="text-afri-text-muted truncate max-w-[160px]">
+                  {flag.updatedAt
+                    ? `Modifié le ${new Date(flag.updatedAt).toLocaleDateString("fr-FR")} ${flag.updatedBy ? `par ${flag.updatedBy.split("@")[0]}` : ""}`
+                    : (flag.enabled ? "Actif" : "Inactif")}
+                </span>
               </div>
             </div>
           ))}

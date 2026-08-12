@@ -1100,6 +1100,7 @@ export interface WheelSegment {
   type: WheelRewardType;
   rewardValue: number | string;
   rewardDuration?: number; // duration in days or hours
+  durationUnit?: "hours" | "days" | "weeks";
   probability: number; // weight e.g. 20 (for 20%)
   enabled: boolean;
   color?: string;
@@ -1109,17 +1110,21 @@ export interface AfriGomboWheel {
   id: string;
   name: string;
   description: string;
-  type: WheelType;
+  type: WheelType | string;
   enabled: boolean;
   cost: number;
   currency: string;
   segments: WheelSegment[];
   maxDailyParticipations: number;
   maxParticipationsPerUser: number;
+  delayInHours?: number; // cooldown between 2 participations e.g. 6 hours
+  maxIdenticalRewardsPerUser?: number;
   allowedAccountTypes?: ("standard" | "premium" | "vip" | "all")[];
   createdAt: string;
   updatedAt: string;
   createdBy: string;
+  updatedBy?: string;
+  version?: number;
   rulesText?: string;
 }
 

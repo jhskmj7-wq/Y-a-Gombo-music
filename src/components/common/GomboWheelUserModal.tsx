@@ -5,12 +5,15 @@ import {
 } from "lucide-react";
 import { AfriGomboWheel, WheelSegment, WheelSpinRecord } from "../../types";
 import { WheelEngineService } from "../../lib/WheelEngineService";
+import { subscribeToFeatureFlags } from "../../lib/featureFlags";
 
 interface GomboWheelUserModalProps {
   currentUser?: any;
   userEmail?: string;
   userAccountType?: "standard" | "premium" | string;
   isFounder?: boolean;
+  isTestMode?: boolean;
+  isUserViewOnly?: boolean;
   audioSynth?: any;
   isOpen: boolean;
   onClose: () => void;
@@ -22,6 +25,8 @@ export default function GomboWheelUserModal({
   userEmail = "",
   userAccountType = "standard",
   isFounder = false,
+  isTestMode = false,
+  isUserViewOnly = false,
   audioSynth,
   isOpen,
   onClose,
@@ -39,12 +44,22 @@ export default function GomboWheelUserModal({
     winningSegment?: WheelSegment;
     spinRecord?: WheelSpinRecord;
     balanceAfter?: number;
+    isSimulation?: boolean;
   } | null>(null);
   const [spinError, setSpinError] = useState<string | null>(null);
   const [showRules, setShowRules] = useState(false);
+  const [flagsLoading, setFlagsLoading] = useState(true);
+  const [isWheelGlobalEnabled, setIsWheelGlobalEnabled] = useState(true);
 
   useEffect(() => {
     if (!isOpen) return;
+
+    setFlagsLoading(true);
+    const unsubFlags = subscribeToFeatureFlags((flags) => {
+      const enabled = flags["wheel"] !== undefined ? flags["wheel"] : true;
+      setIsWheelGlobalEnabled(enabled);
+      setFlagsLoading(false);
+    });
 
     const unsub = WheelEngineService.subscribeWheels((data) => {
       setWheels(data);
@@ -56,7 +71,10 @@ export default function GomboWheelUserModal({
       setLoading(false);
     });
 
-    return () => unsub();
+    return () => {
+      unsubFlags();
+      unsub();
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -64,7 +82,14 @@ export default function GomboWheelUserModal({
   const currentWheel = selectedWheel || wheels[0];
 
   const handleStartSpin = async () => {
-    if (!currentWheel || !currentUser?.uid) {
+    if (!currentWheel) return;
+
+    if (!isWheelGlobalEnabled && !isFounder && !isTestMode) {
+      setSpinError("🎡 La Roue est actuellement désactivée dans le Centre de Déploiement.");
+      return;
+    }
+
+    if (!currentUser?.uid && !isTestMode && !isFounder) {
       setSpinError("Veuillez vous connecter pour tenter votre chance.");
       return;
     }
@@ -82,11 +107,22 @@ export default function GomboWheelUserModal({
     const totalRotation = spinDegree + extraRotations + randomOffset;
     setSpinDegree(totalRotation);
 
-    // Call WheelEngineService.spinWheel
+    // Call WheelEngineService or handle Test Simulation
     setTimeout(async () => {
+      if (isTestMode) {
+        const winningSeg = WheelEngineService.pickWinningSegment(currentWheel.segments);
+        setIsSpinning(false);
+        setSpinResult({
+          winningSegment: winningSeg,
+          isSimulation: true
+        });
+        try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
+        return;
+      }
+
       const res = await WheelEngineService.spinWheel({
-        userId: currentUser.uid,
-        userName: currentUser.displayName || currentUser.email || userEmail || "Membre",
+        userId: currentUser?.uid || "founder_test",
+        userName: currentUser?.displayName || currentUser?.email || userEmail || "Membre",
         userAccountType,
         wheelId: currentWheel.id,
         isFounder
@@ -117,6 +153,20 @@ export default function GomboWheelUserModal({
         
         {/* Glow Header Background */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-32 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Mode Banners */}
+        {isTestMode && (
+          <div className="bg-emerald-500/20 border-b border-emerald-500/40 p-2 text-center text-emerald-300 font-mono text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <span>🧪 MODE TEST — SIMULATION SANS DÉBIT NI RÉCOMPENSE RÉELLE</span>
+          </div>
+        )}
+        {isUserViewOnly && (
+          <div className="bg-amber-500/20 border-b border-amber-500/40 p-2 text-center text-amber-300 font-mono text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5">
+            <Info className="w-3.5 h-3.5 text-amber-400" />
+            <span>👁️ MODE APERÇU UTILISATEUR — INTERFACE LECTURE SEULE</span>
+          </div>
+        )}
 
         {/* Modal Top Bar */}
         <div className="p-4 border-b border-zinc-800 flex items-center justify-between z-10 bg-zinc-950/80">
@@ -312,19 +362,36 @@ export default function GomboWheelUserModal({
 
         {/* Action Button Footer */}
         <div className="p-4 border-t border-zinc-800 bg-zinc-950/90 space-y-2">
-          {!showConfirmModal ? (
+          {isUserViewOnly ? (
+            <div className="p-3 bg-zinc-900 border border-amber-500/30 rounded-2xl text-center space-y-1">
+              <span className="text-xs font-black text-amber-400 uppercase font-mono block">
+                Mode Aperçu Utilisateur (Lecture Seule)
+              </span>
+              <p className="text-[10px] text-zinc-400 font-mono">
+                L'action de lancement est désactivée dans ce mode d'inspection commerciale.
+              </p>
+            </div>
+          ) : !showConfirmModal ? (
             <button
               type="button"
-              onClick={() => setShowConfirmModal(true)}
+              onClick={() => {
+                if (isTestMode) {
+                  handleStartSpin();
+                } else {
+                  setShowConfirmModal(true);
+                }
+              }}
               disabled={isSpinning || !currentWheel?.enabled}
               className={`w-full py-3.5 rounded-2xl font-black uppercase text-xs transition cursor-pointer flex items-center justify-center gap-2 shadow-xl ${
                 isSpinning
                   ? "bg-zinc-800 text-zinc-500 border border-zinc-700"
+                  : isTestMode
+                  ? "bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20 border border-emerald-400"
                   : "bg-[#D4AF37] hover:bg-amber-400 text-black shadow-[#D4AF37]/20 border border-[#D4AF37]"
               }`}
             >
               <Disc className={`w-4 h-4 ${isSpinning ? "animate-spin" : ""}`} />
-              <span>{isSpinning ? "Tirage en cours..." : "Tenter ma chance !"}</span>
+              <span>{isSpinning ? "Tirage en cours..." : isTestMode ? "🧪 Lancer le Tirage de Test (Gratuit)" : "Tenter ma chance !"}</span>
             </button>
           ) : (
             <div className="p-3 bg-zinc-900 border border-[#D4AF37]/50 rounded-2xl space-y-3 animate-fadeIn">

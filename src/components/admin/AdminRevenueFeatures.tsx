@@ -3,7 +3,8 @@ import {
   Crown, ShieldCheck, AlertOctagon, ArrowLeft, Disc, 
   Award, Zap, DollarSign, Settings, Check, X, Sparkles, 
   SlidersHorizontal, Radio, Layers, Info, RefreshCw, ChevronRight, Eye, EyeOff,
-  Plus, Edit3, Trash2, History, TrendingUp, Users, PlayCircle
+  Plus, Edit3, Trash2, History, TrendingUp, Users, PlayCircle, BarChart2,
+  Clock, Shield, AlertTriangle
 } from "lucide-react";
 import { SecurityService } from "../../lib/SecurityService";
 import { RevenueFeaturesService } from "../../lib/RevenueFeaturesService";
@@ -30,11 +31,20 @@ export default function AdminRevenueFeatures({
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "wheel" | "premium_rewards" | "boosts" | "other_revenue">("all");
   
-  // Wheel Admin Modals
+  // Wheel Admin Modals & State
   const [editingWheel, setEditingWheel] = useState<AfriGomboWheel | null>(null);
   const [isTestWheelOpen, setIsTestWheelOpen] = useState(false);
+  const [isUserViewOpen, setIsUserViewOpen] = useState(false);
   const [spinHistorySearch, setSpinHistorySearch] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Simulation State
+  const [showSimulationModal, setShowSimulationModal] = useState(false);
+  const [simulationTargetWheel, setSimulationTargetWheel] = useState<AfriGomboWheel | null>(null);
+  const [simulationStats, setSimulationStats] = useState<{
+    totalSpins: number;
+    counts: Record<string, number>;
+  } | null>(null);
 
   // STRICT ZERO-TRUST FOUNDER AUTHORIZATION CHECK
   const isFounder = SecurityService.isFounder(currentUser) || 
@@ -124,23 +134,108 @@ export default function AdminRevenueFeatures({
     }
   };
 
+  const handleDeleteWheel = async (wheel: AfriGomboWheel) => {
+    if (!window.confirm(`Confirmer la suppression définitive de la roue "${wheel.name}" ?`)) return;
+    try {
+      await WheelEngineService.deleteWheel(wheel.id);
+      try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
+      setNotice(`Roue "${wheel.name}" supprimée de Firestore.`);
+      setTimeout(() => setNotice(null), 3000);
+    } catch (err) {
+      console.error("Error deleting wheel:", err);
+    }
+  };
+
+  const handleCreateNewWheel = () => {
+    const timestamp = Date.now();
+    const newWheel: AfriGomboWheel = {
+      id: `wheel_${timestamp}`,
+      name: `🎡 Roue Commerciale Sur-Mesure #${wheels.length + 1}`,
+      description: "Roue commerciale AFRIGOMBO personnalisée avec segments et probabilités pondérées.",
+      type: "CUSTOM",
+      enabled: true,
+      cost: 500,
+      currency: "FCFA",
+      maxDailyParticipations: 5,
+      maxParticipationsPerUser: 100,
+      delayInHours: 24,
+      maxIdenticalRewardsPerUser: 5,
+      allowedAccountTypes: ["standard", "premium", "all"],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdBy: userEmail || "jhs.kmj7@gmail.com",
+      version: 1,
+      rulesText: "Tirage au sort commercial régi de manière transparente par probabilités pondérées.",
+      segments: [
+        {
+          id: `seg_${timestamp}_1`,
+          label: "🏆 7 Jours Premium",
+          type: "PREMIUM_DAYS",
+          rewardValue: 7,
+          rewardDuration: 7,
+          durationUnit: "days",
+          probability: 25,
+          enabled: true,
+          color: "#D4AF37"
+        },
+        {
+          id: `seg_${timestamp}_2`,
+          label: "⚡ Boost Visibilité 24h",
+          type: "VISIBILITY_BOOST",
+          rewardValue: "Boost Visibilité",
+          rewardDuration: 24,
+          durationUnit: "hours",
+          probability: 35,
+          enabled: true,
+          color: "#10B981"
+        },
+        {
+          id: `seg_${timestamp}_3`,
+          label: "🎟️ 1 Spin Gratuit",
+          type: "EXTRA_SPIN",
+          rewardValue: 1,
+          probability: 20,
+          enabled: true,
+          color: "#8B5CF6"
+        },
+        {
+          id: `seg_${timestamp}_4`,
+          label: "🎯 Recommencer",
+          type: "NO_REWARD",
+          rewardValue: 0,
+          probability: 20,
+          enabled: true,
+          color: "#4B5563"
+        }
+      ]
+    };
+
+    setEditingWheel(newWheel);
+  };
+
   const handleSaveWheelConfig = async () => {
     if (!editingWheel) return;
 
     const probVal = WheelEngineService.validateWheelProbabilities(editingWheel.segments);
     if (!probVal.isValid) {
-      setNotice(`⚠️ Impossible de sauvegarder : ${probVal.error}`);
+      setNotice(`⚠️ Impossible d'enregistrer la configuration : ${probVal.error}`);
+      return;
+    }
+
+    if (editingWheel.cost < 0) {
+      setNotice("⚠️ Impossible d'enregistrer : Le prix du tirage ne peut pas être négatif.");
       return;
     }
 
     try {
       await WheelEngineService.saveWheel(editingWheel, userEmail || "jhs.kmj7@gmail.com");
       try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
-      setNotice(`Configuration de la roue "${editingWheel.name}" sauvegardée avec succès !`);
+      setNotice(`✅ Configuration de la roue "${editingWheel.name}" (Version ${editingWheel.version ? editingWheel.version + 1 : 1}) enregistrée avec succès !`);
       setEditingWheel(null);
-      setTimeout(() => setNotice(null), 3000);
+      setTimeout(() => setNotice(null), 4000);
     } catch (err) {
       console.error("Error saving wheel config:", err);
+      setNotice("❌ Erreur lors de l'enregistrement de la configuration.");
     }
   };
 
@@ -148,10 +243,11 @@ export default function AdminRevenueFeatures({
     if (!editingWheel) return;
     const newSeg: WheelSegment = {
       id: `seg_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
-      label: "Nouveau Segment",
+      label: "Nouveau Segment Gain",
       type: "PREMIUM_DAYS",
       rewardValue: 1,
       rewardDuration: 1,
+      durationUnit: "days",
       probability: 10,
       enabled: true,
       color: "#D4AF37"
@@ -181,6 +277,25 @@ export default function AdminRevenueFeatures({
         return s;
       })
     });
+  };
+
+  const handleRunSimulation100Spins = (targetWheel: AfriGomboWheel) => {
+    const activeSegs = targetWheel.segments.filter((s) => s.enabled);
+    if (activeSegs.length === 0) return;
+
+    const counts: Record<string, number> = {};
+    activeSegs.forEach((s) => { counts[s.id] = 0; });
+
+    for (let i = 0; i < 100; i++) {
+      const winner = WheelEngineService.pickWinningSegment(activeSegs);
+      if (winner) {
+        counts[winner.id] = (counts[winner.id] || 0) + 1;
+      }
+    }
+
+    setSimulationTargetWheel(targetWheel);
+    setSimulationStats({ totalSpins: 100, counts });
+    setShowSimulationModal(true);
   };
 
   const premiumRewards = features.filter((f) => f.type === "premium_rewards");
@@ -215,11 +330,11 @@ export default function AdminRevenueFeatures({
                 Revenus & Avantages
               </h1>
               <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-black uppercase bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40">
-                Super Fondateur
+                Super Fondateur Souverain
               </span>
             </div>
             <p className="text-xs text-zinc-400 font-mono mt-0.5">
-              Moteur commercial souverain : Roues AFRIGOMBO, Récompenses Premium & Boosts
+              Panneau commercial complet : Configuration des roues, prix FCFA, probabilités strictes & tirages
             </p>
           </div>
         </div>
@@ -236,9 +351,14 @@ export default function AdminRevenueFeatures({
       </div>
 
       {notice && (
-        <div className="p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/40 text-[#D4AF37] rounded-xl text-xs font-mono font-bold animate-fadeIn flex items-center justify-between">
-          <span>📍 {notice}</span>
-          <button onClick={() => setNotice(null)} className="text-zinc-400 hover:text-white"><X className="w-4 h-4" /></button>
+        <div className="p-3.5 bg-zinc-950 border-2 border-[#D4AF37] text-[#D4AF37] rounded-2xl text-xs font-mono font-bold animate-fadeIn flex items-center justify-between shadow-2xl">
+          <span className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+            <span>{notice}</span>
+          </span>
+          <button onClick={() => setNotice(null)} className="text-zinc-400 hover:text-white p-1">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -275,53 +395,71 @@ export default function AdminRevenueFeatures({
         })}
       </div>
 
-      {/* SECTION A: GESTION DES ROUES (MOTEUR DE ROUE) */}
+      {/* SECTION A: GESTION & CONFIGURATION COMMERCIALE DES ROUES */}
       {(activeTab === "all" || activeTab === "wheel") && (
         <section className="space-y-4">
           
-          {/* Section Header */}
+          {/* Section Header & Quick Control Toolbar */}
           <div className="bg-zinc-950 border border-[#D4AF37]/40 rounded-2xl p-4 sm:p-5 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3 flex-wrap gap-2">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3 flex-wrap gap-3">
               <div className="flex items-center gap-2.5">
                 <div className="p-2.5 bg-[#D4AF37]/20 border border-[#D4AF37]/40 rounded-xl text-[#D4AF37]">
                   <Disc className="w-5 h-5 animate-spin-slow" />
                 </div>
                 <div>
                   <h2 className="text-sm font-black uppercase text-[#D4AF37] tracking-wider font-mono">
-                    SECTION A — 🎡 MOTEUR DE LA ROUE AFRIGOMBO
+                    SECTION A — 🎡 PANNEAU COMMERCIAL DES ROUES AFRIGOMBO
                   </h2>
                   <p className="text-[11px] text-zinc-400 font-mono">
-                    Configuration des roues (CLASSIQUE, PREMIUM, ÉLITE), segments, probabilités & tirages
+                    Gestion souveraine des prix FCFA, probabilités (strictement 100%), durées, tirages de test & limites
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleCreateNewWheel}
+                  className="px-3.5 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black border border-[#D4AF37] rounded-xl text-xs font-mono font-black uppercase transition cursor-pointer flex items-center gap-1.5 shadow-lg shadow-[#D4AF37]/20"
+                >
+                  <Plus className="w-4 h-4 text-black" />
+                  <span>Créer une Roue</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setIsTestWheelOpen(true)}
                   className="px-3.5 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 rounded-xl text-xs font-mono font-bold uppercase transition cursor-pointer flex items-center gap-1.5"
                 >
                   <PlayCircle className="w-4 h-4 text-emerald-400" />
-                  <span>Tester le Tirage (Aperçu Joueur)</span>
+                  <span>🧪 Mode Test (Tirage Gratuit)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsUserViewOpen(true)}
+                  className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 rounded-xl text-xs font-mono font-bold uppercase transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Eye className="w-4 h-4 text-[#D4AF37]" />
+                  <span>👁️ Aperçu Utilisateur</span>
                 </button>
               </div>
             </div>
 
-            {/* Real Stats Metrics Grid */}
+            {/* Financial Overview & Real Stats Metrics Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 font-mono">
               <div className="p-3 bg-zinc-900/90 border border-zinc-800 rounded-xl space-y-1">
-                <span className="text-[9px] text-zinc-400 uppercase font-bold block">Tirages Totaux</span>
-                <span className="text-sm font-black text-white">{realStats.totalParticipations}</span>
+                <span className="text-[9px] text-zinc-400 uppercase font-bold block">Participations Totales</span>
+                <span className="text-sm font-black text-white">{realStats.totalParticipations} tirages</span>
               </div>
 
               <div className="p-3 bg-zinc-900/90 border border-zinc-800 rounded-xl space-y-1">
-                <span className="text-[9px] text-zinc-400 uppercase font-bold block">Aujourd'hui</span>
+                <span className="text-[9px] text-zinc-400 uppercase font-bold block">Tirages Aujourd'hui</span>
                 <span className="text-sm font-black text-emerald-400">{realStats.todayParticipations}</span>
               </div>
 
               <div className="p-3 bg-zinc-900/90 border border-zinc-800 rounded-xl space-y-1">
-                <span className="text-[9px] text-zinc-400 uppercase font-bold block">Revenus Générés</span>
+                <span className="text-[9px] text-zinc-400 uppercase font-bold block">Revenus Bruts Réels</span>
                 <span className="text-sm font-black text-[#D4AF37]">{realStats.totalRevenueFCFA} FCFA</span>
               </div>
 
@@ -336,78 +474,114 @@ export default function AdminRevenueFeatures({
               </div>
 
               <div className="p-3 bg-zinc-900/90 border border-zinc-800 rounded-xl space-y-1">
-                <span className="text-[9px] text-zinc-400 uppercase font-bold block">Joueurs Uniques</span>
+                <span className="text-[9px] text-zinc-400 uppercase font-bold block">Membres Actifs</span>
                 <span className="text-xs font-bold text-zinc-300">
                   {realStats.totalUniqueUsers} ({realStats.standardUsersCount} Std / {realStats.premiumUsersCount} Prem)
                 </span>
               </div>
             </div>
 
-            {/* Active Wheels Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+            {/* Active Wheels Configuration Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-2">
               {wheels.map((wheel) => {
+                const statusInfo = WheelEngineService.getWheelConfigStatus(wheel);
                 const probVal = WheelEngineService.validateWheelProbabilities(wheel.segments);
+                
                 return (
                   <div
                     key={wheel.id}
-                    className="bg-zinc-900 border border-zinc-800 hover:border-[#D4AF37]/50 rounded-2xl p-4 space-y-3 flex flex-col justify-between transition shadow-lg"
+                    className="bg-zinc-900 border border-zinc-800 hover:border-[#D4AF37]/60 rounded-2xl p-4 space-y-3.5 flex flex-col justify-between transition shadow-xl relative overflow-hidden"
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
+                    <div className="space-y-2.5">
+                      {/* Wheel Status Badges */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
                         <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold uppercase bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30">
-                          {wheel.type}
+                          {wheel.type} • v{wheel.version || 1}
                         </span>
-                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase font-mono ${
-                          wheel.enabled ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-rose-500/10 text-rose-400 border border-rose-500/30"
-                        }`}>
-                          {wheel.enabled ? "ACTIVÉE" : "DESACTIVÉE"}
+
+                        <span className={`px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase font-mono border ${statusInfo.bgClass} ${statusInfo.colorClass} ${statusInfo.borderClass}`}>
+                          {statusInfo.code === "VALID" ? "🟢 VALIDE" : statusInfo.code === "INCOMPLETE" ? "🟠 INCOMPLÈTE" : "🔴 INVALIDE"}
                         </span>
                       </div>
 
-                      <h3 className="text-xs font-black text-white font-mono">{wheel.name}</h3>
+                      <h3 className="text-xs font-black text-white font-mono flex items-center justify-between">
+                        <span>{wheel.name}</span>
+                        {!wheel.enabled && <span className="text-[9px] text-rose-400 uppercase font-mono">(Désactivée)</span>}
+                      </h3>
+                      
                       <p className="text-[11px] text-zinc-400 font-mono leading-relaxed line-clamp-2">{wheel.description}</p>
 
-                      <div className="p-2.5 bg-zinc-950 border border-zinc-800/80 rounded-xl space-y-1 text-[10px] font-mono">
-                        <div className="flex justify-between">
-                          <span className="text-zinc-400">Coût :</span>
-                          <span className="font-bold text-[#D4AF37]">{wheel.cost} FCFA</span>
+                      {/* Commercial Configuration Summary Card */}
+                      <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl space-y-1.5 text-[10px] font-mono">
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Prix du tirage :</span>
+                          <span className="font-bold text-[#D4AF37]">{wheel.cost} {wheel.currency || "FCFA"}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-zinc-400">Max / Jour :</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Max / Jour / Membre :</span>
                           <span className="font-bold text-white">{wheel.maxDailyParticipations} tirage(s)</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Délai recharge :</span>
+                          <span className="font-bold text-zinc-300">{wheel.delayInHours || 24}h</span>
+                        </div>
+                        <div className="flex justify-between items-center">
                           <span className="text-zinc-400">Segments :</span>
                           <span className="font-bold text-white">{wheel.segments?.length || 0} segments</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center pt-1 border-t border-zinc-900">
                           <span className="text-zinc-400">Probabilités :</span>
                           <span className={`font-bold ${probVal.isValid ? "text-emerald-400" : "text-rose-400"}`}>
-                            {probVal.isValid ? `Valides (${probVal.totalProbability}%)` : "Invalides"}
+                            {probVal.isValid ? `Exactement 100% ✅` : `${probVal.totalProbability}% (Invalide)`}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-zinc-800 flex items-center justify-between gap-2">
-                      <button
-                        onClick={() => handleToggleWheelEnable(wheel)}
-                        className={`px-3 py-1.5 rounded-xl text-[10px] font-mono font-black uppercase transition cursor-pointer ${
-                          wheel.enabled
-                            ? "bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20"
-                            : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20"
-                        }`}
-                      >
-                        {wheel.enabled ? "Désactiver" : "Activer"}
-                      </button>
+                    {/* Wheel Card Bottom Actions */}
+                    <div className="pt-2 border-t border-zinc-800 space-y-2">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleWheelEnable(wheel)}
+                          className={`flex-1 py-1.5 rounded-xl text-[10px] font-mono font-black uppercase transition cursor-pointer ${
+                            wheel.enabled
+                              ? "bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20"
+                              : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20"
+                          }`}
+                        >
+                          {wheel.enabled ? "Désactiver" : "Activer"}
+                        </button>
 
-                      <button
-                        onClick={() => setEditingWheel(wheel)}
-                        className="px-3 py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-[10px] rounded-xl transition cursor-pointer flex items-center gap-1 shadow-md shadow-[#D4AF37]/20"
-                      >
-                        <SlidersHorizontal className="w-3.5 h-3.5" />
-                        <span>Configurer</span>
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingWheel(wheel)}
+                          className="flex-1 py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-[10px] rounded-xl transition cursor-pointer flex items-center justify-center gap-1 shadow-md shadow-[#D4AF37]/20"
+                        >
+                          <SlidersHorizontal className="w-3.5 h-3.5" />
+                          <span>Configurer</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleRunSimulation100Spins(wheel)}
+                          className="flex-1 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-[9px] font-mono font-bold uppercase transition flex items-center justify-center gap-1"
+                        >
+                          <BarChart2 className="w-3 h-3 text-amber-400" />
+                          <span>Simuler 100 Tirages</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteWheel(wheel)}
+                          className="p-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg transition"
+                          title="Supprimer la roue"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -465,7 +639,7 @@ export default function AdminRevenueFeatures({
                             </span>
                           </td>
                           <td className="p-3 font-bold text-[#D4AF37]">
-                            {sp.isExtraSpinUsed ? "Gratuit" : `${sp.cost} ${sp.currency}`}
+                            {sp.isExtraSpinUsed ? "Gratuit" : `${sp.cost} ${sp.currency || "FCFA"}`}
                           </td>
                           <td className="p-3 font-bold text-emerald-400">
                             {sp.rewardLabel}
@@ -500,7 +674,7 @@ export default function AdminRevenueFeatures({
                 SECTION B — 👑 RÉCOMPENSES PREMIUM ({premiumRewards.length})
               </h2>
             </div>
-            <span className="text-[10px] text-zinc-400 font-mono">Privilèges & Codes d'Abonnement</span>
+            <span className="text-[10px] text-zinc-400 font-mono">Privilèges, Jours Offerts & Codes d'Abonnement</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -554,7 +728,7 @@ export default function AdminRevenueFeatures({
                 SECTION C — ⚡ BOOSTS & AMPLIFICATEURS ({boosts.length})
               </h2>
             </div>
-            <span className="text-[10px] text-zinc-400 font-mono">Amplification Radar & Profils</span>
+            <span className="text-[10px] text-zinc-400 font-mono">Visibilité Radar, Profils & Sponsoring</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -606,7 +780,7 @@ export default function AdminRevenueFeatures({
                 SECTION D — 💰 AUTRES SOURCES DE REVENUS ({otherRevenues.length})
               </h2>
             </div>
-            <span className="text-[10px] text-zinc-400 font-mono">Packs, Tickets & Services Commercialisés</span>
+            <span className="text-[10px] text-zinc-400 font-mono">Packs de Extra Spins, Tickets & Services Commercialisés</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -651,15 +825,24 @@ export default function AdminRevenueFeatures({
       {/* EDIT WHEEL CONFIGURATION MODAL */}
       {editingWheel && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-fadeIn">
-          <div className="bg-zinc-950 border border-[#D4AF37]/50 rounded-3xl p-4 sm:p-6 w-full max-w-3xl space-y-4 shadow-2xl relative max-h-[92vh] flex flex-col font-sans">
+          <div className="bg-zinc-950 border border-[#D4AF37]/50 rounded-3xl p-4 sm:p-6 w-full max-w-4xl space-y-4 shadow-2xl relative max-h-[92vh] flex flex-col font-sans">
             
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div className="flex items-center gap-2">
                 <Disc className="w-5 h-5 text-[#D4AF37] animate-spin-slow" />
-                <h3 className="text-sm font-black font-mono uppercase text-[#D4AF37]">
-                  Éditeur de Roue : {editingWheel.name}
-                </h3>
+                <div>
+                  <h3 className="text-sm font-black font-mono uppercase text-[#D4AF37] flex items-center gap-2">
+                    <span>Éditeur Commercial de Roue : {editingWheel.name}</span>
+                    <span className="px-2 py-0.2 rounded text-[9px] bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40">
+                      v{editingWheel.version || 1}
+                    </span>
+                  </h3>
+                  <p className="text-[10px] text-zinc-400 font-mono">
+                    Prix, Segments, Probabilités strictes (100%), Durées & Limites de participation
+                  </p>
+                </div>
               </div>
+
               <button
                 onClick={() => setEditingWheel(null)}
                 className="p-2 text-zinc-400 hover:text-white rounded-xl bg-zinc-900 border border-zinc-800"
@@ -668,84 +851,205 @@ export default function AdminRevenueFeatures({
               </button>
             </div>
 
-            <div className="overflow-y-auto space-y-4 font-mono text-xs pr-1 flex-1 scrollbar-none">
+            <div className="overflow-y-auto space-y-5 font-mono text-xs pr-1 flex-1 scrollbar-none">
               
-              {/* General Config Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-zinc-900/80 border border-zinc-800 rounded-2xl">
-                <div className="space-y-1">
-                  <label className="text-[10px] text-zinc-400 uppercase font-bold block">Nom de la Roue</label>
-                  <input
-                    type="text"
-                    value={editingWheel.name}
-                    onChange={(e) => setEditingWheel({ ...editingWheel, name: e.target.value })}
-                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-[#D4AF37]"
-                  />
+              {/* General Wheel Configuration Section */}
+              <div className="p-4 bg-zinc-900/80 border border-zinc-800 rounded-2xl space-y-3">
+                <h4 className="text-xs font-black uppercase text-[#D4AF37] flex items-center gap-1.5">
+                  <Settings className="w-4 h-4" />
+                  <span>1. Paramètres Commerciaux Généraux</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-zinc-400 uppercase font-bold block">Nom de la Roue</label>
+                    <input
+                      type="text"
+                      value={editingWheel.name}
+                      onChange={(e) => setEditingWheel({ ...editingWheel, name: e.target.value })}
+                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-zinc-400 uppercase font-bold block">Type de Roue</label>
+                    <input
+                      type="text"
+                      value={editingWheel.type}
+                      onChange={(e) => setEditingWheel({ ...editingWheel, type: e.target.value.toUpperCase() })}
+                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-[#D4AF37]"
+                      placeholder="CLASSIQUE / PREMIUM / ELITE"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-zinc-400 uppercase font-bold block">Devise</label>
+                    <input
+                      type="text"
+                      value={editingWheel.currency || "FCFA"}
+                      onChange={(e) => setEditingWheel({ ...editingWheel, currency: e.target.value })}
+                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] text-zinc-400 uppercase font-bold block">Prix du Tirage (FCFA)</label>
-                  <input
-                    type="number"
-                    value={editingWheel.cost}
-                    onChange={(e) => setEditingWheel({ ...editingWheel, cost: Number(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-[#D4AF37]"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-zinc-400 uppercase font-bold block">Prix du Tirage ({editingWheel.currency || "FCFA"})</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={editingWheel.cost}
+                        onChange={(e) => setEditingWheel({ ...editingWheel, cost: Number(e.target.value) || 0 })}
+                        className="flex-1 px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                      <div className="flex items-center gap-1">
+                        {[300, 500, 1000].map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => setEditingWheel({ ...editingWheel, cost: p })}
+                            className="px-2 py-1.5 bg-zinc-800 hover:bg-[#D4AF37] hover:text-black text-zinc-300 rounded-lg text-[10px] font-bold transition"
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-zinc-400 uppercase font-bold block">Description Commerciale</label>
+                    <input
+                      type="text"
+                      value={editingWheel.description}
+                      onChange={(e) => setEditingWheel({ ...editingWheel, description: e.target.value })}
+                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] text-zinc-400 uppercase font-bold block">Max Participations / Jour</label>
-                  <input
-                    type="number"
-                    value={editingWheel.maxDailyParticipations}
-                    onChange={(e) => setEditingWheel({ ...editingWheel, maxDailyParticipations: Number(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-[#D4AF37]"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 border-t border-zinc-800">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-zinc-400 uppercase font-bold block">Max Tirages / Jour / Membre</label>
+                    <input
+                      type="number"
+                      value={editingWheel.maxDailyParticipations}
+                      onChange={(e) => setEditingWheel({ ...editingWheel, maxDailyParticipations: Number(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-zinc-400 uppercase font-bold block">Délai Recharge (Heures)</label>
+                    <input
+                      type="number"
+                      value={editingWheel.delayInHours || 24}
+                      onChange={(e) => setEditingWheel({ ...editingWheel, delayInHours: Number(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-zinc-400 uppercase font-bold block">Max Récompenses Identiques / Membre</label>
+                    <input
+                      type="number"
+                      value={editingWheel.maxIdenticalRewardsPerUser || 5}
+                      onChange={(e) => setEditingWheel({ ...editingWheel, maxIdenticalRewardsPerUser: Number(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Segments & Probabilities Config */}
+              {/* Segments & Real-Time Probability Validation Banner */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
-                    <h4 className="text-xs font-black uppercase text-[#D4AF37]">
-                      Segments & Probabilités ({editingWheel.segments.length})
+                    <h4 className="text-xs font-black uppercase text-[#D4AF37] flex items-center gap-1.5">
+                      <Disc className="w-4 h-4" />
+                      <span>2. Segments, Récompenses & Probabilités ({editingWheel.segments.length})</span>
                     </h4>
                     {(() => {
                       const val = WheelEngineService.validateWheelProbabilities(editingWheel.segments);
                       return (
-                        <span className={`text-[10px] font-bold block ${val.isValid ? "text-emerald-400" : "text-rose-400"}`}>
-                          Somme des probabilités actives : {val.totalProbability}% {val.isValid ? "✅ (Conforme)" : "❌ (Invalide)"}
-                        </span>
+                        <div className={`text-[11px] font-bold mt-1 p-2 rounded-xl border flex items-center gap-2 ${
+                          val.isValid 
+                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
+                            : "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                        }`}>
+                          <span>{val.isValid ? "🟢" : "🔴"}</span>
+                          <span>Total des probabilités actives : <strong>{val.totalProbability}%</strong></span>
+                          <span>{val.isValid ? "✅ (Conforme à 100%)" : `❌ (${val.error})`}</span>
+                        </div>
                       );
                     })()}
                   </div>
 
                   <button
+                    type="button"
                     onClick={handleAddSegmentToEditingWheel}
-                    className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 rounded-xl text-[10px] font-bold uppercase transition flex items-center gap-1 cursor-pointer"
+                    className="px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 rounded-xl text-xs font-bold uppercase transition flex items-center gap-1 cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-4 h-4" />
                     <span>Ajouter un Segment</span>
                   </button>
                 </div>
 
-                <div className="space-y-2">
+                {/* Real-Time Visual Wheel Arc Preview */}
+                <div className="p-4 bg-zinc-900/60 border border-zinc-800 rounded-2xl flex flex-col md:flex-row items-center justify-center gap-6">
+                  <div className="relative w-40 h-40 rounded-full border-4 border-[#D4AF37] shadow-2xl overflow-hidden flex items-center justify-center shrink-0">
+                    {editingWheel.segments.map((seg, idx) => {
+                      const totalSegs = editingWheel.segments.length;
+                      const angle = (360 / totalSegs) * idx;
+                      return (
+                        <div
+                          key={seg.id || idx}
+                          className="absolute w-full h-full top-0 left-0 flex items-center justify-center pointer-events-none"
+                          style={{ transform: `rotate(${angle}deg)` }}
+                        >
+                          <div
+                            className="absolute top-1 text-[8px] font-black uppercase text-black px-1 py-0.5 rounded text-center truncate max-w-[55px]"
+                            style={{ backgroundColor: seg.enabled ? (seg.color || "#D4AF37") : "#3F3F46" }}
+                          >
+                            {seg.label}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div className="w-10 h-10 rounded-full bg-black border border-[#D4AF37] z-10 flex items-center justify-center text-[8px] font-black text-[#D4AF37]">
+                      AFRI
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-zinc-400 space-y-1 flex-1">
+                    <span className="text-xs font-bold text-[#D4AF37] block uppercase">Aperçu en Temps Réel :</span>
+                    <p>
+                      La modification dynamique des libellés, couleurs, durées ou probabilités met instantanément à jour le rendu visuel et la validation stricte.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Segments Configuration Table / Cards */}
+                <div className="space-y-2.5">
                   {editingWheel.segments.map((seg) => (
                     <div
                       key={seg.id}
-                      className="p-3 bg-zinc-900 border border-zinc-800 rounded-2xl grid grid-cols-1 sm:grid-cols-6 gap-2 items-center"
+                      className={`p-3 bg-zinc-900 border rounded-2xl grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center transition ${
+                        seg.enabled ? "border-zinc-800" : "border-zinc-800/40 opacity-60 bg-zinc-950"
+                      }`}
                     >
-                      <div className="sm:col-span-2 space-y-0.5">
+                      <div className="sm:col-span-3 space-y-0.5">
                         <label className="text-[9px] text-zinc-500 uppercase font-bold block">Libellé Gain</label>
                         <input
                           type="text"
                           value={seg.label}
                           onChange={(e) => handleSegmentChange(seg.id, "label", e.target.value)}
-                          className="w-full px-2 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px]"
+                          className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px]"
                         />
                       </div>
 
-                      <div className="space-y-0.5">
+                      <div className="sm:col-span-2 space-y-0.5">
                         <label className="text-[9px] text-zinc-500 uppercase font-bold block">Type Gain</label>
                         <select
                           value={seg.type}
@@ -753,48 +1057,74 @@ export default function AdminRevenueFeatures({
                           className="w-full px-2 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[10px]"
                         >
                           <option value="PREMIUM_DAYS">PREMIUM_DAYS</option>
+                          <option value="PREMIUM_CODE">PREMIUM_CODE</option>
+                          <option value="PREMIUM_BOOST">PREMIUM_BOOST</option>
                           <option value="VISIBILITY_BOOST">VISIBILITY_BOOST</option>
                           <option value="GOMBO_BOOST">GOMBO_BOOST</option>
                           <option value="PROFILE_BOOST">PROFILE_BOOST</option>
                           <option value="PUBLICATION_BOOST">PUBLICATION_BOOST</option>
                           <option value="EXTRA_SPIN">EXTRA_SPIN</option>
-                          <option value="PREMIUM_CODE">PREMIUM_CODE</option>
+                          <option value="SMALL_BONUS">SMALL_BONUS</option>
                           <option value="NO_REWARD">NO_REWARD</option>
                         </select>
                       </div>
 
-                      <div className="space-y-0.5">
+                      <div className="sm:col-span-2 space-y-0.5">
                         <label className="text-[9px] text-zinc-500 uppercase font-bold block">Probabilité (%)</label>
                         <input
                           type="number"
                           value={seg.probability}
                           onChange={(e) => handleSegmentChange(seg.id, "probability", Number(e.target.value) || 0)}
-                          className="w-full px-2 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px]"
+                          className="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px] font-bold text-[#D4AF37]"
                         />
                       </div>
 
-                      <div className="space-y-0.5">
-                        <label className="text-[9px] text-zinc-500 uppercase font-bold block">Valeur / Durée (Jours)</label>
+                      <div className="sm:col-span-2 space-y-0.5">
+                        <label className="text-[9px] text-zinc-500 uppercase font-bold block">Durée + Unité</label>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            value={seg.rewardDuration || 1}
+                            onChange={(e) => handleSegmentChange(seg.id, "rewardDuration", Number(e.target.value) || 0)}
+                            className="w-14 px-2 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px]"
+                          />
+                          <select
+                            value={seg.durationUnit || "days"}
+                            onChange={(e) => handleSegmentChange(seg.id, "durationUnit", e.target.value)}
+                            className="flex-1 px-1 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[9px]"
+                          >
+                            <option value="hours">h (heures)</option>
+                            <option value="days">j (jours)</option>
+                            <option value="weeks">s (semaines)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="sm:col-span-1 space-y-0.5">
+                        <label className="text-[9px] text-zinc-500 uppercase font-bold block">Couleur</label>
                         <input
-                          type="number"
-                          value={seg.rewardDuration || 1}
-                          onChange={(e) => handleSegmentChange(seg.id, "rewardDuration", Number(e.target.value) || 0)}
-                          className="w-full px-2 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-[11px]"
+                          type="color"
+                          value={seg.color || "#D4AF37"}
+                          onChange={(e) => handleSegmentChange(seg.id, "color", e.target.value)}
+                          className="w-full h-8 bg-zinc-950 border border-zinc-800 rounded-lg cursor-pointer"
                         />
                       </div>
 
-                      <div className="flex items-center justify-end gap-2 pt-2 sm:pt-0">
+                      <div className="sm:col-span-2 flex items-center justify-end gap-1.5 pt-2 sm:pt-0">
                         <button
+                          type="button"
                           onClick={() => handleSegmentChange(seg.id, "enabled", !seg.enabled)}
-                          className={`px-2 py-1 rounded-lg text-[9px] font-bold uppercase ${
-                            seg.enabled ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
+                          className={`px-2.5 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition ${
+                            seg.enabled ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
                           }`}
                         >
                           {seg.enabled ? "Actif" : "Inactif"}
                         </button>
+
                         <button
+                          type="button"
                           onClick={() => handleRemoveSegmentFromEditingWheel(seg.id)}
-                          className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg transition"
+                          className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg transition border border-rose-500/20"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -806,35 +1136,124 @@ export default function AdminRevenueFeatures({
 
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
-              <button
-                type="button"
-                onClick={() => setEditingWheel(null)}
-                className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold uppercase text-xs rounded-xl"
-              >
-                Annuler
+            {/* Modal Bottom Action Controls */}
+            <div className="flex items-center justify-between gap-3 pt-3 border-t border-zinc-800">
+              <span className="text-[10px] text-zinc-400 font-mono">
+                Version actuelle : <strong className="text-white">v{editingWheel.version || 1}</strong>
+              </span>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingWheel(null)}
+                  className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold uppercase text-xs rounded-xl"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveWheelConfig}
+                  className="px-5 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-xs rounded-xl shadow-lg shadow-[#D4AF37]/20 flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Enregistrer la Configuration</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 100 SPINS EMPIRICAL SIMULATION MODAL */}
+      {showSimulationModal && simulationTargetWheel && simulationStats && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-fadeIn">
+          <div className="bg-zinc-950 border border-[#D4AF37]/50 rounded-3xl p-5 w-full max-w-xl space-y-4 shadow-2xl font-sans">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-2">
+                <BarChart2 className="w-5 h-5 text-amber-400" />
+                <h3 className="text-sm font-black font-mono uppercase text-[#D4AF37]">
+                  Simulation Empirique (100 Tirages) : {simulationTargetWheel.name}
+                </h3>
+              </div>
+              <button onClick={() => setShowSimulationModal(false)} className="text-zinc-400 hover:text-white">
+                <X className="w-4 h-4" />
               </button>
+            </div>
+
+            <div className="space-y-3 font-mono text-xs">
+              <p className="text-[11px] text-zinc-400">
+                Résultats observés sur 100 tirages virtuels aléatoires selon les probabilités configurées :
+              </p>
+
+              <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/60">
+                <table className="w-full text-left text-[11px]">
+                  <thead>
+                    <tr className="border-b border-zinc-800 bg-zinc-900 text-zinc-400 uppercase">
+                      <th className="p-2.5">Segment</th>
+                      <th className="p-2.5">Probabilité</th>
+                      <th className="p-2.5">Observé (100 Spins)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800 text-zinc-200">
+                    {simulationTargetWheel.segments.filter((s) => s.enabled).map((seg) => {
+                      const count = simulationStats.counts[seg.id] || 0;
+                      return (
+                        <tr key={seg.id}>
+                          <td className="p-2.5 font-bold text-white">{seg.label}</td>
+                          <td className="p-2.5 text-[#D4AF37] font-bold">{seg.probability}%</td>
+                          <td className="p-2.5 font-black text-emerald-400">{count} fois ({count}%)</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center pt-2">
               <button
                 type="button"
-                onClick={handleSaveWheelConfig}
-                className="px-5 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-xs rounded-xl shadow-lg shadow-[#D4AF37]/20"
+                onClick={() => handleRunSimulation100Spins(simulationTargetWheel)}
+                className="px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 rounded-xl text-xs font-mono font-bold uppercase transition cursor-pointer flex items-center gap-1.5"
               >
-                Sauvegarder la Roue
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Relancer 100 Tirages</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowSimulationModal(false)}
+                className="px-4 py-2 bg-zinc-900 text-zinc-300 rounded-xl text-xs font-bold uppercase"
+              >
+                Fermer
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* USER WHEEL PREVIEW / TEST MODAL */}
+      {/* USER WHEEL PREVIEW MODAL — TEST MODE */}
       <GomboWheelUserModal
         currentUser={currentUser}
         userEmail={userEmail}
         userAccountType="premium"
         isFounder={true}
+        isTestMode={true}
         audioSynth={audioSynth}
         isOpen={isTestWheelOpen}
         onClose={() => setIsTestWheelOpen(false)}
+      />
+
+      {/* USER WHEEL PREVIEW MODAL — USER VIEW ONLY */}
+      <GomboWheelUserModal
+        currentUser={currentUser}
+        userEmail={userEmail}
+        userAccountType="standard"
+        isFounder={true}
+        isUserViewOnly={true}
+        audioSynth={audioSynth}
+        isOpen={isUserViewOpen}
+        onClose={() => setIsUserViewOpen(false)}
       />
 
     </div>
