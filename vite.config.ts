@@ -14,7 +14,7 @@ const buildTimeStr = now.toISOString().slice(11, 16).replace(':', '');
 let gitCommitSha = process.env.VERCEL_GIT_COMMIT_SHA || process.env.GITHUB_SHA || "";
 if (!gitCommitSha) {
   try {
-    gitCommitSha = execSync("git rev-parse HEAD").toString().trim();
+    gitCommitSha = execSync("git rev-parse HEAD", { stdio: 'ignore' }).toString().trim();
   } catch (e) {
     gitCommitSha = "";
   }
@@ -72,7 +72,19 @@ function versionJsonPlugin() {
 
 export default defineConfig({
   base: '/',
-  build: { sourcemap: true },
+  build: { 
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'maplibre-gl': ['maplibre-gl'],
+        }
+      }
+    }
+  },
+  resolve: {
+    dedupe: ['react', 'react-dom']
+  },
   define: {
     '__AFRIGOMBO_BUILD_ID__': JSON.stringify(BUILD_ID),
     '__AFRIGOMBO_BUILD_TIME__': JSON.stringify(buildTimestamp),
@@ -159,6 +171,7 @@ export default defineConfig({
     port: 3000,
   },
   optimizeDeps: {
+    exclude: ['maplibre-gl'],
     include: [
       "firebase/app",
       "firebase/auth",

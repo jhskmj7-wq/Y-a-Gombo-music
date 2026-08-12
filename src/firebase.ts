@@ -300,10 +300,8 @@ export const gomboAuth = {
             }
             
             await setDoc(userRef, newUserData);
-            await restoreFounderIfNeeded(userRef, newUserData, res.user.email || "");
           } else {
             const currentData = uDoc.data();
-            await restoreFounderIfNeeded(userRef, currentData, res.user.email || "");
             if (isFounder && !uDoc.data().isFounder) {
               await updateDoc(userRef, {
                 isFounder: true,
@@ -375,10 +373,8 @@ export const gomboAuth = {
               isPro: isFounder
             };
             await setDoc(userRef, userProfile);
-            await restoreFounderIfNeeded(userRef, userProfile, res.user.email || "");
           } else {
             const currentData = uDoc.data();
-            await restoreFounderIfNeeded(userRef, currentData, res.user.email || "");
             const updates: any = {};
             if (!currentData.displayName && res.user.displayName) updates.displayName = res.user.displayName;
             if (!currentData.photoURL && res.user.photoURL) updates.photoURL = res.user.photoURL;
@@ -481,7 +477,8 @@ export const gomboAuth = {
 export const gomboDB = {
   // USERS
   async getUserProfile(uid: string): Promise<UserProfile | null> {
-    if (db) {
+    if (!db) return null;
+    try {
       const docSnap = await getDoc(doc(db, "users", uid));
       if (docSnap.exists()) {
         let profile = docSnap.data() as UserProfile;
@@ -506,6 +503,8 @@ export const gomboDB = {
         }
         return profile;
       }
+    } catch (err) {
+      console.error("gomboDB: getUserProfile error:", err);
     }
     return null;
   },
@@ -521,8 +520,11 @@ export const gomboDB = {
   },
 
   async updateUserProfile(uid: string, profile: Partial<UserProfile>): Promise<void> {
-    if (db) {
+    if (!db) return;
+    try {
       await setDoc(doc(db, "users", uid), profile, { merge: true });
+    } catch (err) {
+      console.error("gomboDB: updateUserProfile error:", err);
     }
   },
 

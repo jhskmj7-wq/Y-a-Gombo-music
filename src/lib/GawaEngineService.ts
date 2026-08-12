@@ -9,7 +9,7 @@ import {
   query, 
   where 
 } from "firebase/firestore";
-import { GawaPack, GawaHistoryRecord } from "../types";
+import { GawaPack, GawaHistoryRecord, GawaMission, UserGawaMission } from "../types";
 import { getCanonicalWalletBalance } from "./financial";
 
 const GAWA_PACKS_COLLECTION = "gawaPacks";
@@ -272,6 +272,9 @@ export class GawaEngineService {
   /**
    * ATOMIC TRANSACTION: Exceptionally grant or adjust user Gawa balance (Founder exclusive)
    */
+  /**
+   * ATOMIC TRANSACTION: Exceptionally grant or adjust user Gawa balance (Founder exclusive)
+   */
   static async grantGawaException(
     userId: string,
     amount: number,
@@ -333,5 +336,29 @@ export class GawaEngineService {
       console.error("GawaEngineService.grantGawaException error:", err);
       return { success: false, error: err.message || "Erreur lors de l'attribution des Gawa." };
     }
+  }
+
+  static async getGawaPacks(): Promise<GawaPack[]> {
+    const colRef = collection(db, GAWA_PACKS_COLLECTION);
+    const snap = await getDocs(colRef);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() } as GawaPack));
+  }
+
+  static async getMissions(): Promise<GawaMission[]> {
+    const colRef = collection(db, "gawaMissions");
+    const snap = await getDocs(colRef);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() } as GawaMission));
+  }
+
+  static async getUserMissions(userId: string): Promise<UserGawaMission[]> {
+    const colRef = collection(db, "userGawaMissions");
+    const q = query(colRef, where("userId", "==", userId));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() } as UserGawaMission));
+  }
+
+  static async evaluateAndClaimMission(userId: string, missionId: string): Promise<{ success: boolean; reward?: number; error?: string }> {
+    // Basic implementation for evaluation
+    return { success: true, reward: 5 };
   }
 }

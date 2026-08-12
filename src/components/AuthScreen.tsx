@@ -340,6 +340,12 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         )}
 
         {/* Dynamic Alerts Banner */}
+        <div className="mb-6 px-4 py-2 bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-xl">
+          <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest leading-relaxed">
+            Google et Apple déjà actifs,<br/>Facebook bientôt disponible
+          </p>
+        </div>
+
         <AnimatePresence mode="wait">
           {errorMSG && (
             <motion.div

@@ -827,6 +827,46 @@ export interface EscrowPayment {
   [key: string]: any;
 }
 
+export interface GawaPack {
+  id: string;
+  name: string;
+  priceFCFA: number;
+  gawaAmount: number;
+  enabled: boolean;
+  createdAt: string;
+}
+
+export interface GawaHistoryRecord {
+  id: string;
+  userId: string;
+  amount: number;
+  type: string;
+  description: string;
+  createdAt: string;
+  source: string;
+  transactionId?: string;
+}
+
+export interface GawaMission {
+  id: string;
+  title: string;
+  description: string;
+  rewardGawa: number;
+  type: "DAILY" | "ONCE" | "RECURRING";
+  actionType: string;
+  enabled: boolean;
+}
+
+export interface UserGawaMission {
+  id: string;
+  userId: string;
+  missionId: string;
+  status: "COMPLETED" | "CLAIMED";
+  completedAt: string;
+}
+
+export type GawaTransaction = GawaHistoryRecord;
+
 export interface SuspensionRecord {
   id?: string;
   userId: string;
@@ -1171,27 +1211,6 @@ export interface UserExtraSpinRecord {
   used: boolean;
   usedAt?: string;
   createdAt: string;
-}
-
-export interface GawaPack {
-  id: string;
-  name: string;
-  priceFCFA: number;
-  gawaAmount: number;
-  enabled: boolean;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export interface GawaHistoryRecord {
-  id: string;
-  userId: string;
-  amount: number;
-  type: "PURCHASE" | "MISSION" | "BONUS" | "SPEND" | "ADMIN_GRANT" | "ADMIN_ADJUSTMENT" | string;
-  description: string;
-  createdAt: string;
-  source: string;
-  transactionId: string;
 }
 
 export interface Mission {
