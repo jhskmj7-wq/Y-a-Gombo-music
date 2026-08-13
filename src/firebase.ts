@@ -38,6 +38,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { app, auth, db, storage } from "./lib/firebase";
+import { getCanonicalWalletBalance } from "./lib/financial";
 import { 
   UserProfile, 
   Gombo, 
@@ -504,43 +505,41 @@ export const gomboDB = {
       if (docSnap.exists()) {
         let profile = docSnap.data() as UserProfile;
         
-        // Audit existing balances
-        const canonicalBalance = profile.wallet?.soldeDisponible;
-        const legacyBalance = typeof profile.walletBalance === "number" 
-          ? profile.walletBalance 
-          : (typeof profile.balance === "number" ? profile.balance : 0);
-
-        console.log(`[WALLET-HYDRATION] uid=${uid} canonicalBalance=${canonicalBalance ?? 'undefined'} legacyBalance=${legacyBalance}`);
+        const bestBalance = getCanonicalWalletBalance(profile);
 
         let needsSync = false;
         
-        // If wallet object is missing or soldeDisponible is not set, initialize it SAFELY
-        if (!profile.wallet || typeof profile.wallet.soldeDisponible !== "number") {
-          console.warn(`[WALLET-SYNC] Initializing missing wallet for ${uid}. Using legacyBalance: ${legacyBalance}`);
+        if (!profile.wallet) {
           profile.wallet = {
-            ...(profile.wallet || {}),
-            soldeDisponible: legacyBalance,
-            soldeBloque: profile.wallet?.soldeBloque ?? 0,
-            revenusMois: profile.wallet?.revenusMois ?? 0,
-            economiesPremium: profile.wallet?.economiesPremium ?? 0,
-            niveauWallet: profile.wallet?.niveauWallet ?? "Standard",
-            revenus: profile.wallet?.revenus ?? 0,
-            depots: profile.wallet?.depots ?? 0,
-            retraits: profile.wallet?.retraits ?? 0,
-            gainsMensuels: profile.wallet?.gainsMensuels ?? 0
+            soldeDisponible: bestBalance,
+            soldeBloque: 0,
+            revenusMois: 0,
+            economiesPremium: 0,
+            niveauWallet: "Standard",
+            revenus: 0,
+            depots: 0,
+            retraits: 0,
+            gainsMensuels: 0
           };
-          // Also sync top-level legacy fields to match
-          profile.walletBalance = legacyBalance;
-          profile.balance = legacyBalance;
+          profile.walletBalance = bestBalance;
+          profile.balance = bestBalance;
+          needsSync = true;
+        } else if (
+          profile.wallet.soldeDisponible !== bestBalance ||
+          profile.walletBalance !== bestBalance ||
+          profile.balance !== bestBalance
+        ) {
+          profile.wallet.soldeDisponible = bestBalance;
+          profile.walletBalance = bestBalance;
+          profile.balance = bestBalance;
           needsSync = true;
         }
 
         if (needsSync) {
-          // Perform a safe merge write ONLY if we initialized something new
           await updateDoc(doc(db, "users", uid), {
             wallet: profile.wallet,
-            walletBalance: profile.walletBalance,
-            balance: profile.balance,
+            walletBalance: bestBalance,
+            balance: bestBalance,
             updatedAt: serverTimestamp()
           });
         }

@@ -149,6 +149,7 @@ export interface User {
     revenus?: number;
     gainsMensuels?: number;
     soldeGawa?: number;
+    devise?: string;
   };
   gawaBalance?: number;
   builderData?: {
@@ -1201,6 +1202,23 @@ export interface UserBoostRecord {
   status: "ACTIVE" | "EXPIRED" | "CONSUMED";
   durationDays?: number;
   createdAt: string;
+}
+
+export type LotStatus = "AVAILABLE" | "ACTIVATED" | "EXPIRED" | "USED";
+
+export interface UserLotRecord {
+  id: string;
+  spinId?: string;
+  userId: string;
+  rewardType: WheelRewardType;
+  rewardLabel: string;
+  rewardValue: number | string;
+  rewardDuration?: number;
+  status: LotStatus;
+  createdAt: string;
+  activatedAt?: string;
+  expiresAt?: string;
+  wheelName?: string;
 }
 
 export interface UserExtraSpinRecord {

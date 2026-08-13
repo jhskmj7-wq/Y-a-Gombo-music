@@ -74,15 +74,8 @@ export default function GawaCenter({
     fetchPacks();
 
     // 3. Subscribe to Gawa History
-    const qHistory = query(
-      collection(db, "gawaHistory"),
-      where("userId", "==", currentUser.uid),
-      orderBy("createdAt", "desc"),
-      limit(50)
-    );
-    const unsubHistory = onSnapshot(qHistory, (snap) => {
-      const records = snap.docs.map(d => ({ id: d.id, ...d.data() })) as GawaTransaction[];
-      setGawaHistory(records);
+    const unsubHistory = GawaEngineService.subscribeUserGawaHistory(currentUser.uid, (records) => {
+      setGawaHistory(records.slice(0, 50) as GawaTransaction[]);
     });
 
     // 4. Subscribe to Missions

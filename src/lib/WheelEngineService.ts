@@ -1,9 +1,9 @@
 import { db } from "../firebase";
 import { 
-  collection, doc, onSnapshot, setDoc, updateDoc, getDoc, getDocs, query, where, orderBy, deleteDoc 
+  collection, doc, onSnapshot, setDoc, updateDoc, getDoc, getDocs, query, where, orderBy, deleteDoc, runTransaction 
 } from "firebase/firestore";
 import { 
-  AfriGomboWheel, WheelSegment, WheelSpinRecord, UserBoostRecord, UserExtraSpinRecord, WheelType 
+  AfriGomboWheel, WheelSegment, WheelSpinRecord, UserBoostRecord, UserExtraSpinRecord, WheelType, UserLotRecord, LotStatus 
 } from "../types";
 import { PaymentEngine } from "./paymentEngine";
 import { SecurityService } from "./SecurityService";
@@ -12,6 +12,7 @@ const WHEELS_COLLECTION = "revenueFeatures_wheels";
 const SPINS_COLLECTION = "wheelSpins";
 const BOOSTS_COLLECTION = "userBoosts";
 const EXTRA_SPINS_COLLECTION = "userExtraSpins";
+const LOTS_COLLECTION = "userLots";
 
 export const DEFAULT_WHEELS: AfriGomboWheel[] = [
   {
@@ -20,15 +21,15 @@ export const DEFAULT_WHEELS: AfriGomboWheel[] = [
     description: "Roue de fidélité accessible à tous les membres. Permet de gagner du Premium, des Boosts et des Boîtes Surprise.",
     type: "CLASSIQUE",
     enabled: true,
-    cost: 200,
-    currency: "FCFA",
+    cost: 20,
+    currency: "GAWA",
     maxDailyParticipations: 3,
     maxParticipationsPerUser: 50,
     allowedAccountTypes: ["standard", "premium", "vip", "all"],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     createdBy: "jhs.kmj7@gmail.com",
-    rulesText: "Chaque tirage coûte 200 FCFA. Alternance de gains et de pertes. Les boîtes surprise révèlent des bonus exclusifs. Probabilités contrôlées côté serveur.",
+    rulesText: "Chaque tirage coûte 20 GAWA. Tentez votre chance pour remporter du Premium, des Boosts et des Boîtes Surprise.",
     segments: [
       { id: "c_1", label: "👑 Premium 1j", type: "PREMIUM_DAYS", rewardValue: 1, rewardDuration: 1, probability: 8, enabled: true, color: "#D4AF37", promoValueFCFA: 100, minAccountLevel: "all" },
       { id: "c_2", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#4B5563", promoValueFCFA: 0, minAccountLevel: "all" },
@@ -47,20 +48,20 @@ export const DEFAULT_WHEELS: AfriGomboWheel[] = [
     ]
   },
   {
-    id: "wheel_premium",
-    name: "👑 Roue Premium Prestige",
+    id: "wheel_elite",
+    name: "👑 Roue Élite Prestige",
     description: "Roue haut de gamme offrant des périodes Premium prolongées, des boosts supérieurs et des boîtes surprise de prestige.",
-    type: "PREMIUM",
+    type: "ELITE",
     enabled: true,
-    cost: 300,
-    currency: "FCFA",
+    cost: 50,
+    currency: "GAWA",
     maxDailyParticipations: 5,
     maxParticipationsPerUser: 100,
     allowedAccountTypes: ["standard", "premium", "vip", "all"],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     createdBy: "jhs.kmj7@gmail.com",
-    rulesText: "Chaque tirage coûte 300 FCFA. Récompenses plus élevées et boîtes surprise prestige.",
+    rulesText: "Chaque tirage coûte 50 GAWA. Récompenses plus élevées et boîtes surprise prestige.",
     segments: [
       { id: "p_1", label: "👑 Premium 7j", type: "PREMIUM_DAYS", rewardValue: 7, rewardDuration: 7, probability: 12, enabled: true, color: "#D4AF37", promoValueFCFA: 500, minAccountLevel: "all" },
       { id: "p_2", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#4B5563", promoValueFCFA: 0, minAccountLevel: "all" },
@@ -76,20 +77,20 @@ export const DEFAULT_WHEELS: AfriGomboWheel[] = [
     ]
   },
   {
-    id: "wheel_elite",
-    name: "💎 Roue Élite Souveraine",
+    id: "wheel_premium",
+    name: "💎 Roue Premium Souveraine",
     description: "Le sommet du privilège commercial AFRIGOMBO. Récompenses d'élite garanties et boîtes surprise souveraines.",
-    type: "ELITE",
+    type: "PREMIUM",
     enabled: true,
-    cost: 500,
-    currency: "FCFA",
+    cost: 100,
+    currency: "GAWA",
     maxDailyParticipations: 10,
     maxParticipationsPerUser: 200,
     allowedAccountTypes: ["standard", "premium", "vip", "all"],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     createdBy: "jhs.kmj7@gmail.com",
-    rulesText: "Tirage souverain à 500 FCFA. Récompenses majeures de haut niveau et boîtes surprise d'élite.",
+    rulesText: "Tirage souverain à 100 GAWA. Récompenses majeures de haut niveau et boîtes surprise d'élite.",
     segments: [
       { id: "e_1", label: "🏆 30j Premium", type: "PREMIUM_DAYS", rewardValue: 30, rewardDuration: 30, probability: 20, enabled: true, color: "#D4AF37", promoValueFCFA: 2000, minAccountLevel: "all" },
       { id: "e_2", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 10, enabled: true, color: "#4B5563", promoValueFCFA: 0, minAccountLevel: "all" },
@@ -120,8 +121,37 @@ export class WheelEngineService {
         }
         const wheels: AfriGomboWheel[] = [];
         snapshot.forEach((docSnap) => {
-          wheels.push(docSnap.data() as AfriGomboWheel);
+          const w = docSnap.data() as AfriGomboWheel;
+          let normalizedCost = w.cost;
+          let needsUpdate = false;
+
+          if (w.currency !== "GAWA" || w.cost >= 200) {
+            needsUpdate = true;
+            if (w.id === "wheel_classique" || w.cost === 200) normalizedCost = 20;
+            else if (w.id === "wheel_elite" || w.cost === 300) normalizedCost = 50;
+            else if (w.id === "wheel_premium" || w.cost === 500) normalizedCost = 100;
+            else normalizedCost = Math.max(1, Math.round(w.cost / 10));
+          }
+
+          const cleanWheel: AfriGomboWheel = {
+            ...w,
+            cost: normalizedCost,
+            currency: "GAWA"
+          };
+          wheels.push(cleanWheel);
+
+          if (needsUpdate) {
+            updateDoc(doc(db, WHEELS_COLLECTION, w.id), { 
+              cost: normalizedCost, 
+              currency: "GAWA",
+              updatedAt: new Date().toISOString()
+            }).catch(e => console.warn("Failed to normalize wheel currency in Firestore:", e));
+          }
         });
+
+        // Ensure Classique, Elite, Premium sort order
+        wheels.sort((a, b) => a.cost - b.cost);
+
         callback(wheels);
       },
       (err) => {
@@ -438,6 +468,10 @@ export class WheelEngineService {
     winningSegment?: WheelSegment;
     spinRecord?: WheelSpinRecord;
     balanceAfter?: number;
+    insufficientGawa?: boolean;
+    missingGawa?: number;
+    currentGawa?: number;
+    requiredGawa?: number;
     error?: string;
   }> {
     const { userId, userName = "Membre Gombo", userAccountType = "standard", wheelId, isFounder = false } = params;
@@ -541,27 +575,82 @@ export class WheelEngineService {
     const useExtraSpin = !!extraSpinTokenId;
     const finalCost = useExtraSpin ? 0 : wheel.cost;
 
-    // 6. Financial Debit if cost > 0
+    // 6. Financial Debit in GAWA (Atomic Transaction)
     let balanceAfter: number | undefined;
     if (finalCost > 0) {
-      const payRes = await PaymentEngine.processPayment({
-        userId,
-        userName,
-        amount: finalCost,
-        module: "wheel",
-        reason: `Participation à la ${wheel.name}`,
-        metadata: { wheelId: wheel.id, wheelType: wheel.type }
-      });
+      try {
+        const debitResult = await runTransaction(db, async (transaction) => {
+          const userRef = doc(db, "users", userId);
+          const userSnap = await transaction.get(userRef);
 
-      if (!payRes.success) {
-        return { 
-          success: false, 
-          error: payRes.insufficientBalance 
-            ? `Solde insuffisant dans votre Wallet (${payRes.currentBalance || 0} FCFA). La participation coûte ${finalCost} FCFA.`
-            : (payRes.error || "Échec du règlement par Wallet.")
+          if (!userSnap.exists()) {
+            throw new Error("Compte utilisateur introuvable.");
+          }
+
+          const uData = userSnap.data();
+          const currentGawa = typeof uData.gawaBalance === "number"
+            ? uData.gawaBalance
+            : (typeof uData.wallet?.soldeGawa === "number" ? uData.wallet.soldeGawa : 0);
+
+          if (currentGawa < finalCost) {
+            const missingGawa = finalCost - currentGawa;
+            return {
+              success: false,
+              insufficientGawa: true,
+              missingGawa,
+              currentGawa,
+              requiredGawa: finalCost,
+              error: `Gawa insuffisants. Il vous manque ${missingGawa} GAWA pour effectuer ce tirage.`
+            };
+          }
+
+          const newGawa = currentGawa - finalCost;
+
+          // 1. Update user document atomically
+          transaction.update(userRef, {
+            gawaBalance: newGawa,
+            "wallet.soldeGawa": newGawa,
+            updatedAt: new Date().toISOString()
+          });
+
+          // 2. Add transaction log to gawaHistory
+          const gawaTxId = `tx_gawa_spin_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+          const gawaTxRef = doc(db, "gawaHistory", gawaTxId);
+          transaction.set(gawaTxRef, {
+            id: gawaTxId,
+            userId,
+            uid: userId,
+            amount: -finalCost,
+            gawaAmount: -finalCost,
+            type: "wheel_spin",
+            description: `Tirage de la ${wheel.name} (-${finalCost} GAWA)`,
+            createdAt: new Date().toISOString(),
+            date: new Date().toLocaleDateString("fr-FR"),
+            heure: new Date().toLocaleTimeString("fr-FR"),
+            source: "AFRIGOMBO_WHEEL"
+          });
+
+          return { success: true, newGawa };
+        });
+
+        if (!debitResult.success) {
+          return {
+            success: false,
+            insufficientGawa: debitResult.insufficientGawa,
+            missingGawa: debitResult.missingGawa,
+            currentGawa: debitResult.currentGawa,
+            requiredGawa: debitResult.requiredGawa,
+            error: debitResult.error || "Solde Gawa insuffisant."
+          };
+        }
+
+        balanceAfter = debitResult.newGawa;
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err?.message || "Erreur lors du débit des GAWA."
         };
       }
-      balanceAfter = payRes.balanceAfter;
     }
 
     // 7. Consume Extra Spin Token if used
@@ -599,7 +688,7 @@ export class WheelEngineService {
       wheelId: wheel.id,
       wheelType: wheel.type,
       cost: finalCost,
-      currency: wheel.currency || "FCFA",
+      currency: "GAWA",
       rewardType: winningSegment.type,
       rewardLabel: winningSegment.label,
       rewardValue: winningSegment.rewardValue,
@@ -625,7 +714,7 @@ export class WheelEngineService {
   }
 
   /**
-   * Intelligently grant reward without overwriting existing periods or corrupting state
+   * Intelligently grant reward by creating a User Lot record in Firestore
    */
   private static async grantReward(params: {
     userId: string;
@@ -633,23 +722,173 @@ export class WheelEngineService {
     wheel: AfriGomboWheel;
     spinId: string;
   }): Promise<void> {
-    const { userId, segment, spinId } = params;
+    const { userId, segment, spinId, wheel } = params;
     const nowISO = new Date().toISOString();
 
-    if (segment.type === "PREMIUM_DAYS") {
-      // Intelligently stack Premium duration
-      const daysToAdd = Number(segment.rewardValue) || segment.rewardDuration || 7;
-      try {
+    if (!segment.type || segment.type === "NO_REWARD") return;
+
+    try {
+      const lotId = `lot_${spinId}`;
+      const lotRef = doc(db, LOTS_COLLECTION, lotId);
+      const lotRecord: UserLotRecord = {
+        id: lotId,
+        spinId,
+        userId,
+        rewardType: segment.type,
+        rewardLabel: segment.label,
+        rewardValue: segment.rewardValue,
+        rewardDuration: segment.rewardDuration || 1,
+        status: "AVAILABLE",
+        createdAt: nowISO,
+        wheelName: wheel?.name || "Roue AfriGombo"
+      };
+      await setDoc(lotRef, lotRecord);
+      console.log(`Saved won lot ${lotId} to userLots with status AVAILABLE for user ${userId}.`);
+    } catch (err) {
+      console.error("Error saving won lot to userLots collection:", err);
+    }
+  }
+
+  /**
+   * Subscribe to real-time user lots from Firestore (with automatic legacy spins sync)
+   */
+  static subscribeUserLots(userId: string, callback: (lots: UserLotRecord[]) => void): () => void {
+    if (!userId) {
+      callback([]);
+      return () => {};
+    }
+
+    const colRef = collection(db, LOTS_COLLECTION);
+    const q = query(colRef, where("userId", "==", userId));
+
+    return onSnapshot(
+      q,
+      async (snapshot) => {
+        const lots: UserLotRecord[] = [];
+        const existingSpinIds = new Set<string>();
+
+        snapshot.forEach((docSnap) => {
+          const lot = docSnap.data() as UserLotRecord;
+          // Dynamically verify expiration for activated lots
+          if (lot.status === "ACTIVATED" && lot.expiresAt) {
+            if (new Date(lot.expiresAt).getTime() < Date.now()) {
+              lot.status = "EXPIRED";
+              updateDoc(doc(db, LOTS_COLLECTION, lot.id), { status: "EXPIRED" }).catch(() => {});
+            }
+          }
+          lots.push(lot);
+          if (lot.spinId) existingSpinIds.add(lot.spinId);
+        });
+
+        // Also check if user has previous winning wheelSpins not yet in userLots
+        try {
+          const spinsQuery = query(
+            collection(db, SPINS_COLLECTION),
+            where("userId", "==", userId)
+          );
+          const spinSnaps = await getDocs(spinsQuery);
+
+          spinSnaps.forEach((spinDoc) => {
+            const spin = spinDoc.data() as WheelSpinRecord;
+            if (spin.rewardType && spin.rewardType !== "NO_REWARD" && !existingSpinIds.has(spin.spinId)) {
+              const lotId = `lot_${spin.spinId}`;
+              const newLot: UserLotRecord = {
+                id: lotId,
+                spinId: spin.spinId,
+                userId: spin.userId,
+                rewardType: spin.rewardType,
+                rewardLabel: spin.rewardLabel || "Récompense Roue",
+                rewardValue: spin.rewardValue,
+                rewardDuration: spin.rewardDuration || 1,
+                status: "AVAILABLE",
+                createdAt: spin.createdAt || new Date().toISOString(),
+                wheelName: spin.wheelType ? `Roue ${spin.wheelType}` : "Roue AfriGombo"
+              };
+              setDoc(doc(db, LOTS_COLLECTION, lotId), newLot).catch(() => {});
+              lots.push(newLot);
+            }
+          });
+        } catch (e) {
+          // Ignore legacy sync check error
+        }
+
+        // Sort descending by creation date
+        lots.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        callback(lots);
+      },
+      (err) => {
+        console.error("Error subscribing user lots:", err);
+        callback([]);
+      }
+    );
+  }
+
+  /**
+   * Real Activation of a Lot in Firestore
+   */
+  static async activateUserLot(params: {
+    lotId: string;
+    userId: string;
+  }): Promise<{ success: boolean; message?: string }> {
+    const { lotId, userId } = params;
+    if (!lotId || !userId) {
+      return { success: false, message: "Données de requête invalides." };
+    }
+
+    try {
+      const lotRef = doc(db, LOTS_COLLECTION, lotId);
+      const lotSnap = await getDoc(lotRef);
+
+      if (!lotSnap.exists()) {
+        return { success: false, message: "Ce lot n'existe pas dans votre compte." };
+      }
+
+      const lot = lotSnap.data() as UserLotRecord;
+
+      if (lot.userId !== userId) {
+        return { success: false, message: "Non autorisé: ce lot appartient à un autre compte." };
+      }
+
+      if (lot.status !== "AVAILABLE") {
+        if (lot.status === "ACTIVATED") {
+          return { success: false, message: "Ce lot a déjà été activé." };
+        }
+        if (lot.status === "EXPIRED") {
+          return { success: false, message: "Ce lot est expiré." };
+        }
+        return { success: false, message: "Ce lot n'est pas disponible pour activation." };
+      }
+
+      // Check if lot expiration has passed before activation
+      if (lot.expiresAt && new Date(lot.expiresAt).getTime() < Date.now()) {
+        await updateDoc(lotRef, { status: "EXPIRED" });
+        return { success: false, message: "Ce lot a expiré et ne peut plus être activé." };
+      }
+
+      const nowISO = new Date().toISOString();
+      const rewardType = lot.rewardType;
+
+      if (
+        rewardType === "PREMIUM_DAYS" || 
+        rewardType === "PREMIUM_CODE" || 
+        rewardType === "SURPRISE_BOX"
+      ) {
+        // Real Premium Activation on User Profile in Firestore
+        let daysToAdd = Number(lot.rewardValue) || lot.rewardDuration || 7;
+        if (rewardType === "SURPRISE_BOX") {
+          daysToAdd = 7;
+        }
+
         const userRef = doc(db, "users", userId);
         const userSnap = await getDoc(userRef);
-        
+
         let currentExpTime = Date.now();
         if (userSnap.exists()) {
           const uData = userSnap.data();
           if (uData.premiumExpiresAt) {
-            const expParsed = new Date(uData.premiumExpiresAt).getTime();
-            if (expParsed > currentExpTime) {
-              currentExpTime = expParsed; // Stack from existing future expiration
+            const parsed = new Date(uData.premiumExpiresAt).getTime();
+            if (parsed > currentExpTime) {
+              currentExpTime = parsed; // Stack duration seamlessly
             }
           }
         }
@@ -663,83 +902,88 @@ export class WheelEngineService {
           premiumExpiresAt: newExpISO,
           updatedAt: nowISO
         });
-        console.log(`Intelligently stacked ${daysToAdd} Premium days for user ${userId}. New expiration: ${newExpISO}`);
-      } catch (err) {
-        console.error("Error granting Premium days reward:", err);
-      }
-    } else if (segment.type === "EXTRA_SPIN") {
-      // Grant free spin tokens
-      const count = Number(segment.rewardValue) || 1;
-      try {
-        for (let i = 0; i < count; i++) {
-          const tokenId = `extra_${spinId}_${i}`;
-          const tokenRef = doc(db, EXTRA_SPINS_COLLECTION, tokenId);
-          const extraRecord: UserExtraSpinRecord = {
-            id: tokenId,
-            userId,
-            wheelId: params.wheel.id,
-            source: "wheel_reward",
-            used: false,
-            createdAt: nowISO
-          };
-          await setDoc(tokenRef, extraRecord);
-        }
-      } catch (err) {
-        console.error("Error granting extra spin tokens:", err);
-      }
-    } else if (segment.type === "SURPRISE_BOX") {
-      // Mystery box reward: grant 3 days Premium or higher as surprise
-      const surpriseDays = params.wheel.type === "ELITE" ? 14 : params.wheel.type === "PREMIUM" ? 7 : 3;
-      try {
-        const userRef = doc(db, "users", userId);
-        const userSnap = await getDoc(userRef);
-        let currentExpTime = Date.now();
-        if (userSnap.exists()) {
-          const uData = userSnap.data();
-          if (uData.premiumExpiresAt) {
-            const expParsed = new Date(uData.premiumExpiresAt).getTime();
-            if (expParsed > currentExpTime) currentExpTime = expParsed;
-          }
-        }
-        const newExpTime = currentExpTime + surpriseDays * 24 * 60 * 60 * 1000;
-        await updateDoc(userRef, {
-          isPremium: true,
-          accountType: "premium",
-          premiumExpiresAt: new Date(newExpTime).toISOString(),
-          updatedAt: nowISO
+
+        await updateDoc(lotRef, {
+          status: "ACTIVATED",
+          activatedAt: nowISO,
+          expiresAt: newExpISO
         });
-        console.log(`Mystery Box opened for user ${userId}: granted ${surpriseDays} days Premium!`);
-      } catch (err) {
-        console.error("Error granting Surprise Box reward:", err);
-      }
-    } else if (
-      segment.type === "VISIBILITY_BOOST" || 
-      segment.type === "GOMBO_BOOST" || 
-      segment.type === "PROFILE_BOOST" || 
-      segment.type === "PUBLICATION_BOOST" ||
-      segment.type === "PREMIUM_BOOST"
-    ) {
-      // Create temporary boost entry
-      const durationDays = segment.rewardDuration || 1;
-      const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
-      try {
-        const boostId = `boost_${spinId}`;
+
+      } else if (
+        rewardType === "VISIBILITY_BOOST" ||
+        rewardType === "GOMBO_BOOST" ||
+        rewardType === "PROFILE_BOOST" ||
+        rewardType === "PUBLICATION_BOOST" ||
+        rewardType === "PREMIUM_BOOST"
+      ) {
+        // Real Boost Activation
+        const durationDays = Number(lot.rewardDuration) || 1;
+        const startAt = nowISO;
+        const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+
+        const boostId = `boost_${lotId}`;
         const boostRef = doc(db, BOOSTS_COLLECTION, boostId);
         const boostRecord: UserBoostRecord = {
           id: boostId,
           userId,
-          type: segment.type,
-          startAt: nowISO,
+          type: rewardType,
+          startAt,
           expiresAt,
           source: "wheel_reward",
           status: "ACTIVE",
           durationDays,
           createdAt: nowISO
         };
+
         await setDoc(boostRef, boostRecord);
-      } catch (err) {
-        console.error("Error granting boost reward:", err);
+
+        // Update user profile to mark active boost flag
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, {
+          isBoosted: true,
+          boostExpiresAt: expiresAt,
+          updatedAt: nowISO
+        }).catch(() => {});
+
+        await updateDoc(lotRef, {
+          status: "ACTIVATED",
+          activatedAt: nowISO,
+          expiresAt
+        });
+
+      } else if (rewardType === "EXTRA_SPIN") {
+        // Extra Spin Activation
+        const count = Number(lot.rewardValue) || 1;
+        for (let i = 0; i < count; i++) {
+          const tokenId = `extra_${lotId}_${i}`;
+          const tokenRef = doc(db, EXTRA_SPINS_COLLECTION, tokenId);
+          const extraRecord: UserExtraSpinRecord = {
+            id: tokenId,
+            userId,
+            source: "wheel_reward",
+            used: false,
+            createdAt: nowISO
+          };
+          await setDoc(tokenRef, extraRecord);
+        }
+
+        await updateDoc(lotRef, {
+          status: "ACTIVATED",
+          activatedAt: nowISO
+        });
+
+      } else {
+        // Generic Lot Activation
+        await updateDoc(lotRef, {
+          status: "ACTIVATED",
+          activatedAt: nowISO
+        });
       }
+
+      return { success: true };
+    } catch (err: any) {
+      console.error("Error activating user lot:", err);
+      return { success: false, message: err?.message || "Erreur lors de l'activation du lot." };
     }
   }
 

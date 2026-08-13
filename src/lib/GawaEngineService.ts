@@ -242,13 +242,18 @@ export class GawaEngineService {
 
         // 3. Add Gawa transaction to gawaHistory
         const txGawaRef = doc(db, GAWA_HISTORY_COLLECTION, txId);
-        const gawaRecord: GawaHistoryRecord = {
+        const gawaRecord = {
           id: txId,
           userId,
+          uid: userId,
           amount: gawaAmount,
-          type: "PURCHASE",
-          description: `Achat du pack "${packData.name}" (+${gawaAmount} Gawa)`,
+          gawaAmount,
+          priceFCFA,
+          type: "achat_gawa",
+          description: `Achat du pack "${packData.name}" (+${gawaAmount} GAWA)`,
           createdAt: new Date().toISOString(),
+          date: new Date().toLocaleDateString("fr-FR"),
+          heure: new Date().toLocaleTimeString("fr-FR"),
           source: "AFRIGOMBO_WALLET",
           transactionId: txId
         };
@@ -339,9 +344,12 @@ export class GawaEngineService {
   }
 
   static async getGawaPacks(): Promise<GawaPack[]> {
+    await this.initializeDefaultPacksIfNeeded();
     const colRef = collection(db, GAWA_PACKS_COLLECTION);
     const snap = await getDocs(colRef);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() } as GawaPack));
+    const packs = snap.docs.map(d => ({ id: d.id, ...d.data() } as GawaPack));
+    packs.sort((a, b) => a.priceFCFA - b.priceFCFA);
+    return packs;
   }
 
   static async getMissions(): Promise<GawaMission[]> {

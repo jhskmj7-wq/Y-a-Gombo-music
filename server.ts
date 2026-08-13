@@ -6,8 +6,6 @@ import * as admin from "firebase-admin";
 import { initializeApp as initializeAdminApp, getApps as getAdminApps } from "firebase-admin/app";
 import { getFirestore as getAdminFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth as getAdminAuth } from "firebase-admin/auth";
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 
 dotenv.config();
 
@@ -284,26 +282,13 @@ async function startServer() {
   });
 }
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC3eJm2GfUMxGUNGu7uZeIP9-rtcLRljNk",
-  authDomain: "afrigombo.firebaseapp.com",
-  databaseURL: "https://afrigombo-default-rtdb.firebaseio.com",
-  projectId: "afrigombo",
-  storageBucket: "afrigombo.firebasestorage.app",
-  messagingSenderId: "558547758112",
-  appId: "1:558547758112:web:d84cbcb8fb0e0670c5a045",
-  measurementId: "G-27498CNQX0"
-};
-
 // Initialize server-side firebase
-const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
 
 async function runMaintenanceCheck() {
   try {
-    const maintenanceRef = doc(db, "settings", "maintenance");
-    const snap = await getDoc(maintenanceRef);
-    if (!snap.exists()) return;
+    const maintenanceRef = adminDb.collection("settings").doc("maintenance");
+    const snap = await maintenanceRef.get();
+    if (!snap.exists) return;
 
     const data = snap.data();
     const isMaintenanceActive = data.globalMode === true || data.status === "maintenance";

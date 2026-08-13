@@ -547,11 +547,11 @@ export default function AdminRevenueFeatures({
                 <div className="flex items-center gap-2 border-b border-zinc-800 pb-2.5">
                   <DollarSign className="w-4 h-4 text-[#D4AF37]" />
                   <h3 className="text-xs font-black uppercase text-[#D4AF37] tracking-wider font-mono">
-                    ⚖️ Centre de Tarification des Tirages
+                    ⚖️ Centre de Tarification des Tirages (en GAWA)
                   </h3>
                 </div>
                 <p className="text-[11px] text-zinc-400 font-mono leading-relaxed">
-                  Modifiez instantanément les tarifs des tirages de chaque roue. Les changements sont appliqués en temps réel côté serveur et synchronisés pour tous les membres actifs.
+                  Modifiez instantanément les tarifs de tirage en GAWA de chaque roue. La monnaie de tirage est exclusivement le GAWA. Les changements sont synchronisés en temps réel pour tous les membres actifs.
                 </p>
 
                 <div className="space-y-3 pt-1">
@@ -562,7 +562,7 @@ export default function AdminRevenueFeatures({
                         <div className="space-y-1">
                           <span className="text-[9px] font-bold text-zinc-500 uppercase">ROUE {index + 1}</span>
                           <h4 className="text-xs font-black text-white">{wheel.name}</h4>
-                          <div className="text-[10px] text-[#D4AF37] font-semibold">Prix actuel : {wheel.cost} FCFA</div>
+                          <div className="text-[10px] text-[#D4AF37] font-semibold">Prix actuel : {wheel.cost} GAWA</div>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -571,10 +571,10 @@ export default function AdminRevenueFeatures({
                               type="text"
                               value={priceVal}
                               onChange={(e) => setInputPrices(prev => ({ ...prev, [wheel.id]: e.target.value }))}
-                              className="w-24 px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-bold text-white text-right focus:outline-none focus:border-[#D4AF37] pr-7"
+                              className="w-24 px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-bold text-white text-right focus:outline-none focus:border-[#D4AF37] pr-12"
                               placeholder={`${wheel.cost}`}
                             />
-                            <span className="absolute right-2 top-1.5 text-[9px] text-zinc-500 font-bold">FCFA</span>
+                            <span className="absolute right-2 top-1.5 text-[9px] text-zinc-500 font-bold">GAWA</span>
                           </div>
 
                           <button
@@ -703,8 +703,8 @@ export default function AdminRevenueFeatures({
                       {/* Commercial Configuration Summary Card */}
                       <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl space-y-1.5 text-[10px] font-mono">
                         <div className="flex justify-between items-center">
-                          <span className="text-zinc-400">Prix du tirage :</span>
-                          <span className="font-bold text-[#D4AF37]">{wheel.cost} {wheel.currency || "FCFA"}</span>
+                          <span className="text-zinc-400">Coût du tirage :</span>
+                          <span className="font-bold text-[#D4AF37]">{wheel.cost} GAWA</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-zinc-400">Max / Jour / Membre :</span>

@@ -2,11 +2,12 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { Lock } from "lucide-react";
 import { gomboDB, gomboAuth } from "./firebase";
 import { auth } from "./lib/firebase";
-import { serverTimestamp } from "firebase/firestore";
+import { serverTimestamp, doc, getDoc } from "firebase/firestore";
+import { db } from "./lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { UserProfile } from "./types";
 import { PremiumEngine } from "./lib/premiumEngine";
-import { fetchPlatformPricing } from "./lib/financial";
+import { fetchPlatformPricing, getCanonicalWalletBalance } from "./lib/financial";
 import { safeStringify } from "./lib/jsonUtils";
 
 interface AuthContextType {
@@ -108,9 +109,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCurrentUser(firebaseUser);
         setShowAuthPopup(false);
         try {
-          let uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
-          
-          if (!uProfile) {
+          const userDocRef = doc(db, "users", firebaseUser.uid);
+          const docSnap = await getDoc(userDocRef);
+          let uProfile: UserProfile | null = null;
+
+          if (!docSnap.exists()) {
+            // Strictly NEW account creation ONLY
             const names = typeof firebaseUser.displayName === "string" ? firebaseUser.displayName.split(" ") : ["Artiste", "Afrigombo"];
             const isFounder = firebaseUser.email === "jhs.kmj7@gmail.com";
             const founderPermissions = [
@@ -140,11 +144,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               isVerified: false,
               balance: 0,
               totalRevenue: 0,
+              wallet: {
+                soldeDisponible: 0,
+                soldeBloque: 0,
+                soldeGawa: 0,
+                revenusMois: 0,
+                economiesPremium: 0,
+                niveauWallet: "Standard",
+                devise: "FCFA"
+              },
               createdAt: serverTimestamp() as any
             };
             
             await gomboDB.updateUserProfile(firebaseUser.uid, uProfile);
           } else {
+            // Document EXISTS: Load existing profile safely without overwriting balances
+            uProfile = docSnap.data() as UserProfile;
+            const canonicalBal = getCanonicalWalletBalance(uProfile);
+
+            if (!uProfile.wallet) {
+              uProfile.wallet = {
+                soldeDisponible: canonicalBal,
+                soldeBloque: 0,
+                soldeGawa: 0,
+                revenusMois: 0,
+                economiesPremium: 0,
+                niveauWallet: "Standard",
+                devise: "FCFA"
+              };
+            } else if (canonicalBal > (uProfile.wallet.soldeDisponible || 0)) {
+              uProfile.wallet.soldeDisponible = canonicalBal;
+            }
+            uProfile.balance = canonicalBal;
+            uProfile.walletBalance = canonicalBal;
+
             // Fill missing avatar or display name in profile if empty
             if (!uProfile.photoURL && firebaseUser.photoURL) uProfile.photoURL = firebaseUser.photoURL;
             if (!uProfile.avatarUrl && firebaseUser.photoURL) uProfile.avatarUrl = firebaseUser.photoURL;

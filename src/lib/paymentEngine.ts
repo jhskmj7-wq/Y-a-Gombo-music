@@ -1,5 +1,6 @@
 import { db } from "./firebase";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { getCanonicalWalletBalance } from "./financial";
 
 export interface PaymentOptions {
   userId: string;
@@ -36,62 +37,28 @@ export class PaymentEngineClass {
    * or complete smooth, idempotent migration from old fields if needed.
    */
   async getCanonicalBalanceAndSync(userId: string, userData: any, userRef: any): Promise<number> {
-    const walletObj = userData?.wallet;
-    const solde = walletObj?.soldeDisponible;
-    const legacyBalance = typeof userData?.walletBalance === "number" 
-      ? userData.walletBalance 
-      : (typeof userData?.balance === "number" ? userData.balance : 0);
-    
-    if (typeof solde === "number") {
-      // RECOVERY: If canonical is 0 but legacy has funds, prioritize legacy to restore balance
-      if (solde === 0 && legacyBalance > 0) {
-        console.warn(`[PaymentEngine] RECOVERY: User ${userId} has 0 in canonical but ${legacyBalance} in legacy. Restoring legacy balance.`);
-        try {
-          await updateDoc(userRef, {
-            "wallet.soldeDisponible": legacyBalance,
-            walletBalance: legacyBalance,
-            balance: legacyBalance,
-            updatedAt: new Date().toISOString(),
-            "wallet.recoveryNote": "Restored from legacy field due to initialization error"
-          });
-          return legacyBalance;
-        } catch (e) {
-          console.error("[PaymentEngine] Recovery failed:", e);
-          return legacyBalance; // Return legacy anyway for current session
-        }
-      }
+    const currentBest = getCanonicalWalletBalance(userData);
 
-      // Normal Sync: Ensure legacy fields match canonical value if canonical is established (> 0 or no legacy funds)
-      if (userData.walletBalance !== solde || userData.balance !== solde) {
-        console.log(`[PaymentEngine] Syncing legacy balance fields to canonical value: ${solde}`);
-        try {
-          await updateDoc(userRef, {
-            walletBalance: solde,
-            balance: solde,
-            "wallet.soldeDisponible": solde
-          });
-        } catch (e) {
-          console.error("[PaymentEngine] Sync warning:", e);
-        }
+    // Sync all 3 balance fields if any of them differs from currentBest
+    if (
+      userData?.wallet?.soldeDisponible !== currentBest ||
+      userData?.walletBalance !== currentBest ||
+      userData?.balance !== currentBest
+    ) {
+      console.log(`[PaymentEngine] Syncing all balance fields to canonical value: ${currentBest}`);
+      try {
+        await updateDoc(userRef, {
+          "wallet.soldeDisponible": currentBest,
+          walletBalance: currentBest,
+          balance: currentBest,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (e) {
+        console.error("[PaymentEngine] Sync warning:", e);
       }
-      return solde;
     }
 
-    // It is not canonical yet. Resolve using legacy fields and migrate.
-    console.log(`[PaymentEngine] Migrating user ${userId} to canonical wallet.soldeDisponible: ${legacyBalance}`);
-    try {
-      await updateDoc(userRef, {
-        walletBalance: legacyBalance,
-        balance: legacyBalance,
-        "wallet.soldeDisponible": legacyBalance,
-        "wallet.devise": "FCFA",
-        updatedAt: new Date().toISOString()
-      });
-    } catch (e) {
-      console.error("[PaymentEngine] Migration warning:", e);
-    }
-    
-    return legacyBalance;
+    return currentBest;
   }
 
   /**

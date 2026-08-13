@@ -241,6 +241,7 @@ export default function AfrigomboWalletDashboard({
           pinLength: uData.paymentSettings?.pinLength || 4,
         });
       }
+      setLoading(false);
     });
 
     // 2. Listen to all transactions in both 'transactions' and 'walletTransactions' collections in real-time

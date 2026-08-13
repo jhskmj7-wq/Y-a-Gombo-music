@@ -249,7 +249,7 @@ export default function GomboWheelUserModal({
                       : "bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800"
                   }`}
                 >
-                  {w.type} • {w.cost > 0 ? `${w.cost} FCFA` : "GRATUIT"}
+                  {w.type} • {w.cost > 0 ? `${w.cost} GAWA` : "GRATUIT"}
                 </button>
               ))}
             </div>
@@ -261,7 +261,7 @@ export default function GomboWheelUserModal({
               <div className="flex items-center justify-between text-xs">
                 <span className="text-zinc-400 font-bold uppercase tracking-wide">Coût du tirage :</span>
                 <span className="text-base font-black text-[#D4AF37]">
-                  {currentWheel.cost > 0 ? `${currentWheel.cost} FCFA` : "GRATUIT"}
+                  {currentWheel.cost > 0 ? `${currentWheel.cost} GAWA` : "GRATUIT"}
                 </span>
               </div>
 
