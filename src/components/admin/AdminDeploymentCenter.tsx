@@ -113,7 +113,13 @@ export default function AdminDeploymentCenter({
     { id: "favorites", name: "⭐ Favoris & Enregistrements", category: "Application", enabled: true, status: "validated", description: "Gestion des annonces et profils enregistrés" },
 
     // REVENUS & MONÉTISATION
-    { id: "wheel", name: "🎡 Roue AFRIGOMBO", category: "Monétisation", enabled: true, status: "validated", description: "Permet aux utilisateurs éligibles d'accéder à la Roue AFRIGOMBO et à ses récompenses." },
+    { id: "gawa_center", name: "🟡 Centre Gawa", category: "Monétisation", enabled: true, status: "validated", description: "Boutique, recharge et missions Gawa pour les utilisateurs" },
+    { id: "mes_lots", name: "🎁 Mes lots", category: "Monétisation", enabled: true, status: "validated", description: "Espace des récompenses et lots réellement gagnés par l'utilisateur" },
+    { id: "wheel", name: "🎡 Roue AFRIGOMBO (Général)", category: "Monétisation", enabled: true, status: "validated", description: "Permet aux utilisateurs éligibles d'accéder à la Roue AFRIGOMBO et à ses récompenses." },
+    { id: "wheel_1", name: "🎡 Roue 1 (Classique)", category: "Monétisation", enabled: true, status: "validated", description: "Accès à la Roue Classique 20 GAWA" },
+    { id: "wheel_2", name: "🎡 Roue 2 (Élite)", category: "Monétisation", enabled: true, status: "validated", description: "Accès à la Roue Élite Prestige 50 GAWA" },
+    { id: "wheel_3", name: "🎡 Roue 3 (Premium)", category: "Monétisation", enabled: true, status: "validated", description: "Accès à la Roue Premium Souveraine 100 GAWA" },
+    { id: "lots_management", name: "🎁 Gestion des lots (Module)", category: "Monétisation", enabled: true, status: "validated", description: "Configuration et administration des lots du système" },
 
     // FINANCES
     { id: "wallet", name: "💳 Wallet Souverain AFRIPAY", category: "Finance", enabled: true, status: "validated", description: "Solde rechargeable et virements sécurisés" },

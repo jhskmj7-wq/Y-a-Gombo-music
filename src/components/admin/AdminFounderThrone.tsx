@@ -19,6 +19,10 @@ import { AdminCommunicationCenter } from "./AdminCommunicationCenter";
 import AdminSupportCenter from "./AdminSupportCenter";
 import AdminPollCenter from "./AdminPollCenter";
 import AdminFounderNotebook from "./AdminFounderNotebook";
+import AdminGawaCenter from "./AdminGawaCenter";
+import AdminLotsManagement from "./AdminLotsManagement";
+import AdminRewardsManagement from "./AdminRewardsManagement";
+import AdminRevenueFeatures from "./AdminRevenueFeatures";
 import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";
 import { useMaintenance } from "../../hooks/useMaintenance";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
@@ -2555,6 +2559,94 @@ export default function AdminFounderThrone({
               </div>
             </div>
 
+            {/* MONÉTISATION & GAWA */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-mono uppercase font-black text-[#D4AF37] tracking-widest flex items-center gap-2">
+                  <Coins className="w-4 h-4 text-[#D4AF37]" />
+                  Monétisation & Gawa
+                </h3>
+                <span className="text-[10px] font-mono text-afri-text-sec">Centre Économique & Roues</span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                {/* Centre Gawa */}
+                <div
+                  onClick={() => setSelectedSection("gawa_center")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <Coins className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Centre Gawa
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Packs, boutique & ajustements</p>
+                  <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Gérer Gawa →</span>
+                </div>
+
+                {/* Gestion des lots */}
+                <div
+                  onClick={() => setSelectedSection("lots_management")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-purple-500/10 border border-purple-500/20 rounded-2xl text-purple-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <Gift className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Gestion des lots
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Lots, modèle & attribution</p>
+                  <span className="text-[9px] font-mono text-purple-400 font-bold block mt-3">Administrer →</span>
+                </div>
+
+                {/* Gestion des roues */}
+                <div
+                  onClick={() => setSelectedSection("wheels_management")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <Award className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Gestion des roues
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">3 Roues & segments GAWA</p>
+                  <span className="text-[9px] font-mono text-rose-400 font-bold block mt-3">Configurer →</span>
+                </div>
+
+                {/* Gestion des récompenses */}
+                <div
+                  onClick={() => setSelectedSection("rewards_management")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-sky-500/10 border border-sky-500/20 rounded-2xl text-sky-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <Sparkles className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Récompenses
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Règles globales & surprise box</p>
+                  <span className="text-[9px] font-mono text-sky-400 font-bold block mt-3">Définir →</span>
+                </div>
+
+                {/* Revenus */}
+                <div
+                  onClick={() => setSelectedSection("revenus")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <BarChart3 className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Revenus
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Trésorerie & finances</p>
+                  <span className="text-[9px] font-mono text-emerald-400 font-bold block mt-3">Consulter →</span>
+                </div>
+              </div>
+            </div>
+
             {/* 4. ADMINISTRATION (GESTION DE LA PLATEFORME) */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -3160,6 +3252,50 @@ export default function AdminFounderThrone({
 
                 </div>
               </div>
+            )}
+
+            {/* =========================================================
+                 DETAILED VIEW: 🟡 Centre Gawa
+                 ========================================================= */}
+            {selectedSection === "gawa_center" && (
+              <AdminGawaCenter
+                currentUser={currentUserProfile}
+                userEmail={founderEmail}
+                audioSynth={audioSynth}
+              />
+            )}
+
+            {/* =========================================================
+                 DETAILED VIEW: 🎁 Gestion des Lots
+                 ========================================================= */}
+            {selectedSection === "lots_management" && (
+              <AdminLotsManagement
+                currentUser={currentUserProfile}
+                userEmail={founderEmail}
+                audioSynth={audioSynth}
+              />
+            )}
+
+            {/* =========================================================
+                 DETAILED VIEW: 🎡 Gestion des Roues
+                 ========================================================= */}
+            {selectedSection === "wheels_management" && (
+              <AdminRevenueFeatures
+                currentUser={currentUserProfile}
+                userEmail={founderEmail}
+                audioSynth={audioSynth}
+              />
+            )}
+
+            {/* =========================================================
+                 DETAILED VIEW: 💎 Gestion des Récompenses
+                 ========================================================= */}
+            {selectedSection === "rewards_management" && (
+              <AdminRewardsManagement
+                currentUser={currentUserProfile}
+                userEmail={founderEmail}
+                audioSynth={audioSynth}
+              />
             )}
 
             {/* =========================================================
