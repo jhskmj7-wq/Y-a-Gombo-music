@@ -841,6 +841,8 @@ export interface GawaHistoryRecord {
   id: string;
   userId: string;
   amount: number;
+  gawaAmount?: number;
+  priceFCFA?: number;
   type: string;
   description: string;
   createdAt: string;
@@ -1219,6 +1221,7 @@ export interface UserLotRecord {
   activatedAt?: string;
   expiresAt?: string;
   wheelName?: string;
+  wheelId?: string;
 }
 
 export interface UserExtraSpinRecord {

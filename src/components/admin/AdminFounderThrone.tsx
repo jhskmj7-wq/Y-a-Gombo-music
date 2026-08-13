@@ -6,7 +6,7 @@ import {
   Activity, Users, FileText, Coins, Database, HardDrive, Lock, Server, Terminal,
   Sparkles, Wallet, CreditCard, Bell, BarChart3, Brain, DatabaseBackup, ListCollapse,
   Play, Pause, Trash2, Volume2, Plus, ArrowUp, ArrowDown, Send, Mail, Wrench,
-  RefreshCw, CheckCircle, XCircle, Search, HelpCircle, Save, BookOpen, Scroll, Target, Award,
+  RefreshCw, CheckCircle, XCircle, Search, HelpCircle, Save, BookOpen, Scroll, Target, Award, Gift,
   Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square,
   Clock, MapPin, Cloud, Zap, Sun, ChevronDown, ChevronUp, Flame, ToggleLeft, ToggleRight, UserCheck, Radio, Eye, Bot,
   MessageSquare
@@ -3259,8 +3259,8 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "gawa_center" && (
               <AdminGawaCenter
-                currentUser={currentUserProfile}
-                userEmail={founderEmail}
+                currentUser={profile || currentUser}
+                userEmail={adminEmail || currentUser?.email || "admin@afrigombo.ci"}
                 audioSynth={audioSynth}
               />
             )}
@@ -3270,8 +3270,8 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "lots_management" && (
               <AdminLotsManagement
-                currentUser={currentUserProfile}
-                userEmail={founderEmail}
+                currentUser={profile || currentUser}
+                userEmail={adminEmail || currentUser?.email || "admin@afrigombo.ci"}
                 audioSynth={audioSynth}
               />
             )}
@@ -3281,8 +3281,8 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "wheels_management" && (
               <AdminRevenueFeatures
-                currentUser={currentUserProfile}
-                userEmail={founderEmail}
+                currentUser={profile || currentUser}
+                userEmail={adminEmail || currentUser?.email || "admin@afrigombo.ci"}
                 audioSynth={audioSynth}
               />
             )}
@@ -3292,8 +3292,8 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "rewards_management" && (
               <AdminRewardsManagement
-                currentUser={currentUserProfile}
-                userEmail={founderEmail}
+                currentUser={profile || currentUser}
+                userEmail={adminEmail || currentUser?.email || "admin@afrigombo.ci"}
                 audioSynth={audioSynth}
               />
             )}

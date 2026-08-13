@@ -254,8 +254,10 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       console.error("Apple SSO Failure:", err);
       if (err?.code === "auth/account-exists-with-different-credential") {
         setErrorMSG("Un compte existe déjà avec cet email mais via une autre méthode de connexion (ex: Google). Veuillez utiliser l'autre méthode.");
+      } else if (err?.code === "auth/configuration-not-found" || err?.code === "auth/operation-not-allowed" || err?.code === "auth/invalid-provider-id" || err?.message?.includes("configuration")) {
+        setErrorMSG("La connexion Apple requiert la configuration de votre Service ID & clés dans Firebase Console. Veuillez utiliser Google pour vous connecter.");
       } else {
-        setErrorMSG("Connexion impossible. Veuillez réessayer.");
+        setErrorMSG("Connexion Apple indisponible pour le moment. Veuillez utiliser la connexion Google.");
       }
       setLoading(false);
     }
