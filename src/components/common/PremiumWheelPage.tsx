@@ -20,9 +20,12 @@ export default function PremiumWheelPage({
   const isLight = theme === "light";
 
   return (
-    <div className={`w-full max-w-full h-screen h-[100dvh] overflow-hidden flex flex-col font-sans box-border ${
-      isLight ? "bg-[#FDFBF7] text-gray-900" : "bg-[#050505] text-white"
-    }`}>
+    <div 
+      className={`w-full max-w-full flex flex-col font-sans box-border ${
+        isLight ? "bg-[#FDFBF7] text-gray-900" : "bg-[#050505] text-white"
+      }`}
+      style={{ height: "100dvh", minHeight: "100dvh", maxHeight: "100dvh", overflow: "hidden", overscrollBehavior: "none" }}
+    >
       {/* Top Header Navigation - Only single return arrow */}
       <div className={`px-2.5 sm:px-4 py-2 border-b flex items-center justify-between gap-2 max-w-full shrink-0 box-border ${
         isLight ? "bg-[#FDFBF7] border-gray-200" : "bg-[#050505] border-zinc-800"

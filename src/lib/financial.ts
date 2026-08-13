@@ -10,8 +10,8 @@ import { PremiumEngine } from "./premiumEngine";
  * 2. walletBalance (top-level numeric field)
  * 3. balance (legacy fallback field)
  */
-export function getCanonicalWalletBalance(userData: any): number {
-  if (!userData) return 0;
+export function getCanonicalWalletBalance(userData: any): number | null {
+  if (!userData) return null;
   
   const solde = userData.wallet?.soldeDisponible;
   const walletBalance = userData.walletBalance;
@@ -21,9 +21,8 @@ export function getCanonicalWalletBalance(userData: any): number {
     (v): v is number => typeof v === "number" && !isNaN(v)
   );
 
-  if (candidateVals.length === 0) return 0;
+  if (candidateVals.length === 0) return null;
 
-  // Always resolve to the highest non-zero balance found across canonical and legacy fields
   return Math.max(...candidateVals);
 }
 

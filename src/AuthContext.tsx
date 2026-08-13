@@ -162,21 +162,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             uProfile = docSnap.data() as UserProfile;
             const canonicalBal = getCanonicalWalletBalance(uProfile);
 
-            if (!uProfile.wallet) {
-              uProfile.wallet = {
-                soldeDisponible: canonicalBal,
-                soldeBloque: 0,
-                soldeGawa: 0,
-                revenusMois: 0,
-                economiesPremium: 0,
-                niveauWallet: "Standard",
-                devise: "FCFA"
-              };
-            } else if (canonicalBal > (uProfile.wallet.soldeDisponible || 0)) {
-              uProfile.wallet.soldeDisponible = canonicalBal;
+            if (canonicalBal !== null) {
+              if (!uProfile.wallet) {
+                uProfile.wallet = {
+                  soldeDisponible: canonicalBal,
+                  soldeBloque: 0,
+                  soldeGawa: 0,
+                  revenusMois: 0,
+                  economiesPremium: 0,
+                  niveauWallet: "Standard",
+                  devise: "FCFA"
+                };
+              } else if (canonicalBal > (uProfile.wallet.soldeDisponible || 0)) {
+                uProfile.wallet.soldeDisponible = canonicalBal;
+              }
+              uProfile.balance = canonicalBal;
+              uProfile.walletBalance = canonicalBal;
             }
-            uProfile.balance = canonicalBal;
-            uProfile.walletBalance = canonicalBal;
 
             // Fill missing avatar or display name in profile if empty
             if (!uProfile.photoURL && firebaseUser.photoURL) uProfile.photoURL = firebaseUser.photoURL;

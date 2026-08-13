@@ -477,73 +477,27 @@ export const gomboAuth = {
 
 export const gomboDB = {
 // USERS
-  async getCanonicalWalletBalance(uid: string): Promise<number> {
-    if (!db) return 0;
+  async getCanonicalWalletBalance(uid: string): Promise<number | null> {
+    if (!db) return null;
     try {
       const docSnap = await getDoc(doc(db, "users", uid));
       if (docSnap.exists()) {
         const data = docSnap.data();
-        // Canonical source is wallet.soldeDisponible
-        if (data.wallet && typeof data.wallet.soldeDisponible === 'number') {
-          return data.wallet.soldeDisponible;
-        }
-        // Fallback to legacy fields WITHOUT writing back (Read-Only)
-        return typeof data.walletBalance === 'number' 
-          ? data.walletBalance 
-          : (typeof data.balance === 'number' ? data.balance : 0);
+        return getCanonicalWalletBalance(data);
       }
     } catch (err) {
       console.error("[WALLET-ERROR] Failed to fetch canonical balance:", err);
     }
-    return 0;
+    return null;
   },
 
   async getUserProfile(uid: string): Promise<UserProfile | null> {
     if (!db) return null;
     try {
-      const docSnap = await getDoc(doc(db, "users", uid));
-      if (docSnap.exists()) {
-        let profile = docSnap.data() as UserProfile;
-        
-        const bestBalance = getCanonicalWalletBalance(profile);
-
-        let needsSync = false;
-        
-        if (!profile.wallet) {
-          profile.wallet = {
-            soldeDisponible: bestBalance,
-            soldeBloque: 0,
-            revenusMois: 0,
-            economiesPremium: 0,
-            niveauWallet: "Standard",
-            revenus: 0,
-            depots: 0,
-            retraits: 0,
-            gainsMensuels: 0
-          };
-          profile.walletBalance = bestBalance;
-          profile.balance = bestBalance;
-          needsSync = true;
-        } else if (
-          profile.wallet.soldeDisponible !== bestBalance ||
-          profile.walletBalance !== bestBalance ||
-          profile.balance !== bestBalance
-        ) {
-          profile.wallet.soldeDisponible = bestBalance;
-          profile.walletBalance = bestBalance;
-          profile.balance = bestBalance;
-          needsSync = true;
-        }
-
-        if (needsSync) {
-          await updateDoc(doc(db, "users", uid), {
-            wallet: profile.wallet,
-            walletBalance: bestBalance,
-            balance: bestBalance,
-            updatedAt: serverTimestamp()
-          });
-        }
-        
+      const snap = await getDoc(doc(db, "users", uid));
+      if (snap.exists()) {
+        const profile = snap.data() as UserProfile;
+        // ONLY READ. Do NOT write back to Firestore on read.
         return profile;
       }
     } catch (err) {
