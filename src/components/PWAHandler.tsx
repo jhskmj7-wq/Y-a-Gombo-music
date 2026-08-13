@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useRegisterSW } from 'virtual:pwa-register/react';
+import React, { useEffect, useState, useRef } from 'react';
+import { registerSW } from 'virtual:pwa-register';
 import { Download, RefreshCw, X, Smartphone, Check } from 'lucide-react';
 
 /**
@@ -10,23 +10,42 @@ export default function PWAHandler() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(false);
   const [installed, setInstalled] = useState(false);
+  const [offlineReady, setOfflineReady] = useState(false);
+  const [needRefresh, setNeedRefresh] = useState(false);
+  const updateServiceWorkerRef = useRef<((reloadPage?: boolean) => Promise<void>) | null>(null);
 
-  const {
-    offlineReady: [offlineReady, setOfflineReady],
-    needRefresh: [needRefresh, setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW({
-    onRegistered(r) {
-      if (typeof window !== "undefined") {
-        if ((window as any)._afrigombo_sw_registered) return;
-        (window as any)._afrigombo_sw_registered = true;
-      }
-      console.log('📡 [PWA] Service Worker inscrit avec succès:', r?.scope || 'Inscrit');
-    },
-    onRegisterError(error) {
-      console.error('⚠️ [PWA] Erreur lors de l\'inscription du Service Worker:', error);
-    },
-  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const updateSW = registerSW({
+        immediate: true,
+        onNeedRefresh() {
+          setNeedRefresh(true);
+        },
+        onOfflineReady() {
+          setOfflineReady(true);
+        },
+        onRegistered(r) {
+          if ((window as any)._afrigombo_sw_registered) return;
+          (window as any)._afrigombo_sw_registered = true;
+          console.log('📡 [PWA] Service Worker inscrit avec succès:', r?.scope || 'Inscrit');
+        },
+        onRegisterError(error) {
+          console.error('⚠️ [PWA] Erreur lors de l\'inscription du Service Worker:', error);
+        },
+      });
+      updateServiceWorkerRef.current = updateSW;
+    } catch (err) {
+      console.warn('[PWA] Service worker registration notice:', err);
+    }
+  }, []);
+
+  const updateServiceWorker = (reloadPage?: boolean) => {
+    if (updateServiceWorkerRef.current) {
+      updateServiceWorkerRef.current(reloadPage);
+    }
+  };
 
   useEffect(() => {
     // Check if app is running in standalone mode (already installed)

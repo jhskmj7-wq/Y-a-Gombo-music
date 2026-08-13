@@ -83,7 +83,13 @@ export default defineConfig({
     }
   },
   resolve: {
-    dedupe: ['react', 'react-dom']
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
+    alias: {
+      react: path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      'react-router-dom': path.resolve(__dirname, 'node_modules/react-router-dom'),
+      '@': path.resolve(__dirname, 'src')
+    }
   },
   define: {
     '__AFRIGOMBO_BUILD_ID__': JSON.stringify(BUILD_ID),
@@ -173,6 +179,12 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['maplibre-gl'],
     include: [
+      "react",
+      "react/jsx-runtime",
+      "react-dom",
+      "react-dom/client",
+      "react-router-dom",
+      "motion/react",
       "firebase/app",
       "firebase/auth",
       "firebase/firestore",

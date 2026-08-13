@@ -15,6 +15,8 @@ import { lazyWithRetry } from "./lib/lazyWithRetry";
 
 // Static Import for Critical Navigation Layer
 import AdminCentre from "./components/AdminCentre";
+import BootSplashScreen from "./components/BootSplashScreen";
+import PWAHandler from "./components/PWAHandler";
 
 // Lazy Loaded Auxiliary Components
 const AuthPage = lazyWithRetry(() => import("./components/AuthPage"));
@@ -22,11 +24,9 @@ const CompleteProfile = lazyWithRetry(() => import("./components/CompleteProfile
 const MaintenanceScreen = lazyWithRetry(() => import("./components/MaintenanceScreen"));
 import PremiumLoader from "./components/PremiumLoader";
 const GlobalNotificationBanner = lazyWithRetry(() => import("./components/GlobalNotificationBanner"));
-const BootSplashScreen = lazyWithRetry(() => import("./components/BootSplashScreen"));
 const BackgroundMusic = lazyWithRetry(() => import("./components/BackgroundMusic").then(m => ({ default: m.BackgroundMusic })));
 const FloatingAudioPlayer = lazyWithRetry(() => import("./components/FloatingAudioPlayer").then(m => ({ default: m.FloatingAudioPlayer })));
 import { LivingInteractions } from "./components/LivingInteractions";
-const PWAHandler = lazyWithRetry(() => import("./components/PWAHandler"));
 const PWADiagnosticPage = lazyWithRetry(() => import("./components/PWADiagnosticPage"));
 const TheThroneOfTheFounder = lazyWithRetry(() => import("./components/TheThroneOfTheFounder"));
 const FounderThronePage = lazyWithRetry(() => import("./components/FounderThronePage"));

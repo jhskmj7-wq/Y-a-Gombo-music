@@ -1708,7 +1708,7 @@ export default function AdminFounderThrone({
   };
 
   return (
-    <div className="text-left font-sans text-afri-text select-none bg-transparent pt-0">
+    <div className="text-left font-sans text-afri-text select-none bg-transparent pt-0 pb-36">
       
       {/* ----------------------------------------------------
            HEADER IMPÉRIAL DU TRÔNE DU FONDATEUR (PLIABLE)
@@ -5735,9 +5735,12 @@ export default function AdminFounderThrone({
       {/* =========================================================================
                       SUPER FOUNDER FIXED BOTTOM NAVIGATION BAR
          ========================================================================= */}
-      <div className={`fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 backdrop-blur-md border-t sm:border border-[#D4AF37]/50 p-1.5 px-3 sm:px-6 flex items-center z-45 sm:rounded-2xl w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1.5 sm:gap-4 select-none pr-6 ${
-        isDark ? 'bg-afri-bg/95 shadow-[0_8px_35px_rgba(212,175,55,0.35)]' : 'bg-[#EDEDED]/95 shadow-[0_8px_35px_rgba(0,0,0,0.15)]'
-      }`}>
+      <div 
+        className={`founder-bottom-nav fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 backdrop-blur-md border-t sm:border border-[#D4AF37]/50 p-1.5 px-3 sm:px-6 flex items-center z-45 sm:rounded-2xl w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1.5 sm:gap-4 select-none pr-6 ${
+          isDark ? 'bg-afri-bg/95 shadow-[0_8px_35px_rgba(212,175,55,0.35)]' : 'bg-[#EDEDED]/95 shadow-[0_8px_35px_rgba(0,0,0,0.15)]'
+        }`}
+        style={{ paddingBottom: 'calc(6px + env(safe-area-inset-bottom, 0px))' }}
+      >
         {/* 1. TRÔNE */}
         <button
           type="button"

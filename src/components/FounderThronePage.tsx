@@ -184,43 +184,21 @@ export default function FounderThronePage() {
   }
 
   return (
-    <div className={`min-h-screen ${isLight ? "bg-[#FDFBF7]" : "bg-afri-bg"} font-sans text-afri-text pb-12 flex flex-col`}>
-      {/* Top Bar with Return to Cabinet */}
-      <div className="sticky top-0 z-50 bg-afri-bg-sec/95 backdrop-blur-md border-b border-afri-gold/20 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/Le-Throne-Of-The-Founder")}
-            className="p-2 border border-afri-gold/30 hover:border-afri-gold bg-afri-bg hover:bg-afri-bg-sec text-afri-gold rounded-xl transition-all cursor-pointer flex items-center gap-2"
-            title="Retour au Cabinet Suprême"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-xs font-mono font-bold uppercase tracking-wider hidden sm:inline">Cabinet Suprême</span>
-          </button>
-          <div className="flex items-center gap-2">
-            <Crown className="w-5 h-5 text-afri-gold" />
-            <h1 className="text-sm sm:text-base font-display font-black text-afri-gold uppercase tracking-wider">
-              Trône du Fondateur — Tableau Souverain
-            </h1>
-          </div>
-        </div>
-      </div>
-
-      <main className="flex-grow">
-        <ErrorBoundary moduleName="Tableau Fondateur">
-          <AdminSuperFounderHub
-            initialModule="throne"
-            userEmail={currentUser?.email || "jhs.kmj7@gmail.com"}
-            currentUser={founderProfile || profile || currentUser}
-            users={users}
-            gombos={gombos}
-            posts={posts}
-            transactions={transactions}
-            alerts={alerts}
-            audioSynth={audioSynth}
-            onExit={() => navigate("/Le-Throne-Of-The-Founder")}
-          />
-        </ErrorBoundary>
-      </main>
+    <div className={`founder-page w-full h-[100dvh] min-h-[100dvh] max-h-[100dvh] overflow-hidden ${isLight ? "bg-[#FDFBF7]" : "bg-afri-bg"} font-sans text-afri-text flex flex-col`}>
+      <ErrorBoundary moduleName="Tableau Fondateur">
+        <AdminSuperFounderHub
+          initialModule="throne"
+          userEmail={currentUser?.email || "jhs.kmj7@gmail.com"}
+          currentUser={founderProfile || profile || currentUser}
+          users={users}
+          gombos={gombos}
+          posts={posts}
+          transactions={transactions}
+          alerts={alerts}
+          audioSynth={audioSynth}
+          onExit={() => navigate("/Le-Throne-Of-The-Founder")}
+        />
+      </ErrorBoundary>
     </div>
   );
 }
