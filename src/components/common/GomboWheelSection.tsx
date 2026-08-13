@@ -368,86 +368,73 @@ export default function GomboWheelSection({
   };
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden bg-[#050505] text-white py-6 sm:py-10 px-2 sm:px-6 font-sans box-border">
-      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-10 w-full max-w-full box-border">
-
-        {/* HEADER */}
-        <div className="text-center space-y-3 w-full max-w-full box-border">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-mono font-black uppercase tracking-widest shadow-lg shadow-[#D4AF37]/5">
-            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-            <span>ÉCOSYSTÈME SOUVERAIN</span>
-          </div>
-
-          <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-white font-mono flex flex-col items-center gap-1">
-            <span className="text-[#D4AF37]">ROUE AFRIGOMBO & CENTRE GAWA</span>
-            <span className="text-xs font-bold text-zinc-400">Lancez la roue avec vos jetons Gawa et gagnez des privilèges.</span>
-          </h2>
-        </div>
+    <div className="w-full h-full max-w-full overflow-hidden bg-[#050505] text-white p-1 font-sans box-border flex flex-col justify-center items-center">
+      <div className="w-full max-w-lg mx-auto box-border flex flex-col items-center justify-center">
 
         {/* LOADING STATE */}
         {(loading || flagsLoading) && (
-          <div className="p-12 bg-zinc-950/50 border border-zinc-800/50 rounded-[32px] text-center space-y-4 shadow-2xl flex flex-col items-center">
-            <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
-            <p className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-widest">Initialisation de l'espace...</p>
+          <div className="p-8 bg-zinc-950/50 border border-zinc-800/50 rounded-2xl text-center space-y-3 shadow-2xl flex flex-col items-center">
+            <Loader2 className="w-6 h-6 text-[#D4AF37] animate-spin" />
+            <p className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-widest">Initialisation...</p>
           </div>
         )}
 
         {/* MAIN CONTAINER */}
         {!loading && !flagsLoading && (isWheelGlobalEnabled || isFounder) && currentWheel && (
-          <div className="space-y-6 sm:space-y-10 animate-fadeIn w-full max-w-full box-border">
+          <div className="w-full max-w-full box-border animate-fadeIn">
             
             {/* ========================================================= */}
-            {/* 1. CONTAINER ROUE (FIRST AT THE VERY TOP) */}
+            {/* 1. CONTAINER ROUE */}
             {/* ========================================================= */}
-            <div className="bg-zinc-950 border border-[#D4AF37]/30 rounded-[24px] sm:rounded-[36px] p-4 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden flex flex-col items-center w-full max-w-full box-border">
-              <div className="absolute top-0 right-0 w-[250px] h-[250px] bg-[#D4AF37]/5 rounded-full blur-[80px] pointer-events-none" />
+            <div className="bg-zinc-950 border border-[#D4AF37]/30 rounded-[20px] sm:rounded-[28px] p-2.5 sm:p-3.5 space-y-2 shadow-2xl relative overflow-hidden flex flex-col items-center w-full max-w-full box-border">
+              <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-[#D4AF37]/5 rounded-full blur-[60px] pointer-events-none" />
 
               {/* Header Bar: Wheel Title & GAWA Balance */}
-              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 pb-4 border-b border-zinc-900 font-mono">
-                <div className="space-y-0.5 text-center sm:text-left">
-                  <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest">
+              <div className="w-full flex items-center justify-between gap-2 pb-2 border-b border-zinc-900 font-mono">
+                <div className="space-y-0.5 text-left min-w-0">
+                  <span className="text-[8px] sm:text-[9px] font-black text-amber-500 uppercase tracking-widest block truncate">
                     🎡 TIRAGE GAWA SOUVERAIN
                   </span>
-                  <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">
+                  <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-tight truncate">
                     {currentWheel?.name || "Roue AfriGombo"}
                   </h3>
                 </div>
 
                 {/* Current GAWA Balance Badge */}
-                <div className="bg-amber-950/40 border border-amber-400/50 px-4 py-2 rounded-2xl flex items-center gap-2 shadow-lg shadow-amber-500/10">
-                  <Zap className="w-4 h-4 fill-amber-400 text-amber-400 shrink-0 animate-pulse" />
-                  <span className="text-xs sm:text-sm font-black text-amber-400 uppercase tracking-tight">
+                <div className="bg-amber-950/40 border border-amber-400/50 px-2.5 py-1 rounded-xl flex items-center gap-1.5 shadow-md shrink-0">
+                  <Zap className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0 animate-pulse" />
+                  <span className="text-xs font-black text-amber-400 uppercase tracking-tight">
                     {(gawaWallet?.soldeGawa || 0).toLocaleString()} GAWA
                   </span>
                 </div>
               </div>
 
               {/* Compact Clickable Access Bars for Centre Gawa & Mes Lots */}
-              <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 box-border">
+              <div className="w-full flex items-center gap-1.5 box-border">
                 {/* Need Gawa Button */}
                 <button
                   onClick={() => {
                     setGawaActiveTab("buy");
                     setShowGawaBottomSheet(true);
                   }}
-                  className="flex-1 min-w-[180px] py-2.5 px-3.5 bg-zinc-900/80 hover:bg-amber-950/30 border border-amber-500/30 hover:border-amber-400/60 rounded-2xl flex items-center justify-between transition cursor-pointer group font-mono text-xs shadow-md"
+                  className="flex-1 py-1.5 px-2.5 bg-zinc-900/80 hover:bg-amber-950/30 border border-amber-500/30 rounded-xl flex items-center justify-between transition cursor-pointer font-mono text-[10px] sm:text-[11px] shadow-sm min-w-0"
                 >
-                  <div className="flex items-center gap-2 text-amber-300 group-hover:text-amber-200 font-bold text-[11px] sm:text-xs min-w-0">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse shrink-0" />
-                    <span className="truncate">✨ Besoin de Gawa ? Venez en chercher.</span>
+                  <div className="flex items-center gap-1.5 text-amber-300 font-bold min-w-0 truncate">
+                    <Sparkles className="w-3 h-3 text-amber-400 animate-pulse shrink-0" />
+                    <span className="truncate">✨ Besoin de Gawa ?</span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-amber-400/70 group-hover:text-amber-400 group-hover:translate-x-0.5 transition shrink-0 ml-1" />
+                  <ChevronRight className="w-3.5 h-3.5 text-amber-400 shrink-0 ml-1" />
                 </button>
 
                 {/* Mes Lots Button */}
                 <button
                   onClick={() => setShowLotsBottomSheet(true)}
-                  className="py-2.5 px-4 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/40 hover:border-amber-400/80 text-amber-400 hover:text-amber-300 rounded-2xl flex items-center justify-center gap-2 transition cursor-pointer font-mono text-xs font-bold shrink-0 shadow-md active:scale-95"
+                  className="py-1.5 px-3 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/40 text-amber-400 rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer font-mono text-[10px] sm:text-[11px] font-bold shrink-0 shadow-sm active:scale-95"
                 >
-                  <Gift className="w-4 h-4 text-amber-400 shrink-0" />
+                  <Gift className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                   <span>🎁 Mes lots</span>
                   {userLots.filter(l => l.status === "AVAILABLE").length > 0 && (
-                    <span className="ml-0.5 px-2 py-0.5 rounded-full bg-amber-400 text-black text-[9px] font-black animate-pulse">
+                    <span className="px-1.5 py-0.5 rounded-full bg-amber-400 text-black text-[8px] font-black animate-pulse">
                       {userLots.filter(l => l.status === "AVAILABLE").length}
                     </span>
                   )}
@@ -456,7 +443,7 @@ export default function GomboWheelSection({
 
               {/* Wheels Selection Tabs */}
               {wheels.length > 1 && (
-                <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1 w-full max-w-full justify-start sm:justify-center px-1 box-border">
+                <div className="flex items-center gap-1 overflow-x-auto scrollbar-none py-0.5 w-full justify-center px-1 box-border">
                   {wheels.map((w) => (
                     <button
                       key={w.id}
@@ -468,10 +455,10 @@ export default function GomboWheelSection({
                           setInsufficientGawaState(null);
                         }
                       }}
-                      className={`px-4 sm:px-5 py-2.5 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider transition shrink-0 cursor-pointer border ${
+                      className={`px-3 py-1 rounded-lg text-[9px] font-mono font-black uppercase tracking-wider transition shrink-0 cursor-pointer border ${
                         currentWheel?.id === w.id
-                          ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-lg shadow-[#D4AF37]/20"
-                          : "bg-zinc-900/60 text-zinc-400 hover:text-white border-zinc-800"
+                          ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-sm"
+                          : "bg-zinc-900/60 text-zinc-400 border-zinc-800"
                       }`}
                     >
                       {w.type || w.name} ({w.cost} GAWA)
@@ -481,18 +468,18 @@ export default function GomboWheelSection({
               )}
 
               {/* Cost Badge */}
-              <div className="px-4 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-[#D4AF37] text-[11px] font-mono font-black uppercase tracking-wider shadow-inner">
+              <div className="px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[#D4AF37] text-[10px] font-mono font-black uppercase tracking-wider">
                 ⚡ COÛT DU LANCEMENT : {hasExtraSpinToken ? "0 GAWA (Spin Offert)" : `${currentWheel?.cost || 20} GAWA`}
               </div>
 
               {/* Visual Wheel Stage */}
-              <div className="relative flex flex-col items-center justify-center py-2 w-full max-w-full">
+              <div className="relative flex flex-col items-center justify-center py-1 w-full max-w-full">
                 {/* Top Pointer Arrow */}
-                <div className="absolute top-0 z-20 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-[#D4AF37] drop-shadow-[0_4px_10px_rgba(212,175,55,0.8)]" />
+                <div className="absolute top-0 z-20 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[16px] border-t-[#D4AF37] drop-shadow-[0_2px_8px_rgba(212,175,55,0.8)]" />
 
                 {/* Rotating Wheel Circle */}
                 <div 
-                  className="w-[min(72vw,280px)] h-[min(72vw,280px)] aspect-square rounded-full border-[5px] sm:border-[6px] border-[#D4AF37] shadow-[0_0_50px_rgba(212,175,55,0.2)] relative overflow-hidden flex items-center justify-center transition-transform duration-[3500ms] cubic-bezier(0.15, 0.9, 0.25, 1) mx-auto"
+                  className="w-[min(54vw,210px,30vh)] h-[min(54vw,210px,30vh)] aspect-square rounded-full border-[4px] sm:border-[5px] border-[#D4AF37] shadow-[0_0_35px_rgba(212,175,55,0.2)] relative overflow-hidden flex items-center justify-center transition-transform duration-[3500ms] cubic-bezier(0.15, 0.9, 0.25, 1) mx-auto"
                   style={{ transform: `rotate(${spinDegree}deg)` }}
                 >
                   {(currentWheel?.segments || []).filter((s) => s.enabled).map((seg, idx, arr) => {
@@ -505,7 +492,7 @@ export default function GomboWheelSection({
                         style={{ transform: `rotate(${angle}deg)` }}
                       >
                         <div 
-                          className="absolute top-3 sm:top-5 text-[8px] sm:text-[10px] font-black uppercase tracking-tight text-black px-1.5 sm:px-2 py-0.5 sm:py-1 rounded shadow-md text-center max-w-[75px] sm:max-w-[90px] truncate"
+                          className="absolute top-2.5 sm:top-4 text-[7px] sm:text-[9px] font-black uppercase tracking-tight text-black px-1.5 py-0.5 rounded shadow-sm text-center max-w-[65px] sm:max-w-[80px] truncate"
                           style={{ backgroundColor: seg.color || "#D4AF37" }}
                         >
                           {formatWheelLabel(seg.label)}
@@ -515,18 +502,18 @@ export default function GomboWheelSection({
                   })}
 
                   {/* Center Hub */}
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-zinc-950 border-2 sm:border-4 border-[#D4AF37] z-10 flex flex-col items-center justify-center shadow-2xl">
-                    <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-[#D4AF37] animate-pulse" />
-                    <span className="text-[7px] sm:text-[8px] font-black text-[#D4AF37] tracking-widest mt-0.5 font-mono">GAWA</span>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-950 border-2 sm:border-3 border-[#D4AF37] z-10 flex flex-col items-center justify-center shadow-xl">
+                    <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D4AF37] animate-pulse" />
+                    <span className="text-[6px] sm:text-[7px] font-black text-[#D4AF37] tracking-widest mt-0.5 font-mono">GAWA</span>
                   </div>
                 </div>
 
                 {/* Action Button: Directly spins, NO modal popup */}
-                <div className="mt-8 w-full max-w-xs space-y-3">
+                <div className="mt-2.5 w-full max-w-xs space-y-1.5">
                   <button
                     onClick={handleExecuteSpin}
                     disabled={isSpinning || remainingDailySpins <= 0}
-                    className={`w-full py-4 px-6 rounded-[22px] font-black uppercase text-xs font-mono tracking-wider transition cursor-pointer flex items-center justify-center gap-2.5 shadow-2xl ${
+                    className={`w-full py-2.5 px-4 rounded-xl font-black uppercase text-xs font-mono tracking-wider transition cursor-pointer flex items-center justify-center gap-2 shadow-xl ${
                       isSpinning || remainingDailySpins <= 0
                         ? "bg-zinc-900 text-zinc-600 border border-zinc-800"
                         : "bg-[#D4AF37] hover:bg-amber-400 text-black shadow-[#D4AF37]/30 border border-[#D4AF37] active:scale-95"
@@ -536,37 +523,37 @@ export default function GomboWheelSection({
                     <span>{isSpinning ? "Tirage en cours..." : "LANCER LA ROUE"}</span>
                   </button>
                   
-                  <div className="flex items-center justify-center gap-6">
-                    <button onClick={() => setShowRulesModal(true)} className="text-[10px] font-black text-zinc-400 uppercase hover:text-[#D4AF37] transition font-mono tracking-tighter cursor-pointer">Règles</button>
-                    <button onClick={() => setShowHistoryModal(true)} className="text-[10px] font-black text-zinc-400 uppercase hover:text-[#D4AF37] transition font-mono tracking-tighter cursor-pointer">Historique</button>
+                  <div className="flex items-center justify-center gap-4">
+                    <button onClick={() => setShowRulesModal(true)} className="text-[9px] font-black text-zinc-400 uppercase hover:text-[#D4AF37] transition font-mono tracking-tighter cursor-pointer">Règles</button>
+                    <button onClick={() => setShowHistoryModal(true)} className="text-[9px] font-black text-zinc-400 uppercase hover:text-[#D4AF37] transition font-mono tracking-tighter cursor-pointer">Historique</button>
                   </div>
                 </div>
               </div>
 
               {/* Error Message */}
               {spinError && (
-                <div className="w-full p-4 bg-red-950/60 border border-red-500/40 rounded-2xl text-red-400 text-xs font-mono font-bold text-center flex items-center justify-center gap-2 animate-fadeIn">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                <div className="w-full p-2.5 bg-red-950/60 border border-red-500/40 rounded-xl text-red-400 text-[10px] font-mono font-bold text-center flex items-center justify-center gap-1.5 animate-fadeIn">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   <span>{spinError}</span>
                 </div>
               )}
 
               {/* Insufficient GAWA Area */}
               {insufficientGawaState && (
-                <div className="w-full p-5 bg-amber-950/40 border border-amber-500/50 rounded-2xl text-center space-y-3 font-mono animate-slideUp">
-                  <div className="flex items-center justify-center gap-2 text-amber-400 font-black text-sm uppercase">
-                    <ShieldAlert className="w-5 h-5 text-amber-400" />
+                <div className="w-full p-3 bg-amber-950/40 border border-amber-500/50 rounded-xl text-center space-y-2 font-mono animate-slideUp">
+                  <div className="flex items-center justify-center gap-1.5 text-amber-400 font-black text-xs uppercase">
+                    <ShieldAlert className="w-4 h-4 text-amber-400" />
                     <span>Gawa insuffisants</span>
                   </div>
-                  <p className="text-xs text-zinc-300">
-                    Il vous manque <span className="font-black text-amber-400">{insufficientGawaState.missingGawa} GAWA</span> pour lancer la {currentWheel?.name || "roue"}.
+                  <p className="text-[10px] text-zinc-300">
+                    Il vous manque <span className="font-black text-amber-400">{insufficientGawaState.missingGawa} GAWA</span> pour lancer la roue.
                   </p>
                   <button
                     onClick={() => {
                       setGawaActiveTab("buy");
                       setShowGawaBottomSheet(true);
                     }}
-                    className="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-black font-black text-xs uppercase rounded-xl tracking-wider shadow-lg shadow-amber-400/20 transition cursor-pointer"
+                    className="px-4 py-1.5 bg-amber-400 hover:bg-amber-300 text-black font-black text-[10px] uppercase rounded-lg tracking-wider shadow-md transition cursor-pointer"
                   >
                     Acheter des Gawa
                   </button>
@@ -575,20 +562,20 @@ export default function GomboWheelSection({
 
               {/* Direct Result Banner Display after Stop */}
               {spinResult?.winningSegment && (
-                <div className="w-full p-6 bg-zinc-900/90 border border-[#D4AF37]/50 rounded-3xl text-center space-y-3 font-mono animate-fadeIn shadow-2xl">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
-                    <Sparkles className="w-3.5 h-3.5" />
+                <div className="w-full p-3 bg-zinc-900/90 border border-[#D4AF37]/50 rounded-2xl text-center space-y-1.5 font-mono animate-fadeIn shadow-xl">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[9px] font-black uppercase tracking-widest">
+                    <Sparkles className="w-3 h-3" />
                     <span>🎉 RÉSULTAT DU TIRAGE</span>
                   </div>
-                  <h3 className="text-xl sm:text-2xl font-black text-[#D4AF37] uppercase tracking-tight">
+                  <h3 className="text-base font-black text-[#D4AF37] uppercase tracking-tight">
                     « {spinResult.winningSegment.label} »
                   </h3>
-                  <p className="text-xs text-zinc-300 max-w-sm mx-auto">
+                  <p className="text-[10px] text-zinc-300 max-w-xs mx-auto">
                     {spinResult.winningSegment.type === "PREMIUM_DAYS"
-                      ? `+${spinResult.winningSegment.rewardValue} jour(s) Premium crédités à votre compte !`
+                      ? `+${spinResult.winningSegment.rewardValue} jour(s) Premium crédités !`
                       : spinResult.winningSegment.type === "EXTRA_SPIN"
                       ? "Un ticket de tirage bonus vous a été offert !"
-                      : "Félicitations pour votre participation à l'écosystème Gombo."}
+                      : "Félicitations pour votre participation !"}
                   </p>
                 </div>
               )}
@@ -605,34 +592,32 @@ export default function GomboWheelSection({
       
       {/* Gawa Purchase Confirmation Modal */}
       {selectedPack && (
-        <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
-          <div className="bg-[#0B0B0C] border border-[#D4AF37]/30 rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 w-full max-w-sm space-y-5 text-center shadow-2xl relative overflow-hidden box-border">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
-             
-             <div className="p-3.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 w-14 h-14 flex items-center justify-center mx-auto mb-1">
-                <ShoppingBag className="w-7 h-7" />
+        <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0B0B0C] border border-[#D4AF37]/30 rounded-[28px] p-5 w-full max-w-xs space-y-4 text-center shadow-2xl relative overflow-hidden box-border">
+             <div className="p-3 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 w-12 h-12 flex items-center justify-center mx-auto">
+                <ShoppingBag className="w-6 h-6" />
              </div>
 
-             <div className="space-y-1">
-                <h3 className="text-sm font-black text-amber-400 uppercase font-mono tracking-widest">Confirmer l'achat</h3>
-                <p className="text-xs text-white font-mono font-bold uppercase tracking-tight">
+             <div className="space-y-0.5">
+                <h3 className="text-xs font-black text-amber-400 uppercase font-mono tracking-widest">Confirmer l'achat</h3>
+                <p className="text-[11px] text-white font-mono font-bold uppercase tracking-tight">
                   {selectedPack.name} • +{selectedPack.gawaAmount} GAWA
                 </p>
              </div>
 
              {/* Financial details breakdown */}
-             <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-900 space-y-2 text-left font-mono">
+             <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-900 space-y-1.5 text-left font-mono">
                 <div className="flex justify-between items-center">
-                   <span className="text-[10px] font-bold text-zinc-400 uppercase">Prix du Pack</span>
-                   <span className="text-sm font-black text-[#D4AF37]">{selectedPack.priceFCFA.toLocaleString()} FCFA</span>
+                   <span className="text-[9px] font-bold text-zinc-400 uppercase">Prix du Pack</span>
+                   <span className="text-xs font-black text-[#D4AF37]">{selectedPack.priceFCFA.toLocaleString()} FCFA</span>
                 </div>
-                <div className="flex justify-between items-center pt-2 border-t border-zinc-900">
-                   <span className="text-[10px] text-zinc-400 uppercase">Solde FCFA Actuel</span>
-                   <span className="text-xs font-bold text-white">{(gawaWallet?.soldeDisponible || 0).toLocaleString()} FCFA</span>
+                <div className="flex justify-between items-center pt-1.5 border-t border-zinc-900">
+                   <span className="text-[9px] text-zinc-400 uppercase">Solde FCFA Actuel</span>
+                   <span className="text-[10px] font-bold text-white">{(gawaWallet?.soldeDisponible || 0).toLocaleString()} FCFA</span>
                 </div>
                 <div className="flex justify-between items-center">
-                   <span className="text-[10px] text-zinc-400 uppercase">Solde FCFA Après</span>
-                   <span className="text-xs font-bold text-amber-400">
+                   <span className="text-[9px] text-zinc-400 uppercase">Solde FCFA Après</span>
+                   <span className="text-[10px] font-bold text-amber-400">
                      {Math.max(0, (gawaWallet?.soldeDisponible || 0) - selectedPack.priceFCFA).toLocaleString()} FCFA
                    </span>
                 </div>
@@ -640,29 +625,29 @@ export default function GomboWheelSection({
 
              {/* Error Message */}
              {error && (
-               <div className="p-3 bg-red-950/60 border border-red-500/40 rounded-xl text-red-400 text-[10px] font-mono font-bold text-center flex items-center justify-center gap-2">
-                 <AlertCircle className="w-4 h-4 shrink-0" />
+               <div className="p-2 bg-red-950/60 border border-red-500/40 rounded-lg text-red-400 text-[9px] font-mono font-bold text-center flex items-center justify-center gap-1">
+                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                  <span>{error}</span>
                </div>
              )}
 
-             <div className="flex gap-3 pt-1">
+             <div className="flex gap-2 pt-1">
                 <button
                   disabled={purchasing}
                   onClick={() => { setSelectedPack(null); setError(null); }}
-                  className="flex-1 py-3.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 rounded-xl text-[10px] font-black uppercase font-mono tracking-wider border border-zinc-800 cursor-pointer transition disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 rounded-xl text-[9px] font-black uppercase font-mono tracking-wider border border-zinc-800 cursor-pointer transition disabled:opacity-50"
                 >
                   Annuler
                 </button>
                 <button
                   disabled={purchasing}
                   onClick={() => handleBuyPack(selectedPack)}
-                  className="flex-1 py-3.5 bg-amber-400 hover:bg-amber-300 disabled:opacity-60 text-black rounded-xl text-[10px] font-black uppercase font-mono tracking-wider shadow-lg shadow-amber-400/20 cursor-pointer transition flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-amber-400 hover:bg-amber-300 disabled:opacity-60 text-black rounded-xl text-[9px] font-black uppercase font-mono tracking-wider shadow-md cursor-pointer transition flex items-center justify-center gap-1.5"
                 >
                   {purchasing ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Traitement...</span>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>...</span>
                     </>
                   ) : (
                     <span>CONFIRMER</span>
@@ -675,20 +660,20 @@ export default function GomboWheelSection({
 
       {/* Success Modal */}
       {successDetails && (
-        <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6 animate-fadeIn">
-          <div className="bg-[#0B0B0C] border border-emerald-500/30 rounded-[40px] p-10 w-full max-w-sm space-y-6 text-center shadow-2xl">
-             <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-emerald-400 mb-2">
-                <Check className="w-10 h-10 stroke-[3]" />
+        <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0B0B0C] border border-emerald-500/30 rounded-[32px] p-6 w-full max-w-xs space-y-4 text-center shadow-2xl">
+             <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-emerald-400">
+                <Check className="w-7 h-7 stroke-[3]" />
              </div>
              <div className="space-y-1">
-                <h3 className="text-lg font-black text-emerald-400 uppercase font-mono tracking-widest">Achat Réussi !</h3>
-                <p className="text-[11px] text-zinc-400 font-mono leading-relaxed">
+                <h3 className="text-base font-black text-emerald-400 uppercase font-mono tracking-widest">Achat Réussi !</h3>
+                <p className="text-[10px] text-zinc-400 font-mono leading-relaxed">
                   +{successDetails.amount} Gawa ont été ajoutés à votre compte.
                 </p>
              </div>
              <button
                onClick={() => setSuccessDetails(null)}
-               className="w-full py-4 bg-emerald-600 text-white rounded-[24px] text-[10px] font-black uppercase font-mono tracking-widest shadow-xl shadow-emerald-600/20 cursor-pointer"
+               className="w-full py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase font-mono tracking-widest shadow-lg cursor-pointer"
              >
                EXCELLENT
              </button>
@@ -698,36 +683,35 @@ export default function GomboWheelSection({
 
       {/* Mystery Box Modal */}
       {spinResult?.winningSegment?.type === "SURPRISE_BOX" && showMysteryBox && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-lg flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#0B0B0C] border-t-2 sm:border-2 border-[#D4AF37]/50 rounded-t-[48px] sm:rounded-[48px] p-10 w-full max-w-md space-y-8 shadow-2xl text-white font-mono text-center relative overflow-hidden animate-slideUp">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-[100px] pointer-events-none" />
-            <div className="inline-flex p-6 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 shadow-xl animate-bounce">
-              <Gift className="w-12 h-12" />
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0B0B0C] border-2 border-[#D4AF37]/50 rounded-[36px] p-6 w-full max-w-xs space-y-5 shadow-2xl text-white font-mono text-center relative overflow-hidden animate-slideUp">
+            <div className="inline-flex p-4 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 shadow-xl animate-bounce">
+              <Gift className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-black text-[#D4AF37] uppercase tracking-wider">🎁 BOÎTE MYSTÈRE</h3>
+            <h3 className="text-base font-black text-[#D4AF37] uppercase tracking-wider">🎁 BOÎTE MYSTÈRE</h3>
             {!mysteryBoxOpened ? (
-              <div className="space-y-6">
-                <p className="text-[11px] text-zinc-500 max-w-xs mx-auto font-medium">Un gain exclusif est caché à l'intérieur de cette boîte souveraine.</p>
+              <div className="space-y-4">
+                <p className="text-[10px] text-zinc-400 font-medium">Un gain exclusif est caché à l'intérieur.</p>
                 <div 
                   onClick={() => { setMysteryBoxOpened(true); try { audioSynth?.playValidationSuccess?.(); } catch (e) {} }}
-                  className="p-10 bg-zinc-950 border-4 border-dashed border-[#D4AF37]/30 rounded-[32px] cursor-pointer hover:border-[#D4AF37] transition group shadow-2xl"
+                  className="p-6 bg-zinc-950 border-2 border-dashed border-[#D4AF37]/30 rounded-2xl cursor-pointer hover:border-[#D4AF37] transition group shadow-xl"
                 >
-                  <div className="text-5xl mb-4 group-hover:scale-110 transition transform">📦</div>
-                  <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest block">DÉCELLER LE MYSTÈRE</span>
+                  <div className="text-4xl mb-2 group-hover:scale-110 transition transform">📦</div>
+                  <span className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest block">DÉCELLER LE MYSTÈRE</span>
                 </div>
               </div>
             ) : (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="p-6 bg-zinc-950 border border-emerald-500/40 rounded-[32px] space-y-2 shadow-inner">
-                  <span className="text-[9px] text-emerald-400 font-black uppercase tracking-[0.2em] block">RÉVÉLATION :</span>
-                  <div className="text-xl font-black text-white tracking-tight">
+              <div className="space-y-4 animate-fadeIn">
+                <div className="p-4 bg-zinc-950 border border-emerald-500/40 rounded-2xl space-y-1 shadow-inner">
+                  <span className="text-[8px] text-emerald-400 font-black uppercase tracking-[0.2em] block">RÉVÉLATION :</span>
+                  <div className="text-base font-black text-white tracking-tight">
                     {currentWheel?.type === "ELITE" ? "🏆 14 Jours Premium Elite" : "👑 7 Jours Premium"}
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowMysteryBox(false)}
-                  className="w-full py-5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-[10px] rounded-[24px] shadow-2xl shadow-[#D4AF37]/20 transition cursor-pointer"
+                  className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-[10px] rounded-xl shadow-xl transition cursor-pointer"
                 >
                   TERMINER
                 </button>
@@ -739,34 +723,34 @@ export default function GomboWheelSection({
 
       {/* Rules Modal */}
       {showRulesModal && currentWheel && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#0B0B0C] border-t sm:border border-zinc-800 rounded-t-[40px] sm:rounded-[40px] p-10 w-full max-w-md space-y-6 shadow-2xl text-white font-mono max-h-[85vh] flex flex-col animate-slideUp">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-5">
-              <h3 className="text-base font-black uppercase text-[#D4AF37] tracking-tight">Règles du Tirage</h3>
-              <button onClick={() => setShowRulesModal(false)} className="text-zinc-600 hover:text-white transition cursor-pointer"><X className="w-5 h-5" /></button>
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0B0B0C] border border-zinc-800 rounded-[28px] p-5 w-full max-w-xs space-y-4 shadow-2xl text-white font-mono flex flex-col animate-slideUp">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+              <h3 className="text-xs font-black uppercase text-[#D4AF37] tracking-tight">Règles du Tirage</h3>
+              <button onClick={() => setShowRulesModal(false)} className="text-zinc-600 hover:text-white transition cursor-pointer"><X className="w-4 h-4" /></button>
             </div>
-            <div className="overflow-y-auto flex-1 space-y-6 text-xs text-zinc-400 leading-relaxed pr-2 scrollbar-none">
-              <div className="p-6 bg-zinc-950 rounded-[32px] border border-zinc-900 space-y-3">
-                <span className="font-black text-white uppercase block">{currentWheel.name}</span>
-                <p>{currentWheel.rulesText || "Chaque tirage est certifié par l'algorithme Souverain d'AFRIGOMBO garantissant équité et transparence."}</p>
+            <div className="space-y-3 text-[10px] text-zinc-400 leading-relaxed">
+              <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-900 space-y-1">
+                <span className="font-black text-white uppercase block text-[10px]">{currentWheel.name}</span>
+                <p className="text-[9px]">{currentWheel.rulesText || "Chaque tirage est certifié par l'algorithme Souverain d'AFRIGOMBO."}</p>
               </div>
-              <div className="space-y-4 bg-zinc-950/50 p-6 rounded-[32px] border border-zinc-900">
-                <span className="font-black text-zinc-300 block uppercase tracking-widest text-[9px]">Conditions de Participation</span>
-                <ul className="space-y-3">
-                   <li className="flex gap-3">
-                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+              <div className="space-y-2 bg-zinc-950/50 p-3 rounded-xl border border-zinc-900">
+                <span className="font-black text-zinc-300 block uppercase tracking-widest text-[8px]">Conditions de Participation</span>
+                <ul className="space-y-1.5 text-[9px]">
+                   <li className="flex gap-2">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                       <span>Coût : {currentWheel.cost} GAWA par spin.</span>
                    </li>
-                   <li className="flex gap-3">
-                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <span>Limite : {currentWheel.maxDailyParticipations || "Aucune"} participation(s) par jour.</span>
+                   <li className="flex gap-2">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>Limite : {currentWheel.maxDailyParticipations || "Aucune"} par jour.</span>
                    </li>
                 </ul>
               </div>
             </div>
             <button
               onClick={() => setShowRulesModal(false)}
-              className="w-full py-4 bg-zinc-900 text-zinc-400 font-black uppercase text-[10px] rounded-[24px] border border-zinc-800 hover:text-white transition cursor-pointer"
+              className="w-full py-2.5 bg-zinc-900 text-zinc-400 font-black uppercase text-[9px] rounded-xl border border-zinc-800 hover:text-white transition cursor-pointer"
             >
               FERMER
             </button>
@@ -776,88 +760,93 @@ export default function GomboWheelSection({
 
       {/* History Modal */}
       {showHistoryModal && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#0B0B0C] border-t sm:border border-zinc-800 rounded-t-[40px] sm:rounded-[40px] p-10 w-full max-w-lg space-y-6 shadow-2xl text-white font-mono max-h-[85vh] flex flex-col animate-slideUp">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-5">
-              <h3 className="text-base font-black uppercase text-[#D4AF37] tracking-tight">Historique des Tirages</h3>
-              <button onClick={() => setShowHistoryModal(false)} className="text-zinc-600 hover:text-white transition cursor-pointer"><X className="w-5 h-5" /></button>
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0B0B0C] border border-zinc-800 rounded-[28px] p-5 w-full max-w-xs space-y-4 shadow-2xl text-white font-mono flex flex-col animate-slideUp">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+              <h3 className="text-xs font-black uppercase text-[#D4AF37] tracking-tight">Historique des Tirages</h3>
+              <button onClick={() => setShowHistoryModal(false)} className="text-zinc-600 hover:text-white transition cursor-pointer"><X className="w-4 h-4" /></button>
             </div>
-            <div className="overflow-y-auto flex-1 space-y-3 pr-2 scrollbar-none">
+            <div className="space-y-2">
                {userSpins.length === 0 ? (
-                 <div className="py-20 text-center text-zinc-700 uppercase font-black text-[10px] tracking-widest">Aucun tirage récent</div>
+                 <div className="py-8 text-center text-zinc-600 uppercase font-black text-[9px] tracking-widest">Aucun tirage récent</div>
                ) : (
-                 userSpins.map(sp => (
-                   <div key={sp.spinId} className="p-5 bg-zinc-950 border border-zinc-900 rounded-[24px] flex items-center justify-between">
-                      <div className="space-y-1">
-                         <div className="font-black text-white uppercase text-[11px] tracking-tight">{sp.rewardLabel}</div>
-                         <div className="text-[9px] text-zinc-600 font-mono uppercase tracking-widest">{new Date(sp.createdAt).toLocaleDateString("fr-FR")}</div>
+                 userSpins.slice(0, 5).map(sp => (
+                   <div key={sp.spinId} className="p-2.5 bg-zinc-950 border border-zinc-900 rounded-xl flex items-center justify-between text-[9px]">
+                      <div className="space-y-0.5 min-w-0">
+                         <div className="font-black text-white uppercase tracking-tight truncate">{sp.rewardLabel}</div>
+                         <div className="text-[7px] text-zinc-500 font-mono uppercase">{new Date(sp.createdAt).toLocaleDateString("fr-FR")}</div>
                       </div>
-                      <div className="text-right">
-                         <div className="text-[10px] font-black text-[#D4AF37] uppercase">{sp.cost} GAWA</div>
-                         <div className="text-[8px] font-black text-emerald-600 uppercase">{sp.status}</div>
+                      <div className="text-right shrink-0">
+                         <div className="font-black text-[#D4AF37]">{sp.cost} GAWA</div>
                       </div>
                    </div>
                  ))
                )}
             </div>
+            <button
+              onClick={() => setShowHistoryModal(false)}
+              className="w-full py-2 bg-zinc-900 text-zinc-400 font-black uppercase text-[9px] rounded-xl border border-zinc-800 transition cursor-pointer"
+            >
+              FERMER
+            </button>
           </div>
         </div>
       )}
 
       {/* CENTRE GAWA BOTTOM SHEET */}
       {showGawaBottomSheet && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col justify-end animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center animate-fadeIn p-0">
           {/* Backdrop click to close */}
           <div 
-            className="flex-1 w-full" 
+            className="fixed inset-0" 
             onClick={() => setShowGawaBottomSheet(false)} 
           />
 
-          {/* Bottom Sheet Panel */}
-          <div className="bg-[#0B0B0C] border-t-2 border-[#D4AF37]/40 rounded-t-[32px] sm:rounded-t-[40px] p-4 sm:p-6 w-full max-w-xl mx-auto space-y-4 shadow-2xl text-white font-mono max-h-[88vh] flex flex-col animate-slideUp relative box-border overflow-hidden">
+          {/* Bottom Sheet Panel anchored at bottom */}
+          <div className="relative z-10 w-full max-w-md bg-[#0B0B0C] border-t-2 border-[#D4AF37]/40 rounded-t-[24px] sm:rounded-t-[32px] p-3 sm:p-4 space-y-2.5 shadow-2xl text-white font-mono flex flex-col animate-slideUp overflow-hidden box-border">
             
             {/* Top Pull Handle */}
             <div 
-              className="w-12 h-1.5 bg-zinc-700 hover:bg-zinc-500 rounded-full mx-auto shrink-0 cursor-pointer transition"
+              className="w-10 h-1 bg-zinc-700 hover:bg-zinc-500 rounded-full mx-auto shrink-0 cursor-pointer transition"
               onClick={() => setShowGawaBottomSheet(false)}
             />
 
             {/* Header Bar */}
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3 shrink-0">
-              <div className="flex items-center gap-2">
-                <Coins className="w-5 h-5 text-amber-400 shrink-0" />
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <Coins className="w-4 h-4 text-amber-400 shrink-0" />
                 <div>
-                  <h3 className="text-sm font-black text-amber-400 uppercase tracking-wider">CENTRE GAWA</h3>
-                  <p className="text-[10px] text-zinc-400 font-normal">Rechargez vos jetons pour lancer les roues</p>
+                  <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">CENTRE GAWA</h3>
+                  <p className="text-[8px] text-zinc-400 font-normal">Rechargez vos jetons Gawa</p>
                 </div>
               </div>
 
               {/* Dual Wallet Display Bar */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {/* FCFA Wallet */}
-                <div className="bg-zinc-900 border border-amber-500/30 px-2.5 py-1 rounded-xl text-right">
-                  <span className="text-[8px] font-black text-amber-500 uppercase block">Wallet FCFA</span>
-                  <span className="text-[10px] font-black text-white">{(gawaWallet?.soldeDisponible || 0).toLocaleString()} FCFA</span>
+                <div className="bg-zinc-900 border border-amber-500/30 px-2 py-0.5 rounded-lg text-right">
+                  <span className="text-[7px] font-black text-amber-500 uppercase block">Wallet FCFA</span>
+                  <span className="text-[9px] font-black text-white">{(gawaWallet?.soldeDisponible || 0).toLocaleString()} F</span>
                 </div>
                 {/* Solde GAWA */}
-                <div className="bg-amber-950/40 border border-amber-400/50 px-2.5 py-1 rounded-xl text-right">
-                  <span className="text-[8px] font-black text-amber-400 uppercase block">Solde GAWA</span>
-                  <span className="text-[10px] font-black text-amber-400 flex items-center justify-end gap-0.5">
-                    <Zap className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
+                <div className="bg-amber-950/40 border border-amber-400/50 px-2 py-0.5 rounded-lg text-right">
+                  <span className="text-[7px] font-black text-amber-400 uppercase block">Solde GAWA</span>
+                  <span className="text-[9px] font-black text-amber-400 flex items-center justify-end gap-0.5">
+                    <Zap className="w-2.5 h-2.5 fill-amber-400 text-amber-400 shrink-0" />
                     {(gawaWallet?.soldeGawa || 0).toLocaleString()} GAWA
                   </span>
                 </div>
                 <button 
                   onClick={() => setShowGawaBottomSheet(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 flex items-center justify-center transition cursor-pointer shrink-0 ml-1"
+                  className="w-7 h-7 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 flex items-center justify-center transition cursor-pointer shrink-0 ml-0.5"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
 
             {/* Navigation Tabs (Acheter / Missions / Historique) */}
-            <div className="flex items-center justify-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800 w-full shrink-0">
+            <div className="flex items-center justify-center gap-1 bg-zinc-900/80 p-0.5 rounded-lg border border-zinc-800 w-full shrink-0">
               {[
                 { id: "buy", label: "🛒 ACHETER GAWA" },
                 { id: "missions", label: "🎯 MISSIONS" },
@@ -866,8 +855,8 @@ export default function GomboWheelSection({
                 <button
                   key={tab.id}
                   onClick={() => setGawaActiveTab(tab.id as any)}
-                  className={`flex-1 py-2 px-2 rounded-lg text-[10px] font-black uppercase font-mono tracking-wider transition whitespace-nowrap cursor-pointer ${
-                    gawaActiveTab === tab.id ? "bg-amber-400 text-black shadow-md shadow-amber-400/20" : "text-zinc-400 hover:text-white"
+                  className={`flex-1 py-1.5 px-1 rounded-md text-[9px] font-black uppercase font-mono tracking-wider transition whitespace-nowrap cursor-pointer ${
+                    gawaActiveTab === tab.id ? "bg-amber-400 text-black shadow-sm" : "text-zinc-400 hover:text-white"
                   }`}
                 >
                   {tab.label}
@@ -875,22 +864,22 @@ export default function GomboWheelSection({
               ))}
             </div>
 
-            {/* Scrollable Tab Content */}
-            <div className="overflow-y-auto flex-1 space-y-3 pr-1 scrollbar-none min-h-[220px]">
+            {/* Tab Content - No internal scroll, compact cards */}
+            <div className="w-full space-y-2 overflow-hidden py-1">
               {/* BUY TAB (Packs) */}
               {gawaActiveTab === "buy" && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full box-border pt-1">
+                <div className="grid grid-cols-3 gap-1.5 w-full box-border">
                   {gawaPacks.map(pack => (
-                    <div key={pack.id} className="p-4 bg-zinc-900/60 border border-zinc-800 hover:border-amber-400/40 rounded-[20px] space-y-3 text-center transition shadow-lg flex flex-col justify-between">
-                      <div className="space-y-1">
-                        <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest block">{pack.name}</span>
-                        <p className="text-2xl font-black text-amber-400 tracking-tighter">+{pack.gawaAmount} GAWA</p>
+                    <div key={pack.id} className="p-2 bg-zinc-900/80 border border-zinc-800 hover:border-amber-400/40 rounded-xl space-y-1.5 text-center transition shadow-md flex flex-col justify-between">
+                      <div>
+                        <span className="text-[8px] font-black text-zinc-400 uppercase tracking-tight block truncate">{pack.name}</span>
+                        <p className="text-sm font-black text-amber-400 tracking-tighter">+{pack.gawaAmount} GAWA</p>
                       </div>
                       <button
                         onClick={() => { setSelectedPack(pack); setError(null); }}
-                        className="w-full py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black rounded-xl text-[10px] uppercase tracking-wider transition cursor-pointer shadow-md shadow-[#D4AF37]/10 active:scale-95"
+                        className="w-full py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black rounded-lg text-[9px] uppercase tracking-wider transition cursor-pointer shadow-sm active:scale-95"
                       >
-                        Acheter ({pack.priceFCFA.toLocaleString()} FCFA)
+                        {pack.priceFCFA.toLocaleString()} FCFA
                       </button>
                     </div>
                   ))}
@@ -899,31 +888,28 @@ export default function GomboWheelSection({
 
               {/* MISSIONS TAB */}
               {gawaActiveTab === "missions" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full box-border pt-1">
+                <div className="space-y-1.5 w-full box-border">
                   {missions.map(m => {
                     const done = userMissions.some(um => um.missionId === m.id);
                     return (
-                      <div key={m.id} className={`p-4 bg-zinc-900/40 border border-zinc-800 rounded-[20px] flex flex-col justify-between gap-3 transition hover:border-[#D4AF37]/30 ${done ? "opacity-60" : ""}`}>
-                        <div className="space-y-1">
-                           <div className="flex items-center justify-between">
-                              <span className="p-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-[#D4AF37]">
-                                 <Target className="w-3.5 h-3.5" />
-                              </span>
-                              <span className="text-xs font-black text-amber-400">+{m.rewardGawa} GAWA</span>
+                      <div key={m.id} className={`p-2 bg-zinc-900/50 border border-zinc-800 rounded-xl flex items-center justify-between gap-2 ${done ? "opacity-60" : ""}`}>
+                        <div className="min-w-0">
+                           <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] font-black text-white uppercase truncate">{m.title}</span>
+                              <span className="text-[9px] font-black text-amber-400 shrink-0">+{m.rewardGawa} GAWA</span>
                            </div>
-                           <h4 className="text-xs font-black text-white uppercase tracking-tight">{m.title}</h4>
-                           <p className="text-[10px] text-zinc-400 leading-relaxed line-clamp-2">{m.description}</p>
+                           <p className="text-[8px] text-zinc-400 truncate">{m.description}</p>
                         </div>
                         <button
                           disabled={done || evaluatingMissions[m.id]}
                           onClick={() => handleClaimMission(m)}
-                          className={`w-full py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition cursor-pointer ${
+                          className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase shrink-0 transition cursor-pointer ${
                             done 
                               ? "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed" 
-                              : "bg-[#D4AF37] hover:bg-amber-400 text-black shadow-md"
+                              : "bg-[#D4AF37] hover:bg-amber-400 text-black shadow-sm"
                           }`}
                         >
-                          {evaluatingMissions[m.id] ? "Vérification..." : done ? "Terminé" : "Réclamer"}
+                          {evaluatingMissions[m.id] ? "..." : done ? "Terminé" : "Réclamer"}
                         </button>
                       </div>
                     );
@@ -933,25 +919,20 @@ export default function GomboWheelSection({
 
               {/* HISTORY TAB */}
               {gawaActiveTab === "history" && (
-                <div className="space-y-2 w-full box-border pt-1">
+                <div className="space-y-1 w-full box-border">
                   {gawaHistory.length === 0 ? (
-                    <div className="py-10 text-center space-y-2">
-                       <History className="w-8 h-8 text-zinc-700 mx-auto" />
-                       <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Aucun historique GAWA</p>
+                    <div className="py-6 text-center space-y-1">
+                       <History className="w-6 h-6 text-zinc-700 mx-auto" />
+                       <p className="text-[9px] text-zinc-500 uppercase font-black">Aucun historique GAWA</p>
                     </div>
                   ) : (
-                    gawaHistory.map(tx => (
-                      <div key={tx.id} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-[16px] flex justify-between items-center gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                           <div className="w-7 h-7 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-center text-amber-400 shrink-0">
-                              <Coins className="w-3.5 h-3.5" />
-                           </div>
-                           <div className="min-w-0 truncate">
-                              <p className="text-[10px] font-black text-white uppercase tracking-tight truncate">{tx.description}</p>
-                              <p className="text-[8px] text-zinc-500 uppercase tracking-widest">{new Date(tx.createdAt).toLocaleDateString("fr-FR")} • {new Date(tx.createdAt).toLocaleTimeString("fr-FR")}</p>
-                           </div>
+                    gawaHistory.slice(0, 4).map(tx => (
+                      <div key={tx.id} className="p-2 bg-zinc-900/50 border border-zinc-900 rounded-lg flex justify-between items-center gap-2">
+                        <div className="min-w-0 truncate">
+                           <p className="text-[9px] font-black text-white uppercase truncate">{tx.description}</p>
+                           <p className="text-[7px] text-zinc-500 font-mono">{new Date(tx.createdAt).toLocaleDateString("fr-FR")}</p>
                         </div>
-                        <span className={`font-black text-xs shrink-0 ${tx.amount > 0 ? "text-amber-400" : "text-zinc-400"}`}>
+                        <span className={`font-black text-[10px] shrink-0 ${tx.amount > 0 ? "text-amber-400" : "text-zinc-400"}`}>
                           {tx.amount > 0 ? "+" : ""}{tx.amount} GAWA
                         </span>
                       </div>
@@ -962,10 +943,10 @@ export default function GomboWheelSection({
             </div>
 
             {/* Footer Close Button */}
-            <div className="pt-2 border-t border-zinc-900 shrink-0">
+            <div className="pt-1.5 border-t border-zinc-900 shrink-0">
               <button
                 onClick={() => setShowGawaBottomSheet(false)}
-                className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white font-black uppercase text-[10px] rounded-2xl border border-zinc-800 transition cursor-pointer"
+                className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white font-black uppercase text-[9px] rounded-xl border border-zinc-800 transition cursor-pointer"
               >
                 FERMER
               </button>
@@ -979,60 +960,60 @@ export default function GomboWheelSection({
       {/* 3. BOTTOM SHEET "MES LOTS" */}
       {/* ========================================================= */}
       {showLotsBottomSheet && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col justify-end animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center animate-fadeIn p-0">
           {/* Backdrop Overlay Click to Close */}
           <div 
-            className="flex-1 w-full cursor-pointer" 
+            className="fixed inset-0 cursor-pointer" 
             onClick={() => setShowLotsBottomSheet(false)} 
           />
 
           {/* Bottom Sheet Container */}
-          <div className="bg-[#0B0B0C] border-t-2 border-[#D4AF37]/40 rounded-t-[32px] sm:rounded-t-[40px] p-4 sm:p-6 w-full max-w-xl mx-auto space-y-4 shadow-2xl text-white font-mono max-h-[88vh] flex flex-col animate-slideUp relative box-border overflow-hidden">
+          <div className="relative z-10 w-full max-w-md bg-[#0B0B0C] border-t-2 border-[#D4AF37]/40 rounded-t-[24px] sm:rounded-t-[32px] p-3 sm:p-4 space-y-2.5 shadow-2xl text-white font-mono flex flex-col animate-slideUp overflow-hidden box-border">
             
             {/* Top Handle Bar */}
             <div 
-              className="w-12 h-1.5 bg-zinc-700 hover:bg-zinc-500 rounded-full mx-auto shrink-0 cursor-pointer transition"
+              className="w-10 h-1 bg-zinc-700 hover:bg-zinc-500 rounded-full mx-auto shrink-0 cursor-pointer transition"
               onClick={() => setShowLotsBottomSheet(false)}
             />
 
             {/* Header Bar */}
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400 shrink-0">
-                  <Gift className="w-4 h-4" />
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400 shrink-0">
+                  <Gift className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-black text-amber-400 uppercase tracking-wider">🎁 MES LOTS</h3>
-                  <p className="text-[10px] text-zinc-400 font-normal">Vos privilèges et récompenses remportés à la roue</p>
+                  <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">🎁 MES LOTS</h3>
+                  <p className="text-[8px] text-zinc-400 font-normal">Vos récompenses remportées</p>
                 </div>
               </div>
               <button 
                 onClick={() => setShowLotsBottomSheet(false)}
-                className="w-8 h-8 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 flex items-center justify-center transition cursor-pointer shrink-0"
+                className="w-7 h-7 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 flex items-center justify-center transition cursor-pointer shrink-0"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Notifications / Feedback */}
             {activationSuccessMsg && (
-              <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-xs font-bold text-center animate-fadeIn shrink-0">
+              <div className="p-2 rounded-lg bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-[10px] font-bold text-center animate-fadeIn shrink-0">
                 {activationSuccessMsg}
               </div>
             )}
             {activationErrorMsg && (
-              <div className="p-3 rounded-xl bg-red-950/80 border border-red-500/50 text-red-300 text-xs font-bold text-center animate-fadeIn shrink-0">
+              <div className="p-2 rounded-lg bg-red-950/80 border border-red-500/50 text-red-300 text-[10px] font-bold text-center animate-fadeIn shrink-0">
                 {activationErrorMsg}
               </div>
             )}
 
-            {/* Scrollable Lot List */}
-            <div className="overflow-y-auto flex-1 space-y-3 pr-1 scrollbar-none min-h-[220px]">
+            {/* Lot List - No internal scroll overflow, compact items */}
+            <div className="w-full space-y-1.5 overflow-hidden py-1">
               {userLots.length === 0 ? (
-                <div className="py-12 text-center space-y-3">
-                  <Gift className="w-10 h-10 text-zinc-700 mx-auto" />
-                  <p className="text-xs text-zinc-400 uppercase font-black tracking-widest">Vous n'avez pas encore de lot gagné</p>
-                  <p className="text-[10px] text-zinc-500 max-w-xs mx-auto">Faites tourner la roue pour remporter du Premium, des Boosts et des récompenses exclusives !</p>
+                <div className="py-8 text-center space-y-2">
+                  <Gift className="w-8 h-8 text-zinc-700 mx-auto" />
+                  <p className="text-[10px] text-zinc-400 uppercase font-black tracking-widest">Vous n'avez pas encore de lot gagné</p>
+                  <p className="text-[8px] text-zinc-500 max-w-xs mx-auto">Faites tourner la roue pour remporter du Premium et des privilèges !</p>
                 </div>
               ) : (
                 userLots.map((lot) => {
@@ -1044,23 +1025,23 @@ export default function GomboWheelSection({
                   return (
                     <div 
                       key={lot.id} 
-                      className={`p-4 rounded-[20px] border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition shadow-lg ${
+                      className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition shadow-md ${
                         isAvailable 
-                          ? "bg-amber-950/20 border-amber-500/40 hover:border-amber-400" 
+                          ? "bg-amber-950/20 border-amber-500/40" 
                           : isActivated
                           ? "bg-emerald-950/10 border-emerald-500/30"
                           : "bg-zinc-900/40 border-zinc-800 opacity-60"
                       }`}
                     >
-                      <div className="space-y-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-black text-white uppercase tracking-tight">
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-black text-white uppercase tracking-tight truncate">
                             {lot.rewardLabel}
                           </span>
                           {/* Status Badge */}
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                          <span className={`px-1.5 py-0.2 rounded-full text-[8px] font-black uppercase ${
                             isAvailable 
-                              ? "bg-amber-400/20 text-amber-300 border border-amber-400/30 animate-pulse" 
+                              ? "bg-amber-400/20 text-amber-300 border border-amber-400/30" 
                               : isActivated
                               ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                               : isExpired
@@ -1071,42 +1052,31 @@ export default function GomboWheelSection({
                           </span>
                         </div>
 
-                        <p className="text-[10px] text-zinc-400 font-mono">
-                          Gagné sur {lot.wheelName || "Roue AfriGombo"} • {new Date(lot.createdAt).toLocaleDateString("fr-FR")}
+                        <p className="text-[8px] text-zinc-400 font-mono">
+                          Gagné sur {lot.wheelName || "Roue AfriGombo"}
                         </p>
-
-                        {isActivated && lot.expiresAt && (
-                          <p className="text-[9px] text-emerald-400 font-bold font-mono">
-                            Expire le : {new Date(lot.expiresAt).toLocaleDateString("fr-FR")} à {new Date(lot.expiresAt).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        )}
                       </div>
 
                       {/* Action Button */}
-                      <div className="shrink-0 pt-1 sm:pt-0">
+                      <div className="shrink-0">
                         {isAvailable && (
                           <button
                             disabled={activatingLotId === lot.id}
                             onClick={() => handleActivateLot(lot)}
-                            className="w-full sm:w-auto px-5 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black text-xs uppercase font-mono rounded-xl tracking-wider shadow-md shadow-[#D4AF37]/20 transition cursor-pointer active:scale-95 disabled:opacity-50"
+                            className="px-3 py-1 bg-[#D4AF37] hover:bg-amber-400 text-black font-black text-[9px] uppercase font-mono rounded-lg transition cursor-pointer active:scale-95 disabled:opacity-50"
                           >
-                            {activatingLotId === lot.id ? "Activation..." : "ACTIVER"}
+                            {activatingLotId === lot.id ? "..." : "ACTIVER"}
                           </button>
                         )}
                         {isActivated && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 text-xs font-bold font-mono">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 text-[9px] font-bold font-mono">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                             Activé
                           </span>
                         )}
-                        {isExpired && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-500 text-xs font-bold font-mono">
-                            Expiré
-                          </span>
-                        )}
-                        {isUsed && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-500 text-xs font-bold font-mono">
-                            Utilisé
+                        {(isExpired || isUsed) && (
+                          <span className="px-2 py-0.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-500 text-[9px] font-mono">
+                            {isExpired ? "Expiré" : "Utilisé"}
                           </span>
                         )}
                       </div>
@@ -1117,10 +1087,10 @@ export default function GomboWheelSection({
             </div>
 
             {/* Footer Close Button */}
-            <div className="pt-2 border-t border-zinc-900 shrink-0">
+            <div className="pt-1.5 border-t border-zinc-900 shrink-0">
               <button
                 onClick={() => setShowLotsBottomSheet(false)}
-                className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white font-black uppercase text-[10px] rounded-2xl border border-zinc-800 transition cursor-pointer"
+                className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white font-black uppercase text-[9px] rounded-xl border border-zinc-800 transition cursor-pointer"
               >
                 FERMER
               </button>
