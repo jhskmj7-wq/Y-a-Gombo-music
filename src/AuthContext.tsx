@@ -1,14 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Lock } from "lucide-react";
-import { gomboDB, gomboAuth } from "./firebase";
-import { auth } from "./lib/firebase";
-import { serverTimestamp, doc, getDoc } from "firebase/firestore";
-import { db } from "./lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { authService } from "./auth/authService";
+import { db, auth } from "./lib/firebase";
+import { doc, getDoc, serverTimestamp } from "firebase/firestore";
 import { UserProfile } from "./types";
 import { PremiumEngine } from "./lib/premiumEngine";
 import { fetchPlatformPricing, getCanonicalWalletBalance } from "./lib/financial";
 import { safeStringify } from "./lib/jsonUtils";
+import { AuthModal } from "./components/auth/AuthModal";
 
 interface AuthContextType {
   currentUser: any | null;       
@@ -29,7 +28,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  console.log("AuthProvider mounted");
   const [currentUser, setCurrentUser] = useState<any | null>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -65,7 +63,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [authLoading, setAuthLoading] = useState(() => {
-    // If user profile is already cached in localStorage, start with authLoading = false
     if (typeof window !== "undefined") {
       try {
         const stored = localStorage.getItem("afrigombo_user_session");
@@ -77,27 +74,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [showAuthPopup, setShowAuthPopup] = useState(false);
 
   useEffect(() => {
-    // Fetch global platform pricing on mount
     fetchPlatformPricing().catch(console.error);
 
     let profileUnsub: (() => void) | null = null;
 
-    // Safety timeout to prevent blocking if Firebase Auth hangs or network is slow
     const safetyTimer = setTimeout(() => {
       setAuthLoading(false);
     }, 1500);
 
-    // Handle Google redirect sign-in result when returning to the application
-    const checkRedirect = async () => {
-      try {
-        await gomboAuth.handleAuthRedirect();
-      } catch (err) {
-        console.error("Error retrieving redirect sign-in result:", err);
-      }
-    };
-    checkRedirect();
+    // Handle Google/Apple redirect sign-in result ONCE at startup
+    authService.handleAuthRedirect().catch((err) => {
+      console.error("Error retrieving redirect sign-in result:", err);
+    });
 
-    const unsubscribe = gomboAuth.onAuthStateChanged(async (firebaseUser) => {
+    const unsubscribe = authService.onAuthStateChanged(async (firebaseUser) => {
       clearTimeout(safetyTimer);
       
       if (profileUnsub) {
@@ -109,124 +99,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCurrentUser(firebaseUser);
         setShowAuthPopup(false);
         try {
-          const userDocRef = doc(db, "users", firebaseUser.uid);
-          const docSnap = await getDoc(userDocRef);
-          let uProfile: UserProfile | null = null;
-
-          if (!docSnap.exists()) {
-            // Strictly NEW account creation ONLY
-            const names = typeof firebaseUser.displayName === "string" ? firebaseUser.displayName.split(" ") : ["Artiste", "Afrigombo"];
-            const isFounder = firebaseUser.email === "jhs.kmj7@gmail.com";
-            const founderPermissions = [
-              "admin",
-              "founder",
-              "dashboard",
-              "users",
-              "verification",
-              "payments",
-              "reports",
-              "settings"
-            ];
-
-            uProfile = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email || "",
-              firstName: names[0] || "",
-              lastName: names.slice(1).join(" ") || "",
-              displayName: firebaseUser.displayName || names.join(" "),
-              photoURL: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-              avatarUrl: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-              role: isFounder ? "admin" : "client",
-              isFounder: isFounder,
-              permissions: isFounder ? founderPermissions : [],
-              provider: firebaseUser.providerData?.[0]?.providerId || "google.com",
-              isProfileComplete: false,
-              isVerified: false,
-              balance: 0,
-              totalRevenue: 0,
-              wallet: {
-                soldeDisponible: 0,
-                soldeBloque: 0,
-                soldeGawa: 0,
-                revenusMois: 0,
-                economiesPremium: 0,
-                niveauWallet: "Standard",
-                devise: "FCFA"
-              },
-              createdAt: serverTimestamp() as any
-            };
-            
-            await gomboDB.updateUserProfile(firebaseUser.uid, uProfile);
-          } else {
-            // Document EXISTS: Load existing profile safely without overwriting balances
-            uProfile = docSnap.data() as UserProfile;
-            const canonicalBal = getCanonicalWalletBalance(uProfile);
-
-            if (canonicalBal !== null) {
-              if (!uProfile.wallet) {
-                uProfile.wallet = {
-                  soldeDisponible: canonicalBal,
-                  soldeBloque: 0,
-                  soldeGawa: 0,
-                  revenusMois: 0,
-                  economiesPremium: 0,
-                  niveauWallet: "Standard",
-                  devise: "FCFA"
-                };
-              } else if (canonicalBal > (uProfile.wallet.soldeDisponible || 0)) {
-                uProfile.wallet.soldeDisponible = canonicalBal;
-              }
-              uProfile.balance = canonicalBal;
-              uProfile.walletBalance = canonicalBal;
-            }
-
-            // Fill missing avatar or display name in profile if empty
-            if (!uProfile.photoURL && firebaseUser.photoURL) uProfile.photoURL = firebaseUser.photoURL;
-            if (!uProfile.avatarUrl && firebaseUser.photoURL) uProfile.avatarUrl = firebaseUser.photoURL;
-            if (!uProfile.displayName && firebaseUser.displayName) uProfile.displayName = firebaseUser.displayName;
-            if (!uProfile.email && firebaseUser.email) uProfile.email = firebaseUser.email;
-
-            // Ensure founder role is set for existing profile if email matches
-            if (firebaseUser.email === "jhs.kmj7@gmail.com" && (!uProfile.isFounder || uProfile.role !== "admin" || !uProfile.isVip || !uProfile.isPro)) {
-              const founderPermissions = [
-                "admin",
-                "founder",
-                "dashboard",
-                "users",
-                "verification",
-                "payments",
-                "reports",
-                "settings"
-              ];
-              uProfile.role = "admin";
-              uProfile.isFounder = true;
-              uProfile.isVip = true;
-              uProfile.isPro = true;
-              uProfile.permissions = founderPermissions;
-              await gomboDB.updateUserProfile(firebaseUser.uid, { 
-                role: "admin", 
-                isFounder: true,
-                isVip: true,
-                isPro: true,
-                permissions: founderPermissions
-              });
-            }
-          }
-          
-          if (firebaseUser.email === "jhs.kmj7@gmail.com") {
-            uProfile.isFounder = true;
-            uProfile.role = "admin";
-            uProfile.isVip = true;
-            uProfile.isPro = true;
-          }
-
+          const uProfile = await authService.ensureUserDocument(firebaseUser, firebaseUser.providerData?.[0]?.providerId || "google.com");
           setProfile(uProfile);
           try {
             localStorage.setItem("afrigombo_user_session", safeStringify(uProfile));
           } catch (e) {}
 
-          // Now listen in real-time to keep wallet and other attributes synced
-          profileUnsub = gomboDB.listenUserProfile(firebaseUser.uid, (realtimeProfile) => {
+          profileUnsub = authService.listenUserProfile(firebaseUser.uid, (realtimeProfile) => {
             if (realtimeProfile) {
               if (!realtimeProfile.photoURL && firebaseUser.photoURL) realtimeProfile.photoURL = firebaseUser.photoURL;
               if (!realtimeProfile.avatarUrl && firebaseUser.photoURL) realtimeProfile.avatarUrl = firebaseUser.photoURL;
@@ -239,7 +118,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 realtimeProfile.isPro = true;
               }
               
-              // Process automatic renewal / expiration checks and synchronize Premium state
               if (PremiumEngine.isPremium(realtimeProfile)) {
                 PremiumEngine.syncPremiumStatus(firebaseUser.uid, realtimeProfile).catch(err => {
                   console.error("Error in PremiumEngine syncPremiumStatus:", err);
@@ -256,7 +134,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error("Error fetching/creating user profile in auth state change:", error);
         }
       } else {
-        // Truly logged out or session expired
         setCurrentUser(null);
         setProfile(null);
         try {
@@ -275,16 +152,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    return await gomboAuth.signIn(email, password);
+    // Fallback or email signin if needed
+    throw new Error("Connexion par email non prise en charge. Veuillez utiliser Google ou Apple.");
   };
 
   const signUp = async (email: string, password: string, role: "musicien" | "client", details: any) => {
-    return await gomboAuth.signUp(email, password, role, details);
+    throw new Error("Inscription par email non prise en charge. Veuillez utiliser Google ou Apple.");
   };
 
   const loginWithApple = async () => {
     try {
-      const res = await gomboAuth.loginWithApple();
+      const res = await authService.signInWithApple();
       setShowAuthPopup(false);
       return res;
     } catch (error) {
@@ -295,7 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async () => {
     try {
-      const res = await gomboAuth.loginWithGoogle();
+      const res = await authService.signInWithGoogle();
       setShowAuthPopup(false);
       return res;
     } catch (error) {
@@ -310,12 +188,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {}
     setCurrentUser(null);
     setProfile(null);
-    await gomboAuth.signOut();
+    await authService.signOut();
   };
 
   const refreshProfile = async () => {
     if (currentUser) {
-      const uProfile = await gomboDB.getUserProfile(currentUser.uid);
+      const uProfile = await authService.getUserProfile(currentUser.uid);
       setProfile(uProfile);
     }
   };
@@ -347,6 +225,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={authContextValue}>
       {children}
+      <AuthModal 
+        open={showAuthPopup} 
+        onClose={() => setShowAuthPopup(false)} 
+      />
     </AuthContext.Provider>
   );
 }

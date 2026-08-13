@@ -177,19 +177,6 @@ export default defineConfig({
     port: 3000,
   },
   optimizeDeps: {
-    exclude: ['maplibre-gl'],
-    include: [
-      "react",
-      "react/jsx-runtime",
-      "react-dom",
-      "react-dom/client",
-      "react-router-dom",
-      "motion/react",
-      "firebase/app",
-      "firebase/auth",
-      "firebase/firestore",
-      "firebase/storage",
-      "firebase/analytics"
-    ]
+    exclude: ['maplibre-gl']
   }
 });

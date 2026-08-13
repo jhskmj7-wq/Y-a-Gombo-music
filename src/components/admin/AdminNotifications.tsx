@@ -16,20 +16,24 @@ import {
   Users, 
   Settings, 
   Plus, 
-  X,
-  Star,
-  Shield,
-  Zap,
-  RefreshCw,
-  Copy,
-  Eye,
-  MousePointerClick,
-  Monitor
+  X, 
+  Star, 
+  Shield, 
+  Zap, 
+  RefreshCw, 
+  Copy, 
+  Eye, 
+  MousePointerClick, 
+  ExternalLink,
+  ChevronRight
 } from "lucide-react";
 import { gomboDB } from "../../firebase";
+import { db } from "../../lib/firebase";
+import { updateDoc, doc } from "firebase/firestore";
 import { useAuth } from "../../AuthContext";
-import { AppNotification, NotificationType, NotificationAudience, NotificationStatus } from "../../types";
+import { AppNotification, NotificationType, NotificationAudience } from "../../types";
 import { motion, AnimatePresence } from "motion/react";
+import { FounderBottomSheet } from "./FounderBottomSheet";
 
 const NOTIFICATION_TYPES: { value: NotificationType; icon: any; color: string }[] = [
   { value: "INFO", icon: Info, color: "text-blue-400" },
@@ -59,6 +63,8 @@ export default function AdminNotifications({ adminEmail = "Fondateur" }: AdminNo
   const [isSending, setIsSending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [selectedNotif, setSelectedNotif] = useState<AppNotification | null>(null);
+  const [activeTab, setActiveTab] = useState<"TOUTES" | "IMPORTANTES" | "A_TRAITER" | "LUES">("TOUTES");
   const { profile } = useAuth();
 
   // Form states
@@ -101,19 +107,22 @@ export default function AdminNotifications({ adminEmail = "Fondateur" }: AdminNo
       type,
       audience,
       priority,
-      scheduledAt,
-      status: isDraft ? "draft" : (scheduledAt ? "scheduled" : "published"),
-      createdBy: profile?.artisticName || profile?.name || adminEmail,
+      status: isDraft ? "draft" : scheduledAt ? "scheduled" : "published",
+      scheduledAt: scheduledAt || undefined,
+      createdAt: new Date().toISOString(),
+      createdBy: profile?.displayName || adminEmail || "Super Fondateur",
+      readCount: 0,
+      clickCount: 0
     };
 
     try {
       await gomboDB.addNotification(newNotif);
       setSuccess(true);
-      setShowForm(false);
       resetForm();
-      setTimeout(() => setSuccess(false), 3000);
+      setShowForm(false);
+      setTimeout(() => setSuccess(false), 4000);
     } catch (err) {
-      console.error("Erreur lors de l'envoi de la notification :", err);
+      console.error(err);
     } finally {
       setIsSending(false);
     }
@@ -133,19 +142,25 @@ export default function AdminNotifications({ adminEmail = "Fondateur" }: AdminNo
     setIsDraft(false);
   };
 
-  const toggleStatus = async (id: string, currentStatus: NotificationStatus) => {
-    const nextStatus: NotificationStatus = currentStatus === "inactive" ? "published" : "inactive";
+  const toggleStatus = async (id: string, currentStatus: string) => {
     try {
-      await gomboDB.updateNotification(id, { status: nextStatus });
+      const nextStatus = currentStatus === "published" ? "inactive" : "published";
+      await updateDoc(doc(db, "notifications", id), { status: nextStatus });
+      if (selectedNotif && selectedNotif.id === id) {
+        setSelectedNotif({ ...selectedNotif, status: nextStatus as any });
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
   const deleteNotification = async (id: string) => {
-    if (!window.confirm("Supprimer définitivement cette notification impériale ?")) return;
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette notification impériale ?")) return;
     try {
       await gomboDB.deleteNotification(id);
+      if (selectedNotif?.id === id) {
+        setSelectedNotif(null);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -165,96 +180,69 @@ export default function AdminNotifications({ adminEmail = "Fondateur" }: AdminNo
     }
   };
 
-  // Stats logic
-  const totalSent = notifications.length;
-  const totalReads = notifications.reduce((acc, n) => acc + (n.readCount || 0), 0);
-  const totalClicks = notifications.reduce((acc, n) => acc + (n.clickCount || 0), 0);
-  const activeNotifs = notifications.filter(n => n.status === "published").length;
+  // Filter counts
+  const countAll = notifications.length;
+  const countImportantes = notifications.filter(n => n.priority >= 5 || n.type === "URGENT" || n.type === "SÉCURITÉ").length;
+  const countATraiter = notifications.filter(n => n.status === "draft" || n.status === "scheduled").length;
+  const countLues = notifications.filter(n => (n.readCount || 0) > 0).length;
+
+  const filteredNotifications = notifications.filter(n => {
+    if (activeTab === "IMPORTANTES") return n.priority >= 5 || n.type === "URGENT" || n.type === "SÉCURITÉ";
+    if (activeTab === "A_TRAITER") return n.status === "draft" || n.status === "scheduled";
+    if (activeTab === "LUES") return (n.readCount || 0) > 0;
+    return true;
+  });
 
   return (
-    <div className="w-full bg-afri-bg-sec text-left overflow-x-hidden relative">
-      {/* IMPERIAL OVERLAY */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-[#D4AF37]/5 to-transparent pointer-events-none" />
-      
-      <div className="max-w-7xl mx-auto px-4 pt-12 relative z-10 space-y-12">
-        {/* HERO HEADER */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center space-y-6"
-        >
-          <div className="inline-flex flex-col items-center gap-4">
-            <motion.div 
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="w-20 h-20 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#AA8811] p-0.5 shadow-[0_0_50px_rgba(212,175,55,0.2)]"
-            >
-              <div className="w-full h-full rounded-full bg-afri-bg flex items-center justify-center">
-                <Bell className="w-10 h-10 text-[#D4AF37]" />
-              </div>
-            </motion.div>
+    <div className="w-full bg-zinc-950 text-left overflow-x-hidden relative select-none">
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        
+        {/* Top Header with Compact Actions */}
+        <div className="p-5 rounded-3xl bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-[#D4AF37]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
+              <Megaphone className="w-6 h-6" />
+            </div>
             <div>
-              <h2 className="text-4xl font-black text-afri-text tracking-tighter uppercase mb-2">Centre de Notifications Impérial</h2>
-              <p className="text-[#D4AF37] font-mono text-sm tracking-widest uppercase opacity-80">
-                Le Temple du Gombo informe sa communauté.
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-black text-white uppercase tracking-wider font-display">
+                  CENTRE DE DIFFUSION & DÉCRETS
+                </h2>
+                <span className="text-[10px] font-mono font-bold bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 px-2 py-0.5 rounded-full">
+                  CANAL IMPÉRIAL
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 font-mono">
+                Notifications push, bannières broadcast et messages prioritaires.
               </p>
             </div>
           </div>
 
-          <div className="flex justify-center">
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="px-10 py-4 bg-afri-bg-sec text-black font-black text-xs uppercase rounded-full hover:scale-105 transition-all flex items-center gap-3 shadow-[0_10px_30px_rgba(212,175,55,0.3)]"
-            >
-              {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              {showForm ? "Masquer le Temple" : "Forger une Annonce"}
-            </button>
-          </div>
-        </motion.div>
-
-        {/* STATS BENTO */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {[
-            { label: "Annonces", value: totalSent, icon: Megaphone, color: "text-blue-400" },
-            { label: "Actives", value: activeNotifs, icon: Activity, color: "text-emerald-400" },
-            { label: "Lectures", value: totalReads, icon: Eye, color: "text-amber-400" },
-            { label: "Clics", value: totalClicks, icon: MousePointerClick, color: "text-indigo-400" }
-          ].map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="p-6 bg-afri-bg border border-afri-border rounded-3xl group hover:border-[#D4AF37]/30 transition-all"
-            >
-              <div className="flex items-center gap-4 mb-4">
-                <div className={`w-10 h-10 rounded-2xl bg-afri-bg border border-afri-border flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform`}>
-                  <stat.icon className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-afri-text-sec font-bold">{stat.label}</span>
-              </div>
-              <div className="text-3xl font-black text-afri-text">{stat.value}</div>
-            </motion.div>
-          ))}
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="px-5 py-2.5 bg-[#D4AF37] hover:bg-[#bfa032] text-black font-mono font-black text-xs uppercase rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-lg active:scale-95"
+          >
+            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            <span>{showForm ? "Fermer le Formulaire" : "Nouvelle Diffusion"}</span>
+          </button>
         </div>
 
-        {/* FEEDBACK */}
+        {/* Feedback Alert */}
         <AnimatePresence>
           {success && (
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-sm flex items-center justify-center gap-3"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="p-4 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-2xl text-xs font-mono font-bold flex items-center gap-3"
             >
               <ShieldCheck className="w-5 h-5" />
-              <span className="font-bold">Décret royal publié avec succès sur tout le réseau.</span>
+              <span>Décret diffusé avec succès sur tout l'écosystème AFRIGOMBO.</span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* EDITOR FORM */}
+        {/* Create Broadcast Form */}
         <AnimatePresence>
           {showForm && (
             <motion.div 
@@ -263,167 +251,101 @@ export default function AdminNotifications({ adminEmail = "Fondateur" }: AdminNo
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="p-8 bg-afri-bg border border-[#D4AF37]/30 rounded-3xl relative shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-afri-bg-sec/5 blur-[100px] rounded-full pointer-events-none" />
-                
-                <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div className="md:col-span-2 space-y-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono uppercase tracking-widest text-afri-text-sec block font-black">Titre du Décret</label>
-                        <input
-                          type="text"
-                          value={title}
-                          onChange={(e) => setTitle(e.target.value)}
-                          placeholder="EX: ÉVÉNEMENT HISTORIQUE À ABIDJAN"
-                          className="w-full bg-afri-bg border border-afri-border rounded-2xl p-4 text-sm text-afri-text focus:border-[#D4AF37] outline-none transition-all font-black uppercase tracking-tight"
-                          required
-                        />
-                      </div>
+              <div className="p-6 bg-zinc-900/90 border border-[#D4AF37]/40 rounded-3xl relative shadow-2xl space-y-6">
+                <h3 className="text-sm font-black text-white font-mono uppercase tracking-wider flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-[#D4AF37]" />
+                  <span>Rédiger une nouvelle diffusion</span>
+                </h3>
 
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono uppercase tracking-widest text-afri-text-sec block font-black">Message Impérial</label>
-                        <textarea
-                          value={message}
-                          onChange={(e) => setMessage(e.target.value)}
-                          placeholder="Détaillez la volonté du Fondateur..."
-                          rows={6}
-                          className="w-full bg-afri-bg border border-afri-border rounded-2xl p-6 text-sm font-sans text-afri-text focus:border-[#D4AF37] outline-none transition-all resize-none leading-relaxed"
-                          required
-                        />
-                      </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">Titre de l'Annonce</label>
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="EX: NOUVELLE FONCTIONNALITÉ DISPONIBLE"
+                        className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-xs text-white focus:border-[#D4AF37] outline-none font-bold uppercase"
+                        required
+                      />
                     </div>
 
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono uppercase tracking-widest text-afri-text-sec block font-black">Type & Audience</label>
-                        <div className="grid grid-cols-1 gap-3">
-                          <select
-                            value={type}
-                            onChange={(e) => setType(e.target.value as NotificationType)}
-                            className="w-full bg-afri-bg border border-afri-border rounded-xl p-4 text-xs text-afri-text focus:border-[#D4AF37] outline-none appearance-none"
-                          >
-                            {NOTIFICATION_TYPES.map(t => (
-                              <option key={t.value} value={t.value}>{t.value}</option>
-                            ))}
-                          </select>
-                          <select
-                            value={audience}
-                            onChange={(e) => setAudience(e.target.value as NotificationAudience)}
-                            className="w-full bg-afri-bg border border-afri-border rounded-xl p-4 text-xs text-afri-text focus:border-[#D4AF37] outline-none appearance-none"
-                          >
-                            {AUDIENCES.map(a => (
-                              <option key={a} value={a}>Destinataires : {a}</option>
-                            ))}
-                          </select>
-                        </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">Audience Cible</label>
+                        <select
+                          value={audience}
+                          onChange={(e) => setAudience(e.target.value as NotificationAudience)}
+                          className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-xs text-white focus:border-[#D4AF37] outline-none"
+                        >
+                          {AUDIENCES.map(a => <option key={a} value={a}>{a}</option>)}
+                        </select>
                       </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono uppercase tracking-widest text-afri-text-sec block font-black">Programmation (Optionnel)</label>
-                        <div className="grid grid-cols-2 gap-3">
-                          <input
-                            type="date"
-                            value={scheduledAtDate}
-                            onChange={(e) => setScheduledAtDate(e.target.value)}
-                            className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-xs text-afri-text focus:border-[#D4AF37] outline-none"
-                          />
-                          <input
-                            type="time"
-                            value={scheduledAtTime}
-                            onChange={(e) => setScheduledAtTime(e.target.value)}
-                            className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-xs text-afri-text focus:border-[#D4AF37] outline-none"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-mono text-afri-text-sec uppercase font-black">Priorité</span>
-                          <span className="text-xs font-black text-[#D4AF37]">{priority}</span>
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max="10"
-                          value={priority}
-                          onChange={(e) => setPriority(parseInt(e.target.value))}
-                          className="w-full h-1 bg-afri-bg-ter rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                        />
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">Type</label>
+                        <select
+                          value={type}
+                          onChange={(e) => setType(e.target.value as NotificationType)}
+                          className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-xs text-white focus:border-[#D4AF37] outline-none"
+                        >
+                          {NOTIFICATION_TYPES.map(t => <option key={t.value} value={t.value}>{t.value}</option>)}
+                        </select>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-afri-border">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-mono uppercase tracking-widest text-afri-text-sec block font-black flex items-center gap-2">
-                        <ImageIcon className="w-3 h-3" /> URL de l'Image
-                      </label>
-                      <input
-                        type="url"
-                        value={image}
-                        onChange={(e) => setImage(e.target.value)}
-                        placeholder="https://..."
-                        className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-xs text-afri-text focus:border-[#D4AF37] outline-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-mono uppercase tracking-widest text-afri-text-sec block font-black flex items-center gap-2">
-                        <Monitor className="w-3 h-3" /> Libellé du Bouton
-                      </label>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">Message du Décret</label>
+                    <textarea
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Texte détaillé du message..."
+                      rows={3}
+                      className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-xs text-white focus:border-[#D4AF37] outline-none resize-none leading-relaxed"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">Texte Bouton Action (Optionnel)</label>
                       <input
                         type="text"
                         value={action}
                         onChange={(e) => setAction(e.target.value)}
-                        placeholder="Ex: Voir l'annonce"
-                        className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-xs text-afri-text focus:border-[#D4AF37] outline-none"
+                        placeholder="EX: VOIR L'ANNONCE"
+                        className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-2.5 text-xs text-white focus:border-[#D4AF37] outline-none"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-mono uppercase tracking-widest text-afri-text-sec block font-black flex items-center gap-2">
-                        <LinkIcon className="w-3 h-3" /> URL d'Action
-                      </label>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">Lien de Redirection (URL / Route)</label>
                       <input
-                        type="url"
+                        type="text"
                         value={actionUrl}
                         onChange={(e) => setActionUrl(e.target.value)}
-                        placeholder="https://..."
-                        className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-xs text-afri-text focus:border-[#D4AF37] outline-none"
+                        placeholder="EX: /wallet ou /gombos"
+                        className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-2.5 text-xs text-white focus:border-[#D4AF37] outline-none"
                       />
                     </div>
                   </div>
 
-                  <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-4">
+                  <div className="flex justify-end gap-3 pt-2">
                     <button
                       type="button"
-                      onClick={() => setIsDraft(!isDraft)}
-                      className={`flex items-center gap-2 px-6 py-3 rounded-full text-[10px] font-black uppercase transition-all border ${
-                        isDraft 
-                          ? "bg-afri-bg-sec text-black border-[#D4AF37]" 
-                          : "bg-afri-bg text-afri-text-sec border-afri-border hover:text-afri-text"
-                      }`}
+                      onClick={resetForm}
+                      className="px-4 py-2 text-zinc-400 hover:text-white text-xs font-mono font-bold transition cursor-pointer"
                     >
-                      {isDraft ? <Clock className="w-4 h-4" /> : <Settings className="w-4 h-4" />}
-                      {isDraft ? "Enregistrer comme Brouillon" : "Passer en Brouillon"}
+                      Effacer
                     </button>
-
-                    <div className="flex gap-4">
-                      <button
-                        type="button"
-                        onClick={resetForm}
-                        className="px-8 py-4 text-afri-text-sec hover:text-afri-text text-[10px] font-black uppercase transition-all"
-                      >
-                        Annuler
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={!title.trim() || !message.trim() || isSending}
-                        className="px-12 py-4 bg-afri-bg-sec disabled:bg-afri-bg-ter text-black font-black text-xs uppercase rounded-full flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-[0_10px_40px_rgba(212,175,55,0.2)]"
-                      >
-                        {isSending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                        {isSending ? "Fonderie en cours..." : "Sceller & Diffuser"}
-                      </button>
-                    </div>
+                    <button
+                      type="submit"
+                      disabled={!title.trim() || !message.trim() || isSending}
+                      className="px-6 py-2.5 bg-[#D4AF37] text-black font-mono font-black text-xs uppercase rounded-xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer disabled:opacity-50"
+                    >
+                      {isSending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      <span>{isSending ? "Diffusion..." : "Diffuser Immédiatement"}</span>
+                    </button>
                   </div>
                 </form>
               </div>
@@ -431,143 +353,191 @@ export default function AdminNotifications({ adminEmail = "Fondateur" }: AdminNo
           )}
         </AnimatePresence>
 
-        {/* FEED / HISTORY */}
-        <div className="space-y-8">
-          <div className="flex items-center justify-between border-b border-afri-border pb-4">
-            <h4 className="text-xl font-black text-afri-text uppercase tracking-tight flex items-center gap-3">
-              <Bell className="w-6 h-6 text-[#D4AF37]" />
-              Sillage Impérial
-            </h4>
-            <div className="flex gap-4">
-              <span className="text-[10px] font-mono text-afri-text-sec uppercase flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500" /> Temps Réel Actif
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-none">
+          {[
+            { id: "TOUTES", label: "TOUTES", count: countAll },
+            { id: "IMPORTANTES", label: "IMPORTANTES", count: countImportantes },
+            { id: "A_TRAITER", label: "À TRAITER", count: countATraiter },
+            { id: "LUES", label: "LUES", count: countLues },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as any)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                activeTab === t.id
+                  ? "bg-[#D4AF37] text-black shadow-md font-black"
+                  : "bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800"
+              }`}
+            >
+              <span>{t.label}</span>
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                activeTab === t.id ? "bg-black/20 text-black" : "bg-zinc-800 text-zinc-300"
+              }`}>
+                {t.count}
               </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Compact List of Notifications (does NOT hog the screen) */}
+        <div className="space-y-2">
+          {filteredNotifications.length === 0 ? (
+            <div className="p-10 text-center bg-zinc-900/40 border border-zinc-800 rounded-2xl">
+              <Bell className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
+              <p className="text-zinc-400 font-mono text-xs">Aucune notification dans cette vue.</p>
             </div>
-          </div>
+          ) : (
+            filteredNotifications.map((notif) => {
+              const typeInfo = NOTIFICATION_TYPES.find(t => t.value === notif.type) || NOTIFICATION_TYPES[0];
+              const Icon = typeInfo.icon;
+              const isUrgent = notif.priority >= 5 || notif.type === "URGENT";
 
-          <div className="grid grid-cols-1 gap-6">
-            {notifications.length === 0 ? (
-              <div className="p-20 text-center bg-afri-bg border border-afri-border rounded-3xl">
-                <Bell className="w-12 h-12 text-zinc-900 mx-auto mb-4" />
-                <p className="text-afri-text-sec font-mono text-[10px] uppercase tracking-widest">Le registre impérial est vide.</p>
-              </div>
-            ) : (
-              notifications.map((notif, idx) => {
-                const typeInfo = NOTIFICATION_TYPES.find(t => t.value === notif.type) || NOTIFICATION_TYPES[0];
-                const Icon = typeInfo.icon;
-                const isInactive = notif.status === "inactive" || notif.status === "draft";
-                const isScheduled = notif.status === "scheduled";
-                
-                return (
-                  <motion.div
-                    key={notif.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className={`p-6 bg-afri-bg border rounded-3xl flex flex-col lg:flex-row gap-8 transition-all hover:border-[#D4AF37]/40 relative overflow-hidden group ${
-                      isInactive ? "border-afri-border grayscale opacity-60" : 
-                      notif.priority > 7 ? "border-red-900/50" : "border-afri-border"
-                    }`}
-                  >
-                    {/* PRIORITY GLOW */}
-                    {notif.priority > 7 && (
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 blur-[50px] rounded-full pointer-events-none" />
-                    )}
-
-                    <div className="flex items-start gap-6 lg:w-3/4">
-                      <div className={`w-16 h-16 rounded-2xl bg-afri-bg border border-afri-border flex items-center justify-center shrink-0 ${typeInfo.color} shadow-lg`}>
-                        <Icon className="w-8 h-8" />
-                      </div>
-                      
-                      <div className="space-y-4">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <h5 className="text-lg font-black text-afri-text uppercase tracking-tight">{notif.title}</h5>
-                          <div className="flex gap-2">
-                            <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                              notif.status === "published" ? "bg-emerald-500/10 text-emerald-400" :
-                              notif.status === "scheduled" ? "bg-blue-500/10 text-blue-400" :
-                              "bg-afri-bg-ter text-afri-text-sec"
-                            }`}>
-                              {notif.status}
-                            </span>
-                            <span className="px-3 py-1 bg-afri-bg-sec text-afri-text-sec border border-afri-border rounded-full text-[8px] font-black uppercase tracking-widest">
-                              Priorité {notif.priority}
-                            </span>
-                          </div>
-                        </div>
-
-                        <p className="text-sm text-afri-text-sec font-sans leading-relaxed line-clamp-3">
-                          {notif.message}
-                        </p>
-
-                        <div className="flex flex-wrap gap-4 items-center">
-                          <div className="flex items-center gap-1.5 text-[9px] font-mono text-afri-text-sec uppercase font-black">
-                            <Target className="w-3.5 h-3.5" /> {notif.audience}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[9px] font-mono text-afri-text-sec uppercase font-black">
-                            <Users className="w-3.5 h-3.5" /> Créé par {notif.createdBy}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[9px] font-mono text-afri-text-sec uppercase font-black">
-                            <Clock className="w-3.5 h-3.5" /> {new Date(notif.createdAt).toLocaleDateString()}
-                          </div>
-                          {isScheduled && notif.scheduledAt && (
-                            <div className="flex items-center gap-1.5 text-[9px] font-mono text-blue-400 uppercase font-black">
-                              <Calendar className="w-3.5 h-3.5" /> Programmé le {new Date(notif.scheduledAt).toLocaleString()}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              return (
+                <div
+                  key={notif.id}
+                  onClick={() => setSelectedNotif(notif)}
+                  className="p-3.5 bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800/80 hover:border-[#D4AF37]/50 rounded-2xl transition cursor-pointer flex items-center justify-between gap-3 group"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className={`w-9 h-9 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 ${typeInfo.color}`}>
+                      <Icon className="w-4 h-4" />
                     </div>
-
-                    <div className="lg:w-1/4 border-t lg:border-t-0 lg:border-l border-afri-border pt-6 lg:pt-0 lg:pl-8 flex flex-col justify-between">
-                      <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div className="space-y-1">
-                          <div className="text-[8px] font-mono text-afri-text-sec uppercase font-black flex items-center gap-1">
-                            <Eye className="w-3 h-3" /> Vues
-                          </div>
-                          <div className="text-xl font-black text-afri-text">{notif.readCount || 0}</div>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-[8px] font-mono text-afri-text-sec uppercase font-black flex items-center gap-1">
-                            <MousePointerClick className="w-3 h-3" /> Clics
-                          </div>
-                          <div className="text-xl font-black text-[#D4AF37]">{notif.clickCount || 0}</div>
-                        </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-xs font-bold text-white uppercase tracking-tight truncate">
+                          {notif.title}
+                        </h4>
+                        {isUrgent && (
+                          <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-red-500/20 text-red-400 border border-red-500/30 uppercase">
+                            Important
+                          </span>
+                        )}
+                        <span className="text-[9px] font-mono text-zinc-500">
+                          {new Date(notif.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </span>
                       </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => duplicateNotification(notif)}
-                          className="flex-1 h-10 bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border text-afri-text rounded-xl transition-all flex items-center justify-center gap-2 group/btn"
-                        >
-                          <Copy className="w-3.5 h-3.5 group-hover/btn:scale-110 transition-transform" />
-                          <span className="text-[9px] font-black uppercase">Cloner</span>
-                        </button>
-                        <button
-                          onClick={() => toggleStatus(notif.id, notif.status)}
-                          className={`flex-1 h-10 rounded-xl border transition-all flex items-center justify-center gap-2 ${
-                            notif.status === "inactive"
-                              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20"
-                              : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
-                          }`}
-                        >
-                          {notif.status === "inactive" ? "Publier" : "Désactiver"}
-                        </button>
-                        <button
-                          onClick={() => deleteNotification(notif.id)}
-                          className="w-10 h-10 bg-red-950/20 hover:bg-red-500 border border-red-950/30 text-red-400 hover:text-afri-text rounded-xl transition-all flex items-center justify-center"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                        {notif.message}
+                      </p>
                     </div>
-                  </motion.div>
-                );
-              })
-            )}
-          </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] font-mono text-zinc-500 group-hover:text-[#D4AF37] transition flex items-center gap-1">
+                      <span>Détails</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
+
+      {/* Notification Bottom Sheet (maxHeight 75dvh) */}
+      <FounderBottomSheet
+        isOpen={!!selectedNotif}
+        onClose={() => setSelectedNotif(null)}
+        title={
+          selectedNotif ? (
+            <div className="flex items-center gap-2">
+              <Megaphone className="w-5 h-5 text-[#D4AF37]" />
+              <span className="font-mono uppercase font-black">{selectedNotif.title}</span>
+            </div>
+          ) : "Notification"
+        }
+        subtitle={selectedNotif ? `Audience : ${selectedNotif.audience} • Type : ${selectedNotif.type}` : ""}
+        maxHeight="75dvh"
+      >
+        {selectedNotif && (
+          <div className="space-y-5 text-left font-sans">
+            {/* Header info */}
+            <div className="p-3.5 bg-zinc-900/80 border border-zinc-800 rounded-2xl flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
+                <span>Statut : <strong className="text-emerald-400 uppercase">{selectedNotif.status}</strong></span>
+                <span>•</span>
+                <span>Priorité : <strong className="text-[#D4AF37]">{selectedNotif.priority}</strong></span>
+              </div>
+              <div className="text-[11px] font-mono text-zinc-500">
+                {new Date(selectedNotif.createdAt).toLocaleString("fr-FR")}
+              </div>
+            </div>
+
+            {/* Message Body */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-mono uppercase font-black text-zinc-400">Corps du Message</h4>
+              <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl text-xs text-zinc-200 leading-relaxed whitespace-pre-wrap">
+                {selectedNotif.message}
+              </div>
+            </div>
+
+            {/* Context details */}
+            <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+              <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl">
+                <span className="text-[10px] text-zinc-500 block">Origine / Émetteur</span>
+                <span className="text-zinc-200 font-bold">{selectedNotif.createdBy || "Super Fondateur"}</span>
+              </div>
+              <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl">
+                <span className="text-[10px] text-zinc-500 block">Public Ciblé</span>
+                <span className="text-zinc-200 font-bold">{selectedNotif.audience}</span>
+              </div>
+            </div>
+
+            {/* Action associated if any */}
+            {selectedNotif.action && (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between text-xs font-mono">
+                <span className="text-amber-300 font-bold">Action : {selectedNotif.action}</span>
+                {selectedNotif.actionUrl && (
+                  <span className="text-zinc-400 text-[11px] flex items-center gap-1">
+                    {selectedNotif.actionUrl} <ExternalLink className="w-3 h-3" />
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-3 text-center text-xs font-mono p-3 bg-zinc-900/40 border border-zinc-800 rounded-xl">
+              <div>
+                <span className="text-[10px] text-zinc-500 block">Vues / Ouvertures</span>
+                <span className="text-white font-bold text-base">{selectedNotif.readCount || 0}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-500 block">Clics sur Action</span>
+                <span className="text-[#D4AF37] font-bold text-base">{selectedNotif.clickCount || 0}</span>
+              </div>
+            </div>
+
+            {/* Actions footer */}
+            <div className="flex items-center justify-between gap-3 pt-3 border-t border-zinc-800">
+              <button
+                onClick={() => duplicateNotification(selectedNotif)}
+                className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 rounded-xl text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span>Dupliquer</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => toggleStatus(selectedNotif.id, selectedNotif.status)}
+                  className="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-200 rounded-xl text-xs font-mono font-bold transition cursor-pointer"
+                >
+                  {selectedNotif.status === "inactive" ? "Publier" : "Désactiver"}
+                </button>
+                <button
+                  onClick={() => deleteNotification(selectedNotif.id)}
+                  className="px-3.5 py-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 rounded-xl text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Supprimer</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </FounderBottomSheet>
     </div>
   );
 }

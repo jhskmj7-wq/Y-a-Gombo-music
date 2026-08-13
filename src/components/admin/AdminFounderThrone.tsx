@@ -9,10 +9,12 @@ import {
   RefreshCw, CheckCircle, XCircle, Search, HelpCircle, Save, BookOpen, Scroll, Target, Award, Gift,
   Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square,
   Clock, MapPin, Cloud, Zap, Sun, ChevronDown, ChevronUp, Flame, ToggleLeft, ToggleRight, UserCheck, Radio, Eye, Bot,
-  MessageSquare
+  MessageSquare, Scale, Archive
 } from "lucide-react";
 import BetaTransactionsAdminPanel from "./BetaTransactionsAdminPanel";
 import { PendingPublicationsAdminPanel } from "./PendingPublicationsAdminPanel";
+import { AdminPublicationsManager } from "./AdminPublicationsManager";
+import { AdminDisputesManager } from "./AdminDisputesManager";
 import { ImperialMessageModal } from "./ImperialMessageModal";
 import { AdminDecouvertesCentre } from "./AdminDecouvertesCentre";
 import { AdminCommunicationCenter } from "./AdminCommunicationCenter";
@@ -24,6 +26,7 @@ import AdminLotsManagement from "./AdminLotsManagement";
 import AdminRewardsManagement from "./AdminRewardsManagement";
 import AdminRevenueFeatures from "./AdminRevenueFeatures";
 import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";
+import { AdminUserWalletDetailModal } from "./AdminUserWalletDetailModal";
 import { useMaintenance } from "../../hooks/useMaintenance";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
 import { db } from "../../lib/firebase";
@@ -177,6 +180,8 @@ export default function AdminFounderThrone({
   const [ticketsSupport, setTicketsSupport] = useState<any[]>([]);
   const [disputesList, setDisputesList] = useState<any[]>([]);
   const [kycRequests, setKycRequests] = useState<any[]>([]);
+  const [kycStatusTab, setKycStatusTab] = useState<"TOUTES" | "A_TRAITER" | "VALIDEES" | "REFUSEES" | "ARCHIVEES">("TOUTES");
+  const [kycToDelete, setKycToDelete] = useState<any | null>(null);
   const [userCommuneFilter, setUserCommuneFilter] = useState<string>("ALL");
   const [userLevelFilter, setUserLevelFilter] = useState<string>("ALL");
   const [userVerifiedFilter, setUserVerifiedFilter] = useState<string>("ALL");
@@ -762,6 +767,37 @@ export default function AdminFounderThrone({
       setTimeout(() => setSuccessMsg(""), 4000);
     } catch (err) {
       console.error("Error rejecting KYC:", err);
+    }
+  };
+
+  const handleArchiveKYC = async (reqItem: any) => {
+    if (!db || !reqItem.id) return;
+    try {
+      await updateDoc(doc(db, "kyc_requests", reqItem.id), {
+        status: "ARCHIVED",
+        archivedAt: new Date().toISOString(),
+        archivedBy: adminEmail || "Superfondateur"
+      });
+      logImperialAction("ARCHIVAGE_KYC", `Dossier KYC archivé pour ${reqItem.userName || reqItem.userId}`);
+      setSuccessMsg(`Dossier KYC archivé.`);
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      console.error("Error archiving KYC:", err);
+      setErrorMsg("Erreur lors de l'archivage du dossier KYC.");
+    }
+  };
+
+  const handleDeleteKYC = async (reqItem: any) => {
+    if (!db || !reqItem.id) return;
+    try {
+      await deleteDoc(doc(db, "kyc_requests", reqItem.id));
+      logImperialAction("SUPPRESSION_KYC", `Dossier KYC supprimé pour ${reqItem.userName || reqItem.userId}`);
+      setSuccessMsg(`Dossier KYC supprimé définitivement.`);
+      setKycToDelete(null);
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      console.error("Error deleting KYC:", err);
+      setErrorMsg("Erreur lors de la suppression du dossier KYC.");
     }
   };
 
@@ -2200,7 +2236,7 @@ export default function AdminFounderThrone({
 
                   {/* 8. ⚖️ Litiges Prestations */}
                   <div
-                    onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("disputes"); }}
+                    onClick={() => setSelectedSection("disputes")}
                     className="p-2.5 bg-gradient-to-br from-amber-600/10 via-zinc-950/20 to-zinc-950/40 border border-amber-600/30 hover:border-amber-500 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm group relative flex flex-col justify-between h-[100px]"
                   >
                     <div className="flex justify-between items-center">
@@ -2283,6 +2319,175 @@ export default function AdminFounderThrone({
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* =========================================================
+                 🏛️ CENTRE DE CONTRÔLE STRATÉGIQUE (VUE D'ENSEMBLE SOUVERAINE)
+                 ========================================================= */}
+            <div className="p-4 sm:p-5 bg-gradient-to-b from-afri-bg via-afri-bg/95 to-afri-bg-sec/40 border border-[#D4AF37]/30 rounded-3xl space-y-4 shadow-xl text-left">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-afri-border/40 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
+                    <Crown className="w-4.5 h-4.5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-display font-black text-[#D4AF37] tracking-wider uppercase flex items-center gap-2">
+                      Centre de Contrôle Stratégique
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30">
+                        SOUVERAIN
+                      </span>
+                    </h3>
+                    <p className="text-[10.5px] text-afri-text-sec font-mono">
+                      Accès direct aux modules clés, données historiques et arbitrages du Royaume
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* GRILLE DES 5 MODULES DU CENTRE DE CONTRÔLE */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                {/* 1. 📝 PUBLICATIONS */}
+                <div
+                  onClick={() => setSelectedSection("publications")}
+                  className="p-3.5 bg-afri-bg border border-sky-500/30 hover:border-sky-400 rounded-2xl cursor-pointer transition-all duration-200 hover:scale-[1.02] shadow-sm flex flex-col justify-between group h-[130px]"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                        <FileText className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-bold text-white group-hover:text-sky-300 transition-colors">
+                        PUBLICATIONS
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-mono text-sky-400 font-bold">Gérer →</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-lg font-display font-black text-sky-400">
+                      {livePosts.length + liveGombos.length} <span className="text-[10px] text-zinc-400 font-mono font-normal">total</span>
+                    </div>
+                    <div className="text-[9.5px] font-mono text-zinc-400 flex flex-wrap gap-1">
+                      <span className="text-emerald-400 font-bold">{livePosts.filter((p: any) => p.status === 'active' || p.status === 'ACTIVE' || !p.status).length + liveGombos.filter((g: any) => g.status === 'open' || g.status === 'ACTIVE').length} actives</span>
+                      <span>•</span>
+                      <span className="text-amber-400 font-bold">{liveGombos.filter((g: any) => g.status === 'in_progress' || g.status === 'assigned').length} en cours</span>
+                      <span>•</span>
+                      <span className="text-zinc-500 font-bold">{livePosts.filter((p: any) => p.status === 'expired' || p.status === 'EXPIREE' || (p.expiresAt && new Date(p.expiresAt).getTime() < Date.now())).length + liveGombos.filter((g: any) => g.status === 'expired' || (g.deadline && new Date(g.deadline).getTime() < Date.now())).length} expirées</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. ⚖️ LITIGES */}
+                <div
+                  onClick={() => setSelectedSection("disputes")}
+                  className="p-3.5 bg-afri-bg border border-amber-500/30 hover:border-amber-400 rounded-2xl cursor-pointer transition-all duration-200 hover:scale-[1.02] shadow-sm flex flex-col justify-between group h-[130px]"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                        <Scale className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
+                        LITIGES
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-mono text-amber-400 font-bold">Arbitrer →</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-lg font-display font-black text-amber-400">
+                      {disputesList.length} <span className="text-[10px] text-zinc-400 font-mono font-normal">dossiers</span>
+                    </div>
+                    <div className="text-[9.5px] font-mono text-zinc-400 flex flex-wrap gap-1">
+                      <span className="text-red-400 font-bold">{disputesList.filter((d: any) => d.status === 'OUVERT' || d.status === 'OPEN' || !d.status || d.status === 'PENDING').length} ouverts</span>
+                      <span>•</span>
+                      <span className="text-amber-400 font-bold">{disputesList.filter((d: any) => d.status === 'EN_COURS' || d.status === 'IN_PROGRESS').length} en cours</span>
+                      <span>•</span>
+                      <span className="text-emerald-400 font-bold">{disputesList.filter((d: any) => d.status === 'RESOLU' || d.status === 'RESOLVED' || d.status === 'CLOSED' || d.status === 'FERME').length} résolus</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. ✓ VALIDATIONS */}
+                <div
+                  onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("kyc"); }}
+                  className="p-3.5 bg-afri-bg border border-purple-500/30 hover:border-purple-400 rounded-2xl cursor-pointer transition-all duration-200 hover:scale-[1.02] shadow-sm flex flex-col justify-between group h-[130px]"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-bold text-white group-hover:text-purple-300 transition-colors">
+                        VALIDATIONS
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-mono text-purple-400 font-bold">Certifier →</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-lg font-display font-black text-purple-400">
+                      {kycRequests.length} <span className="text-[10px] text-zinc-400 font-mono font-normal">Gombo IDs</span>
+                    </div>
+                    <div className="text-[9.5px] font-mono text-zinc-400 flex flex-wrap gap-1">
+                      <span className="text-amber-400 font-bold">{kycRequests.filter((k: any) => k.status !== 'APPROVED' && k.status !== 'REJECTED' && k.status !== 'ARCHIVED').length} à traiter</span>
+                      <span>•</span>
+                      <span className="text-emerald-400 font-bold">{kycRequests.filter((k: any) => k.status === 'APPROVED').length} validées</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. 📡 DIFFUSION */}
+                <div
+                  onClick={() => setSelectedSection("notifications_hub")}
+                  className="p-3.5 bg-afri-bg border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl cursor-pointer transition-all duration-200 hover:scale-[1.02] shadow-sm flex flex-col justify-between group h-[130px]"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
+                        <Radio className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-bold text-white group-hover:text-[#D4AF37] transition-colors">
+                        DIFFUSION
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-mono text-[#D4AF37] font-bold">Diffuser →</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-lg font-display font-black text-[#D4AF37]">
+                      {notificationsList.length} <span className="text-[10px] text-zinc-400 font-mono font-normal">flux</span>
+                    </div>
+                    <div className="text-[9.5px] font-mono text-zinc-400 flex flex-wrap gap-1">
+                      <span className="text-red-400 font-bold">{notificationsList.filter((n: any) => n.priority >= 5 || n.type === 'URGENT' || n.type === 'SÉCURITÉ').length} importantes</span>
+                      <span>•</span>
+                      <span className="text-emerald-400 font-bold">{notificationsList.filter((n: any) => n.status === 'published' || !n.status).length} actives</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 5. 💬 MESSAGERIE */}
+                <div
+                  onClick={() => setSelectedSection("support_center")}
+                  className="p-3.5 bg-afri-bg border border-indigo-500/30 hover:border-indigo-400 rounded-2xl cursor-pointer transition-all duration-200 hover:scale-[1.02] shadow-sm flex flex-col justify-between group h-[130px]"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                        <MessageSquare className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors">
+                        MESSAGERIE
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-mono text-indigo-400 font-bold">Ouvrir →</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-lg font-display font-black text-indigo-400">
+                      {ticketsSupport.filter((t: any) => t.status !== 'RESOLVED').length} <span className="text-[10px] text-zinc-400 font-mono font-normal">actives</span>
+                    </div>
+                    <div className="text-[9.5px] font-mono text-zinc-400 flex flex-wrap gap-1">
+                      <span className="text-indigo-300 font-bold">{ticketsSupport.length} tickets SAV au total</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* GÉOLOCALISATION ET ACTIVITÉ DE ZONE */}
@@ -3707,15 +3912,57 @@ export default function AdminFounderThrone({
                     </div>
                   )}
 
-                  {/* 3. DOSSIERS KYC */}
+                  {/* 3. DOSSIERS KYC & VALIDATIONS */}
                   {formSubTab === "kyc" && (
                     <div className="space-y-4">
-                      {kycRequests.length === 0 ? (
-                        <div className="p-12 text-center bg-afri-bg border border-afri-border rounded-3xl text-afri-text-sec font-mono text-xs">
-                          Aucun dossier KYC enregistré dans `kyc_requests`.
-                        </div>
-                      ) : (
-                        kycRequests.map((kyc: any) => (
+                      {/* FILTRES PAR STATUT */}
+                      <div className="flex flex-wrap items-center gap-2 p-2 bg-afri-bg-sec/30 border border-afri-border rounded-2xl">
+                        {(
+                          [
+                            { id: "TOUTES", label: "Toutes", count: kycRequests.length },
+                            { id: "A_TRAITER", label: "À Traiter", count: kycRequests.filter((k: any) => k.status !== "APPROVED" && k.status !== "REJECTED" && k.status !== "ARCHIVED").length },
+                            { id: "VALIDEES", label: "Validées", count: kycRequests.filter((k: any) => k.status === "APPROVED").length },
+                            { id: "REFUSEES", label: "Refusées", count: kycRequests.filter((k: any) => k.status === "REJECTED").length },
+                            { id: "ARCHIVEES", label: "Archivées", count: kycRequests.filter((k: any) => k.status === "ARCHIVED").length },
+                          ] as const
+                        ).map((tab) => (
+                          <button
+                            key={tab.id}
+                            onClick={() => setKycStatusTab(tab.id)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                              kycStatusTab === tab.id
+                                ? "bg-[#D4AF37] text-zinc-950 shadow-md"
+                                : "bg-afri-bg text-afri-text-sec hover:text-afri-text border border-afri-border"
+                            }`}
+                          >
+                            <span>{tab.label}</span>
+                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${kycStatusTab === tab.id ? "bg-black/20 text-zinc-950 font-black" : "bg-white/10 text-afri-text-sec"}`}>
+                              {tab.count}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* LISTE DES DOSSIERS FILTRÉS */}
+                      {(() => {
+                        const filteredKyc = kycRequests.filter((k: any) => {
+                          if (kycStatusTab === "TOUTES") return true;
+                          if (kycStatusTab === "A_TRAITER") return k.status !== "APPROVED" && k.status !== "REJECTED" && k.status !== "ARCHIVED";
+                          if (kycStatusTab === "VALIDEES") return k.status === "APPROVED";
+                          if (kycStatusTab === "REFUSEES") return k.status === "REJECTED";
+                          if (kycStatusTab === "ARCHIVEES") return k.status === "ARCHIVED";
+                          return true;
+                        });
+
+                        if (filteredKyc.length === 0) {
+                          return (
+                            <div className="p-12 text-center bg-afri-bg border border-afri-border rounded-3xl text-afri-text-sec font-mono text-xs">
+                              Aucun dossier KYC trouvé pour le filtre « {kycStatusTab} ».
+                            </div>
+                          );
+                        }
+
+                        return filteredKyc.map((kyc: any) => (
                           <div
                             key={kyc.id}
                             className={`p-5 rounded-3xl border transition-all ${
@@ -3723,6 +3970,8 @@ export default function AdminFounderThrone({
                                 ? "bg-afri-bg/50 border-emerald-500/30"
                                 : kyc.status === "REJECTED"
                                 ? "bg-afri-bg/50 border-red-500/30"
+                                : kyc.status === "ARCHIVED"
+                                ? "bg-afri-bg/40 border-zinc-700 opacity-60"
                                 : "bg-afri-bg border-purple-500/50 shadow-lg"
                             }`}
                           >
@@ -3739,15 +3988,17 @@ export default function AdminFounderThrone({
                                 </span>
                               </div>
                               <span
-                                className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold ${
+                                className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 ${
                                   kyc.status === "APPROVED"
                                     ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                                     : kyc.status === "REJECTED"
                                     ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                    : kyc.status === "ARCHIVED"
+                                    ? "bg-zinc-800 text-zinc-400 border border-zinc-700"
                                     : "bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse"
                                 }`}
                               >
-                                {kyc.status === "APPROVED" ? "VALIDÉ 🎖️" : kyc.status === "REJECTED" ? "REJETÉ ⚠️" : "EN ATTENTE"}
+                                {kyc.status === "APPROVED" ? "✓ VALIDÉE" : kyc.status === "REJECTED" ? "✕ REFUSÉE" : kyc.status === "ARCHIVED" ? "📦 ARCHIVÉE" : "⏳ À TRAITER"}
                               </span>
                             </div>
 
@@ -3757,26 +4008,44 @@ export default function AdminFounderThrone({
 
                             <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-mono text-afri-text-sec pt-2 border-t border-afri-border/50">
                               <span>Soumis le: {kyc.createdAt && !isNaN(new Date(kyc.createdAt).getTime()) ? new Date(kyc.createdAt).toLocaleString("fr-FR") : "Date inconnue"}</span>
-                              {kyc.status !== "APPROVED" && (
-                                <div className="flex items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
+                                {kyc.status !== "APPROVED" && (
+                                  <>
+                                    <button
+                                      onClick={() => handleRejectKYC(kyc)}
+                                      className="px-3 py-1.5 bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 rounded-xl font-bold cursor-pointer transition-all text-xs"
+                                    >
+                                      ✕ Refuser
+                                    </button>
+                                    <button
+                                      onClick={() => handleApproveKYC(kyc)}
+                                      className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-black cursor-pointer transition-all shadow-md text-xs"
+                                    >
+                                      ✓ Valider KYC
+                                    </button>
+                                  </>
+                                )}
+                                {kyc.status !== "ARCHIVED" && (
                                   <button
-                                    onClick={() => handleRejectKYC(kyc)}
-                                    className="px-3 py-1.5 bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 rounded-xl font-bold cursor-pointer transition-all"
+                                    onClick={() => handleArchiveKYC(kyc)}
+                                    className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 rounded-xl font-bold cursor-pointer transition-all text-xs flex items-center gap-1"
                                   >
-                                    Rejeter ⚠️
+                                    <Archive className="w-3.5 h-3.5" />
+                                    Archiver
                                   </button>
-                                  <button
-                                    onClick={() => handleApproveKYC(kyc)}
-                                    className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-afri-text rounded-xl font-black cursor-pointer transition-all shadow-md"
-                                  >
-                                    🎖️ Valider KYC & Certifier GOMBO ID
-                                  </button>
-                                </div>
-                              )}
+                                )}
+                                <button
+                                  onClick={() => setKycToDelete(kyc)}
+                                  className="px-3 py-1.5 bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-900/50 rounded-xl font-bold cursor-pointer transition-all text-xs flex items-center gap-1"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  Supprimer
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        ))
-                      )}
+                        ));
+                      })()}
                     </div>
                   )}
 
@@ -3849,16 +4118,16 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "publications" && (
               <div className="space-y-6">
-                <div className="p-6 bg-afri-bg/80 border border-sky-500/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(14,165,233,0.05)]">
-                  <FileText className="w-8 h-8 text-sky-400 shrink-0 mt-0.5 animate-pulse" />
-                  <div className="text-xs text-afri-text leading-relaxed font-mono">
-                    <strong>MODÉRATION DES PUBLICATIONS :</strong> Masquez, suspendez, restaurez ou supprimez les publications signalées ou non conformes. Les Gombos et annonces sont publiés automatiquement si le Wallet est approvisionné et le formulaire valide.
-                  </div>
-                </div>
+                <AdminPublicationsManager currentUser={profile} />
+              </div>
+            )}
 
-                <div className="p-1 sm:p-4 bg-afri-bg border border-afri-border rounded-3xl">
-                  <PendingPublicationsAdminPanel currentUser={profile} />
-                </div>
+            {/* =========================================================
+                 DETAILED VIEW: ⚖️ Arbitrage des Litiges
+                 ========================================================= */}
+            {selectedSection === "disputes" && (
+              <div className="space-y-6">
+                <AdminDisputesManager currentUser={profile} />
               </div>
             )}
 
@@ -4553,8 +4822,11 @@ export default function AdminFounderThrone({
                   const artMatch = String(u.artisticName || "").toLowerCase().includes(q);
                   const emailMatch = String(u.email || "").toLowerCase().includes(q);
                   const idMatch = String(u.id || "").toLowerCase().includes(q);
+                  const uidMatch = String(u.uid || "").toLowerCase().includes(q);
+                  const afriIdMatch = String(u.afriId || "").toLowerCase().includes(q);
+                  const walletCodeMatch = String(u.wallet?.walletCode || "").toLowerCase().includes(q);
                   const gomboMatch = String(u.gomboId?.numero || "").toLowerCase().includes(q);
-                  if (!nameMatch && !artMatch && !emailMatch && !idMatch && !gomboMatch) return false;
+                  if (!nameMatch && !artMatch && !emailMatch && !idMatch && !uidMatch && !afriIdMatch && !walletCodeMatch && !gomboMatch) return false;
                 }
 
                 if (userCommuneFilter !== "ALL" && u.commune !== userCommuneFilter) return false;
@@ -4567,11 +4839,10 @@ export default function AdminFounderThrone({
                   if (userLevelFilter === "USER" && (u.role === "admin" || u.isAdmin)) return false;
                 }
 
-                if (userVerifiedFilter !== "ALL") {
-                  const isCert = Boolean(u.isCertified || u.gomboId?.certifie || u.kycStatus === "approved");
-                  if (userVerifiedFilter === "VERIFIED" && !isCert) return false;
-                  if (userVerifiedFilter === "UNVERIFIED" && isCert) return false;
-                }
+                if (userVerifiedFilter === "ACTIVE" && u.isBanned) return false;
+                if (userVerifiedFilter === "SUSPENDED" && !u.isBanned) return false;
+                if (userVerifiedFilter === "VERIFIED" && !Boolean(u.isCertified || u.gomboId?.certifie || u.kycStatus === "approved")) return false;
+                if (userVerifiedFilter === "UNVERIFIED" && Boolean(u.isCertified || u.gomboId?.certifie || u.kycStatus === "approved")) return false;
 
                 if (userDateFilter !== "ALL") {
                   const dateField = u.createdAt || u.registrationDate;
@@ -4645,15 +4916,17 @@ export default function AdminFounderThrone({
 
                       {/* Certifié */}
                       <div className="space-y-1.5">
-                        <label className="text-[9px] font-mono uppercase text-zinc-650 dark:text-afri-text-sec">Vérification Gombo ID</label>
+                        <label className="text-[9px] font-mono uppercase text-zinc-650 dark:text-afri-text-sec">Statut & Vérification</label>
                         <select
                           value={userVerifiedFilter}
                           onChange={(e) => setUserVerifiedFilter(e.target.value)}
                           className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-[11px] text-zinc-900 dark:text-afri-text font-mono focus:outline-none"
                         >
-                          <option value="ALL">Tous les statuts</option>
-                          <option value="VERIFIED">Vérifiés (Certifiés)</option>
-                          <option value="UNVERIFIED">Non vérifiés</option>
+                          <option value="ALL">Tous (TOUS)</option>
+                          <option value="ACTIVE">Actifs (ACTIFS)</option>
+                          <option value="SUSPENDED">Suspendus (SUSPENDUS)</option>
+                          <option value="VERIFIED">Vérifiés (VÉRIFIÉS)</option>
+                          <option value="UNVERIFIED">Non vérifiés (NON VÉRIFIÉS)</option>
                         </select>
                       </div>
 
@@ -4811,127 +5084,14 @@ export default function AdminFounderThrone({
                     </div>
                   )}
 
-                  {/* Profile View Modal */}
+                  {/* Super Founder User & Wallet Detail Modal */}
                   {viewingUser && (
-                    <div 
-                      onClick={() => setViewingUser(null)}
-                      className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md z-[150] flex items-center justify-center p-4 cursor-pointer"
-                    >
-                      <div 
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-afri-bg border border-[#D4AF37]/30 max-w-lg w-full rounded-3xl p-6 space-y-6 shadow-2xl relative overflow-hidden text-zinc-900 dark:text-afri-text cursor-default"
-                      >
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl"></div>
-                        <div className="flex items-start justify-between">
-                          <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider">Profil Impérial Détaillé</h3>
-                          <button 
-                            type="button"
-                            onClick={() => setViewingUser(null)} 
-                            className="w-8 h-8 rounded-full bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] flex items-center justify-center text-afri-text-sec hover:text-afri-text transition-all cursor-pointer text-sm font-bold"
-                            title="Fermer le profil"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#D4AF37] shrink-0 bg-afri-bg-sec flex items-center justify-center">
-                            {viewingUser.photoURL || viewingUser.avatar ? (
-                              <img src={viewingUser.photoURL || viewingUser.avatar} alt={viewingUser.displayName} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="font-mono text-2xl font-bold text-[#D4AF37]">
-                                {(viewingUser.artisticName || viewingUser.displayName || "U").charAt(0).toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-sans font-black text-zinc-900 dark:text-afri-text uppercase flex items-center gap-2">
-                              {viewingUser.artisticName || "Sans nom artistique"}
-                              {viewingUser.isPremium && <span className="text-[8px] bg-amber-500/15 text-[#D4AF37] px-1.5 py-0.5 rounded">ELITE</span>}
-                            </h4>
-                            <p className="text-[10px] text-afri-text-muted dark:text-afri-text-sec font-mono">{viewingUser.displayName || "Aucun nom complet"} • {viewingUser.email}</p>
-                            <p className="text-[9px] text-afri-text-muted dark:text-afri-text-sec font-mono">Dernier accès: {viewingUser.lastActive && !isNaN(new Date(viewingUser.lastActive).getTime()) ? new Date(viewingUser.lastActive).toLocaleString() : "Non enregistré"}</p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 p-4 bg-afri-bg-sec/10 border border-afri-border rounded-2xl font-mono text-[10px] text-zinc-600 dark:text-afri-text-sec">
-                          <div>
-                            <span className="opacity-50 block text-[8px] uppercase">GOMBO ID</span>
-                            <span className="font-bold text-zinc-900 dark:text-afri-text">{viewingUser.gomboId?.numero || "Non généré"}</span>
-                          </div>
-                          <div>
-                            <span className="opacity-50 block text-[8px] uppercase">AFRI ID</span>
-                            <span className="font-bold text-zinc-900 dark:text-afri-text truncate block">{viewingUser.id || viewingUser.uid}</span>
-                          </div>
-                          <div>
-                            <span className="opacity-50 block text-[8px] uppercase">Rôle / Genre</span>
-                            <span className="font-bold text-zinc-900 dark:text-afri-text uppercase">{viewingUser.role || "user"}</span>
-                          </div>
-                          <div>
-                            <span className="opacity-50 block text-[8px] uppercase">Commune / Ville</span>
-                            <span className="font-bold text-zinc-900 dark:text-afri-text">{viewingUser.commune || "Non spécifiée"}</span>
-                          </div>
-                          <div>
-                            <span className="opacity-50 block text-[8px] uppercase">Genre / Style musical</span>
-                            <span className="font-bold text-zinc-900 dark:text-afri-text">{viewingUser.musicalActivity || viewingUser.musicalGenre || "Aucun"}</span>
-                          </div>
-                          <div>
-                            <span className="opacity-50 block text-[8px] uppercase">Téléphone</span>
-                            <span className="font-bold text-zinc-900 dark:text-afri-text">{viewingUser.phone || "Non spécifié"}</span>
-                          </div>
-                          <div className="col-span-2">
-                            <span className="opacity-50 block text-[8px] uppercase">Biographie</span>
-                            <p className="text-[10px] text-zinc-900 dark:text-afri-text mt-1 leading-relaxed bg-afri-bg-sec/20 p-2.5 rounded-xl border border-afri-border">
-                              {viewingUser.bio || "Aucune biographie fournie."}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Actions souveraines directes */}
-                        <div className="grid grid-cols-3 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleTogglePremium(viewingUser);
-                              setViewingUser(null);
-                            }}
-                            className={`py-2 rounded-xl text-[9px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer border ${viewingUser.isPremium ? 'bg-amber-500/15 border-amber-500/30 text-[#D4AF37]' : 'bg-purple-500/15 border-purple-500/30 text-purple-400'}`}
-                          >
-                            {viewingUser.isPremium ? "Révoquer Premium" : "Donner Premium"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleGrantRenfort(viewingUser);
-                              setViewingUser(null);
-                            }}
-                            className="py-2 bg-blue-500/15 border border-blue-500/30 text-blue-400 hover:bg-blue-500/25 rounded-xl text-[9px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer"
-                          >
-                            Renfort Express
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleValidateContract(viewingUser);
-                              setViewingUser(null);
-                            }}
-                            className="py-2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 rounded-xl text-[9px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer"
-                          >
-                            Valider Contrats
-                          </button>
-                        </div>
-
-                        {/* Footer Close Button */}
-                        <div className="pt-2">
-                          <button
-                            type="button"
-                            onClick={() => setViewingUser(null)}
-                            className="w-full py-3 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2"
-                          >
-                            <span>Fermer le profil</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <AdminUserWalletDetailModal
+                      user={viewingUser}
+                      adminUid={currentUser?.uid || "founder-admin"}
+                      onClose={() => setViewingUser(null)}
+                      onRefresh={() => {}}
+                    />
                   )}
 
                   {/* Profile Edit Modal */}
@@ -5899,6 +6059,40 @@ export default function AdminFounderThrone({
         displayUsers={displayUsers}
         handleTogglePremium={handleTogglePremium}
       />
+
+      {/* MODALE DE CONFIRMATION DE SUPPRESSION KYC */}
+      {kycToDelete && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+          <div className="bg-zinc-950 border border-red-500/50 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3 text-red-400">
+              <div className="p-2 bg-red-500/20 border border-red-500/40 rounded-xl">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-white">Confirmation de suppression</h3>
+            </div>
+            <p className="text-xs text-zinc-300 font-sans leading-relaxed">
+              Êtes-vous sûr de vouloir supprimer définitivement le dossier KYC de <strong>{kycToDelete.userName || kycToDelete.userId}</strong> ? Cette action est irréversible dans la base de données.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setKycToDelete(null)}
+                className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-xl text-xs font-mono font-bold cursor-pointer transition-all"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteKYC(kycToDelete)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-mono font-bold cursor-pointer transition-all shadow-lg shadow-red-900/30 flex items-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" />
+                Supprimer définitivement
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

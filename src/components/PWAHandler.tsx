@@ -15,7 +15,9 @@ export default function PWAHandler() {
   const updateServiceWorkerRef = useRef<((reloadPage?: boolean) => Promise<void>) | null>(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+    if ((window as any)._afrigombo_sw_registered) return;
+    (window as any)._afrigombo_sw_registered = true;
 
     try {
       const updateSW = registerSW({
@@ -27,8 +29,6 @@ export default function PWAHandler() {
           setOfflineReady(true);
         },
         onRegistered(r) {
-          if ((window as any)._afrigombo_sw_registered) return;
-          (window as any)._afrigombo_sw_registered = true;
           console.log('📡 [PWA] Service Worker inscrit avec succès:', r?.scope || 'Inscrit');
         },
         onRegisterError(error) {
