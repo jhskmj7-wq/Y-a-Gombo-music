@@ -458,10 +458,15 @@ export default function SocialPostCard({
   };
 
   const handleOpenItinerary = () => {
-    const lat = post.latitude || 5.3600;
-    const lng = post.longitude || -4.0083;
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    window.open(url, "_blank");
+    if (typeof post.latitude === "number" && typeof post.longitude === "number" && !isNaN(post.latitude) && !isNaN(post.longitude)) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${post.latitude},${post.longitude}`;
+      window.open(url, "_blank");
+    } else {
+      const placeQuery = post.locationName || post.commune || post.locationDetail || "Abidjan, Côte d'Ivoire";
+      const destination = encodeURIComponent(`${placeQuery}, Abidjan, Côte d'Ivoire`);
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+      window.open(url, "_blank");
+    }
   };
 
   const getCategoryBadge = (category?: string) => {
@@ -531,10 +536,14 @@ export default function SocialPostCard({
                 })()}
              </div>
              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-               <span className="text-[10px] text-afri-text-sec dark:text-afri-text-sec font-bold block truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
-                 📍 {post.commune || authorProfile?.commune || "Abidjan, CIV"}
-               </span>
-               <span className="text-afri-text-sec dark:text-zinc-700 font-black">•</span>
+               {(post.locationName || post.commune || authorProfile?.commune) ? (
+                 <>
+                   <span className="text-[10px] text-afri-text-sec dark:text-afri-text-sec font-bold block truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
+                     📍 {post.locationName || post.commune || authorProfile?.commune}
+                   </span>
+                   <span className="text-afri-text-sec dark:text-zinc-700 font-black">•</span>
+                 </>
+               ) : null}
                <span className="text-[10px] font-semibold italic text-afri-text-sec dark:text-zinc-550">
                  {getElapsedTime(post.createdAt)}
                </span>
@@ -641,8 +650,8 @@ export default function SocialPostCard({
                <span className="font-extrabold text-[#D4AF37]">{post.budget ? `${Number(post.budget).toLocaleString()} FCFA` : "A débattre"}</span>
              </div>
              <div className="flex items-center gap-1.5">
-               <span className="text-gray-450 font-semibold uppercase text-[9px]">Commune:</span>
-               <span className="font-extrabold">{post.commune || "Abidjan"}</span>
+               <span className="text-gray-450 font-semibold uppercase text-[9px]">Lieu:</span>
+               <span className="font-extrabold">{post.locationName || post.commune || authorProfile?.commune || ""}</span>
              </div>
 
              {/* GPS Actions if coordinates are present (Requirement 6 & 8) */}
@@ -669,7 +678,7 @@ export default function SocialPostCard({
                    className="flex-1 py-1.5 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1 transition cursor-pointer min-h-[36px]"
                  >
                    <Navigation className="w-3.5 h-3.5" />
-                   <span>🧭 Itinéraire</span>
+                   <span>🧭 Voir l'itinéraire</span>
                  </button>
                </div>
              )}
@@ -702,7 +711,7 @@ export default function SocialPostCard({
              </div>
              <div className="flex items-center gap-1.5 col-span-2">
                <span className="text-afri-text-sec font-semibold">Commune:</span>
-               <span className="font-extrabold">{post.commune || "Abidjan"}</span>
+               <span className="font-extrabold">{post.locationName || post.commune || authorProfile?.commune || ""}</span>
              </div>
            </div>
          )}

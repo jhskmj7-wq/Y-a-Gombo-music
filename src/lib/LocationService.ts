@@ -198,21 +198,30 @@ export class LocationService {
    */
   static async submitProposal(proposal: {
     name: string;
-    city: string;
+    city?: string;
+    country?: string;
     address?: string;
     description?: string;
     latitude?: number;
     longitude?: number;
     accuracy?: number;
     createdBy: string;
+    suggestedBy?: string;
+    suggestedByName?: string;
   }): Promise<string> {
-    // Duplicate check
+    const rawName = proposal.name.trim();
+    const normName = rawName.toLowerCase();
+    const cityVal = proposal.city || "Abidjan";
+    const countryVal = proposal.country || "Côte d'Ivoire";
+    const userId = proposal.suggestedBy || proposal.createdBy || "anonyme";
+
+    // Duplicate check in official locations
     const officialSnap = await getDocs(collection(db, LOCATIONS_COLLECTION));
     let duplicate = false;
     officialSnap.forEach((d) => {
       const loc = d.data() as AfriGomboLocation;
-      if (loc.name.trim().toLowerCase() === proposal.name.trim().toLowerCase() && 
-          loc.cityName?.toLowerCase() === proposal.city.toLowerCase()) {
+      if (loc.name.trim().toLowerCase() === normName && 
+          (!loc.cityName || loc.cityName.toLowerCase() === cityVal.toLowerCase())) {
         duplicate = true;
       }
     });
@@ -221,24 +230,37 @@ export class LocationService {
       throw new Error("Ce lieu existe déjà dans AFRIGOMBO.");
     }
 
+    const hasCoords = typeof proposal.latitude === "number" && typeof proposal.longitude === "number";
+    const coordsObj = hasCoords ? { latitude: proposal.latitude!, longitude: proposal.longitude! } : null;
+
     const docRef = doc(collection(db, PROPOSALS_COLLECTION));
     const payload: any = {
       id: docRef.id,
-      name: proposal.name.trim(),
-      city: proposal.city,
+      name: rawName,
+      normalizedName: normName,
+      city: cityVal,
+      country: countryVal,
       address: proposal.address || "",
       description: proposal.description || "",
-      createdBy: proposal.createdBy,
+      suggestedBy: userId,
+      createdBy: userId,
+      suggestedByName: proposal.suggestedByName || "Artiste",
       createdAt: new Date().toISOString(),
       status: "pending",
-      source: "user"
+      source: "user",
+      coordinates: coordsObj
     };
 
     if (typeof proposal.latitude === "number") payload.latitude = proposal.latitude;
     if (typeof proposal.longitude === "number") payload.longitude = proposal.longitude;
     if (typeof proposal.accuracy === "number") payload.accuracy = proposal.accuracy;
 
-    await setDoc(docRef, payload);
+    // Write to proposedPlaces and locationSuggestions for dual collection compatibility
+    await Promise.allSettled([
+      setDoc(docRef, payload),
+      setDoc(doc(db, "locationSuggestions", docRef.id), payload)
+    ]);
+
     return docRef.id;
   }
 
@@ -300,13 +322,18 @@ export class LocationService {
     }
 
     // 3. UPDATE PROPOSAL STATUS TO APPROVED
-    await updateDoc(propRef, {
+    const updateData = {
       status: "approved",
       approvedBy: founderUid,
       approvedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ...(officialPlaceId ? { officialPlaceId } : {})
-    });
+    };
+
+    await Promise.allSettled([
+      updateDoc(propRef, updateData),
+      updateDoc(doc(db, "locationSuggestions", proposal.id), updateData)
+    ]);
   }
 
   /**
@@ -319,15 +346,20 @@ export class LocationService {
       throw new Error("La proposition n'existe pas.");
     }
     const currentData = snap.data() as any;
-    if (currentData.status !== "pending") {
+    if (currentData.status !== "pending" && currentData.status !== "PENDING") {
       throw new Error("Cette proposition a déjà été traitée.");
     }
 
-    await updateDoc(propRef, {
+    const rejectData = {
       status: "rejected",
       rejectedBy: founderUid,
       rejectedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    });
+    };
+
+    await Promise.allSettled([
+      updateDoc(propRef, rejectData),
+      updateDoc(doc(db, "locationSuggestions", proposalId), rejectData)
+    ]);
   }
 }

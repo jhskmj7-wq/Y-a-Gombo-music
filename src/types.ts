@@ -11,7 +11,69 @@ export type AdminMenu =
   | "contracts"
   | "payments_to_verify"
   | "super_admin"
-  | "admin_avatar_store";
+  | "admin_avatar_store"
+  | "gombo_ads";
+
+export type GomboAdsType = "gombo" | "profile" | "event" | "offer";
+
+export type GomboAdsStatus =
+  | "DRAFT"
+  | "PENDING_REVIEW"
+  | "APPROVED"
+  | "ACTIVE"
+  | "PAUSED"
+  | "REJECTED"
+  | "EXPIRED"
+  | "ARCHIVED"
+  | "CANCELLED";
+
+export type GomboAdsPlacement =
+  | "accueil"
+  | "gombo"
+  | "reels"
+  | "decouverte"
+  | "profil"
+  | "evenements";
+
+export interface GomboAdsCampaign {
+  id: string;
+  ownerId: string;
+  ownerName?: string;
+  ownerAvatar?: string;
+  ownerPhone?: string;
+  type: GomboAdsType;
+  targetId: string; // ID of post, gombo, profile, event
+  title: string;
+  description: string;
+  mediaUrl?: string;
+  locationName?: string;
+  commune?: string;
+  category?: string;
+  status: GomboAdsStatus;
+  budget: number; // daily budget in FCFA
+  totalCost: number; // total campaign cost in FCFA
+  currency: string; // "FCFA"
+  durationDays: number; // 1, 3, 7, 14, 30
+  startAt?: string;
+  endAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  rejectedAt?: string;
+  rejectedBy?: string;
+  rejectionReason?: string;
+  impressions: number;
+  clicks: number;
+  views: number;
+  conversions: number;
+  placements: GomboAdsPlacement[];
+  frequencyCap?: number; // max impressions per user per day
+  targetAudience?: {
+    commune?: string;
+    category?: string;
+  };
+}
 
 export type UserRole = "client" | "musicien" | "admin" | string;
 export type PaymentProvider = "MANUAL_BETA" | "CINETPAY" | "WAVE" | "MTN" | "MOOV";

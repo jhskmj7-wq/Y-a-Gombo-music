@@ -37,6 +37,7 @@ import FounderFeesVault from "./FounderFeesVault";
 const AdminContracts = lazyWithRetry(() => import("./AdminContracts"));
 const AdminDeploymentCenter = lazyWithRetry(() => import("./AdminDeploymentCenter"));
 const AdminRevenueFeatures = lazyWithRetry(() => import("./AdminRevenueFeatures"));
+import { GomboAdsAdminSection } from "../ads/GomboAdsAdminSection";
 
 export type AdminModuleType = 
   | "throne"
@@ -58,7 +59,8 @@ export type AdminModuleType =
   | "multimedia"
   | "deployment"
   | "strategic_decisions"
-  | "revenue_features";
+  | "revenue_features"
+  | "gombo_ads";
 
 interface AdminSuperFounderHubProps {
   initialModule?: AdminModuleType;
@@ -156,6 +158,7 @@ export default function AdminSuperFounderHub({
     { key: "multimedia" as AdminModuleType, label: "🎵 Multimédia", icon: Music, badge: undefined },
     { key: "settings" as AdminModuleType, label: "⚙ Paramètres", icon: Settings, badge: undefined },
     { key: "revenue_features" as AdminModuleType, label: "💎 Revenus & Avantages", icon: Landmark, badge: "Commercial" },
+    { key: "gombo_ads" as AdminModuleType, label: "📣 GOMBO ADS", icon: Rocket, badge: "Régie" },
     { key: "deployment" as AdminModuleType, label: "🚀 Déploiement", icon: Rocket, badge: "Android" },
   ];
 
@@ -377,6 +380,12 @@ export default function AdminSuperFounderHub({
           <ErrorBoundary moduleName="Revenue Features">
             {activeModule === "revenue_features" && (
               <AdminRevenueFeatures currentUser={currentUser} userEmail={userEmail} audioSynth={audioSynth} />
+            )}
+          </ErrorBoundary>
+
+          <ErrorBoundary moduleName="Gombo Ads">
+            {activeModule === "gombo_ads" && (
+              <GomboAdsAdminSection adminProfile={currentUser} />
             )}
           </ErrorBoundary>
 

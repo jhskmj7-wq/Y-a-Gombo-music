@@ -94,6 +94,7 @@ import { AuthModal } from "./auth/AuthModal";
 const PremiumEmptyState = lazyWithRetry(() => import("./PremiumEmptyState"));
 const PendingPaymentModal = lazyWithRetry(() => import("./PendingPaymentModal").then(m => ({ default: m.PendingPaymentModal })));
 import { MonAbonnementView } from "./MonAbonnementView";
+import { GomboAdsMainView } from "./ads/GomboAdsMainView";
 
 // Extracted Sub-components
 const UserReelsView = lazyWithRetry(() => import("./UserReelsView").then(m => ({ default: m.UserReelsView })));
@@ -413,7 +414,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     user_mes_groupes: "user_heritage",
     user_comments: "user_terrain",
     user_downloads: "user_heritage",
-    user_history: "user_heritage"
+    user_history: "user_heritage",
+    user_gombo_ads: "user_terrain"
   };
 
   const setActiveMenu = (menu: string) => {
@@ -6082,6 +6084,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         if (setOpenConvoWithUserId) setOpenConvoWithUserId(targetId || "admin");
                         setActiveMenu("user_messages");
                       }}
+                      onNavigateToGomboAds={() => setActiveMenu("user_gombo_ads")}
                     />
                   </Suspense>
                 </div>
@@ -6968,6 +6971,24 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       onBack={() => goBackMenu()} 
                       currentUserProfile={profile}
                       onRefreshProfile={refreshProfile}
+                    />
+                  </div>
+                )}
+                {activeMenu === "user_gombo_ads" && (
+                  <div className="animate-fadeIn">
+                    <GomboAdsMainView 
+                      currentUserProfile={profile || currentUser}
+                      onBack={() => goBackMenu()}
+                      onOpenWalletDeposit={() => setActiveMenu("user_wallet")}
+                      onNavigateToTarget={(type, targetId) => {
+                        if (type === "profile") {
+                          setActiveMenu("user_heritage");
+                        } else if (type === "event") {
+                          setActiveMenu("user_events");
+                        } else {
+                          setActiveMenu("user_terrain");
+                        }
+                      }}
                     />
                   </div>
                 )}

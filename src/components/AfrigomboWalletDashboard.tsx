@@ -17,6 +17,7 @@ import {
   RefreshCw, 
   TrendingUp, 
   ChevronRight,
+  Megaphone,
   FileText,
   MessageSquare,
   QrCode,
@@ -63,13 +64,15 @@ interface AfrigomboWalletDashboardProps {
   addToTerminal: (msg: string) => void;
   onBack?: () => void;
   onNavigateToMessages?: (userId?: string) => void;
+  onNavigateToGomboAds?: () => void;
 }
 
 export default function AfrigomboWalletDashboard({ 
   currentUserProfile, 
   addToTerminal,
   onBack,
-  onNavigateToMessages
+  onNavigateToMessages,
+  onNavigateToGomboAds
 }: AfrigomboWalletDashboardProps) {
   const { isModuleUnderMaintenance, maintenance } = useMaintenance();
   const uid = currentUserProfile?.uid || currentUserProfile?.id;
@@ -1643,6 +1646,28 @@ export default function AfrigomboWalletDashboard({
           </button>
 
         </div>
+
+        {/* • Gombo Ads Banner Direct Link */}
+        {onNavigateToGomboAds && (
+          <button 
+            onClick={onNavigateToGomboAds}
+            className="w-full p-3.5 rounded-[20px] bg-gradient-to-r from-zinc-900 via-black to-zinc-900 border border-[#D4AF37]/40 flex items-center justify-between gap-3 shadow-xl hover:border-[#D4AF37] transition-all group active:scale-98"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:scale-110 transition-transform">
+                <Megaphone className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-black text-white">GOMBO ADS</span>
+                  <span className="text-[9px] font-black text-black bg-[#D4AF37] px-1.5 py-0.2 rounded uppercase">Nouveau</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">Paye tes campagnes directement avec ton Wallet</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[#D4AF37] group-hover:translate-x-1 transition-transform" />
+          </button>
+        )}
       </div>
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

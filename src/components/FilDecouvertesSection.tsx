@@ -15,6 +15,9 @@ import {
   seedInitialFeaturedContentIfEmpty 
 } from "../lib/decouvertesEngine";
 import { AfriModal } from "./common/AfriModal";
+import { GomboAdsService } from "../services/GomboAdsService";
+import { GomboAdCard } from "./ads/GomboAdCard";
+import { GomboAdsCampaign } from "../types";
 
 interface FilDecouvertesSectionProps {
   userCommune?: string;
@@ -32,9 +35,18 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
   onSelectCourseItem
 }) => {
   const [items, setItems] = useState<FeaturedContentDoc[]>([]);
+  const [activeAds, setActiveAds] = useState<GomboAdsCampaign[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedDetail, setSelectedDetail] = useState<FeaturedContentDoc | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | "market" | "academy">("all");
+
+  // Listen to Gombo Ads active campaigns for home placement
+  useEffect(() => {
+    const unsubAds = GomboAdsService.listenActivePlacementAds("accueil", (adsList) => {
+      setActiveAds(adsList);
+    });
+    return () => unsubAds();
+  }, []);
   
   // Auto-scroll state
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -212,6 +224,13 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
         onTouchEnd={() => setIsPaused(false)}
         className="flex gap-3.5 overflow-x-auto pb-2 snap-x snap-mandatory afri-no-scrollbar scroll-smooth"
       >
+        {/* Render Gombo Ads Native Sponsored Cards First */}
+        {activeAds.map((ad) => (
+          <div key={`ad-${ad.id}`} className="w-[280px] sm:w-[300px] shrink-0 snap-start">
+            <GomboAdCard ad={ad} layout="compact" />
+          </div>
+        ))}
+
         {rankedItems.map((item, idx) => {
           const isMarket = item.type === "market";
 
