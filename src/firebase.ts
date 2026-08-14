@@ -508,10 +508,21 @@ export const gomboDB = {
 
   listenUserProfile(uid: string, callback: (profile: UserProfile | null) => void) {
     if (db) {
-      return onSnapshot(doc(db, "users", uid), (snap) => {
-        if (snap.exists()) callback(snap.data() as UserProfile);
-        else callback(null);
-      });
+      try {
+        return onSnapshot(
+          doc(db, "users", uid), 
+          (snap) => {
+            if (snap.exists()) callback(snap.data() as UserProfile);
+            else callback(null);
+          },
+          (err) => {
+            console.warn("gomboDB: listenUserProfile snapshot error:", err);
+          }
+        );
+      } catch (e) {
+        console.warn("gomboDB: listenUserProfile setup error:", e);
+        return () => {};
+      }
     }
     return () => {};
   },

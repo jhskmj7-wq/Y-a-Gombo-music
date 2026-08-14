@@ -519,7 +519,7 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-sec text-black text-xs font-black uppercase transition-all disabled:opacity-50"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#e5bd3c] text-zinc-950 text-xs font-black uppercase transition-all shadow-md disabled:opacity-50 cursor-pointer"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   Publier l'événement
@@ -602,7 +602,7 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
                       }}
                       className={`h-9 rounded-xl flex flex-col items-center justify-center relative cursor-pointer text-xs font-mono font-bold transition-all ${
                         isSelected 
-                          ? "bg-afri-bg-sec text-black scale-105 font-black shadow-[0_0_12px_rgba(212,175,55,0.4)]" 
+                          ? "bg-[#D4AF37] text-zinc-950 scale-105 font-black shadow-[0_0_12px_rgba(212,175,55,0.4)]" 
                           : isToday 
                             ? "bg-afri-bg-sec border border-[#D4AF37]/50 text-afri-text font-black"
                             : "hover:bg-afri-bg-sec text-afri-text"

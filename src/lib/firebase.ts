@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence, indexedDBLocalPersistence } from "firebase/auth";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, memoryLocalCache, getFirestore } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getMessaging, isSupported } from "firebase/messaging";
 
@@ -21,6 +21,10 @@ export const app = getApps().length
 
 export const auth = getAuth(app);
 
+export const db = getFirestore(app);
+
+export const storage = getStorage(app);
+
 // Initialize Firebase Cloud Messaging for Push Notifications Architecture
 let messagingInstance: any = null;
 if (typeof window !== "undefined") {
@@ -33,32 +37,10 @@ if (typeof window !== "undefined") {
 }
 export const messaging = messagingInstance;
 
-// Explicitly set persistent authentication storage (IndexedDB -> LocalStorage)
-if (typeof window !== "undefined") {
-  setPersistence(auth, indexedDBLocalPersistence)
-    .catch(() => setPersistence(auth, browserLocalPersistence))
-    .catch((err) => {
-      console.error("Failed to set auth persistence:", err);
-    });
-}
-
-let firestoreInstance;
-try {
-  firestoreInstance = initializeFirestore(app, {
-    localCache: memoryLocalCache()
-  });
-  console.log("FIRESTORE: memoryLocalCache initialized. Single source of truth from Firestore active across all environments.");
-} catch (e) {
-  firestoreInstance = getFirestore(app);
-}
-
-export const db = firestoreInstance;
-
-export const storage = getStorage(app);
-
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
-console.log("AUTH READY (Afrigombo Default):", auth.app.options.projectId);
+console.log("AUTH & FIRESTORE READY (Afrigombo Default):", auth.app.options.projectId);
+

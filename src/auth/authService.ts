@@ -221,23 +221,40 @@ export const authService = {
   },
 
   async getUserProfile(uid: string): Promise<UserProfile | null> {
-    const docRef = doc(db, "users", uid);
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
-      return snap.data() as UserProfile;
+    if (!db) return null;
+    try {
+      const docRef = doc(db, "users", uid);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        return snap.data() as UserProfile;
+      }
+    } catch (err) {
+      console.warn("authService.getUserProfile warning:", err);
     }
     return null;
   },
 
   listenUserProfile(uid: string, callback: (profile: UserProfile | null) => void) {
-    const docRef = doc(db, "users", uid);
-    return onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        callback(docSnap.data() as UserProfile);
-      } else {
-        callback(null);
-      }
-    });
+    if (!db) return () => {};
+    try {
+      const docRef = doc(db, "users", uid);
+      return onSnapshot(
+        docRef, 
+        (docSnap) => {
+          if (docSnap.exists()) {
+            callback(docSnap.data() as UserProfile);
+          } else {
+            callback(null);
+          }
+        },
+        (error) => {
+          console.warn("authService.listenUserProfile error:", error);
+        }
+      );
+    } catch (err) {
+      console.warn("authService.listenUserProfile init error:", err);
+      return () => {};
+    }
   }
 };
 

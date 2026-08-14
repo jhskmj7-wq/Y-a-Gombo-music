@@ -576,7 +576,7 @@ export default function SocialPostCard({
               className={`px-3 py-1.5 text-[10px] font-black rounded-full transition-all border active:scale-95 cursor-pointer ${
                 followed 
                   ? "bg-gray-100 border-afri-border text-afri-text-sec dark:bg-afri-bg-ter dark:border-afri-border" 
-                  : "bg-afri-bg-sec border-[#D4AF37] text-black hover:bg-afri-bg-sec"
+                  : "bg-[#D4AF37] border-[#D4AF37] text-zinc-950 hover:bg-[#e5bd3c]"
               }`}
             >
               {followed ? "Abonné" : "+ Suivre"}
@@ -744,7 +744,7 @@ export default function SocialPostCard({
                  {/* Round play control button */}
                  <button
                    onClick={handlePlayPause}
-                   className="w-11 h-11 rounded-full bg-afri-bg-sec hover:scale-105 active:scale-95 text-black flex items-center justify-center shadow-lg transition-transform shrink-0 cursor-pointer"
+                   className="w-11 h-11 rounded-full bg-[#D4AF37] hover:scale-105 active:scale-95 text-zinc-950 flex items-center justify-center shadow-lg transition-transform shrink-0 cursor-pointer"
                  >
                    {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current translate-x-0.5" />}
                  </button>
@@ -877,9 +877,9 @@ export default function SocialPostCard({
           <button
             id="btn-repondre"
             onClick={handleRespondToGombo}
-            className="col-span-2 xs:col-span-1 sm:col-span-1 flex items-center justify-center md:justify-start gap-1.5 px-3.5 py-2.5 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-sec text-black font-black active:scale-95 transition-all text-[11px] uppercase cursor-pointer md:ml-auto shadow-sm min-w-0"
+            className="col-span-2 xs:col-span-1 sm:col-span-1 flex items-center justify-center md:justify-start gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#e5bd3c] text-zinc-950 font-black active:scale-95 transition-all text-[11px] uppercase cursor-pointer md:ml-auto shadow-sm min-w-0"
           >
-            <Music className="w-4 h-4 text-black animate-pulse shrink-0" />
+            <Music className="w-4 h-4 text-zinc-950 animate-pulse shrink-0" />
             <span className="truncate">🎤 Répondre</span>
           </button>
         </div>
@@ -892,7 +892,7 @@ export default function SocialPostCard({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0 }}
-            className="px-4 py-2 bg-afri-bg-sec text-black text-[11px] font-black text-center uppercase"
+            className="px-4 py-2 bg-zinc-900 border border-[#D4AF37]/30 text-[#D4AF37] text-[11px] font-black text-center uppercase"
           >
             Lien de la publication copié ! Partagez-le avec vos collègues artistes 📋
           </motion.div>
@@ -955,9 +955,9 @@ export default function SocialPostCard({
               />
               <button
                 type="submit"
-                className="p-2.5 bg-afri-bg-sec hover:bg-afri-bg-sec text-black font-bold rounded-xl active:scale-95 transition-transform cursor-pointer"
+                className="p-2.5 bg-[#D4AF37] hover:bg-[#e5bd3c] text-zinc-950 font-bold rounded-xl active:scale-95 transition-transform cursor-pointer"
               >
-                <Send className="w-4 h-4 text-black" />
+                <Send className="w-4 h-4 text-zinc-950" />
               </button>
             </form>
           </motion.div>

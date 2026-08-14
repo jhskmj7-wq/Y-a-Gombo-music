@@ -221,7 +221,7 @@ export default function AfrigomboBuildersAdminDashboard() {
               className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-lg px-3 py-2 text-afri-text font-mono text-xs focus:outline-none"
               required
             />
-            <button type="submit" className="w-full px-4 py-2 bg-afri-bg-sec text-black text-[10px] font-mono font-black uppercase tracking-wider rounded-lg hover:opacity-90 cursor-pointer">
+            <button type="submit" className="w-full px-4 py-2.5 bg-[#D4AF37] hover:bg-[#e5bd3c] text-zinc-950 text-xs font-mono font-black uppercase tracking-wider rounded-lg hover:opacity-90 cursor-pointer shadow-md transition-all">
               Créer / Ajouter le défi
             </button>
           </form>
