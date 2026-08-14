@@ -107,6 +107,9 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
       expTimestamp = typeof data.dateFin === "number" ? data.dateFin : new Date(data.dateFin).getTime();
     } else if (data.deadline) {
       expTimestamp = typeof data.deadline === "number" ? data.deadline : new Date(data.deadline).getTime();
+    } else if (data.date) {
+      const d = new Date(`${data.date}T23:59:59.999Z`);
+      if (!isNaN(d.getTime())) expTimestamp = d.getTime();
     }
 
     if (expTimestamp && !isNaN(expTimestamp) && expTimestamp < now) {
@@ -258,11 +261,17 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
     setActionLoadingId(item.id);
     try {
       const newSt = item.status === "ARCHIVEE" ? "active" : "archived";
-      await updateDoc(doc(db, item.collectionName, item.id), {
+      const updateData = {
         status: newSt,
+        statut: newSt,
         isArchived: newSt === "archived",
         archivedAt: newSt === "archived" ? new Date().toISOString() : null
-      });
+      };
+      await Promise.allSettled([
+        updateDoc(doc(db, "social_posts", item.id), updateData),
+        updateDoc(doc(db, "gombos", item.id), updateData),
+        updateDoc(doc(db, "posts", item.id), updateData)
+      ]);
       showToast(newSt === "archived" ? `📦 Publication archivée avec succès.` : `✅ Publication désarchivée.`);
       try { audioSynth?.playValidationSuccess(); } catch (_) {}
     } catch (err: any) {
@@ -276,10 +285,16 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
     setActionLoadingId(item.id);
     try {
       const nextSuspended = item.status !== "SUSPENDUE";
-      await updateDoc(doc(db, item.collectionName, item.id), {
+      const updateData = {
         status: nextSuspended ? "suspended" : "active",
+        statut: nextSuspended ? "suspended" : "active",
         visible: !nextSuspended
-      });
+      };
+      await Promise.allSettled([
+        updateDoc(doc(db, "social_posts", item.id), updateData),
+        updateDoc(doc(db, "gombos", item.id), updateData),
+        updateDoc(doc(db, "posts", item.id), updateData)
+      ]);
       showToast(nextSuspended ? `🛑 Publication suspendue.` : `✅ Publication réactivée.`);
       try { audioSynth?.playValidationSuccess(); } catch (_) {}
     } catch (err: any) {
@@ -293,7 +308,11 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
     if (!itemToDelete) return;
     setActionLoadingId(itemToDelete.id);
     try {
-      await deleteDoc(doc(db, itemToDelete.collectionName, itemToDelete.id));
+      await Promise.allSettled([
+        deleteDoc(doc(db, "social_posts", itemToDelete.id)),
+        deleteDoc(doc(db, "gombos", itemToDelete.id)),
+        deleteDoc(doc(db, "posts", itemToDelete.id))
+      ]);
       showToast(`🗑️ Publication "${itemToDelete.title}" supprimée définitivement.`);
       setItemToDelete(null);
       if (selectedItem?.id === itemToDelete.id) {

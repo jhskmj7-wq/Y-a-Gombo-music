@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { 
   X, ShieldAlert, Award, CreditCard, ShieldCheck, UserX, UserCheck, 
-  BookOpen, FolderHeart, MessageSquare, History, Check, Loader2, ArrowUpRight, ArrowDownLeft
+  BookOpen, FolderHeart, MessageSquare, History, Check, Loader2, ArrowUpRight, ArrowDownLeft,
+  Lock, Unlock, RefreshCw, Key, LogOut, Search, Filter, Shield, AlertTriangle, FileText, Phone, Mail, Activity
 } from "lucide-react";
-import { db } from "../../lib/firebase";
+import { db, auth } from "../../lib/firebase";
 import { 
-  doc, updateDoc, collection, query, where, getDocs, getDoc, addDoc 
+  doc, updateDoc, collection, query, where, getDocs, getDoc, addDoc, orderBy, limit, serverTimestamp 
 } from "firebase/firestore";
+import { WalletSecurityService } from "../../lib/WalletSecurityService";
+import { logAdminAction } from "../../lib/auditLogger";
 
 interface AdminUserProfilePanelProps {
   isOpen: boolean;
@@ -14,6 +17,17 @@ interface AdminUserProfilePanelProps {
   userUid: string;
   onRefreshProfile?: () => void;
 }
+
+type FilterCategory = 
+  | "TOUT" 
+  | "CONNEXIONS" 
+  | "WALLET" 
+  | "GAWA" 
+  | "GOMBOS" 
+  | "PUBLICATIONS" 
+  | "MESSAGERIE" 
+  | "SÉCURITÉ" 
+  | "ADMINISTRATION";
 
 export default function AdminUserProfilePanel({
   isOpen,
@@ -23,24 +37,25 @@ export default function AdminUserProfilePanel({
 }: AdminUserProfilePanelProps) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
-  
-  // Real Firestore lists
-  const [posts, setPosts] = useState<any[]>([]);
-  const [applications, setApplications] = useState<any[]>([]);
-  const [contracts, setContracts] = useState<any[]>([]);
-  const [walletHistory, setWalletHistory] = useState<any[]>([]);
-  const [premiumHistory, setPremiumHistory] = useState<any[]>([]);
-  const [securityAlerts, setSecurityAlerts] = useState<any[]>([]);
-  const [deposits, setDeposits] = useState<any[]>([]);
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [secData, setSecData] = useState<any>(null);
 
-  const [activeSubTab, setActiveSubTab] = useState<"general" | "history" | "actions">("general");
-  const [modMessage, setModMessage] = useState<string | null>(null);
+  // Filtered Activity Timeline
+  const [activityLogs, setActivityLogs] = useState<any[]>([]);
+  const [adminLogs, setAdminLogs] = useState<any[]>([]);
+  const [walletHistory, setWalletHistory] = useState<any[]>([]);
+  const [activeFilter, setActiveFilter] = useState<FilterCategory>("TOUT");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [activeTab, setActiveTab] = useState<"identity" | "auth" | "wallet" | "timeline" | "actions">("identity");
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [adminNoteInput, setAdminNoteInput] = useState("");
+  const [actionReasonInput, setActionReasonInput] = useState("");
+  const [adminNotesList, setAdminNotesList] = useState<any[]>([]);
 
   useEffect(() => {
     if (!isOpen || !userUid) return;
     setLoading(true);
-    setModMessage(null);
+    setActionNotice(null);
 
     const loadData = async () => {
       try {
@@ -48,62 +63,65 @@ export default function AdminUserProfilePanel({
         const userRef = doc(db, "users", userUid);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
-          setProfile({ uid: userSnap.id, ...userSnap.data() });
+          const uData = userSnap.data();
+          setProfile({ uid: userSnap.id, ...uData });
         }
 
-        // 2. Posts (Publications)
-        const postsQuery = query(collection(db, "posts"), where("authorId", "==", userUid));
-        const postsSnap = await getDocs(postsQuery);
-        setPosts(postsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        // 2. Wallet Security Status via WalletSecurityService
+        const sec = await WalletSecurityService.getWalletSecurityStatus(userUid);
+        setSecData(sec);
 
-        // 3. Applications (Candidatures)
-        const appsQuery = query(collection(db, "casting_applications"), where("userId", "==", userUid));
-        const appsSnap = await getDocs(appsQuery);
-        setApplications(appsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-        // 4. Contracts (Contrats)
-        const contractsQueryArtist = query(collection(db, "contracts"), where("artistId", "==", userUid));
-        const contractsQueryClient = query(collection(db, "contracts"), where("clientId", "==", userUid));
-        const [contractsSnapArtist, contractsSnapClient] = await Promise.all([
-          getDocs(contractsQueryArtist),
-          getDocs(contractsQueryClient)
-        ]);
-        const allContracts = [
-          ...contractsSnapArtist.docs.map(d => ({ id: d.id, ...d.data() })),
-          ...contractsSnapClient.docs.map(d => ({ id: d.id, ...d.data() }))
-        ];
-        // Deduplicate
-        const uniqueContracts = Array.from(new Map(allContracts.map(item => [item.id, item])).values());
-        setContracts(uniqueContracts);
-
-        // 5. Wallet History (Transactions)
-        const transactionsQuery = query(collection(db, "transactions"), where("userId", "==", userUid));
-        const transactionsSnap = await getDocs(transactionsQuery);
-        setWalletHistory(transactionsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-        // 6. Security Alerts (Signalements)
-        const alertsQuery = query(collection(db, "security_alerts"), where("userId", "==", userUid));
-        const alertsSnap = await getDocs(alertsQuery);
-        setSecurityAlerts(alertsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-        // 7. Deposits & Withdrawals (from betaTransactions)
-        const betaTxQuery = query(collection(db, "betaTransactions"), where("uid", "==", userUid));
-        const betaTxSnap = await getDocs(betaTxQuery);
-        const betaTxs = betaTxSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        setDeposits(betaTxs.filter((tx: any) => tx.type === "deposit"));
-        setWithdrawals(betaTxs.filter((tx: any) => tx.type === "withdrawal"));
-
-        // 8. Premium History
-        const premiumQuery = query(collection(db, "premium_history") || collection(db, "premiumHistory"), where("userId", "==", userUid));
+        // 3. User Activity Logs
         try {
-          const premiumSnap = await getDocs(premiumQuery);
-          setPremiumHistory(premiumSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+          const actQuery = query(
+            collection(db, "user_activity_logs"),
+            where("uid", "==", userUid)
+          );
+          const actSnap = await getDocs(actQuery);
+          const acts = actSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+          setActivityLogs(acts);
         } catch {
-          setPremiumHistory([]);
+          setActivityLogs([]);
+        }
+
+        // 4. Admin Audit Logs on this user
+        try {
+          const admQuery = query(
+            collection(db, "admin_audit_logs"),
+            where("targetUserId", "==", userUid)
+          );
+          const admSnap = await getDocs(admQuery);
+          setAdminLogs(admSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        } catch {
+          setAdminLogs([]);
+        }
+
+        // 5. Wallet Transactions
+        try {
+          const txQuery = query(
+            collection(db, "walletTransactions"),
+            where("uid", "==", userUid)
+          );
+          const txSnap = await getDocs(txQuery);
+          setWalletHistory(txSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        } catch {
+          setWalletHistory([]);
+        }
+
+        // 6. Admin Notes
+        try {
+          const notesQuery = query(
+            collection(db, "admin_user_notes"),
+            where("targetUid", "==", userUid)
+          );
+          const notesSnap = await getDocs(notesQuery);
+          setAdminNotesList(notesSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        } catch {
+          setAdminNotesList([]);
         }
 
       } catch (err) {
-        console.error("Error loading user panel data:", err);
+        console.error("Error loading user profile panel data:", err);
       } finally {
         setLoading(false);
       }
@@ -112,38 +130,43 @@ export default function AdminUserProfilePanel({
     loadData();
   }, [isOpen, userUid]);
 
-  const handleTogglePremium = async () => {
-    if (!profile) return;
-    const isNowPremium = !(profile.isPremium || profile.premium);
+  const currentAdminUid = auth.currentUser?.uid || "SUPER_FOUNDER";
+  const currentAdminEmail = auth.currentUser?.email || "superfounder@afrigombo.com";
+
+  // Actions
+  const handleLockWallet = async () => {
     try {
-      const userRef = doc(db, "users", profile.uid);
-      await updateDoc(userRef, {
-        isPremium: isNowPremium,
-        premium: isNowPremium
-      });
-      
-      // Log actions in premium history
-      await addDoc(collection(db, "premiumHistory"), {
-        userId: profile.uid,
-        action: isNowPremium ? "grant_premium" : "revoke_premium",
-        grantedBy: "admin_souverain",
-        timestamp: new Date().toISOString()
-      });
-
-      // Log in general activity logs
-      await addDoc(collection(db, "admin_logs"), {
-        action: isNowPremium ? "grant_premium" : "revoke_premium",
-        targetUserId: profile.uid,
-        targetUserName: `${profile.firstName || ""} ${profile.lastName || ""}`,
-        timestamp: new Date().toISOString()
-      });
-
-      setProfile(prev => ({ ...prev, isPremium: isNowPremium, premium: isNowPremium }));
-      setModMessage(`Statut Premium mis à jour avec succès : ${isNowPremium ? "👑 Premium" : "Standard"}`);
+      await WalletSecurityService.adminLockWallet(currentAdminUid, userUid, actionReasonInput || "Verrouillage par Super Fondateur");
+      setActionNotice("🔒 Wallet de l'utilisateur verrouillé avec succès.");
+      setSecData((prev: any) => ({ ...prev, pinStatus: "LOCKED", lockedUntil: new Date(Date.now() + 100 * 365 * 24 * 3600 * 1000).toISOString() }));
+      setActionReasonInput("");
       if (onRefreshProfile) onRefreshProfile();
-    } catch (err) {
-      console.error(err);
-      alert("Erreur lors de la modification du statut Premium");
+    } catch (err: any) {
+      alert("Erreur: " + err.message);
+    }
+  };
+
+  const handleUnlockWallet = async () => {
+    try {
+      await WalletSecurityService.adminUnlockWallet(currentAdminUid, userUid, actionReasonInput || "Déverrouillage par Super Fondateur");
+      setActionNotice("🔓 Wallet déverrouillé avec succès.");
+      setSecData((prev: any) => ({ ...prev, pinStatus: "CONFIGURED", lockedUntil: null, failedPinAttempts: 0 }));
+      setActionReasonInput("");
+      if (onRefreshProfile) onRefreshProfile();
+    } catch (err: any) {
+      alert("Erreur: " + err.message);
+    }
+  };
+
+  const handleRequestPinReset = async () => {
+    try {
+      await WalletSecurityService.adminRequestPinReset(currentAdminUid, userUid, actionReasonInput || "Demande administrative de réinitialisation du PIN");
+      setActionNotice("🔑 Demande de réinitialisation du PIN déclenchée. L'utilisateur devra configurer un nouveau PIN lors de sa prochaine action.");
+      setSecData((prev: any) => ({ ...prev, pinStatus: "RESET_PENDING", pinResetRequested: true }));
+      setActionReasonInput("");
+      if (onRefreshProfile) onRefreshProfile();
+    } catch (err: any) {
+      alert("Erreur: " + err.message);
     }
   };
 
@@ -151,415 +174,484 @@ export default function AdminUserProfilePanel({
     if (!profile) return;
     const isNowSuspended = !profile.isSuspended;
     try {
-      const userRef = doc(db, "users", profile.uid);
-      await updateDoc(userRef, {
-        isSuspended: isNowSuspended
+      const userRef = doc(db, "users", userUid);
+      await updateDoc(userRef, { isSuspended: isNowSuspended });
+
+      await logAdminAction({
+        adminUid: currentAdminUid,
+        adminEmail: currentAdminEmail,
+        action: isNowSuspended ? "SUSPENSION" : "REACTIVATION",
+        targetUserId: userUid,
+        reason: actionReasonInput || (isNowSuspended ? "Suspension administrative" : "Réactivation administrative")
       });
 
-      await addDoc(collection(db, "admin_logs"), {
-        action: isNowSuspended ? "suspend_user" : "unsuspend_user",
-        targetUserId: profile.uid,
-        targetUserName: `${profile.firstName || ""} ${profile.lastName || ""}`,
-        timestamp: new Date().toISOString()
-      });
-
-      setProfile(prev => ({ ...prev, isSuspended: isNowSuspended }));
-      setModMessage(`Compte ${isNowSuspended ? "⏸️ Suspendu" : "🟢 Réactivé"} avec succès`);
+      setProfile((prev: any) => ({ ...prev, isSuspended: isNowSuspended }));
+      setActionNotice(`Compte ${isNowSuspended ? "⏸️ Suspendu" : "🟢 Réactivé"} avec succès.`);
+      setActionReasonInput("");
       if (onRefreshProfile) onRefreshProfile();
-    } catch (err) {
-      console.error(err);
-      alert("Erreur lors de la suspension / réactivation");
+    } catch (err: any) {
+      alert("Erreur: " + err.message);
+    }
+  };
+
+  const handleForceLogout = async () => {
+    try {
+      const userRef = doc(db, "users", userUid);
+      await updateDoc(userRef, {
+        forceLogoutAt: new Date().toISOString()
+      });
+
+      await logAdminAction({
+        adminUid: currentAdminUid,
+        adminEmail: currentAdminEmail,
+        action: "FORCE_LOGOUT",
+        targetUserId: userUid,
+        reason: actionReasonInput || "Déconnexion forcée par le Super Fondateur"
+      });
+
+      setActionNotice("🚪 Déconnexion forcée enregistrée pour cet utilisateur.");
+      setActionReasonInput("");
+    } catch (err: any) {
+      alert("Erreur: " + err.message);
+    }
+  };
+
+  const handleAddAdminNote = async () => {
+    if (!adminNoteInput.trim()) return;
+    try {
+      const newNote = {
+        targetUid: userUid,
+        adminUid: currentAdminUid,
+        adminEmail: currentAdminEmail,
+        note: adminNoteInput,
+        createdAt: new Date().toISOString()
+      };
+      await addDoc(collection(db, "admin_user_notes"), newNote);
+      setAdminNotesList(prev => [newNote, ...prev]);
+      setAdminNoteInput("");
+      setActionNotice("📝 Note administrative ajoutée.");
+    } catch (err: any) {
+      alert("Erreur lors de l'ajout de la note: " + err.message);
     }
   };
 
   if (!isOpen) return null;
 
+  // Filter combined timeline items
+  const combinedTimeline = [
+    ...activityLogs.map(a => ({ ...a, source: "user" })),
+    ...adminLogs.map(a => ({ ...a, type: a.action, details: a.reason, source: "admin" })),
+    ...walletHistory.map(tx => ({ ...tx, type: "WALLET", details: `Mouvement: ${tx.amount || tx.montant} FCFA`, source: "wallet" }))
+  ].sort((a, b) => new Date(b.timestamp || b.createdAt || 0).getTime() - new Date(a.timestamp || a.createdAt || 0).getTime());
+
+  const filteredTimeline = combinedTimeline.filter(item => {
+    const typeStr = String(item.type || "").toUpperCase();
+    if (activeFilter === "CONNEXIONS") return typeStr.includes("CONNEXION") || typeStr.includes("DÉCONNEXION");
+    if (activeFilter === "WALLET") return typeStr.includes("WALLET") || typeStr.includes("RETRAIT") || typeStr.includes("TRANSFERT");
+    if (activeFilter === "GAWA") return typeStr.includes("GAWA") || typeStr.includes("ACHAT");
+    if (activeFilter === "GOMBOS") return typeStr.includes("GOMBO") || typeStr.includes("CANDIDATURE");
+    if (activeFilter === "PUBLICATIONS") return typeStr.includes("PUBLICATION");
+    if (activeFilter === "MESSAGERIE") return typeStr.includes("MESSAGE");
+    if (activeFilter === "SÉCURITÉ") return typeStr.includes("PIN") || typeStr.includes("VERROUILLE") || typeStr.includes("REINITIALISATION") || typeStr.includes("SUSPENSION");
+    if (activeFilter === "ADMINISTRATION") return item.source === "admin";
+    return true;
+  }).filter(item => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      String(item.type || "").toLowerCase().includes(q) ||
+      String(item.details || "").toLowerCase().includes(q) ||
+      String(item.reason || "").toLowerCase().includes(q)
+    );
+  });
+
+  const walletSolde = profile?.wallet?.soldeDisponible ?? profile?.balance ?? 0;
+  const walletBloque = profile?.wallet?.soldeBloque ?? 0;
+  const walletRevenus = profile?.wallet?.revenus ?? profile?.totalRevenue ?? 0;
+  const isWalletLocked = secData?.pinStatus === "LOCKED" || profile?.wallet?.walletStatus === "suspended";
+
   return (
-    <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-md z-[9999] flex items-center justify-end">
-      <div className="w-full max-w-2xl bg-afri-bg border-l border-afri-border h-full flex flex-col shadow-2xl relative animate-slideLeft">
-        
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-6 cursor-pointer"
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="bg-zinc-950 border border-[#D4AF37]/50 rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl relative text-zinc-100 overflow-hidden cursor-default"
+      >
+        {/* Top Glow Accent */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
+
         {/* Header */}
-        <div className="p-4 border-b border-afri-border flex items-center justify-between shrink-0 bg-zinc-900/40">
-          <div className="flex items-center gap-2">
-            <Award className="w-5 h-5 text-[#D4AF37]" />
+        <div className="p-5 border-b border-zinc-800 flex items-center justify-between shrink-0 bg-zinc-900/60 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#D4AF37] to-amber-600 p-0.5 shadow-lg shadow-[#D4AF37]/20">
+              <img 
+                src={profile?.avatarUrl || profile?.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+                alt="" 
+                className="w-full h-full object-cover rounded-[14px]"
+                referrerPolicy="no-referrer"
+              />
+            </div>
             <div>
-              <h3 className="text-sm font-black text-afri-text uppercase tracking-wider">Panneau Souverain Utilisateur</h3>
-              <p className="text-[10px] text-afri-text-muted font-mono">Détails et Contrôle de Compte</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-black text-white">{profile?.firstName || ""} {profile?.lastName || "Utilisateur"}</h3>
+                <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase border ${profile?.isSuspended ? 'bg-red-500/15 text-red-400 border-red-500/30' : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'}`}>
+                  {profile?.isSuspended ? "⏸️ Suspendu" : "🟢 Actif"}
+                </span>
+                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 uppercase font-bold">
+                  {profile?.role || "Client"}
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 font-mono mt-0.5">UID: {userUid}</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-afri-bg-ter hover:bg-zinc-700 text-afri-text-sec hover:text-afri-text transition cursor-pointer"
+            className="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-[#D4AF37] text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-3">
-            <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
-            <p className="text-xs text-afri-text-sec font-mono">Chargement des données souveraines...</p>
-          </div>
-        ) : !profile ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-2">
-            <ShieldAlert className="w-10 h-10 text-rose-500" />
-            <p className="text-xs text-afri-text-sec">Le profil de cet utilisateur n'a pas pu être chargé.</p>
-          </div>
-        ) : (
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Quick Profile Summary Card */}
-            <div className="p-5 border-b border-afri-border flex items-center gap-4 bg-gradient-to-r from-zinc-900/60 to-transparent">
-              <img 
-                src={profile.avatarUrl || profile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
-                alt="" 
-                className="w-16 h-16 rounded-full object-cover border-2 border-[#D4AF37] shadow-lg shrink-0"
-                referrerPolicy="no-referrer"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-black text-afri-text uppercase truncate">
-                    {profile.firstName || ""} {profile.lastName || "Membre Gombo"}
-                  </h4>
-                  {profile.isPremium || profile.premium ? (
-                    <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 text-[8px] font-black uppercase rounded-full border border-amber-500/20">
-                      👑 Premium
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 bg-afri-bg-ter text-afri-text-sec text-[8px] font-black uppercase rounded-full">
-                      Standard
-                    </span>
-                  )}
-                </div>
-                <p className="text-[11px] text-[#D4AF37] font-mono mt-0.5">@{profile.artisticName || "Artiste"}</p>
-                
-                <div className="flex items-center gap-3 mt-2 text-[10px] text-afri-text-sec font-mono">
-                  <span>AFRI ID: <span className="text-afri-text-sec font-bold">{profile.afriId || "Non défini"}</span></span>
-                  <span>GOMBO ID: <span className="text-afri-text-sec font-bold">{profile.gomboId?.id || "Non défini"}</span></span>
-                </div>
-              </div>
-            </div>
-
-            {/* Custom Navigation Sub-Tabs */}
-            <div className="border-b border-afri-border bg-afri-bg flex p-1 shrink-0">
-              {[
-                { id: "general", label: "Informations" },
-                { id: "history", label: "Historiques & Stats" },
-                { id: "actions", label: "Actions de Contrôle" }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => { setActiveSubTab(tab.id as any); setModMessage(null); }}
-                  className={`flex-1 py-2 text-center text-xs font-bold uppercase transition rounded-xl cursor-pointer ${
-                    activeSubTab === tab.id 
-                      ? "bg-afri-bg-ter text-afri-text" 
-                      : "text-afri-text-sec hover:text-afri-text"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Notification Bar */}
-            {modMessage && (
-              <div className="p-3 bg-emerald-500/10 border-b border-emerald-500/20 flex items-center gap-2 text-xs text-emerald-400 justify-center font-bold">
-                <Check className="w-4 h-4" />
-                <span>{modMessage}</span>
-              </div>
-            )}
-
-            {/* Sub-Tab Content Stream */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-5">
-              
-              {/* TAB 1: GENERAL INFO */}
-              {activeSubTab === "general" && (
-                <div className="space-y-4">
-                  {/* Grid fields */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80">
-                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Prénom / Nom :</span>
-                      <span className="text-xs text-afri-text font-medium block mt-0.5">{profile.firstName || ""} {profile.lastName || ""}</span>
-                    </div>
-                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80">
-                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Nom artistique :</span>
-                      <span className="text-xs text-[#D4AF37] font-medium block mt-0.5">{profile.artisticName || "N/A"}</span>
-                    </div>
-                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80">
-                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Email :</span>
-                      <span className="text-xs text-afri-text block truncate mt-0.5">{profile.email || "N/A"}</span>
-                    </div>
-                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80">
-                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Téléphone :</span>
-                      <span className="text-xs text-afri-text block mt-0.5">{profile.phone || "N/A"}</span>
-                    </div>
-                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80 col-span-2">
-                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Localisation :</span>
-                      <span className="text-xs text-afri-text block mt-0.5">
-                        {profile.ville || "Abidjan"}, {profile.commune || "N/A"} {profile.quartier ? `(${profile.quartier})` : ""}
-                      </span>
-                    </div>
-                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80">
-                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Activité :</span>
-                      <span className="text-xs text-afri-text block mt-0.5">{profile.specialty || "Musique"}</span>
-                    </div>
-                    <div className="bg-afri-bg-sec p-3 rounded-xl border border-zinc-800/80">
-                      <span className="text-[9px] text-afri-text-muted uppercase font-bold block">Score de confiance :</span>
-                      <span className={`text-xs font-bold block mt-0.5 ${profile.trustScore >= 90 ? "text-emerald-400" : profile.trustScore >= 70 ? "text-amber-400" : "text-rose-400"}`}>
-                        {profile.trustScore !== undefined ? `${profile.trustScore}%` : "100%"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Skills Section */}
-                  <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 space-y-3">
-                    <h5 className="text-xs font-bold text-afri-text uppercase tracking-wider">Identité Artistique</h5>
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-[9px] text-afri-text-muted uppercase block">Styles musicaux :</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {profile.stylesMusicaux && profile.stylesMusicaux.length > 0 ? (
-                            profile.stylesMusicaux.map((s: string) => (
-                              <span key={s} className="px-2 py-0.5 bg-afri-bg-ter border border-afri-border text-[10px] text-afri-text-sec rounded-lg">{s}</span>
-                            ))
-                          ) : (
-                            <span className="text-xs text-afri-text-muted italic">Aucun style enregistré</span>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-afri-text-muted uppercase block">Instruments maîtrisés :</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {profile.instruments && profile.instruments.length > 0 ? (
-                            profile.instruments.map((i: string) => (
-                              <span key={i} className="px-2 py-0.5 bg-afri-bg-ter border border-afri-border text-[10px] text-afri-text-sec rounded-lg">{i}</span>
-                            ))
-                          ) : (
-                            <span className="text-xs text-afri-text-muted italic">Aucun instrument enregistré</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Connection Details */}
-                  <div className="bg-zinc-900/20 border border-afri-border rounded-2xl p-4 flex justify-between items-center text-xs text-afri-text-sec">
-                    <div>
-                      <span className="text-[9px] text-afri-text-muted uppercase font-black block">Dernière connexion :</span>
-                      <span className="font-mono text-afri-text-sec">{profile.lastLoginAt || profile.lastSeen || "Inconnue"}</span>
-                    </div>
-                    <div>
-                      <span className="text-[9px] text-afri-text-muted uppercase font-black block">Statut Compte :</span>
-                      <span className={`font-bold uppercase ${profile.isSuspended ? "text-amber-400" : "text-emerald-400"}`}>
-                        {profile.isSuspended ? "⏸️ Suspendu" : "🟢 Actif"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 2: HISTORY & STATS */}
-              {activeSubTab === "history" && (
-                <div className="space-y-6">
-                  {/* Key Counts Row */}
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="p-3 bg-afri-bg-sec text-center rounded-xl border border-afri-border">
-                      <strong className="text-lg text-[#D4AF37] block font-mono">{posts.length}</strong>
-                      <span className="text-[9px] text-afri-text-muted uppercase font-bold">Publications</span>
-                    </div>
-                    <div className="p-3 bg-afri-bg-sec text-center rounded-xl border border-afri-border">
-                      <strong className="text-lg text-indigo-400 block font-mono">{applications.length}</strong>
-                      <span className="text-[9px] text-afri-text-muted uppercase font-bold">Candidatures</span>
-                    </div>
-                    <div className="p-3 bg-afri-bg-sec text-center rounded-xl border border-afri-border">
-                      <strong className="text-lg text-emerald-400 block font-mono">{contracts.length}</strong>
-                      <span className="text-[9px] text-afri-text-muted uppercase font-bold">Contrats</span>
-                    </div>
-                  </div>
-
-                  {/* Wallet details */}
-                  <div className="bg-zinc-900/40 border border-afri-border rounded-2xl p-4 space-y-3">
-                    <div className="flex justify-between items-center border-b border-afri-border pb-2">
-                      <h5 className="text-xs font-bold text-afri-text uppercase tracking-wider flex items-center gap-1.5">
-                        <CreditCard className="w-4 h-4 text-emerald-400" /> Solde du Wallet
-                      </h5>
-                      <span className="text-xs text-emerald-400 font-mono font-bold">
-                        {Number(profile.wallet?.soldeDisponible || 0).toLocaleString()} FCFA
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs font-mono text-afri-text-sec">
-                      <div>Solde bloqué: <span className="text-afri-text-sec">{Number(profile.wallet?.soldeBloque || 0).toLocaleString()} FCFA</span></div>
-                      <div>Total Dépôts: <span className="text-afri-text-sec">{deposits.length}</span></div>
-                      <div>Total Retraits: <span className="text-afri-text-sec">{withdrawals.length}</span></div>
-                    </div>
-                  </div>
-
-                  {/* Wallet History Table */}
-                  <div className="space-y-2">
-                    <h5 className="text-[10px] font-mono font-black text-afri-text-sec uppercase tracking-widest">Historique du Wallet</h5>
-                    <div className="bg-afri-bg border border-afri-border rounded-xl max-h-40 overflow-y-auto divide-y divide-afri-border">
-                      {walletHistory.length === 0 ? (
-                        <p className="p-3 text-center text-zinc-600 text-xs italic">Aucune transaction trouvée</p>
-                      ) : (
-                        walletHistory.map(tx => (
-                          <div key={tx.id} className="p-2.5 flex justify-between items-center text-xs font-mono">
-                            <div className="flex items-center gap-1.5">
-                              {tx.type === "deposit" || tx.montant > 0 ? (
-                                <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
-                              ) : (
-                                <ArrowDownLeft className="w-3.5 h-3.5 text-rose-400" />
-                              )}
-                              <div>
-                                <span className="text-afri-text-sec font-bold block uppercase">{tx.type || "transaction"}</span>
-                                <span className="text-[9px] text-afri-text-muted">{tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : ""}</span>
-                              </div>
-                            </div>
-                            <span className={`font-bold ${tx.montant > 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                              {tx.montant > 0 ? "+" : ""}{Number(tx.montant).toLocaleString()} FCFA
-                            </span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Deposits & Withdrawals lists */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <span className="text-[9px] text-afri-text-muted uppercase font-black block">Dépôts récents :</span>
-                      <div className="bg-afri-bg border border-afri-border rounded-xl p-2.5 space-y-1.5 text-[11px] font-mono max-h-32 overflow-y-auto">
-                        {deposits.length === 0 ? (
-                          <span className="text-zinc-600 italic">Aucun dépôt</span>
-                        ) : (
-                          deposits.map(d => (
-                            <div key={d.id} className="flex justify-between text-afri-text-sec">
-                              <span>{Number(d.montant).toLocaleString()} F</span>
-                              <span className="text-emerald-400 uppercase font-bold text-[9px]">{d.statut || "valide"}</span>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <span className="text-[9px] text-afri-text-muted uppercase font-black block">Retraits récents :</span>
-                      <div className="bg-afri-bg border border-afri-border rounded-xl p-2.5 space-y-1.5 text-[11px] font-mono max-h-32 overflow-y-auto">
-                        {withdrawals.length === 0 ? (
-                          <span className="text-zinc-600 italic">Aucun retrait</span>
-                        ) : (
-                          withdrawals.map(w => (
-                            <div key={w.id} className="flex justify-between text-afri-text-sec">
-                              <span>{Number(w.montant).toLocaleString()} F</span>
-                              <span className="text-amber-500 uppercase font-bold text-[9px]">{w.statut || "attente"}</span>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Signalements History (Security alerts) */}
-                  <div className="space-y-2">
-                    <h5 className="text-[10px] font-mono font-black text-afri-text-sec uppercase tracking-widest text-rose-400">Historique des Signalements / Alertes</h5>
-                    <div className="bg-afri-bg border border-afri-border rounded-xl p-3 divide-y divide-afri-border max-h-32 overflow-y-auto">
-                      {securityAlerts.length === 0 ? (
-                        <p className="text-zinc-600 text-xs italic text-center py-1">Zéro signalement. Profil vierge.</p>
-                      ) : (
-                        securityAlerts.map(alert => (
-                          <div key={alert.id} className="py-2 text-[11px] text-afri-text-sec font-mono flex items-center justify-between">
-                            <div>
-                              <span className="text-rose-400 font-bold block">{alert.type || "Infraction"}</span>
-                              <span className="text-[10px]">{alert.details || "Bypass ou comportement non conforme"}</span>
-                            </div>
-                            <span className="text-afri-text-muted">{alert.createdAt ? new Date(alert.createdAt).toLocaleDateString() : ""}</span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 3: ACTIONS */}
-              {activeSubTab === "actions" && (
-                <div className="space-y-4">
-                  <h5 className="text-xs font-bold text-afri-text uppercase tracking-wider border-b border-afri-border pb-2">Contrôle du Compte</h5>
-
-                  {/* Premium Actions */}
-                  <div className="bg-zinc-900/40 p-4 rounded-2xl border border-afri-border flex items-center justify-between">
-                    <div>
-                      <strong className="text-xs text-afri-text block">Abonnement Premium</strong>
-                      <span className="text-[10px] text-afri-text-muted">Donne accès à des privilèges et une réduction des taxes (1.5%)</span>
-                    </div>
-                    <button
-                      onClick={handleTogglePremium}
-                      className={`px-4 py-2 text-xs font-black uppercase rounded-xl transition-all cursor-pointer ${
-                        profile.isPremium || profile.premium
-                          ? "bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20"
-                          : "bg-[#D4AF37] hover:bg-amber-400 text-black shadow-md"
-                      }`}
-                    >
-                      {profile.isPremium || profile.premium ? "Retirer Premium" : "Donner Premium 👑"}
-                    </button>
-                  </div>
-
-                  {/* Suspensions Actions */}
-                  <div className="bg-zinc-900/40 p-4 rounded-2xl border border-afri-border flex items-center justify-between">
-                    <div>
-                      <strong className="text-xs text-afri-text block">Statut d'Activité</strong>
-                      <span className="text-[10px] text-afri-text-muted">Un membre suspendu ne peut plus se connecter ni candidater aux Gombos</span>
-                    </div>
-                    <button
-                      onClick={handleToggleSuspension}
-                      className={`px-4 py-2 text-xs font-black uppercase rounded-xl transition-all cursor-pointer ${
-                        profile.isSuspended
-                          ? "bg-emerald-500 hover:bg-emerald-400 text-black shadow-md"
-                          : "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
-                      }`}
-                    >
-                      {profile.isSuspended ? "Réactiver 🟢" : "Suspendre ⏸️"}
-                    </button>
-                  </div>
-
-                  {/* Other action links with alert redirects */}
-                  <div className="pt-2">
-                    <span className="text-[10px] font-mono font-black text-afri-text-muted uppercase tracking-widest block mb-2">Autres liens d'inspection</span>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => alert(`Inspection complète des transactions pour ${profile.firstName}`)}
-                        className="p-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-left text-xs text-afri-text-sec rounded-xl transition flex items-center justify-between"
-                      >
-                        <span>Voir Transactions</span>
-                        <ArrowUpRight className="w-4 h-4 text-[#D4AF37]" />
-                      </button>
-                      <button
-                        onClick={() => alert(`Inspection des publications de ${profile.firstName}`)}
-                        className="p-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-left text-xs text-afri-text-sec rounded-xl transition flex items-center justify-between"
-                      >
-                        <span>Voir Publications</span>
-                        <ArrowUpRight className="w-4 h-4 text-[#D4AF37]" />
-                      </button>
-                      <button
-                        onClick={() => alert(`Inspection des candidatures de ${profile.firstName}`)}
-                        className="p-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-left text-xs text-afri-text-sec rounded-xl transition flex items-center justify-between"
-                      >
-                        <span>Voir Candidatures</span>
-                        <ArrowUpRight className="w-4 h-4 text-[#D4AF37]" />
-                      </button>
-                      <button
-                        onClick={() => alert(`Consultation du Portfolio et des fichiers de ${profile.firstName}`)}
-                        className="p-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-left text-xs text-afri-text-sec rounded-xl transition flex items-center justify-between"
-                      >
-                        <span>Ouvrir Portfolio</span>
-                        <ArrowUpRight className="w-4 h-4 text-[#D4AF37]" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            </div>
+        {/* Action Notification Banner */}
+        {actionNotice && (
+          <div className="px-5 py-3 bg-emerald-950/60 border-b border-emerald-500/40 flex items-center gap-2.5 text-xs text-emerald-300 font-mono shrink-0">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{actionNotice}</span>
           </div>
         )}
 
+        {/* Tab Navigation */}
+        <div className="flex border-b border-zinc-800 bg-zinc-900/40 p-1.5 gap-1 shrink-0 overflow-x-auto">
+          {[
+            { id: "identity", label: "👤 Identité" },
+            { id: "auth", label: "🔑 Auth" },
+            { id: "wallet", label: "💳 Wallet" },
+            { id: "timeline", label: "📜 Journal Activity" },
+            { id: "actions", label: "⚡ Actions Admins" }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id as any); setActionNotice(null); }}
+              className={`flex-1 min-w-[110px] py-2 px-3 rounded-xl text-xs font-mono font-bold uppercase transition-all cursor-pointer ${
+                activeTab === tab.id 
+                  ? "bg-[#D4AF37] text-zinc-950 shadow-md" 
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-5 text-left">
+          {loading ? (
+            <div className="py-16 text-center space-y-3">
+              <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin mx-auto" />
+              <p className="text-xs font-mono text-zinc-400">Chargement de la fiche souveraine...</p>
+            </div>
+          ) : (
+            <>
+              {/* TAB 1: IDENTITÉ */}
+              {activeTab === "identity" && (
+                <div className="space-y-4 animate-in fade-in">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Nom & Prénom</span>
+                      <span className="font-bold text-white text-sm block mt-0.5">{profile?.firstName || "-"} {profile?.lastName || "-"}</span>
+                    </div>
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Email</span>
+                      <span className="font-bold text-white text-sm block truncate mt-0.5">{profile?.email || "Non renseigné"}</span>
+                    </div>
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">AfriID</span>
+                      <span className="font-bold text-[#D4AF37] text-sm block mt-0.5">{profile?.afriId || profile?.id || "N/A"}</span>
+                    </div>
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Commune / Ville</span>
+                      <span className="font-bold text-white text-sm block mt-0.5">{profile?.commune || profile?.city || "Abidjan"}</span>
+                    </div>
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Rôle Actuel</span>
+                      <span className="font-bold text-white text-sm block mt-0.5 uppercase">{profile?.role || "Client"}</span>
+                    </div>
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Statut Compte</span>
+                      <span className={`font-bold text-sm block mt-0.5 ${profile?.isSuspended ? "text-red-400" : "text-emerald-400"}`}>
+                        {profile?.isSuspended ? "Suspendu" : "Actif"}
+                      </span>
+                    </div>
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl sm:col-span-2">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Date de création du compte</span>
+                      <span className="font-bold text-white block mt-0.5">
+                        {profile?.createdAt ? new Date(profile.createdAt).toLocaleString() : "Récemment"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: AUTHENTIFICATION */}
+              {activeTab === "auth" && (
+                <div className="space-y-4 animate-in fade-in">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Fournisseur Principal</span>
+                      <span className="font-bold text-white text-sm uppercase block mt-0.5">{profile?.provider || profile?.providerId || "google.com"}</span>
+                    </div>
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Dernière Connexion</span>
+                      <span className="font-bold text-white block mt-0.5">
+                        {profile?.lastLoginAt || profile?.lastActive ? new Date(profile.lastLoginAt || profile.lastActive).toLocaleString() : "En ligne"}
+                      </span>
+                    </div>
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Dernière Déconnexion</span>
+                      <span className="font-bold text-white block mt-0.5">
+                        {profile?.lastLogoutAt ? new Date(profile.lastLogoutAt).toLocaleString() : "N/A"}
+                      </span>
+                    </div>
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Session Active</span>
+                      <span className="font-bold text-emerald-400 block mt-0.5">Oui (En ligne)</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-amber-950/20 border border-amber-500/30 rounded-2xl flex items-center gap-3 text-xs text-amber-300 font-mono">
+                    <Shield className="w-5 h-5 text-[#D4AF37] shrink-0" />
+                    <span>Sécurité Souveraine : Même en tant que Super Fondateur, aucun secret (mot de passe Firebase, hash PIN, jetons d'accès OAuth) n'est jamais accessible ni affiché.</span>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: WALLET & SÉCURITÉ */}
+              {activeTab === "wallet" && (
+                <div className="space-y-4 animate-in fade-in">
+                  <div className="p-5 rounded-2xl bg-gradient-to-tr from-zinc-900 to-zinc-950 border border-[#D4AF37]/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-widest font-bold">Code Wallet / Statut</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-lg font-mono font-black text-white bg-zinc-950 px-3 py-1 rounded-xl border border-zinc-800">{profile?.wallet?.walletCode || "AFW-GAWA"}</span>
+                        <span className={`text-[10px] font-mono px-2.5 py-1 rounded-full font-bold uppercase ${isWalletLocked ? 'bg-red-500/15 text-red-400 border border-red-500/30' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'}`}>
+                          {isWalletLocked ? '■ Verrouillé / Suspendu' : '● Actif'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block">Solde Gawa Disponible</span>
+                      <span className="text-2xl font-display font-black text-[#D4AF37]">{walletSolde.toLocaleString()} FCFA</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                    <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Solde Bloqué</span>
+                      <span className="font-bold text-white text-sm">{walletBloque.toLocaleString()} FCFA</span>
+                    </div>
+                    <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Revenus Totaux</span>
+                      <span className="font-bold text-emerald-400 text-sm">{walletRevenus.toLocaleString()} FCFA</span>
+                    </div>
+                    <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">PIN Configuré ?</span>
+                      <span className={`font-bold text-sm ${secData?.pinConfigured ? 'text-emerald-400' : 'text-amber-400'}`}>
+                        {secData?.pinConfigured ? "Oui (Sécurisé)" : "Non"}
+                      </span>
+                    </div>
+                    <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Tentatives Échouées</span>
+                      <span className={`font-bold text-sm ${secData?.failedPinAttempts > 0 ? 'text-red-400' : 'text-white'}`}>
+                        {secData?.failedPinAttempts || 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Création du PIN</span>
+                      <span className="font-bold text-white block mt-0.5">
+                        {secData?.pinCreatedAt ? new Date(secData.pinCreatedAt).toLocaleString() : "N/A"}
+                      </span>
+                    </div>
+                    <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
+                      <span className="text-zinc-500 block text-[9px] uppercase">Dernière Modification PIN</span>
+                      <span className="font-bold text-white block mt-0.5">
+                        {secData?.pinUpdatedAt ? new Date(secData.pinUpdatedAt).toLocaleString() : "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: JOURNAL D'ACTIVITÉ */}
+              {activeTab === "timeline" && (
+                <div className="space-y-4 animate-in fade-in">
+                  {/* Search and Filters */}
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="w-4 h-4 absolute left-3 top-3 text-zinc-500" />
+                      <input
+                        type="text"
+                        placeholder="Rechercher dans l'historique..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {[
+                        "TOUT", "CONNEXIONS", "WALLET", "GAWA", "GOMBOS", "PUBLICATIONS", "MESSAGERIE", "SÉCURITÉ", "ADMINISTRATION"
+                      ].map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => setActiveFilter(cat as FilterCategory)}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
+                            activeFilter === cat 
+                              ? "bg-[#D4AF37] text-zinc-950 font-black" 
+                              : "bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800"
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Timeline Stream */}
+                  <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                    {filteredTimeline.length === 0 ? (
+                      <div className="p-8 text-center border border-zinc-800 rounded-2xl bg-zinc-900/30 text-zinc-500 font-mono text-xs">
+                        Aucun événement correspondant dans le journal.
+                      </div>
+                    ) : (
+                      filteredTimeline.map((item, idx) => (
+                        <div key={idx} className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl font-mono text-xs space-y-1">
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-white uppercase">{item.type || "ÉVÉNEMENT"}</span>
+                            <span className="text-[10px] text-zinc-400">
+                              {item.timestamp ? new Date(item.timestamp).toLocaleString() : "Récemment"}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-zinc-300">{item.details || item.reason || "Action enregistrée"}</p>
+                          {item.source === "admin" && (
+                            <span className="text-[9px] text-[#D4AF37] font-bold block uppercase">Action Administrative ({item.adminEmail || "Admin"})</span>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: ACTIONS DU SUPER FONDATEUR */}
+              {activeTab === "actions" && (
+                <div className="space-y-4 animate-in fade-in">
+                  <div className="p-4 bg-zinc-900/60 border border-zinc-800 rounded-2xl space-y-3">
+                    <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-wider block">⚡ Actions Souveraines de Contrôle</span>
+
+                    <input
+                      type="text"
+                      placeholder="Motif administratif obligatoire..."
+                      value={actionReasonInput}
+                      onChange={(e) => setActionReasonInput(e.target.value)}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
+                    />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                      <button
+                        onClick={isWalletLocked ? handleUnlockWallet : handleLockWallet}
+                        className={`py-2.5 px-4 rounded-xl text-xs font-mono font-bold uppercase transition-all cursor-pointer flex items-center justify-center gap-2 border ${
+                          isWalletLocked 
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20" 
+                            : "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
+                        }`}
+                      >
+                        {isWalletLocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                        <span>{isWalletLocked ? "Déverrouiller Wallet" : "Verrouiller Wallet"}</span>
+                      </button>
+
+                      <button
+                        onClick={handleRequestPinReset}
+                        className="py-2.5 px-4 bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/25 rounded-xl text-xs font-mono font-bold uppercase transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>Déclencher Réinitialisation PIN</span>
+                      </button>
+
+                      <button
+                        onClick={handleToggleSuspension}
+                        className={`py-2.5 px-4 rounded-xl text-xs font-mono font-bold uppercase transition-all cursor-pointer flex items-center justify-center gap-2 border ${
+                          profile?.isSuspended 
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20" 
+                            : "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                        }`}
+                      >
+                        <ShieldAlert className="w-4 h-4" />
+                        <span>{profile?.isSuspended ? "Réactiver le Compte" : "Suspendre le Compte"}</span>
+                      </button>
+
+                      <button
+                        onClick={handleForceLogout}
+                        className="py-2.5 px-4 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white rounded-xl text-xs font-mono font-bold uppercase transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4 text-amber-400" />
+                        <span>Forcer Déconnexion</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Admin Notes */}
+                  <div className="p-4 bg-zinc-900/60 border border-zinc-800 rounded-2xl space-y-3">
+                    <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-wider block">📝 Notes Administratives Souveraines</span>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Ajouter une note confidentielle..."
+                        value={adminNoteInput}
+                        onChange={(e) => setAdminNoteInput(e.target.value)}
+                        className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
+                      />
+                      <button
+                        onClick={handleAddAdminNote}
+                        className="px-4 py-2.5 bg-[#D4AF37] text-zinc-950 font-bold rounded-xl text-xs uppercase font-mono cursor-pointer shadow-md"
+                      >
+                        Ajouter
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {adminNotesList.length === 0 ? (
+                        <p className="text-xs font-mono text-zinc-500 italic">Aucune note enregistrée pour cet utilisateur.</p>
+                      ) : (
+                        adminNotesList.map((n, i) => (
+                          <div key={i} className="p-2.5 bg-zinc-950 border border-zinc-800/80 rounded-xl text-xs font-mono space-y-1">
+                            <p className="text-zinc-200">{n.note}</p>
+                            <span className="text-[9px] text-zinc-500 block">{n.adminEmail} • {new Date(n.createdAt).toLocaleString()}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-zinc-800 bg-zinc-900/60 flex justify-end shrink-0 relative z-10">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-mono font-bold uppercase rounded-xl border border-zinc-800 transition-all cursor-pointer"
+          >
+            Fermer Fiche
+          </button>
+        </div>
       </div>
     </div>
   );

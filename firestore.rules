@@ -84,9 +84,25 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isValidUser(incoming());
       allow update: if (isOwner(userId) && (
         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'firstName', 'lastName', 'photoURL', 'avatarUrl', 'bio', 'phone', 'commune', 'orangeMoneyNumber', 'moovMoneyNumber', 'waveNumber', 'paymentMethods']) ||
-        incoming().diff(existing()).affectedKeys().hasOnly(['walletBalance', 'balance', 'wallet', 'gawaBalance', 'updatedAt'])
+        incoming().diff(existing()).affectedKeys().hasOnly(['walletBalance', 'balance', 'wallet', 'gawaBalance', 'updatedAt', 'walletSecurity', 'paymentSettings', 'forceLogoutAt'])
       )) || isFounder() || isAdmin();
       allow delete: if isFounder();
+    }
+
+    // AUDIT & LOGGING COLLECTIONS
+    match /admin_audit_logs/{id} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isFounder();
+    }
+    match /user_activity_logs/{id} {
+      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /admin_user_notes/{id} {
+      allow read: if isAdmin();
+      allow create, update, delete: if isAdmin();
     }
 
     // GOMBOS (Opportunities)

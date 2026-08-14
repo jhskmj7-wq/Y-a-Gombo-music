@@ -163,22 +163,26 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     // 1. VALIDATIONS OBLIGATOIRES DES CHAMPS
     if (!title.trim()) {
       setErrorMsg("Veuillez renseigner le titre de la publication !");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
     if (!description.trim()) {
       setErrorMsg("Veuillez renseigner la description !");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
     const effectiveCommune = commune === "Autre" ? customCommune.trim() : commune;
     if (!effectiveCommune) {
       setErrorMsg("Veuillez renseigner la commune ou la ville !");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
     if (!quartier.trim()) {
       setErrorMsg("Veuillez renseigner le quartier !");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -187,6 +191,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     const selectedDateStr = (typeof date === "string" && date) ? date.split("T")[0] : todayStr;
     if (selectedDateStr < todayStr) {
       setErrorMsg("La date du Gombo doit être aujourd'hui ou dans le futur.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -196,7 +201,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       const userRef = doc(db, "users", currentUserProfile.uid);
       const userSnap = await getDoc(userRef);
       const freshUserData = userSnap.exists() ? userSnap.data() : currentUserProfile;
-      const userSolde = freshUserData?.walletBalance ?? freshUserData?.wallet?.soldeDisponible ?? 0;
+      const userSolde = getCanonicalWalletBalance(freshUserData);
       
       const cachetVal = budget ? Number(budget) : 0;
       const effectiveRate = getEffectiveCommissionRate(freshUserData);
@@ -437,8 +442,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           paymentMethod: "wallet_autonomus",
 
           // Status & Visibility
-          status: "PUBLISHED",
-          statut: "PUBLISHED",
+          status: "active",
+          statut: "active",
           visible: true,
           adminValidated: true,
           isPublished: true,
@@ -449,10 +454,12 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           mediaUrl: uploadedImageUrl,
           audioUrl: uploadedAudioUrl,
 
-          // Real Timestamps
+          // Real Timestamps & Expiration
           createdAt: nowIso,
           timestamp: currentTimestamp,
           publishedAt: nowIso,
+          expiresAt: new Date(date + "T23:59:59.999Z").toISOString(),
+          expiresAtTimestamp: new Date(date + "T23:59:59.999Z").getTime(),
 
           // REAL Statistics initialized to ZERO (No fake metrics)
           views: 0,
@@ -1090,6 +1097,14 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             </div>
           </div>
 
+          {/* Form Error Banner at Bottom */}
+          {errorMsg && (
+            <div className="p-3.5 bg-red-950/40 text-red-400 font-bold text-xs rounded-xl border border-red-800/80 flex items-center gap-2 animate-bounce">
+              <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
           {/* Form Actions Buttons */}
           <div className="flex items-center justify-between gap-4 pt-4 border-t border-afri-border/50">
             <button
@@ -1110,7 +1125,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               }`}
             >
               {loading ? (
-                <div className="w-4 h-4 border-2 border-[#0B0B0B] border-t-transparent rounded-full animate-spin" />
+                <>
+                  <div className="w-4 h-4 border-2 border-[#0B0B0B] border-t-transparent rounded-full animate-spin" />
+                  <span>PUBLICATION EN COURS...</span>
+                </>
               ) : (
                 <>
                   {gomboCategory === "securise" ? <ShieldCheck className="w-4 h-4" /> : "🚀"}

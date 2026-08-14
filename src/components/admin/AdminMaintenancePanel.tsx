@@ -92,37 +92,74 @@ export default function AdminMaintenancePanel() {
       )}
 
       {report && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800">
-            <div className="flex items-center gap-2 mb-3">
-              <Users className="w-4 h-4 text-blue-400" />
-              <h3 className="text-xs font-bold text-zinc-400 uppercase">Utilisateurs & Roles</h3>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-zinc-500">Comptes à réinitialiser</span>
-                <span className="font-black text-white">{report.usersToReset}</span>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="w-4 h-4 text-blue-400" />
+                <h3 className="text-xs font-bold text-zinc-400 uppercase">Comptes Utilisateurs & Wallets</h3>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-zinc-500">Fondateurs protégés</span>
-                <span className="font-black text-emerald-400">{report.foundersProtected}</span>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-zinc-500">Comptes préservés (Non supprimés)</span>
+                  <span className="font-black text-emerald-400">{report.usersPreserved ?? report.usersToReset ?? 0}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-zinc-500">Super Fondateurs protégés</span>
+                  <span className="font-black text-amber-400">{report.foundersProtected ?? 0}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-zinc-500">Wallets réinitialisés (0 FCFA)</span>
+                  <span className="font-black text-white">{report.walletsReset ?? 0}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800">
+              <div className="flex items-center gap-2 mb-3">
+                <Database className="w-4 h-4 text-purple-400" />
+                <h3 className="text-xs font-bold text-zinc-400 uppercase">Données Métier Nettoyées</h3>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-zinc-500">Collections ciblées</span>
+                  <span className="font-black text-white">{report.collectionsCleared ? Object.keys(report.collectionsCleared).length : 0}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-zinc-500">Documents supprimés / estimés</span>
+                  <span className="font-black text-amber-400">{report.totalDocumentsDeleted ?? report.totalDocumentsEstimated ?? 0}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800">
-            <div className="flex items-center gap-2 mb-3">
-              <Database className="w-4 h-4 text-purple-400" />
-              <h3 className="text-xs font-bold text-zinc-400 uppercase">Données Firestore</h3>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-zinc-500">Collections ciblées</span>
-                <span className="font-black text-white">{Object.keys(report.collectionsToClear).length}</span>
+          {/* Breakdown Grid */}
+          <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 space-y-3">
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Détail des Suppressions Métier</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-center">
+              <div className="bg-black/40 p-2.5 rounded-xl border border-zinc-800">
+                <p className="text-[10px] text-zinc-500 uppercase font-bold">Publications</p>
+                <p className="text-sm font-black text-white mt-0.5">{report.publicationsDeleted ?? 0}</p>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-zinc-500">Documents estimés</span>
-                <span className="font-black text-amber-400">~{report.totalDocumentsEstimated}</span>
+              <div className="bg-black/40 p-2.5 rounded-xl border border-zinc-800">
+                <p className="text-[10px] text-zinc-500 uppercase font-bold">Transactions</p>
+                <p className="text-sm font-black text-white mt-0.5">{report.transactionsDeleted ?? 0}</p>
+              </div>
+              <div className="bg-black/40 p-2.5 rounded-xl border border-zinc-800">
+                <p className="text-[10px] text-zinc-500 uppercase font-bold">Messages</p>
+                <p className="text-sm font-black text-white mt-0.5">{report.messagesDeleted ?? 0}</p>
+              </div>
+              <div className="bg-black/40 p-2.5 rounded-xl border border-zinc-800">
+                <p className="text-[10px] text-zinc-500 uppercase font-bold">Notifications</p>
+                <p className="text-sm font-black text-white mt-0.5">{report.notificationsDeleted ?? 0}</p>
+              </div>
+              <div className="bg-black/40 p-2.5 rounded-xl border border-zinc-800">
+                <p className="text-[10px] text-zinc-500 uppercase font-bold">Historiques</p>
+                <p className="text-sm font-black text-white mt-0.5">{report.historiesDeleted ?? 0}</p>
+              </div>
+              <div className="bg-black/40 p-2.5 rounded-xl border border-zinc-800">
+                <p className="text-[10px] text-zinc-500 uppercase font-bold">Lots / Roue</p>
+                <p className="text-sm font-black text-white mt-0.5">{report.lotsDeleted ?? 0}</p>
               </div>
             </div>
           </div>

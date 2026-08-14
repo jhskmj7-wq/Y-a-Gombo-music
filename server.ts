@@ -145,15 +145,14 @@ async function startServer() {
     }
   });
 
-  // SECURE RESET API
+// SECURE RESET API - PHASE 1 BUSINESS DATA RESET
   app.post("/api/admin/reset-environment", async (req, res) => {
     const { idToken, confirmationPhrase, dryRun = false } = req.body;
 
     if (!idToken) return res.status(401).json({ error: "Authentification requise." });
     
-    // For dryRun, we don't strictly need the phrase, but it's safer to require it or a partial one.
     if (!dryRun && confirmationPhrase !== RESET_PHRASE) {
-      return res.status(400).json({ error: "Phrase de confirmation incorrecte." });
+      return res.status(400).json({ error: "Phrase de confirmation incorrecte. Tapez 'RESET AFRIGOMBO TEST'." });
     }
 
     try {
@@ -162,89 +161,158 @@ async function startServer() {
       const uid = decodedToken.uid;
       const userDoc = await adminDb.collection("users").doc(uid).get();
       
-      if (!userDoc.exists) return res.status(403).json({ error: "Accès refusé." });
+      if (!userDoc.exists) return res.status(403).json({ error: "Accès refusé. Profil utilisateur introuvable." });
       
       const userData = userDoc.data();
-      const isSuperFounder = userData?.isFounder === true || userData?.superFounder === true || userData?.role === "admin";
+      const isSuperFounder = userData?.isFounder === true || userData?.superFounder === true || userData?.role === "admin" || PROTECTED_FOUNDER_EMAILS.includes(decodedToken.email || "");
       
-      if (!isSuperFounder) return res.status(403).json({ error: "Seuls les Super Fondateurs peuvent effectuer un reset." });
+      if (!isSuperFounder) return res.status(403).json({ error: "Seuls les Super Fondateurs ont l'autorisation de réinitialiser l'environnement." });
 
-      console.log(`[RESET] ${dryRun ? 'AUDIT' : 'EXECUTION'} initiated by ${decodedToken.email} (${uid})`);
+      console.log(`[RESET PHASE 1] ${dryRun ? 'AUDIT (DryRun)' : 'EXECUTION'} de remise à zéro initiée par ${decodedToken.email} (${uid})`);
 
-      const report: any = {
-        usersToReset: 0,
-        collectionsToClear: {},
-        totalDocumentsEstimated: 0,
+      const report = {
+        usersPreserved: 0,
         foundersProtected: 0,
-        errors: [],
-        isDryRun: dryRun
+        walletsReset: 0,
+        transactionsDeleted: 0,
+        messagesDeleted: 0,
+        publicationsDeleted: 0,
+        notificationsDeleted: 0,
+        historiesDeleted: 0,
+        lotsDeleted: 0,
+        totalDocumentsDeleted: 0,
+        totalDocumentsEstimated: 0,
+        collectionsCleared: {} as Record<string, number>,
+        errors: [] as string[],
+        isDryRun: dryRun,
+        timestamp: new Date().toISOString()
       };
 
-      // 2. Audit/Reset User Profiles
+      // 2. Audit/Reset User Profiles (Preserve Accounts, Reset Business Wallets)
       const usersSnap = await adminDb.collection("users").get();
-      const batch = dryRun ? null : adminDb.batch();
-      let batchCount = 0;
+      report.usersPreserved = usersSnap.size;
 
-      for (const userDoc of usersSnap.docs) {
-        const data = userDoc.data();
+      let batch = adminDb.batch();
+      let batchOpsCount = 0;
+
+      for (const uDoc of usersSnap.docs) {
+        const data = uDoc.data();
         const isProtected = PROTECTED_FOUNDER_EMAILS.includes(data.email) || data.isFounder === true || data.superFounder === true;
 
         if (isProtected) {
           report.foundersProtected++;
-          continue;
         }
 
-        report.usersToReset++;
+        report.walletsReset++;
 
-        if (!dryRun && batch) {
-          batch.update(userDoc.ref, {
+        if (!dryRun) {
+          batch.update(uDoc.ref, {
             balance: 0,
             walletBalance: 0,
+            gawaBalance: 0,
             totalRevenue: 0,
-            "wallet.soldeDisponible": 0,
-            "wallet.soldeBloque": 0,
-            "wallet.revenusMois": 0,
-            "wallet.gainsMensuels": 0,
-            "wallet.economiesPremium": 0,
+            revenus: 0,
+            depenses: 0,
+            gains: 0,
+            transactionsCount: 0,
+            wallet: {
+              soldeDisponible: 0,
+              soldeBloque: 0,
+              soldeGawa: 0,
+              revenusMois: 0,
+              gainsMensuels: 0,
+              economiesPremium: 0,
+              revenus: 0,
+              depenses: 0,
+              niveauWallet: "Standard",
+              devise: "FCFA"
+            },
             reputationScore: 100,
             updatedAt: FieldValue.serverTimestamp()
           });
-          batchCount++;
+          batchOpsCount++;
 
-          if (batchCount >= 450) {
+          if (batchOpsCount >= 400) {
             await batch.commit();
-            // In a real loop we'd need to recreate the batch, but let's keep it simple for now or use a recursive function
+            batch = adminDb.batch();
+            batchOpsCount = 0;
           }
         }
       }
-      if (!dryRun && batch && batchCount > 0) await batch.commit();
+      if (!dryRun && batchOpsCount > 0) {
+        await batch.commit();
+      }
 
-      // 3. Audit/Clear Collections
+      // 3. Clear Target Business Collections
+      const publicationCols = ["gombos", "social_posts", "posts", "casting_calls", "casting_applications", "renforts", "renfort_applications", "renfortApplications", "studio_market", "ticket_events"];
+      const transactionCols = ["transactions", "betaTransactions", "walletTransactions", "walletRefunds", "walletAdjustments", "commissions", "escrow", "withdrawals", "payments"];
+      const messageCols = ["conversations", "messages", "support_messages", "supportMessages", "supportLogs", "tickets_support", "afrigombo_supports"];
+      const notificationCols = ["notifications", "user_notifications"];
+      const historyCols = ["user_activities", "user_activity_logs", "admin_logs", "admin_audit_logs", "adminAuditLogs", "adminActions", "bypass_attempts", "bypassAttempts", "security_alerts", "security_incidents", "security_logs", "beta_feedback", "bug_reports", "bugReports", "user_reports", "reports"];
+      const lotCols = ["wheels", "wheel_spins", "wheel_lots", "wheel_history", "wheelPriceHistory", "wheel_spins_extra", "wheelExtraSpins", "avatarPurchases", "avatarRewards", "avatarGifts"];
+
       for (const colName of COLLECTIONS_TO_RESET) {
         try {
           const colRef = adminDb.collection(colName);
-          // For audit, we just get the count (approximate via limit for speed)
-          const snap = await colRef.limit(1000).get();
-          const count = snap.size;
-          
-          report.collectionsToClear[colName] = count;
-          report.totalDocumentsEstimated += count;
+          let deletedInCol = 0;
 
-          if (!dryRun && count > 0) {
-            // Actual deletion logic (simplified for now to first 1000 docs)
-            const deleteBatch = adminDb.batch();
-            snap.docs.forEach(doc => deleteBatch.delete(doc.ref));
-            await deleteBatch.commit();
+          while (true) {
+            const snap = await colRef.limit(400).get();
+            if (snap.empty) break;
+
+            const count = snap.size;
+            report.totalDocumentsEstimated += count;
+
+            if (!dryRun) {
+              const delBatch = adminDb.batch();
+              snap.docs.forEach((docSnap) => {
+                delBatch.delete(docSnap.ref);
+              });
+              await delBatch.commit();
+              deletedInCol += count;
+            } else {
+              deletedInCol += count;
+              break; // In dry run, sample count and move on
+            }
+
+            if (count < 400) break;
           }
+
+          report.collectionsCleared[colName] = deletedInCol;
+          report.totalDocumentsDeleted += deletedInCol;
+
+          // Categorize counts for detailed reporting
+          if (publicationCols.includes(colName)) report.publicationsDeleted += deletedInCol;
+          else if (transactionCols.includes(colName)) report.transactionsDeleted += deletedInCol;
+          else if (messageCols.includes(colName)) report.messagesDeleted += deletedInCol;
+          else if (notificationCols.includes(colName)) report.notificationsDeleted += deletedInCol;
+          else if (historyCols.includes(colName)) report.historiesDeleted += deletedInCol;
+          else if (lotCols.includes(colName)) report.lotsDeleted += deletedInCol;
+
         } catch (colErr: any) {
-          report.errors.push(`Error auditing/clearing ${colName}: ${colErr.message}`);
+          report.errors.push(`Erreur lors du nettoyage de ${colName}: ${colErr.message}`);
+        }
+      }
+
+      // 4. Log the reset action into admin_audit_logs if live execution
+      if (!dryRun) {
+        try {
+          await adminDb.collection("admin_audit_logs").add({
+            action: "RESET_PHASE_1_BUSINESS_DATA",
+            performedBy: decodedToken.email,
+            performedByUid: uid,
+            report,
+            timestamp: FieldValue.serverTimestamp()
+          });
+        } catch (logErr) {
+          console.warn("[RESET LOG WARNING]", logErr);
         }
       }
 
       res.json({ success: true, report });
     } catch (err: any) {
       console.error("[RESET-ERROR]", err);
-      res.status(500).json({ error: "Erreur serveur lors du reset.", details: err.message });
+      res.status(500).json({ error: "Erreur serveur lors de la réinitialisation.", details: err.message });
     }
   });
 

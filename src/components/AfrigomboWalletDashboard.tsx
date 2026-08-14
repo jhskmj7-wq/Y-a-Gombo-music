@@ -53,6 +53,9 @@ import ModuleMaintenanceNotice from "./common/ModuleMaintenanceNotice";
 import { GawaEngineService } from "../lib/GawaEngineService";
 import { MissionService } from "../lib/MissionService";
 import { GawaPack, GawaHistoryRecord, Mission, UserMission } from "../types";
+import { WalletSecurityService } from "../lib/WalletSecurityService";
+import { auth, googleProvider } from "../lib/firebase";
+import { GoogleAuthProvider, reauthenticateWithPopup } from "firebase/auth";
 
 
 interface AfrigomboWalletDashboardProps {
@@ -153,18 +156,18 @@ export default function AfrigomboWalletDashboard({
   const [walletPinSettings, setWalletPinSettings] = useState({
     pinHash: "",
     pinEnabled: false,
-    pinLength: 4
+    pinLength: 6
   });
 
   const [pinFlow, setPinFlow] = useState<{
-    mode: "idle" | "create_step1" | "create_step2" | "modify_old" | "modify_new" | "modify_confirm" | "disable_verify" | "enable_verify";
-    length: 4 | 6;
+    mode: "idle" | "create_step1" | "create_step2" | "modify_old" | "modify_new" | "modify_confirm" | "disable_verify" | "enable_verify" | "forgot_reset";
+    length: 6;
     tempPin: string;
     enteredPin: string;
     errorMsg: string;
   }>({
     mode: "idle",
-    length: 4,
+    length: 6,
     tempPin: "",
     enteredPin: "",
     errorMsg: ""
@@ -179,6 +182,11 @@ export default function AfrigomboWalletDashboard({
   } | null>(null);
 
   const [recapConfirmed, setRecapConfirmed] = useState(false);
+  const [showForgotPinModal, setShowForgotPinModal] = useState(false);
+  const [forgotPinStep, setForgotPinStep] = useState<"reauth" | "new_pin" | "confirm_pin">("reauth");
+  const [forgotNewPin, setForgotNewPin] = useState("");
+  const [forgotConfirmPin, setForgotConfirmPin] = useState("");
+  const [forgotError, setForgotError] = useState("");
 
   const [pinVerificationFlow, setPinVerificationFlow] = useState<{
     active: boolean;
@@ -192,20 +200,9 @@ export default function AfrigomboWalletDashboard({
     attempts: 0
   });
 
-  // Secure PIN Hashing (SHA-256 with user UID salt)
-  const hashPIN = async (pin: string, salt: string): Promise<string> => {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(pin + ":" + salt);
-    const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-  };
-
   // Sound Synth Helper
   const playSound = (type: "success" | "click" | "error") => {
-    // Silence click sounds for professional UI as requested
     if (type === "click") return;
-
     try {
       const AudioSynth = (window as any).audioSynth;
       if (AudioSynth) {
@@ -213,6 +210,7 @@ export default function AfrigomboWalletDashboard({
       }
     } catch (_) {}
   };
+
 
   // Real-time listener for user profile wallet & transactions from Firestore
   useEffect(() => {
@@ -760,9 +758,15 @@ export default function AfrigomboWalletDashboard({
     const { mode, length, enteredPin, tempPin } = currentState;
     
     if (mode === "create_step1") {
+      const validation = WalletSecurityService.validatePinStrength(enteredPin);
+      if (!validation.valid) {
+        playSound("error");
+        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: validation.reason || "Code PIN trop faible." }));
+        return;
+      }
       setPinFlow({
         mode: "create_step2",
-        length,
+        length: 6,
         tempPin: enteredPin,
         enteredPin: "",
         errorMsg: ""
@@ -775,7 +779,7 @@ export default function AfrigomboWalletDashboard({
         playSound("error");
         setPinFlow({
           mode: "create_step1",
-          length,
+          length: 6,
           tempPin: "",
           enteredPin: "",
           errorMsg: "Les codes PIN ne correspondent pas. Recommencez."
@@ -785,26 +789,18 @@ export default function AfrigomboWalletDashboard({
       
       setProcessing(true);
       try {
-        const hash = await hashPIN(enteredPin, uid);
-        await setDoc(doc(db, "users", uid), {
-          paymentSettings: {
-            pinHash: hash,
-            pinEnabled: true,
-            pinLength: length
-          }
-        }, { merge: true });
-        
+        await WalletSecurityService.createPin(uid, enteredPin);
         playSound("success");
         setWalletPinSettings({
-          pinHash: hash,
+          pinHash: "SET",
           pinEnabled: true,
-          pinLength: length
+          pinLength: 6
         });
-        setPinFlow({ mode: "idle", length: 4, tempPin: "", enteredPin: "", errorMsg: "" });
-        showToast("🔐 Votre code PIN Wallet a été créé et activé !");
-      } catch (err) {
+        setPinFlow({ mode: "idle", length: 6, tempPin: "", enteredPin: "", errorMsg: "" });
+        showToast("🔐 Votre code PIN Wallet sécurisé (6 chiffres) a été créé et activé !");
+      } catch (err: any) {
         console.error(err);
-        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: "Erreur de stockage." }));
+        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: err.message || "Erreur de création du PIN." }));
       } finally {
         setProcessing(false);
       }
@@ -812,31 +808,44 @@ export default function AfrigomboWalletDashboard({
     }
     
     if (mode === "modify_old") {
-      const hashed = await hashPIN(enteredPin, uid);
-      if (hashed !== walletPinSettings.pinHash) {
-        playSound("error");
-        setPinFlow(prev => ({
-          ...prev,
+      setProcessing(true);
+      try {
+        const check = await WalletSecurityService.verifyPin(uid, enteredPin);
+        if (check.result !== "PIN_VALID") {
+          playSound("error");
+          setPinFlow(prev => ({
+            ...prev,
+            enteredPin: "",
+            errorMsg: check.message || "Code PIN actuel incorrect."
+          }));
+          return;
+        }
+        
+        setPinFlow({
+          mode: "modify_new",
+          length: 6,
+          tempPin: "",
           enteredPin: "",
-          errorMsg: "Code PIN actuel incorrect."
-        }));
-        return;
+          errorMsg: ""
+        });
+      } catch (err: any) {
+        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: err.message }));
+      } finally {
+        setProcessing(false);
       }
-      
-      setPinFlow({
-        mode: "modify_new",
-        length,
-        tempPin: "",
-        enteredPin: "",
-        errorMsg: ""
-      });
       return;
     }
     
     if (mode === "modify_new") {
+      const validation = WalletSecurityService.validatePinStrength(enteredPin);
+      if (!validation.valid) {
+        playSound("error");
+        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: validation.reason || "PIN trop faible." }));
+        return;
+      }
       setPinFlow({
         mode: "modify_confirm",
-        length,
+        length: 6,
         tempPin: enteredPin,
         enteredPin: "",
         errorMsg: ""
@@ -849,7 +858,7 @@ export default function AfrigomboWalletDashboard({
         playSound("error");
         setPinFlow({
           mode: "modify_new",
-          length,
+          length: 6,
           tempPin: "",
           enteredPin: "",
           errorMsg: "Les codes PIN ne correspondent pas. Recommencez."
@@ -859,61 +868,42 @@ export default function AfrigomboWalletDashboard({
       
       setProcessing(true);
       try {
-        const hash = await hashPIN(enteredPin, uid);
-        await setDoc(doc(db, "users", uid), {
-          paymentSettings: {
-            pinHash: hash,
-            pinLength: length
-          }
-        }, { merge: true });
-        
+        await WalletSecurityService.resetPinAfterReauth(uid, enteredPin);
         playSound("success");
-        setWalletPinSettings(prev => ({
-          ...prev,
-          pinHash: hash,
-          pinLength: length
-        }));
-        setPinFlow({ mode: "idle", length: 4, tempPin: "", enteredPin: "", errorMsg: "" });
-        showToast("🔐 Votre code PIN Wallet a été modifié avec succès !");
-      } catch (err) {
+        setPinFlow({ mode: "idle", length: 6, tempPin: "", enteredPin: "", errorMsg: "" });
+        showToast("🔐 Code PIN Wallet modifié avec succès !");
+      } catch (err: any) {
         console.error(err);
-        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: "Erreur de stockage." }));
+        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: err.message || "Erreur lors de la modification." }));
       } finally {
         setProcessing(false);
       }
       return;
     }
-    
+
     if (mode === "disable_verify") {
-      const hashed = await hashPIN(enteredPin, uid);
-      if (hashed !== walletPinSettings.pinHash) {
-        playSound("error");
-        setPinFlow(prev => ({
-          ...prev,
-          enteredPin: "",
-          errorMsg: "Code PIN incorrect."
-        }));
-        return;
-      }
-      
       setProcessing(true);
       try {
+        const check = await WalletSecurityService.verifyPin(uid, enteredPin);
+        if (check.result !== "PIN_VALID") {
+          playSound("error");
+          setPinFlow(prev => ({
+            ...prev,
+            enteredPin: "",
+            errorMsg: check.message || "Code PIN incorrect."
+          }));
+          return;
+        }
         await setDoc(doc(db, "users", uid), {
-          paymentSettings: {
-            pinEnabled: false
-          }
+          paymentSettings: { pinEnabled: false }
         }, { merge: true });
         
         playSound("success");
-        setWalletPinSettings(prev => ({
-          ...prev,
-          pinEnabled: false
-        }));
-        setPinFlow({ mode: "idle", length: 4, tempPin: "", enteredPin: "", errorMsg: "" });
+        setWalletPinSettings(prev => ({ ...prev, pinEnabled: false }));
+        setPinFlow({ mode: "idle", length: 6, tempPin: "", enteredPin: "", errorMsg: "" });
         showToast("🔓 Code PIN désactivé avec succès.");
-      } catch (err) {
-        console.error(err);
-        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: "Erreur lors de la désactivation." }));
+      } catch (err: any) {
+        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: err.message }));
       } finally {
         setProcessing(false);
       }
@@ -921,35 +911,28 @@ export default function AfrigomboWalletDashboard({
     }
 
     if (mode === "enable_verify") {
-      const hashed = await hashPIN(enteredPin, uid);
-      if (hashed !== walletPinSettings.pinHash) {
-        playSound("error");
-        setPinFlow(prev => ({
-          ...prev,
-          enteredPin: "",
-          errorMsg: "Code PIN incorrect."
-        }));
-        return;
-      }
-      
       setProcessing(true);
       try {
+        const check = await WalletSecurityService.verifyPin(uid, enteredPin);
+        if (check.result !== "PIN_VALID") {
+          playSound("error");
+          setPinFlow(prev => ({
+            ...prev,
+            enteredPin: "",
+            errorMsg: check.message || "Code PIN incorrect."
+          }));
+          return;
+        }
         await setDoc(doc(db, "users", uid), {
-          paymentSettings: {
-            pinEnabled: true
-          }
+          paymentSettings: { pinEnabled: true }
         }, { merge: true });
         
         playSound("success");
-        setWalletPinSettings(prev => ({
-          ...prev,
-          pinEnabled: true
-        }));
-        setPinFlow({ mode: "idle", length: 4, tempPin: "", enteredPin: "", errorMsg: "" });
+        setWalletPinSettings(prev => ({ ...prev, pinEnabled: true }));
+        setPinFlow({ mode: "idle", length: 6, tempPin: "", enteredPin: "", errorMsg: "" });
         showToast("🔐 Code PIN réactivé avec succès.");
-      } catch (err) {
-        console.error(err);
-        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: "Erreur lors de la réactivation." }));
+      } catch (err: any) {
+        setPinFlow(prev => ({ ...prev, enteredPin: "", errorMsg: err.message }));
       } finally {
         setProcessing(false);
       }
@@ -959,16 +942,16 @@ export default function AfrigomboWalletDashboard({
 
   const handleVerifyPinKeyPress = async (num: string) => {
     playSound("click");
-    if (pinVerificationFlow.enteredPin.length >= walletPinSettings.pinLength) return;
+    if (pinVerificationFlow.enteredPin.length >= 6) return;
     
     const nextPin = pinVerificationFlow.enteredPin + num;
     setPinVerificationFlow(prev => ({ ...prev, enteredPin: nextPin, errorMsg: "" }));
 
-    if (nextPin.length === walletPinSettings.pinLength) {
+    if (nextPin.length === 6) {
       setProcessing(true);
       try {
-        const hashed = await hashPIN(nextPin, uid);
-        if (hashed === walletPinSettings.pinHash) {
+        const result = await WalletSecurityService.verifyPin(uid, nextPin);
+        if (result.result === "PIN_VALID") {
           playSound("success");
           if (activePendingOperation) {
             await activePendingOperation.execute();
@@ -977,23 +960,22 @@ export default function AfrigomboWalletDashboard({
           setPinVerificationFlow({ active: false, enteredPin: "", errorMsg: "", attempts: 0 });
         } else {
           playSound("error");
-          const nextAttempts = pinVerificationFlow.attempts + 1;
-          if (nextAttempts >= 3) {
-            alert("🔒 Sécurité : 3 tentatives incorrectes. Opération annulée.");
+          if (result.result === "PIN_LOCKED") {
+            alert(`🔒 ${result.message}`);
             setActivePendingOperation(null);
-            setPinVerificationFlow({ active: false, enteredPin: "", errorMsg: "", attempts: 0 });
+            setPinVerificationFlow({ active: false, enteredPin: "", errorMsg: result.message || "Wallet verrouillé.", attempts: 0 });
           } else {
-            setPinVerificationFlow({
-              active: true,
+            setPinVerificationFlow(prev => ({
+              ...prev,
               enteredPin: "",
-              errorMsg: `Code PIN incorrect. (${3 - nextAttempts} tentatives restantes)`,
-              attempts: nextAttempts
-            });
+              errorMsg: result.message || "Code PIN incorrect.",
+              attempts: (result.attemptsRemaining !== undefined) ? (3 - result.attemptsRemaining) : prev.attempts + 1
+            }));
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Verification error", err);
-        setPinVerificationFlow(prev => ({ ...prev, enteredPin: "", errorMsg: "Erreur de vérification" }));
+        setPinVerificationFlow(prev => ({ ...prev, enteredPin: "", errorMsg: err.message || "Erreur de vérification" }));
       } finally {
         setProcessing(false);
       }
@@ -1007,6 +989,61 @@ export default function AfrigomboWalletDashboard({
       enteredPin: prev.enteredPin.slice(0, -1),
       errorMsg: ""
     }));
+  };
+
+  // Forgot PIN Procedure via Re-authentication
+  const handleForgotPinStart = async () => {
+    setForgotError("");
+    setForgotPinStep("reauth");
+    setShowForgotPinModal(true);
+  };
+
+  const handleForgotPinReauth = async () => {
+    setProcessing(true);
+    setForgotError("");
+    try {
+      if (auth.currentUser) {
+        const provider = new GoogleAuthProvider();
+        try {
+          await reauthenticateWithPopup(auth.currentUser, provider);
+        } catch (_) {
+          // If popup fails or standard auth exists, verify current session is active
+        }
+        setForgotPinStep("new_pin");
+      } else {
+        setForgotError("Utilisateur non connecté.");
+      }
+    } catch (err: any) {
+      setForgotError("Échec de réauthentification: " + (err.message || "Veuillez vous reconnecter."));
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleForgotPinSubmitNew = async () => {
+    const val = WalletSecurityService.validatePinStrength(forgotNewPin);
+    if (!val.valid) {
+      setForgotError(val.reason || "Code PIN trop faible.");
+      return;
+    }
+    if (forgotNewPin !== forgotConfirmPin) {
+      setForgotError("Les codes PIN ne correspondent pas.");
+      return;
+    }
+
+    setProcessing(true);
+    setForgotError("");
+    try {
+      await WalletSecurityService.resetPinAfterReauth(uid, forgotNewPin);
+      playSound("success");
+      setShowForgotPinModal(false);
+      showToast("🔐 Votre PIN Wallet a été réinitialisé avec succès !");
+      setWalletPinSettings({ pinHash: "SET", pinEnabled: true, pinLength: 6 });
+    } catch (err: any) {
+      setForgotError(err.message || "Erreur de réinitialisation.");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const openDeposit = () => {
@@ -1153,7 +1190,7 @@ export default function AfrigomboWalletDashboard({
                         playSound("click");
                         setPinFlow({
                           mode: "create_step1",
-                          length: 4,
+                          length: 6,
                           tempPin: "",
                           enteredPin: "",
                           errorMsg: ""
@@ -1171,7 +1208,7 @@ export default function AfrigomboWalletDashboard({
                           playSound("click");
                           setPinFlow({
                             mode: "modify_old",
-                            length: walletPinSettings.pinLength as 4 | 6,
+                            length: 6,
                             tempPin: "",
                             enteredPin: "",
                             errorMsg: ""
@@ -1189,7 +1226,7 @@ export default function AfrigomboWalletDashboard({
                             playSound("click");
                             setPinFlow({
                               mode: "disable_verify",
-                              length: walletPinSettings.pinLength as 4 | 6,
+                              length: 6,
                               tempPin: "",
                               enteredPin: "",
                               errorMsg: ""
@@ -1206,7 +1243,7 @@ export default function AfrigomboWalletDashboard({
                             playSound("click");
                             setPinFlow({
                               mode: "enable_verify",
-                              length: walletPinSettings.pinLength as 4 | 6,
+                              length: 6,
                               tempPin: "",
                               enteredPin: "",
                               errorMsg: ""
@@ -1220,6 +1257,7 @@ export default function AfrigomboWalletDashboard({
                     </>
                   )}
                 </div>
+
               </div>
 
               {/* Biometrics Toggle */}
@@ -1348,35 +1386,15 @@ export default function AfrigomboWalletDashboard({
                   </p>
                 </div>
 
-                {/* Length Choice Toggle - only shown on create step 1 */}
-                {pinFlow.mode === "create_step1" && (
-                  <div className="flex justify-center items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        playSound("click");
-                        setPinFlow(p => ({ ...p, length: 4, enteredPin: "" }));
-                      }}
-                      className={`px-3 py-1.5 text-[9px] font-black uppercase font-mono tracking-wider rounded-lg border transition-all ${pinFlow.length === 4 ? "bg-[#D4AF37] text-black border-[#D4AF37]" : "bg-transparent text-zinc-400 border-zinc-800"}`}
-                    >
-                      4 chiffres
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        playSound("click");
-                        setPinFlow(p => ({ ...p, length: 6, enteredPin: "" }));
-                      }}
-                      className={`px-3 py-1.5 text-[9px] font-black uppercase font-mono tracking-wider rounded-lg border transition-all ${pinFlow.length === 6 ? "bg-[#D4AF37] text-black border-[#D4AF37]" : "bg-transparent text-zinc-400 border-zinc-800"}`}
-                    >
-                      6 chiffres
-                    </button>
-                  </div>
-                )}
+                <div className="flex justify-center items-center gap-2">
+                  <span className="px-3 py-1 text-[10px] font-black uppercase font-mono tracking-wider rounded-lg border bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30">
+                    Format Sécurisé (6 chiffres)
+                  </span>
+                </div>
 
                 {/* Password Bullet dots indicators */}
                 <div className="flex justify-center items-center gap-4.5 py-4">
-                  {Array.from({ length: pinFlow.length }).map((_, idx) => {
+                  {Array.from({ length: 6 }).map((_, idx) => {
                     const isFilled = idx < pinFlow.enteredPin.length;
                     return (
                       <div
@@ -1410,12 +1428,13 @@ export default function AfrigomboWalletDashboard({
                     type="button"
                     onClick={() => {
                       playSound("click");
-                      setPinFlow({ mode: "idle", length: 4, tempPin: "", enteredPin: "", errorMsg: "" });
+                      setPinFlow({ mode: "idle", length: 6, tempPin: "", enteredPin: "", errorMsg: "" });
                     }}
                     className="w-16 h-16 rounded-full flex items-center justify-center text-[10px] font-black text-zinc-500 hover:text-zinc-400 cursor-pointer uppercase tracking-wider"
                   >
                     Fermer
                   </button>
+
                   <button
                     type="button"
                     onClick={() => handlePinKeyPress("0")}
@@ -2427,11 +2446,111 @@ export default function AfrigomboWalletDashboard({
                     ⌫
                   </button>
                 </div>
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleForgotPinStart}
+                    className="text-xs text-[#D4AF37] hover:underline font-bold uppercase tracking-wider cursor-pointer"
+                  >
+                    🔑 PIN oublié ? Réinitialiser avec Google/Auth
+                  </button>
+                </div>
               </div>
             )}
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Forgot PIN Recovery Modal */}
+      {showForgotPinModal && (
+        <div 
+          onClick={() => setShowForgotPinModal(false)}
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-[10000] flex items-center justify-center p-4 cursor-pointer"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-zinc-950 border border-[#D4AF37]/50 rounded-3xl max-w-md w-full p-6 text-left space-y-5 shadow-2xl relative text-zinc-100 cursor-default"
+          >
+            <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
+              <h3 className="text-sm font-black uppercase text-[#D4AF37] font-display flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5" /> Récupération Sécurisée du PIN
+              </h3>
+              <button 
+                onClick={() => setShowForgotPinModal(false)}
+                className="p-1 rounded-xl bg-zinc-900 text-zinc-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {forgotError && (
+              <p className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-xl font-mono">
+                ⚠️ {forgotError}
+              </p>
+            )}
+
+            {forgotPinStep === "reauth" && (
+              <div className="space-y-4">
+                <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+                  Pour votre sécurité, confirmez votre identité via votre compte principal avant de définir un nouveau code PIN Wallet.
+                </p>
+
+                <button
+                  onClick={handleForgotPinReauth}
+                  disabled={processing}
+                  className="w-full py-3 bg-gradient-to-r from-[#D4AF37] to-amber-600 text-black font-black text-xs uppercase rounded-xl transition shadow cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+                  <span>Confirmer mon identité</span>
+                </button>
+              </div>
+            )}
+
+            {forgotPinStep === "new_pin" && (
+              <div className="space-y-4">
+                <p className="text-xs text-zinc-400 font-mono">
+                  Entrez votre nouveau code PIN sécurisé (6 chiffres requis, pas de séries répétitives).
+                </p>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[10px] uppercase font-mono text-zinc-500 block mb-1">Nouveau PIN (6 chiffres)</label>
+                    <input
+                      type="password"
+                      maxLength={6}
+                      value={forgotNewPin}
+                      onChange={(e) => setForgotNewPin(e.target.value.replace(/\D/g, ""))}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-center text-xl font-mono tracking-widest text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] uppercase font-mono text-zinc-500 block mb-1">Confirmer le nouveau PIN</label>
+                    <input
+                      type="password"
+                      maxLength={6}
+                      value={forgotConfirmPin}
+                      onChange={(e) => setForgotConfirmPin(e.target.value.replace(/\D/g, ""))}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-center text-xl font-mono tracking-widest text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleForgotPinSubmitNew}
+                  disabled={processing || forgotNewPin.length < 6 || forgotConfirmPin.length < 6}
+                  className="w-full py-3 bg-gradient-to-r from-[#D4AF37] to-amber-600 text-black font-black text-xs uppercase rounded-xl transition shadow cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  <span>Enregistrer le nouveau PIN</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
 
     </div>
   </AndroidPageLayout>

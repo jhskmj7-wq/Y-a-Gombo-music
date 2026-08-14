@@ -1,3 +1,4 @@
+import { isPublicationActive } from "./lib/publicationEngine";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -797,7 +798,7 @@ export const gomboDB = {
       const snap = await getDocs(q);
       return snap.docs
         .map(d => ({ id: d.id, ...d.data() } as Gombo))
-        .filter(g => g.status !== "pending_deposit" && g.visible !== false && g.adminValidated !== false && g.status !== "draft" && g.status !== "cancelled" && g.status !== "refuse" && g.status !== "rejected");
+        .filter(g => isPublicationActive(g));
     }
     return [];
   },
@@ -809,7 +810,7 @@ export const gomboDB = {
         return onSnapshot(q, (snapshot) => {
           const publicGombos = snapshot.docs
             .map(d => ({ id: d.id, ...d.data() } as Gombo))
-            .filter(g => g.status !== "pending_deposit" && g.visible !== false && g.adminValidated !== false && g.status !== "draft" && g.status !== "cancelled" && g.status !== "refuse" && g.status !== "rejected")
+            .filter(g => isPublicationActive(g))
             .sort((a, b) => {
               const timeA = new Date(a.createdAt || a.publishedAt || a.timestamp || 0).getTime();
               const timeB = new Date(b.createdAt || b.publishedAt || b.timestamp || 0).getTime();
@@ -1160,7 +1161,7 @@ export const gomboDB = {
         return onSnapshot(q, (snapshot) => {
           const publicPosts = snapshot.docs
             .map(d => ({ id: d.id, ...d.data() } as SocialPost))
-            .filter(p => p.status !== "pending_deposit" && (p as any).visible !== false && (p as any).adminValidated !== false && p.status !== "draft" && p.status !== "cancelled" && (p as any).status !== "refuse" && (p as any).status !== "rejected")
+            .filter(p => isPublicationActive(p))
             .sort((a, b) => {
               const timeA = new Date((a as any).createdAt || (a as any).publishedAt || (a as any).timestamp || 0).getTime();
               const timeB = new Date((b as any).createdAt || (b as any).publishedAt || (b as any).timestamp || 0).getTime();
