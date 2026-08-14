@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Gift, Users, Search, Send, X, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { db } from '../../firebase';
+import { db } from '../../lib/firebase';
 import { collection, getDocs, query, limit } from 'firebase/firestore';
 import { AvatarItem } from '../../types/avatar';
 import { AvatarEngine } from '../../lib/avatarEngine';

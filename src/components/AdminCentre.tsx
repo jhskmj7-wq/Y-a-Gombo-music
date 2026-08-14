@@ -25,6 +25,7 @@ import { SecurityService } from "../lib/SecurityService";
 import { isFeatureEnabled as checkIsFeatureEnabled, subscribeToFeatureFlags } from "../lib/featureFlags";
 import { FeatureUnavailable } from "./FeatureUnavailable";
 import { getEffectiveCommissionRate, calculatePublicationFinancials, recordWalletTransaction, getCanonicalWalletBalance } from "../lib/financial";
+import { isMenuProtected } from "../auth/accessPolicy";
 import { useNavigate } from "react-router-dom";
 import { lazyWithRetry } from "../lib/lazyWithRetry";
 import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
@@ -1488,30 +1489,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   // Watertight access security rules enforcement for non-authenticated users
   useEffect(() => {
-    const protectedMenus = [
-      "user_publish",
-      "user_mes_gombos",
-      "user_contracts",
-      "user_heritage",
-      "user_wallet",
-      "user_messages",
-      "user_renforts",
-      "notifications",
-      "alertes",
-      "settings",
-      "security",
-      "dashboard",
-      "users",
-      "posts",
-      "gombos",
-      "verifications",
-      "admin_finances",
-      "contracts",
-      "reports",
-      "revenue",
-      "super_admin"
-    ];
-    if (protectedMenus.includes(activeMenu) && !currentUser) {
+    if (isMenuProtected(activeMenu) && !currentUser) {
       setActiveMenu("user_terrain");
       setIsAuthModalOpen(true);
       addToTerminal(`[🛡️ SECURE] Tentative d'accès anonyme au menu ${activeMenu} bloquée.`);
@@ -2635,11 +2613,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               });
                             }, false)}
                             {renderMenuItem("menu_settings", "Paramètres", "⚙", () => {
-                              requireAuthThen(() => {
-                                setPerspective("user");
-                                setActiveMenu("user_settings");
-                                try { audioSynth.playValidationSuccess(); } catch (_) {}
-                              });
+                              setPerspective("user");
+                              setActiveMenu("user_settings");
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, false)}
                             {renderMenuItem("menu_lang", t('langue'), "🌐", () => {
                               const nextL = lang === "fr" ? "nouchi" : (lang === "nouchi" ? "en" : "fr");
@@ -8556,10 +8532,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               id="user-nav-vibes"
               onClick={() => {
                 try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
-                requireAuthThen(() => {
-                  setActiveMenu("user_vibes");
-                  try { audioSynth.playValidationSuccess(); } catch (err) {}
-                });
+                setActiveMenu("user_vibes");
+                try { audioSynth.playValidationSuccess(); } catch (err) {}
               }}
               className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
             >
@@ -10006,17 +9980,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           const val = (e.target as HTMLInputElement).value.trim();
                           if (!val) return;
                           
-                          const id = selectedGomboDetails.id;
-                          const author = profile?.artisticName || currentUser?.displayName || "Artiste Anonyme";
-                          const newC = { author, text: val, date: "À l'instant" };
-                          
-                          setGomboComments(prev => ({
-                            ...prev,
-                            [id]: [...(prev[id] || []), newC]
-                          }));
-                          
-                          (e.target as HTMLInputElement).value = "";
-                          try { audioSynth.playValidationSuccess(); } catch (_) {}
+                          requireAuthThen(() => {
+                            const id = selectedGomboDetails.id;
+                            const author = profile?.artisticName || currentUser?.displayName || "Artiste Anonyme";
+                            const newC = { author, text: val, date: "À l'instant" };
+                            
+                            setGomboComments(prev => ({
+                              ...prev,
+                              [id]: [...(prev[id] || []), newC]
+                            }));
+                            
+                            (e.target as HTMLInputElement).value = "";
+                            try { audioSynth.playValidationSuccess(); } catch (_) {}
+                          });
                         }
                       }}
                       className="flex-1 bg-afri-bg border border-afri-border focus:border-afri-gold/50 focus:bg-afri-bg rounded-2xl px-4 py-3 text-xs text-afri-text placeholder-zinc-700 focus:outline-none"
@@ -10027,17 +10003,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         const val = inputEl?.value?.trim();
                         if (!val) return;
                         
-                        const id = selectedGomboDetails.id;
-                        const author = profile?.artisticName || currentUser?.displayName || "Artiste Anonyme";
-                        const newC = { author, text: val, date: "À l'instant" };
-                        
-                        setGomboComments(prev => ({
-                          ...prev,
-                          [id]: [...(prev[id] || []), newC]
-                        }));
-                        
-                        if (inputEl) inputEl.value = "";
-                        try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        requireAuthThen(() => {
+                          const id = selectedGomboDetails.id;
+                          const author = profile?.artisticName || currentUser?.displayName || "Artiste Anonyme";
+                          const newC = { author, text: val, date: "À l'instant" };
+                          
+                          setGomboComments(prev => ({
+                            ...prev,
+                            [id]: [...(prev[id] || []), newC]
+                          }));
+                          
+                          if (inputEl) inputEl.value = "";
+                          try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        });
                       }}
                       className="bg-afri-gold hover:bg-afri-bg-sec text-black font-black text-[9px] uppercase tracking-widest px-4 rounded-2xl transition-all active:scale-95"
                     >
@@ -10059,9 +10037,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 <button
                   onClick={() => {
                     if (hasApplied) return;
-                    setAppliedGombos(prev => [...prev, selectedGomboDetails.id]);
-                    addToTerminal(`[🎼 CONTRAT] Candidature enregistrée ! Dossier de souveraineté transmis pour : ${selectedGomboDetails.title}`);
-                    try { audioSynth.playValidationSuccess(); } catch (err) {}
+                    requireAuthThen(() => {
+                      setAppliedGombos(prev => [...prev, selectedGomboDetails.id]);
+                      addToTerminal(`[🎼 CONTRAT] Candidature enregistrée ! Dossier de souveraineté transmis pour : ${selectedGomboDetails.title}`);
+                      try { audioSynth.playValidationSuccess(); } catch (err) {}
+                    });
                   }}
                   className={`flex-[2] py-3.5 rounded-2xl font-mono font-black text-xs uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer text-center ${
                     hasApplied

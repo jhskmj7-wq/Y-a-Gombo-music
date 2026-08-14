@@ -9,7 +9,8 @@ import {
   Activity, Smile, Paperclip, Shield, Ban, Lock, Volume2, Info, Check,
   HelpCircle, BookOpen, Megaphone, FileText, ChevronRight, Bot, Zap, Headphones, CheckCircle2, Award, Globe, Crown
 } from "lucide-react";
-import { gomboDB, db } from "../firebase";
+import { gomboDB } from "../firebase";
+import { db } from "../lib/firebase";
 import { collection, query, where, onSnapshot, doc, getDocs, updateDoc, orderBy, deleteField } from "firebase/firestore";
 import { Conversation, Message, UserProfile } from "../types";
 import { SupportService } from "../services/SupportService";

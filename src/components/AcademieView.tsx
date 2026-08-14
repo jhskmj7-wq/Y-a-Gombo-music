@@ -7,7 +7,8 @@ import {
 import { UserProfile } from "../types";
 import { supportConfig } from "../supportConfig";
 import { AfriModal } from "./common/AfriModal";
-import { db, gomboDB } from "../firebase";
+import { gomboDB } from "../firebase";
+import { db } from "../lib/firebase";
 import { recordWalletTransaction } from "../lib/financial";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { safeStringify } from "../lib/jsonUtils";

@@ -5,7 +5,7 @@ import {
   CheckCircle2, Award, Activity, Server, Users, Phone, Mail, FileText, Send, Check
 } from "lucide-react";
 import { doc, updateDoc } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 
 interface AfrigomboTabProps {
   currentUser: any;

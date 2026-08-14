@@ -8,7 +8,7 @@ import {
 import { 
   collection, onSnapshot, query, orderBy, doc, getDoc, updateDoc, addDoc, where 
 } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { SupportService, SUPPORT_PROFILE } from "../../services/SupportService";
 import AdminUserProfilePanel from "./AdminUserProfilePanel";
 

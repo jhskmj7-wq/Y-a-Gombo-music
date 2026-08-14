@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { UserProfile, PaymentProvider } from "../types";
 import { safeStringify } from "../lib/jsonUtils";
-import { gomboDB, gomboAuth, db, isFirebaseMock } from "../firebase";
+import { gomboDB, gomboAuth, isFirebaseMock } from "../firebase";
+import { db } from "../lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { audioSynth } from "../lib/audio";
 import { useAudio } from "../context/AudioContext";

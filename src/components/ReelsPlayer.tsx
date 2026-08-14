@@ -5,9 +5,10 @@ import {
   Send, UserCheck, UserPlus
 } from "lucide-react";
 import { Post } from "../types";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { doc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
 import { useAppSettings } from "../context/AppSettingsContext";
+import { useAuth } from "../AuthContext";
 
 export interface ReelItem {
   id: string;
@@ -87,6 +88,7 @@ const FALLBACK_REELS: ReelItem[] = [
 
 export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, currentUser, initialReelId }: ReelsPlayerProps) {
   const { network } = useAppSettings();
+  const { requireAuth } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [followedUsers, setFollowedUsers] = useState<string[]>([]);
@@ -205,45 +207,51 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
   // Like / Honor action
   const handleLike = (reelId: string) => {
-    setLocalReels(prev => prev.map(r => {
-      if (r.id === reelId) {
-        const nextIsLiked = !r.isLiked;
-        return {
-          ...r,
-          isLiked: nextIsLiked,
-          likesCount: r.likesCount + (nextIsLiked ? 1 : -1)
-        };
-      }
-      return r;
-    }));
-    try {
-      if (navigator.vibrate) navigator.vibrate(40);
-    } catch (_) {}
+    requireAuth(() => {
+      setLocalReels(prev => prev.map(r => {
+        if (r.id === reelId) {
+          const nextIsLiked = !r.isLiked;
+          return {
+            ...r,
+            isLiked: nextIsLiked,
+            likesCount: r.likesCount + (nextIsLiked ? 1 : -1)
+          };
+        }
+        return r;
+      }));
+      try {
+        if (navigator.vibrate) navigator.vibrate(40);
+      } catch (_) {}
+    });
   };
 
   // Bookmark action
   const handleBookmark = (reelId: string) => {
-    setLocalReels(prev => prev.map(r => {
-      if (r.id === reelId) {
-        const nextState = !r.isBookmarked;
-        showToast(nextState ? "⭐ Réel ajouté à vos favoris" : "Retiré de vos favoris");
-        return { ...r, isBookmarked: nextState };
-      }
-      return r;
-    }));
+    requireAuth(() => {
+      setLocalReels(prev => prev.map(r => {
+        if (r.id === reelId) {
+          const nextState = !r.isBookmarked;
+          showToast(nextState ? "⭐ Réel ajouté à vos favoris" : "Retiré de vos favoris");
+          return { ...r, isBookmarked: nextState };
+        }
+        return r;
+      }));
+    });
   };
 
   // Follow action
   const handleToggleFollow = (userId?: string) => {
     if (!userId) return;
-    setFollowedUsers(prev => {
-      if (prev.includes(userId)) {
-        showToast("Abonnement retiré");
-        return prev.filter(u => u !== userId);
-      } else {
-        showToast("👑 Vous suivez désormais cet artiste !");
-        return [...prev, userId];
-      }
+    requireAuth(() => {
+      setFollowedUsers(prev => {
+        if (prev.includes(userId)) {
+          showToast("Abonnement retiré");
+          return prev.filter(u => u !== userId);
+        } else {
+          showToast("👑 Vous suivez désormais cet artiste !");
+          return [...prev, userId];
+        }
+      });
     });
   };
 
@@ -271,19 +279,21 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentInput.trim()) return;
-    const newComment = {
-      id: `c_${Date.now()}`,
-      author: currentUser?.artisticName || currentUser?.name || "Moi (Souverain)",
-      avatar: currentUser?.photoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
-      text: commentInput.trim(),
-      time: "À l'instant"
-    };
-    setCommentsList(prev => [newComment, ...prev]);
-    if (showCommentsFor) {
-      setLocalReels(prev => prev.map(r => r.id === showCommentsFor.id ? { ...r, commentsCount: r.commentsCount + 1 } : r));
-    }
-    setCommentInput("");
-    showToast("💬 Palabre publié !");
+    requireAuth(() => {
+      const newComment = {
+        id: `c_${Date.now()}`,
+        author: currentUser?.artisticName || currentUser?.name || "Moi (Souverain)",
+        avatar: currentUser?.photoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
+        text: commentInput.trim(),
+        time: "À l'instant"
+      };
+      setCommentsList(prev => [newComment, ...prev]);
+      if (showCommentsFor) {
+        setLocalReels(prev => prev.map(r => r.id === showCommentsFor.id ? { ...r, commentsCount: r.commentsCount + 1 } : r));
+      }
+      setCommentInput("");
+      showToast("💬 Palabre publié !");
+    });
   };
 
   return (
@@ -324,7 +334,11 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
           {/* Create Reel button */}
           {onOpenCreate && (
             <button 
-              onClick={onOpenCreate}
+              onClick={() => {
+                requireAuth(() => {
+                  onOpenCreate();
+                });
+              }}
               className="p-2.5 rounded-full bg-[#D4AF37] text-black font-bold shadow-lg hover:bg-amber-400 active:scale-95 transition cursor-pointer"
               title="Publier un Réel"
             >
@@ -608,9 +622,11 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
             <div className="space-y-2">
               <button 
                 onClick={() => {
-                  showToast("💰 Redirection vers le soutien direct...");
-                  setShowMoreFor(null);
-                  window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
+                  requireAuth(() => {
+                    showToast("💰 Redirection vers le soutien direct...");
+                    setShowMoreFor(null);
+                    window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
+                  });
                 }}
                 className="w-full flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-400 font-bold text-xs hover:bg-amber-500/20 transition cursor-pointer"
               >

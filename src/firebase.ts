@@ -37,6 +37,7 @@ import {
   or
 } from "firebase/firestore";
 import { ref, uploadBytes, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+export { app, auth, db, storage } from "./lib/firebase";
 import { app, auth, db, storage } from "./lib/firebase";
 import { getCanonicalWalletBalance } from "./lib/financial";
 import { 
@@ -4171,6 +4172,4 @@ export const gomboDB = {
     }
   }
 };
-
-export { app, auth, db, storage };
 

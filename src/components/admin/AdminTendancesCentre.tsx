@@ -5,7 +5,7 @@ import {
   Plus, Trash2, Pin, PinOff, Sparkles, TrendingUp, ShieldCheck, 
   Search, RefreshCw, CheckCircle2, AlertCircle, Sparkle, Tag
 } from "lucide-react";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { 
   TrendingDoc, 

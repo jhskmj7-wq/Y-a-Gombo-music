@@ -1,4 +1,5 @@
-import { gomboDB, db } from "../firebase";
+import { gomboDB } from "../firebase";
+import { db } from "./firebase";
 import { User, SecurityAlert } from "../types";
 import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 

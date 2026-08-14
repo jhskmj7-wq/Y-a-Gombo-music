@@ -35,7 +35,8 @@ import {
   Share2,
   Maximize2
 } from "lucide-react";
-import { db, gomboDB } from "../../firebase";
+import { gomboDB } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { useAudio } from "../../context/AudioContext";
 import { getAudioUrl } from "../../lib/audioUtils";
 import { SystemMedia, SourceType } from "../../types";

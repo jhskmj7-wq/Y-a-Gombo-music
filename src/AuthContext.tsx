@@ -8,11 +8,18 @@ import { PremiumEngine } from "./lib/premiumEngine";
 import { fetchPlatformPricing, getCanonicalWalletBalance } from "./lib/financial";
 import { safeStringify } from "./lib/jsonUtils";
 import { AuthModal } from "./components/auth/AuthModal";
+import { isMenuPublic, isMenuProtected, getMenuAccessLevel } from "./auth/accessPolicy";
+import type { AccessLevel } from "./auth/accessPolicy";
+
+export { isMenuPublic, isMenuProtected, getMenuAccessLevel };
+export type { AccessLevel };
 
 interface AuthContextType {
   currentUser: any | null;       
   profile: UserProfile | null;   
   loading: boolean;
+  isAuthenticated: boolean;
+  isGuest: boolean;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, role: "musicien" | "client", details: { firstName: string; lastName: string; phone: string; commune: string }) => Promise<any>;
   loginWithApple: () => Promise<any>;
@@ -210,6 +217,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     currentUser, 
     profile, 
     loading: authLoading, 
+    isAuthenticated: !!currentUser,
+    isGuest: !currentUser && !authLoading,
     signIn, 
     signUp, 
     loginWithApple,

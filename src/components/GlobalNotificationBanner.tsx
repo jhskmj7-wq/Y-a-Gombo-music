@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { Megaphone, X, Info, AlertTriangle, Activity, Calendar, Settings, Plus } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useTheme } from "../context/ThemeContext";

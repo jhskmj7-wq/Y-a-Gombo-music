@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../../firebase";
+import { db, storage } from "../../lib/firebase";
 import { AvatarEngine } from "../../lib/avatarEngine";
 import { AvatarEconomyStats } from "../../types/avatar";
 

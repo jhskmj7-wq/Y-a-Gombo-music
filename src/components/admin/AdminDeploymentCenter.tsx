@@ -6,7 +6,8 @@ import {
   AlertCircle, ShieldCheck, Terminal, Layers, RefreshCw, FileText, CheckCircle2,
   XCircle, Zap, Globe, Smartphone, Cloud, Code, Settings
 } from "lucide-react";
-import { gomboDB, db } from "../../firebase";
+import { gomboDB } from "../../firebase";
+import { db } from "../../lib/firebase";
 import {
   collection, doc, onSnapshot, setDoc, updateDoc, addDoc, query, orderBy, limit, serverTimestamp
 } from "firebase/firestore";

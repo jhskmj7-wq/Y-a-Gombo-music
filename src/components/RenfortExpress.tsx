@@ -5,7 +5,8 @@ import {
   Flame, Sparkles, Filter, Check, X, Phone, Users, 
   ChevronDown, MessageCircle, AlertCircle, RefreshCw, Send, Trash2, Wallet
 } from "lucide-react";
-import { db, gomboDB } from "../firebase";
+import { gomboDB } from "../firebase";
+import { db } from "../lib/firebase";
 import { safeStringify } from "../lib/jsonUtils";
 import { doc, getDoc, setDoc, runTransaction, collection } from "firebase/firestore";
 import { Renfort, RenfortApplication, UserProfile } from "../types";

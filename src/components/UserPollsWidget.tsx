@@ -4,7 +4,7 @@ import {
   BarChart3, X, Check, Star, Send, Vote, AlertCircle, Info, Sparkles, CheckCircle
 } from "lucide-react";
 import { collection, onSnapshot, query, where, doc, setDoc, addDoc, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 
 interface Poll {
   id: string;

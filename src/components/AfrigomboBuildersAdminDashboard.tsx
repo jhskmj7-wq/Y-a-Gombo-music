@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Users, Coins, Trophy, Flame, Shield, ArrowUpRight, Trash2 } from "lucide-react";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from "firebase/firestore";
 
 export default function AfrigomboBuildersAdminDashboard() {

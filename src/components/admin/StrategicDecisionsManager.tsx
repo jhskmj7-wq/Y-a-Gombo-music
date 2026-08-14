@@ -5,7 +5,7 @@ import {
   AlertTriangle, Shield, Calendar, User, Clock, Check, X, ArrowUpRight,
   TrendingUp, Tag, Sparkles, AlertCircle
 } from "lucide-react";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { 
   collection, 
   onSnapshot, 

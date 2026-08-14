@@ -4,7 +4,7 @@ import {
   Gift, Sliders, Check, Layers, AlertCircle
 } from "lucide-react";
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 
 interface AdminRewardsManagementProps {
   currentUser?: any;

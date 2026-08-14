@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { supportConfig } from '../supportConfig';
 import { validateAndActivatePremiumCode } from '../lib/premiumSubscriptionEngine';
-import { db } from '../firebase';
+import { db } from '../lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 
 interface Props {

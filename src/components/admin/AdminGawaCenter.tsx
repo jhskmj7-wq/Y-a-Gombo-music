@@ -7,7 +7,7 @@ import {
 import { 
   collection, doc, onSnapshot, query, orderBy, limit, setDoc, deleteDoc, getDocs 
 } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { GawaEngineService } from "../../lib/GawaEngineService";
 import { GawaPack, GawaHistoryRecord } from "../../types";
 

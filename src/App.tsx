@@ -7,7 +7,7 @@ import { AuthGuard } from "./components/AuthGuard";
 import { ProfileGuard } from "./components/ProfileGuard";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useTheme } from "./context/ThemeContext";
-import { db } from "./firebase";
+import { db } from "./lib/firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 import { SecurityService } from "./lib/SecurityService";
 import ScrollToTop from "./components/ScrollToTop";

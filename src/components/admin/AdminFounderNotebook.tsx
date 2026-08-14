@@ -6,7 +6,8 @@ import {
   Bell, History, Filter, Grid, List, X, Check, AlertCircle, RefreshCw,
   Folder, ArrowUpRight, ShieldCheck, Sparkles, FileText, ChevronDown, ChevronUp
 } from "lucide-react";
-import { gomboDB, db } from "../../firebase";
+import { gomboDB } from "../../firebase";
+import { db } from "../../lib/firebase";
 import {
   collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, serverTimestamp
 } from "firebase/firestore";

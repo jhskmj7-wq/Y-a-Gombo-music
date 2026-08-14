@@ -4,7 +4,7 @@ import {
   Users, Layers, Compass, Eye, Route, UserCheck, ShieldCheck, ChevronRight, X
 } from "lucide-react";
 import { collection, onSnapshot, query, limit } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 
 export interface GeoMarkerItem {
   id: string;

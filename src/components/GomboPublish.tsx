@@ -7,7 +7,8 @@ import {
   Wallet, ArrowUpRight, CheckCircle2, Navigation, Map
 } from "lucide-react";
 import MapPickerModal from "./common/MapPickerModal";
-import { db, gomboDB } from "../firebase";
+import { gomboDB } from "../firebase";
+import { db } from "../lib/firebase";
 import { doc, getDoc, setDoc, addDoc, collection, runTransaction } from "firebase/firestore";
 import { UserProfile, SocialPost } from "../types";
 import GomboSecureModal from "./GomboSecureModal";

@@ -7,7 +7,7 @@ import {
 import { 
   collection, doc, onSnapshot, query, orderBy, limit, setDoc, deleteDoc, getDocs, serverTimestamp 
 } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { UserLotRecord, LotStatus } from "../../types";
 
 interface AdminLotsManagementProps {

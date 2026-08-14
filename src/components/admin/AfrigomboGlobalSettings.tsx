@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { doc, onSnapshot, setDoc, addDoc, collection } from "firebase/firestore";
 import { Settings, Save, AlertTriangle, MessageSquare, Globe, Navigation, ShieldAlert, CheckCircle2, Wrench } from "lucide-react";
 import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";

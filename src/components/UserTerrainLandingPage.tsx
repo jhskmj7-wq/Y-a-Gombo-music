@@ -1522,7 +1522,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           title="📹 Réels d'artistes — Fil Réel"
           data={reelsData}
           onAction={(item) => {
-            requireAuthThen(() => setActiveMenu("user_reels"));
+            setActiveMenu("user_reels");
           }}
         />
 
@@ -1532,7 +1532,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           title="🚀 Nouveaux talents"
           data={talentsData}
           onAction={(artist) => {
-            requireAuthThen(() => setActiveMenu("user_profile_view"));
+            setActiveMenu("user_profile_view");
           }}
         />
 
@@ -1540,8 +1540,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <SmartUniverseCarousel 
           items={universeItems}
           onAction={(item) => {
-            if (item.type === "product") requireAuthThen(() => setActiveMenu("user_grand_marche"));
-            else if (item.type === "course") requireAuthThen(() => setActiveMenu("user_academie"));
+            if (item.type === "product") setActiveMenu("user_grand_marche");
+            else if (item.type === "course") setActiveMenu("user_academie");
           }}
         />
 
@@ -1555,7 +1555,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               </h3>
             </div>
             <button 
-              onClick={() => requireAuthThen(() => setActiveMenu("user_grand_marche"))}
+              onClick={() => setActiveMenu("user_grand_marche")}
               className="text-[10px] text-[#D4AF37] font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
             >
               Voir tout <ChevronRight className="w-3 h-3" />
@@ -1591,7 +1591,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             ].map((prod) => (
               <div 
                 key={prod.id}
-                onClick={() => requireAuthThen(() => setActiveMenu("user_grand_marche"))}
+                onClick={() => setActiveMenu("user_grand_marche")}
                 className="bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden p-2.5 flex flex-col justify-between hover:border-[#D4AF37]/50 transition cursor-pointer group shadow-sm"
               >
                 <div className="relative aspect-video rounded-xl overflow-hidden mb-2 bg-afri-bg">
@@ -1612,7 +1612,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           </div>
 
           <button
-            onClick={() => requireAuthThen(() => setActiveMenu("user_grand_marche"))}
+            onClick={() => setActiveMenu("user_grand_marche")}
             className="w-full py-2.5 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 font-mono font-black text-[10px] uppercase tracking-wider rounded-2xl transition cursor-pointer text-center block active:scale-98"
           >
             Accéder au Grand Marché Musique →
@@ -1629,7 +1629,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               </h3>
             </div>
             <button 
-              onClick={() => requireAuthThen(() => setActiveMenu("user_academie"))}
+              onClick={() => setActiveMenu("user_academie")}
               className="text-[10px] text-[#D4AF37] font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
             >
               Voir tout <ChevronRight className="w-3 h-3" />
@@ -1657,7 +1657,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             ].map((course) => (
               <div 
                 key={course.id}
-                onClick={() => requireAuthThen(() => setActiveMenu("user_academie"))}
+                onClick={() => setActiveMenu("user_academie")}
                 className="bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden p-3 flex gap-3 items-center hover:border-sky-400/50 transition cursor-pointer group shadow-sm"
               >
                 <img src={course.image} alt={course.title} className="w-20 h-20 rounded-xl object-cover shrink-0 border border-afri-border group-hover:scale-105 transition-transform" />
@@ -1673,7 +1673,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           </div>
 
           <button
-            onClick={() => requireAuthThen(() => setActiveMenu("user_academie"))}
+            onClick={() => setActiveMenu("user_academie")}
             className="w-full py-2.5 bg-sky-500/10 border border-sky-500/30 hover:bg-sky-500/20 text-sky-400 font-mono font-black text-[10px] uppercase tracking-wider rounded-2xl transition cursor-pointer text-center block active:scale-98"
           >
             Découvrir l'Académie & Se Former →

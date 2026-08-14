@@ -5,7 +5,7 @@ import AfrigomboGlobalSettings from "./AfrigomboGlobalSettings";
 import { fetchPlatformPricing, updatePlatformPricing, PricingConfig } from "../../lib/financial";
 import { useAuth } from "../../AuthContext";
 import { addDoc, collection } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import FounderBottomSheet from "./FounderBottomSheet";
 
 interface AdminSettingsProps {

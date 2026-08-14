@@ -9,7 +9,8 @@ import {
 import { UserProfile } from "../types";
 import { supportConfig } from "../supportConfig";
 import { AfriModal, AndroidBottomSheet } from "./common/AfriModal";
-import { db, gomboDB } from "../firebase";
+import { gomboDB } from "../firebase";
+import { db } from "../lib/firebase";
 import { recordWalletTransaction } from "../lib/financial";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useMaintenance } from "../hooks/useMaintenance";

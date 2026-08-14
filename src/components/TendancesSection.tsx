@@ -17,7 +17,7 @@ import {
   calculateTrendingScore,
   recordTrendingInteraction
 } from "../lib/tendancesEngine";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { collection, onSnapshot, query } from "firebase/firestore";
 
 import { getGomboRef } from "../lib/gomboIdHelper";

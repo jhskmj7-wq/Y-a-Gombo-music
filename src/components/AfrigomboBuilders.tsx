@@ -4,7 +4,7 @@ import {
   ArrowLeft, Users, Sparkles, Coins, ShieldCheck
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { collection, onSnapshot, addDoc, doc, setDoc, getDoc } from "firebase/firestore";
 import { UserProfile } from "../types";
 import { recordWalletTransaction } from "../lib/financial";

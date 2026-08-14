@@ -4,7 +4,7 @@ import { useLanguage } from "../LanguageContext";
 import { supportConfig } from "../supportConfig";
 import { createPendingSubscriptionRequest, validateAndActivatePremiumCode } from "../lib/premiumSubscriptionEngine";
 import { AndroidCenteredDialog } from "./common/GlobalPortalModal";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { doc, getDoc, setDoc, addDoc, collection } from "firebase/firestore";
 import { recordWalletTransaction } from "../lib/financial";
 import { safeStringify } from "../lib/jsonUtils";

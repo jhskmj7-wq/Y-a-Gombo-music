@@ -10,7 +10,7 @@ import { SecurityService } from "../../lib/SecurityService";
 import { subscribeToFeatureFlags } from "../../lib/featureFlags";
 import { GawaEngineService } from "../../lib/GawaEngineService";
 import { getCanonicalWalletBalance } from "../../lib/financial";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { onSnapshot, doc } from "firebase/firestore";
 
 interface GomboWheelSectionProps {

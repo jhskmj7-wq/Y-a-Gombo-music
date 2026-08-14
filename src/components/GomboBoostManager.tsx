@@ -8,7 +8,7 @@ import { useTheme } from "../context/ThemeContext";
 import { PremiumEngine } from "../lib/premiumEngine";
 import { PaymentEngine } from "../lib/paymentEngine";
 import { InsufficientBalanceModal } from "./wallet/InsufficientBalanceModal";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { doc, getDoc, updateDoc, setDoc, addDoc, collection, onSnapshot } from "firebase/firestore";
 
 interface GomboBoostManagerProps {

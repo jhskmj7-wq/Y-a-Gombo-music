@@ -5,7 +5,7 @@ import {
   ShoppingBag, HelpCircle, ArrowRight
 } from "lucide-react";
 import { collection, query, where, getDocs, doc, setDoc, updateDoc, onSnapshot, serverTimestamp, orderBy, limit } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { GawaEngineService } from "../lib/GawaEngineService";
 import { GawaPack, GawaMission, UserGawaMission, GawaTransaction } from "../types";
 import AndroidBottomSheet from "./common/AndroidBottomSheet";

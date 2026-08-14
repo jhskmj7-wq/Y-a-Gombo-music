@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, onSnapshot, addDoc, collection } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
 import { SecurityService } from "../../lib/SecurityService";
 import { AndroidBottomSheet } from "../ui/AndroidBottomSheet";

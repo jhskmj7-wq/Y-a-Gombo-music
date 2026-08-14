@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Sliders } from "lucide-react";
 import { motion } from "motion/react";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { collection, onSnapshot, doc, setDoc, getDoc } from "firebase/firestore";
 import { fetchPlatformPricing, updatePlatformPricing } from "../lib/financial";
 
