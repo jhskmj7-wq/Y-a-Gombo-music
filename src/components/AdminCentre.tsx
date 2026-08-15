@@ -474,6 +474,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     return [];
   });
   const [selectedGomboDetails, setSelectedGomboDetails] = useState<Gombo | null>(null);
+  const [preselectedGomboAdId, setPreselectedGomboAdId] = useState<string | undefined>(undefined);
   const [openConvoWithUserId, setOpenConvoWithUserId] = useState<string | null>(null);
   const [openConvoWithGomboId, setOpenConvoWithGomboId] = useState<string | null>(null);
   const [publicProfileTargetUserId, setPublicProfileTargetUserId] = useState<string | null>(null);
@@ -496,11 +497,22 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     const handleOpenWalletDeposit = () => {
       setActiveMenu("user_wallet");
     };
+    const handleNavigateToGomboAds = (e: CustomEvent<{ targetGomboId?: string }>) => {
+      if (e.detail?.targetGomboId) {
+        setPreselectedGomboAdId(e.detail.targetGomboId);
+      } else {
+        setPreselectedGomboAdId(undefined);
+      }
+      setPerspective("user");
+      setActiveMenu("user_gombo_ads");
+    };
     window.addEventListener("open-public-profile" as any, handleOpenPublicProfile as any);
     window.addEventListener("open_wallet_deposit", handleOpenWalletDeposit);
+    window.addEventListener("navigate_to_gombo_ads_with_target" as any, handleNavigateToGomboAds as any);
     return () => {
       window.removeEventListener("open-public-profile" as any, handleOpenPublicProfile as any);
       window.removeEventListener("open_wallet_deposit", handleOpenWalletDeposit);
+      window.removeEventListener("navigate_to_gombo_ads_with_target" as any, handleNavigateToGomboAds as any);
     };
   }, []);
 
@@ -2559,6 +2571,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_gombo_id");
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, false)}
+                            {renderMenuItem("menu_gombo_ads", "GOMBO ADS", "📣", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_gombo_ads");
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
                             }, false)}
@@ -6980,6 +6999,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       currentUserProfile={profile || currentUser}
                       onBack={() => goBackMenu()}
                       onOpenWalletDeposit={() => setActiveMenu("user_wallet")}
+                      initialTargetGomboId={preselectedGomboAdId}
                       onNavigateToTarget={(type, targetId) => {
                         if (type === "profile") {
                           setActiveMenu("user_heritage");
@@ -10055,23 +10075,35 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   Fermer
                 </button>
 
-                <button
-                  onClick={() => {
-                    if (hasApplied) return;
-                    requireAuthThen(() => {
-                      setAppliedGombos(prev => [...prev, selectedGomboDetails.id]);
-                      addToTerminal(`[🎼 CONTRAT] Candidature enregistrée ! Dossier de souveraineté transmis pour : ${selectedGomboDetails.title}`);
-                      try { audioSynth.playValidationSuccess(); } catch (err) {}
-                    });
-                  }}
-                  className={`flex-[2] py-3.5 rounded-2xl font-mono font-black text-xs uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer text-center ${
-                    hasApplied
-                      ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 cursor-not-allowed"
-                      : "bg-afri-gold hover:bg-afri-bg-sec text-[#050505] shadow-[0_4px_15px_rgba(212,175,55,0.25)]"
-                  }`}
-                >
-                  {hasApplied ? "✓ CANDIDATURE ENREGISTRÉE" : "DÉCROCHER LE CACHET ! 🎯"}
-                </button>
+                {selectedGomboDetails.organizerId === (profile?.uid || currentUser?.uid) ? (
+                  <button
+                    onClick={() => {
+                      setSelectedGomboDetails(null);
+                      window.dispatchEvent(new CustomEvent("navigate_to_gombo_ads_with_target", { detail: { targetGomboId: selectedGomboDetails.id } }));
+                    }}
+                    className="flex-[2] py-3.5 rounded-2xl font-mono font-black text-xs uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer text-center bg-afri-gold hover:bg-afri-bg-sec text-[#050505] shadow-[0_4px_15px_rgba(212,175,55,0.25)] flex items-center justify-center gap-1.5"
+                  >
+                    <span>BOOSTER CE GOMBO 📣</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (hasApplied) return;
+                      requireAuthThen(() => {
+                        setAppliedGombos(prev => [...prev, selectedGomboDetails.id]);
+                        addToTerminal(`[🎼 CONTRAT] Candidature enregistrée ! Dossier de souveraineté transmis pour : ${selectedGomboDetails.title}`);
+                        try { audioSynth.playValidationSuccess(); } catch (err) {}
+                      });
+                    }}
+                    className={`flex-[2] py-3.5 rounded-2xl font-mono font-black text-xs uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer text-center ${
+                      hasApplied
+                        ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 cursor-not-allowed"
+                        : "bg-afri-gold hover:bg-afri-bg-sec text-[#050505] shadow-[0_4px_15px_rgba(212,175,55,0.25)]"
+                    }`}
+                  >
+                    {hasApplied ? "✓ CANDIDATURE ENREGISTRÉE" : "DÉCROCHER LE CACHET ! 🎯"}
+                  </button>
+                )}
               </div>
             </motion.div>
           </div>

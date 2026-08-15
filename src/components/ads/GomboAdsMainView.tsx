@@ -18,30 +18,33 @@ import {
   Wallet,
   ArrowLeft,
   RefreshCw,
-  BarChart2
+  BarChart2,
+  Coins
 } from "lucide-react";
 import { GomboAdsCampaign, GomboAdsType } from "../../types";
 import { GomboAdsService } from "../../services/GomboAdsService";
+import { GawaEngineService } from "../../lib/GawaEngineService";
 import { GomboAdsCreationWizard } from "./GomboAdsCreationWizard";
 import { AndroidPageLayout } from "../layout/AndroidPageLayout";
 import { AndroidCard } from "../layout/AndroidCard";
-import { getCanonicalWalletBalance } from "../../lib/financial";
 
 interface GomboAdsMainViewProps {
   currentUserProfile: any;
   onBack?: () => void;
   onOpenWalletDeposit: () => void;
   onNavigateToTarget?: (type: string, targetId: string) => void;
+  initialTargetGomboId?: string;
 }
 
 export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
   currentUserProfile,
   onBack,
   onOpenWalletDeposit,
-  onNavigateToTarget
+  onNavigateToTarget,
+  initialTargetGomboId
 }) => {
   const userId = currentUserProfile?.uid || currentUserProfile?.id;
-  const walletBalance = getCanonicalWalletBalance(currentUserProfile) ?? 0;
+  const [gawaBalance, setGawaBalance] = useState<number>(0);
 
   const [campaigns, setCampaigns] = useState<GomboAdsCampaign[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -59,13 +62,29 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
       return;
     }
 
-    const unsub = GomboAdsService.listenUserCampaigns(userId, (list) => {
+    // Subscribe to Gawa Balance
+    const unsubGawa = GawaEngineService.subscribeUserGawaBalance(userId, (bal) => {
+      setGawaBalance(bal);
+    });
+
+    // Subscribe to User Campaigns
+    const unsubCamps = GomboAdsService.listenUserCampaigns(userId, (list) => {
       setCampaigns(list);
       setLoading(false);
     });
 
-    return () => unsub();
+    return () => {
+      unsubGawa();
+      unsubCamps();
+    };
   }, [userId]);
+
+  useEffect(() => {
+    if (initialTargetGomboId) {
+      setWizardInitialType("gombo");
+      setIsWizardOpen(true);
+    }
+  }, [initialTargetGomboId]);
 
   const openWizardFor = (type: GomboAdsType) => {
     setWizardInitialType(type);
@@ -73,15 +92,15 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
   };
 
   const handlePause = async (campaignId: string) => {
-    await GomboAdsService.pauseCampaign(campaignId);
+    await GomboAdsService.pauseCampaign(campaignId, userId);
   };
 
   const handleResume = async (campaignId: string) => {
-    await GomboAdsService.resumeCampaign(campaignId);
+    await GomboAdsService.resumeCampaign(campaignId, userId);
   };
 
   const handleArchive = async (campaignId: string) => {
-    await GomboAdsService.archiveCampaign(campaignId);
+    await GomboAdsService.archiveCampaign(campaignId, userId);
   };
 
   const getFilteredCampaigns = () => {
@@ -91,23 +110,23 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
       case "pending":
         return campaigns.filter((c) => c.status === "PENDING_REVIEW");
       case "ended":
-        return campaigns.filter((c) => c.status === "EXPIRED" || c.status === "ARCHIVED" || c.status === "REJECTED");
+        return campaigns.filter((c) => c.status === "EXPIRED" || c.status === "COMPLETED" || c.status === "ARCHIVED" || c.status === "REJECTED");
       case "all":
       default:
         return campaigns;
     }
   };
 
-  // Aggregated stats
+  // Aggregated stats in Gawa
   const totalImpressions = campaigns.reduce((acc, c) => acc + (c.impressions || 0), 0);
   const totalClicks = campaigns.reduce((acc, c) => acc + (c.clicks || 0), 0);
-  const totalSpent = campaigns.reduce((acc, c) => acc + (c.totalCost || 0), 0);
-  const overallCtr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(1) : "0.0";
+  const totalGawaSpent = campaigns.reduce((acc, c) => acc + (c.spentBudget || 0), 0);
+  const overallCtr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0.00";
 
   return (
     <AndroidPageLayout
       header={
-        <header className="flex-none bg-zinc-950/95 backdrop-blur-md border-b border-zinc-800/80 px-3.5 py-2.5 flex items-center justify-between gap-2 z-35 shrink-0">
+        <header className="flex-none bg-zinc-950/95 backdrop-blur-md border-b border-zinc-800/80 px-3.5 py-2.5 flex items-center justify-between gap-2 z-35 shrink-0 font-sans">
           <div className="flex items-center gap-2.5 min-w-0">
             {onBack && (
               <button 
@@ -125,14 +144,14 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-white">
-            <Wallet className="w-3.5 h-3.5 text-[#D4AF37]" />
-            <span className="font-extrabold">{walletBalance.toLocaleString("fr-FR")} FCFA</span>
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-white font-mono">
+            <Coins className="w-3.5 h-3.5 text-[#D4AF37]" />
+            <span className="font-extrabold text-[#D4AF37]">{gawaBalance.toLocaleString("fr-FR")} G</span>
           </div>
         </header>
       }
     >
-      <div className="space-y-5 pb-12">
+      <div className="space-y-5 pb-12 font-sans">
 
         {/* HERO BANNER */}
         <div className="relative w-full rounded-3xl bg-gradient-to-br from-[#18181b] via-[#0d0d0f] to-black border border-[#D4AF37]/40 p-5 shadow-2xl shadow-black overflow-hidden">
@@ -141,7 +160,7 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
           <div className="relative z-10 space-y-3">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[11px] font-black text-[#D4AF37] tracking-wider uppercase">
               <Megaphone className="w-3.5 h-3.5 text-[#D4AF37]" />
-              FAIS GRANDIR TON GOMBO
+              PROPULSE TON GOMBO EN GAWA
             </div>
 
             <h2 className="text-xl sm:text-2xl font-black text-white leading-tight">
@@ -149,7 +168,7 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
             </h2>
 
             <p className="text-xs text-zinc-300 leading-relaxed max-w-lg">
-              Propulse tes opportunités en tête du fil AFRIGOMBO et touche directement des milliers de membres actifs en Côte d'Ivoire et en Afrique de l'Ouest.
+              Propulse tes opportunités en tête du fil AFRIGOMBO et touche directement des milliers de membres actifs à l'aide de tes jetons Gawa !
             </p>
 
             <button 
@@ -157,7 +176,7 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
               className="mt-2 py-3 px-5 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f1d06b] to-[#D4AF37] text-black font-black text-xs sm:text-sm flex items-center gap-2 shadow-xl shadow-[#D4AF37]/20 active:scale-95 transition-transform"
             >
               <Plus className="w-4 h-4 text-black stroke-[3]" />
-              <span>LANCER UNE CAMPAGNE</span>
+              <span>LANCER UNE CAMPAGNE EN GAWA</span>
             </button>
           </div>
         </div>
@@ -228,14 +247,14 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
                 <BarChart2 className="w-4 h-4" />
-                PERFORMANCES GLOBALES
+                BILAN DE TES PROMOTIONS
               </span>
-              <span className="text-[11px] text-zinc-400 font-bold">
+              <span className="text-[11px] text-zinc-400 font-bold font-mono">
                 {campaigns.length} campagne(s)
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 font-mono">
               <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-center">
                 <Eye className="w-4 h-4 text-sky-400 mx-auto mb-1" />
                 <span className="text-sm font-black text-white block">{totalImpressions.toLocaleString("fr-FR")}</span>
@@ -251,13 +270,13 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
               <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-center">
                 <TrendingUp className="w-4 h-4 text-[#D4AF37] mx-auto mb-1" />
                 <span className="text-sm font-black text-white block">{overallCtr}%</span>
-                <span className="text-[10px] text-zinc-400 font-medium">Taux Clics (CTR)</span>
+                <span className="text-[10px] text-zinc-400 font-medium">CTR moyen</span>
               </div>
 
               <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-center">
-                <Wallet className="w-4 h-4 text-purple-400 mx-auto mb-1" />
-                <span className="text-sm font-black text-white block">{totalSpent.toLocaleString("fr-FR")} FCFA</span>
-                <span className="text-[10px] text-zinc-400 font-medium">Budget Investi</span>
+                <Coins className="w-4 h-4 text-purple-400 mx-auto mb-1" />
+                <span className="text-sm font-black text-[#D4AF37] block">{totalGawaSpent.toFixed(1)} G</span>
+                <span className="text-[10px] text-zinc-400 font-medium">Budget consommé</span>
               </div>
             </div>
           </div>
@@ -271,28 +290,28 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
             </h3>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-[11px]">
+            <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-[11px] font-bold">
               <button 
                 onClick={() => setActiveFilter("all")}
-                className={`px-2.5 py-0.5 rounded-lg font-bold transition-colors ${activeFilter === "all" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}
+                className={`px-2.5 py-0.5 rounded-lg transition-colors ${activeFilter === "all" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}
               >
                 Toutes
               </button>
               <button 
                 onClick={() => setActiveFilter("active")}
-                className={`px-2.5 py-0.5 rounded-lg font-bold transition-colors ${activeFilter === "active" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}
+                className={`px-2.5 py-0.5 rounded-lg transition-colors ${activeFilter === "active" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}
               >
                 Actives
               </button>
               <button 
                 onClick={() => setActiveFilter("pending")}
-                className={`px-2.5 py-0.5 rounded-lg font-bold transition-colors ${activeFilter === "pending" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}
+                className={`px-2.5 py-0.5 rounded-lg transition-colors ${activeFilter === "pending" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}
               >
                 Examen
               </button>
               <button 
                 onClick={() => setActiveFilter("ended")}
-                className={`px-2.5 py-0.5 rounded-lg font-bold transition-colors ${activeFilter === "ended" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}
+                className={`px-2.5 py-0.5 rounded-lg transition-colors ${activeFilter === "ended" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}
               >
                 Finies
               </button>
@@ -300,26 +319,26 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
           </div>
 
           {loading ? (
-            <div className="py-12 text-center text-zinc-500 text-xs">
-              Chargement de vos campagnes Gombo Ads...
+            <div className="py-12 text-center text-zinc-500 text-xs font-mono">
+              Interrogation des campagnes Gombo Ads...
             </div>
           ) : getFilteredCampaigns().length === 0 ? (
             <div className="p-8 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 text-center space-y-3">
               <Megaphone className="w-10 h-10 text-zinc-600 mx-auto" />
-              <p className="text-xs text-zinc-400 font-medium">
+              <p className="text-xs text-zinc-400 font-medium font-mono">
                 Aucune campagne {activeFilter !== "all" ? "dans cette catégorie" : "créée pour le moment"}.
               </p>
               <button 
                 onClick={() => openWizardFor("gombo")}
-                className="py-2.5 px-4 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] font-bold text-xs"
+                className="py-2.5 px-4 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] font-black text-xs"
               >
-                Créer ma première campagne
+                Créer ma première campagne en Gawa
               </button>
             </div>
           ) : (
             <div className="space-y-3">
               {getFilteredCampaigns().map((camp) => {
-                const ctr = camp.impressions > 0 ? ((camp.clicks / camp.impressions) * 100).toFixed(1) : "0.0";
+                const ctr = camp.impressions > 0 ? ((camp.clicks / camp.impressions) * 100).toFixed(2) : "0.00";
 
                 return (
                   <div 
@@ -336,7 +355,7 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
                         {camp.status === "ACTIVE" && (
                           <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            ACTIVE
+                            DIFFUSION ACTIVE
                           </span>
                         )}
 
@@ -362,13 +381,19 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
 
                         {camp.status === "EXPIRED" && (
                           <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-zinc-500 bg-zinc-950 px-2 py-0.5 rounded-full border border-zinc-800">
-                            EXPIRÉE
+                            EXPIRÉE (TEMPS ÉCOULÉ)
+                          </span>
+                        )}
+
+                        {camp.status === "COMPLETED" && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">
+                            BUDGET ÉPUISÉ
                           </span>
                         )}
                       </div>
 
-                      <span className="text-xs font-extrabold text-[#D4AF37]">
-                        {camp.totalCost.toLocaleString("fr-FR")} FCFA
+                      <span className="text-xs font-black text-[#D4AF37] font-mono">
+                        {camp.totalCost.toLocaleString("fr-FR")} G
                       </span>
                     </div>
 
@@ -385,29 +410,47 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
                       <div className="flex-1 min-w-0">
                         <h4 className="text-xs font-bold text-white truncate">{camp.title}</h4>
                         <p className="text-[11px] text-zinc-400 line-clamp-1">{camp.description}</p>
-                        <div className="text-[10px] text-zinc-500 mt-0.5">
+                        <div className="text-[10px] text-zinc-500 mt-0.5 font-mono">
                           {camp.durationDays} jour(s) • Du {new Date(camp.createdAt).toLocaleDateString("fr-FR")}
                           {camp.endAt && ` au ${new Date(camp.endAt).toLocaleDateString("fr-FR")}`}
                         </div>
                       </div>
                     </div>
 
+                    {/* Progress Consumption Bar */}
+                    <div className="space-y-1 bg-zinc-950 p-2.5 rounded-2xl border border-zinc-800/60 font-mono text-[10px]">
+                      <div className="flex justify-between items-center text-zinc-400">
+                        <span>Consommé : <strong>{camp.spentBudget?.toFixed(2) || "0.00"} G</strong></span>
+                        <span>Restant : <strong className="text-[#D4AF37]">{camp.remainingBudget?.toFixed(2) || "0.00"} G</strong></span>
+                      </div>
+                      <div className="w-full bg-zinc-850 h-1 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-[#D4AF37]" 
+                          style={{ width: `${Math.min(100, (((camp.spentBudget || 0) / (camp.totalCost || 1)) * 100))}%` }}
+                        />
+                      </div>
+                    </div>
+
                     {/* Rejection Note */}
                     {camp.status === "REJECTED" && camp.rejectionReason && (
                       <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-200">
-                        <strong>Motif du refus :</strong> "{camp.rejectionReason}". Le montant de {camp.totalCost.toLocaleString("fr-FR")} FCFA a été immédiatement crédité sur votre Wallet.
+                        <strong>Motif du refus :</strong> "{camp.rejectionReason}". Le montant de {camp.totalCost.toLocaleString("fr-FR")} Gawa a été immédiatement crédité sur votre solde.
                       </div>
                     )}
 
                     {/* Mini Stats Bar */}
-                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-zinc-800/80 text-center text-xs">
+                    <div className="grid grid-cols-4 gap-2 pt-2 border-t border-zinc-800/80 text-center text-xs font-mono">
                       <div>
-                        <span className="text-[10px] text-zinc-500 block">Impressions</span>
-                        <span className="font-extrabold text-white">{camp.impressions || 0}</span>
+                        <span className="text-[10px] text-zinc-500 block">Vues uniques</span>
+                        <span className="font-extrabold text-white">{camp.uniqueViews || 0}</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-zinc-500 block">Clics</span>
                         <span className="font-extrabold text-white">{camp.clicks || 0}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-zinc-500 block">Engagements</span>
+                        <span className="font-extrabold text-white">{camp.engagements || 0}</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-zinc-500 block">CTR</span>
@@ -416,7 +459,7 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center justify-end gap-2 pt-1">
+                    <div className="flex items-center justify-end gap-2 pt-1 font-mono">
                       {camp.status === "ACTIVE" && (
                         <button 
                           onClick={() => handlePause(camp.id)}
@@ -437,7 +480,7 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
                         </button>
                       )}
 
-                      {(camp.status === "EXPIRED" || camp.status === "PAUSED" || camp.status === "REJECTED") && (
+                      {(camp.status === "EXPIRED" || camp.status === "COMPLETED" || camp.status === "PAUSED" || camp.status === "REJECTED") && (
                         <button 
                           onClick={() => handleArchive(camp.id)}
                           className="px-3 py-1.5 rounded-xl bg-zinc-950 text-zinc-500 font-bold text-xs flex items-center gap-1 hover:text-zinc-300"
@@ -472,6 +515,7 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
         onClose={() => setIsWizardOpen(false)}
         currentUserProfile={currentUserProfile}
         initialType={wizardInitialType}
+        initialTargetId={initialTargetGomboId}
         onSuccess={(id) => {
           // Toast or scroll to campaigns
         }}
@@ -480,3 +524,4 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
     </AndroidPageLayout>
   );
 };
+

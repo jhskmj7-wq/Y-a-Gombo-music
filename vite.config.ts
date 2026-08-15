@@ -85,9 +85,6 @@ export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom', 'react-router-dom', 'firebase', '@firebase/app', '@firebase/auth', '@firebase/firestore', '@firebase/storage', '@firebase/messaging'],
     alias: {
-      react: path.resolve(__dirname, 'node_modules/react'),
-      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
-      'react-router-dom': path.resolve(__dirname, 'node_modules/react-router-dom'),
       '@': path.resolve(__dirname, 'src')
     }
   },

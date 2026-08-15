@@ -249,6 +249,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       let finalNewSolde = 0;
       const nowIso = new Date().toISOString();
       const currentTimestamp = Date.now();
+      let publishedPostId = "";
       
       await runTransaction(db, async (transaction) => {
         const userRef = doc(db, "users", currentUserProfile.uid);
@@ -308,6 +309,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
         // Create Gombo/Post Document Ref
         const postRef = doc(collection(db, "social_posts"));
+        publishedPostId = postRef.id;
         const gomboRefVal = getGomboRef(postRef.id);
 
         pubTxData.publicationId = postRef.id;
@@ -511,7 +513,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       window.dispatchEvent(new CustomEvent("wallet_balance_updated", { detail: { newBalance: finalNewSolde } }));
       window.dispatchEvent(new CustomEvent("wallet_updated", { detail: { newBalance: finalNewSolde } }));
 
-      setDepositDetails(prev => ({ ...prev, userSolde: finalNewSolde }));
+      setDepositDetails(prev => ({ ...prev, refId: publishedPostId, userSolde: finalNewSolde }));
       setPublishOutcome("success_published");
       setShowSuccessOverlay(true);
     } catch (err: any) {
@@ -664,6 +666,20 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                       className="w-full py-4 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer active:scale-98"
                     >
                       Voir la publication sur Le Terrain
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSuccessOverlay(false);
+                        onSuccess();
+                        setTimeout(() => {
+                          window.dispatchEvent(new CustomEvent("navigate_to_gombo_ads_with_target", { detail: { targetGomboId: depositDetails.refId } }));
+                        }, 150);
+                      }}
+                      className="w-full mt-3 py-3.5 border border-afri-gold/50 hover:border-afri-gold bg-transparent text-afri-gold font-black text-xs uppercase rounded-xl transition-all shadow-md cursor-pointer active:scale-98 flex items-center justify-center gap-1.5"
+                    >
+                      <span>Booster avec GOMBO ADS 📣</span>
                     </button>
                   </>
                 )}

@@ -18,12 +18,15 @@ export type GomboAdsType = "gombo" | "profile" | "event" | "offer";
 
 export type GomboAdsStatus =
   | "DRAFT"
+  | "PENDING_PAYMENT"
+  | "PAID"
   | "PENDING_REVIEW"
   | "APPROVED"
   | "ACTIVE"
   | "PAUSED"
   | "REJECTED"
   | "EXPIRED"
+  | "COMPLETED"
   | "ARCHIVED"
   | "CANCELLED";
 
@@ -50,10 +53,10 @@ export interface GomboAdsCampaign {
   commune?: string;
   category?: string;
   status: GomboAdsStatus;
-  budget: number; // daily budget in FCFA
-  totalCost: number; // total campaign cost in FCFA
-  currency: string; // "FCFA"
-  durationDays: number; // 1, 3, 7, 14, 30
+  budget: number; // e.g. daily budget
+  totalCost: number; // total campaign cost in GAWA
+  currency: string; // "GAWA"
+  durationDays: number; // 1, 3, 7, etc.
   startAt?: string;
   endAt?: string;
   createdAt: string;
@@ -67,8 +70,16 @@ export interface GomboAdsCampaign {
   clicks: number;
   views: number;
   conversions: number;
+  uniqueViews: number;
+  engagements: number;
+  gomboViews: number;
+  profileViews: number;
+  initialBudget: number; // in Gawa
+  spentBudget: number; // in Gawa
+  remainingBudget: number; // in Gawa
+  offerId?: string; // starter, boost, premium, etc.
   placements: GomboAdsPlacement[];
-  frequencyCap?: number; // max impressions per user per day
+  frequencyCap?: number;
   targetAudience?: {
     commune?: string;
     category?: string;

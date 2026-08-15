@@ -11,15 +11,14 @@ import {
   Sparkles, 
   AlertCircle, 
   Loader2, 
-  CreditCard,
   PlusCircle,
-  MapPin
+  Coins
 } from "lucide-react";
-import { collection, query, where, getDocs, limit } from "firebase/firestore";
+import { collection, query, where, getDocs, limit, doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { GomboAdsType, GomboAdsPlacement } from "../../types";
-import { GomboAdsService, GOMBO_ADS_DAILY_RATES, CampaignCostBreakdown } from "../../services/GomboAdsService";
-import { getCanonicalWalletBalance } from "../../lib/financial";
+import { GomboAdsService, GomboAdsOffer } from "../../services/GomboAdsService";
+import { GawaEngineService } from "../../lib/GawaEngineService";
 import { AndroidBottomSheet } from "../common/AndroidBottomSheet";
 
 interface GomboAdsCreationWizardProps {
@@ -29,6 +28,7 @@ interface GomboAdsCreationWizardProps {
   initialType?: GomboAdsType;
   onSuccess: (campaignId: string) => void;
   onOpenWalletDeposit: () => void;
+  initialTargetId?: string;
 }
 
 export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
@@ -37,12 +37,12 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
   currentUserProfile,
   initialType,
   onSuccess,
-  onOpenWalletDeposit
+  onOpenWalletDeposit,
+  initialTargetId
 }) => {
   const userId = currentUserProfile?.uid || currentUserProfile?.id;
-  const walletBalance = getCanonicalWalletBalance(currentUserProfile) ?? 0;
 
-  // Wizard Step: 1 = Type, 2 = Select Content, 3 = Select Duration, 4 = Confirmation
+  // Wizard Step: 1 = Type, 2 = Select Content, 3 = Select Offer, 4 = Confirmation
   const [step, setStep] = useState<number>(1);
   const [selectedType, setSelectedType] = useState<GomboAdsType>(initialType || "gombo");
 
@@ -57,20 +57,17 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
   const [customLocation, setCustomLocation] = useState<string>("");
   const [customCategory, setCustomCategory] = useState<string>("");
   const [mediaUrl, setMediaUrl] = useState<string>("");
-  const [durationDays, setDurationDays] = useState<number>(7);
+
+  // Offers state
+  const [offers, setOffers] = useState<GomboAdsOffer[]>([]);
+  const [selectedOffer, setSelectedOffer] = useState<GomboAdsOffer | null>(null);
+  const [loadingOffers, setLoadingOffers] = useState<boolean>(true);
+  const [gawaBalance, setGawaBalance] = useState<number>(0);
 
   // Processing state
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [showInsufficientBalanceSheet, setShowInsufficientBalanceSheet] = useState<boolean>(false);
-
-  // Calculated cost
-  const costBreakdown: CampaignCostBreakdown = GomboAdsService.calculateCampaignCost(
-    selectedType,
-    durationDays
-  );
-
-  const balanceAfterPayment = walletBalance - costBreakdown.totalCost;
 
   // Sync initial type when changed
   useEffect(() => {
@@ -79,9 +76,94 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
     }
   }, [initialType]);
 
-  // Load user items for Step 2
+  // Load offers on open
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const fetchOffers = async () => {
+      setLoadingOffers(true);
+      try {
+        const list = await GomboAdsService.getOffers();
+        const activeOffers = list.filter(o => o.enabled);
+        setOffers(activeOffers);
+        if (activeOffers.length > 0) {
+          setSelectedOffer(activeOffers[0]);
+        }
+      } catch (err) {
+        console.error("Failed to load offers:", err);
+      } finally {
+        setLoadingOffers(false);
+      }
+    };
+
+    fetchOffers();
+  }, [isOpen]);
+
+  // Subscribe to real-time Gawa balance
   useEffect(() => {
     if (!isOpen || !userId) return;
+    const unsub = GawaEngineService.subscribeUserGawaBalance(userId, (bal) => {
+      setGawaBalance(bal);
+    });
+    return () => unsub();
+  }, [isOpen, userId]);
+
+  // Preselect Gombo if initialTargetId is provided
+  useEffect(() => {
+    if (!isOpen || !userId || !initialTargetId) return;
+
+    const fetchPreselectedGombo = async () => {
+      setLoadingItems(true);
+      try {
+        const gRef = doc(db, "gombos", initialTargetId);
+        const gSnap = await getDoc(gRef);
+        if (gSnap.exists()) {
+          const d = gSnap.data();
+          const item = {
+            id: gSnap.id,
+            title: d.title || "Titre du Gombo",
+            description: d.description || d.summary || "",
+            mediaUrl: d.imageUrl || d.mediaURL || d.mediaUrl || "",
+            locationName: d.commune || d.locationName || "Abidjan",
+            category: d.category || "Gombo"
+          };
+          selectItem(item);
+          setSelectedType("gombo");
+          setStep(3); // Go straight to offer selection
+        } else {
+          const pRef = doc(db, "posts", initialTargetId);
+          const pSnap = await getDoc(pRef);
+          if (pSnap.exists()) {
+            const d = pSnap.data();
+            const item = {
+              id: pSnap.id,
+              title: d.title || d.content?.substring(0, 50) || "Publication",
+              description: d.content || "",
+              mediaUrl: d.mediaUrl || d.photoURL || "",
+              locationName: d.commune || "Abidjan",
+              category: "Publication"
+            };
+            selectItem(item);
+            setSelectedType("gombo");
+            setStep(3);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch preselected gombo:", err);
+      } finally {
+        setLoadingItems(false);
+      }
+    };
+
+    fetchPreselectedGombo();
+  }, [isOpen, userId, initialTargetId]);
+
+  const costGawa = selectedOffer ? selectedOffer.priceGawa : 0;
+  const balanceAfterPayment = gawaBalance - costGawa;
+
+  // Load user items for Step 2
+  useEffect(() => {
+    if (!isOpen || !userId || initialTargetId) return; // Skip standard loading if preselected
 
     if (selectedType === "profile") {
       // Profile item is current user
@@ -204,10 +286,10 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
   };
 
   const handleLaunchCampaign = async () => {
-    if (submitting) return;
+    if (submitting || !selectedOffer) return;
 
     // Validate balance first
-    if (walletBalance < costBreakdown.totalCost) {
+    if (gawaBalance < selectedOffer.priceGawa) {
       setShowInsufficientBalanceSheet(true);
       return;
     }
@@ -222,15 +304,14 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
 
     try {
       const res = await GomboAdsService.createCampaign(currentUserProfile, {
-        type: selectedType,
+        offerId: selectedOffer.id,
         targetId: selectedItem.id,
         title: customTitle || selectedItem.title,
         description: customDescription || selectedItem.description,
         mediaUrl: mediaUrl || selectedItem.mediaUrl,
         locationName: customLocation || selectedItem.locationName,
         commune: customLocation || selectedItem.locationName,
-        category: customCategory || selectedItem.category,
-        durationDays
+        category: customCategory || selectedItem.category
       });
 
       if (res.success && res.campaignId) {
@@ -271,7 +352,7 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
                 <h3 className="text-base font-extrabold text-white">
                   {step === 1 && "Que veux-tu promouvoir ?"}
                   {step === 2 && "Sélectionne le contenu"}
-                  {step === 3 && "Choisis la durée"}
+                  {step === 3 && "Choisis une offre Gombo Ads"}
                   {step === 4 && "Confirmation de campagne"}
                 </h3>
               </div>
@@ -326,8 +407,8 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
                     <div>
                       <h4 className="text-sm font-extrabold text-white">📣 PROMOUVOIR UN GOMBO</h4>
                       <p className="text-xs text-zinc-400 mt-0.5">Augmente la visibilité d'une publication ou offre de mission Gombo.</p>
-                      <span className="inline-block mt-1 text-[11px] font-bold text-[#D4AF37]">
-                        {GOMBO_ADS_DAILY_RATES.gombo.toLocaleString("fr-FR")} FCFA / jour
+                      <span className="inline-block mt-1 text-[11px] font-bold text-[#D4AF37] font-mono">
+                        Paiement sécurisé en GAWA
                       </span>
                     </div>
                   </div>
@@ -350,8 +431,8 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
                     <div>
                       <h4 className="text-sm font-extrabold text-white">⭐ PROMOUVOIR MON PROFIL</h4>
                       <p className="text-xs text-zinc-400 mt-0.5">Mets ton profil d'artiste ou prestataire davantage en avant dans l'annuaire.</p>
-                      <span className="inline-block mt-1 text-[11px] font-bold text-[#D4AF37]">
-                        {GOMBO_ADS_DAILY_RATES.profile.toLocaleString("fr-FR")} FCFA / jour
+                      <span className="inline-block mt-1 text-[11px] font-bold text-[#D4AF37] font-mono">
+                        Paiement sécurisé en GAWA
                       </span>
                     </div>
                   </div>
@@ -374,8 +455,8 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
                     <div>
                       <h4 className="text-sm font-extrabold text-white">🎉 PROMOUVOIR UN ÉVÉNEMENT</h4>
                       <p className="text-xs text-zinc-400 mt-0.5">Fais connaître ton concert, showcase ou atelier au plus grand nombre.</p>
-                      <span className="inline-block mt-1 text-[11px] font-bold text-[#D4AF37]">
-                        {GOMBO_ADS_DAILY_RATES.event.toLocaleString("fr-FR")} FCFA / jour
+                      <span className="inline-block mt-1 text-[11px] font-bold text-[#D4AF37] font-mono">
+                        Paiement sécurisé en GAWA
                       </span>
                     </div>
                   </div>
@@ -473,77 +554,97 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
                   disabled={!selectedItem && !customTitle}
                   className="w-full mt-4 py-3 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#b89327] text-black font-extrabold text-xs flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  <span>CONTINUER VERS LA DURÉE</span>
+                  <span>CONTINUER VERS LES OFFRES</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             )}
 
-            {/* STEP 3: Select Duration */}
+            {/* STEP 3: Select Offer Pack */}
             {step === 3 && (
               <div className="space-y-4">
                 <p className="text-xs text-zinc-400">
-                  Combien de temps souhaites-tu diffuser cette campagne ?
+                  Sélectionne un pack publicitaire pour ta campagne :
                 </p>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {[1, 3, 7, 14, 30].map((days) => {
-                    const isSel = durationDays === days;
-                    const previewCost = GomboAdsService.calculateCampaignCost(selectedType, days);
-
-                    return (
-                      <button
-                        key={days}
-                        onClick={() => setDurationDays(days)}
-                        className={`p-3 rounded-2xl border text-left transition-all relative overflow-hidden ${
-                          isSel 
-                            ? "bg-[#D4AF37]/15 border-[#D4AF37] shadow-lg shadow-[#D4AF37]/10" 
-                            : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700"
-                        }`}
-                      >
-                        {previewCost.discountRate > 0 && (
-                          <span className="absolute top-0 right-0 bg-[#D4AF37] text-black text-[9px] font-black px-2 py-0.5 rounded-bl-lg">
-                            -{(previewCost.discountRate * 100).toFixed(0)}%
-                          </span>
-                        )}
-                        <span className="text-sm font-extrabold text-white block">
-                          {days} {days === 1 ? "Jour" : "Jours"}
-                        </span>
-                        <span className="text-xs font-bold text-[#D4AF37] block mt-1">
-                          {previewCost.totalCost.toLocaleString("fr-FR")} FCFA
-                        </span>
-                        <span className="text-[10px] text-zinc-400 block mt-0.5">
-                          ~{Math.round(previewCost.totalCost / days).toLocaleString("fr-FR")} / jour
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Summary Card Preview */}
-                <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-2 text-xs">
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Tarif de base journalier</span>
-                    <span className="text-white font-medium">{costBreakdown.dailyRate.toLocaleString("fr-FR")} FCFA</span>
+                {loadingOffers ? (
+                  <div className="py-8 flex flex-col items-center justify-center">
+                    <Loader2 className="w-6 h-6 text-[#D4AF37] animate-spin mb-2" />
+                    <span className="text-xs text-zinc-500 font-mono">Chargement des tarifs Gawa...</span>
                   </div>
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Sous-total ({durationDays} jours)</span>
-                    <span className="text-white font-medium">{costBreakdown.subtotal.toLocaleString("fr-FR")} FCFA</span>
+                ) : (
+                  <div className="space-y-3">
+                    {offers.map((offer) => {
+                      const isSel = selectedOffer?.id === offer.id;
+                      return (
+                        <button
+                          key={offer.id}
+                          onClick={() => setSelectedOffer(offer)}
+                          className={`w-full p-4 rounded-2xl border text-left transition-all flex justify-between items-center ${
+                            isSel 
+                              ? "bg-[#D4AF37]/15 border-[#D4AF37] shadow-lg shadow-[#D4AF37]/10" 
+                              : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700"
+                          }`}
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-black text-white uppercase tracking-wide">
+                                {offer.name}
+                              </span>
+                              <span className="text-[10px] bg-[#D4AF37]/20 text-[#D4AF37] font-black px-2 py-0.5 rounded-full uppercase">
+                                {offer.durationDays} {offer.durationDays === 1 ? "jour" : "jours"}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-zinc-400 leading-tight">
+                              Placements : {offer.placements.join(", ")}
+                            </p>
+                          </div>
+
+                          <div className="text-right flex items-center gap-3">
+                            <div>
+                              <span className="text-base font-black text-[#D4AF37] block font-mono">
+                                {offer.priceGawa} G
+                              </span>
+                              <span className="text-[9px] text-zinc-500 block font-mono">
+                                ~{Math.round(offer.priceGawa / offer.durationDays)} G / jour
+                              </span>
+                            </div>
+                            <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${
+                              isSel ? "bg-[#D4AF37] border-[#D4AF37]" : "border-zinc-700"
+                            }`}>
+                              {isSel && <Check className="w-3.5 h-3.5 text-black font-extrabold" />}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
-                  {costBreakdown.discountAmount > 0 && (
-                    <div className="flex justify-between text-emerald-400 font-medium">
-                      <span>Réduction ({costBreakdown.discountRate * 100}%)</span>
-                      <span>-{costBreakdown.discountAmount.toLocaleString("fr-FR")} FCFA</span>
+                )}
+
+                {selectedOffer && (
+                  <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-2 text-xs">
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Offre publicitaire</span>
+                      <span className="text-white font-bold">{selectedOffer.name}</span>
                     </div>
-                  )}
-                  <div className="pt-2 border-t border-zinc-800 flex justify-between items-center text-sm font-extrabold text-white">
-                    <span>Total à régler</span>
-                    <span className="text-[#D4AF37] text-base">{costBreakdown.totalCost.toLocaleString("fr-FR")} FCFA</span>
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Durée de livraison</span>
+                      <span className="text-white font-medium">{selectedOffer.durationDays} jour(s)</span>
+                    </div>
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Budget total alloué</span>
+                      <span className="text-white font-mono">{selectedOffer.budgetGawa} Gawa (G)</span>
+                    </div>
+                    <div className="pt-2 border-t border-zinc-800 flex justify-between items-center text-sm font-extrabold text-white">
+                      <span>Total à régler</span>
+                      <span className="text-[#D4AF37] text-base font-mono">{selectedOffer.priceGawa} G</span>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <button 
                   onClick={() => setStep(4)}
+                  disabled={!selectedOffer}
                   className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#b89327] text-black font-extrabold text-xs flex items-center justify-center gap-2"
                 >
                   <span>VÉRIFIER & CONFIRMER</span>
@@ -553,7 +654,7 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
             )}
 
             {/* STEP 4: Confirmation & Payment */}
-            {step === 4 && (
+            {step === 4 && selectedOffer && (
               <div className="space-y-4">
                 {/* Summary Box */}
                 <div className="p-4 rounded-2xl bg-gradient-to-b from-[#18181b] to-[#09090b] border border-[#D4AF37]/40 space-y-3">
@@ -577,35 +678,35 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
                       <span className="text-white font-bold uppercase">{selectedType}</span>
                     </div>
                     <div>
-                      <span className="text-zinc-500 block text-[10px]">Durée</span>
-                      <span className="text-white font-bold">{durationDays} jours</span>
+                      <span className="text-zinc-500 block text-[10px]">Offre sélectionnée</span>
+                      <span className="text-white font-bold">{selectedOffer.name} ({selectedOffer.durationDays}j)</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Wallet Balance Box */}
+                {/* Gawa Balance Box */}
                 <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-2 text-xs">
                   <div className="flex justify-between items-center text-zinc-300">
                     <span className="flex items-center gap-1.5 font-bold">
-                      <Wallet className="w-4 h-4 text-[#D4AF37]" />
-                      Solde Wallet actuel
+                      <Coins className="w-4 h-4 text-[#D4AF37]" />
+                      Solde Gawa disponible
                     </span>
-                    <span className="font-extrabold text-white">
-                      {walletBalance.toLocaleString("fr-FR")} FCFA
+                    <span className="font-extrabold text-white font-mono">
+                      {gawaBalance.toLocaleString("fr-FR")} G
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center text-zinc-300">
                     <span>Coût de la campagne</span>
-                    <span className="font-extrabold text-red-400">
-                      -{costBreakdown.totalCost.toLocaleString("fr-FR")} FCFA
+                    <span className="font-extrabold text-red-400 font-mono">
+                      -{selectedOffer.priceGawa.toLocaleString("fr-FR")} G
                     </span>
                   </div>
 
                   <div className="pt-2 border-t border-zinc-800 flex justify-between items-center">
-                    <span className="font-bold text-zinc-200">Solde après paiement</span>
-                    <span className={`font-black text-sm ${balanceAfterPayment >= 0 ? "text-emerald-400" : "text-red-500"}`}>
-                      {balanceAfterPayment.toLocaleString("fr-FR")} FCFA
+                    <span className="font-bold text-zinc-200">Solde Gawa après paiement</span>
+                    <span className={`font-black text-sm font-mono ${balanceAfterPayment >= 0 ? "text-emerald-400" : "text-red-500"}`}>
+                      {balanceAfterPayment.toLocaleString("fr-FR")} G
                     </span>
                   </div>
                 </div>
@@ -616,14 +717,14 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
                     <div className="flex items-center gap-2">
                       <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
                       <span className="text-xs text-amber-200 font-semibold">
-                        Solde insuffisant pour régler cette campagne.
+                        Gawa insuffisant pour régler cette campagne.
                       </span>
                     </div>
                     <button 
                       onClick={onOpenWalletDeposit}
                       className="px-3 py-1.5 rounded-xl bg-amber-500 text-black font-extrabold text-xs whitespace-nowrap"
                     >
-                      Recharger
+                      Acheter Gawa
                     </button>
                   </div>
                 )}
@@ -637,13 +738,13 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
                   {submitting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>TRAITEMENT SÉCURISÉ...</span>
+                      <span>DEBIT SECURISÉ DU COMPTE...</span>
                     </>
                   ) : (
                     <>
                       <span>🚀 LANCER LA CAMPAGNE</span>
-                      <span className="bg-black/20 text-black px-2 py-0.5 rounded-lg text-[11px]">
-                        {costBreakdown.totalCost.toLocaleString("fr-FR")} FCFA
+                      <span className="bg-black/20 text-black px-2 py-0.5 rounded-lg text-[11px] font-mono">
+                        {selectedOffer.priceGawa} G
                       </span>
                     </>
                   )}
@@ -660,17 +761,17 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
       <AndroidBottomSheet
         isOpen={showInsufficientBalanceSheet}
         onClose={() => setShowInsufficientBalanceSheet(false)}
-        title="Solde Wallet Insuffisant"
+        title="Solde Gawa Insuffisant"
       >
         <div className="space-y-4 text-center py-2">
           <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
-            <Wallet className="w-8 h-8" />
+            <Coins className="w-8 h-8" />
           </div>
 
           <div className="space-y-1">
-            <h4 className="text-base font-extrabold text-white">Recharge requise</h4>
+            <h4 className="text-base font-extrabold text-white">Acquérir du Gawa</h4>
             <p className="text-xs text-zinc-400 max-w-xs mx-auto">
-              Votre solde disponible est de <strong className="text-white">{walletBalance.toLocaleString("fr-FR")} FCFA</strong>. Il vous manque <strong className="text-amber-400">{Math.abs(balanceAfterPayment).toLocaleString("fr-FR")} FCFA</strong> pour lancer cette campagne Gombo Ads.
+              Votre solde Gawa actuel est de <strong className="text-white">{gawaBalance.toLocaleString("fr-FR")} G</strong>. Il vous manque <strong className="text-amber-400">{Math.abs(balanceAfterPayment).toLocaleString("fr-FR")} G</strong> pour lancer cette campagne Gombo Ads.
             </p>
           </div>
 
@@ -684,7 +785,7 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
               className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#b89327] text-black font-black text-xs flex items-center justify-center gap-2 shadow-lg"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>ALIMENTER LE WALLET</span>
+              <span>ACHETER DU GAWA</span>
             </button>
 
             <button 
@@ -699,3 +800,4 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
     </>
   );
 };
+

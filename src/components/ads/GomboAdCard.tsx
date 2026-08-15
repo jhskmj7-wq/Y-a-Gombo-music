@@ -19,14 +19,14 @@ export const GomboAdCard: React.FC<GomboAdCardProps> = ({
   useEffect(() => {
     if (!impressionRecorded.current && ad?.id) {
       impressionRecorded.current = true;
-      GomboAdsService.recordImpression(ad.id);
+      GomboAdsService.recordAdEvent(ad.id, "impression");
     }
   }, [ad?.id]);
 
   const handleAction = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (ad?.id) {
-      GomboAdsService.recordClick(ad.id);
+      GomboAdsService.recordAdEvent(ad.id, "click");
     }
     if (onNavigateToTarget) {
       onNavigateToTarget(ad.type, ad.targetId);
