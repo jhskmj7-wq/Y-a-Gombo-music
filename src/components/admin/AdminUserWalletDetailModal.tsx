@@ -358,37 +358,136 @@ export function AdminUserWalletDetailModal({
         )}
 
         {/* TAB 4: SÉCURITÉ */}
-        {activeTab === "security" && (
-          <div className="space-y-4 text-left animate-in fade-in">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
-              <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
-                <span className="text-zinc-500 block text-[9px] uppercase">Fournisseur d'Authentification</span>
-                <span className="font-bold text-white uppercase">{user.provider || "Google / Apple"}</span>
-              </div>
-              <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
-                <span className="text-zinc-500 block text-[9px] uppercase">Statut Email</span>
-                <span className="font-bold text-emerald-400">Vérifié via OAuth</span>
-              </div>
-              <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
-                <span className="text-zinc-500 block text-[9px] uppercase">Compte Banni / Suspendu</span>
-                <span className={`font-bold ${user.isBanned ? 'text-red-400' : 'text-emerald-400'}`}>
-                  {user.isBanned ? "Oui (Suspendu)" : "Non (Actif)"}
-                </span>
-              </div>
-              <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
-                <span className="text-zinc-500 block text-[9px] uppercase">Dernière Activité</span>
-                <span className="font-bold text-white">
-                  {user.lastActive ? new Date(user.lastActive).toLocaleString() : "En ligne"}
-                </span>
-              </div>
-            </div>
+        {activeTab === "security" && (() => {
+          const sec = user.walletSecurity || {};
+          const isPinConfigured = !!(sec.pinHash || sec.pinConfigured);
+          const pinUpdatedAt = sec.pinUpdatedAt ? new Date(sec.pinUpdatedAt).toLocaleString() : (sec.pinCreatedAt ? new Date(sec.pinCreatedAt).toLocaleString() : "Aucune");
+          const lastAuth = sec.lastAuthSensitiveAt ? new Date(sec.lastAuthSensitiveAt).toLocaleString() : "Aucune";
+          const failedAttempts = sec.failedPinAttempts || 0;
+          const isLocked = !!(sec.lockedUntil && new Date(sec.lockedUntil).getTime() > Date.now());
+          const isRecovery = !!sec.pinResetRequested;
+          const hasSaoDemand = !!user.walletSecurity?.saoAssistancePending;
+          const activeSessions = isPinConfigured && !isLocked ? "Oui (Session active)" : "Non / Inactif";
 
-            <div className="p-4 bg-amber-950/20 border border-amber-500/30 rounded-2xl flex items-center gap-3 text-xs text-amber-300 font-mono">
-              <Shield className="w-5 h-5 text-[#D4AF37] shrink-0" />
-              <span>Conformément aux protocoles de sécurité souverains, les mots de passe et secrets d'authentification ne sont jamais stockés en clair ni affichés aux administrateurs.</span>
+          return (
+            <div className="space-y-4 text-left animate-in fade-in">
+              <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider">
+                🔐 SÉCURITÉ WALLET (Rapport Souverain)
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl flex flex-col justify-between">
+                  <span className="text-zinc-500 block text-[9px] uppercase">Protection activée</span>
+                  <span className={`font-bold text-sm ${isPinConfigured ? "text-emerald-400" : "text-zinc-500"}`}>
+                    {isPinConfigured ? "🟢 Oui (PIN configuré)" : "⚪ Non configurée"}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl flex flex-col justify-between">
+                  <span className="text-zinc-500 block text-[9px] uppercase">Dernière modification de sécurité</span>
+                  <span className="font-bold text-white text-xs">{pinUpdatedAt}</span>
+                </div>
+
+                <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl flex flex-col justify-between">
+                  <span className="text-zinc-500 block text-[9px] uppercase">Dernière authentification sensible</span>
+                  <span className="font-bold text-white text-xs">{lastAuth}</span>
+                </div>
+
+                <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl flex flex-col justify-between">
+                  <span className="text-zinc-500 block text-[9px] uppercase">Nombre d'échecs récents</span>
+                  <span className={`font-bold text-sm ${failedAttempts > 0 ? "text-red-400 font-black" : "text-zinc-400"}`}>
+                    {failedAttempts} tentatives
+                  </span>
+                </div>
+
+                <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl flex flex-col justify-between">
+                  <span className="text-zinc-500 block text-[9px] uppercase">Wallet verrouillé</span>
+                  <span className={`font-bold text-sm ${isLocked ? "text-red-400 font-black animate-pulse" : "text-emerald-400"}`}>
+                    {isLocked ? "⚠️ Oui (Brute-force lock)" : "🟢 Non"}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl flex flex-col justify-between">
+                  <span className="text-zinc-500 block text-[9px] uppercase">Récupération en cours</span>
+                  <span className={`font-bold text-sm ${isRecovery ? "text-amber-400" : "text-zinc-500"}`}>
+                    {isRecovery ? "⚠️ Oui (Réinitialisation demandée)" : "Non"}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl flex flex-col justify-between">
+                  <span className="text-zinc-500 block text-[9px] uppercase">Demande SAO en attente</span>
+                  <span className={`font-bold text-sm ${hasSaoDemand ? "text-[#D4AF37] animate-pulse" : "text-zinc-500"}`}>
+                    {hasSaoDemand ? "🆘 Oui (Assistance requise)" : "Non"}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl flex flex-col justify-between">
+                  <span className="text-zinc-500 block text-[9px] uppercase">Sessions sensibles actives</span>
+                  <span className="font-bold text-white">{activeSessions}</span>
+                </div>
+              </div>
+
+              <div className="p-4 bg-zinc-900/40 border border-zinc-800 rounded-2xl space-y-2">
+                <span className="text-[10px] font-mono font-bold text-[#D4AF37] uppercase tracking-wider block">⚡ Actions Administratives Sécurité</span>
+                <p className="text-[10px] text-zinc-400">
+                  En tant que Super Fondateur, vous pouvez déverrouiller un compte bloqué par brute-force ou approuver/annuler une réinitialisation de sécurité en attente.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {isLocked && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const targetUid = user.uid || user.id;
+                          await updateDoc(doc(db, "users", targetUid), {
+                            "walletSecurity.lockedUntil": null,
+                            "walletSecurity.failedPinAttempts": 0
+                          });
+                          alert("Wallet déverrouillé avec succès.");
+                          onRefresh();
+                        } catch (e: any) {
+                          alert("Erreur: " + e.message);
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 rounded-xl text-xs font-mono font-bold uppercase transition-all cursor-pointer"
+                    >
+                      🔓 Forcer Déverrouillage
+                    </button>
+                  )}
+                  {isPinConfigured && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Voulez-vous vraiment désactiver et supprimer le code PIN de cet utilisateur ?")) return;
+                        try {
+                          const targetUid = user.uid || user.id;
+                          await updateDoc(doc(db, "users", targetUid), {
+                            "walletSecurity.pinHash": null,
+                            "walletSecurity.pinSalt": null,
+                            "walletSecurity.pinConfigured": false,
+                            "walletSecurity.pinStatus": "NOT_CONFIGURED",
+                            "paymentSettings.pinEnabled": false,
+                            "paymentSettings.pinConfigured": false
+                          });
+                          alert("Code PIN désactivé et supprimé.");
+                          onRefresh();
+                        } catch (e: any) {
+                          alert("Erreur: " + e.message);
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/25 rounded-xl text-xs font-mono font-bold uppercase transition-all cursor-pointer"
+                    >
+                      ❌ Réinitialiser/Désactiver PIN
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-4 bg-amber-950/20 border border-amber-500/30 rounded-2xl flex items-center gap-3 text-xs text-amber-300 font-mono">
+                <Shield className="w-5 h-5 text-[#D4AF37] shrink-0" />
+                <span>Le protocole de sécurité souverain garantit que le Super Fondateur ne voit JAMAIS le code PIN ou le hash exploitable de l'utilisateur.</span>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* TAB 5: SUPPORT COMPTE */}
         {activeTab === "support" && (

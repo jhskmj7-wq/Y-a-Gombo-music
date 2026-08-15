@@ -95,6 +95,8 @@ const PremiumEmptyState = lazyWithRetry(() => import("./PremiumEmptyState"));
 const PendingPaymentModal = lazyWithRetry(() => import("./PendingPaymentModal").then(m => ({ default: m.PendingPaymentModal })));
 import { MonAbonnementView } from "./MonAbonnementView";
 import { GomboAdsMainView } from "./ads/GomboAdsMainView";
+import { GomboAdsService } from "../services/GomboAdsService";
+import { GomboAdsCampaign } from "../types";
 
 // Extracted Sub-components
 const UserReelsView = lazyWithRetry(() => import("./UserReelsView").then(m => ({ default: m.UserReelsView })));
@@ -214,6 +216,7 @@ import {
   Download,
   CreditCard,
   ChevronRight,
+  ChevronDown,
   ChevronLeft,
   Handshake,
   ArrowLeft,
@@ -475,6 +478,20 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   });
   const [selectedGomboDetails, setSelectedGomboDetails] = useState<Gombo | null>(null);
   const [preselectedGomboAdId, setPreselectedGomboAdId] = useState<string | undefined>(undefined);
+  const [userCampaigns, setUserCampaigns] = useState<GomboAdsCampaign[]>([]);
+  const [expandedGomboId, setExpandedGomboId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const uid = profile?.uid || currentUser?.uid;
+    if (!uid) {
+      setUserCampaigns([]);
+      return;
+    }
+    const unsub = GomboAdsService.listenUserCampaigns(uid, (list) => {
+      setUserCampaigns(list);
+    });
+    return () => unsub();
+  }, [profile?.uid, currentUser?.uid]);
   const [openConvoWithUserId, setOpenConvoWithUserId] = useState<string | null>(null);
   const [openConvoWithGomboId, setOpenConvoWithGomboId] = useState<string | null>(null);
   const [publicProfileTargetUserId, setPublicProfileTargetUserId] = useState<string | null>(null);
@@ -6375,198 +6392,317 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           icon={Briefcase}
                         />
                       ) : (
-                        filteredGombos.map((gombo) => (
-                          <div key={gombo.id} className="p-4 sm:p-5 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/30 rounded-2xl space-y-3 shadow-md">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-afri-border/60 pb-3">
-                              <div>
-                                <strong className="text-sm font-bold text-afri-text block">{gombo.title}</strong>
-                                <span className="text-[10px] text-afri-text-sec font-mono block mt-0.5">Organisé par : {gombo.organizerName} • {gombo.location || "Abidjan"}</span>
-                              </div>
-                              <div className="flex items-center gap-2 self-start sm:self-auto">
-                                <span className="px-2.5 py-1 rounded-lg bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 text-xs font-black uppercase font-mono">
-                                  {gombo.budget ? `${gombo.budget.toLocaleString()} FCFA` : "A DÉBATTRE"}
-                                </span>
-                                <span className="text-[9px] font-mono uppercase bg-afri-bg-sec text-afri-text px-2 py-0.5 rounded-lg border border-afri-border font-bold">
-                                  {getStatusLabel(gombo.status)}
-                                </span>
-                              </div>
-                            </div>
+                        filteredGombos.map((gombo) => {
+                          const isExpanded = expandedGomboId === gombo.id;
+                          const gomboAdCampaign = userCampaigns.find(c => c.targetId === gombo.id);
+                          const hasAdCampaign = !!gomboAdCampaign;
 
-                            {/* Action Buttons */}
-                            <div className="flex flex-wrap gap-2 pt-1">
-                              {(gombo.status === "pending_deposit" || gombo.status === "pending" || gombo.adminValidated === false) && gombo.organizerId === currentArtist.id && (
-                                <button 
-                                  onClick={() => {
-                                    setPendingPaymentItem({
-                                      id: gombo.id!,
-                                      title: gombo.title,
-                                      budget: gombo.budget,
-                                      collectionName: "gombos"
-                                    });
-                                    setShowPendingPaymentModal(true);
-                                  }} 
-                                  className="px-3 py-1.5 bg-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl shadow-md flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
-                                >
-                                  🔑 Activer la publication
-                                </button>
-                              )}
-
-                              {(gombo.status === "publie" || gombo.status === "candidatures_ouvertes") && gombo.organizerId === currentArtist.id && (
-                                <button onClick={() => setActiveMenu("user_dashboard")} className="px-3 py-1.5 bg-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl hover:bg-amber-400 transition cursor-pointer">
-                                  🎯 Sélectionner Candidat
-                                </button>
-                              )}
-                              
-                              {/* Management actions for organizer */}
-                              {gombo.organizerId === currentArtist.id && (
-                                <div className="w-full flex flex-wrap gap-2 mt-2">
-                                  <button 
-                                    onClick={() => {
-                                      const newTitle = prompt("Modifier le titre de l'annonce :", gombo.title);
-                                      if (newTitle && newTitle !== gombo.title && gombo.id) {
-                                        gomboDB.updateGombo(gombo.id, { title: newTitle });
-                                        setGombos(prev => prev.map(g => g.id === gombo.id ? { ...g, title: newTitle } : g));
-                                        addToTerminal(`[MODIFICATION] Titre mis à jour : ${newTitle}`);
-                                      }
-                                    }}
-                                    className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border text-afri-text text-[10px] font-bold uppercase rounded-xl hover:border-[#D4AF37] transition cursor-pointer"
-                                  >
-                                    ✏️ Modifier
-                                  </button>
-
-                                  <button 
-                                    onClick={() => {
-                                      if (navigator.share) {
-                                        navigator.share({
-                                          title: gombo.title,
-                                          text: `Consultez cette offre sur AFRIGOMBO ELITE : ${gombo.title}`,
-                                          url: window.location.href
-                                        }).catch(() => {});
-                                      } else {
-                                        navigator.clipboard.writeText(window.location.href);
-                                        alert("Lien de la publication copié !");
-                                      }
-                                    }}
-                                    className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border text-afri-text text-[10px] font-bold uppercase rounded-xl hover:border-[#D4AF37] transition cursor-pointer"
-                                  >
-                                    🔗 Transmettre
-                                  </button>
-
-                                  <button 
-                                    onClick={() => setActiveBoostItem({id: gombo.id!, title: gombo.title, type: 'gombo'})} 
-                                    className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl shadow-md flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
-                                  >
-                                    <Sparkles className="w-3.5 h-3.5" /> 🚀 Booster
-                                  </button>
-
-                                  <button 
-                                    onClick={async () => {
-                                      if (window.confirm("Êtes-vous sûr de vouloir supprimer définitivement cette publication ?")) {
-                                        try {
-                                          if (gombo.id) {
-                                            await gomboDB.deleteGombo(gombo.id);
-                                            setGombos(prev => prev.filter(g => g.id !== gombo.id));
-                                            addToTerminal(`[SUPPRESSION] Publication ${gombo.id} supprimée.`);
-                                          }
-                                        } catch (err) {
-                                          alert("Erreur lors de la suppression.");
-                                        }
-                                      }
-                                    }} 
-                                    className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold uppercase rounded-xl hover:bg-red-500/20 transition cursor-pointer"
-                                  >
-                                    🗑️ Supprimer
-                                  </button>
-                                </div>
-                              )}
-
-                              {gombo.contractId && (
-                                <button 
-                                  onClick={() => {
-                                    setActiveMenu("user_contracts");
-                                    try { audioSynth.playValidationSuccess(); } catch (_) {}
-                                  }} 
-                                  className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[10px] font-bold uppercase rounded-xl hover:bg-purple-500/30 flex items-center gap-1 cursor-pointer"
-                                >
-                                  🤝 Gérer le Contrat
-                                </button>
-                              )}
-
-                              {gombo.selectedTalentId === currentArtist.id && gombo.status === "artiste_selectionne" && (
-                                <>
-                                  <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_accepte")} className="px-3 py-1.5 bg-emerald-500 text-black text-[10px] font-bold uppercase rounded-xl hover:bg-emerald-400 cursor-pointer">
-                                    Accepter le Contrat
-                                  </button>
-                                  <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_refuse")} className="px-3 py-1.5 bg-red-900 text-red-100 text-[10px] font-bold uppercase rounded-xl hover:bg-red-800 cursor-pointer">
-                                    Refuser
-                                  </button>
-                                </>
-                              )}
-
-                              {gombo.organizerId === currentArtist.id && (gombo.status === "contrat_accepte" || gombo.status === "contrat_confirme") && (
-                                <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "mission_terminee")} className="px-3 py-1.5 bg-blue-500 text-afri-text text-[10px] font-bold uppercase rounded-xl hover:bg-blue-400 cursor-pointer">
-                                  Valider la Prestation
-                                </button>
-                              )}
-
-                              {gombo.organizerId === currentArtist.id && gombo.status === "mission_terminee" && (
-                                <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "paiement_effectue")} className="px-3 py-1.5 bg-green-500 text-black text-[10px] font-bold uppercase rounded-xl hover:bg-green-400 cursor-pointer">
-                                  Libérer le Paiement
-                                </button>
-                              )}
-
-                              {(gombo.organizerId === currentArtist.id || gombo.selectedTalentId === currentArtist.id) && gombo.selectedTalentId && (
-                                <button 
-                                  onClick={() => {
-                                    const targetId = gombo.organizerId === currentArtist.id ? gombo.selectedTalentId : gombo.organizerId;
-                                    setOpenConvoWithUserId(targetId!);
-                                    setOpenConvoWithGomboId(gombo.id!);
-                                    setActiveMenu("user_messages");
-                                    try { audioSynth.playValidationSuccess(); } catch (_) {}
-                                  }} 
-                                  className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border text-afri-text text-[10px] font-bold uppercase rounded-xl hover:border-[#D4AF37] flex items-center gap-1.5 cursor-pointer"
-                                >
-                                  <MessageSquare className="w-3.5 h-3.5 text-[#D4AF37]" /> Discuter
-                                </button>
-                              )}
-
-                              {gombo.applicantIds?.includes(currentArtist.id) && gombo.status === "publie" && (
-                                <button onClick={() => setActiveBoostItem({id: gombo.id!, title: gombo.title, type: 'candidature'})} className="px-3 py-1.5 mt-2 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl shadow-md flex items-center gap-1 active:scale-95 transition-all cursor-pointer">
-                                  <Sparkles className="w-3.5 h-3.5" /> ⚡ Booster ma candidature
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Reciprocal feedback review trigger (only when mission completed) */}
-                            {(gombo.status === "mission_terminee" || gombo.status === "paiement_effectue") && (
-                              <div className="p-3 bg-[#D4AF37]/5 border border-[#D4AF37]/15 rounded-xl space-y-2 mt-2">
-                                <span className="text-[10px] uppercase font-mono text-[#D4AF37] block font-bold">✍️ Évaluation Réciproque :</span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-afri-text">Note Accordée :</span>
-                                  <div className="flex gap-1 text-[#D4AF37]">
-                                    {[1, 2, 3, 4, 5].map(n => (
-                                      <Star key={n} className="w-3.5 h-3.5 fill-current cursor-pointer" />
-                                    ))}
+                          return (
+                            <div 
+                              key={gombo.id} 
+                              className="bg-afri-bg border border-afri-border hover:border-[#D4AF37]/30 rounded-2xl overflow-hidden shadow-md transition-all duration-200"
+                            >
+                              {/* Compact Header - Always visible, clicking toggles expansion */}
+                              <div 
+                                onClick={() => setExpandedGomboId(isExpanded ? null : gombo.id!)}
+                                className="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer select-none active:bg-afri-bg-sec/40 transition-colors"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    {isExpanded ? (
+                                      <ChevronDown className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                                    ) : (
+                                      <ChevronRight className="w-4 h-4 text-afri-text-sec shrink-0" />
+                                    )}
+                                    <strong className="text-xs sm:text-sm font-black text-afri-text truncate">
+                                      🎵 {gombo.title}
+                                    </strong>
                                   </div>
+                                  <span className="text-[10px] text-afri-text-sec font-mono block mt-1 pl-5.5">
+                                    📍 {gombo.location || "Abidjan"}
+                                  </span>
                                 </div>
-                                <textarea
-                                  rows={2}
-                                  placeholder="Avis sur la collaboration..."
-                                  className="w-full bg-afri-bg border border-afri-border rounded-xl p-2 text-xs text-afri-text placeholder:text-afri-text-sec focus:outline-none focus:border-[#D4AF37]"
-                                />
-                                <button
-                                  onClick={() => {
-                                    addToTerminal(`[ÉVALUATION] Évaluation transmise pour Gombo ${gombo.id}`);
-                                    alert("⭐ Votre avis a été enregistré avec succès !");
-                                  }}
-                                  className="px-4 py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black text-[10px] font-bold uppercase rounded-xl transition-all cursor-pointer"
-                                >
-                                  Soumettre l'avis
-                                </button>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                  {hasAdCampaign && (
+                                    <span className="px-1.5 py-0.5 rounded text-[8px] font-mono font-black uppercase bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 flex items-center gap-0.5 animate-pulse">
+                                      📣 ADS
+                                    </span>
+                                  )}
+                                  <span className="text-[9px] font-mono uppercase bg-afri-bg-sec text-afri-text px-2 py-0.5 rounded-lg border border-afri-border font-bold">
+                                    {getStatusLabel(gombo.status)}
+                                  </span>
+                                </div>
                               </div>
-                            )}
-                          </div>
-                        ))
+
+                              {/* Collapsible Details Content */}
+                              <AnimatePresence initial={false}>
+                                {isExpanded && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.18 }}
+                                    className="border-t border-afri-border/50 bg-afri-bg-sec/10 overflow-hidden"
+                                  >
+                                    <div className="p-4 space-y-4">
+                                      {/* Short Description */}
+                                      {gombo.description && (
+                                        <div className="text-xs text-afri-text-sec leading-relaxed font-sans">
+                                          {gombo.description}
+                                        </div>
+                                      )}
+
+                                      {/* Budget Segment */}
+                                      <div className="flex items-center justify-between text-xs bg-afri-bg/40 p-2.5 rounded-xl border border-afri-border/40">
+                                        <span className="text-afri-text-sec">Budget défini :</span>
+                                        <span className="font-mono font-black text-[#D4AF37] text-xs">
+                                          {gombo.budget ? `${gombo.budget.toLocaleString()} FCFA` : "A DÉBATTRE"}
+                                        </span>
+                                      </div>
+
+                                      {/* Gombo Ads Sponsorship Stats/Actions */}
+                                      <div className="p-3 rounded-2xl border bg-afri-bg/50 border-afri-border/50 space-y-3">
+                                        {gomboAdCampaign ? (
+                                          <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                              <span className="text-[10px] font-mono font-black uppercase text-[#D4AF37] flex items-center gap-1">
+                                                <span>📣 SPONSORISÉ</span>
+                                              </span>
+                                              <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                                Campagne active
+                                              </span>
+                                            </div>
+
+                                            <div className="grid grid-cols-3 gap-2 py-1">
+                                              <div className="p-2 bg-afri-bg rounded-xl border border-afri-border text-center">
+                                                <div className="text-[8px] text-afri-text-sec uppercase font-mono">Vues</div>
+                                                <div className="text-xs font-black text-afri-text font-mono mt-0.5">{gomboAdCampaign.impressions || 0}</div>
+                                              </div>
+                                              <div className="p-2 bg-afri-bg rounded-xl border border-afri-border text-center">
+                                                <div className="text-[8px] text-afri-text-sec uppercase font-mono">Interactions</div>
+                                                <div className="text-xs font-black text-afri-text font-mono mt-0.5">{gomboAdCampaign.clicks || 0}</div>
+                                              </div>
+                                              <div className="p-2 bg-afri-bg rounded-xl border border-afri-border text-center">
+                                                <div className="text-[8px] text-afri-text-sec uppercase font-mono">Restant</div>
+                                                <div className="text-xs font-black text-[#D4AF37] font-mono mt-0.5 truncate">{gomboAdCampaign.remainingBudget || 0} G</div>
+                                              </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between text-[10px] text-afri-text-sec font-mono">
+                                              <span>Fin : {gomboAdCampaign.endAt ? new Date(gomboAdCampaign.endAt).toLocaleDateString("fr-FR") : "N/A"}</span>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  setPreselectedGomboAdId(gombo.id!);
+                                                  setActiveMenu("user_gombo_ads");
+                                                }}
+                                                className="text-[#D4AF37] font-black uppercase hover:underline cursor-pointer"
+                                              >
+                                                Voir la campagne 👁️
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                            <div className="min-w-0 flex-1">
+                                              <strong className="text-[10px] uppercase font-mono text-afri-text font-bold block">Aucune campagne active</strong>
+                                              <span className="text-[9px] text-afri-text-sec block mt-0.5 leading-tight">Boostez la visibilité de cette publication auprès de la communauté.</span>
+                                            </div>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                window.dispatchEvent(new CustomEvent("navigate_to_gombo_ads_with_target", { detail: { targetGomboId: gombo.id } }));
+                                              }}
+                                              className="px-3 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black text-[9px] font-black uppercase rounded-xl transition-all shadow-md cursor-pointer active:scale-95 shrink-0"
+                                            >
+                                              🚀 Promouvoir
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Original Action Buttons */}
+                                      <div className="flex flex-wrap gap-2 pt-1 border-t border-afri-border/30">
+                                        {(gombo.status === "pending_deposit" || gombo.status === "pending" || gombo.adminValidated === false) && gombo.organizerId === currentArtist.id && (
+                                          <button 
+                                            onClick={() => {
+                                              setPendingPaymentItem({
+                                                id: gombo.id!,
+                                                title: gombo.title,
+                                                budget: gombo.budget,
+                                                collectionName: "gombos"
+                                              });
+                                              setShowPendingPaymentModal(true);
+                                            }} 
+                                            className="px-3 py-1.5 bg-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl shadow-md flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
+                                          >
+                                            🔑 Activer la publication
+                                          </button>
+                                        )}
+
+                                        {(gombo.status === "publie" || gombo.status === "candidatures_ouvertes") && gombo.organizerId === currentArtist.id && (
+                                          <button onClick={() => setActiveMenu("user_dashboard")} className="px-3 py-1.5 bg-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl hover:bg-amber-400 transition cursor-pointer">
+                                            🎯 Sélectionner Candidat
+                                          </button>
+                                        )}
+                                        
+                                        {/* Management actions for organizer */}
+                                        {gombo.organizerId === currentArtist.id && (
+                                          <div className="w-full flex flex-wrap gap-2 mt-2">
+                                            <button 
+                                              onClick={() => {
+                                                const newTitle = prompt("Modifier le titre de l'annonce :", gombo.title);
+                                                if (newTitle && newTitle !== gombo.title && gombo.id) {
+                                                  gomboDB.updateGombo(gombo.id, { title: newTitle });
+                                                  setGombos(prev => prev.map(g => g.id === gombo.id ? { ...g, title: newTitle } : g));
+                                                  addToTerminal(`[MODIFICATION] Titre mis à jour : ${newTitle}`);
+                                                }
+                                              }}
+                                              className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border text-afri-text text-[10px] font-bold uppercase rounded-xl hover:border-[#D4AF37] transition cursor-pointer"
+                                            >
+                                              ✏️ Modifier
+                                            </button>
+
+                                            <button 
+                                              onClick={() => {
+                                                if (navigator.share) {
+                                                  navigator.share({
+                                                    title: gombo.title,
+                                                    text: `Consultez cette offre sur AFRIGOMBO ELITE : ${gombo.title}`,
+                                                    url: window.location.href
+                                                  }).catch(() => {});
+                                                } else {
+                                                  navigator.clipboard.writeText(window.location.href);
+                                                  alert("Lien de la publication copié !");
+                                                }
+                                              }}
+                                              className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border text-afri-text text-[10px] font-bold uppercase rounded-xl hover:border-[#D4AF37] transition cursor-pointer"
+                                            >
+                                              🔗 Transmettre
+                                            </button>
+
+                                            <button 
+                                              onClick={() => setActiveBoostItem({id: gombo.id!, title: gombo.title, type: 'gombo'})} 
+                                              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl shadow-md flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
+                                            >
+                                              <Sparkles className="w-3.5 h-3.5" /> 🚀 Booster
+                                            </button>
+
+                                            <button 
+                                              onClick={async () => {
+                                                if (window.confirm("Êtes-vous sûr de vouloir supprimer définitivement cette publication ?")) {
+                                                  try {
+                                                    if (gombo.id) {
+                                                      await gomboDB.deleteGombo(gombo.id);
+                                                      setGombos(prev => prev.filter(g => g.id !== gombo.id));
+                                                      addToTerminal(`[SUPPRESSION] Publication ${gombo.id} supprimée.`);
+                                                    }
+                                                  } catch (err) {
+                                                    alert("Erreur lors de la suppression.");
+                                                  }
+                                                }
+                                              }} 
+                                              className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold uppercase rounded-xl hover:bg-red-500/20 transition cursor-pointer"
+                                            >
+                                              🗑️ Supprimer
+                                            </button>
+                                          </div>
+                                        )}
+
+                                        {gombo.contractId && (
+                                          <button 
+                                            onClick={() => {
+                                              setActiveMenu("user_contracts");
+                                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                                            }} 
+                                            className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[10px] font-bold uppercase rounded-xl hover:bg-purple-500/30 flex items-center gap-1 cursor-pointer"
+                                          >
+                                            🤝 Gérer le Contrat
+                                          </button>
+                                        )}
+
+                                        {gombo.selectedTalentId === currentArtist.id && gombo.status === "artiste_selectionne" && (
+                                          <>
+                                            <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_accepte")} className="px-3 py-1.5 bg-emerald-500 text-black text-[10px] font-bold uppercase rounded-xl hover:bg-emerald-400 cursor-pointer">
+                                              Accepter le Contrat
+                                            </button>
+                                            <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_refuse")} className="px-3 py-1.5 bg-red-900 text-red-100 text-[10px] font-bold uppercase rounded-xl hover:bg-red-800 cursor-pointer">
+                                              Refuser
+                                            </button>
+                                          </>
+                                        )}
+
+                                        {gombo.organizerId === currentArtist.id && (gombo.status === "contrat_accepte" || gombo.status === "contrat_confirme") && (
+                                          <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "mission_terminee")} className="px-3 py-1.5 bg-blue-500 text-afri-text text-[10px] font-bold uppercase rounded-xl hover:bg-blue-400 cursor-pointer">
+                                            Valider la Prestation
+                                          </button>
+                                        )}
+
+                                        {gombo.organizerId === currentArtist.id && gombo.status === "mission_terminee" && (
+                                          <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "paiement_effectue")} className="px-3 py-1.5 bg-green-500 text-black text-[10px] font-bold uppercase rounded-xl hover:bg-green-400 cursor-pointer">
+                                            Libérer le Paiement
+                                          </button>
+                                        )}
+
+                                        {(gombo.organizerId === currentArtist.id || gombo.selectedTalentId === currentArtist.id) && gombo.selectedTalentId && (
+                                          <button 
+                                            onClick={() => {
+                                              const targetId = gombo.organizerId === currentArtist.id ? gombo.selectedTalentId : gombo.organizerId;
+                                              setOpenConvoWithUserId(targetId!);
+                                              setOpenConvoWithGomboId(gombo.id!);
+                                              setActiveMenu("user_messages");
+                                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                                            }} 
+                                            className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border text-afri-text text-[10px] font-bold uppercase rounded-xl hover:border-[#D4AF37] flex items-center gap-1.5 cursor-pointer"
+                                          >
+                                            <MessageSquare className="w-3.5 h-3.5 text-[#D4AF37]" /> Discuter
+                                          </button>
+                                        )}
+
+                                        {gombo.applicantIds?.includes(currentArtist.id) && gombo.status === "publie" && (
+                                          <button onClick={() => setActiveBoostItem({id: gombo.id!, title: gombo.title, type: 'candidature'})} className="px-3 py-1.5 mt-2 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl shadow-md flex items-center gap-1 active:scale-95 transition-all cursor-pointer">
+                                            <Sparkles className="w-3.5 h-3.5" /> ⚡ Booster ma candidature
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      {/* Reciprocal feedback review trigger (only when mission completed) */}
+                                      {(gombo.status === "mission_terminee" || gombo.status === "paiement_effectue") && (
+                                        <div className="p-3 bg-[#D4AF37]/5 border border-[#D4AF37]/15 rounded-xl space-y-2 mt-2">
+                                          <span className="text-[10px] uppercase font-mono text-[#D4AF37] block font-bold">✍️ Évaluation Réciproque :</span>
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-xs text-afri-text">Note Accordée :</span>
+                                            <div className="flex gap-1 text-[#D4AF37]">
+                                              {[1, 2, 3, 4, 5].map(n => (
+                                                <Star key={n} className="w-3.5 h-3.5 fill-current cursor-pointer" />
+                                              ))}
+                                            </div>
+                                          </div>
+                                          <textarea
+                                            rows={2}
+                                            placeholder="Avis sur la collaboration..."
+                                            className="w-full bg-afri-bg border border-afri-border rounded-xl p-2 text-xs text-afri-text placeholder:text-afri-text-sec focus:outline-none focus:border-[#D4AF37]"
+                                          />
+                                          <button
+                                            onClick={() => {
+                                              addToTerminal(`[ÉVALUATION] Évaluation transmise pour Gombo ${gombo.id}`);
+                                              alert("⭐ Votre avis a été enregistré avec succès !");
+                                            }}
+                                            className="px-4 py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black text-[10px] font-bold uppercase rounded-xl transition-all cursor-pointer"
+                                          >
+                                            Soumettre l'avis
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          );
+                        })
                       )}
                     </div>
                   </div>
@@ -10083,7 +10219,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     }}
                     className="flex-[2] py-3.5 rounded-2xl font-mono font-black text-xs uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer text-center bg-afri-gold hover:bg-afri-bg-sec text-[#050505] shadow-[0_4px_15px_rgba(212,175,55,0.25)] flex items-center justify-center gap-1.5"
                   >
-                    <span>BOOSTER CE GOMBO 📣</span>
+                    <span>🚀 PROMOUVOIR AVEC GOMBO ADS</span>
                   </button>
                 ) : (
                   <button

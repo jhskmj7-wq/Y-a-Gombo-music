@@ -28,6 +28,7 @@ import ActivityTab from "./messages/ActivityTab";
 import SettingsTab from "./messages/SettingsTab";
 import AfrigomboTab from "./messages/AfrigomboTab";
 import { audioSynth } from "../lib/audio";
+import { VoiceMessagePlayer } from "./messages/VoiceMessagePlayer";
 
 interface MessagesViewProps {
   currentUser: any;
@@ -104,6 +105,8 @@ export default function MessagesView({
   const [isVoiceRecording, setIsVoiceRecording] = useState(false);
   const [voiceRecordDuration, setVoiceRecordDuration] = useState(0);
   const [slideCancelX, setSlideCancelX] = useState(0);
+  const [recordedVoiceUrl, setRecordedVoiceUrl] = useState<string | null>(null);
+  const [recordedVoiceBlob, setRecordedVoiceBlob] = useState<Blob | null>(null);
   const voiceTimerRef = useRef<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -498,27 +501,59 @@ export default function MessagesView({
       return;
     }
 
-    setIsSending(true);
     setTimeout(() => {
-      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Audio = reader.result as string;
-        if (activeConvo && currentUser?.uid) {
-          const senderName = currentProfile?.firstName ? `${currentProfile.firstName} ${currentProfile.lastName}` : "Moi";
-          await gomboDB.sendMessage(
-            activeConvo.id,
-            currentUser.uid,
-            senderName,
-            "🎙️ Message vocal",
-            "audio",
-            base64Audio
-          );
-        }
-        setIsSending(false);
-      };
-      reader.readAsDataURL(audioBlob);
+      if (audioChunksRef.current.length > 0) {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        setRecordedVoiceBlob(audioBlob);
+        const url = URL.createObjectURL(audioBlob);
+        setRecordedVoiceUrl(url);
+      }
     }, 300);
+  };
+
+  const handleSendVoiceMessage = async () => {
+    if (!recordedVoiceBlob || !activeConvo || !currentUser?.uid || isSending) return;
+    setIsSending(true);
+    try {
+      const fileToSend = new File([recordedVoiceBlob], `vocal_${Date.now()}.mp3`, { type: "audio/mpeg" });
+      const filePath = `chats/${activeConvo.id}/${Date.now()}_vocal.mp3`;
+
+      // Upload audio to Firebase Storage
+      const downloadUrl = await gomboDB.uploadFile(fileToSend, filePath);
+
+      // Send the real storage URL
+      const senderName = currentProfile?.firstName ? `${currentProfile.firstName} ${currentProfile.lastName}` : "Moi";
+      await gomboDB.sendMessage(
+        activeConvo.id,
+        currentUser.uid,
+        senderName,
+        "🎙️ Message vocal",
+        "audio",
+        downloadUrl
+      );
+
+      // Clean up local draft state
+      if (recordedVoiceUrl) {
+        URL.revokeObjectURL(recordedVoiceUrl);
+      }
+      setRecordedVoiceUrl(null);
+      setRecordedVoiceBlob(null);
+      setVoiceRecordDuration(0);
+    } catch (err) {
+      console.error("Failed to send voice message:", err);
+      alert("Erreur lors de l'envoi du message vocal.");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleDiscardVoiceMessage = () => {
+    if (recordedVoiceUrl) {
+      URL.revokeObjectURL(recordedVoiceUrl);
+    }
+    setRecordedVoiceUrl(null);
+    setRecordedVoiceBlob(null);
+    setVoiceRecordDuration(0);
   };
 
   const handleShareLocation = () => {
@@ -970,7 +1005,7 @@ export default function MessagesView({
                                 {isImage ? (
                                   <img src={mediaUrl || messageContent} alt="" className="rounded-xl max-h-60 object-cover" />
                                 ) : isAudio ? (
-                                  <audio controls src={mediaUrl} className="w-full max-w-xs h-8 mt-1" />
+                                  <VoiceMessagePlayer id={m.id || `msg-${idx}`} src={mediaUrl} isMe={isMe} />
                                 ) : isLocation ? (
                                   <div className="flex items-center gap-2">
                                     <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -1052,7 +1087,7 @@ export default function MessagesView({
                       {isVoiceRecording ? (
                         <div
                           onTouchMove={handleVoiceTouchMove}
-                          className="p-3 bg-rose-950/80 border border-rose-500/40 rounded-2xl flex items-center justify-between text-xs text-rose-300"
+                          className="p-3 bg-rose-950/80 border border-rose-500/40 rounded-2xl flex items-center justify-between text-xs text-rose-300 animate-fadeIn"
                         >
                           <div className="flex items-center gap-2">
                             <span className="w-3 h-3 rounded-full bg-rose-500 animate-ping" />
@@ -1060,13 +1095,50 @@ export default function MessagesView({
                               Enregistrement: {Math.floor(voiceRecordDuration / 60)}:{(voiceRecordDuration % 60).toString().padStart(2, "0")}
                             </span>
                           </div>
-                          <p className="text-[10px] text-afri-text-sec animate-pulse">Glisser vers la gauche pour annuler ←</p>
+                          <p className="text-[10px] text-afri-text-sec animate-pulse hidden xs:block">Glisser vers la gauche pour annuler ←</p>
                           <button
+                            type="button"
                             onClick={() => stopVoiceRecording(true)}
-                            className="px-2.5 py-1 bg-rose-500/20 border border-rose-500 text-rose-300 rounded-lg text-[10px] font-bold"
+                            className="px-2.5 py-1 bg-rose-500/20 border border-rose-500 text-rose-300 rounded-lg text-[10px] font-bold cursor-pointer hover:bg-rose-500/40 active:scale-95 transition"
                           >
                             Annuler
                           </button>
+                        </div>
+                      ) : recordedVoiceUrl ? (
+                        <div className="p-3 bg-gradient-to-r from-amber-500/10 to-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 animate-fadeIn">
+                          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                            <span className="text-[10px] font-black uppercase text-[#D4AF37] font-mono tracking-wider shrink-0 bg-[#D4AF37]/15 px-2 py-1 rounded-md">
+                              Préécoute
+                            </span>
+                            <div className="flex-1 sm:flex-initial">
+                              <VoiceMessagePlayer id="draft-vocal" src={recordedVoiceUrl} isMe={true} />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end shrink-0">
+                            <button
+                              type="button"
+                              onClick={handleDiscardVoiceMessage}
+                              className="px-3.5 py-2.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer active:scale-95 transition flex items-center gap-1.5"
+                              title="Supprimer l'enregistrement"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span>Supprimer</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleSendVoiceMessage}
+                              disabled={isSending}
+                              className="px-4 py-2.5 bg-[#D4AF37] hover:bg-amber-400 disabled:opacity-50 text-black rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer active:scale-95 transition flex items-center gap-1.5 shadow-md shadow-amber-500/15"
+                              title="Confirmer l'envoi du message vocal"
+                            >
+                              {isSending ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Send className="w-4 h-4" />
+                              )}
+                              <span>Envoyer</span>
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <form onSubmit={handleSendMessage} className="flex items-center gap-2">
@@ -1123,7 +1195,7 @@ export default function MessagesView({
                               onTouchStart={startVoiceRecording}
                               onMouseUp={() => stopVoiceRecording(false)}
                               onTouchEnd={() => stopVoiceRecording(false)}
-                              className="p-2.5 bg-afri-bg-ter hover:bg-amber-500/20 text-amber-400 border border-afri-border rounded-xl transition cursor-pointer shrink-0"
+                              className="p-2.5 bg-afri-bg-ter hover:bg-amber-500/20 text-amber-400 border border-afri-border rounded-xl transition cursor-pointer shrink-0 animate-pulse"
                               title="Maintenir pour enregistrer un vocal"
                             >
                               <Mic className="w-4 h-4" />
