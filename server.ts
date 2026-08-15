@@ -101,6 +101,159 @@ async function startServer() {
 
   app.use(express.json({ limit: '10mb' }));
 
+// --- WALLET SECURITY BACKEND ENGINE ---
+
+function hashPin(pin: string, salt: string, uid: string): string {
+  const crypto = require('crypto');
+  const secretPayload = `AFRIGOMBO_PIN_SALT_v2:${uid}:${salt}:${pin}`;
+  return crypto.createHash('sha256').update(secretPayload).digest('hex');
+}
+
+function generateSalt(): string {
+  const crypto = require('crypto');
+  return crypto.randomBytes(16).toString('hex');
+}
+
+app.post("/api/wallet/set-pin", async (req, res) => {
+  const { idToken, pin } = req.body;
+  if (!idToken || !pin) return res.status(400).json({ error: "Paramètres manquants." });
+
+  try {
+    const decodedToken = await adminAuth.verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+
+    const salt = generateSalt();
+    const pinHash = hashPin(pin, salt, uid);
+    const now = new Date().toISOString();
+
+    await adminDb.collection("users").doc(uid).set({
+      walletSecurity: {
+        pinConfigured: true,
+        pinHash,
+        pinSalt: salt,
+        pinCreatedAt: now,
+        pinUpdatedAt: now,
+        failedPinAttempts: 0,
+        lockedUntil: null,
+        lastFailedAttemptAt: null,
+        pinResetRequested: false,
+        pinStatus: "CONFIGURED"
+      },
+      paymentSettings: {
+        pinEnabled: true,
+        pinConfigured: true
+      }
+    }, { merge: true });
+
+    await adminDb.collection("admin_audit_logs").add({
+      uid,
+      type: "MODIFICATION_PIN",
+      result: "SUCCESS",
+      details: "Création initiale du PIN Wallet (Backend)",
+      timestamp: FieldValue.serverTimestamp()
+    });
+
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("set-pin error:", err);
+    res.status(500).json({ error: err.message || "Erreur de création du PIN." });
+  }
+});
+
+app.post("/api/wallet/verify-pin", async (req, res) => {
+  const { idToken, pin, action = "SENSITIVE_OP" } = req.body;
+  if (!idToken || !pin) return res.status(400).json({ error: "Paramètres manquants." });
+
+  try {
+    const decodedToken = await adminAuth.verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+
+    const userDoc = await adminDb.collection("users").doc(uid).get();
+    if (!userDoc.exists) return res.status(404).json({ error: "Utilisateur introuvable." });
+
+    const data = userDoc.data();
+    const sec = data?.walletSecurity || {};
+
+    if (!sec.pinHash || !sec.pinSalt) {
+      return res.status(400).json({ result: "PIN_NOT_CONFIGURED", error: "Aucun code PIN configuré." });
+    }
+
+    if (sec.pinResetRequested) {
+      return res.status(403).json({ result: "PIN_RESET_PENDING", error: "Une réinitialisation du PIN est en attente." });
+    }
+
+    // Check lock
+    if (sec.lockedUntil) {
+      const lockTime = new Date(sec.lockedUntil).getTime();
+      const now = Date.now();
+      if (lockTime > now) {
+        const minsLeft = Math.ceil((lockTime - now) / 60000);
+        return res.status(403).json({
+          result: "PIN_LOCKED",
+          error: `Wallet verrouillé. Réessayez dans ${minsLeft} minute(s).`,
+          lockedMinutesRemaining: minsLeft
+        });
+      }
+    }
+
+    const computedHash = hashPin(pin, sec.pinSalt, uid);
+    if (computedHash === sec.pinHash) {
+      // SUCCESS
+      await adminDb.collection("users").doc(uid).update({
+        "walletSecurity.failedPinAttempts": 0,
+        "walletSecurity.lockedUntil": null,
+        "walletSecurity.lastAuthSensitiveAt": new Date().toISOString()
+      });
+
+      // Create a secure session token
+      const sessionToken = `wsess_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+      await adminDb.collection("wallet_sessions").doc(uid).set({
+        token: sessionToken,
+        uid,
+        action,
+        expiresAt: expiresAt.toISOString(),
+        createdAt: new Date().toISOString()
+      });
+
+      return res.json({ success: true, sessionToken });
+    }
+
+    // FAILED
+    const currentAttempts = (sec.failedPinAttempts || 0) + 1;
+    let lockedUntil: string | null = null;
+    let lockMins = 0;
+
+    if (currentAttempts >= 5) {
+      lockMins = 60;
+      lockedUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    } else if (currentAttempts >= 3) {
+      lockMins = 15;
+      lockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    }
+
+    await adminDb.collection("users").doc(uid).update({
+      "walletSecurity.failedPinAttempts": currentAttempts,
+      "walletSecurity.lastFailedAttemptAt": new Date().toISOString(),
+      "walletSecurity.lockedUntil": lockedUntil
+    });
+
+    const remaining = 5 - currentAttempts;
+
+    return res.status(401).json({
+      result: lockedUntil ? "PIN_LOCKED" : "PIN_INVALID",
+      error: lockedUntil ? `Trop d'échecs. Wallet verrouillé pour ${lockMins} mins.` : "Code PIN incorrect.",
+      attemptsRemaining: remaining > 0 ? remaining : 0,
+      lockedMinutesRemaining: lockMins
+    });
+
+  } catch (err: any) {
+    console.error("verify-pin error:", err);
+    res.status(500).json({ error: "Erreur serveur de sécurité." });
+  }
+});
+
   // API health-check for network latency diagnostic pings
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: Date.now() });

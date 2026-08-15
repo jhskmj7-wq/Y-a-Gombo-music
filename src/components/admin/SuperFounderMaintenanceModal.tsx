@@ -1,3 +1,4 @@
+import { NotificationService } from "../../lib/NotificationService";
 import React, { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, onSnapshot, addDoc, collection } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -270,7 +271,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
           message = "La maintenance est terminée ! L'application est entièrement opérationnelle.";
         }
 
-        await addDoc(collection(db, "notifications"), {
+        await NotificationService.sendNotification({
           title,
           message,
           type: "app_update",
@@ -373,7 +374,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
 
     // Send immediate real-time notification to the users (Requirement 1 & 2)
     try {
-      await addDoc(collection(db, "notifications"), {
+      await NotificationService.sendNotification({
         title: "🛠️ MAINTENANCE PROGRAMMÉE",
         message: generatedMsg || globalMessage,
         type: "app_update",

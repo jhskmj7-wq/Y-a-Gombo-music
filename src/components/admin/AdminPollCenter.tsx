@@ -1,3 +1,4 @@
+import { NotificationService } from "../../lib/NotificationService";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -234,7 +235,7 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
 
       // If closing, send notifications with results
       if (newStatus === "closed") {
-        await addDoc(collection(db, "notifications"), {
+        await NotificationService.sendNotification({
           userId: "all",
           title: "Sondage Clôturé 📊",
           message: `Les résultats du sondage officiel "${polls.find(p => p.id === pollId)?.title}" sont désormais disponibles !`,
@@ -358,7 +359,7 @@ export default function AdminPollCenter({ audioSynth }: { audioSynth?: any }) {
       });
 
       // 4. Send targeted notifications
-      await addDoc(collection(db, "notifications"), {
+      await NotificationService.sendNotification({
         userId: "all",
         title: "Nouveau Sondage Officiel 📊",
         message: `Le Fondateur sollicite votre avis ! Répondez au sondage : "${formTitle}"`,

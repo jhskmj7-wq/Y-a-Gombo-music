@@ -1,3 +1,4 @@
+import { NotificationService } from "../../lib/NotificationService";
 import React, { useState, useEffect } from "react";
 import { db } from "../../lib/firebase";
 import { doc, onSnapshot, setDoc, addDoc, collection } from "firebase/firestore";
@@ -48,7 +49,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
       
       // Send global notification for maintenance state change
       try {
-        await addDoc(collection(db, "notifications"), {
+        await NotificationService.sendNotification({
           title: nextMode ? "Maintenance En Cours ⚠️" : "Maintenance Terminée ✅",
           message: nextMode 
             ? "L'application est maintenant en maintenance pour amélioration de vos services. Merci de patienter !" 
@@ -121,7 +122,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
           message = "La maintenance est terminée ! L'application est entièrement opérationnelle.";
         }
 
-        await addDoc(collection(db, "notifications"), {
+        await NotificationService.sendNotification({
           title,
           message,
           type: "app_update",

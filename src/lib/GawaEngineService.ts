@@ -1,4 +1,5 @@
 import { db } from "./firebase";
+import { WalletSecurityService } from "./WalletSecurityService";
 import { 
   doc, 
   collection, 

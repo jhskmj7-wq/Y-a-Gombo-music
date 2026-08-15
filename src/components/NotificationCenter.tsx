@@ -128,85 +128,99 @@ export default function NotificationCenter({
   };
 
   const getNotifIcon = (type: string) => {
-    switch (type) {
+    const t = type?.toUpperCase();
+    switch (t) {
       case "INFO": return <Info className="w-5 h-5 text-blue-400" />;
       case "GOMBO": return <Zap className="w-5 h-5 text-[#D4AF37]" />;
       case "URGENT": return <AlertTriangle className="w-5 h-5 text-red-500" />;
       case "ÉVÉNEMENT": return <Crown className="w-5 h-5 text-purple-400" />;
       case "MISE À JOUR": return <RefreshCw className="w-5 h-5 text-emerald-400" />;
       case "PREMIUM": return <Sparkles className="w-5 h-5 text-amber-400" />;
-      case "SÉCURITÉ": return <ShieldAlert className="w-5 h-5 text-rose-500" />;
+      case "SÉCURITÉ": 
+      case "SECURITY": return <ShieldAlert className="w-5 h-5 text-rose-500" />;
+      case "WALLET":
+      case "PORTEFEUILLE": return <Wallet className="w-5 h-5 text-amber-500" />;
+      case "GAWA": return <Crown className="w-5 h-5 text-purple-500" />;
+      case "LOT": return <Sparkles className="w-5 h-5 text-[#D4AF37]" />;
+      case "ACHAT": return <BadgeCheck className="w-5 h-5 text-blue-500" />;
+      case "KYC": return <ShieldCheck className="w-5 h-5 text-emerald-500" />;
+      case "ALERT":
+      case "ALERTE": return <AlertTriangle className="w-5 h-5 text-red-500" />;
+      case "SYSTEM":
+      case "SYSTÈME": return <Info className="w-5 h-5 text-gray-400" />;
+      case "WITHDRAWAL":
+      case "RETRAIT": return <RefreshCw className="w-5 h-5 text-red-400" />;
       
-      case "new_message": return <MessageSquare className="w-5 h-5 text-teal-400" />;
-      case "payment_received": return <Wallet className="w-5 h-5 text-emerald-400" />;
-      case "payment_held": return <Wallet className="w-5 h-5 text-yellow-500 animate-pulse" />;
-      case "contract_signed": return <BadgeCheck className="w-5 h-5 text-blue-400" />;
-      case "application_accepted": return <UserCheck className="w-5 h-5 text-purple-400" />;
-      case "application_refused": return <AlertTriangle className="w-5 h-5 text-red-400" />;
-      case "kyc_validated": return <ShieldCheck className="w-5 h-5 text-green-400" />;
-      case "gombo_id_validated": return <Music className="w-5 h-5 text-[#D4AF37]" />;
-      case "kyc_info_required": return <Info className="w-5 h-5 text-orange-400" />;
-      case "premium_activated": return <Crown className="w-5 h-5 text-amber-400" />;
-      case "publication_boosted": return <Zap className="w-5 h-5 text-orange-400" />;
-      case "new_favorite": return <Heart className="w-5 h-5 text-rose-400" />;
-      case "support_received": return <Heart className="w-5 h-5 text-red-400 fill-current" />;
-      
-      case "new_gombo": return <Briefcase className="w-5 h-5 text-orange-500" />;
-      case "new_renfort": return <Sparkles className="w-5 h-5 text-amber-500" />;
+      case "NEW_MESSAGE": return <MessageSquare className="w-5 h-5 text-teal-400" />;
+      case "PAYMENT_RECEIVED": return <Wallet className="w-5 h-5 text-emerald-400" />;
+      case "PAYMENT_HELD": return <Wallet className="w-5 h-5 text-yellow-500 animate-pulse" />;
+      case "CONTRACT_SIGNED": return <BadgeCheck className="w-5 h-5 text-blue-400" />;
+      case "APPLICATION_ACCEPTED": return <UserCheck className="w-5 h-5 text-purple-400" />;
+      case "APPLICATION_REFUSED": return <AlertTriangle className="w-5 h-5 text-red-400" />;
+      case "KYC_VALIDATED": return <ShieldCheck className="w-5 h-5 text-green-400" />;
+      case "GOMBO_ID_VALIDATED": return <Music className="w-5 h-5 text-[#D4AF37]" />;
+      case "KYC_INFO_REQUIRED": return <Info className="w-5 h-5 text-orange-400" />;
+      case "PREMIUM_ACTIVATED": return <Crown className="w-5 h-5 text-amber-400" />;
+      case "PUBLICATION_BOOSTED": return <Zap className="w-5 h-5 text-orange-400" />;
+      case "NEW_FAVORITE": return <Heart className="w-5 h-5 text-rose-400" />;
+      case "SUPPORT_RECEIVED": return <Heart className="w-5 h-5 text-red-400 fill-current" />;
+      case "NEW_GOMBO": return <Briefcase className="w-5 h-5 text-orange-500" />;
+      case "NEW_RENFORT": return <Sparkles className="w-5 h-5 text-amber-500" />;
       default: return <Bell className="w-5 h-5 text-afri-text-sec" />;
     }
   };
 
   const getDeepLinkLabel = (type: string) => {
-    switch (type) {
-      case "new_message": return "Accéder à la messagerie";
-      case "payment_received":
-      case "payment_held":
-      case "payment": return "Ouvrir mon Portefeuille";
-      case "contract_signed":
-      case "application_accepted":
-      case "application_refused":
-      case "new_application": return "Consulter mes contrats";
-      case "kyc_validated":
-      case "gombo_id_validated":
-      case "kyc_info_required": return "Voir mon Gombo ID";
-      case "premium_activated": return "Mon Statut VIP";
-      case "new_favorite": return "Mes Favoris";
-      case "publication_boosted": return "Mes Publications";
-      case "support_received": return "Coin Bâtisseurs";
-      default: return "Explorer";
-    }
+    const t = type?.toLowerCase();
+    if (t?.includes("message")) return "Accéder à la messagerie";
+    if (t?.includes("payment") || t?.includes("wallet") || t?.includes("portefeuille") || t?.includes("retrait") || t?.includes("withdrawal")) return "Ouvrir mon Portefeuille";
+    if (t?.includes("contract") || t?.includes("application")) return "Consulter mes contrats";
+    if (t?.includes("kyc") || t?.includes("gombo_id")) return "Voir mon Gombo ID";
+    if (t?.includes("premium") || t?.includes("vip") || t?.includes("heritage")) return "Mon Statut VIP";
+    if (t?.includes("favorite") || t?.includes("favoris")) return "Mes Favoris";
+    if (t?.includes("publication") || t?.includes("boost")) return "Mes Publications";
+    if (t?.includes("support") || t?.includes("builder")) return "Coin Bâtisseurs";
+    if (t?.includes("gawa")) return "Centre Gawa";
+    if (t?.includes("lot")) return "Mes lots";
+    if (t?.includes("security") || t?.includes("sécurité")) return "Paramètres sécurité";
+    if (t?.includes("validation") || t?.includes("code")) return "Validation";
+    return "Explorer";
   };
 
   const triggerDeepLink = (notif: GomboNotification | AppNotification) => {
     if (!onNavigateTo) return;
     const type = notif.type || "";
-    const relatedId = (notif as any).relatedId || "";
+    const t = type.toLowerCase();
+    const relatedId = (notif as any).relatedId || (notif as any).targetId || "";
+    const route = (notif as any).targetRoute || (notif as any).route || "";
 
-    if (type === "new_message") {
+    if (route) {
+        // If specific route exists, use it
+        onNavigateTo(route, relatedId);
+        return;
+    }
+
+    if (t.includes("message")) {
       onNavigateTo("menu_msgs", relatedId);
-    } else if (type === "payment_received" || type === "payment_held" || type === "payment") {
+    } else if (t.includes("payment") || t.includes("wallet") || t.includes("portefeuille") || t.includes("withdrawal")) {
       onNavigateTo("menu_wallet", relatedId);
-    } else if (
-      type === "contract_signed" || 
-      type === "application_accepted" || 
-      type === "application_refused" ||
-      type === "new_application"
-    ) {
+    } else if (t.includes("contract") || t.includes("application")) {
       onNavigateTo("user_contracts", relatedId);
-    } else if (
-      type === "kyc_validated" || 
-      type === "gombo_id_validated" || 
-      type === "kyc_info_required"
-    ) {
+    } else if (t.includes("kyc") || t.includes("gombo_id")) {
       onNavigateTo("menu_gombo_id", relatedId);
-    } else if (type === "premium_activated") {
+    } else if (t.includes("gawa")) {
+      onNavigateTo("user_gawa", relatedId);
+    } else if (t.includes("lot")) {
+      onNavigateTo("user_lots", relatedId);
+    } else if (t.includes("security") || t.includes("sécurité")) {
+      onNavigateTo("user_settings_security", relatedId);
+    } else if (t.includes("premium")) {
       onNavigateTo("menu_heritage", relatedId);
-    } else if (type === "new_favorite") {
+    } else if (t.includes("favorite")) {
       onNavigateTo("menu_favorites", relatedId);
-    } else if (type === "publication_boosted") {
+    } else if (t.includes("publication") || t.includes("boost")) {
       onNavigateTo("menu_pubs", relatedId);
-    } else if (type === "support_received") {
+    } else if (t.includes("support")) {
       onNavigateTo("menu_builders_1", relatedId);
     } else {
       onNavigateHome();
@@ -297,8 +311,13 @@ export default function NotificationCenter({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap">
                       <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-                        <h4 className={`text-xs sm:text-sm font-bold uppercase tracking-tight break-words ${isUnread ? "text-afri-text font-black" : "text-afri-text-sec font-semibold"}`}>
+                        <h4 className={`text-xs sm:text-sm font-bold uppercase tracking-tight break-words ${(notif as any).groupCount > 1 ? "text-afri-gold" : (isUnread ? "text-afri-text font-black" : "text-afri-text-sec font-semibold")}`}>
                           {(notif as any).title || "Notification"}
+                          {(notif as any).groupCount > 1 && (
+                            <span className="ml-2 px-1.5 py-0.5 bg-afri-gold/20 text-afri-gold text-[10px] rounded-md">
+                               × {(notif as any).groupCount}
+                            </span>
+                          )}
                         </h4>
                         {isUnread ? (
                           <span className="px-1.5 py-0.5 bg-[#D4AF37] text-black font-extrabold text-[8.5px] uppercase tracking-wider rounded-md animate-pulse shrink-0">

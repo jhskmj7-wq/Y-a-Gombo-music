@@ -371,10 +371,9 @@ export class GomboAdsService {
         tx.set(campaignDocRef, newCampaign);
 
         // Generate non-blocking notifications
-        const notifId = `notif_${campaignId}`;
-        const notifRef = doc(db, "notifications", notifId);
-        tx.set(notifRef, {
-          id: notifId,
+        // Notification will be sent after transaction
+        tx.set(doc(db, "notifications", `notif_${campaignId}`), {
+          id: `notif_${campaignId}`,
           userId,
           title: "📢 Campagne Gombo Ads créée !",
           message: isAdminOrFounder

@@ -1,3 +1,4 @@
+import { NotificationService } from "./lib/NotificationService";
 import { isPublicationActive } from "./lib/publicationEngine";
 import {
   createUserWithEmailAndPassword,
@@ -978,7 +979,7 @@ export const gomboDB = {
           const creatorId = gData.clientId || gData.creatorId || gData.userId;
           if (creatorId) {
             try {
-              await addDoc(collection(db, "notifications"), {
+              await NotificationService.sendNotification({
                 userId: creatorId,
                 title: "Nouvelle candidature ! 🔥",
                 message: `${application.applicantName || application.musicianName || 'Un artiste'} a postulé à votre gombo "${gData.title || 'Contrat'}" !`,
@@ -1050,7 +1051,7 @@ export const gomboDB = {
           const gomboTitle = appData.gomboTitle || "votre gombo";
           
           if (finalStatus === "accepte" && candidateId) {
-            await addDoc(collection(db, "notifications"), {
+            await NotificationService.sendNotification({
               userId: candidateId,
               title: "Candidature Acceptée ! 🎉",
               message: `Félicitations ! Votre candidature pour le gombo "${gomboTitle}" a été officiellement acceptée par l'organisateur.`,
@@ -1329,7 +1330,7 @@ export const gomboDB = {
         }
       }
 
-      await addDoc(collection(db, "notifications"), {
+      await NotificationService.sendNotification({
         ...notif,
         isRead: false,
         createdAt: new Date().toISOString()
@@ -1367,7 +1368,7 @@ export const gomboDB = {
           source: data.source || "SYSTEM",
           data: data.data || {},
         };
-        await addDoc(collection(db, "notifications"), notif);
+        await NotificationService.sendNotification(notif);
       } catch (err) {
         console.warn("Could not create founder notification:", err);
       }
@@ -1931,28 +1932,8 @@ export const gomboDB = {
     return () => {};
   },
 
-  async addNotification(notif: Partial<AppNotification>) {
-    if (db) {
-      const user = auth?.currentUser;
-      const docRef = doc(collection(db, "notifications"));
-      await setDoc(docRef, {
-        title: "Sans titre",
-        message: "",
-        type: "INFO",
-        audience: "Tous",
-        priority: 0,
-        scheduledAt: null,
-        status: "published",
-        readCount: 0,
-        clickCount: 0,
-        ...notif,
-        id: docRef.id,
-        createdAt: serverTimestamp() as any,
-        createdBy: user?.displayName || user?.email || "Fondateur"
-      });
-      return docRef.id;
-    }
-    throw new Error("Base de données non disponible");
+  async addNotification(notif: any) {
+    return await NotificationService.sendNotification(notif);
   },
 
   async updateNotification(id: string, updates: Partial<AppNotification>) {

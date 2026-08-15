@@ -1,3 +1,4 @@
+import { NotificationService } from "../lib/NotificationService";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -287,7 +288,7 @@ export default function GomboBoostManager({
       }
 
       // Add user notification in Firestore
-      await addDoc(collection(db, "notifications"), {
+      await NotificationService.sendNotification({
         userId: uid,
         title: "⚡ Boost Activé avec Succès !",
         message: `Félicitations, le boost "${selectedTitle}" a été activé pour votre ${activeItem.type === "profile" ? "profil" : "publication"} pour une durée de ${selectedDurationText}.`,

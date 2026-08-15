@@ -1,3 +1,4 @@
+import { NotificationService } from "../lib/NotificationService";
 import { db } from "./firebase";
 import { 
   collection, 
@@ -83,7 +84,7 @@ export async function createBetaTransaction(payload: {
 
   // Create real-time notification for promoter
   try {
-    await addDoc(collection(db, "notifications"), {
+    await NotificationService.sendNotification({
       userId: payload.promoterId,
       title: "🛡️ Dépôt Bêta Initié",
       body: `Votre transaction de ${payload.amount.toLocaleString()} FCFA pour ${payload.artistName} est en attente de paiement assisté.`,
@@ -137,7 +138,7 @@ export async function proceedToSupportAssistance(
 
   // Notify Admin Command Center
   try {
-    await addDoc(collection(db, "notifications"), {
+    await NotificationService.sendNotification({
       userId: "admin_command_center",
       title: "🔔 Nouvelle transaction Bêta à valider",
       body: `${promoterName} demande la validation du dépôt de ${amount.toLocaleString()} FCFA pour ${artistName}.`,
@@ -289,7 +290,7 @@ export async function validateBetaDeposit(
   for (const notif of notifications) {
     try {
       if (notif.userId) {
-        await addDoc(collection(db, "notifications"), notif);
+        await NotificationService.sendNotification(notif);
       }
     } catch (err) {
       console.warn("Notification dispatch error:", err);
@@ -331,7 +332,7 @@ export async function refuseBetaDeposit(
 
   // Notify promoter
   try {
-    await addDoc(collection(db, "notifications"), {
+    await NotificationService.sendNotification({
       userId: txData.promoterId,
       title: "❌ Transaction Bêta Refusée",
       body: `Votre transaction de ${txData.amount.toLocaleString()} FCFA a été refusée. Raison : ${reason}`,
@@ -366,7 +367,7 @@ export async function requestBetaVerification(
   });
 
   try {
-    await addDoc(collection(db, "notifications"), {
+    await NotificationService.sendNotification({
       userId: txData.promoterId,
       title: "🔍 Vérification Requise pour votre Dépôt",
       body: `L'équipe AFRIGOMBO ELITE demande une vérification complémentaire : ${note}`,
@@ -458,7 +459,7 @@ export async function releaseBetaCachet(
   for (const notif of notifications) {
     try {
       if (notif.userId) {
-        await addDoc(collection(db, "notifications"), notif);
+        await NotificationService.sendNotification(notif);
       }
     } catch (err) {
       console.warn("Notification error:", err);
@@ -524,7 +525,7 @@ export async function openBetaDispute(
   for (const notif of notifs) {
     try {
       if (notif.userId) {
-        await addDoc(collection(db, "notifications"), notif);
+        await NotificationService.sendNotification(notif);
       }
     } catch (err) {
       console.warn("Notification error:", err);

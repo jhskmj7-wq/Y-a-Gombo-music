@@ -89,6 +89,27 @@ export class WalletSecurityService {
   /**
    * Fetch current wallet security status from user document
    */
+  
+  /**
+   * Request a PIN reset manually (contacts SAO)
+   */
+  static async requestPinReset(uid: string): Promise<void> {
+    await updateDoc(doc(db, "users", uid), {
+      "walletSecurity.pinResetRequested": true,
+      "walletSecurity.saoAssistancePending": true,
+      "walletSecurity.pinStatus": "RESET_PENDING"
+    });
+    
+    // Create an assistance ticket
+    await addDoc(collection(db, "support_tickets"), {
+      userId: uid,
+      subject: "Demande de réinitialisation de PIN Wallet",
+      status: "open",
+      createdAt: new Date().toISOString(),
+      type: "SECURITY_ASSISTANCE"
+    });
+  }
+
   static async getWalletSecurityStatus(uid: string): Promise<WalletSecurityData> {
     if (!uid) {
       return {
@@ -148,7 +169,7 @@ export class WalletSecurityService {
   }
 
   /**
-   * Create initial PIN for wallet
+   * Create initial PIN for wallet using secure backend hashing.
    */
   static async createPin(uid: string, pin: string): Promise<{ success: boolean; error?: string }> {
     const strength = this.validatePinStrength(pin);
@@ -157,153 +178,121 @@ export class WalletSecurityService {
     }
 
     try {
-      const salt = this.generateSalt();
-      const pinHash = await this.hashPin(pin, salt, uid);
-      const now = new Date().toISOString();
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) throw new Error("Authentification requise.");
 
-      await setDoc(doc(db, "users", uid), {
-        walletSecurity: {
-          pinConfigured: true,
-          pinHash,
-          pinSalt: salt,
-          pinCreatedAt: now,
-          pinUpdatedAt: now,
-          failedPinAttempts: 0,
-          lockedUntil: null,
-          lastFailedAttemptAt: null,
-          pinResetRequested: false,
-          pinStatus: "CONFIGURED"
-        },
-        paymentSettings: {
-          pinEnabled: true,
-          pinConfigured: true
-        }
-      }, { merge: true });
-
-      await logUserActivity({
-        uid,
-        type: "MODIFICATION_PIN",
-        result: "SUCCESS",
-        details: "Création initiale du PIN Wallet sécurisé"
+      const response = await fetch("/api/wallet/set-pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken, pin })
       });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Erreur lors de la création du code PIN.");
+      }
 
       return { success: true };
     } catch (err: any) {
       console.error("Error creating PIN:", err);
-      return { success: false, error: "Impossible de sauvegarder le code PIN. Réessayez." };
+      return { success: false, error: err.message || "Impossible de sauvegarder le code PIN. Réessayez." };
     }
   }
 
   /**
    * Verify entered PIN against stored salt/hash with anti-brute-force rate limiting
    */
-  static async verifyPin(uid: string, enteredPin: string): Promise<{
+  
+  /**
+   * Verify PIN inside a Firestore Transaction to guarantee atomic security.
+   */
+  static async verifyPinTransaction(transaction: any, uid: string, enteredPin?: string): Promise<void> {
+    const userRef = doc(db, "users", uid);
+    const snap = await transaction.get(userRef);
+    if (!snap.exists()) throw new Error("Utilisateur introuvable");
+    
+    const data = snap.data();
+    const sec = data.walletSecurity || data.paymentSettings || {};
+    
+    const pinConfigured = !!(sec.pinHash || sec.pinConfigured);
+    const lockedUntil = sec.lockedUntil || null;
+    
+    if (lockedUntil && new Date(lockedUntil).getTime() > Date.now()) {
+      throw new Error("Wallet temporairement verrouillé suite à de multiples échecs.");
+    }
+    
+    if (sec.pinResetRequested) {
+      throw new Error("Une réinitialisation du PIN est en attente. Opération bloquée.");
+    }
+
+    if (!pinConfigured) {
+      return; // No PIN configured, allowed to proceed.
+    }
+
+    if (!enteredPin) {
+      throw new Error("Authentification Wallet (PIN) requise pour cette opération.");
+    }
+
+    const hashedInput = await this.hashPin(enteredPin, sec.pinSalt, uid);
+    if (hashedInput !== sec.pinHash) {
+      throw new Error("Code PIN Wallet incorrect.");
+    }
+  }
+
+  /**
+   * Verify entered PIN against stored salt/hash with anti-brute-force rate limiting.
+   * Now performs server-side verification for enhanced security.
+   */
+  static async verifyPin(uid: string, enteredPin: string, action = "SENSITIVE_OP"): Promise<{
     result: "PIN_VALID" | "PIN_INVALID" | "PIN_LOCKED" | "PIN_NOT_CONFIGURED" | "PIN_RESET_PENDING";
     message: string;
     attemptsRemaining?: number;
     lockedMinutesRemaining?: number;
+    sessionToken?: string;
   }> {
     if (!uid) {
       return { result: "PIN_NOT_CONFIGURED", message: "Utilisateur non identifié." };
     }
 
-    const secStatus = await this.getWalletSecurityStatus(uid);
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) throw new Error("Session expirée. Veuillez vous reconnecter.");
 
-    if (secStatus.pinResetRequested) {
-      return {
-        result: "PIN_RESET_PENDING",
-        message: "Une réinitialisation du PIN est en attente. Veuillez réinitialiser votre PIN via votre compte."
-      };
-    }
-
-    if (!secStatus.pinConfigured || !secStatus.pinHash) {
-      return { result: "PIN_NOT_CONFIGURED", message: "Aucun code PIN configuré." };
-    }
-
-    // Check lock
-    if (secStatus.lockedUntil) {
-      const lockTime = new Date(secStatus.lockedUntil).getTime();
-      const now = Date.now();
-      if (lockTime > now) {
-        const minsLeft = Math.ceil((lockTime - now) / 60000);
-        return {
-          result: "PIN_LOCKED",
-          message: `Wallet temporairement verrouillé pour des raisons de sécurité. Réessayez dans ${minsLeft} minute(s).`,
-          lockedMinutesRemaining: minsLeft
-        };
-      }
-    }
-
-    // Compute hash with salt (or fallback to UID if old legacy format)
-    const salt = secStatus.pinSalt || uid;
-    const computedHash = await this.hashPin(enteredPin, salt, uid);
-
-    if (computedHash === secStatus.pinHash) {
-      // SUCCESS: Reset failed attempts
-      await setDoc(doc(db, "users", uid), {
-        walletSecurity: {
-          failedPinAttempts: 0,
-          lockedUntil: null,
-          lastFailedAttemptAt: null,
-          pinStatus: "CONFIGURED"
-        }
-      }, { merge: true });
-
-      return { result: "PIN_VALID", message: "PIN valide." };
-    }
-
-    // FAILED ATTEMPT: Increment brute-force counter
-    const currentAttempts = (secStatus.failedPinAttempts || 0) + 1;
-    const nowIso = new Date().toISOString();
-
-    let lockedUntil: string | null = null;
-    let lockMins = 0;
-
-    if (currentAttempts >= 5) {
-      lockMins = 60; // 1 hour lock
-      lockedUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-    } else if (currentAttempts >= 3) {
-      lockMins = 15; // 15 min lock
-      lockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-    }
-
-    await setDoc(doc(db, "users", uid), {
-      walletSecurity: {
-        failedPinAttempts: currentAttempts,
-        lastFailedAttemptAt: nowIso,
-        lockedUntil,
-        pinStatus: lockedUntil ? "LOCKED" : "CONFIGURED"
-      }
-    }, { merge: true });
-
-    await logUserActivity({
-      uid,
-      type: "TENTATIVE_PIN_ECHOUEE",
-      result: "FAILED",
-      details: `Tentative de PIN incorrecte (${currentAttempts} tentative(s))`
-    });
-
-    if (lockedUntil) {
-      await logUserActivity({
-        uid,
-        type: "WALLET_VERROUILLE",
-        result: "LOCKED",
-        details: `Wallet verrouillé pendant ${lockMins} minutes suite à plusieurs erreurs de PIN`
+      const response = await fetch("/api/wallet/verify-pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken, pin: enteredPin, action })
       });
 
+      const data = await response.json();
+      
+      if (!response.ok) {
+        if (data.result === "PIN_LOCKED") {
+           return {
+             result: "PIN_LOCKED",
+             message: data.error || "Wallet verrouillé.",
+             lockedMinutesRemaining: data.lockedMinutesRemaining
+           };
+        }
+        return {
+          result: data.result || "PIN_INVALID",
+          message: data.error || "Code PIN incorrect.",
+          attemptsRemaining: data.attemptsRemaining
+        };
+      }
+
       return {
-        result: "PIN_LOCKED",
-        message: `Trop de tentatives incorrectes. Le Wallet est verrouillé pour ${lockMins} minutes.`,
-        lockedMinutesRemaining: lockMins
+        result: "PIN_VALID",
+        message: "Code PIN vérifié avec succès.",
+        sessionToken: data.sessionToken
+      };
+    } catch (err: any) {
+      console.error("verifyPin error:", err);
+      return { 
+        result: "PIN_INVALID", 
+        message: err.message || "Erreur de communication avec le serveur de sécurité." 
       };
     }
-
-    const remaining = 3 - currentAttempts;
-    return {
-      result: "PIN_INVALID",
-      message: `Code PIN incorrect. (${remaining > 0 ? remaining + ' tentative(s) restante(s)' : 'Dernière tentative !'})`,
-      attemptsRemaining: remaining > 0 ? remaining : 0
-    };
   }
 
   /**

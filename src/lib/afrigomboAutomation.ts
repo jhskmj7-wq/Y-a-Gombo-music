@@ -1,3 +1,4 @@
+import { NotificationService } from "../lib/NotificationService";
 import { db } from "./firebase";
 export { db };
 import { collection, doc, setDoc, updateDoc, increment, addDoc, onSnapshot, getDoc } from "firebase/firestore";
@@ -123,7 +124,7 @@ export async function triggerAutomationAction(action: {
     }
 
     // 4. Notifications update
-    await addDoc(collection(db, "user_notifications"), {
+    await NotificationService.sendNotification({
       userId: action.userId,
       type: action.type,
       title: action.title ? `[${action.type.toUpperCase()}] ${action.title}` : `Nouvelle activité enregistrée`,

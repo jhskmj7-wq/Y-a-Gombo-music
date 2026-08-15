@@ -1,12 +1,23 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/App.tsx', 'utf8');
-code = code.replace(
-  '  if (showCinematicIntro) {',
-  `  const isSuperUser = SecurityService.isFounder(currentUser) || SecurityService.isAdmin(currentUser);
-  if (platformStatus?.status === "maintenance" && !isSuperUser) {
-    return <MaintenanceScreen message="L'application est actuellement en maintenance. Veuillez patienter." />;
-  }
+let code = fs.readFileSync('src/lib/GawaEngineService.ts', 'utf8');
 
-  if (showCinematicIntro) {`
+if (!code.includes('WalletSecurityService')) {
+  code = code.replace(
+    'import { db } from "./firebase";',
+    'import { db } from "./firebase";\nimport { WalletSecurityService } from "./WalletSecurityService";'
+  );
+}
+
+// Update purchaseGawaPack signature
+code = code.replace(
+  'userId: string,\n    packId: string',
+  'userId: string,\n    packId: string,\n    walletPin?: string'
 );
-fs.writeFileSync('src/App.tsx', code);
+
+// Inject verifyPinTransaction
+code = code.replace(
+  'const userSnap = await transaction.get(userRef);',
+  'const userSnap = await transaction.get(userRef);\n        await WalletSecurityService.verifyPinTransaction(transaction, userId, walletPin);'
+);
+
+fs.writeFileSync('src/lib/GawaEngineService.ts', code);

@@ -54,7 +54,7 @@ export const CreatorActivityDashboard: React.FC<CreatorActivityDashboardProps> =
     if (!db) return;
     try {
       const q = query(
-        collection(db, "user_notifications"),
+        collection(db, "notifications"),
         where("userId", "==", userId)
       );
       const unsub = onSnapshot(q, (snapshot) => {

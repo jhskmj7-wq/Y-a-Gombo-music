@@ -1,3 +1,4 @@
+import { NotificationService } from "../lib/NotificationService";
 import { recordWalletTransaction } from "./financial";
 import { db } from "./firebase";
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, getDoc } from "firebase/firestore";
@@ -109,7 +110,7 @@ export async function activatePremiumForUser(
     });
 
     // Also notify user in Firestore
-    await addDoc(collection(db, "notifications"), {
+    await NotificationService.sendNotification({
       userId: userId,
       title: `👑 Abonnement ${normalizedPlan} Activé !`,
       body: `Félicitations ! Votre abonnement ${normalizedPlan} est désormais actif. Profitez de tous vos avantages Premium.`,
@@ -347,7 +348,7 @@ export async function checkAndProcessPremiumAutoRenewal(
       });
 
       // Send notification
-      await addDoc(collection(db, "notifications"), {
+      await NotificationService.sendNotification({
         userId: profile.uid,
         title: "🔄 Renouvellement Premium Réussi !",
         message: `Votre abonnement ${planName} a été renouvelé automatiquement pour 30 jours. ${amount.toLocaleString()} FCFA ont été débités de votre Wallet.`,
@@ -378,7 +379,7 @@ export async function checkAndProcessPremiumAutoRenewal(
         ? `Votre abonnement ${planName} a expiré car votre solde de Wallet (${liveSolde.toLocaleString()} FCFA) était insuffisant pour le renouvellement de ${amount.toLocaleString()} FCFA.`
         : `Votre abonnement ${planName} a expiré. Pour continuer à profiter des avantages Premium, réabonnez-vous dès maintenant.`;
 
-      await addDoc(collection(db, "notifications"), {
+      await NotificationService.sendNotification({
         userId: profile.uid,
         title: "⚠️ Abonnement Premium Expiré",
         message: notificationMessage,

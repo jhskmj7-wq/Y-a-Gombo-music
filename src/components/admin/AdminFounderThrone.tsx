@@ -1,3 +1,4 @@
+import { NotificationService } from "../../lib/NotificationService";
 import BouclierAfrigombo from "./BouclierAfrigombo";
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -127,7 +128,7 @@ export default function AdminFounderThrone({
       
       // Send global notification for maintenance state change
       try {
-        await addDoc(collection(db, "notifications"), {
+        await NotificationService.sendNotification({
           title: nextMode ? "Maintenance En Cours ⚠️" : "Maintenance Terminée ✅",
           message: nextMode 
             ? "L'application est maintenant en maintenance pour amélioration de vos services. Merci de patienter !" 
@@ -717,7 +718,7 @@ export default function AdminFounderThrone({
         }
 
         // 3. Send notification to user
-        await addDoc(collection(db, "notifications"), {
+        await NotificationService.sendNotification({
           userId: reqItem.userId,
           title: "Dossier KYC Validé 🎖️",
           message: "Félicitations ! Votre dossier de certification d'identité et de qualification artistique a été officiellement approuvé par le Trône du Fondateur.",
@@ -752,7 +753,7 @@ export default function AdminFounderThrone({
           });
         } catch (e) {}
 
-        await addDoc(collection(db, "notifications"), {
+        await NotificationService.sendNotification({
           userId: reqItem.userId,
           title: "Dossier KYC Non Retenu ⚠️",
           message: `Votre demande de certification GOMBO ID nécessite un complément d'information. Motif: ${reason}`,
@@ -812,7 +813,7 @@ export default function AdminFounderThrone({
       });
 
       if (disputeItem.userId) {
-        await addDoc(collection(db, "notifications"), {
+        await NotificationService.sendNotification({
           userId: disputeItem.userId,
           title: "Litige Arbitré et Résolu ⚖️",
           message: `Le litige concernant votre prestation a été pris en charge et résolu par l'administration du Trône. Note: ${note}`,
@@ -840,7 +841,7 @@ export default function AdminFounderThrone({
       });
 
       if (ticketItem.userId && ticketItem.userId !== "anonyme" && ticketItem.userId !== "visiteur_anonyme") {
-        await addDoc(collection(db, "notifications"), {
+        await NotificationService.sendNotification({
           userId: ticketItem.userId,
           title: "Réponse du Support / Conseiller 💬",
           message: `Votre demande au conseiller support ("${ticketItem.title || ticketItem.subject || 'Support'}") a été traitée avec succès.`,
@@ -868,7 +869,7 @@ export default function AdminFounderThrone({
       });
 
       if (bugItem.userId && bugItem.userId !== "anonyme") {
-        await addDoc(collection(db, "notifications"), {
+        await NotificationService.sendNotification({
           userId: bugItem.userId,
           title: "Signalement de Bug Pris en Charge 🐛",
           message: `Merci pour votre signalement ("${bugItem.title || bugItem.subject || 'Bug'}") ! L'équipe technique a apporté les corrections nécessaires.`,

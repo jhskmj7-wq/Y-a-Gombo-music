@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-
 import { audioSynth } from "./lib/audio";
 import { useAuth } from "./AuthContext";
 import { AuthGuard } from "./components/AuthGuard";
+import { WalletSecurityProvider } from "./context/WalletSecurityContext";
 import { ProfileGuard } from "./components/ProfileGuard";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useTheme } from "./context/ThemeContext";

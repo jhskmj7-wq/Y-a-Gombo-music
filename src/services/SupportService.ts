@@ -1,3 +1,4 @@
+import { NotificationService } from "../lib/NotificationService";
 import { db } from "../lib/firebase";
 import { 
   collection, 
@@ -209,7 +210,7 @@ export const SupportService = {
     // 4. Trigger Real-time Notification
     try {
       const notifyRecipient = senderUid === "afrigombo_support" ? conversationId : "founder_admin";
-      await addDoc(collection(db, "notifications"), {
+      await NotificationService.sendNotification({
         type: "support_message",
         recipientUid: notifyRecipient,
         title: senderUid === "afrigombo_support" ? "Support AFRIGOMBO ELITE" : "Nouveau message de support",

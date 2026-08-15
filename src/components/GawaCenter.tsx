@@ -10,7 +10,7 @@ import { GawaEngineService } from "../lib/GawaEngineService";
 import { GawaPack, GawaMission, UserGawaMission, GawaTransaction } from "../types";
 import AndroidBottomSheet from "./common/AndroidBottomSheet";
 import { AndroidCard } from "./common/AndroidComponents";
-import { WalletSecurityService } from "../lib/WalletSecurityService";
+import { useWalletSecurity } from "../context/WalletSecurityContext";
 
 interface GawaCenterProps {
   isOpen: boolean;
@@ -40,157 +40,37 @@ export default function GawaCenter({
   const [purchasing, setPurchasing] = useState(false);
   const [successDetails, setSuccessDetails] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Security / PIN confirmation states
-  const [showPinModal, setShowPinModal] = useState(false);
-  const [pinPendingPack, setPinPendingPack] = useState<GawaPack | null>(null);
-  const [enteredPin, setEnteredPin] = useState("");
-  const [pinError, setPinError] = useState("");
-  
-  // Mission states
-  const [evaluatingMissions, setEvaluatingMissions] = useState<Record<string, boolean>>({});
-  const [missionToast, setMissionToast] = useState<{ success: boolean; message: string } | null>(null);
-
-  // Admin states
-  const [adminUserId, setAdminUserId] = useState("");
-  const [adminAmount, setAdminAmount] = useState<number | "">("");
-  const [adminType, setAdminType] = useState<"ADMIN_GRANT" | "BONUS" | "MISSION" | "ADMIN_ADJUSTMENT">("ADMIN_GRANT");
-  const [adminDesc, setAdminDesc] = useState("");
-  const [adminProcessing, setAdminProcessing] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen || !currentUser?.uid) return;
-
-    // 1. Subscribe to User Wallet
-    const unsubWallet = onSnapshot(doc(db, "users", currentUser.uid), (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        setWallet(data.wallet || { soldeDisponible: data.walletBalance || 0, soldeGawa: 0 });
-      }
-    });
-
-    // 2. Fetch Gawa Packs
-    const fetchPacks = async () => {
-      try {
-        const packs = await GawaEngineService.getGawaPacks();
-        setGawaPacks(packs);
-      } catch (err) {
-        console.error("Error fetching gawa packs:", err);
-      }
-    };
-    fetchPacks();
-
-    // 3. Subscribe to Gawa History
-    const unsubHistory = GawaEngineService.subscribeUserGawaHistory(currentUser.uid, (records) => {
-      setGawaHistory(records.slice(0, 50) as GawaTransaction[]);
-    });
-
-    // 4. Subscribe to Missions
-    const unsubMissions = onSnapshot(collection(db, "waiting_features"), (snap) => {
-      // Assuming missions are in waiting_features or a dedicated collection
-      // For this implementation, we will use GawaEngineService if it has a way, 
-      // or just fetch from a 'gawaMissions' collection.
-    });
-    
-    // Fallback: Fetch missions from engine
-    const fetchMissions = async () => {
-      try {
-        const allMissions = await GawaEngineService.getMissions();
-        setMissions(allMissions);
-        
-        const completed = await GawaEngineService.getUserMissions(currentUser.uid);
-        setUserMissions(completed);
-      } catch (err) {
-        console.error("Error fetching missions:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMissions();
-
-    return () => {
-      unsubWallet();
-      unsubHistory();
-      unsubMissions();
-    };
-  }, [isOpen, currentUser]);
+  const { requireWalletAuthentication } = useWalletSecurity();
 
   const handleBuyPack = async (pack: GawaPack) => {
-    if (!currentUser?.uid || !wallet) return;
+    if (!currentUser?.uid) return;
     
-    if (wallet.soldeDisponible < pack.priceFCFA) {
-      setError(`Solde insuffisant. Requis: ${pack.priceFCFA} FCFA.`);
-      return;
-    }
-
-    try {
-      const status = await WalletSecurityService.getWalletSecurityStatus(currentUser.uid);
-      if (status.pinConfigured && status.pinStatus === "CONFIGURED") {
-        setPinPendingPack(pack);
-        setEnteredPin("");
-        setPinError("");
-        setShowPinModal(true);
-        return;
-      }
-    } catch (e) {
-      console.warn("Could not check wallet security status:", e);
-    }
-
-    // Direct buy if no security PIN configured
-    executeBuyPack(pack);
-  };
-
-  const executeBuyPack = async (pack: GawaPack) => {
+    // Gawa Pack requires PIN
+    const isAuth = await requireWalletAuthentication("ACHAT GAWA", true);
+    if (!isAuth) return;
+    
     setPurchasing(true);
     setError(null);
     try {
       const res = await GawaEngineService.purchaseGawaPack(currentUser.uid, pack.id);
-      setSuccessDetails({
-        amount: pack.gawaAmount,
-        packName: pack.name,
-        price: pack.priceFCFA,
-        newFCFA: res.balanceAfterFCFA,
-        newGawa: res.balanceAfterGawa
-      });
-      playSound("success");
-    } catch (err: any) {
-      setError(err.message || "Erreur lors de l'achat.");
-      playSound("error");
-    } finally {
-      setPurchasing(false);
-    }
-  };
-
-  const handlePinSubmit = async () => {
-    if (!currentUser?.uid || !pinPendingPack) return;
-    setPurchasing(true);
-    setPinError("");
-    try {
-      const res = await WalletSecurityService.verifyPin(currentUser.uid, enteredPin);
-      if (res.result === "PIN_VALID") {
-        // Record sensitive auth activity time
-        try {
-          await updateDoc(doc(db, "users", currentUser.uid), {
-            "walletSecurity.lastAuthSensitiveAt": new Date().toISOString()
-          });
-        } catch (err) {
-          console.warn("Failed to record sensitive auth time:", err);
-        }
-
-        setShowPinModal(false);
-        setEnteredPin("");
-        executeBuyPack(pinPendingPack);
+      if (res.success) {
+        playSound("success");
+        setSuccessDetails({ pack, newBalance: res.balanceAfterGawa });
+        setTimeout(() => onClose(), 3000);
       } else {
         playSound("error");
-        setPinError(res.message);
-        setEnteredPin("");
+        setError(res.error || "Erreur lors de l'achat.");
       }
     } catch (err: any) {
-      setPinError(err.message || "Erreur de validation du code PIN.");
+      playSound("error");
+      setError(err.message || "Une erreur est survenue.");
     } finally {
       setPurchasing(false);
     }
   };
+
+  const [evaluatingMissions, setEvaluatingMissions] = useState<Record<string, boolean>>({});
+  const [missionToast, setMissionToast] = useState<{ success: boolean; message: string } | null>(null);
 
   const handleClaimMission = async (mission: GawaMission) => {
     if (!currentUser?.uid) return;
@@ -214,6 +94,12 @@ export default function GawaCenter({
       setEvaluatingMissions(prev => ({ ...prev, [mission.id]: false }));
     }
   };
+
+  const [adminUserId, setAdminUserId] = useState("");
+  const [adminAmount, setAdminAmount] = useState("");
+  const [adminType, setAdminType] = useState<"bonus" | "malus">("bonus");
+  const [adminDesc, setAdminDesc] = useState("");
+  const [adminProcessing, setAdminProcessing] = useState(false);
 
   const handleAdminAdjust = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -398,7 +284,7 @@ export default function GawaCenter({
                   type="number"
                   placeholder="Montant (G)"
                   value={adminAmount}
-                  onChange={e => setAdminAmount(e.target.value === "" ? "" : Number(e.target.value))}
+                  onChange={e => setAdminAmount(e.target.value)}
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white"
                 />
                 <input
@@ -420,155 +306,6 @@ export default function GawaCenter({
           )}
         </div>
       </AndroidBottomSheet>
-
-      {/* Confirmation Modal */}
-      {selectedPack && (
-        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-6">
-          <AndroidCard className="w-full max-w-xs p-6 space-y-4 text-center border-[#D4AF37]/50">
-            <h3 className="text-sm font-black text-amber-400 uppercase font-mono">Confirmer l'achat</h3>
-            <p className="text-xs text-zinc-300 font-mono">
-              Acheter {selectedPack.gawaAmount} Gawa pour {selectedPack.priceFCFA} FCFA ?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setSelectedPack(null)}
-                className="flex-1 py-3 bg-zinc-800 text-zinc-400 rounded-xl text-[10px] font-black uppercase font-mono"
-              >
-                Annuler
-              </button>
-              <button
-                disabled={purchasing}
-                onClick={() => handleBuyPack(selectedPack)}
-                className="flex-1 py-3 bg-amber-500 text-black rounded-xl text-[10px] font-black uppercase font-mono"
-              >
-                {purchasing ? "..." : "Confirmer"}
-              </button>
-            </div>
-          </AndroidCard>
-        </div>
-      )}
-
-      {/* Success Modal */}
-      {successDetails && (
-        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-6">
-          <AndroidCard className="w-full max-w-xs p-6 space-y-4 text-center border-emerald-500/50">
-            <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-emerald-400">
-              <Check className="w-6 h-6 stroke-[3]" />
-            </div>
-            <h3 className="text-sm font-black text-emerald-400 uppercase font-mono">Achat Réussi !</h3>
-            <p className="text-xs text-zinc-300 font-mono">
-              Vous avez reçu {successDetails.amount} Gawa.
-            </p>
-            <button
-              onClick={() => setSuccessDetails(null)}
-              className="w-full py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase font-mono"
-            >
-              D'accord
-            </button>
-          </AndroidCard>
-        </div>
-      )}
-
-      {/* 🔐 CONFIRMATION WALLET PIN OVERLAY */}
-      {showPinModal && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[10000] flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-[#D4AF37]/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-6 shadow-2xl relative">
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/20">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <h3 className="text-sm font-black uppercase text-white font-display tracking-wider">
-                🔐 CONFIRMATION WALLET
-              </h3>
-              <p className="text-xs text-zinc-400">
-                Confirmez cette opération avec votre code de sécurité.
-              </p>
-            </div>
-
-            {/* Dots */}
-            <div className="flex justify-center items-center gap-3">
-              {Array.from({ length: 6 }).map((_, idx) => (
-                <div
-                  key={idx}
-                  className={`w-3.5 h-3.5 rounded-full border-2 transition-all ${
-                    idx < enteredPin.length ? "bg-[#D4AF37] border-[#D4AF37] scale-110" : "bg-transparent border-zinc-700"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {pinError && (
-              <p className="text-[11px] text-red-400 font-bold font-sans">
-                ⚠️ {pinError}
-              </p>
-            )}
-
-            {/* Virtual Keypad */}
-            <div className="grid grid-cols-3 gap-y-3 gap-x-6 max-w-[240px] mx-auto pt-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => {
-                    playSound("click");
-                    if (enteredPin.length >= 6) return;
-                    const nextPin = enteredPin + num;
-                    setEnteredPin(nextPin);
-                    if (nextPin.length === 6) {
-                      setTimeout(() => {
-                        handlePinSubmit();
-                      }, 200);
-                    }
-                  }}
-                  className="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-base font-bold font-mono text-white flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
-                >
-                  {num}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  setShowPinModal(false);
-                  setPinPendingPack(null);
-                  setSelectedPack(null);
-                }}
-                className="w-12 h-12 rounded-full text-[10px] font-black text-red-400 hover:text-red-300 cursor-pointer uppercase tracking-wider"
-              >
-                Annuler
-              </button>
-              <button
-                key={0}
-                type="button"
-                onClick={() => {
-                  playSound("click");
-                  if (enteredPin.length >= 6) return;
-                  const nextPin = enteredPin + "0";
-                  setEnteredPin(nextPin);
-                  if (nextPin.length === 6) {
-                    setTimeout(() => {
-                      handlePinSubmit();
-                    }, 200);
-                  }
-                }}
-                className="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-base font-bold font-mono text-white flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
-              >
-                0
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  playSound("click");
-                  setEnteredPin(prev => prev.slice(0, -1));
-                  setPinError("");
-                }}
-                className="w-12 h-12 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-300 active:scale-95 cursor-pointer text-base"
-              >
-                ⌫
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

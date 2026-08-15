@@ -1,3 +1,4 @@
+import { NotificationService } from "../lib/NotificationService";
 import { db } from "./firebase";
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, getDoc } from "firebase/firestore";
 
@@ -227,7 +228,7 @@ export async function validateAndPublishWithCode(
         } catch (_) {}
       }
 
-      await addDoc(collection(db, "notifications"), {
+      await NotificationService.sendNotification({
         userId: authorId,
         title: "🎉 Publication de Gombo Activée !",
         body: `Votre publication "${matchedPostData?.title || 'Gombo'}" a été validée avec le code ${cleanCode} et est désormais publiée dans le fil.`,

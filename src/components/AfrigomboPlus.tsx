@@ -1,3 +1,4 @@
+import { NotificationService } from "../lib/NotificationService";
 import React, { useState, useEffect } from "react";
 import { Sparkles, Check, Coins, ChevronLeft, CreditCard, Award, Shield, Music, BarChart3, Radio, X, Zap, Calculator, KeyRound, MessageCircle } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
@@ -235,7 +236,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         });
 
         // Ajouter une notification
-        await addDoc(collection(db, "notifications"), {
+        await NotificationService.sendNotification({
           userId: currentUserProfile.uid,
           title: "👑 Abonnement Activé !",
           message: `Félicitations, vous êtes désormais membre ${subName}. Profitez de vos avantages exclusifs !`,

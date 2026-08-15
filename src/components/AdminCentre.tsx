@@ -1,3 +1,4 @@
+import { NotificationService } from "../lib/NotificationService";
 import { useGeoEngine } from "../hooks/useGeoEngine";
 import { ErrorBoundary } from "./ErrorBoundary";
 import React, { useState, useEffect, useRef, useLayoutEffect, lazy, Suspense } from "react";
@@ -55,6 +56,7 @@ const GomboMusikEcosystem = lazyWithRetry(() => import("./GomboMusikEcosystem"))
 
 // Optimized Static Imports for instant opening without loading screens
 import GrandMarcheView from "./GrandMarcheView";
+import GomboPublish from "./GomboPublish";
 import AcademieView from "./AcademieView";
 import MessagesView from "./MessagesView";
 import AfrigomboWalletDashboard from "./AfrigomboWalletDashboard";
@@ -157,6 +159,7 @@ import {
   DollarSign,
   TrendingUp,
   MapPin,
+  Navigation,
   Clock,
   Briefcase,
   Bell,
@@ -811,15 +814,23 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [pubFilter, setPubFilter] = useState<"all" | "en_cours" | "valide" | "termine" | "annule">("all");
   const [historyFilter, setHistoryFilter] = useState<"all" | "connections" | "transactions" | "applications">("all");
   
+  const isFirstLoadRef = useRef(true);
+
   useEffect(() => {
     if (currentUser?.uid) {
       const unsubscribeUser = gomboDB.listenUserNotifications(currentUser.uid, (userNotifs) => {
         setRealNotifications(prev => {
           const newUnread = userNotifs.filter(n => !n.read).length;
           const oldUnread = prev.filter(n => !n.read).length;
-          if (newUnread > oldUnread) {
+          
+          if (!isFirstLoadRef.current && newUnread > oldUnread) {
             try { if (navigator.vibrate) navigator.vibrate(200); } catch (e) {}
           }
+          
+          if (isFirstLoadRef.current) {
+             isFirstLoadRef.current = false;
+          }
+          
           return userNotifs;
         });
       });
@@ -2139,7 +2150,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         read: false,
         type: "megaphone"
       };
-      await addDoc(collection(db, "notifications"), newNotif);
+      await NotificationService.sendNotification(newNotif);
       addToTerminal(`[📡 MÉGAPHONE] Enregistré sur Firestore.`);
     } catch (err) {
       console.error("Error broadcasting megaphone", err);
@@ -9810,8 +9821,27 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded font-bold uppercase select-none">
                       ● Cachet Actif
                     </span>
-                    <span>📍 {selectedGomboDetails.location}</span>
+                    <span>📍 {typeof selectedGomboDetails.location === "object" && selectedGomboDetails.location ? (selectedGomboDetails.location as any).name : (selectedGomboDetails.location || "Abidjan")}</span>
                     <span>• {selectedGomboDetails.date || "Immédiat"}</span>
+                    {(selectedGomboDetails.location || (selectedGomboDetails as any).latitude || (selectedGomboDetails as any).commune) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const lat = typeof (selectedGomboDetails as any).latitude === "number" ? (selectedGomboDetails as any).latitude : typeof (selectedGomboDetails.location as any)?.latitude === "number" ? (selectedGomboDetails.location as any).latitude : null;
+                          const lng = typeof (selectedGomboDetails as any).longitude === "number" ? (selectedGomboDetails as any).longitude : typeof (selectedGomboDetails.location as any)?.longitude === "number" ? (selectedGomboDetails.location as any).longitude : null;
+                          if (lat && lng) {
+                            window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, "_blank");
+                          } else {
+                            const locStr = typeof selectedGomboDetails.location === "string" ? selectedGomboDetails.location : (selectedGomboDetails.location as any)?.name || (selectedGomboDetails as any).commune || "Abidjan, Côte d'Ivoire";
+                            window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${locStr}, Côte d'Ivoire`)}`, "_blank");
+                          }
+                        }}
+                        className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-400 font-bold rounded-lg text-[9px] uppercase transition cursor-pointer active:scale-95"
+                      >
+                        <Navigation className="w-3 h-3" />
+                        <span>🧭 Itinéraire</span>
+                      </button>
+                    )}
                   </div>
 
                   <h3 className="text-xl sm:text-2xl font-display font-black text-afri-text leading-tight uppercase">

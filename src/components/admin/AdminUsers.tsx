@@ -1,3 +1,4 @@
+import { NotificationService } from "../../lib/NotificationService";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -419,7 +420,7 @@ export default function AdminUsers({
         status: "unread"
       };
 
-      await addDoc(collection(db, "user_notifications"), notifData);
+      await NotificationService.sendNotification(notifData);
 
       await logAdminAction({
         adminUid: currentUser?.uid || "system",
