@@ -7,7 +7,7 @@ import {
 import { AfriGomboWheel, WheelSegment, WheelSpinRecord, UserExtraSpinRecord, GawaPack, GawaMission, UserGawaMission, GawaTransaction, UserLotRecord } from "../../types";
 import { WheelEngineService } from "../../lib/WheelEngineService";
 import { SecurityService } from "../../lib/SecurityService";
-import { subscribeToFeatureFlags } from "../../lib/featureFlags";
+import { subscribeToFeatureFlags, isModuleAccessible } from "../../lib/featureFlags";
 import { GawaEngineService } from "../../lib/GawaEngineService";
 import { getCanonicalWalletBalance } from "../../lib/financial";
 import { db } from "../../lib/firebase";
@@ -93,7 +93,7 @@ export default function GomboWheelSection({
   useEffect(() => {
     setFlagsLoading(true);
     const unsubFlags = subscribeToFeatureFlags((flags) => {
-      const enabled = flags["wheel"] !== undefined ? flags["wheel"] : true;
+      const enabled = isModuleAccessible("wheel", currentUserProfile, currentUserProfile, flags);
       setIsWheelGlobalEnabled(enabled);
       setFlagsLoading(false);
     });

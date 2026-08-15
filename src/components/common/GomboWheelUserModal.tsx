@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { AfriGomboWheel, WheelSegment, WheelSpinRecord } from "../../types";
 import { WheelEngineService } from "../../lib/WheelEngineService";
-import { subscribeToFeatureFlags } from "../../lib/featureFlags";
+import { subscribeToFeatureFlags, isModuleAccessible } from "../../lib/featureFlags";
 
 interface GomboWheelUserModalProps {
   currentUser?: any;
@@ -68,7 +68,7 @@ export default function GomboWheelUserModal({
 
     setFlagsLoading(true);
     const unsubFlags = subscribeToFeatureFlags((flags) => {
-      const enabled = flags["wheel"] !== undefined ? flags["wheel"] : true;
+      const enabled = isModuleAccessible("wheel", currentUser, currentUser, flags);
       setIsWheelGlobalEnabled(enabled);
       setFlagsLoading(false);
     });

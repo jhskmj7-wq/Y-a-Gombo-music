@@ -23,11 +23,17 @@ import { safeStringify, getCircularReplacer, safeJsonClone } from "../lib/jsonUt
 import { getEffectiveGomboId, generateGomboId, formatGomboIdDisplay, formatGomboRefDisplay } from "../lib/gomboIdHelper";
 import { PremiumEngine } from "../lib/premiumEngine";
 import { SecurityService } from "../lib/SecurityService";
-import { isFeatureEnabled as checkIsFeatureEnabled, subscribeToFeatureFlags } from "../lib/featureFlags";
+import { 
+  isFeatureEnabled as checkIsFeatureEnabled, 
+  isModuleVisible as checkIsModuleVisible, 
+  isModuleAccessible as checkIsModuleAccessible, 
+  isModuleComingSoon as checkIsModuleComingSoon, 
+  subscribeToFeatureFlags 
+} from "../lib/featureFlags";
 import { FeatureUnavailable } from "./FeatureUnavailable";
 import { getEffectiveCommissionRate, calculatePublicationFinancials, recordWalletTransaction, getCanonicalWalletBalance } from "../lib/financial";
 import { isMenuProtected } from "../auth/accessPolicy";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { lazyWithRetry } from "../lib/lazyWithRetry";
 import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
 
@@ -358,6 +364,20 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   const [menuHistory, setMenuHistory] = useState<string[]>(["user_terrain"]);
   const activeMenu = menuHistory[menuHistory.length - 1] || "user_terrain";
+  const location = useLocation();
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === "/publish") {
+      setMenuHistory(prev => prev[prev.length - 1] === "user_publish" ? prev : [...prev, "user_publish"]);
+    } else if (path === "/vibes") {
+      setMenuHistory(prev => prev[prev.length - 1] === "user_reels" ? prev : [...prev, "user_reels"]);
+    } else if (path === "/my-gombos") {
+      setMenuHistory(prev => prev[prev.length - 1] === "user_mes_gombos" ? prev : [...prev, "user_mes_gombos"]);
+    } else if (path === "/heritage") {
+      setMenuHistory(prev => prev[prev.length - 1] === "user_heritage" ? prev : [...prev, "user_heritage"]);
+    }
+  }, [location.pathname]);
 
   // Reset scrolling of all panels/containers inside AdminCentre when switching views
   useEffect(() => {
@@ -1124,7 +1144,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   }, [adminEmail]);
 
   // REAL-TIME GLOBAL FEATURE FLAGS ENGINE
-  const [systemFeatureFlags, setSystemFeatureFlags] = useState<Record<string, boolean>>({});
+  const [systemFeatureFlags, setSystemFeatureFlags] = useState<Record<string, any>>({});
 
   useEffect(() => {
     const unsubSys = subscribeToFeatureFlags((updatedFlags) => {
@@ -1133,33 +1153,108 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     return () => unsubSys();
   }, []);
 
+  const isSuperFounderUser = React.useMemo(() => {
+    return isAuthorizedSuperFounder || (currentUser?.email === "jhs.kmj7@gmail.com");
+  }, [isAuthorizedSuperFounder, currentUser?.email]);
+
+  const isModuleVisible = (flagId: string): boolean => {
+    return checkIsModuleVisible(flagId, systemFeatureFlags, isSuperFounderUser);
+  };
+
+  const isModuleAccessible = (flagId: string): boolean => {
+    return checkIsModuleAccessible(flagId, systemFeatureFlags, isSuperFounderUser);
+  };
+
+  const isModuleComingSoon = (flagId: string): boolean => {
+    return checkIsModuleComingSoon(flagId, systemFeatureFlags, isSuperFounderUser);
+  };
+
   const isFeatureEnabled = (flagId: string): boolean => {
-    return checkIsFeatureEnabled(flagId, currentUser, profile, systemFeatureFlags);
+    return checkIsModuleAccessible(flagId, systemFeatureFlags, isSuperFounderUser);
   };
 
   const getFlagForMenu = (menu: string): string | null => {
-    // ÉTAPE 5: ONLY map the 7 specified features
     const map: Record<string, string> = {
+      user_home: "home",
+      user_terrain: "home",
+      user_gombos: "gombos",
+      user_publish: "gombos",
+      nearby: "nearby",
+      user_nearby: "nearby",
+      nearbyOpportunities: "nearbyOpportunities",
+      user_opportunities: "nearbyOpportunities",
+      radar: "radar",
+      user_radar: "radar",
+      user_reels: "reels",
+      reels: "reels",
+      user_renforts: "renforts",
+      renforts: "renforts",
+      user_podcasts: "podcasts",
+      podcasts: "podcasts",
+      user_events: "events",
+      events: "events",
+      menu_events: "events",
+      user_mes_groupes: "mes_groupes",
+      user_favorites: "favorites",
+      favorites: "favorites",
+      user_gawa_center: "gawa_center",
+      user_mes_lots: "mes_lots",
+      user_wheel: "wheel",
+      wheel: "wheel",
       user_grand_marche: "grandMarket",
       user_grandMarket: "grandMarket",
       user_ecosystem: "grandMarket",
+      menu_grand_marche: "grandMarket",
+      user_academie: "academie",
+      academie: "academie",
+      menu_academie: "academie",
       user_whats_new: "updateJournal",
       user_downloads: "downloads",
       user_backups: "backups",
-      user_avatar: "avatar",
-      nearby: "nearby",
-      nearbyOpportunities: "nearbyOpportunities",
-      user_opportunities: "nearbyOpportunities"
+      user_avatar: "avatar"
     };
     return map[menu] || null;
   };
 
   const getFeatureNameForMenu = (menu: string): string => {
     switch (menu) {
+      case "user_home":
+      case "user_terrain":
+        return "Accueil & Le Terrain";
+      case "user_gombos":
+      case "user_publish":
+        return "Gombos & Publications";
+      case "nearby":
+      case "user_nearby":
+        return "Près de moi";
+      case "nearbyOpportunities":
+      case "user_opportunities":
+        return "Opportunités Proches";
+      case "radar":
+      case "user_radar":
+        return "Radar Géolocalisé";
+      case "user_reels":
+      case "reels":
+        return "Flex Multimédia & Reels";
+      case "user_renforts":
+      case "renforts":
+        return "Renfort Express";
+      case "user_podcasts":
+      case "podcasts":
+        return "Podcasts & Résonances";
+      case "user_events":
+      case "events":
+      case "menu_events":
+        return "Événements (Calendrier)";
       case "user_grand_marche":
       case "user_grandMarket":
       case "user_ecosystem":
-        return "Grand Marché";
+      case "menu_grand_marche":
+        return "Le Grand Marché";
+      case "user_academie":
+      case "academie":
+      case "menu_academie":
+        return "L'Académie";
       case "user_whats_new":
         return "Journal des Mises à jour";
       case "user_downloads":
@@ -1168,11 +1263,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         return "Sauvegardes";
       case "user_avatar":
         return "Avatar";
-      case "nearby":
-        return "Près de moi";
-      case "user_opportunities":
-      case "nearbyOpportunities":
-        return "Opportunités Proches";
+      case "user_wheel":
+      case "wheel":
+        return "Roue AFRIGOMBO";
       default:
         return "Fonctionnalité";
     }
@@ -2501,8 +2594,20 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         icon: string, 
                         actionOnSelect: () => void, 
                         isInactive: boolean,
-                        customBadge?: React.ReactNode
+                        customBadge?: React.ReactNode,
+                        flagIdParam?: string
                       ) => {
+                        const flagKey = flagIdParam || getFlagForMenu(key);
+                        if (flagKey) {
+                          const visible = checkIsModuleVisible(flagKey, systemFeatureFlags, isSuperFounderUser);
+                          if (!visible) return null;
+
+                          const comingSoon = checkIsModuleComingSoon(flagKey, systemFeatureFlags, isSuperFounderUser);
+                          if (comingSoon) {
+                            isInactive = true;
+                          }
+                        }
+
                         const currentIndex = globalItemIndex++;
                         return (
                           <motion.button
@@ -2528,7 +2633,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               <span className="text-xs sm:text-sm shrink-0">{icon}</span>
                               <span>{label}</span>
                             </span>
-                            {customBadge ? customBadge : (
+                            {customBadge && !isInactive ? customBadge : (
                               isInactive ? (
                                 <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-afri-gold/10 border border-afri-gold/25 text-afri-gold rounded uppercase font-black tracking-tighter">
                                   Bientôt
@@ -3013,9 +3118,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           <div 
             className={activeMenu === "nearby" ? "w-full h-full animate-fadeIn text-left overflow-hidden" : "hidden"}
           >
-            {!isFeatureEnabled("nearby") ? (
+            {!isModuleAccessible("nearby") ? (
               <FeatureUnavailable 
                 featureName="Près de moi" 
+                variant={isModuleComingSoon("nearby") ? "coming_soon" : "temporary_disabled"}
+                title={isModuleComingSoon("nearby") ? "🔒 Bientôt disponible" : "🔒 Module indisponible"}
+                description={isModuleComingSoon("nearby") ? "Cette fonctionnalité arrive prochainement sur AFRIGOMBO." : "Le module \"Près de moi\" n'est pas accessible actuellement."}
                 onBack={() => setActiveMenu("user_terrain")} 
               />
             ) : (
@@ -3111,9 +3219,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 }`}
                 style={{ overscrollBehaviorY: "contain" }}
               >
-                {getFlagForMenu(activeMenu) && !isFeatureEnabled(getFlagForMenu(activeMenu)!) ? (
+                {getFlagForMenu(activeMenu) && !isModuleAccessible(getFlagForMenu(activeMenu)!) ? (
                   <FeatureUnavailable 
                     featureName={getFeatureNameForMenu(activeMenu)}
+                    variant={isModuleComingSoon(getFlagForMenu(activeMenu)!) ? "coming_soon" : "temporary_disabled"}
+                    title={isModuleComingSoon(getFlagForMenu(activeMenu)!) ? "🔒 Bientôt disponible" : "🔒 Module indisponible"}
+                    description={isModuleComingSoon(getFlagForMenu(activeMenu)!) ? "Cette fonctionnalité arrive prochainement sur AFRIGOMBO." : `Le module "${getFeatureNameForMenu(activeMenu)}" n'est pas accessible actuellement.`}
                     onBack={() => setActiveMenu("user_terrain")} 
                   />
                 ) : (
@@ -5644,6 +5755,22 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   </div>
                 );
               })()}
+
+              {/* 7e. PUBLIER UN GOMBO */}
+              {activeMenu === "user_publish" && (
+                <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 py-3 sm:py-6 animate-fadeIn">
+                  <GomboPublish
+                    currentUserProfile={profile || (currentUser as any)}
+                    onSuccess={() => {
+                      try { audioSynth.playValidationSuccess(); } catch (_) {}
+                      setActiveMenu("user_mes_gombos");
+                    }}
+                    onCancel={() => {
+                      goBackMenu();
+                    }}
+                  />
+                </div>
+              )}
 
               {activeMenu === "payments_to_verify" && (
                 <div className="p-6 rounded-2xl bg-afri-bg border border-afri-gold/30 space-y-6 animate-fadeIn">

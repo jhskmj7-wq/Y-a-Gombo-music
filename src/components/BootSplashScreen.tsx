@@ -23,10 +23,10 @@ export default function BootSplashScreen({ onComplete }: BootSplashScreenProps) 
         setStatusText("Bienvenue dans le Temple");
         setIsFinished(true);
         setTimeout(() => {
-          onComplete();
+          if (typeof onComplete === 'function') onComplete();
         }, 300);
       } else {
-        onComplete();
+        if (typeof onComplete === 'function') onComplete();
       }
     };
 

@@ -83,9 +83,23 @@ export default defineConfig({
     }
   },
   resolve: {
-    dedupe: ['react', 'react-dom', 'react-router-dom', 'firebase', '@firebase/app', '@firebase/auth', '@firebase/firestore', '@firebase/storage', '@firebase/messaging'],
+    dedupe: [
+      'react', 
+      'react-dom', 
+      'react-router-dom', 
+      'motion', 
+      'framer-motion', 
+      'firebase', 
+      '@firebase/app', 
+      '@firebase/auth', 
+      '@firebase/firestore', 
+      '@firebase/storage', 
+      '@firebase/messaging'
+    ],
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': path.resolve(__dirname, 'src'),
+      'react': path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom')
     }
   },
   define: {
@@ -174,6 +188,19 @@ export default defineConfig({
     port: 3000,
   },
   optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-dom/client',
+      'react-router-dom',
+      'motion',
+      'motion/react',
+      'framer-motion',
+      'firebase/app',
+      'firebase/auth',
+      'firebase/firestore',
+      'firebase/storage'
+    ],
     exclude: ['maplibre-gl']
   }
 });

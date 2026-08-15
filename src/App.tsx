@@ -275,6 +275,38 @@ function App() {
             } 
           />
           <Route 
+            path="/publish" 
+            element={
+              <ProfileGuard>
+                <MainAppLayout />
+              </ProfileGuard>
+            } 
+          />
+          <Route 
+            path="/vibes" 
+            element={
+              <ProfileGuard>
+                <MainAppLayout />
+              </ProfileGuard>
+            } 
+          />
+          <Route 
+            path="/my-gombos" 
+            element={
+              <ProfileGuard>
+                <MainAppLayout />
+              </ProfileGuard>
+            } 
+          />
+          <Route 
+            path="/heritage" 
+            element={
+              <ProfileGuard>
+                <MainAppLayout />
+              </ProfileGuard>
+            } 
+          />
+          <Route 
             path="/complete-profile" 
             element={
               <AuthGuard>

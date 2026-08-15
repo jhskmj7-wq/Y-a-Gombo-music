@@ -38,7 +38,19 @@ export const logBugReport = async (data: BugReportInput) => {
       } : {},
     };
 
-    await addDoc(collection(db, "bugReports"), report);
+    if (!db) {
+      console.warn("Firestore db unavailable for bugReportLogger.");
+      return;
+    }
+
+    try {
+      const bugReportsCollection = collection(db, "bugReports");
+      if (bugReportsCollection) {
+        await addDoc(bugReportsCollection, report);
+      }
+    } catch (err) {
+      console.warn("Failed to write to bugReports collection:", err);
+    }
   } catch (err) {
     console.error("Failed to write to bugReports collection:", err);
   }

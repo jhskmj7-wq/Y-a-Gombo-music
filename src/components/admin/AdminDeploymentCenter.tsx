@@ -4,7 +4,7 @@ import {
   Rocket, ToggleRight, CheckCircle, History, Info, Clock, Check, X,
   ShieldAlert, ChevronRight, User, Server, Database, GitBranch, Cpu,
   AlertCircle, ShieldCheck, Terminal, Layers, RefreshCw, FileText, CheckCircle2,
-  XCircle, Zap, Globe, Smartphone, Cloud, Code, Settings
+  XCircle, Zap, Globe, Smartphone, Cloud, Code, Settings, EyeOff
 } from "lucide-react";
 import { gomboDB } from "../../firebase";
 import { db } from "../../lib/firebase";
@@ -30,12 +30,16 @@ export interface DeploymentRecord {
   commitHash?: string;
 }
 
+export type FeatureVisibilityStatus = "ACTIVE" | "COMING_SOON" | "HIDDEN";
+
 export interface FeatureFlagItem {
   id: string;
   name: string;
   category: string;
-  enabled: boolean;
-  status: "validated" | "experimental" | "pending" | "disabled";
+  visibilityStatus?: FeatureVisibilityStatus;
+  enabled?: boolean;
+  isPremium?: boolean;
+  status?: "validated" | "experimental" | "pending" | "disabled";
   description?: string;
   updatedAt?: string;
   updatedBy?: string;
@@ -94,9 +98,10 @@ export default function AdminDeploymentCenter({
   const [isSubmittingDeploy, setIsSubmittingDeploy] = useState(false);
 
   // Filter & Saving states for Feature Flags
-  const [activeFlagFilter, setActiveFlagFilter] = useState<"all" | "validated" | "experimental" | "pending" | "disabled">("all");
+  const [activeFlagFilter, setActiveFlagFilter] = useState<"all" | "active" | "coming_soon" | "hidden" | "premium">("all");
   const [savingFlagId, setSavingFlagId] = useState<string | null>(null);
   const [flagError, setFlagError] = useState<string | null>(null);
+  const [confirmHideFlag, setConfirmHideFlag] = useState<FeatureFlagItem | null>(null);
 
   // 1. DEFAULT FEATURE FLAGS INITIALIZER
   const defaultFlags: FeatureFlagItem[] = [
@@ -174,39 +179,66 @@ export default function AdminDeploymentCenter({
       setDeploymentHistory(records);
     }, (err) => console.error("Err deployment stream:", err));
 
-    // Combined feature flags streams
+    // Combined feature flags streams: systemConfig/features is the SINGLE SOURCE OF TRUTH
     const targetKeys = defaultFlags.map(f => f.id);
     const flagsRef = doc(db, "settings", "feature_flags");
     const sysConfigRef = doc(db, "systemConfig", "features");
 
     let lastSettingsFlags: FeatureFlagItem[] = [];
-    let lastSysFlags: Record<string, { enabled: boolean; updatedAt?: any; updatedBy?: string }> = {};
+    let lastSysFlags: Record<string, any> = {};
 
     const updateCombinedFlags = (
       settingsFlags: FeatureFlagItem[],
-      sysFlags: Record<string, { enabled: boolean; updatedAt?: any; updatedBy?: string }>
+      sysFlags: Record<string, any>
     ) => {
       const combined = defaultFlags.map(f => {
         const sysValue = sysFlags[f.id];
+        let visibilityStatus: FeatureVisibilityStatus = f.visibilityStatus || (f.enabled ? "ACTIVE" : "HIDDEN");
+        let isPremium = !!f.isPremium;
+        let formattedDate: string | undefined = undefined;
+        let updatedBy: string | undefined = undefined;
+
         if (sysValue !== undefined) {
-          let formattedDate: string | undefined = undefined;
           if (sysValue.updatedAt) {
             if (typeof sysValue.updatedAt === "string") formattedDate = sysValue.updatedAt;
             else if (sysValue.updatedAt?.toDate) formattedDate = sysValue.updatedAt.toDate().toISOString();
           }
-          return {
-            ...f,
-            enabled: sysValue.enabled,
-            status: sysValue.enabled ? (f.status === "disabled" ? "validated" : f.status) : ("disabled" as any),
-            updatedAt: formattedDate,
-            updatedBy: sysValue.updatedBy
-          };
+          if (sysValue.updatedBy) updatedBy = sysValue.updatedBy;
+
+          if (typeof sysValue === "boolean") {
+            visibilityStatus = sysValue ? "ACTIVE" : "HIDDEN";
+          } else if (typeof sysValue === "string") {
+            const upper = sysValue.toUpperCase();
+            if (["ACTIVE", "COMING_SOON", "HIDDEN"].includes(upper)) {
+              visibilityStatus = upper as FeatureVisibilityStatus;
+            }
+          } else if (typeof sysValue === "object" && sysValue !== null) {
+            if (sysValue.status && ["ACTIVE", "COMING_SOON", "HIDDEN"].includes(sysValue.status)) {
+              visibilityStatus = sysValue.status as FeatureVisibilityStatus;
+            } else if (sysValue.enabled !== undefined) {
+              visibilityStatus = sysValue.enabled ? "ACTIVE" : "HIDDEN";
+            }
+            if (sysValue.isPremium !== undefined) {
+              isPremium = !!sysValue.isPremium;
+            }
+          }
+        } else {
+          const settingsMatch = settingsFlags.find(sf => sf.id === f.id);
+          if (settingsMatch) {
+            visibilityStatus = settingsMatch.visibilityStatus || (settingsMatch.enabled ? "ACTIVE" : "HIDDEN");
+            isPremium = !!settingsMatch.isPremium;
+          }
         }
-        const settingsMatch = settingsFlags.find(sf => sf.id === f.id);
-        if (settingsMatch) {
-          return settingsMatch;
-        }
-        return f;
+
+        return {
+          ...f,
+          visibilityStatus,
+          enabled: visibilityStatus === "ACTIVE",
+          isPremium,
+          status: visibilityStatus === "ACTIVE" ? ("validated" as const) : visibilityStatus === "COMING_SOON" ? ("experimental" as const) : ("disabled" as const),
+          updatedAt: formattedDate,
+          updatedBy
+        };
       });
       setFeatureFlags(combined);
     };
@@ -225,7 +257,7 @@ export default function AdminDeploymentCenter({
 
     const unsubSysConfig = onSnapshot(sysConfigRef, async (docSnap) => {
       if (docSnap.exists()) {
-        const data = docSnap.data() as Record<string, { enabled: boolean; updatedAt?: any }>;
+        const data = docSnap.data() as Record<string, any>;
         lastSysFlags = data;
         
         // Auto-initialize any missing keys in systemConfig/features
@@ -234,8 +266,11 @@ export default function AdminDeploymentCenter({
           const updates: Record<string, any> = {};
           missingKeys.forEach(k => {
             const defaultObj = defaultFlags.find(f => f.id === k);
+            const vis = defaultObj?.visibilityStatus || (defaultObj?.enabled ? "ACTIVE" : "HIDDEN");
             updates[k] = {
-              enabled: defaultObj ? defaultObj.enabled : true,
+              status: vis,
+              enabled: vis === "ACTIVE",
+              isPremium: !!defaultObj?.isPremium,
               updatedAt: serverTimestamp()
             };
           });
@@ -249,7 +284,13 @@ export default function AdminDeploymentCenter({
         lastSysFlags = {};
         const initialData: Record<string, any> = {};
         defaultFlags.forEach(f => {
-          initialData[f.id] = { enabled: f.enabled, updatedAt: serverTimestamp() };
+          const vis = f.visibilityStatus || (f.enabled ? "ACTIVE" : "HIDDEN");
+          initialData[f.id] = {
+            status: vis,
+            enabled: vis === "ACTIVE",
+            isPremium: !!f.isPremium,
+            updatedAt: serverTimestamp()
+          };
         });
         try {
           await setDoc(sysConfigRef, initialData);
@@ -285,9 +326,9 @@ export default function AdminDeploymentCenter({
     };
   }, []);
 
-  // TOGGLE FEATURE FLAG IN FIRESTORE
-  const handleToggleFlag = async (flagId: string) => {
-    if (savingFlagId) return; // double-click protection
+  // UPDATE FEATURE FLAG VISIBILITY IN FIRESTORE
+  const handleUpdateFlagVisibility = async (flagId: string, newVisibility: FeatureVisibilityStatus, newIsPremium?: boolean) => {
+    if (savingFlagId) return;
 
     const currentFlag = featureFlags.find((f) => f.id === flagId);
     if (!currentFlag) return;
@@ -295,16 +336,19 @@ export default function AdminDeploymentCenter({
     setSavingFlagId(flagId);
     setFlagError(null);
 
-    const newEnabled = !currentFlag.enabled;
+    const targetVisibility = newVisibility;
+    const targetPremium = newIsPremium !== undefined ? newIsPremium : !!currentFlag.isPremium;
     const nowIso = new Date().toISOString();
 
     try {
       const sysConfigRef = doc(db, "systemConfig", "features");
       await setDoc(sysConfigRef, {
         [flagId]: {
-          enabled: newEnabled,
+          status: targetVisibility,
+          enabled: targetVisibility === "ACTIVE",
+          isPremium: targetPremium,
           updatedAt: serverTimestamp(),
-          updatedBy: founderEmail || "Fondateur"
+          updatedBy: founderEmail || "Super Fondateur"
         }
       }, { merge: true });
 
@@ -312,12 +356,12 @@ export default function AdminDeploymentCenter({
         if (f.id === flagId) {
           return {
             ...f,
-            enabled: newEnabled,
+            visibilityStatus: targetVisibility,
+            enabled: targetVisibility === "ACTIVE",
+            isPremium: targetPremium,
             updatedAt: nowIso,
-            updatedBy: founderEmail || "Fondateur",
-            status: newEnabled
-              ? (f.status === "disabled" ? "validated" : f.status)
-              : ("disabled" as any)
+            updatedBy: founderEmail || "Super Fondateur",
+            status: targetVisibility === "ACTIVE" ? ("validated" as const) : targetVisibility === "COMING_SOON" ? ("experimental" as const) : ("disabled" as const)
           };
         }
         return f;
@@ -327,16 +371,15 @@ export default function AdminDeploymentCenter({
       await setDoc(flagsRef, {
         flags: updatedFlags,
         updatedAt: nowIso,
-        updatedBy: founderEmail || "Fondateur"
+        updatedBy: founderEmail || "Super Fondateur"
       }, { merge: true });
 
-      // Audit Log (Requirement 12)
       await SecurityService.logSecurityEvent({
         userId: founderEmail,
         userEmail: founderEmail,
-        action: "feature_flag_toggle",
+        action: "feature_flag_visibility_update",
         severity: "medium",
-        details: `Feature Flag '${flagId}' changed to ${newEnabled ? 'ENABLED' : 'DISABLED'} by ${founderEmail}`,
+        details: `Module '${flagId}' visibility set to '${targetVisibility}' (isPremium: ${targetPremium}) by ${founderEmail}`,
         result: "allowed"
       });
 
@@ -344,9 +387,10 @@ export default function AdminDeploymentCenter({
       try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
     } catch (err) {
       console.error("Erreur feature flag update:", err);
-      setFlagError("Impossible de modifier l'état de la fonctionnalité.");
+      setFlagError("Impossible de modifier le statut du module.");
     } finally {
       setSavingFlagId(null);
+      setConfirmHideFlag(null);
     }
   };
 
@@ -420,6 +464,10 @@ export default function AdminDeploymentCenter({
 
   const filteredFlags = featureFlags.filter((f) => {
     if (activeFlagFilter === "all") return true;
+    if (activeFlagFilter === "active") return f.visibilityStatus === "ACTIVE";
+    if (activeFlagFilter === "coming_soon") return f.visibilityStatus === "COMING_SOON";
+    if (activeFlagFilter === "hidden") return f.visibilityStatus === "HIDDEN";
+    if (activeFlagFilter === "premium") return !!f.isPremium;
     return f.status === activeFlagFilter;
   });
 
@@ -775,15 +823,21 @@ export default function AdminDeploymentCenter({
           </h3>
 
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-            {(["all", "validated", "experimental", "pending", "disabled"] as const).map((st) => (
+            {[
+              { id: "all", label: "Tous" },
+              { id: "active", label: "🟢 Actifs" },
+              { id: "coming_soon", label: "🟡 Bientôt" },
+              { id: "hidden", label: "🔴 Masqués" },
+              { id: "premium", label: "💎 Premium" }
+            ].map((st) => (
               <button
-                key={st}
-                onClick={() => setActiveFlagFilter(st)}
+                key={st.id}
+                onClick={() => setActiveFlagFilter(st.id as any)}
                 className={`px-2.5 py-1 rounded-lg text-[10px] font-mono uppercase font-bold transition whitespace-nowrap cursor-pointer ${
-                  activeFlagFilter === st ? "bg-[#D4AF37] text-black" : "bg-afri-bg text-afri-text-sec hover:text-white"
+                  activeFlagFilter === st.id ? "bg-[#D4AF37] text-black" : "bg-afri-bg text-afri-text-sec hover:text-white"
                 }`}
               >
-                {st === "all" ? "Tous" : st === "validated" ? "Validés" : st === "experimental" ? "Expérimentaux" : st === "pending" ? "En attente" : "Désactivés"}
+                {st.label}
               </button>
             ))}
           </div>
@@ -797,74 +851,119 @@ export default function AdminDeploymentCenter({
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredFlags.map((flag) => (
-            <div
-              key={flag.id}
-              className={`p-4 rounded-2xl border transition flex flex-col justify-between space-y-3 ${
-                flag.enabled
-                  ? "bg-afri-bg-sec border-[#D4AF37]/40"
-                  : "bg-afri-bg/50 border-afri-border opacity-70"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="space-y-1">
-                  <span className="text-[9px] uppercase font-mono font-bold text-afri-text-muted">{flag.category}</span>
-                  <h4 className="text-xs font-bold text-white leading-tight">{flag.name}</h4>
+          {filteredFlags.map((flag) => {
+            const currentVis = flag.visibilityStatus || (flag.enabled ? "ACTIVE" : "HIDDEN");
+            const isSavingThis = savingFlagId === flag.id;
+
+            return (
+              <div
+                key={flag.id}
+                className={`p-4 rounded-2xl border transition flex flex-col justify-between space-y-3 ${
+                  currentVis === "ACTIVE"
+                    ? "bg-afri-bg-sec border-[#D4AF37]/40 shadow-sm"
+                    : currentVis === "COMING_SOON"
+                    ? "bg-amber-500/5 border-amber-500/30"
+                    : "bg-afri-bg/50 border-afri-border opacity-70"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[9px] uppercase font-mono font-bold text-afri-text-muted">{flag.category}</span>
+                      {flag.isPremium && (
+                        <span className="px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                          💎 PREMIUM
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="text-xs font-bold text-white leading-tight">{flag.name}</h4>
+                  </div>
+
+                  {/* Premium Switch */}
+                  <button
+                    type="button"
+                    title={flag.isPremium ? "Rendre accessible à tous" : "Réserver aux membres Premium"}
+                    disabled={isSavingThis}
+                    onClick={() => handleUpdateFlagVisibility(flag.id, currentVis, !flag.isPremium)}
+                    className={`px-2 py-1 rounded-lg text-[9px] font-mono font-bold transition flex items-center gap-1 cursor-pointer ${
+                      flag.isPremium
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 hover:bg-amber-500/30"
+                        : "bg-zinc-800 text-zinc-400 border border-zinc-700 hover:text-white"
+                    }`}
+                  >
+                    💎 {flag.isPremium ? "PREMIUM" : "GRATUIT"}
+                  </button>
                 </div>
 
-                {/* Status Toggle Button with explicit status */}
-                <button
-                  type="button"
-                  disabled={savingFlagId === flag.id}
-                  onClick={() => handleToggleFlag(flag.id)}
-                  className={`px-3 py-1.5 rounded-xl font-mono text-[10px] font-bold uppercase transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-md ${
-                    savingFlagId === flag.id
-                      ? "bg-zinc-800 text-zinc-400 border border-zinc-700 cursor-not-allowed"
-                      : flag.enabled
-                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500/30"
-                      : "bg-rose-500/20 text-rose-400 border border-rose-500/50 hover:bg-rose-500/30"
-                  }`}
-                >
-                  {savingFlagId === flag.id ? (
-                    <>
-                      <RefreshCw className="w-3 h-3 animate-spin text-amber-400" />
-                      <span>Sauvegarde...</span>
-                    </>
-                  ) : flag.enabled ? (
-                    <>
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <span>🟢 ACTIVÉ</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="w-2 h-2 rounded-full bg-rose-400" />
-                      <span>🔴 DÉSACTIVÉ</span>
-                    </>
-                  )}
-                </button>
+                <p className="text-[11px] text-afri-text-sec font-mono line-clamp-2 leading-tight">
+                  {flag.description || "Fonctionnalité paramétrable du système"}
+                </p>
+
+                {/* 3-STATE VISIBILITY CONTROL BUTTONS */}
+                <div className="space-y-1.5 pt-2 border-t border-afri-border">
+                  <div className="text-[9px] font-mono uppercase font-bold text-afri-text-muted">
+                    Visibilité du module :
+                  </div>
+                  <div className="grid grid-cols-3 gap-1">
+                    {/* ACTIVE */}
+                    <button
+                      type="button"
+                      disabled={isSavingThis}
+                      onClick={() => handleUpdateFlagVisibility(flag.id, "ACTIVE")}
+                      className={`px-2 py-1.5 rounded-lg text-[9px] font-mono font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
+                        currentVis === "ACTIVE"
+                          ? "bg-emerald-500 text-black font-black shadow-md"
+                          : "bg-zinc-800 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 border border-zinc-700"
+                      }`}
+                    >
+                      🟢 ACTIVE
+                    </button>
+
+                    {/* COMING SOON */}
+                    <button
+                      type="button"
+                      disabled={isSavingThis}
+                      onClick={() => handleUpdateFlagVisibility(flag.id, "COMING_SOON")}
+                      className={`px-2 py-1.5 rounded-lg text-[9px] font-mono font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
+                        currentVis === "COMING_SOON"
+                          ? "bg-amber-500 text-black font-black shadow-md"
+                          : "bg-zinc-800 text-zinc-400 hover:text-amber-400 hover:bg-amber-500/10 border border-zinc-700"
+                      }`}
+                    >
+                      🟡 BIENTÔT
+                    </button>
+
+                    {/* HIDDEN */}
+                    <button
+                      type="button"
+                      disabled={isSavingThis}
+                      onClick={() => {
+                        if (currentVis !== "HIDDEN") {
+                          setConfirmHideFlag(flag);
+                        }
+                      }}
+                      className={`px-2 py-1.5 rounded-lg text-[9px] font-mono font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
+                        currentVis === "HIDDEN"
+                          ? "bg-rose-500 text-white font-black shadow-md"
+                          : "bg-zinc-800 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 border border-zinc-700"
+                      }`}
+                    >
+                      🔴 MASQUÉ
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[9px] font-mono pt-1 text-afri-text-muted">
+                  <span className="truncate max-w-[180px]">
+                    {flag.updatedAt
+                      ? `Maj: ${new Date(flag.updatedAt).toLocaleDateString("fr-FR")} ${flag.updatedBy ? `par ${flag.updatedBy.split("@")[0]}` : ""}`
+                      : "Statut par défaut"}
+                  </span>
+                  {isSavingThis && <RefreshCw className="w-3 h-3 animate-spin text-amber-400" />}
+                </div>
               </div>
-
-              <p className="text-[11px] text-afri-text-sec font-mono line-clamp-2 leading-tight">
-                {flag.description || "Fonctionnalité paramétrable du système"}
-              </p>
-
-              <div className="flex items-center justify-between text-[9px] font-mono pt-2 border-t border-afri-border">
-                <span className={`px-2 py-0.5 rounded font-bold uppercase ${
-                  flag.status === "validated" ? "bg-emerald-500/10 text-emerald-400" :
-                  flag.status === "experimental" ? "bg-amber-500/10 text-amber-400" :
-                  flag.status === "pending" ? "bg-sky-500/10 text-sky-400" : "bg-afri-bg-ter text-afri-text-muted"
-                }`}>
-                  {flag.status}
-                </span>
-
-                <span className="text-afri-text-muted truncate max-w-[160px]">
-                  {flag.updatedAt
-                    ? `Modifié le ${new Date(flag.updatedAt).toLocaleDateString("fr-FR")} ${flag.updatedBy ? `par ${flag.updatedBy.split("@")[0]}` : ""}`
-                    : (flag.enabled ? "Actif" : "Inactif")}
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -1035,6 +1134,67 @@ export default function AdminDeploymentCenter({
                 className="px-5 py-2 bg-rose-500 hover:bg-rose-400 text-white font-black rounded-xl text-xs uppercase tracking-wider transition cursor-pointer"
               >
                 {isSubmittingDeploy ? "Validation..." : "Valider le Déploiement"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM HIDE MODULE MODAL */}
+      {confirmHideFlag && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-afri-bg-sec border border-rose-500/50 rounded-3xl w-full max-w-md p-6 space-y-4 shadow-2xl relative text-left font-mono">
+            <div className="flex items-center justify-between border-b border-afri-border pb-3">
+              <h3 className="text-xs font-black uppercase text-rose-400 tracking-wider flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-rose-400 animate-pulse" /> MASQUER LE MODULE
+              </h3>
+              <button onClick={() => setConfirmHideFlag(null)} className="text-afri-text-sec hover:text-white cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs leading-relaxed">
+              <p className="text-white font-bold">
+                Voulez-vous vraiment passer le module <span className="text-[#D4AF37]">"{confirmHideFlag.name}"</span> au statut <span className="text-rose-400 font-black">MASQUÉ (HIDDEN)</span> ?
+              </p>
+
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl space-y-2 text-[11px] text-rose-200">
+                <div className="font-bold flex items-center gap-1.5 text-rose-400 uppercase">
+                  ⚠️ Conséquences immédiates :
+                </div>
+                <ul className="space-y-1 list-disc list-inside text-[10px] opacity-90">
+                  <li><strong>Pour les utilisateurs normaux :</strong> Le module sera totalement retiré de l'application (menus, grilles, actions).</li>
+                  <li><strong>Protection d'accès direct :</strong> Si un utilisateur tape directement l'URL, l'accès sera bloqué.</li>
+                  <li><strong>Pour le Super Fondateur :</strong> Le module reste visible et totalement accessible pour vos tests.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-afri-border">
+              <button
+                type="button"
+                onClick={() => setConfirmHideFlag(null)}
+                className="px-4 py-2 bg-afri-bg hover:bg-zinc-800 text-afri-text-sec hover:text-white rounded-xl text-xs font-bold uppercase transition cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                disabled={savingFlagId === confirmHideFlag.id}
+                onClick={() => handleUpdateFlagVisibility(confirmHideFlag.id, "HIDDEN")}
+                className="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-xl text-xs uppercase tracking-wider transition cursor-pointer shadow-lg flex items-center gap-2"
+              >
+                {savingFlagId === confirmHideFlag.id ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Enregistrement...</span>
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="w-3.5 h-3.5" />
+                    <span>Confirmer le masquage</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
