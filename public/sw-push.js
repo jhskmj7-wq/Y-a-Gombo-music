@@ -37,8 +37,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: body,
-    icon: "/favicon.ico",
-    badge: "/favicon.ico",
+    icon: "/pwa-192x192.png",
+    badge: "/favicon.png",
     tag: notificationId, // Native browser deduplication & replacement
     vibrate: [200, 100, 200],
     requireInteraction: true,

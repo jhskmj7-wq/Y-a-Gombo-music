@@ -1364,11 +1364,11 @@ export const gomboDB = {
           isRead: false,
           read: false,
           createdAt: new Date().toISOString(),
-          priority: data.priority || "NORMAL",
+          priority: (data.priority as any) || "NORMAL",
           source: data.source || "SYSTEM",
           data: data.data || {},
         };
-        await NotificationService.sendNotification(notif);
+        await NotificationService.sendNotification(notif as any);
       } catch (err) {
         console.warn("Could not create founder notification:", err);
       }

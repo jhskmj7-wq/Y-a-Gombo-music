@@ -4,6 +4,7 @@ import {
   query, where, orderBy, onSnapshot 
 } from "firebase/firestore";
 import { PaymentEngine } from "./paymentEngine";
+import { NotificationService } from "./NotificationService";
 
 export type ContractStatus = 
   | "waiting_payment"
@@ -697,17 +698,16 @@ export async function logContractEvent(contractId: string, type: string, label: 
  */
 async function notifyUser(userId: string, title: string, body: string, type: string, contractId: string) {
   try {
-    const notifRef = doc(collection(db, "notifications"));
-    await setDoc(notifRef, {
-      id: notifRef.id,
+    await NotificationService.sendNotification({
       userId,
       title,
-      body,
       message: body,
-      type,
+      type: type || "contract_update",
       contractId,
-      read: false,
-      createdAt: new Date().toISOString()
+      targetId: contractId,
+      targetRoute: "/contracts",
+      eventId: `contract_${contractId}_${type}_${Date.now()}`,
+      priority: "HIGH"
     });
   } catch (err) {
     console.warn("notifyUser failed:", err);

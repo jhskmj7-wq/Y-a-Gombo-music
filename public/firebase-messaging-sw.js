@@ -20,10 +20,12 @@ try {
     console.log('[firebase-messaging-sw.js] Received background message ', payload);
     const notificationTitle = payload.notification?.title || 'AFRIGOMBO';
     const notificationOptions = {
-      body: payload.notification?.body,
-      icon: '/icons/icon-192x192.png',
+      body: payload.notification?.body || '',
+      icon: '/pwa-192x192.png',
+      badge: '/favicon.png',
+      tag: payload.data?.eventId || `fcm-${Date.now()}`,
       vibrate: [200, 100, 200, 100, 200],
-      data: payload.data
+      data: payload.data || {}
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);
@@ -34,19 +36,19 @@ try {
 
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
-  const route = event.notification.data?.route || '/';
+  const route = event.notification.data?.targetRoute || event.notification.data?.targetPath || event.notification.data?.route || '/notifications';
   
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(windowClients => {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
       for (var i = 0; i < windowClients.length; i++) {
         var client = windowClients[i];
         if (client.url.indexOf(self.location.origin) !== -1 && 'focus' in client) {
-          client.navigate(client.url.split('#')[0] + '#' + route);
+          client.postMessage({ type: 'NAVIGATE', url: route });
           return client.focus();
         }
       }
       if (clients.openWindow) {
-        return clients.openWindow('/#' + route);
+        return clients.openWindow(route);
       }
     })
   );

@@ -1006,6 +1006,8 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           {activeTab === "gombos" && (() => {
             const getGomboStatusHelper = (status: string | undefined) => {
               switch (status) {
+                case "draft":
+                  return { label: "Brouillon", color: "bg-zinc-500/10 text-zinc-400 border border-zinc-500/30", emoji: "📝" };
                 case "publie":
                   return { label: "Publié", color: "bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-950/25 dark:text-amber-400 dark:border-amber-900/30", emoji: "🟡" };
                 case "candidatures_ouvertes":

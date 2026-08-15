@@ -20,6 +20,8 @@ import { useTheme } from "../context/ThemeContext";
 import { useAppSettings, ThemeMode } from "../context/AppSettingsContext";
 import { AndroidPageLayout } from "./layout/AndroidPageLayout";
 import { AndroidCard } from "./layout/AndroidCard";
+import { useWalletSecurity } from "../context/WalletSecurityContext";
+import { WalletSecurityService } from "../lib/WalletSecurityService";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -213,6 +215,15 @@ export default function SettingsModal({
     clearAppCache,
     showToast
   } = useAppSettings();
+
+  const { setupWalletPin, changeWalletPin, requestPinResetSOA } = useWalletSecurity();
+  const [walletSecData, setWalletSecData] = useState<any>(null);
+
+  useEffect(() => {
+    if (currentUser?.uid) {
+      WalletSecurityService.getWalletSecurityStatus(currentUser.uid).then(setWalletSecData).catch(console.error);
+    }
+  }, [currentUser]);
 
   const langCode = (currentLang === "en" || currentLang === "fr") ? currentLang : "fr";
   const mt = (key: string) => modalTranslations[langCode]?.[key] || modalTranslations["fr"][key] || key;
@@ -905,6 +916,70 @@ export default function SettingsModal({
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* 2D-WAL. TICALE WALLET SÉCURITÉ */}
+        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
+            💳 TICALE WALLET — SÉCURITÉ DU WALLET
+          </h2>
+
+          <div className="p-3.5 bg-afri-bg border border-afri-border rounded-xl space-y-3 font-mono text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-zinc-400 font-bold uppercase text-[10px]">Statut du Secret Wallet</span>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${walletSecData?.pinConfigured ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/10 text-[#D4AF37] border border-[#D4AF37]/30"}`}>
+                {walletSecData?.pinConfigured ? "🟢 Protection activée" : "⚪ Protection non configurée"}
+              </span>
+            </div>
+
+            <div className="space-y-1.5 pt-1 border-t border-afri-border/50 text-[11px]">
+              <div className="flex items-center justify-between text-zinc-300 py-1">
+                <span>• Code secret Wallet 6 chiffres</span>
+                <span className={walletSecData?.pinConfigured ? "text-emerald-400 font-bold" : "text-zinc-500 font-bold"}>
+                  {walletSecData?.pinConfigured ? "Configuré" : "Non défini"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-zinc-300 py-1">
+                <span>• Expiration de session dynamique</span>
+                <span className="text-afri-gold font-bold">15 Min active</span>
+              </div>
+              <div className="flex items-center justify-between text-zinc-300 py-1">
+                <span>• Protection Anti-Bruteforce S-O-A</span>
+                <span className="text-emerald-400 font-bold">Actif</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (walletSecData?.pinConfigured) {
+                    await changeWalletPin();
+                  } else {
+                    await setupWalletPin();
+                  }
+                  if (currentUser?.uid) {
+                    const status = await WalletSecurityService.getWalletSecurityStatus(currentUser.uid);
+                    setWalletSecData(status);
+                  }
+                }}
+                className="py-2.5 px-3 bg-[#D4AF37] text-zinc-950 font-black rounded-xl text-[10px] uppercase tracking-wider cursor-pointer shadow active:scale-98"
+              >
+                {walletSecData?.pinConfigured ? "Modifier mon code secret" : "Définir secret Wallet"}
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await requestPinResetSOA("Demande de réinitialisation via les Paramètres");
+                }}
+                className="py-2.5 px-3 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white font-bold rounded-xl text-[10px] uppercase tracking-wider cursor-pointer active:scale-98"
+              >
+                Code oublié ? Contacter S-O-A
+              </button>
             </div>
           </div>
         </div>

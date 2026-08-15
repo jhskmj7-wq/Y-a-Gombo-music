@@ -48,13 +48,14 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const [selectedType, setSelectedType] = useState("opportunite");
   const [gomboCategory, setGomboCategory] = useState<"libre" | "securise">("libre");
 
-  // Location Modes: "none" | "gps" | "commune" | "autre"
+  // Location Bottom Sheet & Modes: "none" | "gps" | "commune" | "autre"
+  const [isLocationSheetOpen, setIsLocationSheetOpen] = useState(false);
   const [locationOption, setLocationOption] = useState<"none" | "gps" | "commune" | "autre">("none");
   const [commune, setCommune] = useState("Cocody");
   const [customCommune, setCustomCommune] = useState("");
   const [quartier, setQuartier] = useState("");
   const [customPlaceInput, setCustomPlaceInput] = useState<string>("");
-  const [proposePlaceToCommunity, setProposePlaceToCommunity] = useState(true);
+  const [proposePlaceToCommunity, setProposePlaceToCommunity] = useState(false);
   const [locationDetail, setLocationDetail] = useState("");
   const [latitude, setLatitude] = useState<number | null>(currentUserProfile?.latitude || null);
   const [longitude, setLongitude] = useState<number | null>(currentUserProfile?.longitude || null);
@@ -810,13 +811,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             </div>
           </div>
 
-          {/* 4. LOCALISATION (ANDROID-FIRST, FACULTATIF) */}
-          <div className="p-4 bg-white/[0.02] border border-afri-border/80 rounded-2xl space-y-3.5">
+          {/* 4. LOCALISATION (OPTIONNELLE, MOBILE-FIRST ANDROID) */}
+          <div className="p-4 bg-white/[0.02] border border-afri-border/80 rounded-2xl space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-[#D4AF37]" />
                 <span className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">
-                  5. Localisation de l'événement
+                  5. Lieu du Gombo
                 </span>
               </div>
               <span className="text-[9px] font-mono text-afri-text-sec bg-white/5 px-2 py-0.5 rounded-full">
@@ -824,210 +825,68 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               </span>
             </div>
 
-            {/* Location Options Pills */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setLocationOption("none");
-                  setLatitude(null);
-                  setLongitude(null);
-                }}
-                className={`py-2 px-1 text-center rounded-xl text-[10px] font-bold uppercase transition cursor-pointer border ${
-                  locationOption === "none"
-                    ? "bg-[#D4AF37] text-black border-[#D4AF37]"
-                    : "bg-white/[0.03] border-afri-border text-afri-text-sec hover:border-white/20"
-                }`}
-              >
-                🚫 Aucun lieu
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setLocationOption("commune")}
-                className={`py-2 px-1 text-center rounded-xl text-[10px] font-bold uppercase transition cursor-pointer border ${
-                  locationOption === "commune"
-                    ? "bg-[#D4AF37] text-black border-[#D4AF37]"
-                    : "bg-white/[0.03] border-afri-border text-afri-text-sec hover:border-white/20"
-                }`}
-              >
-                📍 Commune
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setLocationOption("gps");
-                  if (!latitude || !longitude) {
-                    handleUseCurrentGps();
-                  }
-                }}
-                className={`py-2 px-1 text-center rounded-xl text-[10px] font-bold uppercase transition cursor-pointer border ${
-                  locationOption === "gps"
-                    ? "bg-[#D4AF37] text-black border-[#D4AF37]"
-                    : "bg-white/[0.03] border-afri-border text-afri-text-sec hover:border-white/20"
-                }`}
-              >
-                📱 Mon GPS
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setLocationOption("autre")}
-                className={`py-2 px-1 text-center rounded-xl text-[10px] font-bold uppercase transition cursor-pointer border ${
-                  locationOption === "autre"
-                    ? "bg-[#D4AF37] text-black border-[#D4AF37]"
-                    : "bg-white/[0.03] border-afri-border text-afri-text-sec hover:border-white/20"
-                }`}
-              >
-                ✍️ Saisir un lieu
-              </button>
-            </div>
-
-            {/* Conditional Location Sub-Forms */}
-            {locationOption === "commune" && (
-              <div className="space-y-3 pt-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[9.5px] font-black text-afri-text-sec uppercase mb-1">
-                      Commune / Ville :
-                    </label>
-                    <select
-                      value={commune}
-                      onChange={(e) => setCommune(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-black/40 border border-afri-border rounded-xl text-xs font-bold text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-                    >
-                      {CI_COMMUNES.map((c) => (
-                        <option key={c} value={c} className="bg-zinc-900 text-white">
-                          {c}
-                        </option>
-                      ))}
-                    </select>
+            {locationOption === "none" ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-black/40 border border-dashed border-white/10 rounded-xl">
+                <div className="text-[11px] text-afri-text-sec">
+                  <span>Aucun lieu spécifié</span>
+                  <span className="block text-[9px] text-gray-500">Vous pouvez publier librement sans localisation</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsLocationSheetOpen(true)}
+                  className="px-4 py-2 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Ajouter un lieu</span>
+                </button>
+              </div>
+            ) : (
+              <div className="p-3 bg-black/40 border border-[#D4AF37]/30 rounded-xl space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-0.5 text-left">
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span className="text-[#D4AF37]">📍</span>
+                      <span>
+                        {locationOption === "commune" ? (commune === "Autre" ? (customCommune || "Autre ville") : commune) : 
+                         locationOption === "autre" ? (customPlaceInput || "Lieu personnalisé") :
+                         "Position GPS"}
+                        {quartier ? `, ${quartier}` : ""}
+                      </span>
+                    </div>
+                    {customPlaceInput && locationOption === "commune" && (
+                      <p className="text-[10px] text-afri-text-sec pl-4">{customPlaceInput}</p>
+                    )}
+                    {latitude && longitude && (
+                      <p className="text-[9px] font-mono text-emerald-400 pl-4">
+                        GPS: {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                      </p>
+                    )}
                   </div>
 
-                  {commune === "Autre" ? (
-                    <div>
-                      <label className="block text-[9.5px] font-black text-afri-text-sec uppercase mb-1">
-                        Nom de la ville :
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ex: Daloa, Man, Korhogo..."
-                        value={customCommune}
-                        onChange={(e) => setCustomCommune(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-black/40 border border-afri-border rounded-xl text-xs text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-                      />
-                    </div>
-                  ) : (
-                    <div>
-                      <label className="block text-[9.5px] font-black text-afri-text-sec uppercase mb-1">
-                        Quartier / Repère (Optionnel) :
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ex: Angré 8e Tranche, Selmer, Zone 4..."
-                        value={quartier}
-                        onChange={(e) => setQuartier(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-black/40 border border-afri-border rounded-xl text-xs text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {locationOption === "gps" && (
-              <div className="p-3 bg-black/40 border border-afri-border rounded-xl space-y-2.5 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-afri-text-sec font-mono text-[10px]">Coordonnées de l'événement :</span>
-                  <button
-                    type="button"
-                    onClick={handleUseCurrentGps}
-                    disabled={gpsLoading}
-                    className="px-3 py-1.5 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    {gpsLoading ? <div className="w-3 h-3 border border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : <Navigation className="w-3 h-3" />}
-                    <span>Actualiser GPS</span>
-                  </button>
-                </div>
-
-                {gpsNotice && (
-                  <p className="text-[10px] text-amber-300 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
-                    {gpsNotice}
-                  </p>
-                )}
-
-                {latitude && longitude && (
-                  <div className="flex items-center justify-between text-[10px] font-mono text-emerald-400 bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
-                    <span>Lat: {latitude.toFixed(4)} | Long: {longitude.toFixed(4)}</span>
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
                       type="button"
-                      onClick={() => setIsMapPickerOpen(true)}
-                      className="text-[#D4AF37] underline font-bold uppercase cursor-pointer"
+                      onClick={() => setIsLocationSheetOpen(true)}
+                      className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[#D4AF37] rounded-lg text-[10px] font-bold uppercase transition cursor-pointer"
                     >
-                      Ajuster sur carte
+                      Modifier
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLocationOption("none");
+                        setLatitude(null);
+                        setLongitude(null);
+                        setCustomPlaceInput("");
+                        setQuartier("");
+                      }}
+                      className="p-1 text-red-400 hover:text-red-300 rounded-lg text-[10px] transition cursor-pointer"
+                      title="Retirer la localisation"
+                    >
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                )}
-              </div>
-            )}
-
-            {locationOption === "autre" && (
-              <div className="space-y-3 pt-1">
-                <div>
-                  <label className="block text-[9.5px] font-black text-afri-text-sec uppercase mb-1">
-                    Nom de l'établissement / Salle / Maquis :
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Palais de la Culture, Maquis Chez Tantie Alice..."
-                    value={customPlaceInput}
-                    onChange={(e) => setCustomPlaceInput(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-black/40 border border-afri-border rounded-xl text-xs text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-                  />
                 </div>
-
-                <div className="flex items-center gap-2 pt-1">
-                  <input
-                    type="checkbox"
-                    id="proposePlace"
-                    checked={proposePlaceToCommunity}
-                    onChange={(e) => setProposePlaceToCommunity(e.target.checked)}
-                    className="w-4 h-4 rounded border-afri-border accent-[#D4AF37]"
-                  />
-                  <label htmlFor="proposePlace" className="text-[10.5px] text-afri-text-sec cursor-pointer">
-                    Proposer ce lieu pour validation officielle dans l'annuaire AFRIGOMBO
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {locationOption !== "none" && (
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-afri-border/40">
-                <button
-                  type="button"
-                  onClick={() => setLocationPrivacy("exact")}
-                  className={`p-2 rounded-xl border text-left transition cursor-pointer ${
-                    locationPrivacy === "exact"
-                      ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text"
-                      : "bg-white/[0.02] border-afri-border text-afri-text-sec"
-                  }`}
-                >
-                  <div className="text-[9.5px] font-black uppercase">✓ Position exacte</div>
-                  <div className="text-[8px] text-afri-text-sec">Visible dès la publication</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLocationPrivacy("approximate")}
-                  className={`p-2 rounded-xl border text-left transition cursor-pointer ${
-                    locationPrivacy === "approximate"
-                      ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text"
-                      : "bg-white/[0.02] border-afri-border text-afri-text-sec"
-                  }`}
-                >
-                  <div className="text-[9.5px] font-black uppercase">🔒 Quartier uniquement</div>
-                  <div className="text-[8px] text-afri-text-sec">Précision après acceptation</div>
-                </button>
               </div>
             )}
           </div>
@@ -1202,6 +1061,256 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           </div>
         </form>
       </motion.div>
+
+      {/* LOCATION SELECTION BOTTOM SHEET (ANDROID-FIRST) */}
+      <AndroidBottomSheet
+        isOpen={isLocationSheetOpen}
+        onClose={() => setIsLocationSheetOpen(false)}
+        title="📍 Lieu du Gombo"
+      >
+        <div className="space-y-4 py-1 text-left">
+          <p className="text-xs text-afri-text-sec">
+            Choisissez l'emplacement de l'événement. La localisation est <strong className="text-white">facultative</strong>.
+          </p>
+
+          {/* 3 Main Choice Tabs */}
+          <div className="grid grid-cols-3 gap-1.5 p-1 bg-black/50 border border-afri-border rounded-xl">
+            <button
+              type="button"
+              onClick={() => {
+                setLocationOption("commune");
+              }}
+              className={`py-2 px-1 text-center rounded-lg text-[10.5px] font-bold uppercase transition cursor-pointer ${
+                locationOption === "commune"
+                  ? "bg-[#D4AF37] text-black shadow"
+                  : "text-afri-text-sec hover:text-white"
+              }`}
+            >
+              ✏️ Commune
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLocationOption("gps");
+                if (!latitude || !longitude) {
+                  handleUseCurrentGps();
+                }
+              }}
+              className={`py-2 px-1 text-center rounded-lg text-[10.5px] font-bold uppercase transition cursor-pointer ${
+                locationOption === "gps"
+                  ? "bg-[#D4AF37] text-black shadow"
+                  : "text-afri-text-sec hover:text-white"
+              }`}
+            >
+              📍 Mon GPS
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLocationOption("gps");
+                setIsMapPickerOpen(true);
+              }}
+              className={`py-2 px-1 text-center rounded-lg text-[10.5px] font-bold uppercase transition cursor-pointer ${
+                locationOption === "gps" && isMapPickerOpen
+                  ? "bg-[#D4AF37] text-black shadow"
+                  : "text-afri-text-sec hover:text-white"
+              }`}
+            >
+              🗺️ Sur carte
+            </button>
+          </div>
+
+          {/* Form Fields according to selected tab */}
+          {locationOption === "commune" && (
+            <div className="space-y-3 p-3.5 bg-black/40 border border-afri-border rounded-2xl">
+              <div>
+                <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
+                  Commune / Ville :
+                </label>
+                <select
+                  value={commune}
+                  onChange={(e) => setCommune(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                >
+                  {CI_COMMUNES.map((c) => (
+                    <option key={c} value={c} className="bg-zinc-900 text-white">
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {commune === "Autre" && (
+                <div>
+                  <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
+                    Nom de votre ville :
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Daloa, Korhogo, San-Pédro..."
+                    value={customCommune}
+                    onChange={(e) => setCustomCommune(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
+                  Quartier / Repère (Optionnel) :
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Angré 8e Tranche, Selmer, Zone 4..."
+                  value={quartier}
+                  onChange={(e) => setQuartier(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
+                  Nom du lieu / Salle / Maquis :
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Palais de la Culture, Espace Crystal..."
+                  value={customPlaceInput}
+                  onChange={(e) => setCustomPlaceInput(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                />
+              </div>
+
+              {/* Proposal to AFRIGOMBO */}
+              {customPlaceInput.trim().length > 2 && (
+                <div className="p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl space-y-1.5">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={proposePlaceToCommunity}
+                      onChange={(e) => setProposePlaceToCommunity(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-afri-border accent-[#D4AF37]"
+                    />
+                    <div className="text-left">
+                      <span className="text-[11px] font-bold text-white block">
+                        Proposer ce lieu à AFRIGOMBO
+                      </span>
+                      <span className="text-[9.5px] text-afri-text-sec block leading-relaxed">
+                        Votre lieu pourra être vérifié par l'administration et ajouté aux lieux officiels.
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              )}
+            </div>
+          )}
+
+          {locationOption === "gps" && (
+            <div className="space-y-3 p-3.5 bg-black/40 border border-afri-border rounded-2xl">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-afri-text-sec">Position actuelle :</span>
+                <button
+                  type="button"
+                  onClick={handleUseCurrentGps}
+                  disabled={gpsLoading}
+                  className="px-3 py-1.5 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl font-bold text-[10.5px] uppercase flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  {gpsLoading ? (
+                    <div className="w-3 h-3 border border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Navigation className="w-3.5 h-3.5" />
+                  )}
+                  <span>{gpsLoading ? "Détection..." : "Activer mon GPS"}</span>
+                </button>
+              </div>
+
+              {gpsNotice && (
+                <p className="text-[10px] text-amber-300 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
+                  {gpsNotice}
+                </p>
+              )}
+
+              {latitude && longitude ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-emerald-400 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20">
+                    <span>📍 Lat: {latitude.toFixed(4)} | Lng: {longitude.toFixed(4)}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsMapPickerOpen(true)}
+                    className="w-full py-2 bg-white/5 hover:bg-white/10 text-[#D4AF37] border border-white/10 rounded-xl text-xs font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Map className="w-3.5 h-3.5" />
+                    <span>Ajuster précisément sur la carte</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center py-3 text-afri-text-sec text-xs">
+                  Touchez "Activer mon GPS" ou "Sur carte" pour définir vos coordonnées.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Privacy Choice */}
+          {locationOption !== "none" && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setLocationPrivacy("exact")}
+                className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                  locationPrivacy === "exact"
+                    ? "bg-[#D4AF37]/15 border-[#D4AF37] text-white"
+                    : "bg-black/30 border-afri-border text-afri-text-sec"
+                }`}
+              >
+                <div className="text-[10px] font-black uppercase">✓ Position exacte</div>
+                <div className="text-[8.5px] text-afri-text-sec">Visible sur la carte</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLocationPrivacy("approximate")}
+                className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                  locationPrivacy === "approximate"
+                    ? "bg-[#D4AF37]/15 border-[#D4AF37] text-white"
+                    : "bg-black/30 border-afri-border text-afri-text-sec"
+                }`}
+              >
+                <div className="text-[10px] font-black uppercase">🔒 Approximatif</div>
+                <div className="text-[8.5px] text-afri-text-sec">Quartier uniquement</div>
+              </button>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setLocationOption("none");
+                setLatitude(null);
+                setLongitude(null);
+                setCustomPlaceInput("");
+                setQuartier("");
+                setIsLocationSheetOpen(false);
+              }}
+              className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-red-400 font-bold text-xs uppercase rounded-xl border border-white/10 transition cursor-pointer"
+            >
+              🚫 Aucun lieu
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (locationOption === "none") setLocationOption("commune");
+                setIsLocationSheetOpen(false);
+              }}
+              className="flex-1 py-3 bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black font-black text-xs uppercase rounded-xl shadow transition cursor-pointer active:scale-95"
+            >
+              ✓ Appliquer
+            </button>
+          </div>
+        </div>
+      </AndroidBottomSheet>
 
       {/* CONFIRMATION BOTTOM SHEET */}
       <AndroidBottomSheet

@@ -254,6 +254,142 @@ app.post("/api/wallet/verify-pin", async (req, res) => {
   }
 });
 
+app.post("/api/wallet/change-pin", async (req, res) => {
+  const { idToken, currentPin, newPin } = req.body;
+  if (!idToken || !currentPin || !newPin) return res.status(400).json({ error: "Paramètres manquants." });
+
+  try {
+    const decodedToken = await adminAuth.verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+
+    const userDoc = await adminDb.collection("users").doc(uid).get();
+    if (!userDoc.exists) return res.status(404).json({ error: "Utilisateur introuvable." });
+
+    const data = userDoc.data();
+    const sec = data?.walletSecurity || {};
+
+    if (!sec.pinHash || !sec.pinSalt) {
+      return res.status(400).json({ error: "Aucun PIN configuré." });
+    }
+
+    const computedCurrent = hashPin(currentPin, sec.pinSalt, uid);
+    if (computedCurrent !== sec.pinHash) {
+      return res.status(401).json({ error: "L'ancien code PIN est incorrect." });
+    }
+
+    const newSalt = generateSalt();
+    const newPinHash = hashPin(newPin, newSalt, uid);
+    const now = new Date().toISOString();
+
+    await adminDb.collection("users").doc(uid).update({
+      "walletSecurity.pinConfigured": true,
+      "walletSecurity.pinHash": newPinHash,
+      "walletSecurity.pinSalt": newSalt,
+      "walletSecurity.pinUpdatedAt": now,
+      "walletSecurity.failedPinAttempts": 0,
+      "walletSecurity.lockedUntil": null,
+      "walletSecurity.pinResetRequested": false,
+      "walletSecurity.pinStatus": "CONFIGURED",
+      "paymentSettings.pinEnabled": true
+    });
+
+    await adminDb.collection("admin_audit_logs").add({
+      uid,
+      type: "MODIFICATION_PIN",
+      result: "SUCCESS",
+      details: "Modification sécurisée du PIN Wallet (Backend)",
+      timestamp: FieldValue.serverTimestamp()
+    });
+
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("change-pin error:", err);
+    res.status(500).json({ error: err.message || "Erreur lors du changement de PIN." });
+  }
+});
+
+app.post("/api/wallet/disable-pin", async (req, res) => {
+  const { idToken, currentPin } = req.body;
+  if (!idToken || !currentPin) return res.status(400).json({ error: "Paramètres manquants." });
+
+  try {
+    const decodedToken = await adminAuth.verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+
+    const userDoc = await adminDb.collection("users").doc(uid).get();
+    if (!userDoc.exists) return res.status(404).json({ error: "Utilisateur introuvable." });
+
+    const data = userDoc.data();
+    const sec = data?.walletSecurity || {};
+
+    if (!sec.pinHash || !sec.pinSalt) {
+      return res.status(400).json({ error: "Aucun PIN configuré." });
+    }
+
+    const computedCurrent = hashPin(currentPin, sec.pinSalt, uid);
+    if (computedCurrent !== sec.pinHash) {
+      return res.status(401).json({ error: "Le code PIN actuel est incorrect." });
+    }
+
+    await adminDb.collection("users").doc(uid).update({
+      "walletSecurity.pinConfigured": false,
+      "walletSecurity.pinStatus": "NOT_CONFIGURED",
+      "walletSecurity.pinHash": null,
+      "walletSecurity.pinSalt": null,
+      "walletSecurity.failedPinAttempts": 0,
+      "walletSecurity.lockedUntil": null,
+      "paymentSettings.pinEnabled": false
+    });
+
+    await adminDb.collection("admin_audit_logs").add({
+      uid,
+      type: "DESACTIVATION_PIN",
+      result: "SUCCESS",
+      details: "Désactivation du PIN Wallet (Backend)",
+      timestamp: FieldValue.serverTimestamp()
+    });
+
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("disable-pin error:", err);
+    res.status(500).json({ error: err.message || "Erreur lors de la désactivation du PIN." });
+  }
+});
+
+app.post("/api/wallet/request-reset", async (req, res) => {
+  const { idToken, reason = "Demande utilisateur" } = req.body;
+  if (!idToken) return res.status(401).json({ error: "Authentification requise." });
+
+  try {
+    const decodedToken = await adminAuth.verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+    const now = new Date().toISOString();
+
+    await adminDb.collection("users").doc(uid).update({
+      "walletSecurity.pinResetRequested": true,
+      "walletSecurity.saoAssistancePending": true,
+      "walletSecurity.pinStatus": "RESET_PENDING"
+    });
+
+    await adminDb.collection("support_tickets").add({
+      userId: uid,
+      userEmail: decodedToken.email || "",
+      subject: "🆘 Demande de Réinitialisation PIN Wallet (S-O-A)",
+      description: `L'utilisateur a demandé l'assistance du Support Officiel AFRIGOMBO (S-O-A) pour réinitialiser son code PIN Wallet. Raison: ${reason}`,
+      status: "open",
+      category: "SECURITY",
+      type: "SECURITY_ASSISTANCE",
+      createdAt: now,
+      updatedAt: now
+    });
+
+    res.json({ success: true, message: "Demande de réinitialisation transmise au Support Officiel AFRIGOMBO (S-O-A)." });
+  } catch (err: any) {
+    console.error("request-reset error:", err);
+    res.status(500).json({ error: err.message || "Erreur lors de la transmission." });
+  }
+});
+
   // API health-check for network latency diagnostic pings
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: Date.now() });

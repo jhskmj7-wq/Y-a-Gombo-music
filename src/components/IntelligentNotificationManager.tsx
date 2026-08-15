@@ -86,7 +86,12 @@ export function IntelligentNotificationManager() {
     let hasMessageListener = false;
     const handleServiceWorkerMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === "NAVIGATE" && event.data.url) {
-        navigate(event.data.url);
+        const url = event.data.url;
+        if (url.startsWith("/")) {
+          navigate(url);
+        } else {
+          navigate(`/${url.replace(/^menu_/, "")}`);
+        }
       }
     };
 
@@ -97,7 +102,7 @@ export function IntelligentNotificationManager() {
 
     const timer = setTimeout(() => {
       isInitialLoadRef.current = false;
-    }, 3000);
+    }, 2000);
 
     return () => {
       if (unsubUserNotifs) unsubUserNotifs();
@@ -107,7 +112,7 @@ export function IntelligentNotificationManager() {
         navigator.serviceWorker.removeEventListener("message", handleServiceWorkerMessage);
       }
     };
-  }, [currentUser, isFounderUser]);
+  }, [currentUser, isFounderUser, navigate]);
 
   const requestSystemNotificationPermission = async () => {
     try {
@@ -165,22 +170,22 @@ export function IntelligentNotificationManager() {
 
           // Trigger Success native notification with official S-O-A identity
           try {
-            const sysTitle = "S-O-A";
-            const sysBody = "SUPPORT OFFICIEL AFRIGOMBO\n\nNotifications téléphone activées avec succès ! ✅";
+            const sysTitle = "AFRIGOMBO";
+            const sysBody = "SUPPORT OFFICIEL AFRIGOMBO\n\nNotifications en direct activées avec succès ! ✅";
             if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
               navigator.serviceWorker.ready.then(reg => {
                 reg.showNotification(sysTitle, {
                   body: sysBody,
-                  icon: "/favicon.ico",
-                  badge: "/favicon.ico",
+                  icon: "/pwa-192x192.png",
+                  badge: "/favicon.png",
                   tag: "permission-success",
                   data: { targetPath: "/notifications" }
                 } as any);
               }).catch(() => {
-                new Notification(sysTitle, { body: sysBody, icon: "/favicon.ico", tag: "permission-success" });
+                new Notification(sysTitle, { body: sysBody, icon: "/pwa-192x192.png", tag: "permission-success" });
               });
             } else {
-              new Notification(sysTitle, { body: sysBody, icon: "/favicon.ico", tag: "permission-success" });
+              new Notification(sysTitle, { body: sysBody, icon: "/pwa-192x192.png", tag: "permission-success" });
             }
           } catch (_) {}
         } else {
@@ -212,20 +217,32 @@ export function IntelligentNotificationManager() {
 
       seenIdsRef.current.add(notifId);
       try {
-        const arr = Array.from(seenIdsRef.current).slice(-100);
+        const arr = Array.from(seenIdsRef.current).slice(-200);
         sessionStorage.setItem("afrigombo_seen_notif_ids", JSON.stringify(arr));
       } catch (_) {}
 
-      if (isInitialLoadRef.current) {
+      // Do not popup or play sound if initial page load or if notification is already read
+      if (isInitialLoadRef.current || n.isRead || n.read) {
         return;
+      }
+
+      // Do not popup notifications older than 2 minutes (prevent offline backlog replay)
+      if (n.createdAt) {
+        const ageMs = Date.now() - new Date(n.createdAt).getTime();
+        if (ageMs > 2 * 60 * 1000) {
+          return;
+        }
       }
 
       const isFounderNotif = isFounderStream || n.isFounder || n.type === "founder_alert" || n.audience === "Super Fondateur" || (n.title || "").includes("Fondateur");
       
-      const title = isFounderNotif ? "CENTRE FONDATEUR AFRIGOMBO" : "SUPPORT OFFICIEL AFRIGOMBO";
+      const title = isFounderNotif ? "CENTRE FONDATEUR AFRIGOMBO" : (n.title || "SUPPORT OFFICIEL AFRIGOMBO");
       const message = n.message || n.description || n.content || "Vous avez reçu une nouvelle notification officielle.";
       
-      const targetPath = n.targetPath || n.link || (isFounderNotif ? "/Le-Trone-Du-Fondateur" : "/notifications");
+      let targetPath = n.targetRoute || n.targetPath || n.link || "";
+      if (!targetPath) {
+        targetPath = isFounderNotif ? "/Le-Trone-Du-Fondateur" : "/notifications";
+      }
       const targetId = n.targetId || n.relatedId;
 
       newPopups.push({
@@ -239,23 +256,24 @@ export function IntelligentNotificationManager() {
         priority: n.priority
       });
 
-      // Trigger Native Phone/Browser System Notification if permitted
+      // Trigger Native Phone/Browser System Notification if permitted and window is unfocused or priority HIGH
       try {
         if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-          const sysTitle = isFounderNotif ? "CENTRE FONDATEUR AFRIGOMBO" : "S-O-A";
-          const sysBody = isFounderNotif ? message : `SUPPORT OFFICIEL AFRIGOMBO\n${message}`;
+          const sysTitle = isFounderNotif ? "CENTRE FONDATEUR AFRIGOMBO" : "AFRIGOMBO";
+          const sysBody = isFounderNotif ? message : `${n.title ? n.title + '\n' : ''}${message}`;
 
           if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
             navigator.serviceWorker.ready.then(reg => {
               reg.showNotification(sysTitle, {
                 body: sysBody,
-                icon: "/favicon.ico",
-                badge: "/favicon.ico",
+                icon: "/pwa-192x192.png",
+                badge: "/favicon.png",
                 tag: notifId, // Anti-duplication native tag
+                vibrate: [200, 100, 200],
                 data: { targetPath }
               } as any);
             }).catch(() => {
-              const nativeNotif = new Notification(sysTitle, { body: sysBody, icon: "/favicon.ico", tag: notifId });
+              const nativeNotif = new Notification(sysTitle, { body: sysBody, icon: "/pwa-192x192.png", tag: notifId });
               nativeNotif.onclick = () => {
                 window.focus();
                 if (targetPath) navigate(targetPath);
@@ -263,7 +281,7 @@ export function IntelligentNotificationManager() {
               };
             });
           } else {
-            const nativeNotif = new Notification(sysTitle, { body: sysBody, icon: "/favicon.ico", tag: notifId });
+            const nativeNotif = new Notification(sysTitle, { body: sysBody, icon: "/pwa-192x192.png", tag: notifId });
             nativeNotif.onclick = () => {
               window.focus();
               if (targetPath) navigate(targetPath);
@@ -296,10 +314,19 @@ export function IntelligentNotificationManager() {
     setActivePopups(prev => prev.filter(p => p.id !== id));
   };
 
-  const handlePopupClick = (popup: PopupNotification) => {
+  const handlePopupClick = async (popup: PopupNotification) => {
     dismissPopup(popup.id);
+    if (popup.id) {
+      try {
+        await gomboDB.markNotificationAsRead(popup.id);
+      } catch (_) {}
+    }
     if (popup.targetPath) {
-      navigate(popup.targetPath);
+      if (popup.targetPath.startsWith("/")) {
+        navigate(popup.targetPath);
+      } else {
+        navigate(`/${popup.targetPath.replace(/^menu_/, "")}`);
+      }
     }
   };
 

@@ -512,12 +512,17 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             // User Notification
             const notifRef = doc(collection(db, "notifications"));
             transaction.set(notifRef, sanitizeForFirestore({
+              id: notifRef.id,
               userId: req.uid,
               title: "💳 Dépôt Crédité avec Succès !",
               message: `Votre rechargement Wallet de ${req.montant.toLocaleString('fr-FR')} FCFA (Réf: ${req.reference || req.id}) a été validé par le Fondateur.`,
               type: "payment_received",
+              priority: "HIGH",
+              targetRoute: "/wallet",
+              eventId: `wallet_deposit_${req.id}_${Date.now()}`,
               createdAt: nowIso,
-              isRead: false
+              isRead: false,
+              read: false
             }));
 
           } else {
@@ -656,12 +661,17 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             // User Notification
             const notifRef = doc(collection(db, "notifications"));
             transaction.set(notifRef, sanitizeForFirestore({
+              id: notifRef.id,
               userId: req.uid,
               title: "💸 Retrait Transféré !",
               message: `Votre demande de retrait de ${req.montant.toLocaleString('fr-FR')} FCFA a été validée et exécutée vers le ${req.numero || req.phoneNumber || "Mobile Money"}.`,
               type: "payment_received",
+              priority: "HIGH",
+              targetRoute: "/wallet",
+              eventId: `wallet_withdrawal_${req.id}_${Date.now()}`,
               createdAt: nowIso,
-              isRead: false
+              isRead: false,
+              read: false
             }));
           }
         } else if (pendingAction === "REFUSE") {
@@ -734,12 +744,17 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
           // User Notification
           const notifRef = doc(collection(db, "notifications"));
           transaction.set(notifRef, sanitizeForFirestore({
+            id: notifRef.id,
             userId: req.uid,
             title: req.type === "deposit" ? "🔴 Rechargement Refusé" : "🔴 Retrait Refusé",
             message: `Votre demande de ${req.type === "deposit" ? "dépôt" : "retrait"} de ${req.montant.toLocaleString('fr-FR')} FCFA a été refusée par le Fondateur. Motif : ${comment}`,
             type: "payment_refused",
+            priority: "HIGH",
+            targetRoute: "/wallet",
+            eventId: `wallet_refusal_${req.id}_${Date.now()}`,
             createdAt: nowIso,
-            isRead: false
+            isRead: false,
+            read: false
           }));
 
         } else if (pendingAction === "PENDING") {

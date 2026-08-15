@@ -296,48 +296,59 @@ export class WalletSecurityService {
   }
 
   /**
-   * Change PIN with verification of old PIN
+   * Change PIN with verification of old PIN via backend API
    */
   static async changePin(uid: string, currentPin: string, newPin: string): Promise<{ success: boolean; error?: string }> {
-    const verifyRes = await this.verifyPin(uid, currentPin);
-    if (verifyRes.result !== "PIN_VALID") {
-      return { success: false, error: verifyRes.message };
-    }
-
     const strength = this.validatePinStrength(newPin);
     if (!strength.valid) {
       return { success: false, error: strength.reason };
     }
 
     try {
-      const salt = this.generateSalt();
-      const pinHash = await this.hashPin(newPin, salt, uid);
-      const now = new Date().toISOString();
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) throw new Error("Authentification requise.");
 
-      await setDoc(doc(db, "users", uid), {
-        walletSecurity: {
-          pinConfigured: true,
-          pinHash,
-          pinSalt: salt,
-          pinUpdatedAt: now,
-          failedPinAttempts: 0,
-          lockedUntil: null,
-          pinResetRequested: false,
-          pinStatus: "CONFIGURED"
-        }
-      }, { merge: true });
-
-      await logUserActivity({
-        uid,
-        type: "MODIFICATION_PIN",
-        result: "SUCCESS",
-        details: "Modification réussie du PIN Wallet"
+      const response = await fetch("/api/wallet/change-pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken, currentPin, newPin })
       });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Erreur lors du changement de PIN.");
+      }
 
       return { success: true };
     } catch (err: any) {
       console.error("Error changing PIN:", err);
-      return { success: false, error: "Erreur lors de la mise à jour du PIN." };
+      return { success: false, error: err.message || "Erreur lors de la mise à jour du PIN." };
+    }
+  }
+
+  /**
+   * Disable PIN with verification of current PIN via backend API
+   */
+  static async disablePin(uid: string, currentPin: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) throw new Error("Authentification requise.");
+
+      const response = await fetch("/api/wallet/disable-pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken, currentPin })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Erreur lors de la désactivation du PIN.");
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      console.error("Error disabling PIN:", err);
+      return { success: false, error: err.message || "Erreur lors de la désactivation du PIN." };
     }
   }
 

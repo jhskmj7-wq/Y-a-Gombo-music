@@ -372,14 +372,19 @@ export class GomboAdsService {
 
         // Generate non-blocking notifications
         // Notification will be sent after transaction
-        tx.set(doc(db, "notifications", `notif_${campaignId}`), {
-          id: `notif_${campaignId}`,
+        const notifId = `notif_${campaignId}`;
+        tx.set(doc(db, "notifications", notifId), {
+          id: notifId,
           userId,
           title: "📢 Campagne Gombo Ads créée !",
           message: isAdminOrFounder
             ? `Votre campagne "${payload.title}" est maintenant active pour ${durationDays} jour(s).`
             : `Votre campagne "${payload.title}" a été payée et est maintenant en attente de révision.`,
           type: "gombo_ads",
+          priority: "HIGH",
+          targetRoute: "/ads",
+          eventId: `ads_created_${campaignId}`,
+          isRead: false,
           read: false,
           createdAt: now.toISOString()
         });
@@ -428,12 +433,17 @@ export class GomboAdsService {
       });
 
       // Send approval notification
-      await setDoc(doc(db, "notifications", `notif_app_${campaignId}_${Date.now()}`), {
-        id: `notif_app_${campaignId}_${Date.now()}`,
+      const appNotifId = `notif_app_${campaignId}_${Date.now()}`;
+      await setDoc(doc(db, "notifications", appNotifId), {
+        id: appNotifId,
         userId: campaign.ownerId,
         title: "✅ Campagne Gombo Ads Approuvée !",
         message: `Votre campagne "${campaign.title}" est maintenant active sur AFRIGOMBO jusqu'au ${new Date(endAt).toLocaleDateString("fr-FR")}.`,
         type: "gombo_ads_approved",
+        priority: "HIGH",
+        targetRoute: "/ads",
+        eventId: `ads_approved_${campaignId}`,
+        isRead: false,
         read: false,
         createdAt: now.toISOString()
       });
@@ -550,12 +560,17 @@ export class GomboAdsService {
       });
 
       // Send rejection notification
-      await setDoc(doc(db, "notifications", `notif_rej_${campaignId}_${Date.now()}`), {
-        id: `notif_rej_${campaignId}_${Date.now()}`,
+      const rejNotifId = `notif_rej_${campaignId}_${Date.now()}`;
+      await setDoc(doc(db, "notifications", rejNotifId), {
+        id: rejNotifId,
         userId: campaign.ownerId,
         title: "❌ Campagne Gombo Ads Refusée",
         message: `Votre campagne "${campaign.title}" a été refusée pour la raison suivante : "${reason}". Un remboursement de ${campaign.totalCost.toLocaleString("fr-FR")} Gawa a été crédité sur votre compte.`,
         type: "gombo_ads_rejected",
+        priority: "HIGH",
+        targetRoute: "/ads",
+        eventId: `ads_rejected_${campaignId}`,
+        isRead: false,
         read: false,
         createdAt: now.toISOString()
       });
