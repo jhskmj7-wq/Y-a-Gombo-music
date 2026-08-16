@@ -18,7 +18,7 @@ import {
   Check
 } from "lucide-react";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getEffectiveGomboId } from "../lib/gomboIdHelper";
+import { getEffectiveGomboId, getGomboIdStatusInfo, formatGomboIdDisplay } from "../lib/gomboIdHelper";
 import { storage } from "../lib/firebase";
 import { User } from "../types";
 import { motion, AnimatePresence } from "motion/react";
@@ -106,52 +106,44 @@ function GomboIdUserDashboardInner({
 
   if (!currentUser) return null;
 
+  // Single Source of Truth Gombo ID Info
+  const gInfo = getGomboIdStatusInfo(currentUser);
+
   // Status mapping helper
   const getStatusDisplay = () => {
-    const status = currentUser?.kycStatus ?? "none";
-    const type = currentUser?.kycType ?? "standard";
-    const level = currentUser?.gomboId?.niveau || 1;
-
-    if (status === "approved") {
+    if (gInfo.statusCode === "ATTRIBUTED") {
       return {
-        label: `✅ Talent Certifié (Niveau ${level})`,
+        label: `✅ Talent Certifié (${gInfo.verificationLevel})`,
         color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
-        desc: "Félicitations ! Votre compte est certifié d'excellence artistique."
+        desc: `GOMBO ID Officiel : ${gInfo.gomboId}. Votre compte est certifié d'excellence artistique.`
       };
     }
-    if (status === "rejected") {
+    if (gInfo.statusCode === "REJECTED") {
       return {
-        label: "🚫 Vérification refusée",
+        label: "🔴 Demande non validée",
         color: "text-red-400 bg-red-500/10 border-red-500/30",
-        desc: "Votre dossier a été refusé. Vous pouvez modifier vos informations et tenter à nouveau."
+        desc: gInfo.rejectionReason || "Votre dossier n'a pas été validé. Vous pouvez régulariser votre demande."
       };
     }
-    if (status === "info_required") {
-      return {
-        label: "🟡 Informations complémentaires requises",
-        color: "text-amber-400 bg-amber-500/10 border-amber-500/30",
-        desc: currentUser?.kycComplementaryInfo || "L'administration requiert d'autres détails concernant votre activité."
-      };
-    }
-    if (status === "pending") {
-      if (type === "express") {
+    if (gInfo.statusCode === "PENDING") {
+      if (currentUser?.kycType === "express") {
         return {
           label: "⚡ En traitement Express (24-72h)",
           color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/30",
-          desc: "Dossier prioritaire d'excellence. Un Super Admin examine vos documents en urgence."
+          desc: "Dossier prioritaire d'excellence. L'administration examine vos pièces."
         };
       }
       return {
-        label: "⏳ En attente de vérification",
-        color: "text-afri-text-sec bg-zinc-500/10 border-zinc-500/30",
-        desc: "Dossier en attente dans la file d'attente standard (traitement sous 7-14 jours)."
+        label: "🟡 En vérification (Dossier Transmis)",
+        color: "text-amber-400 bg-amber-500/10 border-amber-500/30",
+        desc: "Votre demande de Gombo ID est en cours d'analyse dans la file d'attente."
       };
     }
 
     return {
-      label: "Héritage à Révéler",
+      label: "Héritage à Révéler — Non attribué",
       color: "text-afri-text-sec bg-zinc-500/5 border-zinc-500/15",
-      desc: "Ton héritage musical mérite d'être raconté. Demandez votre GOMBO ID pour sceller votre prestige."
+      desc: "Ton héritage musical mérite d'être raconté. Obtenez votre GOMBO ID pour sceller votre prestige."
     };
   };
 
