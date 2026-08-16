@@ -85,6 +85,9 @@ const BetaCheckPanel = lazyWithRetry(() => import("./admin/BetaCheckPanel"));
 // New Lazy Imports for optimization
 const NearbyPageView = lazyWithRetry(() => import("./NearbyPageView").then(m => ({ default: m.NearbyPageView })));
 const GomboBoostManager = lazyWithRetry(() => import("./GomboBoostManager"));
+const GomboApply = lazyWithRetry(() => import("./GomboApply"));
+const GomboItineraryModal = lazyWithRetry(() => import("./GomboItineraryModal"));
+const GomboSecureModal = lazyWithRetry(() => import("./GomboSecureModal"));
 const AfrigomboSupportModal = lazyWithRetry(() => import("./AfrigomboSupportModal").then(m => ({ default: m.AfrigomboSupportModal })));
 import NotificationCenter from "./NotificationCenter";
 import SettingsModal from "./SettingsModal";
@@ -104,7 +107,7 @@ const PendingPaymentModal = lazyWithRetry(() => import("./PendingPaymentModal").
 import { MonAbonnementView } from "./MonAbonnementView";
 import { GomboAdsMainView } from "./ads/GomboAdsMainView";
 import { GomboAdsService } from "../services/GomboAdsService";
-import { GomboAdsCampaign } from "../types";
+import { GomboAdsCampaign, UserProfile } from "../types";
 
 // Extracted Sub-components
 const UserReelsView = lazyWithRetry(() => import("./UserReelsView").then(m => ({ default: m.UserReelsView })));
@@ -367,15 +370,26 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const location = useLocation();
 
   useEffect(() => {
-    const path = location.pathname;
-    if (path === "/publish") {
-      setMenuHistory(prev => prev[prev.length - 1] === "user_publish" ? prev : [...prev, "user_publish"]);
-    } else if (path === "/vibes") {
-      setMenuHistory(prev => prev[prev.length - 1] === "user_reels" ? prev : [...prev, "user_reels"]);
-    } else if (path === "/my-gombos") {
-      setMenuHistory(prev => prev[prev.length - 1] === "user_mes_gombos" ? prev : [...prev, "user_mes_gombos"]);
-    } else if (path === "/heritage") {
-      setMenuHistory(prev => prev[prev.length - 1] === "user_heritage" ? prev : [...prev, "user_heritage"]);
+    const path = location.pathname.toLowerCase();
+    let targetMenu = "";
+    if (path === "/publish" || path === "/publier") targetMenu = "user_publish";
+    else if (path === "/vibes" || path === "/reels") targetMenu = "user_reels";
+    else if (path === "/my-gombos" || path === "/gombos" || path === "/gombo") targetMenu = "user_mes_gombos";
+    else if (path === "/heritage" || path === "/profil" || path === "/profile") targetMenu = "user_heritage";
+    else if (path === "/wallet") targetMenu = "user_wallet";
+    else if (path === "/gombo-id") targetMenu = "user_gombo_id";
+    else if (path === "/nearby") targetMenu = "nearby";
+    else if (path === "/messages" || path === "/chat") targetMenu = "user_messages";
+    else if (path === "/settings") targetMenu = "user_settings";
+    else if (path === "/grand-marche" || path === "/market") targetMenu = "user_grand_marche";
+    else if (path === "/academie") targetMenu = "user_academie";
+    else if (path === "/events") targetMenu = "user_events";
+    else if (path === "/contracts") targetMenu = "user_contracts";
+    else if (path === "/notifications") targetMenu = "user_notifications";
+    else if (path === "/home" || path === "/") targetMenu = "user_terrain";
+
+    if (targetMenu) {
+      setMenuHistory(prev => prev[prev.length - 1] === targetMenu ? prev : [...prev, targetMenu]);
     }
   }, [location.pathname]);
 
@@ -500,6 +514,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     return [];
   });
   const [selectedGomboDetails, setSelectedGomboDetails] = useState<Gombo | null>(null);
+  const [applyingGombo, setApplyingGombo] = useState<Gombo | null>(null);
+  const [itineraryTarget, setItineraryTarget] = useState<{
+    title: string;
+    commune?: string;
+    latitude?: number;
+    longitude?: number;
+  } | null>(null);
+  const [isGomboSecureModalOpen, setIsGomboSecureModalOpen] = useState(false);
   const [preselectedGomboAdId, setPreselectedGomboAdId] = useState<string | undefined>(undefined);
   const [userCampaigns, setUserCampaigns] = useState<GomboAdsCampaign[]>([]);
   const [expandedGomboId, setExpandedGomboId] = useState<string | null>(null);
@@ -1178,6 +1200,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       user_home: "home",
       user_terrain: "home",
       user_gombos: "gombos",
+      user_mes_gombos: "gombos",
       user_publish: "gombos",
       nearby: "nearby",
       user_nearby: "nearby",
@@ -1191,6 +1214,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       renforts: "renforts",
       user_podcasts: "podcasts",
       podcasts: "podcasts",
+      user_vibes: "podcasts",
       user_events: "events",
       events: "events",
       menu_events: "events",
@@ -1202,6 +1226,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       user_wheel: "wheel",
       wheel: "wheel",
       premium_wheel: "wheel",
+      user_wallet: "wallet",
+      user_contracts: "escrow",
+      user_subscription_management: "premium",
+      user_gombo_plus: "premium",
       user_grand_marche: "grandMarket",
       user_grandMarket: "grandMarket",
       user_ecosystem: "grandMarket",
@@ -1213,6 +1241,17 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       user_downloads: "downloads",
       user_backups: "backups",
       user_avatar: "avatar",
+      user_profile_view: "avatar",
+      user_edit_profile: "avatar",
+      user_heritage: "heritage",
+      user_gombo_id: "gombo_id",
+      user_messages: "chat",
+      user_notifications: "notifications",
+      user_support: "support",
+      user_help_center: "support",
+      user_command_center: "cahier",
+      user_builders: "cahier",
+      user_verification: "verification",
       menu_near_opports: "nearbyOpportunities",
       menu_msgs: "chat",
       menu_favorites: "favorites",
@@ -1231,6 +1270,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       case "user_terrain":
         return "Accueil & Le Terrain";
       case "user_gombos":
+      case "user_mes_gombos":
       case "user_publish":
         return "Gombos & Publications";
       case "nearby":
@@ -1250,6 +1290,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         return "Renfort Express";
       case "user_podcasts":
       case "podcasts":
+      case "user_vibes":
         return "Podcasts & Résonances";
       case "user_events":
       case "events":
@@ -1264,6 +1305,27 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       case "academie":
       case "menu_academie":
         return "L'Académie";
+      case "user_wallet":
+        return "Wallet Souverain AFRIPAY";
+      case "user_contracts":
+        return "Séquestre & Contrats";
+      case "user_subscription_management":
+      case "user_gombo_plus":
+        return "Adhésion Premium & Gombo Plus";
+      case "user_heritage":
+      case "menu_heritage":
+        return "Mon Héritage & Portfolio";
+      case "user_gombo_id":
+      case "menu_gombo_id":
+        return "Gombo ID Souverain";
+      case "user_messages":
+        return "Messagerie Instantanée";
+      case "user_notifications":
+        return "Notifications";
+      case "user_gawa_center":
+        return "Centre Gawa";
+      case "user_mes_lots":
+        return "Mes Lots";
       case "user_whats_new":
         return "Journal des Mises à jour";
       case "user_downloads":
@@ -1271,10 +1333,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       case "user_backups":
         return "Sauvegardes";
       case "user_avatar":
-        return "Avatar";
+      case "user_profile_view":
+      case "user_edit_profile":
+        return "Avatar & Profil";
       case "user_wheel":
       case "wheel":
+      case "premium_wheel":
         return "Roue AFRIGOMBO";
+      case "user_command_center":
+      case "user_builders":
+        return "Cahier & Command Center";
+      case "user_support":
+      case "user_help_center":
+        return "Support & Aide";
       default:
         return "Fonctionnalité";
     }
@@ -5331,9 +5402,17 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {activeMenu === "user_mes_gombos" && (() => {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
-                if (!currentArtist) return <p className="text-afri-text-sec">Aucun artiste disponible.</p>;
+                const myUid = profile?.uid || currentUser?.uid || currentArtist?.id;
+                if (!currentArtist && !myUid) return <p className="text-afri-text-sec">Aucun artiste disponible.</p>;
 
-                const myGombos = gombos.filter(g => g.organizerId === currentArtist.id || g.applicantIds?.includes(currentArtist.id) || g.selectedTalentId === currentArtist.id);
+                const myGombos = gombos.filter(g => 
+                  (myUid && (g.organizerId === myUid || g.clientId === myUid)) ||
+                  (currentArtist && (g.organizerId === currentArtist.id || g.clientId === currentArtist.id)) ||
+                  (myUid && g.applicantIds?.includes(myUid)) ||
+                  (currentArtist && g.applicantIds?.includes(currentArtist.id)) ||
+                  (myUid && g.selectedTalentId === myUid) ||
+                  (currentArtist && g.selectedTalentId === currentArtist.id)
+                );
 
                 const filteredGombos = myGombos.filter(g => {
                   if (pubFilter === "all") return true;
@@ -5452,6 +5531,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           const isExpanded = expandedGomboId === gombo.id;
                           const gomboAdCampaign = userCampaigns.find(c => c.targetId === gombo.id);
                           const hasAdCampaign = !!gomboAdCampaign;
+                          const isMyGombo = Boolean((myUid && (gombo.organizerId === myUid || gombo.clientId === myUid)) || (currentArtist && (gombo.organizerId === currentArtist.id || gombo.clientId === currentArtist.id)));
+                          const isMyTalent = Boolean((myUid && gombo.selectedTalentId === myUid) || (currentArtist && gombo.selectedTalentId === currentArtist.id));
 
                           return (
                             <div 
@@ -5475,7 +5556,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     </strong>
                                   </div>
                                   <span className="text-[10px] text-afri-text-sec font-mono block mt-1 pl-5.5">
-                                    📍 {gombo.location || "Abidjan"}
+                                    📍 {typeof gombo.location === "object" && gombo.location ? (gombo.location as any).name : (gombo.location || "Abidjan")}
                                   </span>
                                 </div>
 
@@ -5581,7 +5662,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                                       {/* Original Action Buttons */}
                                       <div className="flex flex-wrap gap-2 pt-1 border-t border-afri-border/30">
-                                        {(gombo.status === "pending_deposit" || gombo.status === "pending" || gombo.adminValidated === false) && gombo.organizerId === currentArtist.id && (
+                                        {(gombo.status === "pending_deposit" || gombo.status === "pending" || gombo.adminValidated === false) && isMyGombo && (
                                           <button 
                                             onClick={() => {
                                               setPendingPaymentItem({
@@ -5598,14 +5679,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                           </button>
                                         )}
 
-                                        {(gombo.status === "publie" || gombo.status === "candidatures_ouvertes") && gombo.organizerId === currentArtist.id && (
+                                        {(gombo.status === "publie" || gombo.status === "candidatures_ouvertes") && isMyGombo && (
                                           <button onClick={() => setActiveMenu("user_dashboard")} className="px-3 py-1.5 bg-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl hover:bg-amber-400 transition cursor-pointer">
                                             🎯 Sélectionner Candidat
                                           </button>
                                         )}
                                         
                                         {/* Management actions for organizer */}
-                                        {gombo.organizerId === currentArtist.id && (
+                                        {isMyGombo && (
                                           <div className="w-full flex flex-wrap gap-2 mt-2">
                                             <button 
                                               onClick={() => {
@@ -5653,7 +5734,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                                     if (gombo.id) {
                                                       await gomboDB.deleteGombo(gombo.id);
                                                       setGombos(prev => prev.filter(g => g.id !== gombo.id));
-                                                      addToTerminal(`[SUPPRESSION] Publication ${gombo.id} supprimée.`);
+                                                      addToTerminal(`[SUPPRESSION] Publication ${gombo.title} supprimée.`);
                                                     }
                                                   } catch (err) {
                                                     alert("Erreur lors de la suppression.");
@@ -5679,33 +5760,53 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                           </button>
                                         )}
 
-                                        {gombo.selectedTalentId === currentArtist.id && gombo.status === "artiste_selectionne" && (
+                                        {isMyTalent && gombo.status === "artiste_selectionne" && (
                                           <>
-                                            <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_accepte")} className="px-3 py-1.5 bg-emerald-500 text-black text-[10px] font-bold uppercase rounded-xl hover:bg-emerald-400 cursor-pointer">
+                                            <button onClick={async () => {
+                                              if (!gombo.id) return;
+                                              await gomboDB.updateGomboStatus(gombo.id, "contrat_accepte");
+                                              setGombos(prev => prev.map(g => g.id === gombo.id ? { ...g, status: "contrat_accepte" } : g));
+                                              addToTerminal(`[CONTRAT] Contrat accepté pour "${gombo.title}"`);
+                                            }} className="px-3 py-1.5 bg-emerald-500 text-black text-[10px] font-bold uppercase rounded-xl hover:bg-emerald-400 cursor-pointer">
                                               Accepter le Contrat
                                             </button>
-                                            <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_refuse")} className="px-3 py-1.5 bg-red-900 text-red-100 text-[10px] font-bold uppercase rounded-xl hover:bg-red-800 cursor-pointer">
+                                            <button onClick={async () => {
+                                              if (!gombo.id) return;
+                                              await gomboDB.updateGomboStatus(gombo.id, "contrat_refuse");
+                                              setGombos(prev => prev.map(g => g.id === gombo.id ? { ...g, status: "contrat_refuse" } : g));
+                                              addToTerminal(`[CONTRAT] Contrat refusé pour "${gombo.title}"`);
+                                            }} className="px-3 py-1.5 bg-red-900 text-red-100 text-[10px] font-bold uppercase rounded-xl hover:bg-red-800 cursor-pointer">
                                               Refuser
                                             </button>
                                           </>
                                         )}
 
-                                        {gombo.organizerId === currentArtist.id && (gombo.status === "contrat_accepte" || gombo.status === "contrat_confirme") && (
-                                          <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "mission_terminee")} className="px-3 py-1.5 bg-blue-500 text-afri-text text-[10px] font-bold uppercase rounded-xl hover:bg-blue-400 cursor-pointer">
+                                        {isMyGombo && (gombo.status === "contrat_accepte" || gombo.status === "contrat_confirme") && (
+                                          <button onClick={async () => {
+                                            if (!gombo.id) return;
+                                            await gomboDB.updateGomboStatus(gombo.id, "mission_terminee");
+                                            setGombos(prev => prev.map(g => g.id === gombo.id ? { ...g, status: "mission_terminee" } : g));
+                                            addToTerminal(`[MISSION] Prestation validée pour "${gombo.title}"`);
+                                          }} className="px-3 py-1.5 bg-blue-500 text-afri-text text-[10px] font-bold uppercase rounded-xl hover:bg-blue-400 cursor-pointer">
                                             Valider la Prestation
                                           </button>
                                         )}
 
-                                        {gombo.organizerId === currentArtist.id && gombo.status === "mission_terminee" && (
-                                          <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "paiement_effectue")} className="px-3 py-1.5 bg-green-500 text-black text-[10px] font-bold uppercase rounded-xl hover:bg-green-400 cursor-pointer">
+                                        {isMyGombo && gombo.status === "mission_terminee" && (
+                                          <button onClick={async () => {
+                                            if (!gombo.id) return;
+                                            await gomboDB.updateGomboStatus(gombo.id, "paiement_effectue");
+                                            setGombos(prev => prev.map(g => g.id === gombo.id ? { ...g, status: "paiement_effectue" } : g));
+                                            addToTerminal(`[PAIEMENT] Paiement libéré pour "${gombo.title}"`);
+                                          }} className="px-3 py-1.5 bg-green-500 text-black text-[10px] font-bold uppercase rounded-xl hover:bg-green-400 cursor-pointer">
                                             Libérer le Paiement
                                           </button>
                                         )}
 
-                                        {(gombo.organizerId === currentArtist.id || gombo.selectedTalentId === currentArtist.id) && gombo.selectedTalentId && (
+                                        {(isMyGombo || isMyTalent) && gombo.selectedTalentId && (
                                           <button 
                                             onClick={() => {
-                                              const targetId = gombo.organizerId === currentArtist.id ? gombo.selectedTalentId : gombo.organizerId;
+                                              const targetId = isMyGombo ? gombo.selectedTalentId : gombo.organizerId;
                                               setOpenConvoWithUserId(targetId!);
                                               setOpenConvoWithGomboId(gombo.id!);
                                               setActiveMenu("user_messages");
@@ -7600,76 +7701,124 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         title="Que souhaitez-vous publier ?"
       >
         <div className="space-y-2.5">
-          <button
-            onClick={() => {
-              setActivePublishType("gombo");
-              setActiveMenu("user_publish");
-              setIsPlusMenuOpen(false);
-            }}
-            className="w-full flex items-center gap-4 bg-gradient-to-r from-afri-gold/10 to-transparent hover:from-afri-gold/20 border border-afri-gold/20 rounded-2xl py-3 px-3.5 text-left transition-all group cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-afri-gold to-[#F1C40F] flex items-center justify-center text-black shrink-0 shadow-lg group-hover:scale-105 transition-transform">
-              <Megaphone className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Publier un Gombo</h4>
-              <p className="text-[10px] text-afri-text-sec font-mono">Recrutez des artistes pour vos événements.</p>
-            </div>
-          </button>
+          {isModuleVisible("gombos") && (
+            <button
+              onClick={() => {
+                if (isModuleComingSoon("gombos")) {
+                  setIsPlusMenuOpen(false);
+                  setComingSoonFeatureKey("user_gombos");
+                  return;
+                }
+                setActivePublishType("gombo");
+                setActiveMenu("user_publish");
+                setIsPlusMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-4 bg-gradient-to-r from-afri-gold/10 to-transparent hover:from-afri-gold/20 border border-afri-gold/20 rounded-2xl py-3 px-3.5 text-left transition-all group cursor-pointer relative"
+            >
+              {isModuleComingSoon("gombos") && (
+                <span className="absolute top-2 right-2 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
+                  Bientôt disponible 🔒
+                </span>
+              )}
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-afri-gold to-[#F1C40F] flex items-center justify-center text-black shrink-0 shadow-lg group-hover:scale-105 transition-transform">
+                <Megaphone className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Publier un Gombo</h4>
+                <p className="text-[10px] text-afri-text-sec font-mono">Recrutez des artistes pour vos événements.</p>
+              </div>
+            </button>
+          )}
 
-          <button
-            onClick={() => {
-              setActivePublishType("reel");
-              setActiveMenu("user_publish");
-              setIsPlusMenuOpen(false);
-            }}
-            className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl py-3 px-3.5 text-left transition-all group cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30 group-hover:scale-105 transition-transform">
-              <Video className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Publier un Réel</h4>
-              <p className="text-[10px] text-afri-text-sec font-mono">Partagez votre talent en vidéo courte.</p>
-            </div>
-          </button>
+          {isModuleVisible("reels") && (
+            <button
+              onClick={() => {
+                if (isModuleComingSoon("reels")) {
+                  setIsPlusMenuOpen(false);
+                  setComingSoonFeatureKey("user_reels");
+                  return;
+                }
+                setActivePublishType("reel");
+                setActiveMenu("user_publish");
+                setIsPlusMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl py-3 px-3.5 text-left transition-all group cursor-pointer relative"
+            >
+              {isModuleComingSoon("reels") && (
+                <span className="absolute top-2 right-2 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
+                  Bientôt disponible 🔒
+                </span>
+              )}
+              <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30 group-hover:scale-105 transition-transform">
+                <Video className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Publier un Réel</h4>
+                <p className="text-[10px] text-afri-text-sec font-mono">Partagez votre talent en vidéo courte.</p>
+              </div>
+            </button>
+          )}
 
-          <button
-            onClick={() => {
-              setActivePublishType("demo");
-              setActiveMenu("user_publish");
-              setIsPlusMenuOpen(false);
-            }}
-            className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl py-3 px-3.5 text-left transition-all group cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/30 group-hover:scale-105 transition-transform">
-              <Mic2 className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Démo Musicale</h4>
-              <p className="text-[10px] text-afri-text-sec font-mono">Publiez une démo audio pour les recruteurs.</p>
-            </div>
-          </button>
+          {isModuleVisible("podcasts") && (
+            <button
+              onClick={() => {
+                if (isModuleComingSoon("podcasts")) {
+                  setIsPlusMenuOpen(false);
+                  setComingSoonFeatureKey("user_podcasts");
+                  return;
+                }
+                setActivePublishType("demo");
+                setActiveMenu("user_publish");
+                setIsPlusMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl py-3 px-3.5 text-left transition-all group cursor-pointer relative"
+            >
+              {isModuleComingSoon("podcasts") && (
+                <span className="absolute top-2 right-2 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
+                  Bientôt disponible 🔒
+                </span>
+              )}
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/30 group-hover:scale-105 transition-transform">
+                <Mic2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Démo Musicale</h4>
+                <p className="text-[10px] text-afri-text-sec font-mono">Publiez une démo audio pour les recruteurs.</p>
+              </div>
+            </button>
+          )}
 
-          <button
-            onClick={() => {
-              setActivePublishType("renfort");
-              setActiveMenu("user_publish");
-              setIsPlusMenuOpen(false);
-            }}
-            className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl py-3 px-3.5 text-left transition-all group relative overflow-hidden cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 border border-red-500/30 group-hover:scale-105 transition-transform">
-              <Zap className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5 flex items-center gap-2">
-                Renfort Express
-                <span className="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded uppercase">Urgent</span>
-              </h4>
-              <p className="text-[10px] text-afri-text-sec font-mono">Demandez un dépannage immédiat (musicien).</p>
-            </div>
-          </button>
+          {isModuleVisible("renforts") && (
+            <button
+              onClick={() => {
+                if (isModuleComingSoon("renforts")) {
+                  setIsPlusMenuOpen(false);
+                  setComingSoonFeatureKey("user_renforts");
+                  return;
+                }
+                setActivePublishType("renfort");
+                setActiveMenu("user_publish");
+                setIsPlusMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl py-3 px-3.5 text-left transition-all group relative overflow-hidden cursor-pointer"
+            >
+              {isModuleComingSoon("renforts") && (
+                <span className="absolute top-2 right-2 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
+                  Bientôt disponible 🔒
+                </span>
+              )}
+              <div className="w-10 h-10 rounded-xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 border border-red-500/30 group-hover:scale-105 transition-transform">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5 flex items-center gap-2">
+                  Renfort Express
+                  <span className="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded uppercase">Urgent</span>
+                </h4>
+                <p className="text-[10px] text-afri-text-sec font-mono">Demandez un dépannage immédiat (musicien).</p>
+              </div>
+            </button>
+          )}
         </div>
       </AndroidBottomSheet>
 
@@ -8210,7 +8359,55 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                              COMING SOON EXPLANATORY MODAL
          ========================================================================= */}
       {comingSoonFeatureKey && (() => {
-        const details = {
+        const detailsMap: Record<string, { title: string; badge: string; description: string; incentive: string; icon: string; color: string }> = {
+          user_gombos: {
+            title: "Gombos & Annonces",
+            badge: "Bientôt disponible",
+            description: "La publication et la consultation directe des gombos est en cours de déploiement.",
+            incentive: "Trouvez les meilleures prestations musicales vérifiées à Abidjan et au-delà !",
+            icon: "💼",
+            color: "from-amber-500 to-yellow-600"
+          },
+          user_reels: {
+            title: "Flex Multimédia & Vidéos Réels",
+            badge: "Bientôt disponible",
+            description: "Le studio de partage vidéo des talents africains arrive très bientôt.",
+            incentive: "Préparez vos meilleurs clips et solos pour enflammer la communauté !",
+            icon: "📹",
+            color: "from-purple-500 to-pink-600"
+          },
+          user_podcasts: {
+            title: "Podcasts & Résonances",
+            badge: "Bientôt disponible",
+            description: "Le canal audio et démos musicales haute fidélité est en cours de configuration.",
+            incentive: "Faites écouter vos arrangements et grooves aux meilleurs producteurs.",
+            icon: "🎙️",
+            color: "from-blue-500 to-indigo-600"
+          },
+          user_renforts: {
+            title: "Renfort Express 🚨",
+            badge: "Bientôt disponible",
+            description: "Le système de remplacement et dépannage d'urgence en direct sera accessible sous peu.",
+            incentive: "Soyez alerté en priorité lors des besoins immédiats sur scène !",
+            icon: "⚡",
+            color: "from-red-500 to-orange-600"
+          },
+          user_wheel: {
+            title: "Roue des Avantages Premium",
+            badge: "Bientôt disponible",
+            description: "La Roue de la fortune souveraine est en cours de paramétrage par la Chancellerie.",
+            incentive: "Tirages au sort, boosts de profil gratuits et bonus souverains à gagner !",
+            icon: "🎡",
+            color: "from-yellow-500 to-amber-600"
+          },
+          premium_wheel: {
+            title: "Roue des Avantages Premium",
+            badge: "Bientôt disponible",
+            description: "La Roue de la fortune souveraine est en cours de paramétrage par la Chancellerie.",
+            incentive: "Tirages au sort, boosts de profil gratuits et bonus souverains à gagner !",
+            icon: "🎡",
+            color: "from-yellow-500 to-amber-600"
+          },
           menu_favorites: {
             title: "Mes Favoris Élite",
             badge: "Bientôt disponible",
@@ -8243,9 +8440,16 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             icon: "💾",
             color: "from-purple-500 to-fuchsia-600"
           }
-        }[comingSoonFeatureKey];
+        };
 
-        if (!details) return null;
+        const details = detailsMap[comingSoonFeatureKey] || {
+          title: getFeatureNameForMenu(comingSoonFeatureKey) || "Module Bientôt Disponible",
+          badge: "Bientôt disponible",
+          description: "Cette fonctionnalité est en cours de déploiement et sera accessible très prochainement sur AFRIGOMBO.",
+          incentive: "Restez connecté pour profiter des prochaines opportunités artistiques !",
+          icon: "🚀",
+          color: "from-amber-500 to-yellow-600"
+        };
 
         return (
           <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
@@ -8878,14 +9082,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       <button
                         type="button"
                         onClick={() => {
-                          const lat = typeof (selectedGomboDetails as any).latitude === "number" ? (selectedGomboDetails as any).latitude : typeof (selectedGomboDetails.location as any)?.latitude === "number" ? (selectedGomboDetails.location as any).latitude : null;
-                          const lng = typeof (selectedGomboDetails as any).longitude === "number" ? (selectedGomboDetails as any).longitude : typeof (selectedGomboDetails.location as any)?.longitude === "number" ? (selectedGomboDetails.location as any).longitude : null;
-                          if (lat && lng) {
-                            window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, "_blank");
-                          } else {
-                            const locStr = typeof selectedGomboDetails.location === "string" ? selectedGomboDetails.location : (selectedGomboDetails.location as any)?.name || (selectedGomboDetails as any).commune || "Abidjan, Côte d'Ivoire";
-                            window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${locStr}, Côte d'Ivoire`)}`, "_blank");
-                          }
+                          const lat = typeof (selectedGomboDetails as any).latitude === "number" ? (selectedGomboDetails as any).latitude : typeof (selectedGomboDetails.location as any)?.latitude === "number" ? (selectedGomboDetails.location as any).latitude : undefined;
+                          const lng = typeof (selectedGomboDetails as any).longitude === "number" ? (selectedGomboDetails as any).longitude : typeof (selectedGomboDetails.location as any)?.longitude === "number" ? (selectedGomboDetails.location as any).longitude : undefined;
+                          const commune = (selectedGomboDetails as any).commune || (typeof selectedGomboDetails.location === "string" ? selectedGomboDetails.location : (selectedGomboDetails.location as any)?.name) || "Abidjan";
+                          setItineraryTarget({
+                            title: selectedGomboDetails.title,
+                            commune: commune,
+                            latitude: lat,
+                            longitude: lng
+                          });
                         }}
                         className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-400 font-bold rounded-lg text-[9px] uppercase transition cursor-pointer active:scale-95"
                       >
@@ -8917,7 +9122,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   <div className="p-5 rounded-2xl bg-afri-bg border border-afri-gold/35 space-y-4 text-xs animate-fadeIn">
                     <div className="border-b border-afri-gold/20 pb-2 flex items-center justify-between">
                       <span className="font-mono font-bold text-afri-gold uppercase tracking-wider text-[9px]">⚖️ RECTO-VERSO CONTRACTUEL SOUVERAIN</span>
-                      <span className="text-[8px] bg-amber-500/10 border border-amber-500/20 text-amber-400 px-2 py-0.5 rounded uppercase font-mono font-bold">Escrow Sécurisé GomboCaisse</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsGomboSecureModalOpen(true)}
+                        className="text-[8px] bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 px-2 py-0.5 rounded uppercase font-mono font-bold transition cursor-pointer active:scale-95 flex items-center gap-1"
+                      >
+                        <span>🔒 Escrow Sécurisé GomboCaisse</span>
+                      </button>
                     </div>
 
                     {/* Section System Renfort group if category === "Renfort groupe" */}
@@ -9307,9 +9518,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     onClick={() => {
                       if (hasApplied) return;
                       requireAuthThen(() => {
-                        setAppliedGombos(prev => [...prev, selectedGomboDetails.id]);
-                        addToTerminal(`[🎼 CONTRAT] Candidature enregistrée ! Dossier de souveraineté transmis pour : ${selectedGomboDetails.title}`);
-                        try { audioSynth.playValidationSuccess(); } catch (err) {}
+                        setApplyingGombo(selectedGomboDetails);
                       });
                     }}
                     className={`flex-[2] py-3.5 rounded-2xl font-mono font-black text-xs uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer text-center ${
@@ -9326,6 +9535,46 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           </div>
         );
       })()}
+
+      {/* Gombo Apply Modal */}
+      {applyingGombo && (
+        <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin"></div></div>}>
+          <GomboApply
+            gombo={applyingGombo}
+            currentUserProfile={(profile || currentUser || { uid: "anon", artisticName: "Artiste" }) as UserProfile}
+            onCancel={() => setApplyingGombo(null)}
+            onSuccess={() => {
+              const appliedId = applyingGombo.id;
+              setAppliedGombos(prev => appliedId ? [...prev, appliedId] : prev);
+              addToTerminal(`[🎼 CONTRAT] Candidature enregistrée ! Dossier de souveraineté transmis pour : ${applyingGombo.title}`);
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
+              setApplyingGombo(null);
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Gombo Itinerary Modal */}
+      {itineraryTarget && (
+        <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin"></div></div>}>
+          <GomboItineraryModal
+            isOpen={Boolean(itineraryTarget)}
+            onClose={() => setItineraryTarget(null)}
+            targetTitle={itineraryTarget.title}
+            targetCommune={itineraryTarget.commune}
+            targetLat={itineraryTarget.latitude}
+            targetLng={itineraryTarget.longitude}
+          />
+        </Suspense>
+      )}
+
+      {/* Gombo Secure Escrow Modal */}
+      <Suspense fallback={null}>
+        <GomboSecureModal
+          isOpen={isGomboSecureModalOpen}
+          onClose={() => setIsGomboSecureModalOpen(false)}
+        />
+      </Suspense>
 
       {/* =========================================================================
                                      REELS VIDEO LIGHTBOX PORTALS

@@ -169,7 +169,7 @@ export default function MapPickerModal({
         style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
       >
         {/* Header */}
-        <div className="p-4 bg-zinc-900 border-b border-afri-border flex items-center justify-between shrink-0">
+        <div className="p-4 bg-afri-bg-sec border-b border-afri-border flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-[#D4AF37]/20 border border-[#D4AF37]/40 rounded-xl text-[#D4AF37]">
               <MapPin className="w-4 h-4" />
@@ -186,14 +186,14 @@ export default function MapPickerModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-afri-text-sec hover:text-white rounded-xl bg-afri-bg-sec border border-afri-border cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 text-afri-text-sec hover:text-afri-text rounded-xl bg-afri-bg border border-afri-border cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Top Controls & Feedback */}
-        <div className="p-3 bg-zinc-950/80 border-b border-afri-border space-y-2 shrink-0">
+        <div className="p-3 bg-afri-bg/90 border-b border-afri-border space-y-2 shrink-0">
           {geoError && (
             <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center gap-2 text-[11px] text-amber-300 font-mono">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -221,16 +221,16 @@ export default function MapPickerModal({
         </div>
 
         {/* Map Container */}
-        <div className="relative w-full h-72 xs:h-80 sm:h-96 bg-zinc-900">
+        <div className="relative w-full h-72 xs:h-80 sm:h-96 bg-afri-bg-sec">
           <div ref={mapContainerRef} className="w-full h-full" />
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-zinc-900 border-t border-afri-border flex items-center justify-end gap-3 shrink-0">
+        <div className="p-4 bg-afri-bg-sec border-t border-afri-border flex items-center justify-end gap-3 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-3 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold text-xs rounded-xl transition cursor-pointer min-h-[48px]"
+            className="px-4 py-3 bg-afri-bg hover:bg-afri-bg-ter text-afri-text font-bold text-xs rounded-xl border border-afri-border transition cursor-pointer min-h-[48px]"
           >
             Annuler
           </button>

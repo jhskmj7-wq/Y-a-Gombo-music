@@ -3,11 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Flame, Plus, User, Megaphone } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth } from '../AuthContext';
+import { useFeatureFlags } from '../lib/featureFlags';
 
 export default function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { requireAuth } = useAuth();
+  const { requireAuth, currentUser, profile } = useAuth();
+  const { isModuleVisible } = useFeatureFlags(currentUser, profile);
 
   const triggerHaptic = () => {
     try {
@@ -18,12 +20,14 @@ export default function Navigation() {
   };
 
   const navItems = [
-    { name: 'ACCUEIL', path: '/home', icon: Home, requiresAuth: false },
-    { name: 'VIBES', path: '/vibes', icon: Flame, requiresAuth: false },
-    { name: 'PUBLIER', path: '/publish', icon: Plus, requiresAuth: true },
-    { name: 'MES GOMBOS', path: '/my-gombos', icon: Megaphone, requiresAuth: true },
-    { name: 'MON HÉRITAGE', path: '/heritage', icon: User, requiresAuth: true },
-  ];
+    { name: 'ACCUEIL', path: '/home', icon: Home, requiresAuth: false, featureId: 'home' },
+    { name: 'VIBES', path: '/vibes', icon: Flame, requiresAuth: false, featureId: 'podcasts' },
+    { name: 'PUBLIER', path: '/publish', icon: Plus, requiresAuth: true, featureId: 'gombos' },
+    { name: 'MES GOMBOS', path: '/my-gombos', icon: Megaphone, requiresAuth: true, featureId: 'gombos' },
+    { name: 'MON HÉRITAGE', path: '/heritage', icon: User, requiresAuth: true, featureId: 'heritage' },
+  ].filter(item => isModuleVisible(item.featureId));
+
+  if (navItems.length === 0) return null;
 
   return (
     <nav

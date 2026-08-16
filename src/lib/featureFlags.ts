@@ -17,6 +17,17 @@ export interface FeatureFlagValue {
 
 export type FeatureFlagsMap = Record<string, FeatureFlagValue | boolean | string>;
 
+// Module-level global cached flags map for instantaneous access anywhere in the app
+let globalCachedFlagsMap: FeatureFlagsMap = {};
+
+export function setGlobalCachedFeatureFlags(flags: FeatureFlagsMap): void {
+  globalCachedFlagsMap = { ...globalCachedFlagsMap, ...flags };
+}
+
+export function getGlobalCachedFeatureFlags(): FeatureFlagsMap {
+  return globalCachedFlagsMap;
+}
+
 /**
  * Check if a user is a Founder or Super Founder using standard security checks.
  */
@@ -83,15 +94,130 @@ export function parseModuleVisibilityArgs(
   return { isFounder, flagsMap };
 }
 
+export const CANONICAL_FEATURE_IDS: Record<string, string> = {
+  // Gombos & Publications
+  gombo: "gombos",
+  gombos: "gombos",
+  user_gombos: "gombos",
+  my_gombos: "gombos",
+  publish: "gombos",
+  publier: "gombos",
+
+  // Wheel / Roue
+  wheel: "wheel",
+  roue: "wheel",
+  roulette: "wheel",
+  premium_wheel: "wheel",
+  wheel_gombo: "wheel",
+  wheel_1: "wheel_1",
+  wheel_2: "wheel_2",
+  wheel_3: "wheel_3",
+
+  // Avatar
+  avatar: "avatar",
+  user_avatar: "avatar",
+
+  // Gombo ID
+  gombo_id: "gombo_id",
+  gomboid: "gombo_id",
+  id: "gombo_id",
+
+  // Marketplace / Grand Marché
+  grandmarket: "grandMarket",
+  grandMarket: "grandMarket",
+  marketplace: "grandMarket",
+  grand_marche: "grandMarket",
+  market: "grandMarket",
+
+  // Académie
+  academie: "academie",
+  academy: "academie",
+
+  // Profil / Héritage
+  heritage: "heritage",
+  profile: "heritage",
+  user_heritage: "heritage",
+
+  // Podcasts & Vibes
+  podcasts: "podcasts",
+  podcast: "podcasts",
+  vibes: "podcasts",
+
+  // Events
+  events: "events",
+  event: "events",
+  evenements: "events",
+
+  // Chat / Messagerie
+  chat: "chat",
+  messages: "chat",
+  messagerie: "chat",
+
+  // Wallet
+  wallet: "wallet",
+  afripay: "wallet",
+
+  // Escrow
+  escrow: "escrow",
+
+  // Premium / Abonnement
+  premium: "premium",
+  subscription: "premium",
+  abonnement: "premium",
+
+  // Radar & Nearby
+  radar: "radar",
+  nearby: "nearby",
+  nearbyopportunities: "nearbyOpportunities",
+  nearbyOpportunities: "nearbyOpportunities",
+
+  // Renforts / Urgences
+  renforts: "renforts",
+  renfort: "renforts",
+  urgences: "renforts",
+
+  // Favorites
+  favorites: "favorites",
+  favoris: "favorites",
+
+  // Notifications
+  notifications: "notifications",
+
+  // Home
+  home: "home",
+  accueil: "home",
+  terrain: "home"
+};
+
 /**
  * Returns raw module status stored in Firestore ("ACTIVE", "COMING_SOON", "HIDDEN").
  */
 export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap): FeatureVisibilityStatus {
-  if (!flagsMap || flagsMap[featureId] === undefined) {
+  const activeMap = flagsMap && Object.keys(flagsMap).length > 0 ? flagsMap : globalCachedFlagsMap;
+  if (!activeMap) {
     return "ACTIVE";
   }
 
-  const value = flagsMap[featureId];
+  // 1. Check exact key
+  let value = activeMap[featureId];
+
+  // 2. Check canonical alias
+  if (value === undefined && featureId) {
+    const cleanId = featureId.toLowerCase().trim();
+    const mapped = CANONICAL_FEATURE_IDS[cleanId];
+    if (mapped && activeMap[mapped] !== undefined) {
+      value = activeMap[mapped];
+    }
+  }
+
+  // 3. Fallback for sub-flags (e.g. wheel_1, wheel_2 -> check parent wheel)
+  if (value === undefined && featureId && featureId.startsWith("wheel_") && activeMap["wheel"] !== undefined) {
+    value = activeMap["wheel"];
+  }
+
+  if (value === undefined) {
+    return "ACTIVE";
+  }
 
   if (typeof value === "boolean") {
     return value ? "ACTIVE" : "HIDDEN";
@@ -124,8 +250,9 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
  * Check if module is flagged as Premium.
  */
 export function isModulePremium(featureId: string, flagsMap?: FeatureFlagsMap): boolean {
-  if (!flagsMap || !flagsMap[featureId]) return false;
-  const value = flagsMap[featureId];
+  const activeMap = flagsMap && Object.keys(flagsMap).length > 0 ? flagsMap : globalCachedFlagsMap;
+  if (!activeMap || !activeMap[featureId]) return false;
+  const value = activeMap[featureId];
   if (typeof value === "object" && value !== null) {
     return !!value.isPremium;
   }
@@ -136,8 +263,9 @@ export function isModulePremium(featureId: string, flagsMap?: FeatureFlagsMap): 
  * Check if module is flagged as Beta.
  */
 export function isModuleBeta(featureId: string, flagsMap?: FeatureFlagsMap): boolean {
-  if (!flagsMap || !flagsMap[featureId]) return false;
-  const value = flagsMap[featureId];
+  const activeMap = flagsMap && Object.keys(flagsMap).length > 0 ? flagsMap : globalCachedFlagsMap;
+  if (!activeMap || !activeMap[featureId]) return false;
+  const value = activeMap[featureId];
   if (typeof value === "object" && value !== null) {
     return !!value.isBeta;
   }
@@ -148,8 +276,9 @@ export function isModuleBeta(featureId: string, flagsMap?: FeatureFlagsMap): boo
  * Check if module is in Maintenance mode.
  */
 export function isModuleMaintenance(featureId: string, flagsMap?: FeatureFlagsMap): boolean {
-  if (!flagsMap || !flagsMap[featureId]) return false;
-  const value = flagsMap[featureId];
+  const activeMap = flagsMap && Object.keys(flagsMap).length > 0 ? flagsMap : globalCachedFlagsMap;
+  if (!activeMap || !activeMap[featureId]) return false;
+  const value = activeMap[featureId];
   if (typeof value === "object" && value !== null) {
     return !!value.maintenance;
   }
@@ -330,6 +459,7 @@ export function subscribeToFeatureFlags(
           }
         });
 
+        setGlobalCachedFeatureFlags(map);
         onUpdate(map);
       },
       (error) => {

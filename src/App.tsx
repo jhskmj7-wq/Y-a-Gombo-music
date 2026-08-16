@@ -266,46 +266,28 @@ function App() {
         {/* Main application layer, rendered cleanly */}
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route 
-            path="/home" 
-            element={
-              <ProfileGuard>
-                <MainAppLayout />
-              </ProfileGuard>
-            } 
-          />
-          <Route 
-            path="/publish" 
-            element={
-              <ProfileGuard>
-                <MainAppLayout />
-              </ProfileGuard>
-            } 
-          />
-          <Route 
-            path="/vibes" 
-            element={
-              <ProfileGuard>
-                <MainAppLayout />
-              </ProfileGuard>
-            } 
-          />
-          <Route 
-            path="/my-gombos" 
-            element={
-              <ProfileGuard>
-                <MainAppLayout />
-              </ProfileGuard>
-            } 
-          />
-          <Route 
-            path="/heritage" 
-            element={
-              <ProfileGuard>
-                <MainAppLayout />
-              </ProfileGuard>
-            } 
-          />
+          <Route path="/home" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/publish" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/vibes" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/my-gombos" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/gombos" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/gombo" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/heritage" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/profil" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/profile" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/wallet" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/gombo-id" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/nearby" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/reels" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/messages" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/chat" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/settings" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/grand-marche" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/market" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/academie" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/events" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/contracts" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/notifications" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
           <Route 
             path="/complete-profile" 
             element={

@@ -130,7 +130,7 @@ export default function UserLocationProposalModal({
             <button 
               type="button"
               onClick={onClose}
-              className="p-2.5 text-afri-text-sec hover:text-white rounded-xl bg-afri-bg-sec border border-afri-border cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-2.5 text-afri-text-sec hover:text-afri-text rounded-xl bg-afri-bg-sec border border-afri-border cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <X className="w-5 h-5" />
             </button>
@@ -191,7 +191,7 @@ export default function UserLocationProposalModal({
               </div>
 
               {/* LOCALISATION DU LIEU (Requirement 2 & 9) */}
-              <div className="p-3 bg-zinc-950 border border-[#D4AF37]/30 rounded-2xl space-y-2.5">
+              <div className="p-3 bg-afri-bg-sec border border-[#D4AF37]/30 rounded-2xl space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-black uppercase text-[#D4AF37]">📍 Localiser le lieu</span>
                   {latitude !== undefined && longitude !== undefined && (

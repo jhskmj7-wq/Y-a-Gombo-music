@@ -1266,61 +1266,67 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       {/* ==========================================
           2. ACTIONS RAPIDES (NOUVELLE VERSION BÊTA FINALE - 4 ACTIONS CLÉS)
          ========================================== */}
-      <div className={`afri-card transition-all duration-300 shadow-[0_4px_25px_rgba(212,175,55,0.08)] ${isQuickActionsOpen ? "p-3 sm:p-5 space-y-3 sm:space-y-4" : "py-2 px-3 sm:px-4"}`}>
-        <button
-          onClick={() => {
-            setIsQuickActionsOpen(!isQuickActionsOpen);
-            try { audioSynth?.playTamTam?.(false); } catch(_) {}
-          }}
-          className="w-full flex justify-between items-center text-left focus:outline-none cursor-pointer hover:opacity-90 select-none"
-        >
-          <h3 className="afri-title-sm sm:afri-title-md text-afri-text flex items-center gap-1.5">
-            <span>⚡ ACTIONS RAPIDES</span>
-          </h3>
-          <span className="text-[8px] xs:text-[10px] font-mono font-black text-[#D4AF37] bg-afri-bg border border-[#D4AF37]/20 w-4.5 h-4.5 xs:w-5 xs:h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center transition-all">
-            {isQuickActionsOpen ? "▲" : "▼"}
-          </span>
-        </button>
-
-        <div
-          className={`transition-all duration-300 ease-in-out origin-top overflow-hidden ${
-            isQuickActionsOpen ? "max-h-[800px] opacity-100 mt-1 sm:mt-2" : "max-h-0 opacity-0 pointer-events-none"
-          }`}
-        >
-          <motion.div
-            variants={{
-              hidden: { opacity: 0 },
-              show: {
-                opacity: 1,
-                transition: {
-                  staggerChildren: 0.04
-                }
-              }
-          }}
-          initial="hidden"
-            animate={isQuickActionsOpen ? "show" : "hidden"}
-            className={`grid ${
-              [
-                { id: "pres_de_moi", featureId: "nearby" },
-                { id: "urgences", featureId: "renforts" },
-                { id: "mes_favoris", featureId: "favorites" },
-                { id: "mes_candidatures", featureId: "gombos" }
-              ].filter(action => isModuleVisible(action.featureId)).length === 4 ? "grid-cols-4" :
-              [
-                { id: "pres_de_moi", featureId: "nearby" },
-                { id: "urgences", featureId: "renforts" },
-                { id: "mes_favoris", featureId: "favorites" },
-                { id: "mes_candidatures", featureId: "gombos" }
-              ].filter(action => isModuleVisible(action.featureId)).length === 3 ? "grid-cols-3" :
-              [
-                { id: "pres_de_moi", featureId: "nearby" },
-                { id: "urgences", featureId: "renforts" },
-                { id: "mes_favoris", featureId: "favorites" },
-                { id: "mes_candidatures", featureId: "gombos" }
-              ].filter(action => isModuleVisible(action.featureId)).length === 2 ? "grid-cols-2" :
-              "grid-cols-1"
-            } gap-1.5 xs:gap-2 sm:gap-4 w-full select-none`}
+      {[
+        { id: "pres_de_moi", featureId: "nearby" },
+        { id: "urgences", featureId: "renforts" },
+        { id: "mes_favoris", featureId: "favorites" },
+        { id: "mes_candidatures", featureId: "gombos" }
+      ].some(action => isModuleVisible(action.featureId)) && (
+        <div className={`afri-card transition-all duration-300 shadow-[0_4px_25px_rgba(212,175,55,0.08)] ${isQuickActionsOpen ? "p-3 sm:p-5 space-y-3 sm:space-y-4" : "py-2 px-3 sm:px-4"}`}>
+          <button
+            onClick={() => {
+              setIsQuickActionsOpen(!isQuickActionsOpen);
+              try { audioSynth?.playTamTam?.(false); } catch(_) {}
+            }}
+            className="w-full flex justify-between items-center text-left focus:outline-none cursor-pointer hover:opacity-90 select-none"
           >
+            <h3 className="afri-title-sm sm:afri-title-md text-afri-text flex items-center gap-1.5">
+              <span>⚡ ACTIONS RAPIDES</span>
+            </h3>
+            <span className="text-[8px] xs:text-[10px] font-mono font-black text-[#D4AF37] bg-afri-bg border border-[#D4AF37]/20 w-4.5 h-4.5 xs:w-5 xs:h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center transition-all">
+              {isQuickActionsOpen ? "▲" : "▼"}
+            </span>
+          </button>
+
+          <div
+            className={`transition-all duration-300 ease-in-out origin-top overflow-hidden ${
+              isQuickActionsOpen ? "max-h-[800px] opacity-100 mt-1 sm:mt-2" : "max-h-0 opacity-0 pointer-events-none"
+            }`}
+          >
+            <motion.div
+              variants={{
+                hidden: { opacity: 0 },
+                show: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.04
+                  }
+                }
+            }}
+            initial="hidden"
+              animate={isQuickActionsOpen ? "show" : "hidden"}
+              className={`grid ${
+                [
+                  { id: "pres_de_moi", featureId: "nearby" },
+                  { id: "urgences", featureId: "renforts" },
+                  { id: "mes_favoris", featureId: "favorites" },
+                  { id: "mes_candidatures", featureId: "gombos" }
+                ].filter(action => isModuleVisible(action.featureId)).length === 4 ? "grid-cols-4" :
+                [
+                  { id: "pres_de_moi", featureId: "nearby" },
+                  { id: "urgences", featureId: "renforts" },
+                  { id: "mes_favoris", featureId: "favorites" },
+                  { id: "mes_candidatures", featureId: "gombos" }
+                ].filter(action => isModuleVisible(action.featureId)).length === 3 ? "grid-cols-3" :
+                [
+                  { id: "pres_de_moi", featureId: "nearby" },
+                  { id: "urgences", featureId: "renforts" },
+                  { id: "mes_favoris", featureId: "favorites" },
+                  { id: "mes_candidatures", featureId: "gombos" }
+                ].filter(action => isModuleVisible(action.featureId)).length === 2 ? "grid-cols-2" :
+                "grid-cols-1"
+              } gap-1.5 xs:gap-2 sm:gap-4 w-full select-none`}
+            >
              {[
                { 
                  id: "pres_de_moi", 
@@ -1427,6 +1433,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           </motion.div>
         </div>
       </div>
+
+      )}
 
       <UserPollsWidget 
         currentUser={currentUser} 

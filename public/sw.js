@@ -5,7 +5,7 @@ try {
   console.log('[SW] Push script import omitted or not found');
 }
 
-const CACHE_NAME = 'afrigombo-pwa-v2';
+const CACHE_NAME = 'afrigombo-pwa-v3';
 const ASSETS_TO_CACHE = [
   '/', 
   '/index.html', 
@@ -58,12 +58,16 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Put a copy of the fresh page in the cache
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put('/index.html', responseClone);
-          });
-          return response;
+          // Only cache valid 200 OK HTML responses
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put('/index.html', responseClone);
+            });
+            return response;
+          }
+          // If server returns 404 or non-200 for a subroute on direct load, fallback to cached index.html SPA entry point
+          return caches.match('/index.html').then((cached) => cached || response);
         })
         .catch(() => {
           // If network fails (offline), load from cache fallback

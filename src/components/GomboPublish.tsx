@@ -5,14 +5,21 @@ import {
   Music, Sparkles, Image as ImageIcon, Briefcase, 
   X, AlertCircle, Award, Star, Radio, Lock, ShieldCheck, Zap,
   Wallet, ArrowUpRight, CheckCircle2, Navigation, Map, Building2, Plus,
-  FileText, Compass, Trash2, CheckCircle, Clock
+  FileText, Compass, Trash2, CheckCircle, Clock, Hash, Layers, Mic
 } from "lucide-react";
 import MapPickerModal from "./common/MapPickerModal";
 import { gomboDB } from "../firebase";
 import { db } from "../lib/firebase";
 import { doc, getDoc, setDoc, addDoc, collection, runTransaction } from "firebase/firestore";
 import { UserProfile, SocialPost } from "../types";
-import { calculatePublicationFinancials, getEffectiveCommissionRate, getCanonicalWalletBalance } from "../lib/financial";
+import { 
+  MIN_GOMBO_AMOUNT, 
+  calculateGomboFees, 
+  calculatePublicationFinancials, 
+  getEffectiveCommissionRate, 
+  getCanonicalWalletBalance,
+  resolveUserStatusAndRate 
+} from "../lib/financial";
 import { PremiumEngine } from "../lib/premiumEngine";
 import { subscribeToFeatureFlags, getModuleVisibility } from "../lib/featureFlags";
 import { useLocations } from "../hooks/useLocations";
@@ -34,7 +41,46 @@ const PUBLICATION_TYPES = [
   { id: "recherche", label: "🎸 Recherche d'instrumentiste", desc: "Rechercher activement un pianiste, un batteur ou un soliste permanent" }
 ];
 
-const DRAFT_STORAGE_KEY = "gombo_publish_draft";
+const SPECIALTIES_LIST = [
+  "Piano / Clavier",
+  "Batterie",
+  "Guitare Solo",
+  "Guitare Rythmique",
+  "Basse",
+  "Chant / Lead Vocal",
+  "Chœur",
+  "Saxophone",
+  "Trompette / Cuivres",
+  "Percussions / Djembé",
+  "DJ / Beatmaker",
+  "Ingénieur Son / Régisseur",
+  "Tous instruments"
+];
+
+const POPULAR_HASHTAGS = [
+  "#GomboLive",
+  "#AbidjanMusic",
+  "#PianoBar",
+  "#ConcertLive",
+  "#CastingMusic",
+  "#RenfortExpress",
+  "#GomboSecurise",
+  "#LiveCabaret"
+];
+
+const MUSIC_STYLES = [
+  "Afrobeats",
+  "Coupé Décalé",
+  "Zouglou",
+  "Jazz / Blues",
+  "Gospel",
+  "Reggae",
+  "Variété Internationale",
+  "Salsa / Latino",
+  "Traditionnel"
+];
+
+const DRAFT_STORAGE_KEY = "gombo_publish_draft_v2";
 
 const getGomboRef = (id: string) => `GOMBO-${id.slice(0, 6).toUpperCase()}`;
 
@@ -60,13 +106,36 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const isFounder = userEmail.toLowerCase() === "jhs.kmj7@gmail.com";
   const geoVis = getModuleVisibility("nearby", currentUserProfile, currentUserProfile, flagsMap);
 
-  // Location Bottom Sheet & Modes: "none" | "gps" | "commune" | "autre" | "map" | "manual"
+  // Form core fields
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [specialty, setSpecialty] = useState("Piano / Clavier");
+  const [customSpecialty, setCustomSpecialty] = useState("");
+  const [hashtags, setHashtags] = useState<string[]>(["#GomboLive"]);
+  const [hashtagInput, setHashtagInput] = useState("");
+  const [musicStyle, setMusicStyle] = useState("Afrobeats");
+  const [experienceLevel, setExperienceLevel] = useState("Tous niveaux");
+
+  // Date & Time
+  const [date, setDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  });
+  const [time, setTime] = useState("18:30");
+  const [duration, setDuration] = useState("hours");
+  const [customDurationDays, setCustomDurationDays] = useState("1");
+
+  // Remuneration / Budget
+  const [budget, setBudget] = useState("25000");
+
+  // Location fields
   const [isLocationSheetOpen, setIsLocationSheetOpen] = useState(false);
   const [locationOption, setLocationOption] = useState<"none" | "gps" | "commune" | "autre" | "map" | "manual">("none");
   const [commune, setCommune] = useState("Cocody");
   const [customCommune, setCustomCommune] = useState("");
   const [quartier, setQuartier] = useState("");
   const [customPlaceInput, setCustomPlaceInput] = useState<string>("");
+  const [itineraryNotes, setItineraryNotes] = useState("");
   const [proposePlaceToCommunity, setProposePlaceToCommunity] = useState(false);
   const [locationDetail, setLocationDetail] = useState("");
   const [latitude, setLatitude] = useState<number | null>(currentUserProfile?.latitude || null);
@@ -77,22 +146,6 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
   const [gpsNotice, setGpsNotice] = useState<string | null>(null);
 
-  // Duration states
-  const [duration, setDuration] = useState("1_day");
-  const [customDurationDays, setCustomDurationDays] = useState("1");
-
-  // Inline Validation Errors
-  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
-
-  // Form core fields
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
-  });
-  const [budget, setBudget] = useState("");
-  
   // Media attachments
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -104,6 +157,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const [draftSavedToast, setDraftSavedToast] = useState(false);
   const [hasRestoredDraft, setHasRestoredDraft] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const [publishOutcome, setPublishOutcome] = useState<"idle" | "success_published" | "insufficient_funds">("idle");
@@ -116,6 +170,9 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     sequestre: number;
     total: number;
     rate: number;
+    ratePercent: number;
+    netAmount: number;
+    statusName: string;
     isPremium: boolean;
     requiresDeposit: boolean;
     refId: string;
@@ -128,7 +185,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     fee: 0, 
     sequestre: 0, 
     total: 0, 
-    rate: 0.025, 
+    rate: 0.015, 
+    ratePercent: 1.5,
+    netAmount: 0,
+    statusName: "USER",
     isPremium: false, 
     requiresDeposit: false, 
     refId: "", 
@@ -141,30 +201,40 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const imageInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
-  // Live financial calculation using PremiumEngine
-  const isUserPremium = PremiumEngine.isPremium(currentUserProfile);
-  const feeRate = PremiumEngine.getCommissionRate(currentUserProfile);
+  // Live financial calculation using the single central calculation engine
+  const userRateInfo = resolveUserStatusAndRate(currentUserProfile);
   const cachetVal = budget ? Number(budget) : 0;
-  const financials = calculatePublicationFinancials(cachetVal, feeRate);
+  const feeEngineResult = calculateGomboFees({
+    amount: cachetVal,
+    userProfile: currentUserProfile
+  });
+  const financials = calculatePublicationFinancials(cachetVal, currentUserProfile);
 
   // 1. AUTO-RESTORE DRAFT ON MOUNT
   useEffect(() => {
     try {
-      const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+      const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY) || localStorage.getItem("gombo_publish_draft");
       if (savedDraft) {
         const parsed = JSON.parse(savedDraft);
-        if (parsed.title || parsed.description) {
+        if (parsed.title || parsed.description || parsed.budget) {
           if (parsed.title) setTitle(parsed.title);
           if (parsed.description) setDescription(parsed.description);
           if (parsed.selectedType) setSelectedType(parsed.selectedType);
+          if (parsed.specialty) setSpecialty(parsed.specialty);
+          if (parsed.customSpecialty) setCustomSpecialty(parsed.customSpecialty);
+          if (Array.isArray(parsed.hashtags)) setHashtags(parsed.hashtags);
+          if (parsed.musicStyle) setMusicStyle(parsed.musicStyle);
+          if (parsed.experienceLevel) setExperienceLevel(parsed.experienceLevel);
           if (parsed.gomboCategory) setGomboCategory(parsed.gomboCategory);
           if (parsed.locationOption) setLocationOption(parsed.locationOption);
           if (parsed.commune) setCommune(parsed.commune);
           if (parsed.customCommune) setCustomCommune(parsed.customCommune);
           if (parsed.quartier) setQuartier(parsed.quartier);
           if (parsed.customPlaceInput) setCustomPlaceInput(parsed.customPlaceInput);
+          if (parsed.itineraryNotes) setItineraryNotes(parsed.itineraryNotes);
           if (parsed.locationDetail) setLocationDetail(parsed.locationDetail);
           if (parsed.date) setDate(parsed.date);
+          if (parsed.time) setTime(parsed.time);
           if (parsed.budget) setBudget(parsed.budget);
           if (typeof parsed.latitude === "number") setLatitude(parsed.latitude);
           if (typeof parsed.longitude === "number") setLongitude(parsed.longitude);
@@ -181,23 +251,31 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const clearDraft = () => {
     try {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
+      localStorage.removeItem("gombo_publish_draft");
     } catch (_) {}
     setTitle("");
     setDescription("");
     setSelectedType("opportunite");
+    setSpecialty("Piano / Clavier");
+    setCustomSpecialty("");
+    setHashtags(["#GomboLive"]);
+    setMusicStyle("Afrobeats");
+    setExperienceLevel("Tous niveaux");
     setGomboCategory("libre");
     setLocationOption("none");
     setCommune("Cocody");
     setCustomCommune("");
     setQuartier("");
     setCustomPlaceInput("");
+    setItineraryNotes("");
     setLocationDetail("");
-    setBudget("");
+    setBudget("25000");
+    setTime("18:30");
     setLatitude(null);
     setLongitude(null);
     setImageFile(null);
     setAudioFile(null);
-    setDuration("1_day");
+    setDuration("hours");
     setCustomDurationDays("1");
     setFieldErrors({});
     setHasRestoredDraft(false);
@@ -213,14 +291,21 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       title: title.trim(),
       description: description.trim(),
       selectedType,
+      specialty,
+      customSpecialty,
+      hashtags,
+      musicStyle,
+      experienceLevel,
       gomboCategory,
       locationOption,
       commune,
       customCommune,
       quartier,
       customPlaceInput,
+      itineraryNotes,
       locationDetail,
       date,
+      time,
       budget,
       latitude,
       longitude,
@@ -248,52 +333,61 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           description: description.trim(),
           type: selectedType,
           category: selectedType,
-          gomboCategory,
+          specialty: specialty === "Autre" ? customSpecialty : specialty,
+          hashtags,
+          musicStyle,
+          experienceLevel,
+          budget: cachetVal,
+          currency: "XOF",
+          date,
+          time,
+          duration,
+          commune: locationOption === "commune" ? (commune === "Autre" ? customCommune : commune) : "",
+          quartier,
+          customPlaceInput,
+          itineraryNotes,
+          isDraft: true,
           status: "draft",
           statut: "draft",
           visible: false,
-          isPublished: false,
-          budget: cachetVal,
-          date,
-          duration: duration === "custom" ? `${customDurationDays} jour(s)` : 
-                    duration === "hours" ? "Quelques heures" : 
-                    duration === "1_day" ? "1 jour" : 
-                    duration === "2_days" ? "2 jours" : 
-                    duration === "3_days" ? "3 jours" : "1 semaine",
-          customDurationDays,
-          locationName: locationOption === "commune" ? commune : (customPlaceInput || ""),
-          commune: commune || "",
-          quartier: quartier || "",
-          createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          timestamp: Date.now()
+          createdAt: new Date().toISOString()
         }, { merge: true });
       }
 
       setDraftSavedToast(true);
-      setTimeout(() => setDraftSavedToast(false), 3500);
-    } catch (err: any) {
-      console.error("Erreur lors de la sauvegarde du brouillon:", err);
-      // Even if firestore throws, local storage succeeded
-      setDraftSavedToast(true);
-      setTimeout(() => setDraftSavedToast(false), 3500);
+      setTimeout(() => setDraftSavedToast(false), 4000);
+    } catch (err) {
+      console.error("Draft save error:", err);
     } finally {
       setSavingDraft(false);
     }
   };
 
+  const handleAddHashtag = (tag: string) => {
+    let cleanTag = tag.trim();
+    if (!cleanTag) return;
+    if (!cleanTag.startsWith("#")) cleanTag = `#${cleanTag}`;
+    if (!hashtags.includes(cleanTag) && hashtags.length < 8) {
+      setHashtags([...hashtags, cleanTag]);
+    }
+    setHashtagInput("");
+  };
+
+  const handleRemoveHashtag = (tagToRemove: string) => {
+    setHashtags(hashtags.filter(t => t !== tagToRemove));
+  };
+
   const handleUseCurrentGps = () => {
-    setGpsNotice(null);
-    if ("geolocation" in navigator) {
+    if (navigator.geolocation) {
       setGpsLoading(true);
+      setGpsNotice(null);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          const lat = Number(pos.coords.latitude.toFixed(6));
-          const lng = Number(pos.coords.longitude.toFixed(6));
-          setLatitude(lat);
-          setLongitude(lng);
-          setGpsNotice(`📍 Position GPS détectée (${lat}, ${lng}) !`);
           setGpsLoading(false);
+          setLatitude(pos.coords.latitude);
+          setLongitude(pos.coords.longitude);
+          setGpsNotice("📍 Position GPS capturée avec succès !");
         },
         (err) => {
           setGpsLoading(false);
@@ -343,23 +437,37 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     }
 
     if (!description.trim()) {
-      newErrors.description = "Veuillez renseigner la description !";
+      newErrors.description = "Veuillez renseigner la description détaillée !";
     }
 
-    if (locationOption === "autre" && !customPlaceInput.trim()) {
-      newErrors.location = "Veuillez préciser le nom du lieu ou désactiver l'option lieu.";
+    // 2. RÈGLE ABSOLUE — MONTANT MINIMUM 15 000 FCFA
+    if (!budget || cachetVal < MIN_GOMBO_AMOUNT) {
+      newErrors.budget = "Le cachet minimum pour publier un Gombo est de 15 000 FCFA.";
     }
 
-    // 2. VALIDATION DATE (≥ AUJOURD'HUI)
+    // 3. VALIDATION DATE (≥ AUJOURD'HUI)
     const todayStr = new Date().toISOString().split("T")[0];
     const selectedDateStr = (typeof date === "string" && date) ? date.split("T")[0] : todayStr;
     if (selectedDateStr < todayStr) {
       newErrors.date = "La date du Gombo doit être fixée à aujourd'hui ou dans le futur.";
     }
 
+    // 4. VALIDATION HORAIRE
+    if (!time.trim()) {
+      newErrors.time = "Veuillez préciser l'horaire de début du Gombo.";
+    }
+
+    // 5. VALIDATION LOCALISATION SI CHOISIE
+    if (locationOption === "autre" && !customPlaceInput.trim()) {
+      newErrors.location = "Veuillez préciser le nom du lieu ou désactiver l'option lieu.";
+    }
+    if (locationOption === "commune" && commune === "Autre" && !customCommune.trim()) {
+      newErrors.location = "Veuillez préciser votre commune ou ville.";
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setFieldErrors(newErrors);
-      setErrorMsg("Veuillez corriger les erreurs de saisie ci-dessous.");
+      setErrorMsg(newErrors.budget || "Veuillez corriger les erreurs de saisie ci-dessous.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -371,14 +479,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       const userRef = doc(db, "users", currentUserProfile.uid);
       const userSnap = await getDoc(userRef);
       const freshUserData = userSnap.exists() ? userSnap.data() : currentUserProfile;
-      const userSolde = getCanonicalWalletBalance(freshUserData);
+      const userSolde = getCanonicalWalletBalance(freshUserData) ?? 0;
       
-      const effectiveRate = getEffectiveCommissionRate(freshUserData);
-      const calculatedFinancials = calculatePublicationFinancials(cachetVal, effectiveRate);
+      const calculatedFinancials = calculatePublicationFinancials(cachetVal, freshUserData);
 
       // In Gombo Libre, escrow sequestre is optional or paid on site by the client
       const isSecurise = gomboCategory === "securise";
-      const totalToDebit = isSecurise ? calculatedFinancials.total : calculatedFinancials.fee;
+      const totalToDebit = isSecurise ? calculatedFinancials.total : 0;
 
       setDepositDetails({
         cachet: cachetVal,
@@ -386,6 +493,9 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         sequestre: isSecurise ? calculatedFinancials.sequestre : 0,
         total: totalToDebit,
         rate: calculatedFinancials.rate,
+        ratePercent: calculatedFinancials.ratePercent,
+        netAmount: calculatedFinancials.netAmount,
+        statusName: calculatedFinancials.statusName,
         isPremium: calculatedFinancials.isPremium,
         requiresDeposit: totalToDebit > 0,
         refId: `PUB-${Date.now()}`,
@@ -398,13 +508,20 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       setShowConfirmModal(true);
     } catch (err: any) {
       console.error("Erreur lors de la préparation de la publication:", err);
-      // Even if wallet check has an issue, open confirmation
       setShowConfirmModal(true);
     }
   };
 
   const executePublish = async () => {
     if (loading || isSubmitting) return;
+
+    // Strict Backend-grade validation before execution
+    if (cachetVal < MIN_GOMBO_AMOUNT) {
+      setErrorMsg("Le cachet minimum pour publier un Gombo est de 15 000 FCFA.");
+      setShowConfirmModal(false);
+      return;
+    }
+
     setIsSubmitting(true);
     setShowConfirmModal(false);
     setLoading(true);
@@ -479,10 +596,14 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         const userSnap = await transaction.get(userRef);
         const userData = userSnap.exists() ? userSnap.data() : currentUserProfile;
 
-        const liveSolde = getCanonicalWalletBalance(userData);
+        // Verify minimum cachet rule again inside transaction
+        if (cachetVal < MIN_GOMBO_AMOUNT) {
+          throw new Error("Le cachet minimum pour publier un Gombo est de 15 000 FCFA.");
+        }
+
+        const liveSolde = getCanonicalWalletBalance(userData) ?? 0;
         const liveBloque = userData?.wallet?.soldeBloque ?? 0;
-        const dynamicFeeRate = getEffectiveCommissionRate(userData);
-        const freshFinancials = calculatePublicationFinancials(cachetVal, dynamicFeeRate);
+        const freshFinancials = calculatePublicationFinancials(cachetVal, userData);
 
         const totalToDebit = isSecurise ? freshFinancials.total : 0;
 
@@ -543,6 +664,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         publishedPostId = postRef.id;
         const gomboRefVal = getGomboRef(postRef.id);
 
+        const finalSpecialty = specialty === "Autre" ? (customSpecialty.trim() || "Musique") : specialty;
+
         const gomboPayload = {
           id: postRef.id,
           gomboId: postRef.id,
@@ -568,7 +691,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           organizerAvatar: authorAvatar,
           userAvatar: authorAvatar,
 
-          // Content
+          // Content & Enrichments
           title: title.trim(),
           description: description.trim(),
           content: description.trim(),
@@ -576,8 +699,16 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           type: selectedType,
           category: selectedType,
           gomboCategory,
+          specialty: finalSpecialty,
+          specialties: [finalSpecialty],
+          instrument: finalSpecialty,
+          instruments: [finalSpecialty],
+          hashtags: hashtags.length > 0 ? hashtags : ["#GomboLive"],
+          tags: hashtags.length > 0 ? hashtags : ["#GomboLive"],
+          musicStyle,
+          experienceLevel,
 
-          // Location
+          // Location & Itinerary
           location: hasLoc ? {
             name: effectiveLocationName || "Emplacement Gombo",
             latitude: latitude || null,
@@ -591,7 +722,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           commune: hasLoc ? (locationOption === "commune" ? (commune === "Autre" ? customCommune : commune) : "") : "",
           quartier: quartier ? quartier.trim() : "",
           locationDetail: locationDetail.trim(),
+          itineraryNotes: itineraryNotes.trim(),
           date: date,
+          time: time.trim() || "18:30",
+          heure: time.trim() || "18:30",
           city: currentUserProfile.city || "Abidjan",
           country: currentUserProfile.country || "Côte d'Ivoire",
           latitude: (hasLoc && typeof latitude === "number") ? latitude : null,
@@ -602,8 +736,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           // Financials & Payment
           budget: cachetVal,
           cachet: cachetVal,
-          fee: isSecurise ? financials.fee : 0,
-          frais: isSecurise ? financials.fee : 0,
+          currency: "XOF",
+          minGomboAmount: MIN_GOMBO_AMOUNT,
+          fee: freshFinancials.fee,
+          frais: freshFinancials.fee,
+          netAmount: freshFinancials.netAmount,
+          commissionRatePercent: freshFinancials.ratePercent,
+          creatorStatus: freshFinancials.statusName,
           paymentStatus: isSecurise ? "paid_escrow" : "unpaid_direct",
           paymentMethod: isSecurise ? "wallet_escrow" : "direct_scene",
 
@@ -625,7 +764,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           timestamp: currentTimestamp,
           publishedAt: nowIso,
           duration: duration === "custom" ? `${customDurationDays} jour(s)` : 
-                    duration === "hours" ? "Quelques heures" : 
+                    duration === "hours" ? "Quelques heures (Soirée)" : 
                     duration === "1_day" ? "1 jour" : 
                     duration === "2_days" ? "2 jours" : 
                     duration === "3_days" ? "3 jours" : "1 semaine",
@@ -686,6 +825,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       // Clear local draft upon success
       try {
         localStorage.removeItem(DRAFT_STORAGE_KEY);
+        localStorage.removeItem("gombo_publish_draft");
       } catch (_) {}
 
       // Dispatch UI events
@@ -709,12 +849,14 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     }
   };
 
+  const finalSpecialtyDisplay = specialty === "Autre" ? (customSpecialty || "Spécialité personnalisée") : specialty;
+
   return (
     <div className="max-w-xl mx-auto py-2 sm:py-4 px-2 select-none">
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#0D0D0E] text-afri-text rounded-3xl p-5 sm:p-7 border border-[#D4AF37]/35 shadow-[0_0_35px_rgba(212,175,55,0.12)] relative overflow-hidden"
+        className="bg-afri-bg-sec text-afri-text rounded-3xl p-5 sm:p-7 border border-afri-border/90 shadow-[0_0_35px_rgba(212,175,55,0.12)] relative overflow-hidden"
       >
         {/* Top Gold Bar Accent */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#D4AF37] via-amber-400 to-[#D4AF37]" />
@@ -729,14 +871,14 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               </h2>
             </div>
             <p className="text-[11px] text-afri-text-sec font-sans">
-              Opportunité musicale, contrat direct ou renfort live
+              Opportunité musicale, contrat direct ou renfort live certifié
             </p>
           </div>
 
           <button
             type="button"
             onClick={onCancel}
-            className="w-8 h-8 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-white transition cursor-pointer"
+            className="w-8 h-8 rounded-full bg-afri-bg hover:bg-afri-bg-ter border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-afri-text transition cursor-pointer"
             title="Fermer"
           >
             <X className="w-4 h-4" />
@@ -779,7 +921,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           {/* 1. TYPE DE PUBLICATION */}
           <div>
             <label className="block text-[10px] font-black text-[#D4AF37] mb-2 uppercase tracking-widest">
-              1. Type de publication
+              1. Type de publication *
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {PUBLICATION_TYPES.map((t) => {
@@ -791,8 +933,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     onClick={() => setSelectedType(t.id)}
                     className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[64px] ${
                       isSelected
-                        ? "bg-[#D4AF37]/15 border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.2)] text-white"
-                        : "bg-white/[0.02] border-afri-border/70 hover:border-white/20 text-afri-text-sec"
+                        ? "bg-[#D4AF37]/15 border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.2)] text-afri-text font-bold"
+                        : "bg-afri-bg/60 border-afri-border/70 hover:border-[#D4AF37]/40 text-afri-text-sec hover:text-afri-text"
                     }`}
                   >
                     <span className="text-xs font-black truncate block">{t.label}</span>
@@ -806,7 +948,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           {/* 2. MODE GOMBO : LIBRE vs SÉCURISÉ */}
           <div>
             <label className="block text-[10px] font-black text-[#D4AF37] mb-2 uppercase tracking-widest">
-              2. Modalité de contrat
+              2. Modalité de contrat *
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -814,8 +956,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 onClick={() => setGomboCategory("libre")}
                 className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                   gomboCategory === "libre"
-                    ? "bg-[#D4AF37]/15 border-[#D4AF37] text-white shadow-[0_0_15px_rgba(212,175,55,0.2)]"
-                    : "bg-white/[0.02] border-afri-border/70 text-afri-text-sec hover:border-white/20"
+                    ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text shadow-[0_0_15px_rgba(212,175,55,0.2)] font-bold"
+                    : "bg-afri-bg/60 border-afri-border/70 text-afri-text-sec hover:border-[#D4AF37]/40"
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -832,8 +974,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 onClick={() => setGomboCategory("securise")}
                 className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                   gomboCategory === "securise"
-                    ? "bg-[#D4AF37]/15 border-[#D4AF37] text-white shadow-[0_0_15px_rgba(212,175,55,0.2)]"
-                    : "bg-white/[0.02] border-afri-border/70 text-afri-text-sec hover:border-white/20"
+                    ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text shadow-[0_0_15px_rgba(212,175,55,0.2)] font-bold"
+                    : "bg-afri-bg/60 border-afri-border/70 text-afri-text-sec hover:border-[#D4AF37]/40"
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -847,7 +989,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             </div>
           </div>
 
-          {/* 3. TITRE & DESCRIPTION */}
+          {/* 3. TITRE & INFORMATIONS */}
           <div className="space-y-4">
             <div>
               <div className="flex justify-between items-center mb-1.5">
@@ -872,7 +1014,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     });
                   }
                 }}
-                className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-2xl text-xs font-bold text-afri-text placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                className="w-full px-4 py-3 bg-afri-bg/80 border border-afri-border rounded-2xl text-xs font-bold text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
               />
               {fieldErrors.title && (
                 <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1">
@@ -882,6 +1024,117 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               )}
             </div>
 
+            {/* SOUS-CATÉGORIE / SPÉCIALITÉ / INSTRUMENT */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-black text-[#D4AF37] mb-1.5 uppercase tracking-widest">
+                  Spécialité / Instrument recherché *
+                </label>
+                <select
+                  value={specialty}
+                  onChange={(e) => setSpecialty(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-afri-bg border border-afri-border rounded-xl text-xs font-bold text-afri-text focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                >
+                  {SPECIALTIES_LIST.map((s) => (
+                    <option key={s} value={s} className="bg-afri-bg-sec text-afri-text">
+                      {s}
+                    </option>
+                  ))}
+                  <option value="Autre" className="bg-afri-bg-sec text-afri-text">Autre spécialité...</option>
+                </select>
+
+                {specialty === "Autre" && (
+                  <input
+                    type="text"
+                    placeholder="Précisez la spécialité (Ex: Violon, Flûte...)"
+                    value={customSpecialty}
+                    onChange={(e) => setCustomSpecialty(e.target.value)}
+                    className="mt-2 w-full px-3 py-2 bg-afri-bg/80 border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                  />
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-[#D4AF37] mb-1.5 uppercase tracking-widest">
+                  Style musical dominant
+                </label>
+                <select
+                  value={musicStyle}
+                  onChange={(e) => setMusicStyle(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-afri-bg border border-afri-border rounded-xl text-xs font-bold text-afri-text focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                >
+                  {MUSIC_STYLES.map((m) => (
+                    <option key={m} value={m} className="bg-afri-bg-sec text-afri-text">
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* HASHTAGS */}
+            <div>
+              <label className="block text-[10px] font-black text-[#D4AF37] mb-1.5 uppercase tracking-widest">
+                Hashtags & Mots-clés
+              </label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {hashtags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] rounded-lg text-[10px] font-bold"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveHashtag(tag)}
+                      className="hover:text-red-400 cursor-pointer ml-0.5"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ajouter un hashtag (ex: #AbidjanLive)"
+                  value={hashtagInput}
+                  onChange={(e) => setHashtagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddHashtag(hashtagInput);
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 bg-afri-bg/80 border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddHashtag(hashtagInput)}
+                  className="px-3 py-2 bg-afri-bg hover:bg-afri-bg-ter text-afri-text font-bold text-xs rounded-xl border border-afri-border cursor-pointer transition"
+                >
+                  + Ajouter
+                </button>
+              </div>
+
+              {/* Quick suggestions */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[9.5px] text-afri-text-sec">
+                <span className="font-bold">Suggestions :</span>
+                {POPULAR_HASHTAGS.filter(t => !hashtags.includes(t)).slice(0, 4).map(t => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => handleAddHashtag(t)}
+                    className="text-afri-text-sec hover:text-[#D4AF37] bg-afri-bg px-2 py-0.5 rounded border border-afri-border cursor-pointer transition"
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* DESCRIPTION */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">
@@ -893,7 +1146,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 required
                 maxLength={1000}
                 rows={3}
-                placeholder="Précisez le répertoire, l'horaire de balance, la tenue exigée et les conditions du live..."
+                placeholder="Précisez le répertoire musical, les conditions, le lieu et les consignes du live..."
                 value={description}
                 onChange={(e) => {
                   setDescription(e.target.value);
@@ -905,7 +1158,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     });
                   }
                 }}
-                className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-2xl text-xs text-afri-text placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#D4AF37] resize-none"
+                className="w-full px-4 py-3 bg-afri-bg/80 border border-afri-border rounded-2xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] resize-none"
               />
               {fieldErrors.description && (
                 <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1">
@@ -916,154 +1169,95 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             </div>
           </div>
 
-          {/* 4. LOCALISATION (OPTIONNELLE, MOBILE-FIRST ANDROID) */}
-          {!(geoVis === "HIDDEN" && !isFounder) && (
-            <div className="p-4 bg-white/[0.02] border border-afri-border/80 rounded-2xl space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-[#D4AF37]" />
-                  <span className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">
-                    5. Lieu du Gombo {geoVis === "COMING_SOON" && !isFounder ? "(Bientôt disponible)" : ""}
-                  </span>
-                </div>
-                <span className="text-[9px] font-mono text-afri-text-sec bg-white/5 px-2 py-0.5 rounded-full">
-                  {geoVis === "COMING_SOON" && !isFounder ? "Bientôt" : "Facultatif"}
+          {/* 4. DATE ET HORAIRE */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-black text-[#D4AF37] mb-1.5 uppercase tracking-widest">
+                5. Date de l'événement *
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-afri-text-sec">
+                  <Calendar className="w-4 h-4 text-[#D4AF37]" />
                 </span>
+                <input
+                  type="date"
+                  required
+                  min={new Date().toISOString().split("T")[0]}
+                  value={date}
+                  onChange={(e) => {
+                    setDate(e.target.value);
+                    if (fieldErrors.date) {
+                      setFieldErrors(prev => {
+                        const copy = { ...prev };
+                        delete copy.date;
+                        return copy;
+                      });
+                    }
+                  }}
+                  className="w-full pl-10 pr-4 py-3 bg-afri-bg/80 border border-afri-border rounded-2xl text-xs font-bold text-afri-text focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                />
               </div>
-
-              {geoVis === "COMING_SOON" && !isFounder ? (
-                <div className="p-3 bg-black/40 border border-[#D4AF37]/30 rounded-xl text-center text-xs text-[#D4AF37]">
-                  Module Géolocalisation bientôt disponible.
-                </div>
-              ) : locationOption === "none" ? (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-black/40 border border-dashed border-white/10 rounded-xl">
-                  <div className="text-[11px] text-afri-text-sec">
-                    <span>Aucun lieu spécifié</span>
-                    <span className="block text-[9px] text-gray-500">Vous pouvez publier librement sans localisation</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsLocationSheetOpen(true)}
-                    className="px-4 py-2 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Choisir l'itinéraire</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="p-3 bg-black/40 border border-[#D4AF37]/30 rounded-xl space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-0.5 text-left">
-                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <span className="text-[#D4AF37]">📍</span>
-                        <span>
-                          {locationOption === "commune" ? (commune === "Autre" ? (customCommune || "Autre ville") : commune) : 
-                           locationOption === "manual" ? `${customPlaceInput || "Lieu saisi"} (${commune || ""})` :
-                           locationOption === "autre" ? (customPlaceInput || "Lieu personnalisé") :
-                           locationOption === "map" ? "Position sur la Carte" :
-                           "Position GPS"}
-                          {quartier ? `, ${quartier}` : ""}
-                        </span>
-                      </div>
-                      {customPlaceInput && locationOption === "commune" && (
-                        <p className="text-[10px] text-afri-text-sec pl-4">{customPlaceInput}</p>
-                      )}
-                      {latitude && longitude && (
-                        <p className="text-[9px] font-mono text-emerald-400 pl-4">
-                          GPS: {latitude.toFixed(4)}, {longitude.toFixed(4)}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setIsLocationSheetOpen(true)}
-                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[#D4AF37] rounded-lg text-[10px] font-bold uppercase transition cursor-pointer"
-                      >
-                        Modifier
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLocationOption("none");
-                          setLatitude(null);
-                          setLongitude(null);
-                          setCustomPlaceInput("");
-                          setQuartier("");
-                        }}
-                        className="p-1 text-red-400 hover:text-red-300 rounded-lg text-[10px] transition cursor-pointer"
-                        title="Retirer la localisation"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {fieldErrors.location && (
+              {fieldErrors.date && (
                 <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                  <span>{fieldErrors.location}</span>
+                  <span>{fieldErrors.date}</span>
                 </p>
               )}
             </div>
-          )}
 
-          {/* 5. DATE DE L'ÉVÉNEMENT */}
-          <div>
-            <label className="block text-[10px] font-black text-[#D4AF37] mb-1.5 uppercase tracking-widest">
-              6. Date de l'événement *
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-afri-text-sec">
-                <Calendar className="w-4 h-4 text-[#D4AF37]" />
-              </span>
-              <input
-                type="date"
-                required
-                min={new Date().toISOString().split("T")[0]}
-                value={date}
-                onChange={(e) => {
-                  setDate(e.target.value);
-                  if (fieldErrors.date) {
-                    setFieldErrors(prev => {
-                      const copy = { ...prev };
-                      delete copy.date;
-                      return copy;
-                    });
-                  }
-                }}
-                className="w-full pl-10 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-2xl text-xs font-bold text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-              />
+            <div>
+              <label className="block text-[10px] font-black text-[#D4AF37] mb-1.5 uppercase tracking-widest">
+                Heure de début *
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-afri-text-sec">
+                  <Clock className="w-4 h-4 text-[#D4AF37]" />
+                </span>
+                <input
+                  type="time"
+                  required
+                  value={time}
+                  onChange={(e) => {
+                    setTime(e.target.value);
+                    if (fieldErrors.time) {
+                      setFieldErrors(prev => {
+                        const copy = { ...prev };
+                        delete copy.time;
+                        return copy;
+                      });
+                    }
+                  }}
+                  className="w-full pl-10 pr-4 py-3 bg-afri-bg/80 border border-afri-border rounded-2xl text-xs font-bold text-afri-text focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                />
+              </div>
+              {fieldErrors.time && (
+                <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{fieldErrors.time}</span>
+                </p>
+              )}
             </div>
-            {fieldErrors.date && (
-              <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>{fieldErrors.date}</span>
-              </p>
-            )}
           </div>
 
           {/* DURÉE DU GOMBO */}
-          <div className="p-4 bg-white/[0.02] border border-afri-border/80 rounded-2xl space-y-3 text-left">
+          <div className="p-4 bg-afri-bg/60 border border-afri-border rounded-2xl space-y-3 text-left">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#D4AF37]" />
                 <span className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">
-                  6b. Durée du Gombo *
+                  6. Durée du Gombo *
                 </span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {[
-                { id: "hours", label: "Quelques heures" },
-                { id: "1_day", label: "1 jour" },
-                { id: "2_days", label: "2 jours" },
-                { id: "3_days", label: "3 jours" },
-                { id: "1_week", label: "1 semaine" },
-                { id: "custom", label: "Durée personnalisée" }
+                { id: "hours", label: "⏱️ Quelques heures (Soirée)" },
+                { id: "1_day", label: "📅 1 jour" },
+                { id: "2_days", label: "📅 2 jours" },
+                { id: "3_days", label: "📅 3 jours" },
+                { id: "1_week", label: "🗓️ 1 semaine" },
+                { id: "custom", label: "⚙️ Personnalisée" }
               ].map((opt) => {
                 const isSelected = duration === opt.id;
                 return (
@@ -1073,8 +1267,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     onClick={() => setDuration(opt.id)}
                     className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-[#D4AF37]/15 border-[#D4AF37] text-white font-extrabold"
-                        : "bg-white/[0.02] border-afri-border/70 text-afri-text-sec hover:border-white/20"
+                        ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text font-black"
+                        : "bg-afri-bg border-afri-border/70 text-afri-text-sec hover:border-[#D4AF37]/40 hover:text-afri-text"
                     }`}
                   >
                     <span className="text-[11px] block">{opt.label}</span>
@@ -1095,7 +1289,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     max={90}
                     value={customDurationDays}
                     onChange={(e) => setCustomDurationDays(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-bold text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                    className="w-full px-4 py-2.5 bg-afri-bg border border-afri-border rounded-xl text-xs font-bold text-afri-text focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
                     placeholder="Nombre de jours (ex: 5)"
                   />
                   <span className="absolute right-3 top-2.5 text-[10px] font-bold text-afri-text-sec">jour(s)</span>
@@ -1104,51 +1298,195 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             )}
           </div>
 
-          {/* 6. CACHET OPTIONNEL & RÉCAPITULATIF */}
+          {/* 5. RÉMUNÉRATION (MINIMUM OBLIGATOIRE 15 000 FCFA) */}
           <div>
-            <label className="block text-[10px] font-black text-[#D4AF37] mb-1.5 uppercase tracking-widest">
-              7. Cachet / Rémunération (Optionnel, en FCFA)
-            </label>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">
+                7. Cachet / Rémunération * (Minimum : 15 000 FCFA)
+              </label>
+              <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                Devise : FCFA (XOF)
+              </span>
+            </div>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-emerald-500 font-extrabold text-xs">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-emerald-400 font-black text-xs">
                 FCFA
               </span>
               <input
                 type="number"
-                placeholder="Ex: 50000 (Laisser vide pour discuter)"
+                required
+                min={MIN_GOMBO_AMOUNT}
+                step={500}
+                placeholder="Ex: 25 000 (Min. 15 000 FCFA)"
                 value={budget}
-                onChange={(e) => setBudget(e.target.value)}
-                className="w-full pl-14 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-2xl text-xs font-bold text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder:text-gray-600"
+                onChange={(e) => {
+                  setBudget(e.target.value);
+                  if (fieldErrors.budget) {
+                    setFieldErrors(prev => {
+                      const copy = { ...prev };
+                      delete copy.budget;
+                      return copy;
+                    });
+                  }
+                }}
+                className={`w-full pl-16 pr-4 py-3 bg-afri-bg/80 border rounded-2xl text-xs font-bold text-afri-text focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] ${
+                  cachetVal > 0 && cachetVal < MIN_GOMBO_AMOUNT ? "border-red-500" : "border-afri-border"
+                }`}
               />
             </div>
 
-            {/* Financial Summary */}
-            {cachetVal > 0 && (
-              <div className="mt-3 p-4 bg-afri-bg-sec/90 border border-[#D4AF37]/30 rounded-2xl space-y-2 text-xs">
-                <div className="flex items-center justify-between font-black text-[#D4AF37] uppercase">
-                  <span>📄 Récapitulatif Financier</span>
-                  <span className="text-[9.5px] bg-[#D4AF37]/15 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">
-                    {isUserPremium ? "Taux VIP (1,5%)" : "Taux Standard (2,5%)"}
+            {/* Minimum 15,000 FCFA Warning Banner if < 15,000 */}
+            {cachetVal > 0 && cachetVal < MIN_GOMBO_AMOUNT && (
+              <div className="mt-2 p-3 bg-red-950/40 border border-red-500/60 rounded-2xl flex items-center gap-2 text-red-400 text-xs font-bold animate-pulse">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                <span>Le cachet minimum pour publier un Gombo est de 15 000 FCFA.</span>
+              </div>
+            )}
+
+            {fieldErrors.budget && (
+              <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{fieldErrors.budget}</span>
+              </p>
+            )}
+
+            {/* REAL-TIME DYNAMIC FINANCIAL BREAKDOWN */}
+            {cachetVal >= MIN_GOMBO_AMOUNT && (
+              <div className="mt-3 p-4 bg-afri-bg border border-[#D4AF37]/35 rounded-2xl space-y-2.5 text-xs shadow-sm">
+                <div className="flex items-center justify-between font-black text-[#D4AF37] uppercase text-[11px]">
+                  <span className="flex items-center gap-1.5">
+                    <span>📄</span>
+                    <span>Moteur Financier & Commission</span>
+                  </span>
+                  <span className="text-[9.5px] bg-[#D4AF37]/15 px-2.5 py-0.5 rounded-full border border-[#D4AF37]/30 text-[#D4AF37]">
+                    {financials.isPremium 
+                      ? `👑 ${financials.statusName} (${financials.ratePercent}%)` 
+                      : `👤 ${financials.statusName} (${financials.ratePercent}%)`}
                   </span>
                 </div>
-                <div className="space-y-1 text-afri-text-sec">
-                  <div className="flex justify-between">
+
+                <div className="space-y-1.5 text-afri-text-sec pt-1 border-t border-afri-border/50">
+                  <div className="flex justify-between items-center">
                     <span>Cachet convenu :</span>
-                    <span className="font-mono font-bold text-white">{financials.cachet.toLocaleString('fr-FR')} FCFA</span>
+                    <span className="font-mono font-bold text-afri-text">{financials.cachet.toLocaleString('fr-FR')} FCFA</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Commission plateforme ({isUserPremium ? "1,5%" : "2,5%"}):</span>
+                  <div className="flex justify-between items-center">
+                    <span>Frais applicables ({financials.ratePercent} %) :</span>
                     <span className="font-mono font-bold text-[#D4AF37]">{financials.fee.toLocaleString('fr-FR')} FCFA</span>
                   </div>
+                  <div className="flex justify-between items-center pt-1.5 border-t border-afri-border/50">
+                    <span className="font-bold text-emerald-400">Montant net pour l'artiste :</span>
+                    <span className="font-mono font-black text-emerald-400">{financials.netAmount.toLocaleString('fr-FR')} FCFA</span>
+                  </div>
+                  {gomboCategory === "securise" && (
+                    <div className="flex justify-between items-center pt-1 text-[11px] text-amber-300">
+                      <span>Total bloqué sous séquestre :</span>
+                      <span className="font-mono font-bold text-amber-300">{financials.total.toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </div>
 
+          {/* 6. LOCALISATION & ITINÉRAIRE (FACULTATIVE) */}
+          {!(geoVis === "HIDDEN" && !isFounder) && (
+            <div className="p-4 bg-afri-bg/60 border border-afri-border rounded-2xl space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-[#D4AF37]" />
+                  <span className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">
+                    8. Lieu du Gombo & Itinéraire
+                  </span>
+                </div>
+                <span className="text-[9px] font-mono text-afri-text-sec bg-white/5 px-2 py-0.5 rounded-full">
+                  Facultatif
+                </span>
+              </div>
+
+              {locationOption === "none" ? (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-afri-bg border border-dashed border-afri-border rounded-xl">
+                  <div className="text-[11px] text-afri-text-sec">
+                    <span className="font-bold text-afri-text">Aucun lieu spécifié</span>
+                    <span className="block text-[9px] text-afri-text-muted">Vous pouvez publier librement sans localisation</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsLocationSheetOpen(true)}
+                    className="px-4 py-2 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Choisir l'itinéraire</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="p-3 bg-afri-bg border border-[#D4AF37]/30 rounded-xl space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-0.5 text-left">
+                      <div className="text-xs font-bold text-afri-text flex items-center gap-1.5">
+                        <span className="text-[#D4AF37]">📍</span>
+                        <span>
+                          {locationOption === "commune" ? (commune === "Autre" ? (customCommune || "Autre ville") : commune) : 
+                           locationOption === "manual" ? `${customPlaceInput || "Lieu saisi"} (${commune || ""})` :
+                           locationOption === "autre" ? (customPlaceInput || "Lieu personnalisé") :
+                           locationOption === "map" ? "Position sur la Carte" :
+                           "Position GPS"}
+                          {quartier ? `, ${quartier}` : ""}
+                        </span>
+                      </div>
+                      {customPlaceInput && locationOption === "commune" && (
+                        <p className="text-[10px] text-afri-text-sec pl-4">{customPlaceInput}</p>
+                      )}
+                      {itineraryNotes && (
+                        <p className="text-[9.5px] text-[#D4AF37] pl-4 italic">🧭 Repère : {itineraryNotes}</p>
+                      )}
+                      {latitude && longitude && (
+                        <p className="text-[9px] font-mono text-emerald-400 pl-4">
+                          GPS: {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setIsLocationSheetOpen(true)}
+                        className="px-2.5 py-1 bg-afri-bg-ter hover:bg-afri-bg text-[#D4AF37] border border-afri-border rounded-lg text-[10px] font-bold uppercase transition cursor-pointer"
+                      >
+                        Modifier
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLocationOption("none");
+                          setLatitude(null);
+                          setLongitude(null);
+                          setCustomPlaceInput("");
+                          setQuartier("");
+                          setItineraryNotes("");
+                        }}
+                        className="p-1 text-red-400 hover:text-red-300 rounded-lg text-[10px] transition cursor-pointer"
+                        title="Retirer la localisation"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {fieldErrors.location && (
+                <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{fieldErrors.location}</span>
+                </p>
+              )}
+            </div>
+          )}
+
           {/* 7. MÉDIAS (PHOTO / AUDIO) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div 
-              className="p-4 border border-dashed border-white/10 hover:border-[#D4AF37]/40 bg-white/[0.01] rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer min-h-[95px] transition relative"
+              className="p-4 border border-dashed border-afri-border hover:border-[#D4AF37]/60 bg-afri-bg rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer min-h-[95px] transition relative"
               onClick={() => imageInputRef.current?.click()}
             >
               <input 
@@ -1164,7 +1502,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   <button 
                     type="button" 
                     onClick={(e) => { e.stopPropagation(); clearFile("image"); }} 
-                    className="text-[10px] uppercase font-bold text-red-400 inline-flex items-center gap-0.5 bg-red-950/30 px-2 py-0.5 rounded"
+                    className="text-[10px] uppercase font-bold text-red-400 inline-flex items-center gap-0.5 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20"
                   >
                     <X className="w-3 h-3" /> Retirer
                   </button>
@@ -1179,7 +1517,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             </div>
 
             <div 
-              className="p-4 border border-dashed border-white/10 hover:border-[#D4AF37]/40 bg-white/[0.01] rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer min-h-[95px] transition relative"
+              className="p-4 border border-dashed border-afri-border hover:border-[#D4AF37]/60 bg-afri-bg rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer min-h-[95px] transition relative"
               onClick={() => audioInputRef.current?.click()}
             >
               <input 
@@ -1195,7 +1533,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   <button 
                     type="button" 
                     onClick={(e) => { e.stopPropagation(); clearFile("audio"); }} 
-                    className="text-[10px] uppercase font-bold text-red-400 inline-flex items-center gap-0.5 bg-red-950/30 px-2 py-0.5 rounded"
+                    className="text-[10px] uppercase font-bold text-red-400 inline-flex items-center gap-0.5 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20"
                   >
                     <X className="w-3 h-3" /> Retirer
                   </button>
@@ -1210,9 +1548,51 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             </div>
           </div>
 
+          {/* 8. RÉCAPITULATIF VISUEL AVANT SOUMISSION */}
+          <div className="p-4 bg-afri-bg border border-[#D4AF37]/35 rounded-2xl space-y-2 text-left text-xs shadow-sm">
+            <div className="flex items-center justify-between pb-2 border-b border-afri-border/60">
+              <span className="font-black text-[#D4AF37] uppercase tracking-wider text-[11px]">
+                📋 Récapitulatif du Gombo
+              </span>
+              <span className="text-[10px] font-bold text-afri-text px-2 py-0.5 bg-afri-bg-ter border border-afri-border rounded-full">
+                {gomboCategory === "securise" ? "🛡️ Gombo Sécurisé" : "🚀 Gombo Direct"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-afri-text-sec pt-1">
+              <div>
+                <span className="block text-afri-text-muted text-[9px] uppercase font-bold">🎵 Spécialité & Style</span>
+                <span className="font-bold text-afri-text">{finalSpecialtyDisplay} • {musicStyle}</span>
+              </div>
+              <div>
+                <span className="block text-afri-text-muted text-[9px] uppercase font-bold">📅 Date & Heure</span>
+                <span className="font-bold text-afri-text">{date} à {time}</span>
+              </div>
+              <div>
+                <span className="block text-afri-text-muted text-[9px] uppercase font-bold">📍 Emplacement</span>
+                <span className="font-bold text-afri-text">
+                  {locationOption !== "none" ? (commune || customPlaceInput || "Localisé") : "Non géolocalisé"}
+                </span>
+              </div>
+              <div>
+                <span className="block text-afri-text-muted text-[9px] uppercase font-bold">💰 Cachet convenu</span>
+                <span className="font-bold font-mono text-emerald-400">
+                  {cachetVal >= MIN_GOMBO_AMOUNT ? `${cachetVal.toLocaleString('fr-FR')} FCFA` : "15 000 FCFA minimum"}
+                </span>
+              </div>
+            </div>
+
+            {cachetVal >= MIN_GOMBO_AMOUNT && (
+              <div className="pt-2 mt-1 border-t border-afri-border/50 flex justify-between items-center text-[10.5px]">
+                <span className="text-afri-text-sec">Frais ({financials.ratePercent} %) : <strong className="text-[#D4AF37]">{financials.fee.toLocaleString('fr-FR')} FCFA</strong></span>
+                <span className="text-afri-text-sec">Net artiste : <strong className="text-emerald-400">{financials.netAmount.toLocaleString('fr-FR')} FCFA</strong></span>
+              </div>
+            )}
+          </div>
+
           {/* Inline Error Message */}
           {errorMsg && (
-            <div className="p-3.5 bg-red-950/40 text-red-400 font-bold text-xs rounded-2xl border border-red-800/80 flex items-center gap-2 animate-bounce">
+            <div className="p-3.5 bg-red-500/10 text-red-400 font-bold text-xs rounded-2xl border border-red-500/30 flex items-center gap-2 animate-bounce">
               <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
               <span>{errorMsg}</span>
             </div>
@@ -1224,10 +1604,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               type="button"
               onClick={handleSaveDraft}
               disabled={loading || savingDraft}
-              className="w-full sm:w-1/3 py-3.5 px-4 bg-white/[0.04] hover:bg-white/[0.08] border border-afri-border text-afri-text font-black text-xs uppercase rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 min-h-[46px]"
+              className="w-full sm:w-1/3 py-3.5 px-4 bg-afri-bg hover:bg-afri-bg-ter border border-afri-border text-afri-text font-black text-xs uppercase rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 min-h-[46px]"
             >
               {savingDraft ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-afri-text border-t-transparent rounded-full animate-spin" />
               ) : (
                 <FileText className="w-4 h-4 text-afri-text-sec" />
               )}
@@ -1259,15 +1639,15 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       <AndroidBottomSheet
         isOpen={isLocationSheetOpen}
         onClose={() => setIsLocationSheetOpen(false)}
-        title="📍 Lieu du Gombo"
+        title="📍 Lieu du Gombo & Itinéraire"
       >
         <div className="space-y-4 py-1 text-left">
           <p className="text-[11px] text-afri-text-sec">
-            Choisissez l'emplacement de l'événement. La localisation est <strong className="text-white">facultative</strong>.
+            Choisissez l'emplacement de l'événement. La localisation est <strong className="text-afri-text">facultative</strong>.
           </p>
 
           {/* 5 visual choices (A to E) */}
-          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-1.5 p-1.5 bg-black/50 border border-afri-border rounded-2xl">
+          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-1.5 p-1.5 bg-afri-bg border border-afri-border rounded-2xl">
             <button
               type="button"
               onClick={() => {
@@ -1276,7 +1656,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
                 locationOption === "commune"
                   ? "bg-[#D4AF37] text-black shadow"
-                  : "text-afri-text-sec hover:text-white"
+                  : "text-afri-text-sec hover:text-afri-text"
               }`}
             >
               <span className="text-sm">🏙️</span>
@@ -1291,7 +1671,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
                 locationOption === "gps"
                   ? "bg-[#D4AF37] text-black shadow"
-                  : "text-afri-text-sec hover:text-white"
+                  : "text-afri-text-sec hover:text-afri-text"
               }`}
             >
               <span className="text-sm">📍</span>
@@ -1307,7 +1687,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
                 locationOption === "map"
                   ? "bg-[#D4AF37] text-black shadow"
-                  : "text-afri-text-sec hover:text-white"
+                  : "text-afri-text-sec hover:text-afri-text"
               }`}
             >
               <span className="text-sm">🗺️</span>
@@ -1322,7 +1702,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
                 locationOption === "manual"
                   ? "bg-[#D4AF37] text-black shadow"
-                  : "text-afri-text-sec hover:text-white"
+                  : "text-afri-text-sec hover:text-afri-text"
               }`}
             >
               <span className="text-sm">✏️</span>
@@ -1337,7 +1717,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
                 locationOption === "autre"
                   ? "bg-[#D4AF37] text-black shadow"
-                  : "text-afri-text-sec hover:text-white"
+                  : "text-afri-text-sec hover:text-afri-text"
               }`}
             >
               <span className="text-sm">➕</span>
@@ -1347,7 +1727,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
           {/* Option A: Commune */}
           {locationOption === "commune" && (
-            <div className="space-y-3 p-3.5 bg-black/40 border border-afri-border rounded-2xl">
+            <div className="space-y-3 p-3.5 bg-afri-bg border border-afri-border rounded-2xl">
               <div>
                 <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
                   Commune / Ville :
@@ -1355,10 +1735,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 <select
                   value={commune}
                   onChange={(e) => setCommune(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                  className="w-full px-3 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs font-bold text-afri-text focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
                 >
                   {CI_COMMUNES.map((c) => (
-                    <option key={c} value={c} className="bg-zinc-900 text-white">
+                    <option key={c} value={c} className="bg-afri-bg-sec text-afri-text">
                       {c}
                     </option>
                   ))}
@@ -1368,14 +1748,14 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               {commune === "Autre" && (
                 <div>
                   <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
-                    Nom de votre ville :
+                    Nom de votre commune / ville :
                   </label>
                   <input
                     type="text"
                     placeholder="Ex: Daloa, Korhogo, San-Pédro..."
                     value={customCommune}
                     onChange={(e) => setCustomCommune(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                    className="w-full px-3 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
                   />
                 </div>
               )}
@@ -1389,7 +1769,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   placeholder="Ex: Angré 8e Tranche, Selmer, Zone 4..."
                   value={quartier}
                   onChange={(e) => setQuartier(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                  className="w-full px-3 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
                 />
               </div>
 
@@ -1402,7 +1782,20 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   placeholder="Ex: Palais de la Culture, Espace Crystal..."
                   value={customPlaceInput}
                   onChange={(e) => setCustomPlaceInput(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                  className="w-full px-3 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
+                  Repère d'accès / Itinéraire :
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: En face de la pharmacie, 2e carrefour à gauche..."
+                  value={itineraryNotes}
+                  onChange={(e) => setItineraryNotes(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
                 />
               </div>
 
@@ -1416,7 +1809,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                       className="mt-0.5 w-4 h-4 rounded border-afri-border accent-[#D4AF37]"
                     />
                     <div className="text-left">
-                      <span className="text-[11px] font-bold text-white block">
+                      <span className="text-[11px] font-bold text-afri-text block">
                         Proposer ce lieu à AFRIGOMBO
                       </span>
                       <span className="text-[9.5px] text-afri-text-sec block leading-relaxed">
@@ -1431,7 +1824,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
           {/* Option B: GPS */}
           {locationOption === "gps" && (
-            <div className="space-y-3 p-3.5 bg-black/40 border border-afri-border rounded-2xl">
+            <div className="space-y-3 p-3.5 bg-afri-bg border border-afri-border rounded-2xl">
               <div className="text-center py-2 space-y-2">
                 <p className="text-[11px] text-afri-text-sec">
                   Déterminez les coordonnées GPS précises de l'événement. Vous devez autoriser l'accès à votre position.
@@ -1452,7 +1845,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               </div>
 
               {gpsNotice && (
-                <p className="text-[10px] text-amber-300 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
+                <p className="text-[10px] text-amber-500 dark:text-amber-300 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
                   {gpsNotice}
                 </p>
               )}
@@ -1469,7 +1862,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
           {/* Option C: Carte (Map Picker) */}
           {locationOption === "map" && (
-            <div className="space-y-3 p-3.5 bg-black/40 border border-afri-border rounded-2xl">
+            <div className="space-y-3 p-3.5 bg-afri-bg border border-afri-border rounded-2xl">
               <p className="text-[11px] text-afri-text-sec text-center">
                 Ouvrez la carte interactive pour désigner l'emplacement exact de votre événement.
               </p>
@@ -1492,7 +1885,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
           {/* Option D: Saisir (Manual input) */}
           {locationOption === "manual" && (
-            <div className="space-y-3 p-3.5 bg-black/40 border border-afri-border rounded-2xl">
+            <div className="space-y-3 p-3.5 bg-afri-bg border border-afri-border rounded-2xl">
               <div>
                 <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
                   Ville / Commune :
@@ -1502,7 +1895,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   placeholder="Ex: Yamoussoukro, Abidjan..."
                   value={commune}
                   onChange={(e) => setCommune(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                  className="w-full px-3 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
                 />
               </div>
 
@@ -1515,7 +1908,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   placeholder="Ex: Près de la gare..."
                   value={quartier}
                   onChange={(e) => setQuartier(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                  className="w-full px-3 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
                 />
               </div>
 
@@ -1528,7 +1921,20 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   placeholder="Ex: Hôtel Président..."
                   value={customPlaceInput}
                   onChange={(e) => setCustomPlaceInput(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                  className="w-full px-3 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
+                  Repère d'accès / Itinéraire :
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Carrefour principal, 100m après la station..."
+                  value={itineraryNotes}
+                  onChange={(e) => setItineraryNotes(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
                 />
               </div>
             </div>
@@ -1536,7 +1942,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
           {/* Option E: Autre */}
           {locationOption === "autre" && (
-            <div className="space-y-3 p-3.5 bg-black/40 border border-afri-border rounded-2xl">
+            <div className="space-y-3 p-3.5 bg-afri-bg border border-afri-border rounded-2xl">
               <div>
                 <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
                   Précisez le lieu * :
@@ -1546,7 +1952,20 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   placeholder="Ex: En ligne, Lieu privé, Étranger..."
                   value={customPlaceInput}
                   onChange={(e) => setCustomPlaceInput(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                  className="w-full px-3 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
+                  Itinéraire / Accès :
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Lien visio, ou instructions d'accès..."
+                  value={itineraryNotes}
+                  onChange={(e) => setItineraryNotes(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
                 />
               </div>
 
@@ -1558,14 +1977,14 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     onChange={(e) => setProposePlaceToCommunity(e.target.checked)}
                     className="mt-0.5 w-4 h-4 rounded border-afri-border accent-[#D4AF37]"
                   />
-                  <div className="text-left">
-                    <span className="text-[11px] font-bold text-white block">
-                      Proposer ce lieu à AFRIGOMBO
-                    </span>
-                    <span className="text-[9.5px] text-afri-text-sec block leading-relaxed">
-                      Votre suggestion sera étudiée et validée pour enrichir l'arborescence officielle.
-                    </span>
-                  </div>
+                    <div className="text-left">
+                      <span className="text-[11px] font-bold text-afri-text block">
+                        Proposer ce lieu à AFRIGOMBO
+                      </span>
+                      <span className="text-[9.5px] text-afri-text-sec block leading-relaxed">
+                        Votre suggestion sera étudiée et validée pour enrichir l'arborescence officielle.
+                      </span>
+                    </div>
                 </label>
               </div>
             </div>
@@ -1579,8 +1998,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 onClick={() => setLocationPrivacy("exact")}
                 className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
                   locationPrivacy === "exact"
-                    ? "bg-[#D4AF37]/15 border-[#D4AF37] text-white"
-                    : "bg-black/30 border-afri-border text-afri-text-sec"
+                    ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text font-bold"
+                    : "bg-afri-bg border-afri-border text-afri-text-sec hover:text-afri-text"
                 }`}
               >
                 <div className="text-[10px] font-black uppercase">✓ Position exacte</div>
@@ -1591,8 +2010,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 onClick={() => setLocationPrivacy("approximate")}
                 className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
                   locationPrivacy === "approximate"
-                    ? "bg-[#D4AF37]/15 border-[#D4AF37] text-white"
-                    : "bg-black/30 border-afri-border text-afri-text-sec"
+                    ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text font-bold"
+                    : "bg-afri-bg border-afri-border text-afri-text-sec hover:text-afri-text"
                 }`}
               >
                 <div className="text-[10px] font-black uppercase">🔒 Approximatif</div>
@@ -1611,9 +2030,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 setLongitude(null);
                 setCustomPlaceInput("");
                 setQuartier("");
+                setItineraryNotes("");
                 setIsLocationSheetOpen(false);
               }}
-              className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-red-400 font-bold text-xs uppercase rounded-xl border border-white/10 transition cursor-pointer"
+              className="flex-1 py-3 bg-afri-bg hover:bg-afri-bg-ter text-red-400 font-bold text-xs uppercase rounded-xl border border-afri-border transition cursor-pointer"
             >
               🚫 Aucun lieu
             </button>
@@ -1641,22 +2061,40 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           <div className="p-4 bg-afri-bg rounded-2xl border border-afri-border space-y-2.5 text-xs">
             <div className="flex justify-between items-center">
               <span className="text-afri-text-sec">Type d'annonce :</span>
-              <span className="font-bold text-white uppercase">{depositDetails.typeName}</span>
+              <span className="font-bold text-afri-text uppercase">{depositDetails.typeName}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-afri-text-sec">Titre :</span>
-              <span className="font-bold text-white truncate max-w-[200px]">{depositDetails.title}</span>
+              <span className="font-bold text-afri-text truncate max-w-[200px]">{depositDetails.title}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-afri-text-sec">Spécialité :</span>
+              <span className="font-bold text-[#D4AF37]">{finalSpecialtyDisplay}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-afri-text-sec">Date & Heure :</span>
+              <span className="font-bold text-afri-text">{date} à {time}</span>
             </div>
             {cachetVal > 0 && (
-              <div className="flex justify-between items-center">
-                <span className="text-afri-text-sec">Cachet :</span>
-                <span className="font-mono font-bold text-emerald-400">{cachetVal.toLocaleString('fr-FR')} FCFA</span>
-              </div>
+              <>
+                <div className="flex justify-between items-center pt-1 border-t border-afri-border/50">
+                  <span className="text-afri-text-sec">Cachet convenu :</span>
+                  <span className="font-mono font-bold text-afri-text">{cachetVal.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-afri-text-sec">Commission ({depositDetails.ratePercent} %) :</span>
+                  <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.fee.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-emerald-400 font-bold">Net artiste :</span>
+                  <span className="font-mono font-bold text-emerald-400">{depositDetails.netAmount.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+              </>
             )}
             <div className="flex justify-between items-center pt-2 border-t border-afri-border">
               <span className="text-afri-text-sec">Mode :</span>
               <span className="font-bold text-[#D4AF37] uppercase">
-                {gomboCategory === "securise" ? "🛡️ Gombo Sécurisé" : "🚀 Gombo Direct"}
+                {gomboCategory === "securise" ? "🛡️ Gombo Sécurisé (Escrow)" : "🚀 Gombo Direct"}
               </span>
             </div>
           </div>
@@ -1665,7 +2103,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             <button
               type="button"
               onClick={() => setShowConfirmModal(false)}
-              className="flex-1 py-3.5 bg-afri-bg hover:bg-afri-bg/80 text-afri-text font-black text-xs uppercase rounded-2xl border border-afri-border cursor-pointer active:scale-95"
+              className="flex-1 py-3.5 bg-afri-bg hover:bg-afri-bg-ter text-afri-text font-black text-xs uppercase rounded-2xl border border-afri-border cursor-pointer active:scale-95"
             >
               Modifier
             </button>
@@ -1688,13 +2126,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 15 }}
-              className="bg-[#0F0F12] border border-[#D4AF37]/40 rounded-3xl w-full max-w-md p-6 sm:p-8 relative shadow-2xl space-y-5 text-center"
+              className="bg-afri-bg-sec text-afri-text border border-[#D4AF37]/40 rounded-3xl w-full max-w-md p-6 sm:p-8 relative shadow-2xl space-y-5 text-center"
             >
               {publishOutcome === "insufficient_funds" ? (
                 <>
@@ -1702,7 +2140,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     <AlertCircle className="w-8 h-8" />
                   </div>
                   <div className="space-y-1.5">
-                    <h3 className="text-lg font-black text-white uppercase">Solde insuffisant</h3>
+                    <h3 className="text-lg font-black text-afri-text uppercase">Solde insuffisant</h3>
                     <p className="text-xs text-afri-text-sec">
                       Votre solde actuel ne permet pas de bloquer le cachet en sécurité. Vous pouvez publier en Gombo Direct ou recharger votre Wallet.
                     </p>
@@ -1727,7 +2165,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     <span className="text-[10px] font-mono font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
                       ✅ PUBLIÉ EN DIRECT
                     </span>
-                    <h3 className="text-lg font-black text-white uppercase pt-1">
+                    <h3 className="text-lg font-black text-afri-text uppercase pt-1">
                       Gombo publié avec succès !
                     </h3>
                     <p className="text-xs text-afri-text-sec max-w-xs mx-auto">

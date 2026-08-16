@@ -11,6 +11,7 @@ import { getEffectiveGomboId } from "../lib/gomboIdHelper";
 import { AndroidCenteredDialog } from "./common/GlobalPortalModal";
 import { AndroidBottomSheet } from "./ui/AndroidBottomSheet";
 import { useTheme } from "../context/ThemeContext";
+import { useFeatureFlags } from "../lib/featureFlags";
 
 interface GomboProfileMainViewProps {
   currentUserProfile: UserProfile;
@@ -51,6 +52,9 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
   const [showCertModal, setShowCertModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
+  const [localComingSoon, setLocalComingSoon] = useState<string | null>(null);
+
+  const { isModuleVisible, isModuleComingSoon } = useFeatureFlags(currentUserProfile, currentUserProfile);
 
   if (!currentUserProfile) return null;
 
@@ -259,29 +263,42 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         </motion.div>
       )}
 
-      {/* ACCÈS ROUE DES AVANTAGES PREMIUM (VISIBLE POUR TOUS) */}
-      <button
-        type="button"
-        onClick={() => onNavigateView("premium_wheel")}
-        className={`w-full p-4 rounded-[18px] border transition-all active:scale-98 flex items-center justify-between gap-3 text-left cursor-pointer shadow-sm group ${
-          isLight
-            ? "bg-[#FDFBF7] border-amber-400/50 hover:border-amber-500 text-gray-900"
-            : "bg-afri-bg-sec border-amber-500/30 hover:border-amber-400 text-afri-text"
-        }`}
-      >
-        <div className="flex items-center gap-3.5 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform">
-            🎁
+      {/* ACCÈS ROUE DES AVANTAGES PREMIUM (VISIBLE SI NON MASQUÉE) */}
+      {isModuleVisible("wheel") && (
+        <button
+          type="button"
+          onClick={() => {
+            if (isModuleComingSoon("wheel")) {
+              setLocalComingSoon("Roue des Avantages Premium 🎡");
+              return;
+            }
+            onNavigateView("premium_wheel");
+          }}
+          className={`w-full p-4 rounded-[18px] border transition-all active:scale-98 flex items-center justify-between gap-3 text-left cursor-pointer shadow-sm group relative ${
+            isLight
+              ? "bg-[#FDFBF7] border-amber-400/50 hover:border-amber-500 text-gray-900"
+              : "bg-afri-bg-sec border-amber-500/30 hover:border-amber-400 text-afri-text"
+          }`}
+        >
+          {isModuleComingSoon("wheel") && (
+            <span className="absolute top-2 right-2 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
+              Bientôt disponible 🔒
+            </span>
+          )}
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform">
+              🎁
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-xs font-black uppercase text-afri-text tracking-wide truncate">Tente ta chance pour des avantages Premium</h4>
+              <p className="text-[10px] text-afri-text-sec truncate font-mono">Tirage au sort souverain & récompenses exclusives</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h4 className="text-xs font-black uppercase text-afri-text tracking-wide truncate">Tente ta chance pour des avantages Premium</h4>
-            <p className="text-[10px] text-afri-text-sec truncate font-mono">Tirage au sort souverain & récompenses exclusives</p>
+          <div className="text-amber-500 font-bold shrink-0 text-sm group-hover:translate-x-1 transition-transform">
+            →
           </div>
-        </div>
-        <div className="text-amber-500 font-bold shrink-0 text-sm group-hover:translate-x-1 transition-transform">
-          →
-        </div>
-      </button>
+        </button>
+      )}
       <div className={`w-full relative  rounded-[18px] border shadow-sm p-4 ${
         isLight 
           ? "bg-[#FDFBF7] border-[#D4AF37]/60" 
@@ -297,7 +314,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 isLight ? "border-[#D4AF37]/35 bg-stone-100" : "border-amber-400/45 bg-afri-bg-ter"
               }`}>
                 <img 
-                  src={(currentUserProfile.useAvatarAsProfile && currentUserProfile.avatarDataUri) ? currentUserProfile.avatarDataUri : (currentUserProfile.avatarUrl || currentUserProfile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150")} 
+                  src={(isModuleVisible("avatar") && currentUserProfile.useAvatarAsProfile && currentUserProfile.avatarDataUri) ? currentUserProfile.avatarDataUri : (currentUserProfile.photoURL || currentUserProfile.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150")} 
                   alt="Artist Avatar" 
                   className="w-full  object-cover rounded-full" 
                   referrerPolicy="no-referrer"
@@ -351,29 +368,47 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </div>
 
             {/* Gombo ID Display (Gold pill with black text) */}
-            {isKycApproved ? (
-              <div 
-                onClick={handleCopyId}
-                className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[8.5px] xs:text-[9.5px] font-mono font-black tracking-widest px-2.5 py-0.5 rounded shadow-sm uppercase inline-flex items-center gap-1 border border-amber-400/40 w-fit cursor-pointer"
-              >
-                <span>🎼 {gomboId}</span>
-              </div>
-            ) : (
-              <div 
-                onClick={handleCopyId}
-                className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[8.5px] xs:text-[9.5px] font-mono font-black tracking-widest px-2.5 py-0.5 rounded shadow-sm uppercase inline-flex items-center gap-1 border border-amber-400/40 w-fit cursor-pointer"
-              >
-                <span>ID NON ATTRIBUÉ</span>
-              </div>
+            {isModuleVisible("gombo_id") && (
+              isKycApproved ? (
+                <div 
+                  onClick={() => {
+                    if (isModuleComingSoon("gombo_id")) {
+                      setLocalComingSoon("Gombo ID Souverain 🪪");
+                      return;
+                    }
+                    handleCopyId();
+                  }}
+                  className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[8.5px] xs:text-[9.5px] font-mono font-black tracking-widest px-2.5 py-0.5 rounded shadow-sm uppercase inline-flex items-center gap-1 border border-amber-400/40 w-fit cursor-pointer"
+                >
+                  <span>🎼 {gomboId}</span>
+                  {isModuleComingSoon("gombo_id") && <span className="text-[7px] bg-black/20 px-1 rounded">Bientôt</span>}
+                </div>
+              ) : (
+                <div 
+                  onClick={() => {
+                    if (isModuleComingSoon("gombo_id")) {
+                      setLocalComingSoon("Gombo ID Souverain 🪪");
+                      return;
+                    }
+                    handleCopyId();
+                  }}
+                  className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[8.5px] xs:text-[9.5px] font-mono font-black tracking-widest px-2.5 py-0.5 rounded shadow-sm uppercase inline-flex items-center gap-1 border border-amber-400/40 w-fit cursor-pointer"
+                >
+                  <span>ID NON ATTRIBUÉ</span>
+                  {isModuleComingSoon("gombo_id") && <span className="text-[7px] bg-black/20 px-1 rounded">Bientôt</span>}
+                </div>
+              )
             )}
 
             {/* Subscription status */}
-            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[8px] xs:text-[9px] font-bold tracking-wide uppercase w-fit ${
-              isLight ? "border-[#D4AF37]/35 bg-[#FDFBF7] text-gray-800" : "border-afri-border bg-afri-bg-sec text-afri-text-sec"
-            }`}>
-              <span className="text-amber-500">👑</span>
-              <span>ABONNEMENT : {isSubscribed ? "PREMIUM ELITE" : "STANDARD (GRATUIT)"}</span>
-            </div>
+            {isModuleVisible("premium") && (
+              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[8px] xs:text-[9px] font-bold tracking-wide uppercase w-fit ${
+                isLight ? "border-[#D4AF37]/35 bg-[#FDFBF7] text-gray-800" : "border-afri-border bg-afri-bg-sec text-afri-text-sec"
+              }`}>
+                <span className="text-amber-500">👑</span>
+                <span>ABONNEMENT : {isSubscribed ? "PREMIUM ELITE" : "STANDARD (GRATUIT)"}</span>
+              </div>
+            )}
 
             {/* KYC status badge */}
             <div className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[8px] xs:text-[9px] font-bold tracking-wide uppercase w-fit ${
@@ -798,69 +833,43 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => onNavigateView("user_mes_gombos")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-afri-border hover:bg-afri-bg-ter/80 transition-colors text-left">
-              <Edit3 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <div className="truncate">
-                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Publications</span>
-                <span className="block text-[8px] text-afri-text-sec font-mono">{myPosts.length} posts</span>
-              </div>
-            </button>
-            
-            <button onClick={() => onNavigateView("user_contracts")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-afri-border hover:bg-afri-bg-ter/80 transition-colors text-left">
-              <ShieldCheck className="w-4 h-4 text-afri-gold shrink-0" />
-              <div className="truncate">
-                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Contrats</span>
-                <span className="block text-[8px] text-afri-text-sec font-mono">Sécurisés</span>
-              </div>
-            </button>
-            
-            <button onClick={() => onNavigateView("user_opportunities")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-afri-border hover:bg-afri-bg-ter/80 transition-colors text-left">
-              <Target className="w-4 h-4 text-purple-400 shrink-0" />
-              <div className="truncate">
-                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Candidatures</span>
-                <span className="block text-[8px] text-afri-text-sec font-mono">{currentUserProfile.applicationsSent || 0} envois</span>
-              </div>
-            </button>
-
-            <button onClick={() => onNavigateView("user_wallet")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-afri-border hover:bg-afri-bg-ter/80 transition-colors text-left">
-              <Wallet className="w-4 h-4 text-amber-500 shrink-0" />
-              <div className="truncate">
-                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Revenus</span>
-                <span className="block text-[8px] text-afri-text-sec font-mono">{(currentUserProfile.totalRevenue || 0).toLocaleString()} F</span>
-              </div>
-            </button>
-            
-            <button onClick={() => onNavigateView("user_vibes")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-afri-border hover:bg-afri-bg-ter/80 transition-colors text-left">
-              <Heart className="w-4 h-4 text-rose-500 shrink-0" />
-              <div className="truncate">
-                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Favoris</span>
-                <span className="block text-[8px] text-afri-text-sec font-mono">Sauvegardés</span>
-              </div>
-            </button>
-
-            <button onClick={() => onNavigateView("user_events")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-afri-border hover:bg-afri-bg-ter/80 transition-colors text-left">
-              <Clock className="w-4 h-4 text-cyan-400 shrink-0" />
-              <div className="truncate">
-                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Calendrier</span>
-                <span className="block text-[8px] text-afri-text-sec font-mono">Mes dates</span>
-              </div>
-            </button>
-
-            <button onClick={() => onNavigateView("user_grand_marche")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-[#D4AF37]/40 hover:bg-afri-bg-ter/80 transition-colors text-left">
-              <Store className="w-4 h-4 text-[#D4AF37] shrink-0" />
-              <div className="truncate">
-                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Grand Marché</span>
-                <span className="block text-[8px] text-[#D4AF37] font-mono">Achat/Vente</span>
-              </div>
-            </button>
-
-            <button onClick={() => onNavigateView("user_academie")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-emerald-500/40 hover:bg-afri-bg-ter/80 transition-colors text-left">
-              <GraduationCap className="w-4 h-4 text-emerald-400 shrink-0" />
-              <div className="truncate">
-                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Académie</span>
-                <span className="block text-[8px] text-emerald-400 font-mono">Formations</span>
-              </div>
-            </button>
+            {[
+              { id: "gombos", featureId: "gombos", label: "Publications", sub: `${myPosts.length} posts`, icon: Edit3, color: "text-emerald-400", action: () => onNavigateView("user_mes_gombos") },
+              { id: "escrow", featureId: "escrow", label: "Contrats", sub: "Sécurisés", icon: ShieldCheck, color: "text-afri-gold", action: () => onNavigateView("user_contracts") },
+              { id: "candidatures", featureId: "gombos", label: "Candidatures", sub: `${currentUserProfile.applicationsSent || 0} envois`, icon: Target, color: "text-purple-400", action: () => onNavigateView("user_opportunities") },
+              { id: "wallet", featureId: "wallet", label: "Revenus", sub: `${(currentUserProfile.totalRevenue || 0).toLocaleString()} F`, icon: Wallet, color: "text-amber-500", action: () => onNavigateView("user_wallet") },
+              { id: "favorites", featureId: "favorites", label: "Favoris", sub: "Sauvegardés", icon: Heart, color: "text-rose-500", action: () => onNavigateView("user_vibes") },
+              { id: "events", featureId: "events", label: "Calendrier", sub: "Mes dates", icon: Clock, color: "text-cyan-400", action: () => onNavigateView("user_events") },
+              { id: "grandMarket", featureId: "grandMarket", label: "Grand Marché", sub: "Achat/Vente", icon: Store, color: "text-[#D4AF37]", border: "border-[#D4AF37]/40", action: () => onNavigateView("user_grand_marche") },
+              { id: "academie", featureId: "academie", label: "Académie", sub: "Formations", icon: GraduationCap, color: "text-emerald-400", border: "border-emerald-500/40", action: () => onNavigateView("user_academie") }
+            ].filter(item => isModuleVisible(item.featureId)).map((item) => {
+              const isComing = isModuleComingSoon(item.featureId);
+              const IconComp = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    if (isComing) {
+                      setLocalComingSoon(`${item.label} 🔒`);
+                      return;
+                    }
+                    item.action();
+                  }}
+                  className={`flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border ${item.border || "border-afri-border"} hover:bg-afri-bg-ter/80 transition-colors text-left relative cursor-pointer group`}
+                >
+                  {isComing && (
+                    <span className="absolute top-1 right-1 text-[7px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1 py-0.2 rounded">
+                      🔒
+                    </span>
+                  )}
+                  <IconComp className={`w-4 h-4 ${item.color} shrink-0`} />
+                  <div className="truncate">
+                    <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">{item.label}</span>
+                    <span className="block text-[8px] text-afri-text-sec font-mono">{item.sub}</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -1157,6 +1166,36 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </div>
           );
         })()}
+      </AndroidCenteredDialog>
+
+      {/* POPUP BIENTÔT DISPONIBLE */}
+      <AndroidCenteredDialog
+        isOpen={!!localComingSoon}
+        onClose={() => setLocalComingSoon(null)}
+        title="Fonctionnalité en Préparation"
+      >
+        <div className="p-4 sm:p-5 space-y-4 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-2xl mx-auto shadow-inner">
+            ⏳
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="text-base font-black uppercase text-afri-text">{localComingSoon}</h3>
+            <span className="inline-block text-[9px] font-mono py-0.5 px-2.5 bg-amber-500/15 text-amber-400 rounded-full border border-amber-500/30 uppercase font-black tracking-wider">
+              Bientôt disponible 🔒
+            </span>
+          </div>
+          <p className="text-xs text-afri-text-sec max-w-sm mx-auto leading-relaxed">
+            Ce module exceptionnel est en cours de déploiement par la Chancellerie AFRIGOMBO. Il sera accessible très prochainement.
+          </p>
+          <div className="pt-2">
+            <button
+              onClick={() => setLocalComingSoon(null)}
+              className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-afri-gold hover:brightness-110 text-black font-black uppercase text-xs tracking-widest rounded-xl transition-all shadow-md cursor-pointer"
+            >
+              Compris
+            </button>
+          </div>
+        </div>
       </AndroidCenteredDialog>
 
     </motion.div>

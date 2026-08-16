@@ -1,7 +1,14 @@
 import { db } from "./firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
-
 import { PremiumEngine } from "./premiumEngine";
+import { SecurityService } from "./SecurityService";
+import { sanitizeForFirestore } from "./firestoreUtils";
+
+/**
+ * 15 000 FCFA MINIMUM RULE - OFFICIAL RULE IN AFRIGOMBO ELITE
+ * MIN_GOMBO_AMOUNT = 15000 XOF
+ */
+export const MIN_GOMBO_AMOUNT = 15000; // 15 000 FCFA
 
 /**
  * SINGLE CANONICAL SOURCE OF TRUTH RESOLUTION FOR WALLET BALANCE
@@ -28,24 +35,28 @@ export function getCanonicalWalletBalance(userData: any): number | null {
 
 // Global in-memory cache for platform pricing configuration
 export interface PricingConfig {
-  standardCommissionRate: number; // e.g. 0.05
-  premiumCommissionRate: number; // e.g. 0.015
+  standardCommissionRate: number; // e.g. 0.025 (2.5%)
+  premiumCommissionRate: number; // e.g. 0.015 (1.5%)
 }
 
 let currentPricing: PricingConfig = {
-  standardCommissionRate: 0.025,
-  premiumCommissionRate: 0.015
+  standardCommissionRate: 0.025, // 2.5%
+  premiumCommissionRate: 0.015   // 1.5%
 };
 
-// Setup real-time listener
+// Setup real-time listener for sovereign economy settings
 onSnapshot(doc(db, "system_settings", "economy"), (snap) => {
   if (snap.exists()) {
     const data = snap.data();
     if (typeof data?.commissionBase === "number") {
       currentPricing.standardCommissionRate = data.commissionBase / 100;
+    } else if (typeof data?.commissionRateStandard === "number") {
+      currentPricing.standardCommissionRate = data.commissionRateStandard;
     }
     if (typeof data?.commissionPremium === "number") {
       currentPricing.premiumCommissionRate = data.commissionPremium / 100;
+    } else if (typeof data?.commissionRatePremium === "number") {
+      currentPricing.premiumCommissionRate = data.commissionRatePremium;
     }
   }
 });
@@ -60,9 +71,13 @@ export async function fetchPlatformPricing(): Promise<PricingConfig> {
       const data = snap.data();
       if (typeof data?.commissionBase === "number") {
         currentPricing.standardCommissionRate = data.commissionBase / 100;
+      } else if (typeof data?.commissionRateStandard === "number") {
+        currentPricing.standardCommissionRate = data.commissionRateStandard;
       }
       if (typeof data?.commissionPremium === "number") {
         currentPricing.premiumCommissionRate = data.commissionPremium / 100;
+      } else if (typeof data?.commissionRatePremium === "number") {
+        currentPricing.premiumCommissionRate = data.commissionRatePremium;
       }
     }
   } catch (err) {
@@ -76,33 +91,199 @@ export function getPlatformPricing(): PricingConfig {
 }
 
 /**
+ * Resolve User Status Name and its corresponding commission rate.
+ * Supported Statuses: FOUNDER, BATISSEUR, AMBASSADEUR, CREATOR, PRO, PREMIUM, USER
+ */
+export function resolveUserStatusAndRate(userData: any, explicitStatus?: string | null): {
+  statusName: "FOUNDER" | "BATISSEUR" | "AMBASSADEUR" | "CREATOR" | "PRO" | "PREMIUM" | "USER";
+  ratePercent: number;
+  rateDecimal: number;
+  isPremium: boolean;
+} {
+  const pricing = getPlatformPricing();
+  const standardRatePercent = Number((pricing.standardCommissionRate * 100).toFixed(4)); // default 2.5%
+  const premiumRatePercent = Number((pricing.premiumCommissionRate * 100).toFixed(4));   // default 1.5%
+
+  const email = (userData?.email || "").toLowerCase();
+  const isFounder = email === "jhs.kmj7@gmail.com" || userData?.isFounder === true || userData?.role === "admin" || explicitStatus === "FOUNDER";
+  if (isFounder) {
+    return {
+      statusName: "FOUNDER",
+      ratePercent: 0,
+      rateDecimal: 0,
+      isPremium: true
+    };
+  }
+
+  const explicit = (explicitStatus || "").toUpperCase();
+  if (explicit === "BATISSEUR" || explicit === "BÂTISSEUR") {
+    return { statusName: "BATISSEUR", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+  }
+  if (explicit === "AMBASSADEUR") {
+    return { statusName: "AMBASSADEUR", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+  }
+  if (explicit === "CREATOR" || explicit === "CREATEUR") {
+    return { statusName: "CREATOR", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+  }
+  if (explicit === "PRO" || explicit === "ELITE" || explicit === "VIP") {
+    return { statusName: "PRO", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+  }
+
+  // Check badges / profile fields
+  const badges: string[] = Array.isArray(userData?.badges) ? userData.badges : [];
+  const hasBuilderBadge = badges.some(b => b?.toLowerCase().includes("bâtisseur") || b?.toLowerCase().includes("fondateur"));
+  if (hasBuilderBadge || userData?.isBuilder === true) {
+    return { statusName: "BATISSEUR", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+  }
+
+  const hasAmbassadorBadge = badges.some(b => b?.toLowerCase().includes("ambassadeur"));
+  if (hasAmbassadorBadge || userData?.isAmbassador === true || userData?.role === "ambassadeur") {
+    return { statusName: "AMBASSADEUR", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+  }
+
+  const hasCreatorBadge = badges.some(b => b?.toLowerCase().includes("creator") || b?.toLowerCase().includes("créateur"));
+  if (hasCreatorBadge || userData?.isCreator === true || userData?.role === "creator") {
+    return { statusName: "CREATOR", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+  }
+
+  const isPrem = PremiumEngine.isPremium(userData);
+  if (isPrem) {
+    return {
+      statusName: userData?.subscriptionPlan?.toLowerCase().includes("pro") ? "PRO" : "PREMIUM",
+      ratePercent: premiumRatePercent,
+      rateDecimal: pricing.premiumCommissionRate,
+      isPremium: true
+    };
+  }
+
+  return {
+    statusName: "USER",
+    ratePercent: standardRatePercent,
+    rateDecimal: pricing.standardCommissionRate,
+    isPremium: false
+  };
+}
+
+export interface GomboFeeCalculationParams {
+  amount: number;
+  userStatus?: string | null;
+  userProfile?: any;
+  customRatePercent?: number;
+  context?: "publication" | "contract" | "escrow" | "direct";
+}
+
+export interface GomboFeeCalculationResult {
+  amount: number;
+  ratePercent: number;
+  rateDecimal: number;
+  fee: number;
+  netAmount: number;
+  sequestre: number;
+  total: number;
+  isValidAmount: boolean;
+  minAmount: number;
+  statusName: string;
+  isPremium: boolean;
+  errorMessage?: string;
+}
+
+/**
+ * THE SINGLE CENTRALIZED GOMBO FEE ENGINE
+ * Formula: fee = Math.round((amount * ratePercent) / 100)
+ * Net amount = amount - fee
+ * Min amount: 15 000 FCFA
+ */
+export function calculateGomboFees({
+  amount,
+  userStatus,
+  userProfile,
+  customRatePercent,
+  context
+}: GomboFeeCalculationParams): GomboFeeCalculationResult {
+  const cleanAmount = typeof amount === "number" && !isNaN(amount) ? Math.max(0, Math.round(amount)) : 0;
+  
+  let ratePercent = 2.5;
+  let rateDecimal = 0.025;
+  let statusName: string = "USER";
+  let isPremium = false;
+
+  if (typeof customRatePercent === "number" && !isNaN(customRatePercent) && customRatePercent >= 0) {
+    // If rate was passed as decimal <= 0.5 (e.g. 0.015 instead of 1.5)
+    ratePercent = customRatePercent <= 0.5 ? Number((customRatePercent * 100).toFixed(4)) : customRatePercent;
+    rateDecimal = ratePercent / 100;
+    statusName = "CUSTOM";
+    isPremium = ratePercent <= 1.5;
+  } else {
+    const resolved = resolveUserStatusAndRate(userProfile, userStatus);
+    ratePercent = resolved.ratePercent;
+    rateDecimal = resolved.rateDecimal;
+    statusName = resolved.statusName;
+    isPremium = resolved.isPremium;
+  }
+
+  // Canonical base calculation: fee = Math.round((amount * ratePercent) / 100)
+  const fee = Math.round((cleanAmount * ratePercent) / 100);
+  const netAmount = Math.max(0, cleanAmount - fee);
+  const isValidAmount = cleanAmount >= MIN_GOMBO_AMOUNT;
+  
+  const errorMessage = !isValidAmount && cleanAmount > 0
+    ? "Le cachet minimum pour publier un Gombo est de 15 000 FCFA."
+    : undefined;
+
+  return {
+    amount: cleanAmount,
+    ratePercent,
+    rateDecimal,
+    fee,
+    netAmount,
+    sequestre: cleanAmount,
+    total: cleanAmount + fee,
+    isValidAmount,
+    minAmount: MIN_GOMBO_AMOUNT,
+    statusName,
+    isPremium,
+    errorMessage
+  };
+}
+
+/**
  * SINGLE UNIQUE FUNCTION to calculate platform fee.
  * @param amount - Cachet amount in FCFA
  * @param feeRate - Optional custom fee rate
  */
 export function calculatePlatformFee(amount: number, feeRate?: number): number {
   if (!amount || amount <= 0) return 0;
-  const rate = typeof feeRate === "number" ? feeRate : currentPricing.standardCommissionRate;
-  return Math.round(amount * rate);
+  const res = calculateGomboFees({ 
+    amount, 
+    customRatePercent: typeof feeRate === "number" ? (feeRate <= 0.5 ? feeRate * 100 : feeRate) : undefined 
+  });
+  return res.fee;
 }
 
 /**
  * Calculate financial breakdown for a Gombo publication (Cachet + Platform Fee).
  */
-export function calculatePublicationFinancials(cachet: number, feeRate?: number) {
-  const cachetVal = Math.max(0, cachet);
-  const rate = typeof feeRate === "number" ? feeRate : currentPricing.standardCommissionRate;
-  const feeAmount = Math.round(cachetVal * rate);
-  const montantSequestre = cachetVal;
-  const totalDebite = cachetVal + feeAmount;
+export function calculatePublicationFinancials(cachet: number, feeRateOrUserData?: number | any) {
+  const isUserData = typeof feeRateOrUserData === "object" && feeRateOrUserData !== null;
+  const res = calculateGomboFees({
+    amount: cachet,
+    userProfile: isUserData ? feeRateOrUserData : undefined,
+    customRatePercent: typeof feeRateOrUserData === "number" ? (feeRateOrUserData <= 0.5 ? feeRateOrUserData * 100 : feeRateOrUserData) : undefined
+  });
 
   return {
-    cachet: cachetVal,
-    fee: feeAmount,
-    sequestre: montantSequestre,
-    total: totalDebite,
-    rate: rate,
-    isPremium: rate === currentPricing.premiumCommissionRate
+    cachet: res.amount,
+    fee: res.fee,
+    sequestre: res.sequestre,
+    total: res.total,
+    rate: res.rateDecimal,
+    ratePercent: res.ratePercent,
+    netAmount: res.netAmount,
+    isPremium: res.isPremium,
+    isValid: res.isValidAmount,
+    statusName: res.statusName,
+    minAmount: res.minAmount,
+    errorMessage: res.errorMessage
   };
 }
 
@@ -115,9 +296,11 @@ export async function updatePlatformPricing(newPricing: Partial<PricingConfig>):
     const payload: any = { updatedAt: new Date().toISOString() };
     if (newPricing.standardCommissionRate !== undefined) {
       payload.commissionBase = newPricing.standardCommissionRate * 100;
+      payload.commissionRateStandard = newPricing.standardCommissionRate;
     }
     if (newPricing.premiumCommissionRate !== undefined) {
       payload.commissionPremium = newPricing.premiumCommissionRate * 100;
+      payload.commissionRatePremium = newPricing.premiumCommissionRate;
     }
     await setDoc(doc(db, "system_settings", "economy"), payload, { merge: true });
   } catch (err) {
@@ -129,11 +312,9 @@ export async function updatePlatformPricing(newPricing: Partial<PricingConfig>):
  * Calculate effective commission rate based on user's Firestore profile.
  */
 export function getEffectiveCommissionRate(userData: any): number {
-  return PremiumEngine.getCommissionRate(userData);
+  const { rateDecimal } = resolveUserStatusAndRate(userData);
+  return rateDecimal;
 }
-
-import { SecurityService } from "./SecurityService";
-import { sanitizeForFirestore } from "./firestoreUtils";
 
 /**
  * Generate cryptographic signature hash for transaction anti-tampering

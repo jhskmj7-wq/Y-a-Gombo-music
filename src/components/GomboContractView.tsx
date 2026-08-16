@@ -984,7 +984,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                 <div className="bg-afri-bg-sec/60 p-3 rounded-2xl border border-afri-border text-[9.5px] text-afri-text-sec">
                   <p className="font-bold text-afri-text mb-1">💡 Avantage Économique Premium</p>
                   <p className="leading-normal">
-                    Les membres Premium bénéficient d'un taux réduit à <span className="text-[#D4AF37] font-bold">4%</span> au lieu de 6%, économisant sur chaque gombo validé.
+                    Les membres Pro & Premium bénéficient d'un taux réduit à <span className="text-[#D4AF37] font-bold">1,5%</span> au lieu de 2,5%, économisant sur chaque gombo validé.
                   </p>
                 </div>
               </div>
