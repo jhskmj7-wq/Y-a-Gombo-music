@@ -5,7 +5,7 @@ import {
   Music, Sparkles, Image as ImageIcon, Briefcase, 
   X, AlertCircle, Award, Star, Radio, Lock, ShieldCheck, Zap,
   Wallet, ArrowUpRight, CheckCircle2, Navigation, Map, Building2, Plus,
-  FileText, Compass, Trash2, CheckCircle
+  FileText, Compass, Trash2, CheckCircle, Clock
 } from "lucide-react";
 import MapPickerModal from "./common/MapPickerModal";
 import { gomboDB } from "../firebase";
@@ -14,7 +14,7 @@ import { doc, getDoc, setDoc, addDoc, collection, runTransaction } from "firebas
 import { UserProfile, SocialPost } from "../types";
 import { calculatePublicationFinancials, getEffectiveCommissionRate, getCanonicalWalletBalance } from "../lib/financial";
 import { PremiumEngine } from "../lib/premiumEngine";
-import { getGomboRef } from "../lib/gomboIdHelper";
+import { subscribeToFeatureFlags, getModuleVisibility } from "../lib/featureFlags";
 import { useLocations } from "../hooks/useLocations";
 import UserLocationProposalModal from "./common/UserLocationProposalModal";
 import { AndroidBottomSheet } from "./common/GlobalPortalModal";
@@ -36,6 +36,8 @@ const PUBLICATION_TYPES = [
 
 const DRAFT_STORAGE_KEY = "gombo_publish_draft";
 
+const getGomboRef = (id: string) => `GOMBO-${id.slice(0, 6).toUpperCase()}`;
+
 interface GomboPublishProps {
   currentUserProfile: UserProfile;
   onSuccess: () => void;
@@ -48,9 +50,19 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const [selectedType, setSelectedType] = useState("opportunite");
   const [gomboCategory, setGomboCategory] = useState<"libre" | "securise">("libre");
 
-  // Location Bottom Sheet & Modes: "none" | "gps" | "commune" | "autre"
+  const [flagsMap, setFlagsMap] = useState<any>({});
+  useEffect(() => {
+    const unsub = subscribeToFeatureFlags((map) => setFlagsMap(map));
+    return () => unsub();
+  }, []);
+
+  const userEmail = currentUserProfile?.email || "";
+  const isFounder = userEmail.toLowerCase() === "jhs.kmj7@gmail.com";
+  const geoVis = getModuleVisibility("nearby", currentUserProfile, currentUserProfile, flagsMap);
+
+  // Location Bottom Sheet & Modes: "none" | "gps" | "commune" | "autre" | "map" | "manual"
   const [isLocationSheetOpen, setIsLocationSheetOpen] = useState(false);
-  const [locationOption, setLocationOption] = useState<"none" | "gps" | "commune" | "autre">("none");
+  const [locationOption, setLocationOption] = useState<"none" | "gps" | "commune" | "autre" | "map" | "manual">("none");
   const [commune, setCommune] = useState("Cocody");
   const [customCommune, setCustomCommune] = useState("");
   const [quartier, setQuartier] = useState("");
@@ -64,6 +76,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const [gpsLoading, setGpsLoading] = useState(false);
   const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
   const [gpsNotice, setGpsNotice] = useState<string | null>(null);
+
+  // Duration states
+  const [duration, setDuration] = useState("1_day");
+  const [customDurationDays, setCustomDurationDays] = useState("1");
+
+  // Inline Validation Errors
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
 
   // Form core fields
   const [title, setTitle] = useState("");
@@ -149,6 +168,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           if (parsed.budget) setBudget(parsed.budget);
           if (typeof parsed.latitude === "number") setLatitude(parsed.latitude);
           if (typeof parsed.longitude === "number") setLongitude(parsed.longitude);
+          if (parsed.duration) setDuration(parsed.duration);
+          if (parsed.customDurationDays) setCustomDurationDays(parsed.customDurationDays);
           setHasRestoredDraft(true);
         }
       }
@@ -176,6 +197,9 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     setLongitude(null);
     setImageFile(null);
     setAudioFile(null);
+    setDuration("1_day");
+    setCustomDurationDays("1");
+    setFieldErrors({});
     setHasRestoredDraft(false);
     setErrorMsg("");
   };
@@ -200,6 +224,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       budget,
       latitude,
       longitude,
+      duration,
+      customDurationDays,
       savedAt: new Date().toISOString()
     };
 
@@ -229,6 +255,12 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           isPublished: false,
           budget: cachetVal,
           date,
+          duration: duration === "custom" ? `${customDurationDays} jour(s)` : 
+                    duration === "hours" ? "Quelques heures" : 
+                    duration === "1_day" ? "1 jour" : 
+                    duration === "2_days" ? "2 jours" : 
+                    duration === "3_days" ? "3 jours" : "1 semaine",
+          customDurationDays,
           locationName: locationOption === "commune" ? commune : (customPlaceInput || ""),
           commune: commune || "",
           quartier: quartier || "",
@@ -305,33 +337,34 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     }
     
     // 1. VALIDATIONS OBLIGATOIRES DES CHAMPS
+    const newErrors: {[key: string]: string} = {};
     if (!title.trim()) {
-      setErrorMsg("Veuillez renseigner le titre de votre Gombo !");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
+      newErrors.title = "Veuillez renseigner le titre de votre Gombo !";
     }
 
     if (!description.trim()) {
-      setErrorMsg("Veuillez renseigner la description !");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
+      newErrors.description = "Veuillez renseigner la description !";
     }
 
     if (locationOption === "autre" && !customPlaceInput.trim()) {
-      setErrorMsg("Veuillez préciser le nom du lieu ou désactiver l'option lieu.");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
+      newErrors.location = "Veuillez préciser le nom du lieu ou désactiver l'option lieu.";
     }
 
     // 2. VALIDATION DATE (≥ AUJOURD'HUI)
     const todayStr = new Date().toISOString().split("T")[0];
     const selectedDateStr = (typeof date === "string" && date) ? date.split("T")[0] : todayStr;
     if (selectedDateStr < todayStr) {
-      setErrorMsg("La date du Gombo doit être fixée à aujourd'hui ou dans le futur.");
+      newErrors.date = "La date du Gombo doit être fixée à aujourd'hui ou dans le futur.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFieldErrors(newErrors);
+      setErrorMsg("Veuillez corriger les erreurs de saisie ci-dessous.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
+    setFieldErrors({});
     setErrorMsg("");
 
     try {
@@ -427,8 +460,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       // 3. Prepare Location Data
       const effectiveLocationName = 
         locationOption === "commune" ? (commune === "Autre" ? customCommune.trim() : commune) :
+        locationOption === "manual" ? `${customPlaceInput.trim()} (${commune || ""})` :
         locationOption === "autre" ? customPlaceInput.trim() :
         locationOption === "gps" ? "Position GPS détectée" :
+        locationOption === "map" ? "Position Carte" :
         "";
 
       const hasLoc = locationOption !== "none" && Boolean(effectiveLocationName || (latitude && longitude));
@@ -589,8 +624,48 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           createdAt: nowIso,
           timestamp: currentTimestamp,
           publishedAt: nowIso,
-          expiresAt: new Date(date + "T23:59:59.999Z").toISOString(),
-          expiresAtTimestamp: new Date(date + "T23:59:59.999Z").getTime(),
+          duration: duration === "custom" ? `${customDurationDays} jour(s)` : 
+                    duration === "hours" ? "Quelques heures" : 
+                    duration === "1_day" ? "1 jour" : 
+                    duration === "2_days" ? "2 jours" : 
+                    duration === "3_days" ? "3 jours" : "1 semaine",
+          customDurationDays,
+          expiresAt: (() => {
+            let expDate = new Date(date + "T23:59:59.999Z");
+            if (duration === "hours") {
+              expDate = new Date(new Date(date + "T00:00:00.000Z").getTime() + 12 * 60 * 60 * 1000);
+            } else if (duration === "1_day") {
+              expDate = new Date(new Date(date + "T23:59:59.999Z").getTime() + 1 * 24 * 60 * 60 * 1000);
+            } else if (duration === "2_days") {
+              expDate = new Date(new Date(date + "T23:59:59.999Z").getTime() + 2 * 24 * 60 * 60 * 1000);
+            } else if (duration === "3_days") {
+              expDate = new Date(new Date(date + "T23:59:59.999Z").getTime() + 3 * 24 * 60 * 60 * 1000);
+            } else if (duration === "1_week") {
+              expDate = new Date(new Date(date + "T23:59:59.999Z").getTime() + 7 * 24 * 60 * 60 * 1000);
+            } else if (duration === "custom") {
+              const daysVal = Number(customDurationDays) || 1;
+              expDate = new Date(new Date(date + "T23:59:59.999Z").getTime() + daysVal * 24 * 60 * 60 * 1000);
+            }
+            return expDate.toISOString();
+          })(),
+          expiresAtTimestamp: (() => {
+            let expDate = new Date(date + "T23:59:59.999Z");
+            if (duration === "hours") {
+              expDate = new Date(new Date(date + "T00:00:00.000Z").getTime() + 12 * 60 * 60 * 1000);
+            } else if (duration === "1_day") {
+              expDate = new Date(new Date(date + "T23:59:59.999Z").getTime() + 1 * 24 * 60 * 60 * 1000);
+            } else if (duration === "2_days") {
+              expDate = new Date(new Date(date + "T23:59:59.999Z").getTime() + 2 * 24 * 60 * 60 * 1000);
+            } else if (duration === "3_days") {
+              expDate = new Date(new Date(date + "T23:59:59.999Z").getTime() + 3 * 24 * 60 * 60 * 1000);
+            } else if (duration === "1_week") {
+              expDate = new Date(new Date(date + "T23:59:59.999Z").getTime() + 7 * 24 * 60 * 60 * 1000);
+            } else if (duration === "custom") {
+              const daysVal = Number(customDurationDays) || 1;
+              expDate = new Date(new Date(date + "T23:59:59.999Z").getTime() + daysVal * 24 * 60 * 60 * 1000);
+            }
+            return expDate.getTime();
+          })(),
 
           // Statistics initialized to 0
           views: 0,
@@ -787,9 +862,24 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 maxLength={100}
                 placeholder="Ex: Recherche Pianiste Live Cabaret à Marcory"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  if (fieldErrors.title) {
+                    setFieldErrors(prev => {
+                      const copy = { ...prev };
+                      delete copy.title;
+                      return copy;
+                    });
+                  }
+                }}
                 className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-2xl text-xs font-bold text-afri-text placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
               />
+              {fieldErrors.title && (
+                <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{fieldErrors.title}</span>
+                </p>
+              )}
             </div>
 
             <div>
@@ -805,91 +895,120 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 rows={3}
                 placeholder="Précisez le répertoire, l'horaire de balance, la tenue exigée et les conditions du live..."
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  if (fieldErrors.description) {
+                    setFieldErrors(prev => {
+                      const copy = { ...prev };
+                      delete copy.description;
+                      return copy;
+                    });
+                  }
+                }}
                 className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-2xl text-xs text-afri-text placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#D4AF37] resize-none"
               />
+              {fieldErrors.description && (
+                <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{fieldErrors.description}</span>
+                </p>
+              )}
             </div>
           </div>
 
           {/* 4. LOCALISATION (OPTIONNELLE, MOBILE-FIRST ANDROID) */}
-          <div className="p-4 bg-white/[0.02] border border-afri-border/80 rounded-2xl space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#D4AF37]" />
-                <span className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">
-                  5. Lieu du Gombo
+          {!(geoVis === "HIDDEN" && !isFounder) && (
+            <div className="p-4 bg-white/[0.02] border border-afri-border/80 rounded-2xl space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-[#D4AF37]" />
+                  <span className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">
+                    5. Lieu du Gombo {geoVis === "COMING_SOON" && !isFounder ? "(Bientôt disponible)" : ""}
+                  </span>
+                </div>
+                <span className="text-[9px] font-mono text-afri-text-sec bg-white/5 px-2 py-0.5 rounded-full">
+                  {geoVis === "COMING_SOON" && !isFounder ? "Bientôt" : "Facultatif"}
                 </span>
               </div>
-              <span className="text-[9px] font-mono text-afri-text-sec bg-white/5 px-2 py-0.5 rounded-full">
-                Facultatif
-              </span>
-            </div>
 
-            {locationOption === "none" ? (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-black/40 border border-dashed border-white/10 rounded-xl">
-                <div className="text-[11px] text-afri-text-sec">
-                  <span>Aucun lieu spécifié</span>
-                  <span className="block text-[9px] text-gray-500">Vous pouvez publier librement sans localisation</span>
+              {geoVis === "COMING_SOON" && !isFounder ? (
+                <div className="p-3 bg-black/40 border border-[#D4AF37]/30 rounded-xl text-center text-xs text-[#D4AF37]">
+                  Module Géolocalisation bientôt disponible.
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsLocationSheetOpen(true)}
-                  className="px-4 py-2 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Ajouter un lieu</span>
-                </button>
-              </div>
-            ) : (
-              <div className="p-3 bg-black/40 border border-[#D4AF37]/30 rounded-xl space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="space-y-0.5 text-left">
-                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <span className="text-[#D4AF37]">📍</span>
-                      <span>
-                        {locationOption === "commune" ? (commune === "Autre" ? (customCommune || "Autre ville") : commune) : 
-                         locationOption === "autre" ? (customPlaceInput || "Lieu personnalisé") :
-                         "Position GPS"}
-                        {quartier ? `, ${quartier}` : ""}
-                      </span>
+              ) : locationOption === "none" ? (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-black/40 border border-dashed border-white/10 rounded-xl">
+                  <div className="text-[11px] text-afri-text-sec">
+                    <span>Aucun lieu spécifié</span>
+                    <span className="block text-[9px] text-gray-500">Vous pouvez publier librement sans localisation</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsLocationSheetOpen(true)}
+                    className="px-4 py-2 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Choisir l'itinéraire</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="p-3 bg-black/40 border border-[#D4AF37]/30 rounded-xl space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-0.5 text-left">
+                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <span className="text-[#D4AF37]">📍</span>
+                        <span>
+                          {locationOption === "commune" ? (commune === "Autre" ? (customCommune || "Autre ville") : commune) : 
+                           locationOption === "manual" ? `${customPlaceInput || "Lieu saisi"} (${commune || ""})` :
+                           locationOption === "autre" ? (customPlaceInput || "Lieu personnalisé") :
+                           locationOption === "map" ? "Position sur la Carte" :
+                           "Position GPS"}
+                          {quartier ? `, ${quartier}` : ""}
+                        </span>
+                      </div>
+                      {customPlaceInput && locationOption === "commune" && (
+                        <p className="text-[10px] text-afri-text-sec pl-4">{customPlaceInput}</p>
+                      )}
+                      {latitude && longitude && (
+                        <p className="text-[9px] font-mono text-emerald-400 pl-4">
+                          GPS: {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                        </p>
+                      )}
                     </div>
-                    {customPlaceInput && locationOption === "commune" && (
-                      <p className="text-[10px] text-afri-text-sec pl-4">{customPlaceInput}</p>
-                    )}
-                    {latitude && longitude && (
-                      <p className="text-[9px] font-mono text-emerald-400 pl-4">
-                        GPS: {latitude.toFixed(4)}, {longitude.toFixed(4)}
-                      </p>
-                    )}
-                  </div>
 
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setIsLocationSheetOpen(true)}
-                      className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[#D4AF37] rounded-lg text-[10px] font-bold uppercase transition cursor-pointer"
-                    >
-                      Modifier
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLocationOption("none");
-                        setLatitude(null);
-                        setLongitude(null);
-                        setCustomPlaceInput("");
-                        setQuartier("");
-                      }}
-                      className="p-1 text-red-400 hover:text-red-300 rounded-lg text-[10px] transition cursor-pointer"
-                      title="Retirer la localisation"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setIsLocationSheetOpen(true)}
+                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[#D4AF37] rounded-lg text-[10px] font-bold uppercase transition cursor-pointer"
+                      >
+                        Modifier
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLocationOption("none");
+                          setLatitude(null);
+                          setLongitude(null);
+                          setCustomPlaceInput("");
+                          setQuartier("");
+                        }}
+                        className="p-1 text-red-400 hover:text-red-300 rounded-lg text-[10px] transition cursor-pointer"
+                        title="Retirer la localisation"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+              {fieldErrors.location && (
+                <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{fieldErrors.location}</span>
+                </p>
+              )}
+            </div>
+          )}
 
           {/* 5. DATE DE L'ÉVÉNEMENT */}
           <div>
@@ -905,10 +1024,84 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 required
                 min={new Date().toISOString().split("T")[0]}
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  if (fieldErrors.date) {
+                    setFieldErrors(prev => {
+                      const copy = { ...prev };
+                      delete copy.date;
+                      return copy;
+                    });
+                  }
+                }}
                 className="w-full pl-10 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-2xl text-xs font-bold text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
               />
             </div>
+            {fieldErrors.date && (
+              <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{fieldErrors.date}</span>
+              </p>
+            )}
+          </div>
+
+          {/* DURÉE DU GOMBO */}
+          <div className="p-4 bg-white/[0.02] border border-afri-border/80 rounded-2xl space-y-3 text-left">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#D4AF37]" />
+                <span className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">
+                  6b. Durée du Gombo *
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {[
+                { id: "hours", label: "Quelques heures" },
+                { id: "1_day", label: "1 jour" },
+                { id: "2_days", label: "2 jours" },
+                { id: "3_days", label: "3 jours" },
+                { id: "1_week", label: "1 semaine" },
+                { id: "custom", label: "Durée personnalisée" }
+              ].map((opt) => {
+                const isSelected = duration === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setDuration(opt.id)}
+                    className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-[#D4AF37]/15 border-[#D4AF37] text-white font-extrabold"
+                        : "bg-white/[0.02] border-afri-border/70 text-afri-text-sec hover:border-white/20"
+                    }`}
+                  >
+                    <span className="text-[11px] block">{opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {duration === "custom" && (
+              <div className="mt-2 space-y-1.5 animate-fadeIn">
+                <label className="block text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">
+                  Spécifier le nombre de jours :
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={1}
+                    max={90}
+                    value={customDurationDays}
+                    onChange={(e) => setCustomDurationDays(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-bold text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                    placeholder="Nombre de jours (ex: 5)"
+                  />
+                  <span className="absolute right-3 top-2.5 text-[10px] font-bold text-afri-text-sec">jour(s)</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 6. CACHET OPTIONNEL & RÉCAPITULATIF */}
@@ -1038,7 +1231,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               ) : (
                 <FileText className="w-4 h-4 text-afri-text-sec" />
               )}
-              <span>{savingDraft ? "Enregistrement..." : "Brouillon"}</span>
+              <span>{savingDraft ? "Enregistrement..." : "Enregistrer en brouillon"}</span>
             </button>
 
             <button
@@ -1069,58 +1262,90 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         title="📍 Lieu du Gombo"
       >
         <div className="space-y-4 py-1 text-left">
-          <p className="text-xs text-afri-text-sec">
+          <p className="text-[11px] text-afri-text-sec">
             Choisissez l'emplacement de l'événement. La localisation est <strong className="text-white">facultative</strong>.
           </p>
 
-          {/* 3 Main Choice Tabs */}
-          <div className="grid grid-cols-3 gap-1.5 p-1 bg-black/50 border border-afri-border rounded-xl">
+          {/* 5 visual choices (A to E) */}
+          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-1.5 p-1.5 bg-black/50 border border-afri-border rounded-2xl">
             <button
               type="button"
               onClick={() => {
                 setLocationOption("commune");
               }}
-              className={`py-2 px-1 text-center rounded-lg text-[10.5px] font-bold uppercase transition cursor-pointer ${
+              className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
                 locationOption === "commune"
                   ? "bg-[#D4AF37] text-black shadow"
                   : "text-afri-text-sec hover:text-white"
               }`}
             >
-              ✏️ Commune
+              <span className="text-sm">🏙️</span>
+              <span className="leading-none text-[8.5px]">A. Commune</span>
             </button>
+
             <button
               type="button"
               onClick={() => {
                 setLocationOption("gps");
-                if (!latitude || !longitude) {
-                  handleUseCurrentGps();
-                }
               }}
-              className={`py-2 px-1 text-center rounded-lg text-[10.5px] font-bold uppercase transition cursor-pointer ${
+              className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
                 locationOption === "gps"
                   ? "bg-[#D4AF37] text-black shadow"
                   : "text-afri-text-sec hover:text-white"
               }`}
             >
-              📍 Mon GPS
+              <span className="text-sm">📍</span>
+              <span className="leading-none text-[8.5px]">B. GPS</span>
             </button>
+
             <button
               type="button"
               onClick={() => {
-                setLocationOption("gps");
+                setLocationOption("map");
                 setIsMapPickerOpen(true);
               }}
-              className={`py-2 px-1 text-center rounded-lg text-[10.5px] font-bold uppercase transition cursor-pointer ${
-                locationOption === "gps" && isMapPickerOpen
+              className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
+                locationOption === "map"
                   ? "bg-[#D4AF37] text-black shadow"
                   : "text-afri-text-sec hover:text-white"
               }`}
             >
-              🗺️ Sur carte
+              <span className="text-sm">🗺️</span>
+              <span className="leading-none text-[8.5px]">C. Carte</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setLocationOption("manual");
+              }}
+              className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
+                locationOption === "manual"
+                  ? "bg-[#D4AF37] text-black shadow"
+                  : "text-afri-text-sec hover:text-white"
+              }`}
+            >
+              <span className="text-sm">✏️</span>
+              <span className="leading-none text-[8.5px]">D. Saisir</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setLocationOption("autre");
+              }}
+              className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
+                locationOption === "autre"
+                  ? "bg-[#D4AF37] text-black shadow"
+                  : "text-afri-text-sec hover:text-white"
+              }`}
+            >
+              <span className="text-sm">➕</span>
+              <span className="leading-none text-[8.5px]">E. Autre</span>
             </button>
           </div>
 
-          {/* Form Fields according to selected tab */}
+          {/* Option A: Commune */}
           {locationOption === "commune" && (
             <div className="space-y-3 p-3.5 bg-black/40 border border-afri-border rounded-2xl">
               <div>
@@ -1181,7 +1406,6 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 />
               </div>
 
-              {/* Proposal to AFRIGOMBO */}
               {customPlaceInput.trim().length > 2 && (
                 <div className="p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl space-y-1.5">
                   <label className="flex items-start gap-2.5 cursor-pointer">
@@ -1205,22 +1429,25 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             </div>
           )}
 
+          {/* Option B: GPS */}
           {locationOption === "gps" && (
             <div className="space-y-3 p-3.5 bg-black/40 border border-afri-border rounded-2xl">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-afri-text-sec">Position actuelle :</span>
+              <div className="text-center py-2 space-y-2">
+                <p className="text-[11px] text-afri-text-sec">
+                  Déterminez les coordonnées GPS précises de l'événement. Vous devez autoriser l'accès à votre position.
+                </p>
                 <button
                   type="button"
                   onClick={handleUseCurrentGps}
                   disabled={gpsLoading}
-                  className="px-3 py-1.5 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl font-bold text-[10.5px] uppercase flex items-center gap-1.5 transition cursor-pointer"
+                  className="mx-auto px-4 py-2.5 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition cursor-pointer"
                 >
                   {gpsLoading ? (
-                    <div className="w-3 h-3 border border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3.5 h-3.5 border border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <Navigation className="w-3.5 h-3.5" />
+                    <Navigation className="w-4 h-4 text-[#D4AF37]" />
                   )}
-                  <span>{gpsLoading ? "Détection..." : "Activer mon GPS"}</span>
+                  <span>📍 Utiliser ma position</span>
                 </button>
               </div>
 
@@ -1230,25 +1457,117 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 </p>
               )}
 
-              {latitude && longitude ? (
+              {latitude && longitude && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-mono text-emerald-400 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20">
                     <span>📍 Lat: {latitude.toFixed(4)} | Lng: {longitude.toFixed(4)}</span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsMapPickerOpen(true)}
-                    className="w-full py-2 bg-white/5 hover:bg-white/10 text-[#D4AF37] border border-white/10 rounded-xl text-xs font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Map className="w-3.5 h-3.5" />
-                    <span>Ajuster précisément sur la carte</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="text-center py-3 text-afri-text-sec text-xs">
-                  Touchez "Activer mon GPS" ou "Sur carte" pour définir vos coordonnées.
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Option C: Carte (Map Picker) */}
+          {locationOption === "map" && (
+            <div className="space-y-3 p-3.5 bg-black/40 border border-afri-border rounded-2xl">
+              <p className="text-[11px] text-afri-text-sec text-center">
+                Ouvrez la carte interactive pour désigner l'emplacement exact de votre événement.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsMapPickerOpen(true)}
+                className="w-full py-2.5 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 rounded-xl text-xs font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Map className="w-4 h-4 text-[#D4AF37]" />
+                <span>Ouvrir la carte interactive</span>
+              </button>
+
+              {latitude && longitude && (
+                <div className="flex items-center justify-between text-[11px] font-mono text-emerald-400 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20">
+                  <span>Coordonnées: {latitude.toFixed(4)}, {longitude.toFixed(4)}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Option D: Saisir (Manual input) */}
+          {locationOption === "manual" && (
+            <div className="space-y-3 p-3.5 bg-black/40 border border-afri-border rounded-2xl">
+              <div>
+                <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
+                  Ville / Commune :
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Yamoussoukro, Abidjan..."
+                  value={commune}
+                  onChange={(e) => setCommune(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
+                  Quartier / Repère (Optionnel) :
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Près de la gare..."
+                  value={quartier}
+                  onChange={(e) => setQuartier(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
+                  Nom du lieu / Salle (Saisie libre) * :
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Hôtel Président..."
+                  value={customPlaceInput}
+                  onChange={(e) => setCustomPlaceInput(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Option E: Autre */}
+          {locationOption === "autre" && (
+            <div className="space-y-3 p-3.5 bg-black/40 border border-afri-border rounded-2xl">
+              <div>
+                <label className="block text-[10px] font-black text-afri-text-sec uppercase mb-1">
+                  Précisez le lieu * :
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: En ligne, Lieu privé, Étranger..."
+                  value={customPlaceInput}
+                  onChange={(e) => setCustomPlaceInput(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-[#0a0a0c] border border-afri-border rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                />
+              </div>
+
+              <div className="p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl space-y-1.5">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={proposePlaceToCommunity}
+                    onChange={(e) => setProposePlaceToCommunity(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-afri-border accent-[#D4AF37]"
+                  />
+                  <div className="text-left">
+                    <span className="text-[11px] font-bold text-white block">
+                      Proposer ce lieu à AFRIGOMBO
+                    </span>
+                    <span className="text-[9.5px] text-afri-text-sec block leading-relaxed">
+                      Votre suggestion sera étudiée et validée pour enrichir l'arborescence officielle.
+                    </span>
+                  </div>
+                </label>
+              </div>
             </div>
           )}
 

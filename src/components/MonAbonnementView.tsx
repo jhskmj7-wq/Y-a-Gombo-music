@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, History, RefreshCcw, ArrowRight, Check, Sparkles, 
   KeyRound, MessageCircle, Crown, Calendar, CreditCard, ArrowLeft,
@@ -8,6 +8,7 @@ import { supportConfig } from '../supportConfig';
 import { validateAndActivatePremiumCode } from '../lib/premiumSubscriptionEngine';
 import { db } from '../lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
+import { subscribeToFeatureFlags, getModuleVisibility } from '../lib/featureFlags';
 
 interface Props {
   isPremium: boolean;
@@ -24,6 +25,47 @@ export const MonAbonnementView: React.FC<Props> = ({
   currentUserProfile,
   onRefreshProfile
 }) => {
+  const [flagsMap, setFlagsMap] = useState<any>({});
+  useEffect(() => {
+    const unsub = subscribeToFeatureFlags((map) => setFlagsMap(map));
+    return () => unsub();
+  }, []);
+
+  const userEmail = currentUserProfile?.email || "";
+  const isFounder = userEmail.toLowerCase() === "jhs.kmj7@gmail.com";
+  const vis = getModuleVisibility("premium", currentUserProfile, currentUserProfile, flagsMap);
+
+  if (vis === "HIDDEN" && !isFounder) {
+    return (
+      <div className="p-8 text-center text-afri-text space-y-4">
+        <p className="text-sm font-mono text-gray-400">Ce module est actuellement indisponible.</p>
+        {onBack && (
+          <button onClick={onBack} className="px-4 py-2 bg-[#D4AF37] text-black rounded-xl font-bold text-xs">
+            Retour
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  if (vis === "COMING_SOON" && !isFounder) {
+    return (
+      <div className="p-8 text-center bg-black/40 border border-[#D4AF37]/30 rounded-2xl my-6 space-y-3">
+        <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/15 flex items-center justify-center text-[#D4AF37] mx-auto font-bold text-xl">
+          💎
+        </div>
+        <h3 className="text-lg font-black text-white">Adhésion Premium ELITE — Bientôt disponible</h3>
+        <p className="text-xs text-afri-text-sec max-w-md mx-auto">
+          Le programme d'adhésion Premium arrive très prochainement sur AFRIGOMBO.
+        </p>
+        {onBack && (
+          <button onClick={onBack} className="mt-4 px-4 py-2 bg-[#D4AF37] text-black rounded-xl font-bold text-xs">
+            Retour
+          </button>
+        )}
+      </div>
+    );
+  }
   // Activation code local state
   const [inputCode, setInputCode] = useState("");
   const [activationError, setActivationError] = useState("");

@@ -9,6 +9,8 @@ export interface FeatureFlagValue {
   status: FeatureVisibilityStatus;
   enabled?: boolean;
   isPremium?: boolean;
+  isBeta?: boolean;
+  maintenance?: boolean;
   updatedAt?: any;
   updatedBy?: string;
 }
@@ -126,6 +128,30 @@ export function isModulePremium(featureId: string, flagsMap?: FeatureFlagsMap): 
   const value = flagsMap[featureId];
   if (typeof value === "object" && value !== null) {
     return !!value.isPremium;
+  }
+  return false;
+}
+
+/**
+ * Check if module is flagged as Beta.
+ */
+export function isModuleBeta(featureId: string, flagsMap?: FeatureFlagsMap): boolean {
+  if (!flagsMap || !flagsMap[featureId]) return false;
+  const value = flagsMap[featureId];
+  if (typeof value === "object" && value !== null) {
+    return !!value.isBeta;
+  }
+  return false;
+}
+
+/**
+ * Check if module is in Maintenance mode.
+ */
+export function isModuleMaintenance(featureId: string, flagsMap?: FeatureFlagsMap): boolean {
+  if (!flagsMap || !flagsMap[featureId]) return false;
+  const value = flagsMap[featureId];
+  if (typeof value === "object" && value !== null) {
+    return !!value.maintenance;
   }
   return false;
 }

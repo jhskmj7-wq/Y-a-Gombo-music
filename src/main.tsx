@@ -10,7 +10,7 @@ import { ModalProvider } from "./components/common/AfriModal";
 import { AudioProvider } from "./context/AudioContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { safeStringify } from "./lib/jsonUtils";
-import App from "./App";
+import App from "./App.tsx";
 import "./index.css";
 
 // Patch console.error and console.warn to sanitize arguments before logging

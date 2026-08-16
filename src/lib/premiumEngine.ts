@@ -1,5 +1,5 @@
 import { NotificationService } from "../lib/NotificationService";
-import { recordWalletTransaction } from "./financial";
+import { getPlatformPricing, recordWalletTransaction } from "./financial";
 import { db } from "./firebase";
 import { doc, updateDoc, getDoc, collection, addDoc } from "firebase/firestore";
 
@@ -67,7 +67,6 @@ export const PremiumEngine = {
    * Calculates the commission rate dynamically from global pricing configuration.
    */
   getCommissionRate(userData: any): number {
-    const { getPlatformPricing } = require("./financial");
     const pricing = getPlatformPricing();
     return this.isPremium(userData) ? pricing.premiumCommissionRate : pricing.standardCommissionRate;
   },

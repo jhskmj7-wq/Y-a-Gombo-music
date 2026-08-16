@@ -7,7 +7,7 @@ import {
 import { AfriGomboWheel, WheelSegment, WheelSpinRecord, UserExtraSpinRecord, GawaPack, GawaMission, UserGawaMission, GawaTransaction, UserLotRecord } from "../../types";
 import { WheelEngineService } from "../../lib/WheelEngineService";
 import { SecurityService } from "../../lib/SecurityService";
-import { subscribeToFeatureFlags, isModuleAccessible } from "../../lib/featureFlags";
+import { subscribeToFeatureFlags, isModuleAccessible, getModuleVisibility } from "../../lib/featureFlags";
 import { GawaEngineService } from "../../lib/GawaEngineService";
 import { getCanonicalWalletBalance } from "../../lib/financial";
 import { db } from "../../lib/firebase";
@@ -89,10 +89,12 @@ export default function GomboWheelSection({
   const userAccountType = currentUserProfile?.isPremium ? "premium" : "standard";
   const isFounder = SecurityService.isFounder(currentUserProfile) || userEmail.toLowerCase() === "jhs.kmj7@gmail.com";
 
+  const [flagsMap, setFlagsMap] = useState<any>({});
   // 0. Subscribe to Global Feature Flags
   useEffect(() => {
     setFlagsLoading(true);
     const unsubFlags = subscribeToFeatureFlags((flags) => {
+      setFlagsMap(flags);
       const enabled = isModuleAccessible("wheel", currentUserProfile, currentUserProfile, flags);
       setIsWheelGlobalEnabled(enabled);
       setFlagsLoading(false);
@@ -100,6 +102,26 @@ export default function GomboWheelSection({
 
     return () => unsubFlags();
   }, []);
+
+  const wheelVis = getModuleVisibility("wheel", currentUserProfile, currentUserProfile, flagsMap);
+
+  if (wheelVis === "HIDDEN" && !isFounder) {
+    return null;
+  }
+
+  if (wheelVis === "COMING_SOON" && !isFounder) {
+    return (
+      <div className="p-8 text-center bg-black/40 border border-afri-gold/30 rounded-2xl my-6 space-y-3">
+        <div className="w-12 h-12 rounded-2xl bg-afri-gold/15 flex items-center justify-center text-afri-gold mx-auto font-bold text-xl">
+          🎡
+        </div>
+        <h3 className="text-lg font-black text-white">Roue AFRIGOMBO — Bientôt disponible</h3>
+        <p className="text-xs text-afri-text-sec max-w-md mx-auto">
+          Ce module exceptionnel est en cours de finalisation par la Grande Chancellerie et sera accessible très prochainement.
+        </p>
+      </div>
+    );
+  }
 
   // 1. Subscribe to Wheels Collection
   useEffect(() => {

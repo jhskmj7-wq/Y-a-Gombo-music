@@ -18,6 +18,7 @@ import PremiumEmptyState from "./PremiumEmptyState";
 import TendancesSection from "./TendancesSection";
 import FilDecouvertesSection from "./FilDecouvertesSection";
 import { useAuth } from "../AuthContext";
+import { useFeatureFlags } from "../lib/featureFlags";
 import { db } from "../lib/firebase";
 import { formatGomboIdDisplay, getEffectiveGomboId } from "../lib/gomboIdHelper";
 import { gomboDB } from "../firebase";
@@ -180,6 +181,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const profile = profileProp || authProfile;
   const currentUser = currentUserProp || authUser;
   const geo = useGeoEngine(profile);
+  const { isModuleVisible, isModuleAccessible, isModuleComingSoon } = useFeatureFlags(currentUser, profile);
   const [showGeoDialog, setShowGeoDialog] = useState(false);
 
   useEffect(() => {
@@ -793,7 +795,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     { id: "u1", type: "product" as const, title: "Micro Studio Pro Neumann", image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=400&auto=format&fit=crop&q=80", description: "Qualité exceptionnelle pour vos sessions studio à Abidjan.", tag: "Grand Marché" },
     { id: "u2", type: "course" as const, title: "Maîtrise du Piano Afro-Jazz", image: "https://images.unsplash.com/photo-1520529612722-68ec39750058?w=400&auto=format&fit=crop&q=80", description: "Apprenez avec les virtuoses du Trône.", tag: "Académie" },
     { id: "u3", type: "event" as const, title: "Grand Concert du Trône 2026", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&auto=format&fit=crop&q=80", description: "Le plus grand rassemblement des orchestres d'Afrique.", tag: "Événements" }
-  ], []);
+  ].filter(item => {
+    if (item.type === "product") return isModuleVisible("grandMarket");
+    if (item.type === "course") return isModuleVisible("academie");
+    if (item.type === "event") return isModuleVisible("events");
+    return true;
+  }), [isModuleVisible]);
 
   // NIVEAU 1 — INTELLIGENCE DES GOMBOS (Tri dynamique des 3 sections fixes)
   const level1Order = React.useMemo(() => {
@@ -1292,14 +1299,39 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           }}
           initial="hidden"
             animate={isQuickActionsOpen ? "show" : "hidden"}
-            className="grid grid-cols-4 gap-1.5 xs:gap-2 sm:gap-4 w-full select-none"
+            className={`grid ${
+              [
+                { id: "pres_de_moi", featureId: "nearby" },
+                { id: "urgences", featureId: "renforts" },
+                { id: "mes_favoris", featureId: "favorites" },
+                { id: "mes_candidatures", featureId: "gombos" }
+              ].filter(action => isModuleVisible(action.featureId)).length === 4 ? "grid-cols-4" :
+              [
+                { id: "pres_de_moi", featureId: "nearby" },
+                { id: "urgences", featureId: "renforts" },
+                { id: "mes_favoris", featureId: "favorites" },
+                { id: "mes_candidatures", featureId: "gombos" }
+              ].filter(action => isModuleVisible(action.featureId)).length === 3 ? "grid-cols-3" :
+              [
+                { id: "pres_de_moi", featureId: "nearby" },
+                { id: "urgences", featureId: "renforts" },
+                { id: "mes_favoris", featureId: "favorites" },
+                { id: "mes_candidatures", featureId: "gombos" }
+              ].filter(action => isModuleVisible(action.featureId)).length === 2 ? "grid-cols-2" :
+              "grid-cols-1"
+            } gap-1.5 xs:gap-2 sm:gap-4 w-full select-none`}
           >
              {[
                { 
                  id: "pres_de_moi", 
+                 featureId: "nearby",
                  label: "Près de moi", 
                  emoji: "📍", 
                  action: () => { 
+                   if (isModuleComingSoon("nearby")) {
+                     setLocalComingSoonKey("Près de moi 📍");
+                     return;
+                   }
                    if (geo.permissionStatus !== "granted") {
                      geo.requestLocation();
                    }
@@ -1309,62 +1341,89 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                },
                { 
                  id: "urgences", 
+                 featureId: "renforts",
                  label: "Urgences", 
                  emoji: "🚨", 
                  badge: gombos.filter(g => g.urgent || g.isExpress || (g as any).type === "renfort" || g.category === "casting" || g.isRenfort).length || undefined,
                  badgeColor: "bg-red-600 text-afri-text animate-pulse",
                  action: () => { 
+                   if (isModuleComingSoon("renforts")) {
+                     setLocalComingSoonKey("Urgences & Renfort Express 🚨");
+                     return;
+                   }
                    setIsUrgencesModalOpen(true); 
                    try { audioSynth?.playValidationSuccess?.(); } catch (_) {} 
                  } 
                },
                { 
                  id: "mes_favoris", 
+                 featureId: "favorites",
                  label: "Mes Favoris", 
                  emoji: "⭐", 
                  badge: likedGombos.length > 0 ? likedGombos.length : undefined,
                  badgeColor: "bg-[#D4AF37] text-black",
                  action: () => { 
+                   if (isModuleComingSoon("favorites")) {
+                     setLocalComingSoonKey("menu_favorites");
+                     return;
+                   }
                    setIsFavoritesModalOpen(true); 
                    try { audioSynth?.playValidationSuccess?.(); } catch (_) {} 
                  } 
                },
                { 
                  id: "mes_candidatures", 
+                 featureId: "gombos",
                  label: "Candidatures", 
                  emoji: "🎫", 
                  badge: userApplications.length > 0 ? userApplications.length : undefined,
                  badgeColor: "bg-emerald-500 text-afri-text",
-                 action: () => requireAuthThen(() => { 
-                   setIsCandidaturesModalOpen(true); 
-                   try { audioSynth?.playValidationSuccess?.(); } catch (_) {} 
-                 }) 
+                 action: () => { 
+                   if (isModuleComingSoon("gombos")) {
+                     setLocalComingSoonKey("Candidatures & Gombos 🎫");
+                     return;
+                   }
+                   requireAuthThen(() => { 
+                     setIsCandidaturesModalOpen(true); 
+                     try { audioSynth?.playValidationSuccess?.(); } catch (_) {} 
+                   });
+                 } 
                }
-             ].map(action => (
-               <motion.button
-                 key={action.id}
-                 variants={{
-                   hidden: { opacity: 0, y: 15, scale: 0.95 },
-                   show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
-                 }}
-                 whileHover={{ scale: 1.04 }}
-                 whileTap={{ scale: 0.92 }}
-                 onClick={action.action}
-                 className="bg-afri-bg-sec border border-[#D4AF37]/25 rounded-2xl p-2 flex flex-col items-center justify-center gap-1 shadow-md hover:bg-afri-bg-sec/5 transition-all cursor-pointer relative group"
-               >
-                 {(action as any).badge !== undefined && (
-                   <span className={`absolute -top-1.5 -right-1.5 ${(action as any).badgeColor} text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border border-afri-border shadow-md z-10`}>
-                     {(action as any).badge}
+             ].filter(action => isModuleVisible(action.featureId)).map(action => {
+               const isComingSoon = isModuleComingSoon(action.featureId);
+               return (
+                 <motion.button
+                   key={action.id}
+                   variants={{
+                     hidden: { opacity: 0, y: 15, scale: 0.95 },
+                     show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
+                   }}
+                   whileHover={isComingSoon ? {} : { scale: 1.04 }}
+                   whileTap={isComingSoon ? { scale: 0.98 } : { scale: 0.92 }}
+                   onClick={action.action}
+                   className={`bg-afri-bg-sec border ${isComingSoon ? 'border-amber-500/20 opacity-80' : 'border-[#D4AF37]/25'} rounded-2xl p-2 flex flex-col items-center justify-center gap-1 shadow-md hover:bg-afri-bg-sec/5 transition-all cursor-pointer relative group`}
+                 >
+                   {isComingSoon && (
+                     <span className="absolute top-1 left-1.5 bg-amber-500/20 text-amber-300 font-mono text-[6.5px] font-black px-1 py-0.5 rounded border border-amber-500/30 uppercase leading-none scale-90 origin-top-left">
+                       Bientôt
+                     </span>
+                   )}
+                   {action.badge !== undefined && !isComingSoon && (
+                     <span className={`absolute -top-1.5 -right-1.5 ${action.badgeColor} text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border border-afri-border shadow-md z-10`}>
+                       {action.badge}
+                     </span>
+                   )}
+                   <div className={`w-10 h-10 rounded-full ${isComingSoon ? 'bg-amber-500/5 border-amber-500/10' : 'bg-afri-bg-sec/8 border-[#D4AF37]/20'} flex items-center justify-center border group-hover:border-[#D4AF37] transition shrink-0`}>
+                     <span className="text-xl leading-none select-none">
+                       {isComingSoon ? "🔒" : action.emoji}
+                     </span>
+                   </div>
+                   <span className="text-[9px] text-afri-text/90 font-black tracking-wider uppercase text-center truncate w-full px-1">
+                     {action.label}
                    </span>
-                 )}
-                 <div className="w-10 h-10 rounded-full bg-afri-bg-sec/8 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition shrink-0">
-                   <span className="text-xl leading-none select-none">{action.emoji}</span>
-                 </div>
-                 <span className="text-[9px] text-afri-text/90 font-black tracking-wider uppercase text-center truncate w-full px-1">
-                   {action.label}
-                 </span>
-               </motion.button>
-             ))}
+                 </motion.button>
+               );
+             })}
           </motion.div>
         </div>
       </div>
@@ -1395,64 +1454,128 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           SECTIONS 4, 5, 6 — ZONE OPPORTUNITÉS (NIVEAU 1 FIXE)
           Gombos à proximité, Renfort Express, Nouveaux Gombos
          ========================================== */}
-      <div className="space-y-6 bg-afri-bg-sec/40 border border-[#D4AF37]/35 p-4 sm:p-5 rounded-3xl backdrop-blur-sm relative shadow-xl">
-        <div className="flex items-center justify-between pb-2 border-b border-[#D4AF37]/20">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#D4AF37] animate-ping" />
-            <h2 className="text-[11px] font-mono font-black uppercase tracking-widest text-[#D4AF37]">
-              🎯 ZONE OPPORTUNITÉS (FIXE & DÉDIÉE)
-            </h2>
+      {((level1Order.includes("nearby") && isModuleVisible("nearby")) ||
+        (level1Order.includes("renfort") && isModuleVisible("renforts")) ||
+        (level1Order.includes("urgent_recent") && isModuleVisible("gombos"))) && (
+        <div className="space-y-6 bg-afri-bg-sec/40 border border-[#D4AF37]/35 p-4 sm:p-5 rounded-3xl backdrop-blur-sm relative shadow-xl">
+          <div className="flex items-center justify-between pb-2 border-b border-[#D4AF37]/20">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#D4AF37] animate-ping" />
+              <h2 className="text-[11px] font-mono font-black uppercase tracking-widest text-[#D4AF37]">
+                🎯 ZONE OPPORTUNITÉS (FIXE & DÉDIÉE)
+              </h2>
+            </div>
+            <span className="text-[8px] font-mono font-bold text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-0.5 rounded-full border border-[#D4AF37]/30 uppercase">
+              GOMBOS PRIORITAIRES
+            </span>
           </div>
-          <span className="text-[8px] font-mono font-bold text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-0.5 rounded-full border border-[#D4AF37]/30 uppercase">
-            GOMBOS PRIORITAIRES
-          </span>
-        </div>
 
-        {/* Dynamic Smart Sorting of Level 1 Sections */}
-        {level1Order.map((sectionId) => {
-          if (sectionId === "nearby") {
-            return (
-              <div key="nearby" id="nearby-gombos-section" className="space-y-3">
-                <NearbyGombosSection 
-                  gombos={geo.getNearbyItems(gombos, 25)}
-                  userProfile={profile}
-                  onSelect={handleOpenGomboDetails}
-                />
-              </div>
-            );
-          }
-          if (sectionId === "renfort") {
-            return (
-              <SmartBlock 
-                key="renfort"
-                type="RENFORT_EXPRESS"
-                title="⚡ Renfort Express & Remplacements"
-                data={renfortGombos}
-                onAction={handleOpenGomboDetails}
-              />
-            );
-          }
-          if (sectionId === "urgent_recent") {
-            return (
-              <div key="urgent_recent" className="space-y-6">
-                <SmartBlock 
-                  type="URGENT_OPPORTUNITIES"
-                  title="🔥 Opportunités urgentes"
-                  data={urgentGombos}
-                  onAction={handleOpenGomboDetails}
-                />
-                <SmartBlock 
-                  type="NEW_GOMBOS"
-                  title="🆕 Gombos récents"
-                  data={recentGombos}
-                  onAction={handleOpenGomboDetails}
-                />
-              </div>
-            );
-          }
-          return null;
-        })}
-      </div>
+          {/* Dynamic Smart Sorting of Level 1 Sections */}
+          {level1Order.map((sectionId) => {
+            if (sectionId === "nearby") {
+              if (!isModuleVisible("nearby")) return null;
+              const isComingSoon = isModuleComingSoon("nearby");
+              return (
+                <div key="nearby" id="nearby-gombos-section" className={`space-y-3 ${isComingSoon ? "opacity-75 relative cursor-pointer" : ""}`} onClick={() => {
+                  if (isComingSoon) {
+                    setLocalComingSoonKey("Près de moi 📍");
+                  }
+                }}>
+                  {isComingSoon && (
+                    <div className="absolute top-2 right-2 bg-amber-500/20 text-amber-300 font-mono text-[8px] font-black px-2 py-0.5 rounded border border-amber-500/30 uppercase z-10">
+                      Bientôt disponible 🔒
+                    </div>
+                  )}
+                  <NearbyGombosSection 
+                    gombos={geo.getNearbyItems(gombos, 25)}
+                    userProfile={profile}
+                    onSelect={(g) => {
+                      if (isComingSoon) {
+                        setLocalComingSoonKey("Près de moi 📍");
+                      } else {
+                        handleOpenGomboDetails(g);
+                      }
+                    }}
+                  />
+                </div>
+              );
+            }
+            if (sectionId === "renfort") {
+              if (!isModuleVisible("renforts")) return null;
+              const isComingSoon = isModuleComingSoon("renforts");
+              return (
+                <div key="renfort" className="relative">
+                  {isComingSoon && (
+                    <div className="absolute top-2 right-2 bg-amber-500/20 text-amber-300 font-mono text-[8px] font-black px-2 py-0.5 rounded border border-amber-500/30 uppercase z-10">
+                      Bientôt disponible 🔒
+                    </div>
+                  )}
+                  <SmartBlock 
+                    type="RENFORT_EXPRESS"
+                    title="⚡ Renfort Express & Remplacements"
+                    data={isComingSoon ? [] : renfortGombos}
+                    onAction={(g) => {
+                      if (isComingSoon) {
+                        setLocalComingSoonKey("Urgences & Renfort Express 🚨");
+                      } else {
+                        handleOpenGomboDetails(g);
+                      }
+                    }}
+                  />
+                  {isComingSoon && (
+                    <div className="p-6 text-center border border-dashed border-amber-500/20 bg-amber-500/5 rounded-2xl cursor-pointer animate-pulse" onClick={() => setLocalComingSoonKey("Urgences & Renfort Express 🚨")}>
+                      <span className="text-xs text-amber-300 font-bold">Consulter les Renforts Express (Bientôt Disponible)</span>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            if (sectionId === "urgent_recent") {
+              if (!isModuleVisible("gombos")) return null;
+              const isComingSoon = isModuleComingSoon("gombos");
+              return (
+                <div key="urgent_recent" className="space-y-6 relative">
+                  {isComingSoon && (
+                    <div className="absolute top-2 right-2 bg-amber-500/20 text-amber-300 font-mono text-[8px] font-black px-2 py-0.5 rounded border border-amber-500/30 uppercase z-10">
+                      Bientôt disponible 🔒
+                    </div>
+                  )}
+                  <SmartBlock 
+                    type="URGENT_OPPORTUNITIES"
+                    title="🔥 Opportunités urgentes"
+                    data={isComingSoon ? [] : urgentGombos}
+                    onAction={(g) => {
+                      if (isComingSoon) {
+                        setLocalComingSoonKey("Candidatures & Gombos 🎫");
+                      } else {
+                        handleOpenGomboDetails(g);
+                      }
+                    }}
+                  />
+                  <SmartBlock 
+                    type="NEW_GOMBOS"
+                    title="🆕 Gombos récents"
+                    data={isComingSoon ? [] : recentGombos}
+                    onAction={(g) => {
+                      if (isComingSoon) {
+                        setLocalComingSoonKey("Candidatures & Gombos 🎫");
+                      } else {
+                        handleOpenGomboDetails(g);
+                      }
+                    }}
+                  />
+                  {isComingSoon && (
+                    <div className="p-6 text-center border border-dashed border-amber-500/20 bg-amber-500/5 rounded-2xl cursor-pointer animate-pulse" onClick={() => setLocalComingSoonKey("Candidatures & Gombos 🎫")}>
+                      <span className="text-xs text-amber-300 font-bold">Consulter le Fil des Gombos (Bientôt Disponible)</span>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return null;
+          })}
+        </div>
+      )}
 
       {/* ==========================================
           NIVEAU 2 — UNIVERS AFRIGOMBO ELITE
@@ -1460,25 +1583,56 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
          ========================================== */}
       <div className="space-y-8 pb-10 pt-2">
         {/* AFRIGOMBO ELITE GEO ENGINE: RADAR & ARTISTES */}
-        <GeoRadarSection 
-          nearbyGombos={geo.getNearbyItems(gombos, 10)}
-          nearbyArtists={geo.getNearbyItems(users.filter(u => u.role === "musicien"), 15)}
-          onAction={(item) => {
-            if (item.radarType === "gombo") handleOpenGomboDetails(item);
-            else setActiveMenu("user_profile_view");
-          }}
-        />
+        {isModuleVisible("radar") && (
+          <div className="relative">
+            {isModuleComingSoon("radar") && (
+              <div className="absolute top-2 right-2 bg-amber-500/20 text-amber-300 font-mono text-[8px] font-black px-2 py-0.5 rounded border border-amber-500/30 uppercase z-10">
+                Bientôt disponible 🔒
+              </div>
+            )}
+            <GeoRadarSection 
+              nearbyGombos={geo.getNearbyItems(gombos, 10)}
+              nearbyArtists={geo.getNearbyItems(users.filter(u => u.role === "musicien"), 15)}
+              onAction={(item) => {
+                if (isModuleComingSoon("radar")) {
+                  setLocalComingSoonKey("Radar Géolocalisé Nearby 🛰️");
+                  return;
+                }
+                if (item.radarType === "gombo") handleOpenGomboDetails(item);
+                else setActiveMenu("user_profile_view");
+              }}
+            />
+          </div>
+        )}
 
-        <NearbyArtistsSection 
-          artists={geo.getNearbyItems(users.filter(u => u.role === "musicien" && u.availability?.status === "available"), 50)}
-          userProfile={profile}
-          onContact={(artist) => {
-            requireAuthThen(() => {
-              addToTerminal(`[MESSAGERIE] Connexion établie avec ${artist.artisticName}...`);
-              setActiveMenu("user_messages");
-            });
-          }}
-        />
+        {isModuleVisible("nearby") && (
+          <div className="relative">
+            {isModuleComingSoon("nearby") && (
+              <div className="absolute top-2 right-2 bg-amber-500/20 text-amber-300 font-mono text-[8px] font-black px-2 py-0.5 rounded border border-amber-500/30 uppercase z-10">
+                Bientôt disponible 🔒
+              </div>
+            )}
+            <NearbyArtistsSection 
+              artists={isModuleComingSoon("nearby") ? [] : geo.getNearbyItems(users.filter(u => u.role === "musicien" && u.availability?.status === "available"), 50)}
+              userProfile={profile}
+              onContact={(artist) => {
+                if (isModuleComingSoon("nearby")) {
+                  setLocalComingSoonKey("Près de moi 📍");
+                  return;
+                }
+                requireAuthThen(() => {
+                  addToTerminal(`[MESSAGERIE] Connexion établie avec ${artist.artisticName}...`);
+                  setActiveMenu("user_messages");
+                });
+              }}
+            />
+            {isModuleComingSoon("nearby") && (
+              <div className="p-6 text-center border border-dashed border-amber-500/20 bg-amber-500/5 rounded-2xl cursor-pointer animate-pulse" onClick={() => setLocalComingSoonKey("Près de moi 📍")}>
+                <span className="text-xs text-amber-300 font-bold">Consulter les Musiciens à Proximité (Bientôt Disponible)</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Artist Search Results */}
         {globalSearchTerm && UsersToRender.length > 0 && (
@@ -1509,176 +1663,276 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         )}
 
         {/* 7. SÉLECTION DU SOUVERAIN */}
-        <SmartBlock 
-          type="TRENDS"
-          title="👑 Sélection du Souverain"
-          data={sovereignGombos}
-          onAction={handleOpenGomboDetails}
-        />
+        {isModuleVisible("gombos") && (
+          <div className="relative">
+            {isModuleComingSoon("gombos") && (
+              <div className="absolute top-2 right-2 bg-amber-500/20 text-amber-300 font-mono text-[8px] font-black px-2 py-0.5 rounded border border-amber-500/30 uppercase z-10">
+                Bientôt disponible 🔒
+              </div>
+            )}
+            <SmartBlock 
+              type="TRENDS"
+              title="👑 Sélection du Souverain"
+              data={isModuleComingSoon("gombos") ? [] : sovereignGombos}
+              onAction={(g) => {
+                if (isModuleComingSoon("gombos")) {
+                  setLocalComingSoonKey("Candidatures & Gombos 🎫");
+                } else {
+                  handleOpenGomboDetails(g);
+                }
+              }}
+            />
+          </div>
+        )}
 
         {/* 8. RÉELS D'ARTISTES (Redirige vers l'écran dédié Fil Réel) */}
-        <SmartBlock 
-          type="POPULAR_REELS"
-          title="📹 Réels d'artistes — Fil Réel"
-          data={reelsData}
-          onAction={(item) => {
-            setActiveMenu("user_reels");
-          }}
-        />
+        {isModuleVisible("reels") && (
+          <div className="relative">
+            {isModuleComingSoon("reels") && (
+              <div className="absolute top-2 right-2 bg-amber-500/20 text-amber-300 font-mono text-[8px] font-black px-2 py-0.5 rounded border border-amber-500/30 uppercase z-10">
+                Bientôt disponible 🔒
+              </div>
+            )}
+            <SmartBlock 
+              type="POPULAR_REELS"
+              title="📹 Réels d'artistes — Fil Réel"
+              data={isModuleComingSoon("reels") ? [] : reelsData}
+              onAction={(item) => {
+                if (isModuleComingSoon("reels")) {
+                  setLocalComingSoonKey("Studio Vidéo Réels 📹");
+                } else {
+                  setActiveMenu("user_reels");
+                }
+              }}
+            />
+            {isModuleComingSoon("reels") && (
+              <div className="p-6 text-center border border-dashed border-amber-500/20 bg-amber-500/5 rounded-2xl cursor-pointer animate-pulse" onClick={() => setLocalComingSoonKey("Studio Vidéo Réels 📹")}>
+                <span className="text-xs text-amber-300 font-bold">Parcourir les Réels d'Artistes (Bientôt Disponible)</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 9. NOUVEAUX TALENTS */}
-        <SmartBlock 
-          type="NEW_TALENTS"
-          title="🚀 Nouveaux talents"
-          data={talentsData}
-          onAction={(artist) => {
-            setActiveMenu("user_profile_view");
-          }}
-        />
+        {isModuleVisible("gombos") && (
+          <SmartBlock 
+            type="NEW_TALENTS"
+            title="🚀 Nouveaux talents"
+            data={talentsData}
+            onAction={(artist) => {
+              setActiveMenu("user_profile_view");
+            }}
+          />
+        )}
 
         {/* 10. UNIVERS AFRIGOMBO ELITE */}
-        <SmartUniverseCarousel 
-          items={universeItems}
-          onAction={(item) => {
-            if (item.type === "product") setActiveMenu("user_grand_marche");
-            else if (item.type === "course") setActiveMenu("user_academie");
-          }}
-        />
+        {universeItems.length > 0 && (
+          <SmartUniverseCarousel 
+            items={universeItems}
+            onAction={(item) => {
+              if (item.type === "product") {
+                if (isModuleComingSoon("grandMarket")) {
+                  setLocalComingSoonKey("Grand Marché Matériel & Studio 🛒");
+                } else {
+                  setActiveMenu("user_grand_marche");
+                }
+              } else if (item.type === "course") {
+                if (isModuleComingSoon("academie")) {
+                  setLocalComingSoonKey("AFRIGOMBO ELITE Academy 🎓");
+                } else {
+                  setActiveMenu("user_academie");
+                }
+              }
+            }}
+          />
+        )}
 
         {/* 11. GRAND MARCHÉ */}
-        <div className="space-y-3 py-2 text-left bg-afri-bg-sec/30 p-4 rounded-3xl border border-afri-border">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
-                🛒 Grand Marché Matériel & Studio
-              </h3>
-            </div>
-            <button 
-              onClick={() => setActiveMenu("user_grand_marche")}
-              className="text-[10px] text-[#D4AF37] font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
-            >
-              Voir tout <ChevronRight className="w-3 h-3" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[
-              {
-                id: "gm1",
-                title: "Pack Micro Studio Pro & Pied",
-                price: "185 000 FCFA",
-                commune: "Cocody",
-                image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=400&auto=format&fit=crop&q=80",
-                tag: "Matériel Pro"
-              },
-              {
-                id: "gm2",
-                title: "Guitare Électrique Yamaha RGX",
-                price: "240 000 FCFA",
-                commune: "Marcory",
-                image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&auto=format&fit=crop&q=80",
-                tag: "Instrument"
-              },
-              {
-                id: "gm3",
-                title: "Console de Mixage 16 Voies",
-                price: "450 000 FCFA",
-                commune: "Yopougon",
-                image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&auto=format&fit=crop&q=80",
-                tag: "Sonorisation"
-              }
-            ].map((prod) => (
-              <div 
-                key={prod.id}
-                onClick={() => setActiveMenu("user_grand_marche")}
-                className="bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden p-2.5 flex flex-col justify-between hover:border-[#D4AF37]/50 transition cursor-pointer group shadow-sm"
+        {isModuleVisible("grandMarket") && (
+          <div className="space-y-3 py-2 text-left bg-afri-bg-sec/30 p-4 rounded-3xl border border-afri-border relative">
+            {isModuleComingSoon("grandMarket") && (
+              <div className="absolute top-2 right-2 bg-amber-500/20 text-amber-300 font-mono text-[8px] font-black px-2 py-0.5 rounded border border-amber-500/30 uppercase z-10">
+                Bientôt disponible 🔒
+              </div>
+            )}
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
+                  🛒 Grand Marché Matériel & Studio
+                </h3>
+              </div>
+              <button 
+                onClick={() => {
+                  if (isModuleComingSoon("grandMarket")) {
+                    setLocalComingSoonKey("Grand Marché Matériel & Studio 🛒");
+                  } else {
+                    setActiveMenu("user_grand_marche");
+                  }
+                }}
+                className="text-[10px] text-[#D4AF37] font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
               >
-                <div className="relative aspect-video rounded-xl overflow-hidden mb-2 bg-afri-bg">
-                  <img src={prod.image} alt={prod.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  <span className="absolute top-1.5 left-1.5 bg-afri-bg/80 text-[#D4AF37] font-mono text-[8px] font-black px-2 py-0.5 rounded-full border border-[#D4AF37]/30 uppercase">
-                    {prod.tag}
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-[10px] font-black text-afri-text uppercase truncate leading-tight">{prod.title}</h4>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-mono font-black text-[#D4AF37]">{prod.price}</span>
-                    <span className="text-[8px] font-mono text-afri-text-sec uppercase">📍 {prod.commune}</span>
+                Voir tout <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[
+                {
+                  id: "gm1",
+                  title: "Pack Micro Studio Pro & Pied",
+                  price: "185 000 FCFA",
+                  commune: "Cocody",
+                  image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=400&auto=format&fit=crop&q=80",
+                  tag: "Matériel Pro"
+                },
+                {
+                  id: "gm2",
+                  title: "Guitare Électrique Yamaha RGX",
+                  price: "240 000 FCFA",
+                  commune: "Marcory",
+                  image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&auto=format&fit=crop&q=80",
+                  tag: "Instrument"
+                },
+                {
+                  id: "gm3",
+                  title: "Console de Mixage 16 Voies",
+                  price: "450 000 FCFA",
+                  commune: "Yopougon",
+                  image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&auto=format&fit=crop&q=80",
+                  tag: "Sonorisation"
+                }
+              ].map((prod) => (
+                <div 
+                  key={prod.id}
+                  onClick={() => {
+                    if (isModuleComingSoon("grandMarket")) {
+                      setLocalComingSoonKey("Grand Marché Matériel & Studio 🛒");
+                    } else {
+                      setActiveMenu("user_grand_marche");
+                    }
+                  }}
+                  className="bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden p-2.5 flex flex-col justify-between hover:border-[#D4AF37]/50 transition cursor-pointer group shadow-sm"
+                >
+                  <div className="relative aspect-video rounded-xl overflow-hidden mb-2 bg-afri-bg">
+                    <img src={prod.image} alt={prod.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <span className="absolute top-1.5 left-1.5 bg-afri-bg/80 text-[#D4AF37] font-mono text-[8px] font-black px-2 py-0.5 rounded-full border border-[#D4AF37]/30 uppercase">
+                      {prod.tag}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-[10px] font-black text-afri-text uppercase truncate leading-tight">{prod.title}</h4>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-mono font-black text-[#D4AF37]">{prod.price}</span>
+                      <span className="text-[8px] font-mono text-afri-text-sec uppercase">📍 {prod.commune}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={() => setActiveMenu("user_grand_marche")}
-            className="w-full py-2.5 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 font-mono font-black text-[10px] uppercase tracking-wider rounded-2xl transition cursor-pointer text-center block active:scale-98"
-          >
-            Accéder au Grand Marché Musique →
-          </button>
-        </div>
-
-        {/* 12. AFRIGOMBO ELITE ACADEMY */}
-        <div className="space-y-3 py-2 text-left bg-afri-bg-sec/30 p-4 rounded-3xl border border-afri-border">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-sky-400" />
-              <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
-                🎓 AFRIGOMBO ELITE Academy & Masterclasses
-              </h3>
+              ))}
             </div>
-            <button 
-              onClick={() => setActiveMenu("user_academie")}
-              className="text-[10px] text-[#D4AF37] font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
+
+            <button
+              onClick={() => {
+                if (isModuleComingSoon("grandMarket")) {
+                  setLocalComingSoonKey("Grand Marché Matériel & Studio 🛒");
+                } else {
+                  setActiveMenu("user_grand_marche");
+                }
+              }}
+              className="w-full py-2.5 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 font-mono font-black text-[10px] uppercase tracking-wider rounded-2xl transition cursor-pointer text-center block active:scale-98"
             >
-              Voir tout <ChevronRight className="w-3 h-3" />
+              Accéder au Grand Marché Musique →
             </button>
           </div>
+        )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {[
-              {
-                id: "ac1",
-                title: "Masterclass Piano Afro-Jazz & Harmonies",
-                mentor: "Maître Kassi",
-                level: "Intermédiaire / Avancé",
-                image: "https://images.unsplash.com/photo-1520529612722-68ec39750058?w=400&auto=format&fit=crop&q=80",
-                badge: "Certifiant"
-              },
-              {
-                id: "ac2",
-                title: "Production & Mixage Afrobeat sur FL Studio",
-                mentor: "Beatmaker Yoboué",
-                level: "Tous Niveaux",
-                image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&auto=format&fit=crop&q=80",
-                badge: "Populaire"
-              }
-            ].map((course) => (
-              <div 
-                key={course.id}
-                onClick={() => setActiveMenu("user_academie")}
-                className="bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden p-3 flex gap-3 items-center hover:border-sky-400/50 transition cursor-pointer group shadow-sm"
-              >
-                <img src={course.image} alt={course.title} className="w-20 h-20 rounded-xl object-cover shrink-0 border border-afri-border group-hover:scale-105 transition-transform" />
-                <div className="flex-1 min-w-0 space-y-1">
-                  <span className="text-[8px] font-mono font-black uppercase text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20 inline-block">
-                    {course.badge}
-                  </span>
-                  <h4 className="text-[11px] font-black text-afri-text uppercase leading-tight line-clamp-2">{course.title}</h4>
-                  <p className="text-[9px] text-afri-text-sec font-mono">👨‍🏫 {course.mentor} • {course.level}</p>
-                </div>
+        {/* 12. AFRIGOMBO ELITE ACADEMY */}
+        {isModuleVisible("academie") && (
+          <div className="space-y-3 py-2 text-left bg-afri-bg-sec/30 p-4 rounded-3xl border border-afri-border relative">
+            {isModuleComingSoon("academie") && (
+              <div className="absolute top-2 right-2 bg-amber-500/20 text-amber-300 font-mono text-[8px] font-black px-2 py-0.5 rounded border border-amber-500/30 uppercase z-10">
+                Bientôt disponible 🔒
               </div>
-            ))}
-          </div>
+            )}
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-4 h-4 text-sky-400" />
+                <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
+                  🎓 AFRIGOMBO ELITE Academy & Masterclasses
+                </h3>
+              </div>
+              <button 
+                onClick={() => {
+                  if (isModuleComingSoon("academie")) {
+                    setLocalComingSoonKey("AFRIGOMBO ELITE Academy 🎓");
+                  } else {
+                    setActiveMenu("user_academie");
+                  }
+                }}
+                className="text-[10px] text-[#D4AF37] font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
+              >
+                Voir tout <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
 
-          <button
-            onClick={() => setActiveMenu("user_academie")}
-            className="w-full py-2.5 bg-sky-500/10 border border-sky-500/30 hover:bg-sky-500/20 text-sky-400 font-mono font-black text-[10px] uppercase tracking-wider rounded-2xl transition cursor-pointer text-center block active:scale-98"
-          >
-            Découvrir l'Académie & Se Former →
-          </button>
-        </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                {
+                  id: "ac1",
+                  title: "Masterclass Piano Afro-Jazz & Harmonies",
+                  mentor: "Maître Kassi",
+                  level: "Intermédiaire / Avancé",
+                  image: "https://images.unsplash.com/photo-1520529612722-68ec39750058?w=400&auto=format&fit=crop&q=80",
+                  badge: "Certifiant"
+                },
+                {
+                  id: "ac2",
+                  title: "Production & Mixage Afrobeat sur FL Studio",
+                  mentor: "Beatmaker Yoboué",
+                  level: "Tous Niveaux",
+                  image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&auto=format&fit=crop&q=80",
+                  badge: "Populaire"
+                }
+              ].map((course) => (
+                <div 
+                  key={course.id}
+                  onClick={() => {
+                    if (isModuleComingSoon("academie")) {
+                      setLocalComingSoonKey("AFRIGOMBO ELITE Academy 🎓");
+                    } else {
+                      setActiveMenu("user_academie");
+                    }
+                  }}
+                  className="bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden p-3 flex gap-3 items-center hover:border-sky-400/50 transition cursor-pointer group shadow-sm"
+                >
+                  <img src={course.image} alt={course.title} className="w-20 h-20 rounded-xl object-cover shrink-0 border border-afri-border group-hover:scale-105 transition-transform" />
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <span className="text-[8px] font-mono font-black uppercase text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20 inline-block">
+                      {course.badge}
+                    </span>
+                    <h4 className="text-[11px] font-black text-afri-text uppercase leading-tight line-clamp-2">{course.title}</h4>
+                    <p className="text-[9px] text-afri-text-sec font-mono">👨‍🏫 {course.mentor} • {course.level}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                if (isModuleComingSoon("academie")) {
+                  setLocalComingSoonKey("AFRIGOMBO ELITE Academy 🎓");
+                } else {
+                  setActiveMenu("user_academie");
+                }
+              }}
+              className="w-full py-2.5 bg-sky-500/10 border border-sky-500/30 hover:bg-sky-500/20 text-sky-400 font-mono font-black text-[10px] uppercase tracking-wider rounded-2xl transition cursor-pointer text-center block active:scale-98"
+            >
+              Découvrir l'Académie & Se Former →
+            </button>
+          </div>
+        )}
+
+
 
         {/* INFINITE EXTENSION STREAM (NO DUPLICATE HEADERS) */}
         {infiniteFeedPage > 1 && (
