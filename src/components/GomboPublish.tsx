@@ -5,7 +5,7 @@ import {
   Music, Sparkles, Image as ImageIcon, Briefcase, 
   X, AlertCircle, Award, Star, Radio, Lock, ShieldCheck, Zap,
   Wallet, ArrowUpRight, CheckCircle2, Navigation, Map, Building2, Plus,
-  FileText, Compass, Trash2, CheckCircle, Clock, Hash, Layers, Mic
+  FileText, Compass, Trash2, CheckCircle, Clock, Hash, Layers, Mic, Info
 } from "lucide-react";
 import MapPickerModal from "./common/MapPickerModal";
 import { gomboDB } from "../firebase";
@@ -93,6 +93,7 @@ interface GomboPublishProps {
 export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }: GomboPublishProps) {
   const { locations: officialLocationsList, communeNames, submitProposal: submitLocationProposal } = useLocations();
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
+  const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [selectedType, setSelectedType] = useState("opportunite");
   const [gomboCategory, setGomboCategory] = useState<"libre" | "securise">("libre");
 
@@ -885,20 +886,54 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           </button>
         </div>
 
-        {/* Draft Restored Banner */}
-        {hasRestoredDraft && (
-          <div className="mt-3 p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl flex items-center justify-between text-xs">
+        {/* Draft Restored Banner & Action Buttons */}
+        {hasRestoredDraft ? (
+          <div className="mt-3 p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl flex items-center justify-between text-xs gap-2 flex-wrap sm:flex-nowrap">
             <div className="flex items-center gap-2 text-[#D4AF37] font-bold">
               <FileText className="w-4 h-4 shrink-0" />
               <span>Brouillon précédent restauré</span>
             </div>
-            <button
-              type="button"
-              onClick={clearDraft}
-              className="text-[10px] text-red-400 hover:text-red-300 font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer"
-            >
-              <Trash2 className="w-3 h-3" /> Effacer
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsRulesModalOpen(true)}
+                aria-label="Voir les règles du Gombo"
+                className="text-[10px] text-[#D4AF37] hover:text-amber-300 font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 border border-[#D4AF37]/40 px-2.5 py-1 rounded-xl transition-all active:scale-95"
+              >
+                <Info className="w-3.5 h-3.5" /> Règles
+              </button>
+              <button
+                type="button"
+                onClick={clearDraft}
+                className="text-[10px] text-red-400 hover:text-red-300 font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer py-1 px-1.5 hover:bg-red-500/10 rounded-xl transition-all"
+              >
+                <Trash2 className="w-3 h-3" /> Effacer
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 p-2.5 bg-afri-bg-sec border border-afri-border rounded-2xl flex items-center justify-between gap-2 text-xs flex-wrap sm:flex-nowrap">
+            <div className="flex items-center gap-2 text-afri-text-sec font-bold">
+              <Sparkles className="w-4 h-4 text-[#D4AF37] shrink-0" />
+              <span className="text-[11px]">Consultez les règles avant de publier</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsRulesModalOpen(true)}
+                aria-label="Voir les règles du Gombo"
+                className="text-[10px] text-[#D4AF37] hover:text-amber-300 font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30 px-2.5 py-1 rounded-xl transition-all active:scale-95"
+              >
+                <Info className="w-3.5 h-3.5 text-[#D4AF37]" /> Règles
+              </button>
+              <button
+                type="button"
+                onClick={clearDraft}
+                className="text-[10px] text-red-400 hover:text-red-300 font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer py-1 px-1.5 hover:bg-red-500/10 rounded-xl transition-all"
+              >
+                <Trash2 className="w-3 h-3" /> Effacer
+              </button>
+            </div>
           </div>
         )}
 
@@ -2201,6 +2236,260 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           setGpsNotice(`📍 Emplacement GPS défini (Lat ${coords.latitude.toFixed(4)}, Lng ${coords.longitude.toFixed(4)})`);
         }}
       />
+
+      {/* RÈGLES DU GOMBO MODAL (ANDROID BOTTOM SHEET) */}
+      <AndroidBottomSheet
+        isOpen={isRulesModalOpen}
+        onClose={() => setIsRulesModalOpen(false)}
+        title="⚠️ RÈGLES DU GOMBO"
+        subtitle="À lire avant de publier"
+      >
+        <div className="space-y-4 text-left text-xs text-afri-text leading-relaxed pb-2 max-w-full">
+          {/* 1. Vos fonds sont sécurisés dès la publication */}
+          <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
+            <h3 className="font-bold text-[#D4AF37] text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide">
+              💰 1. Vos fonds sont sécurisés dès la publication
+            </h3>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Lorsque vous publiez un Gombo, le système vérifie automatiquement que votre Wallet dispose du <strong className="text-afri-text font-bold">solde disponible nécessaire</strong>.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Si le solde est suffisant :
+            </p>
+            <p className="text-emerald-400 font-bold text-[11.5px] p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+              le montant du Gombo est automatiquement débité de votre solde disponible et placé en sécurité dans le système AFRIGOMBO.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Les fonds ne sont donc plus disponibles pour être utilisés dans une autre opération pendant leur réservation pour ce Gombo.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Le talent peut alors consulter le Gombo et décider de l'accepter.
+            </p>
+            <p className="text-afri-text font-bold text-[11.5px] pt-1 border-t border-afri-border/40">
+              L'acceptation du talent fait entrer le Gombo dans sa phase d'exécution selon les conditions convenues.
+            </p>
+          </div>
+
+          {/* 2. Respect du délai */}
+          <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
+            <h3 className="font-bold text-[#D4AF37] text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide">
+              📅 2. Respect du délai
+            </h3>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Chaque Gombo possède une durée ou un délai défini lors de sa publication.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Le client et le talent doivent respecter les conditions et les délais convenus.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Un délai dépassé peut avoir des conséquences sur :
+            </p>
+            <ul className="list-disc list-inside text-afri-text-sec text-[11.5px] space-y-1 pl-1">
+              <li>la validation du Gombo ;</li>
+              <li>le paiement ;</li>
+              <li>le statut de la mission ;</li>
+              <li>l'évaluation des parties ;</li>
+              <li>les éventuelles procédures de résolution.</li>
+            </ul>
+            <p className="text-afri-text font-bold text-[11.5px] pt-1">
+              AFRIGOMBO ne peut pas être tenu responsable d'un retard résultant du non-respect des engagements d'une partie.
+            </p>
+          </div>
+
+          {/* 3. Annulation */}
+          <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
+            <h3 className="font-bold text-[#D4AF37] text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide">
+              ❌ 3. Annulation
+            </h3>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Une annulation n'est pas automatiquement possible à n'importe quel moment.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Avant l'acceptation du Gombo par le talent, certaines possibilités d'annulation peuvent être disponibles selon les règles du système.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Lorsque le Gombo est annulé conformément aux règles applicables, les fonds sécurisés peuvent être <strong className="text-emerald-400 font-bold">libérés et retournés au Wallet du client</strong>, selon le statut réel de l'opération.
+            </p>
+            <p className="text-afri-text font-bold text-[11.5px]">
+              Après l'acceptation du talent et la validation du contrat, l'annulation est soumise à des règles spécifiques.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Elle peut nécessiter une justification, une validation ou une procédure particulière selon l'état du Gombo.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px] font-semibold italic">
+              L'objectif est de protéger le client, le talent et les fonds engagés.
+            </p>
+          </div>
+
+          {/* 4. Engagement des deux parties */}
+          <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
+            <h3 className="font-bold text-[#D4AF37] text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide">
+              🤝 4. Engagement des deux parties
+            </h3>
+            <p className="text-afri-text-sec text-[11.5px]">
+              En acceptant un Gombo :
+            </p>
+            <p className="text-afri-text font-bold text-[11.5px] pl-2 border-l-2 border-[#D4AF37]">
+              le client s'engage à fournir ce qui a été convenu ;
+            </p>
+            <p className="text-afri-text font-bold text-[11.5px] pl-2 border-l-2 border-[#D4AF37]">
+              le talent s'engage à réaliser ce qui a été accepté.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px] pt-1">
+              Les informations importantes doivent donc être indiquées clairement dans le Gombo :
+            </p>
+            <ul className="list-disc list-inside text-afri-text-sec text-[11.5px] space-y-1 pl-1">
+              <li>prestation ;</li>
+              <li>montant ;</li>
+              <li>durée ;</li>
+              <li>date ou délai ;</li>
+              <li>conditions particulières ;</li>
+              <li>lieu lorsque nécessaire.</li>
+            </ul>
+          </div>
+
+          {/* 5. Frais AFRIGOMBO */}
+          <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
+            <h3 className="font-bold text-[#D4AF37] text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide">
+              💳 5. Frais AFRIGOMBO
+            </h3>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Les frais applicables sont présentés avant la confirmation.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Le montant du Gombo, les frais éventuels et le montant total à payer doivent être clairement visibles avant validation.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Aucun montant supplémentaire ne doit être prélevé sans être indiqué conformément aux règles du système.
+            </p>
+          </div>
+
+          {/* 6. Protection des fonds */}
+          <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
+            <h3 className="font-bold text-[#D4AF37] text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide">
+              🛡️ 6. Protection des fonds
+            </h3>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Le système de séquestre permet de sécuriser les fonds pendant le déroulement du Gombo.
+            </p>
+            <p className="text-afri-text font-bold text-[11.5px]">
+              Le talent ne doit pas considérer le montant sécurisé comme un revenu définitivement acquis avant la validation du paiement.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              De la même manière, le client ne doit pas considérer les fonds comme immédiatement disponibles lorsqu'un Gombo est publié et que le montant a déjà été débité.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Le déblocage, le retour ou le versement des fonds dépend de l'état réel du Gombo et des règles applicables.
+            </p>
+          </div>
+
+          {/* 7. En cas de problème */}
+          <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
+            <h3 className="font-bold text-[#D4AF37] text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide">
+              ⚖️ 7. En cas de problème
+            </h3>
+            <p className="text-afri-text-sec text-[11.5px]">
+              En cas de désaccord, de retard, de prestation incomplète ou de problème lié au Gombo, le système pourra utiliser les informations enregistrées :
+            </p>
+            <ul className="list-disc list-inside text-afri-text-sec text-[11.5px] space-y-1 pl-1">
+              <li>contrat ;</li>
+              <li>conditions acceptées ;</li>
+              <li>dates ;</li>
+              <li>statut ;</li>
+              <li>historique ;</li>
+              <li>validations ;</li>
+              <li>preuves disponibles.</li>
+            </ul>
+            <p className="text-afri-text-sec text-[11.5px] pt-1">
+              Les règles détaillées concernant les évaluations, litiges et décisions seront présentées dans les modules correspondants.
+            </p>
+          </div>
+
+          {/* 8. Avant de publier */}
+          <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
+            <h3 className="font-bold text-[#D4AF37] text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide">
+              🔐 8. Avant de publier
+            </h3>
+            <p className="text-afri-text-sec text-[11.5px] font-bold">
+              Vérifiez attentivement :
+            </p>
+            <div className="grid grid-cols-2 gap-1.5 text-[11px] font-mono text-[#D4AF37] bg-afri-bg p-2 rounded-xl border border-afri-border/60">
+              <span>Montant ✓</span>
+              <span>Prestation ✓</span>
+              <span>Durée ✓</span>
+              <span>Date / délai ✓</span>
+              <span className="col-span-2">Conditions ✓</span>
+            </div>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Assurez-vous également que votre Wallet dispose du solde nécessaire.
+            </p>
+            <p className="text-afri-text font-bold text-[11.5px]">
+              La publication d'un Gombo entraîne automatiquement le débit du montant prévu lorsque les conditions de paiement sont remplies.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              Une fois le Gombo publié, certaines modifications ou annulations peuvent être limitées selon son état.
+            </p>
+          </div>
+
+          {/* 9. Comment fonctionne un Gombo ? */}
+          <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
+            <h3 className="font-bold text-[#D4AF37] text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide">
+              🚀 9. Comment fonctionne un Gombo ?
+            </h3>
+            <div className="space-y-1 text-[11px] text-center font-bold text-afri-text py-1">
+              <div className="p-2 bg-afri-bg border border-afri-border rounded-xl">Vous préparez votre Gombo</div>
+              <div className="text-[#D4AF37] font-black">↓</div>
+              <div className="p-2 bg-afri-bg border border-afri-border rounded-xl">Votre Wallet est vérifié</div>
+              <div className="text-[#D4AF37] font-black">↓</div>
+              <div className="p-2 bg-afri-bg border border-afri-border rounded-xl">Le montant nécessaire est automatiquement débité</div>
+              <div className="text-[#D4AF37] font-black">↓</div>
+              <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl">Les fonds sont sécurisés dans le système AFRIGOMBO</div>
+              <div className="text-[#D4AF37] font-black">↓</div>
+              <div className="p-2 bg-afri-bg border border-afri-border rounded-xl">Le Gombo est publié</div>
+              <div className="text-[#D4AF37] font-black">↓</div>
+              <div className="p-2 bg-afri-bg border border-afri-border rounded-xl">Le talent accepte</div>
+              <div className="text-[#D4AF37] font-black">↓</div>
+              <div className="p-2 bg-afri-bg border border-afri-border rounded-xl">Le contrat entre dans sa phase d'exécution</div>
+              <div className="text-[#D4AF37] font-black">↓</div>
+              <div className="p-2 bg-afri-bg border border-afri-border rounded-xl">Le Gombo est réalisé</div>
+              <div className="text-[#D4AF37] font-black">↓</div>
+              <div className="p-2 bg-afri-bg border border-afri-border rounded-xl">Les conditions de validation sont vérifiées</div>
+              <div className="text-[#D4AF37] font-black">↓</div>
+              <div className="p-2 bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-black rounded-xl">Les fonds sont libérés selon les règles du système</div>
+            </div>
+          </div>
+
+          {/* ⚠️ À RETENIR */}
+          <div className="p-4 bg-[#D4AF37]/10 border-2 border-[#D4AF37]/50 rounded-2xl space-y-2 mt-2">
+            <h3 className="font-black text-[#D4AF37] text-xs uppercase tracking-wider flex items-center gap-2">
+              ⚠️ À RETENIR
+            </h3>
+            <p className="text-afri-text font-bold text-xs">
+              Un Gombo n'est pas simplement une annonce. C'est un engagement encadré par AFRIGOMBO.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              En publiant un Gombo, vous confirmez que votre Wallet dispose des fonds nécessaires et acceptez que le montant prévu soit automatiquement débité et sécurisé conformément aux règles du système.
+            </p>
+            <p className="text-afri-text-sec text-[11.5px]">
+              <strong className="text-afri-text font-bold">Le talent accepte ensuite le Gombo et les deux parties sont tenues de respecter les conditions convenues.</strong>
+            </p>
+            <p className="text-[10.5px] text-[#D4AF37] font-semibold italic pt-1">
+              En continuant, vous reconnaissez avoir pris connaissance de ces règles.
+            </p>
+          </div>
+
+          {/* Bouton unique de fermeture */}
+          <div className="pt-3 sticky bottom-0 bg-afri-bg/95 backdrop-blur pb-1 z-10 mt-4">
+            <button
+              type="button"
+              onClick={() => setIsRulesModalOpen(false)}
+              className="w-full py-3.5 px-6 bg-gradient-to-r from-[#D4AF37] via-amber-400 to-[#D4AF37] hover:opacity-95 text-black font-display font-black text-xs uppercase tracking-wider rounded-2xl shadow-[0_0_20px_rgba(212,175,55,0.35)] cursor-pointer transition-all active:scale-95 text-center min-h-[46px]"
+            >
+              J'ai compris
+            </button>
+          </div>
+        </div>
+      </AndroidBottomSheet>
     </div>
   );
 }

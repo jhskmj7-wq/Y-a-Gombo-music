@@ -117,6 +117,24 @@ export interface UserPerformance {
   [key: string]: any;
 }
 
+export type BetaRankType = "AMBASSADOR" | "BUILDER" | "NONE";
+
+export interface BetaBenefit {
+  type: "AMBASSADOR" | "BUILDER";
+  rankNumber: number; // 1..20 for AMBASSADOR, 21..100 for BUILDER
+  title: string;
+  durationMonths: number; // 12 for Ambassador, 6 for Builder
+  price: number; // 0 FCFA
+  referencePrice: number; // 10,000 FCFA for Ambassador, 5,000 FCFA for Builder
+  startedAt: string; // ISO String
+  expiresAt: string; // ISO String
+  status: "active" | "expired" | "suspended";
+  assignedBy?: string;
+  suspendedAt?: string;
+  suspendedReason?: string;
+  reactivatedAt?: string;
+}
+
 export interface User {
   id?: string;
   uid?: string;
@@ -152,6 +170,12 @@ export interface User {
   isCertified?: boolean;
   kycStatus?: "pending" | "approved" | "rejected" | "none" | "info_required";
   kycDocUrl?: string;
+  // Beta Program Phase 4 Fields
+  betaRankType?: BetaRankType;
+  betaRankNumber?: number; // 1 to 100
+  betaRankTitle?: string; // "AMBASSADEUR DE L'ÉCOSYSTÈME" | "BÂTISSEUR DE L'ÉCOSYSTÈME"
+  betaRankAssignedAt?: string;
+  betaBenefit?: BetaBenefit;
   status?: "active" | "suspended" | "suspect";
   specialties?: string[];
   groups?: string[];

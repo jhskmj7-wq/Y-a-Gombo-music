@@ -23,6 +23,7 @@ import AdminSupportCenter from "./AdminSupportCenter";
 import AdminPollCenter from "./AdminPollCenter";
 import AdminFounderNotebook from "./AdminFounderNotebook";
 import AdminGawaCenter from "./AdminGawaCenter";
+import { processUserBetaEligibility } from "../../lib/BetaSystemEngine";
 import AdminLotsManagement from "./AdminLotsManagement";
 import AdminRewardsManagement from "./AdminRewardsManagement";
 import AdminRevenueFeatures from "./AdminRevenueFeatures";
@@ -712,6 +713,12 @@ export default function AdminFounderThrone({
             gomboIdNumber,
             gomboId: gomboIdObj,
             verificationBadge: "certified_artist"
+          });
+
+          // Trigger Phase 4 Beta Program Attribution
+          await processUserBetaEligibility(reqItem.userId, {
+            uid: currentUser?.uid || "founder",
+            email: currentUser?.email || "founder@afrigombo.com"
           });
         } catch (e) {
           console.warn("User update error:", e);
@@ -1464,6 +1471,12 @@ export default function AdminFounderThrone({
         gomboIdNumber,
         "gomboId.certifie": true,
         "gomboId.statut": "CERTIFIÉ ELITE"
+      });
+
+      // Trigger Phase 4 Beta Program Attribution
+      await processUserBetaEligibility(userId, {
+        uid: currentUser?.uid || "founder",
+        email: currentUser?.email || "founder@afrigombo.com"
       });
       setSuccessMsg("Souveraineté : Certificat artistique validé et octroyé.");
       setTimeout(() => setSuccessMsg(""), 3000);

@@ -3,6 +3,7 @@ import { db } from '../../lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { ProfileAvatar } from './ProfileAvatar';
 import { Shield, Sparkles, Crown } from 'lucide-react';
+import { getEffectiveGomboId } from '../../lib/gomboIdHelper';
 
 interface ProfileHeaderProps {
   uid: string;
@@ -22,6 +23,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ uid }) => {
     return () => unsubscribe();
   }, [uid]);
 
+  const effectiveGomboId = getEffectiveGomboId(profile);
+
   return (
     <div className="w-full bg-afri-bg-sec border border-afri-border rounded-3xl p-5 shadow-xl relative overflow-hidden select-none">
       <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
@@ -40,6 +43,19 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ uid }) => {
                 <Shield className="w-3 h-3" /> Certifié
               </span>
             )}
+            {profile?.betaRankType === "AMBASSADOR" && (
+              <span className="px-2.5 py-0.5 bg-black border border-[#D4AF37] text-[#D4AF37] text-[10px] font-mono font-bold uppercase rounded-full flex items-center gap-1 shadow-md shadow-[#D4AF37]/10">
+                🏆 Ambassadeur #{profile.betaRankNumber ? String(profile.betaRankNumber).padStart(2, '0') : ''}
+              </span>
+            )}
+            {profile?.betaRankType === "BUILDER" && (
+              <span className="px-2.5 py-0.5 bg-black border border-amber-500 text-amber-400 text-[10px] font-mono font-bold uppercase rounded-full flex items-center gap-1 shadow-md shadow-amber-500/10">
+                🏗️ Bâtisseur #{profile.betaRankNumber ? String(profile.betaRankNumber).padStart(2, '0') : ''}
+              </span>
+            )}
+            <span className="px-2.5 py-0.5 bg-black/60 border border-[#D4AF37]/40 text-[#D4AF37] text-[10px] font-mono font-bold uppercase rounded-full flex items-center gap-1 shadow-sm">
+              🆔 {effectiveGomboId}
+            </span>
           </div>
           <p className="text-xs text-afri-text-sec font-mono">@{profile?.username || uid.substring(0, 8)}</p>
           <p className="text-xs text-zinc-300 leading-relaxed max-w-md">{profile?.bio || "Créateur et bâtisseur de l'écosystème numérique africain."}</p>

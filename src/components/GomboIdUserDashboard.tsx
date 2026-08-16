@@ -335,6 +335,16 @@ function GomboIdUserDashboardInner({
                     ★ CERTIFIÉ
                   </span>
                 )}
+                {currentUser?.betaRankType === "AMBASSADOR" && (
+                  <span className="inline-flex items-center gap-1 text-[8px] xs:text-[9px] bg-black border border-[#D4AF37] text-[#D4AF37] px-2 py-0.5 rounded font-black uppercase tracking-wider shadow w-fit">
+                    🏆 AMBASSADEUR BÊTA #{currentUser.betaRankNumber ? String(currentUser.betaRankNumber).padStart(2, '0') : ''}
+                  </span>
+                )}
+                {currentUser?.betaRankType === "BUILDER" && (
+                  <span className="inline-flex items-center gap-1 text-[8px] xs:text-[9px] bg-black border border-amber-500 text-amber-400 px-2 py-0.5 rounded font-black uppercase tracking-wider shadow w-fit">
+                    🏗️ BÂTISSEUR BÊTA #{currentUser.betaRankNumber ? String(currentUser.betaRankNumber).padStart(2, '0') : ''}
+                  </span>
+                )}
               </div>
               <p className="afri-text-tiny text-afri-text/60 font-medium">Nom : {currentUser?.name ?? ""}</p>
               

@@ -17,6 +17,157 @@ function getRandomChars(count: number): string {
   return result;
 }
 
+export type GomboIdStatusCode = "NOT_ATTRIBUTED" | "PENDING" | "REJECTED" | "ATTRIBUTED";
+
+export interface UnifiedGomboIdInfo {
+  statusCode: GomboIdStatusCode;
+  statusLabel: string;
+  statusColor: string;
+  badgeLabel: string;
+  buttonLabel: string;
+  gomboId: string;
+  rawId: string | null;
+  isKycApproved: boolean;
+  kycStatus: "none" | "pending" | "approved" | "rejected" | "info_required";
+  assignedAt: string | null;
+  submittedAt: string | null;
+  verificationLevel: string;
+  trustScore: number;
+  rejectionReason?: string;
+  betaRankType?: string;
+  betaRankTitle?: string;
+  betaRankNumber?: number;
+  canApply: boolean;
+}
+
+/**
+ * SINGLE SOURCE OF TRUTH STATUS RESOLVER FOR GOMBO ID
+ */
+export function getGomboIdStatusInfo(
+  user: {
+    kycStatus?: string;
+    gomboIdNumber?: string;
+    gomboId?: any;
+    kycApprovedDate?: string;
+    kycSubmittedDate?: string;
+    kycComplementaryInfo?: string;
+    trustScore?: number;
+    isCertified?: boolean;
+    betaRankType?: any;
+    betaRankTitle?: string;
+    betaRankNumber?: number;
+  } | null | undefined
+): UnifiedGomboIdInfo {
+  if (!user) {
+    return {
+      statusCode: "NOT_ATTRIBUTED",
+      statusLabel: "Non attribué",
+      statusColor: "text-zinc-400 bg-zinc-500/10 border-zinc-500/30",
+      badgeLabel: "À obtenir",
+      buttonLabel: "Obtenir mon Gombo ID",
+      gomboId: NOT_ASSIGNED_GOMBO_ID,
+      rawId: null,
+      isKycApproved: false,
+      kycStatus: "none",
+      assignedAt: null,
+      submittedAt: null,
+      verificationLevel: "Niveau 0 (Non vérifié)",
+      trustScore: 0,
+      canApply: true
+    };
+  }
+
+  const rawKycStatus = (user.kycStatus || "none").toLowerCase();
+  const kycStatus = rawKycStatus as UnifiedGomboIdInfo["kycStatus"];
+  const rawId = user.gomboIdNumber || (typeof user.gomboId === "string" ? user.gomboId : user.gomboId?.id) || null;
+  const isApproved = rawKycStatus === "approved" || rawKycStatus === "validated" || (user.isCertified === true && !!rawId);
+
+  const trustScore = user.gomboId?.scoreConfiance ?? user.trustScore ?? (isApproved ? 95 : 50);
+  const niveau = user.gomboId?.niveau || (isApproved ? 1 : 0);
+  const assignedAt = user.kycApprovedDate || user.gomboId?.createdAt || null;
+  const submittedAt = user.kycSubmittedDate || null;
+
+  if (isApproved) {
+    const effectiveRaw = rawId || "GMB-000-000";
+    const formatted = formatGomboIdDisplay(effectiveRaw);
+    return {
+      statusCode: "ATTRIBUTED",
+      statusLabel: "🟢 Actif",
+      statusColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
+      badgeLabel: "✓ Vérifié",
+      buttonLabel: "Mon Gombo ID",
+      gomboId: formatted,
+      rawId: effectiveRaw,
+      isKycApproved: true,
+      kycStatus: "approved",
+      assignedAt,
+      submittedAt,
+      verificationLevel: `Niveau ${niveau} • Artiste Certifié`,
+      trustScore,
+      betaRankType: user.betaRankType,
+      betaRankTitle: user.betaRankTitle,
+      betaRankNumber: user.betaRankNumber,
+      canApply: false
+    };
+  }
+
+  if (kycStatus === "pending") {
+    return {
+      statusCode: "PENDING",
+      statusLabel: "🟡 En vérification",
+      statusColor: "text-amber-400 bg-amber-500/10 border-amber-500/30",
+      badgeLabel: "En cours",
+      buttonLabel: "Demande de Gombo ID",
+      gomboId: PENDING_KYC_GOMBO_ID,
+      rawId: null,
+      isKycApproved: false,
+      kycStatus: "pending",
+      assignedAt: null,
+      submittedAt,
+      verificationLevel: "En cours d'analyse",
+      trustScore,
+      canApply: false
+    };
+  }
+
+  if (kycStatus === "rejected") {
+    return {
+      statusCode: "REJECTED",
+      statusLabel: "🔴 Demande non validée",
+      statusColor: "text-red-400 bg-red-500/10 border-red-500/30",
+      badgeLabel: "Refusé",
+      buttonLabel: "Régulariser ma demande",
+      gomboId: NOT_ASSIGNED_GOMBO_ID,
+      rawId: null,
+      isKycApproved: false,
+      kycStatus: "rejected",
+      assignedAt: null,
+      submittedAt,
+      rejectionReason: user.kycComplementaryInfo || "Dossier non conforme ou pièces illisibles.",
+      verificationLevel: "Non validé",
+      trustScore,
+      canApply: true
+    };
+  }
+
+  return {
+    statusCode: "NOT_ATTRIBUTED",
+    statusLabel: "Non attribué",
+    statusColor: "text-zinc-400 bg-zinc-500/10 border-zinc-500/30",
+    badgeLabel: "À obtenir",
+    buttonLabel: "Obtenir mon Gombo ID",
+    gomboId: NOT_ASSIGNED_GOMBO_ID,
+    rawId: null,
+    isKycApproved: false,
+    kycStatus: kycStatus === "info_required" ? "info_required" : "none",
+    assignedAt: null,
+    submittedAt: null,
+    verificationLevel: kycStatus === "info_required" ? "Informations complémentaires requises" : "Non attribué",
+    trustScore,
+    canApply: true
+  };
+}
+
 /**
  * Formats any raw Gombo reference or ID into official business format GB-2026-XXXXX.
  */
@@ -85,39 +236,17 @@ export function generateGomboId(): string {
 }
 
 /**
- * Returns the official GOMBO ID if KYC status is "approved" or "validated",
- * otherwise returns "EN ATTENTE DE VALIDATION KYC" if pending, or "ID NON ATTRIBUÉ".
+ * Returns the official GOMBO ID using the single source of truth status info.
  */
 export function getEffectiveGomboId(
-  user: { kycStatus?: string; gomboIdNumber?: string; gomboId?: any } | null | undefined
+  user: { kycStatus?: string; gomboIdNumber?: string; gomboId?: any; isCertified?: boolean } | null | undefined
 ): string {
-  if (!user) return NOT_ASSIGNED_GOMBO_ID;
-
-  const status = (user.kycStatus || "").toLowerCase();
-
-  if (status === "pending") {
-    return PENDING_KYC_GOMBO_ID;
-  }
-
-  if (status !== "approved" && status !== "validated") {
-    return NOT_ASSIGNED_GOMBO_ID;
-  }
-
-  const rawId =
-    user.gomboIdNumber ||
-    (typeof user.gomboId === "string" ? user.gomboId : user.gomboId?.id);
-
-  if (!rawId || rawId === NOT_ASSIGNED_GOMBO_ID || rawId === PENDING_KYC_GOMBO_ID) {
-    return NOT_ASSIGNED_GOMBO_ID;
-  }
-
-  return formatGomboIdDisplay(rawId);
+  return getGomboIdStatusInfo(user).gomboId;
 }
 
 /**
  * Helper to check strictly if KYC is approved or validated.
  */
-export function isKycApproved(user: { kycStatus?: string } | null | undefined): boolean {
-  const status = (user?.kycStatus || "").toLowerCase();
-  return status === "approved" || status === "validated";
+export function isKycApproved(user: { kycStatus?: string; isCertified?: boolean } | null | undefined): boolean {
+  return getGomboIdStatusInfo(user).isKycApproved;
 }

@@ -20,7 +20,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
 import { safeStringify, getCircularReplacer, safeJsonClone } from "../lib/jsonUtils";
-import { getEffectiveGomboId, generateGomboId, formatGomboIdDisplay, formatGomboRefDisplay } from "../lib/gomboIdHelper";
+import { getEffectiveGomboId, getGomboIdStatusInfo, generateGomboId, formatGomboIdDisplay, formatGomboRefDisplay } from "../lib/gomboIdHelper";
 import { PremiumEngine } from "../lib/premiumEngine";
 import { SecurityService } from "../lib/SecurityService";
 import { 
@@ -42,6 +42,8 @@ const AdminReports = lazyWithRetry(() => import("./admin/AdminReports"));
 const AdminActions = lazyWithRetry(() => import("./AdminActions"));
 import AdminDashboard from "./admin/AdminDashboard";
 const AdminUsers = lazyWithRetry(() => import("./admin/AdminUsers"));
+const AdminBetaProgram = lazyWithRetry(() => import("./admin/AdminBetaProgram"));
+import { processUserBetaEligibility } from "../lib/BetaSystemEngine";
 const AdminNotifications = lazyWithRetry(() => import("./admin/AdminNotifications"));
 const AdminRevenue = lazyWithRetry(() => import("./admin/AdminRevenue"));
 const AdminRevenueFeatures = lazyWithRetry(() => import("./admin/AdminRevenueFeatures"));
@@ -2213,6 +2215,16 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     });
     setUsers(updatedUsers);
     
+    // Trigger Phase 4 Beta Program attribution (1..20 Ambassadeurs, 21..100 Bâtisseurs)
+    try {
+      await processUserBetaEligibility(userId, {
+        uid: currentUser?.uid || "admin",
+        email: currentUser?.email || "admin@afrigombo.com"
+      });
+    } catch (betaErr) {
+      console.warn("Could not process beta eligibility:", betaErr);
+    }
+
     // Play interaction!
     interactionBus.emit("GOMBO_VALIDATED");
 
@@ -2780,13 +2792,26 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               setActiveMenu("user_academie");
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20 uppercase font-black">COURS</span>)}
-                            {renderMenuItem("menu_gombo_id", "GOMBO ID", "🆔", () => {
-                              requireAuthThen(() => {
-                                setPerspective("user");
-                                setActiveMenu("user_gombo_id");
-                                try { audioSynth.playValidationSuccess(); } catch (_) {}
-                              });
-                            }, false)}
+                            {(() => {
+                              const gInfo = getGomboIdStatusInfo(currentUser);
+                              return renderMenuItem("menu_gombo_id", "GOMBO ID", "🆔", () => {
+                                requireAuthThen(() => {
+                                  setPerspective("user");
+                                  setActiveMenu("user_gombo_id");
+                                  try { audioSynth.playValidationSuccess(); } catch (_) {}
+                                });
+                              }, false, (
+                                <span className={`text-[7px] font-mono py-0.5 px-1.5 rounded border uppercase font-black ${
+                                  gInfo.statusCode === "ATTRIBUTED" 
+                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
+                                    : gInfo.statusCode === "PENDING"
+                                    ? "bg-amber-500/10 text-amber-400 border-amber-500/30 font-semibold"
+                                    : "bg-zinc-800/80 text-zinc-400 border-zinc-700/50"
+                                }`}>
+                                  {gInfo.badgeLabel}
+                                </span>
+                              ));
+                            })()}
                             {renderMenuItem("menu_gombo_ads", "GOMBO ADS", "📣", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
@@ -6360,6 +6385,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 </Suspense>
               )}
 
+              {/* ----------------------------------------------------
+                                VIEW: PROGRAMME BÊTA (PHASE 4)
+                  ---------------------------------------------------- */}
+              {(activeMenu === "beta_program" || activeMenu === "beta") && (
+                <Suspense fallback={<div className="p-12 text-center text-[#D4AF37] font-mono animate-pulse">Chargement du Programme Bêta...</div>}>
+                  <AdminBetaProgram onSelectUser={(userId) => {
+                    setEditingProfileUserId(userId);
+                    setActiveMenu("users");
+                  }} />
+                </Suspense>
+              )}
+
               {activeMenu === "afrigombo_labs" && (
                 <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement de Afrigombo Labs...</div>}>
                   <AfrigomboLabs />
@@ -8052,6 +8089,21 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           >
             <Users className="w-4.5 h-4.5" />
             <span className="text-[9px] font-mono uppercase tracking-wider">Utilisateurs</span>
+          </button>
+
+          {/* 2.5 PROGRAMME BÊTA */}
+          <button
+            id="admin-nav-beta"
+            onClick={() => {
+              setActiveMenu("beta_program");
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
+            }}
+            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+              activeMenu === "beta_program" || activeMenu === "beta" ? "text-afri-gold scale-105 bg-afri-gold/5 font-black" : "text-afri-text-sec hover:text-afri-text"
+            }`}
+          >
+            <Award className="w-4.5 h-4.5" />
+            <span className="text-[9px] font-mono uppercase tracking-wider">Prog. Bêta</span>
           </button>
 
           {/* 3. NOTIFICATIONS */}
