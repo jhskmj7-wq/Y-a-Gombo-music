@@ -39,7 +39,9 @@ import { gomboDB } from "../../firebase";
 import { db } from "../../lib/firebase";
 import { useAudio } from "../../context/AudioContext";
 import { getAudioUrl } from "../../lib/audioUtils";
+import { supabaseStorage } from "../../lib/supabaseStorage";
 import { SystemMedia, SourceType } from "../../types";
+import { SupabaseStorageDiagnostic } from "./SupabaseStorageDiagnostic";
 import {
   collection,
   onSnapshot,
@@ -194,7 +196,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     projectId?: string;
     apiKey?: string;
     fileName?: string;
-    fileSize?: number;
+    fileSize?: number | string;
     errorDetails?: {
       code: string;
       message: string;
@@ -321,7 +323,8 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
   // Play preview handler with volume settings
   const togglePlayAudio = (asset: MediaAsset) => {
     const id = asset.id;
-    const url = getAudioUrl(asset.sourceType, asset.githubPath || asset.externalUrl || asset.storagePath);
+    const candidateUrl = (asset as any).mediaUrl || asset.downloadURL || asset.url || asset.firebaseUrl || asset.externalUrl || asset.storagePath;
+    const url = getAudioUrl(asset.sourceType, candidateUrl);
 
     incrementPlayCount(id);
 
@@ -367,9 +370,18 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     return idx !== -1 ? idx + 1 : 1;
   };
 
-  // Handle uploading files safely with history saving
+  // Handle uploading files safely with history saving and Supabase Storage integration
   const handleFileUpload = async (id: string, file: File, sectionName: string) => {
     if (!isAuthorizedSuperFounder) return;
+
+    // 1. Validation de format audio strict
+    if (sectionName === "audio" || sectionName === "sounds") {
+      const isAudio = file.type.startsWith("audio/") || /\.(mp3|wav|ogg|m4a|aac|webm|flac)$/i.test(file.name);
+      if (!isAudio) {
+        alert("Format audio non supporté. Veuillez sélectionner un fichier audio valide (MP3, WAV, AAC, M4A, OGG).");
+        return;
+      }
+    }
 
     setUploadingId(id);
     setUploadStatuses((prev) => ({
@@ -380,24 +392,34 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     setDiagnostics((prev) => ({
       ...prev,
       [id]: {
-        logs: ["Début du transfert impérial..."]
+        logs: ["Initialisation du transfert Supabase Storage..."]
       }
     }));
 
-    const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, "_");
-    
-    // Imperial folder organization for Firebase Storage path
-    let folder = "media";
-    if (sectionName === "audio") folder = "music";
-    else if (sectionName === "images") folder = "images";
-    else if (sectionName === "videos") folder = "videos";
-    else if (sectionName === "sounds") folder = "sounds";
-    else if (sectionName === "animations") folder = "animations";
-    else if (sectionName === "notifications") folder = "notifications";
-    else if (sectionName === "system") folder = "system";
+    // 2. Génération du chemin unique normalisé
+    const safeFileName = file.name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .toLowerCase();
+    const timestamp = Date.now();
+    const founderId = adminEmail ? adminEmail.replace(/[^a-zA-Z0-9._-]/g, "_") : "super_founder";
 
-    const storagePath = `${folder}/${id}/${Date.now()}_${cleanName}`;
+    let storagePath = "";
+    if (sectionName === "audio") {
+      storagePath = `audios/${founderId}/${timestamp}-${safeFileName}`;
+    } else if (sectionName === "images") {
+      storagePath = `images/${founderId}/${timestamp}-${safeFileName}`;
+    } else if (sectionName === "videos") {
+      storagePath = `videos/${founderId}/${timestamp}-${safeFileName}`;
+    } else if (sectionName === "sounds") {
+      storagePath = `sounds/${founderId}/${timestamp}-${safeFileName}`;
+    } else {
+      storagePath = `media/${id}/${timestamp}-${safeFileName}`;
+    }
+
     const formattedSize = formatBytes(file.size);
+    const targetBucket = supabaseStorage.getBucketName();
 
     try {
       setUploadStatuses((prev) => ({
@@ -405,38 +427,64 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
         [id]: { progress: 1, state: "uploading" }
       }));
 
-      const downloadURL = await gomboDB.uploadFile(storagePath, file, (progress: number, details?: any) => {
-        setUploadStatuses((prev) => ({
-          ...prev,
-          [id]: {
-            progress: Math.max(1, Math.round(progress)),
-            state: details?.state || "uploading",
-            error: details?.error ? `${details.error.code}: ${details.error.message}` : undefined
-          }
-        }));
+      let downloadURL = "";
+      let activeProvider = "supabase";
 
-        if (details) {
-          setDiagnostics((prev) => {
-            const current = prev[id] || { logs: [] };
-            const newLogs = [...current.logs];
-            if (details.log && !newLogs.includes(details.log)) {
-              newLogs.push(details.log);
-            }
-            return {
+      // 3. Téléversement réel vers Supabase Storage (bucket afrigombo-médias)
+      if (supabaseStorage.isConfigured()) {
+        const uploadResult = await supabaseStorage.uploadGenericFile(file, storagePath, {
+          userId: founderId,
+          mediaType: sectionName === "audio" || sectionName === "sounds" ? "audio" : sectionName === "videos" ? "video" : sectionName === "images" ? "image" : "other",
+          isPrivate: false,
+          onProgress: (info) => {
+            setUploadStatuses((prev) => ({
               ...prev,
               [id]: {
-                bucket: details.bucket,
-                projectId: details.projectId,
-                apiKey: details.apiKey,
-                fileName: details.fileName,
-                fileSize: details.fileSize,
-                errorDetails: details.error,
-                logs: newLogs
+                progress: Math.max(1, Math.round(info.percentage)),
+                state: info.state,
+                error: info.state === "error" ? info.log : undefined
               }
-            };
-          });
+            }));
+
+            if (info.log) {
+              setDiagnostics((prev) => {
+                const current = prev[id] || { logs: [] };
+                return {
+                  ...prev,
+                  [id]: {
+                    ...current,
+                    bucket: targetBucket,
+                    fileName: safeFileName,
+                    fileSize: formattedSize,
+                    logs: [...current.logs, info.log!]
+                  }
+                };
+              });
+            }
+          }
+        });
+
+        if (uploadResult.success && uploadResult.url) {
+          downloadURL = uploadResult.url;
+          storagePath = uploadResult.storagePath;
+          activeProvider = "supabase";
         }
-      });
+      }
+
+      // Fallback transparent vers Firebase Storage si Supabase n'est pas encore actif
+      if (!downloadURL) {
+        activeProvider = "firebase";
+        downloadURL = await gomboDB.uploadFile(storagePath, file, (progress: number, details?: any) => {
+          setUploadStatuses((prev) => ({
+            ...prev,
+            [id]: {
+              progress: Math.max(1, Math.round(progress)),
+              state: details?.state || "uploading",
+              error: details?.error ? `${details.error.code}: ${details.error.message}` : undefined
+            }
+          }));
+        });
+      }
 
       if (downloadURL) {
         const existingAsset = mediaAssets[id];
@@ -457,7 +505,8 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
         const spot = [...AUDIO_SPOTS, ...IMAGE_SPOTS, ...VIDEO_SPOTS, ...SOUND_SPOTS, ...NOTIFICATION_SPOTS, ...ANIMATION_SPOTS, ...SYSTEM_SPOTS].find(s => s.id === id);
         const currentOrder = getSpotOrder(id, sectionName);
 
-        const newAsset: MediaAsset = {
+        // 6. Métadonnées Firestore conformes à la spécification
+        const newAsset: MediaAsset & { [key: string]: any } = {
           id,
           title: titleText,
           description: spot?.desc || "",
@@ -466,6 +515,14 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           storagePath,
           downloadURL,
           firebaseUrl: downloadURL,
+          mediaUrl: downloadURL,
+          provider: activeProvider,
+          bucket: targetBucket,
+          mediaType: sectionName === "audio" || sectionName === "sounds" ? "audio" : sectionName === "videos" ? "video" : "image",
+          mimeType: file.type || "audio/mpeg",
+          fileName: file.name,
+          size: file.size,
+          uploadedBy: founderId,
           githubPath: "",
           externalUrl: "",
           enabled: existingAsset?.enabled !== undefined ? existingAsset.enabled : true,
@@ -474,6 +531,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           volume: existingAsset?.volume !== undefined ? existingAsset.volume : 0.8,
           priority: existingAsset?.priority || 0,
           updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
           updatedBy: adminEmail,
           fileSize: formattedSize,
           fileType: file.type || (typeof file.name === "string" ? file.name.split(".").pop() : ""),
@@ -491,14 +549,14 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           actif: existingAsset?.enabled !== undefined ? existingAsset.enabled : true,
         };
 
-        // SAVE TO BOTH COLLECTIONS FOR INDEPENDENCE
+        // 7. Enregistrement Firestore instantané
         await setDoc(doc(db, "media", id), newAsset);
         await gomboDB.addSystemMedia(newAsset);
         await logAudit(
           id,
           newAsset.title,
           "Téléversement",
-          `Nouveau média téléversé pour ${sectionName} (${formattedSize})`
+          `Nouveau média téléversé pour ${sectionName} (${formattedSize}) via ${activeProvider.toUpperCase()}`
         );
         
         setUploadStatuses((prev) => ({
@@ -834,7 +892,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           <div><span className="text-afri-text-sec font-bold">Bucket :</span> <span className="text-afri-text">{diag?.bucket || "GomboBucket"}</span></div>
           <div><span className="text-afri-text-sec font-bold">Projet ID :</span> <span className="text-afri-text">{diag?.projectId || "afrigombo-elite"}</span></div>
           <div><span className="text-zinc-605 font-bold">Fichier :</span> <span className="text-afri-text truncate block max-w-full" title={diag?.fileName}>{diag?.fileName || "En attente"}</span></div>
-          <div><span className="text-zinc-605 font-bold">Taille :</span> <span className="text-afri-text">{diag?.fileSize ? formatBytes(diag.fileSize) : "Inconnue"}</span></div>
+          <div><span className="text-zinc-605 font-bold">Taille :</span> <span className="text-afri-text">{diag?.fileSize ? (typeof diag.fileSize === "number" ? formatBytes(diag.fileSize) : diag.fileSize) : "Inconnue"}</span></div>
         </div>
 
         <div className="space-y-1">
@@ -1023,7 +1081,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                     <audio 
                       controls 
                       className="w-full h-8 mt-2"
-                      src={getAudioUrl(asset.sourceType, asset.githubPath || asset.externalUrl || asset.storagePath)}
+                      src={getAudioUrl(asset.sourceType, (asset as any).mediaUrl || asset.downloadURL || asset.url || asset.firebaseUrl || asset.externalUrl || asset.storagePath)}
                     />
                     </>
                   ) : sectionName === "images" || sectionName === "notifications" || sectionName === "system" ? (
@@ -1577,6 +1635,9 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               </div>
             </div>
           </div>
+
+          {/* SUPABASE STORAGE (BACKEND MÉDIAS DÉDIÉ) */}
+          <SupabaseStorageDiagnostic />
 
           {/* DUAL CODES & RECENT ACTIONS */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

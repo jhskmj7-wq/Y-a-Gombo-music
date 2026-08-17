@@ -1,13 +1,15 @@
+import { supabaseStorage } from "./supabaseStorage";
+
 /**
- * Utility to normalize audio URLs for AFRIGOMBO ELITE
+ * Utilitaire pour normaliser et résoudre les URLs Audio d'AFRIGOMBO ELITE
+ * Supporte : Supabase Storage (afrigombo-médias), Firebase Storage, GitHub et URLs distantes.
  */
 
 export const getAudioUrl = (source: string, path: string): string => {
   if (!path) return "";
   
-  // Already valid URL
-  if (path.startsWith("http")) {
-    // Handle GitHub blob URL
+  // URL HTTP/HTTPS complète (Supabase public URL, Firebase download URL, CDN externe)
+  if (path.startsWith("http://") || path.startsWith("https://")) {
     if (path.includes("github.com") && path.includes("/blob/")) {
       return path
         .replace("github.com", "raw.githubusercontent.com")
@@ -16,10 +18,14 @@ export const getAudioUrl = (source: string, path: string): string => {
     return path;
   }
 
-  // GitHub path or local path
-  if (source === "GITHUB" || path.startsWith("public/") || path.startsWith("audio/")) {
+  // Si c'est un chemin de stockage Supabase (ex: audios/..., audio/...)
+  if (path.startsWith("audios/") || path.startsWith("audio/")) {
+    return supabaseStorage.getPublicUrl(path);
+  }
+
+  // Chemin GitHub ou local historique
+  if (source === "GITHUB" || path.startsWith("public/")) {
     const baseUrl = "https://raw.githubusercontent.com/jhskmj7-wq/Y-a-Gombo-music/principal/";
-    // Remove leading slash if exists
     const cleanPath = path.replace(/^\//, "");
     return encodeURI(baseUrl + cleanPath);
   }

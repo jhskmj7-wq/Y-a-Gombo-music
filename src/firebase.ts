@@ -39,7 +39,9 @@ import {
   or
 } from "firebase/firestore";
 import { ref, uploadBytes, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { supabaseStorage } from "./lib/supabaseStorage";
 export { app, auth, db, storage } from "./lib/firebase";
+export { supabaseStorage } from "./lib/supabaseStorage";
 import { app, auth, db, storage } from "./lib/firebase";
 import { getCanonicalWalletBalance } from "./lib/financial";
 import { 
@@ -1983,21 +1985,68 @@ export const gomboDB = {
     return "";
   },
 
-  // FILES
+  // FILES (Supabase Storage principal + Fallback Firebase Storage)
   async uploadFile(fileOrPath: File | string, pathOrFile: string | File, callbackOrMetadata?: any): Promise<string> {
-    if (storage) {
-      let finalFile: File | string;
-      let finalPath: string;
-      if (typeof fileOrPath === "string" && (typeof pathOrFile !== "string")) {
-        // Called as uploadFile(path, file, callback)
-        finalPath = fileOrPath;
-        finalFile = pathOrFile;
-      } else {
-        // Called as uploadFile(file, path, metadata)
-        finalFile = fileOrPath;
-        finalPath = pathOrFile as string;
-      }
+    let finalFile: File | string;
+    let finalPath: string;
+    if (typeof fileOrPath === "string" && (typeof pathOrFile !== "string")) {
+      // Called as uploadFile(path, file, callback)
+      finalPath = fileOrPath;
+      finalFile = pathOrFile;
+    } else {
+      // Called as uploadFile(file, path, metadata)
+      finalFile = fileOrPath;
+      finalPath = pathOrFile as string;
+    }
 
+    let progressCallback = typeof callbackOrMetadata === "function" ? callbackOrMetadata : undefined;
+
+    // --- PRIORITÉ 1 : SUPABASE STORAGE ---
+    if (supabaseStorage.isConfigured()) {
+      try {
+        console.log("[STORAGE] Téléversement vers Supabase Storage, chemin :", finalPath);
+        const isKyc = finalPath.startsWith("kyc/") || finalPath.includes("/kyc/");
+        
+        let mediaType: "image" | "video" | "audio" | "document" | "other" = "other";
+        const lower = finalPath.toLowerCase();
+        if (lower.match(/\.(jpg|jpeg|png|webp|gif|svg)$/) || lower.includes("image") || lower.includes("avatar") || lower.includes("photo") || lower.includes("cover")) {
+          mediaType = "image";
+        } else if (lower.match(/\.(mp3|wav|ogg|m4a|aac)$/) || lower.includes("audio")) {
+          mediaType = "audio";
+        } else if (lower.match(/\.(mp4|webm|mov|mkv)$/) || lower.includes("video")) {
+          mediaType = "video";
+        } else if (lower.match(/\.(pdf|doc|docx)$/) || isKyc || lower.includes("doc")) {
+          mediaType = "document";
+        }
+
+        const result = await supabaseStorage.uploadGenericFile(finalFile, finalPath, {
+          mediaType,
+          isPrivate: isKyc,
+          onProgress: (info) => {
+            if (progressCallback) {
+              progressCallback(info.percentage, {
+                state: info.state,
+                bucket: supabaseStorage.getBucketName(),
+                fileName: finalPath.split("/").pop(),
+                log: info.log
+              });
+            }
+          }
+        });
+
+        if (result.success && result.url) {
+          console.log("[STORAGE] Succès Supabase Storage, URL :", result.url);
+          return result.url;
+        } else {
+          console.warn("[STORAGE] Échec Supabase, tentative de secours Firebase...", result.error);
+        }
+      } catch (sbErr) {
+        console.warn("[STORAGE] Exception Supabase Storage, basculement vers Firebase :", sbErr);
+      }
+    }
+
+    // --- PRIORITÉ 2 : FIREBASE STORAGE (Mode de secours ou existant) ---
+    if (storage) {
       const storageRef = ref(storage, finalPath);
       const bucketName = storage.app.options.storageBucket || "Inconnu";
       const projectId = storage.app.options.projectId || "Inconnu";

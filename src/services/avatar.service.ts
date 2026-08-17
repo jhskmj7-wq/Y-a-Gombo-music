@@ -1,6 +1,7 @@
 import { db, storage } from '../lib/firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc, getDoc, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { supabaseStorage } from '../lib/supabaseStorage';
 import { AvatarItem, AvatarConfig } from '../types/avatar.types';
 
 export const avatarService = {
@@ -137,9 +138,27 @@ export const avatarService = {
   },
 
   async uploadAvatarAsset(file: File, pathPrefix: string = 'avatar_assets'): Promise<string> {
-    const storageRef = ref(storage, `${pathPrefix}/${Date.now()}_${file.name}`);
-    const uploadTask = await uploadBytesResumable(storageRef, file);
-    const downloadUrl = await getDownloadURL(uploadTask.ref);
-    return downloadUrl;
+    if (supabaseStorage.isConfigured()) {
+      try {
+        const path = `${pathPrefix}/${Date.now()}_${file.name}`;
+        const result = await supabaseStorage.uploadGenericFile(file, path, {
+          mediaType: "image",
+          isPrivate: false,
+        });
+        if (result.success && result.url) {
+          return result.url;
+        }
+      } catch (sbErr) {
+        console.warn("[AVATAR SERVICE] Supabase upload failed, falling back to Firebase:", sbErr);
+      }
+    }
+
+    if (storage) {
+      const storageRef = ref(storage, `${pathPrefix}/${Date.now()}_${file.name}`);
+      const uploadTask = await uploadBytesResumable(storageRef, file);
+      const downloadUrl = await getDownloadURL(uploadTask.ref);
+      return downloadUrl;
+    }
+    throw new Error("Aucun service de stockage disponible");
   }
 };
