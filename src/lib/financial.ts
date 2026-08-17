@@ -225,7 +225,7 @@ export function calculateGomboFees({
 
   // Canonical base calculation: fee = Math.round((amount * ratePercent) / 100)
   const fee = Math.round((cleanAmount * ratePercent) / 100);
-  const netAmount = Math.max(0, cleanAmount - fee);
+  const netAmount = cleanAmount;
   const isValidAmount = cleanAmount >= MIN_GOMBO_AMOUNT;
   
   const errorMessage = !isValidAmount && cleanAmount > 0
