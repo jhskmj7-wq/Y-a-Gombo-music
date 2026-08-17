@@ -100,9 +100,11 @@ export function resolveUserStatusAndRate(userData: any, explicitStatus?: string 
   rateDecimal: number;
   isPremium: boolean;
 } {
-  const pricing = getPlatformPricing();
-  const standardRatePercent = Number((pricing.standardCommissionRate * 100).toFixed(4)); // default 2.5%
-  const premiumRatePercent = Number((pricing.premiumCommissionRate * 100).toFixed(4));   // default 1.5%
+  // Sovereign platform commission rates
+  const standardRatePercent = 2.5; // Always 2.5% for Standard
+  const premiumRatePercent = 1.5;  // Always 1.5% for Premium
+  const standardRateDecimal = 0.025;
+  const premiumRateDecimal = 0.015;
 
   const email = (userData?.email || "").toLowerCase();
   const isFounder = email === "jhs.kmj7@gmail.com" || userData?.isFounder === true || userData?.role === "admin" || explicitStatus === "FOUNDER";
@@ -117,33 +119,33 @@ export function resolveUserStatusAndRate(userData: any, explicitStatus?: string 
 
   const explicit = (explicitStatus || "").toUpperCase();
   if (explicit === "BATISSEUR" || explicit === "BÂTISSEUR") {
-    return { statusName: "BATISSEUR", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+    return { statusName: "BATISSEUR", ratePercent: premiumRatePercent, rateDecimal: premiumRateDecimal, isPremium: true };
   }
   if (explicit === "AMBASSADEUR") {
-    return { statusName: "AMBASSADEUR", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+    return { statusName: "AMBASSADEUR", ratePercent: premiumRatePercent, rateDecimal: premiumRateDecimal, isPremium: true };
   }
   if (explicit === "CREATOR" || explicit === "CREATEUR") {
-    return { statusName: "CREATOR", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+    return { statusName: "CREATOR", ratePercent: premiumRatePercent, rateDecimal: premiumRateDecimal, isPremium: true };
   }
   if (explicit === "PRO" || explicit === "ELITE" || explicit === "VIP") {
-    return { statusName: "PRO", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+    return { statusName: "PRO", ratePercent: premiumRatePercent, rateDecimal: premiumRateDecimal, isPremium: true };
   }
 
   // Check badges / profile fields
   const badges: string[] = Array.isArray(userData?.badges) ? userData.badges : [];
   const hasBuilderBadge = badges.some(b => b?.toLowerCase().includes("bâtisseur") || b?.toLowerCase().includes("fondateur"));
   if (hasBuilderBadge || userData?.isBuilder === true) {
-    return { statusName: "BATISSEUR", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+    return { statusName: "BATISSEUR", ratePercent: premiumRatePercent, rateDecimal: premiumRateDecimal, isPremium: true };
   }
 
   const hasAmbassadorBadge = badges.some(b => b?.toLowerCase().includes("ambassadeur"));
   if (hasAmbassadorBadge || userData?.isAmbassador === true || userData?.role === "ambassadeur") {
-    return { statusName: "AMBASSADEUR", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+    return { statusName: "AMBASSADEUR", ratePercent: premiumRatePercent, rateDecimal: premiumRateDecimal, isPremium: true };
   }
 
   const hasCreatorBadge = badges.some(b => b?.toLowerCase().includes("creator") || b?.toLowerCase().includes("créateur"));
   if (hasCreatorBadge || userData?.isCreator === true || userData?.role === "creator") {
-    return { statusName: "CREATOR", ratePercent: premiumRatePercent, rateDecimal: pricing.premiumCommissionRate, isPremium: true };
+    return { statusName: "CREATOR", ratePercent: premiumRatePercent, rateDecimal: premiumRateDecimal, isPremium: true };
   }
 
   const isPrem = PremiumEngine.isPremium(userData);
@@ -151,7 +153,7 @@ export function resolveUserStatusAndRate(userData: any, explicitStatus?: string 
     return {
       statusName: userData?.subscriptionPlan?.toLowerCase().includes("pro") ? "PRO" : "PREMIUM",
       ratePercent: premiumRatePercent,
-      rateDecimal: pricing.premiumCommissionRate,
+      rateDecimal: premiumRateDecimal,
       isPremium: true
     };
   }
@@ -159,7 +161,7 @@ export function resolveUserStatusAndRate(userData: any, explicitStatus?: string 
   return {
     statusName: "USER",
     ratePercent: standardRatePercent,
-    rateDecimal: pricing.standardCommissionRate,
+    rateDecimal: standardRateDecimal,
     isPremium: false
   };
 }

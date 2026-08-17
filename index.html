@@ -62,6 +62,15 @@
       setVh();
       window.addEventListener('resize', setVh);
       window.addEventListener('orientationchange', setVh);
+
+      // PWA Service Worker Registration for PWABuilder
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.log('[SW-REG] Registration failed:', err);
+          });
+        });
+      }
     </script>
   </head>
   <body class="bg-afri-bg text-afri-text min-h-screen">

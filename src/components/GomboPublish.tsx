@@ -1406,7 +1406,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     <span className="font-mono font-bold text-afri-text">{financials.cachet.toLocaleString('fr-FR')} FCFA</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Frais applicables ({financials.ratePercent} %) :</span>
+                    <span>Commission de plateforme ({financials.ratePercent} %) :</span>
                     <span className="font-mono font-bold text-[#D4AF37]">{financials.fee.toLocaleString('fr-FR')} FCFA</span>
                   </div>
                   <div className="flex justify-between items-center pt-1.5 border-t border-afri-border/50">
@@ -1414,9 +1414,9 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                     <span className="font-mono font-black text-emerald-400">{financials.netAmount.toLocaleString('fr-FR')} FCFA</span>
                   </div>
                   {gomboCategory === "securise" && (
-                    <div className="flex justify-between items-center pt-1 text-[11px] text-amber-300">
-                      <span>Total bloqué sous séquestre :</span>
-                      <span className="font-mono font-bold text-amber-300">{financials.total.toLocaleString('fr-FR')} FCFA</span>
+                    <div className="flex justify-between items-center pt-1.5 text-[11px] text-amber-300 font-bold border-t border-dashed border-afri-border/40">
+                      <span>Total à débiter (Cachet + Commission) :</span>
+                      <span className="font-mono font-black text-amber-300 text-xs">{financials.total.toLocaleString('fr-FR')} FCFA</span>
                     </div>
                   )}
                 </div>
@@ -2117,13 +2117,19 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   <span className="font-mono font-bold text-afri-text">{cachetVal.toLocaleString('fr-FR')} FCFA</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-afri-text-sec">Commission ({depositDetails.ratePercent} %) :</span>
-                  <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.fee.toLocaleString('fr-FR')} FCFA</span>
+                  <span className="text-afri-text-sec">Commission ({financials.ratePercent} %) :</span>
+                  <span className="font-mono font-bold text-[#D4AF37]">{financials.fee.toLocaleString('fr-FR')} FCFA</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-emerald-400 font-bold">Net artiste :</span>
-                  <span className="font-mono font-bold text-emerald-400">{depositDetails.netAmount.toLocaleString('fr-FR')} FCFA</span>
+                  <span className="font-mono font-bold text-emerald-400">{financials.netAmount.toLocaleString('fr-FR')} FCFA</span>
                 </div>
+                {gomboCategory === "securise" && (
+                  <div className="flex justify-between items-center pt-1.5 border-t border-dashed border-[#D4AF37]/50 text-[#D4AF37]">
+                    <span className="font-black uppercase text-[10.5px]">Total à débiter :</span>
+                    <span className="font-mono font-black text-sm">{financials.total.toLocaleString('fr-FR')} FCFA</span>
+                  </div>
+                )}
               </>
             )}
             <div className="flex justify-between items-center pt-2 border-t border-afri-border">
