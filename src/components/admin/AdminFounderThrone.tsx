@@ -3122,7 +3122,7 @@ export default function AdminFounderThrone({
                 </span>
               </div>
 
-              <div className="space-y-2 max-h-64 independent-scroll pr-1">
+              <div className="space-y-2 max-h-64 overflow-y-auto overscroll-contain pr-1">
                 {imperialLogs.length === 0 ? (
                   <p className="text-afri-text-sec text-center py-6 text-xs font-mono">
                     Aucune action enregistrée pour l'instant. Les interventions du Fondateur apparaîtront en temps réel.
