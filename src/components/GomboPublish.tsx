@@ -2124,12 +2124,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   <span className="text-emerald-400 font-bold">Net artiste :</span>
                   <span className="font-mono font-bold text-emerald-400">{financials.netAmount.toLocaleString('fr-FR')} FCFA</span>
                 </div>
-                {gomboCategory === "securise" && (
-                  <div className="flex justify-between items-center pt-1.5 border-t border-dashed border-[#D4AF37]/50 text-[#D4AF37]">
-                    <span className="font-black uppercase text-[10.5px]">Total à débiter :</span>
-                    <span className="font-mono font-black text-sm">{financials.total.toLocaleString('fr-FR')} FCFA</span>
-                  </div>
-                )}
+                <div className="flex justify-between items-center pt-1.5 border-t border-dashed border-[#D4AF37]/50 text-[#D4AF37]">
+                  <span className="font-black uppercase text-[10.5px]">Total à payer (Cachet + Commission) :</span>
+                  <span className="font-mono font-black text-sm">{financials.total.toLocaleString('fr-FR')} FCFA</span>
+                </div>
               </>
             )}
             <div className="flex justify-between items-center pt-2 border-t border-afri-border">
