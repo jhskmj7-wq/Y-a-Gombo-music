@@ -6109,27 +6109,29 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {activeMenu === "user_settings" && (() => {
                 return (
-                  <ErrorBoundary moduleName="Paramètres">
-                    <SettingsModal 
-                      isOpen={true} 
-                      onClose={() => goBackMenu()}
-                      onLogout={async () => {
-                        try {
-                          await logout();
-                          navigate("/auth");
-                        } catch (err) {
-                          console.error("Logout error after deletion:", err);
-                        }
-                      }}
-                      onNavigateToFounder={() => {
-                        navigate("/Le-Throne-Of-The-Founder?tab=command");
-                      }}
-                      onNavigateToThrone={() => {
-                        navigate("/Le-Throne-Of-The-Founder?tab=founder");
-                      }}
-                      onSupportClick={() => setIsSupportModalOpen(true)}
-                    />
-                  </ErrorBoundary>
+                  <div className="absolute inset-0 z-50 bg-afri-bg overflow-y-auto animate-fadeIn text-left">
+                    <ErrorBoundary moduleName="Paramètres">
+                      <SettingsModal 
+                        isOpen={true} 
+                        onClose={() => goBackMenu()}
+                        onLogout={async () => {
+                          try {
+                            await logout();
+                            navigate("/auth");
+                          } catch (err) {
+                            console.error("Logout error after deletion:", err);
+                          }
+                        }}
+                        onNavigateToFounder={() => {
+                          navigate("/Le-Throne-Of-The-Founder?tab=command");
+                        }}
+                        onNavigateToThrone={() => {
+                          navigate("/Le-Throne-Of-The-Founder?tab=founder");
+                        }}
+                        onSupportClick={() => setIsSupportModalOpen(true)}
+                      />
+                    </ErrorBoundary>
+                  </div>
                 );
               })()}
 
