@@ -809,6 +809,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       }
 
       await gomboDB.deleteSystemMedia(id);
+      await deleteDoc(doc(db, "media", id));
       
       // Mise à jour de l'état local pour rafraîchir l'écran immédiatement
       setMediaAssets(prev => {

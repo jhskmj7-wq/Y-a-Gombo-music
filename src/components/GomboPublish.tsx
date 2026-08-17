@@ -2137,6 +2137,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               </span>
             </div>
           </div>
+
           <div className="flex gap-3 pt-2">
             <button
               type="button"
