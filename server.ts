@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import crypto from "crypto";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import * as admin from "firebase-admin";
@@ -104,13 +105,11 @@ async function startServer() {
 // --- WALLET SECURITY BACKEND ENGINE ---
 
 function hashPin(pin: string, salt: string, uid: string): string {
-  const crypto = require('crypto');
   const secretPayload = `AFRIGOMBO_PIN_SALT_v2:${uid}:${salt}:${pin}`;
   return crypto.createHash('sha256').update(secretPayload).digest('hex');
 }
 
 function generateSalt(): string {
-  const crypto = require('crypto');
   return crypto.randomBytes(16).toString('hex');
 }
 
