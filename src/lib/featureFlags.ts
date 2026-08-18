@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { doc, onSnapshot, getDoc, setDoc } from "firebase/firestore";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { doc, onSnapshot, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
 import { SecurityService } from "./SecurityService";
 
@@ -17,11 +17,36 @@ export interface FeatureFlagValue {
 
 export type FeatureFlagsMap = Record<string, FeatureFlagValue | boolean | string>;
 
+const FEATURE_FLAGS_CACHE_KEY = "afrigombo_cached_feature_flags_v2";
+
+/**
+ * Load cached feature flags synchronously from localStorage to eliminate any startup flash.
+ */
+function loadInitialCachedFlags(): FeatureFlagsMap {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const raw = localStorage.getItem(FEATURE_FLAGS_CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
+          return parsed;
+        }
+      }
+    }
+  } catch (_) {}
+  return {};
+}
+
 // Module-level global cached flags map for instantaneous access anywhere in the app
-let globalCachedFlagsMap: FeatureFlagsMap = {};
+let globalCachedFlagsMap: FeatureFlagsMap = loadInitialCachedFlags();
 
 export function setGlobalCachedFeatureFlags(flags: FeatureFlagsMap): void {
   globalCachedFlagsMap = { ...globalCachedFlagsMap, ...flags };
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      localStorage.setItem(FEATURE_FLAGS_CACHE_KEY, JSON.stringify(globalCachedFlagsMap));
+    }
+  } catch (_) {}
 }
 
 export function getGlobalCachedFeatureFlags(): FeatureFlagsMap {
@@ -99,94 +124,166 @@ export const CANONICAL_FEATURE_IDS: Record<string, string> = {
   gombo: "gombos",
   gombos: "gombos",
   user_gombos: "gombos",
+  user_mes_gombos: "gombos",
   my_gombos: "gombos",
   publish: "gombos",
   publier: "gombos",
+  user_publish: "gombos",
+  menu_pubs: "gombos",
+  menu_gombo_ads: "gombos",
 
   // Wheel / Roue
   wheel: "wheel",
   roue: "wheel",
   roulette: "wheel",
   premium_wheel: "wheel",
+  user_wheel: "wheel",
   wheel_gombo: "wheel",
   wheel_1: "wheel_1",
   wheel_2: "wheel_2",
   wheel_3: "wheel_3",
+  lots_management: "lots_management",
 
   // Avatar
   avatar: "avatar",
   user_avatar: "avatar",
+  user_profile_view: "avatar",
+  user_edit_profile: "avatar",
 
   // Gombo ID
   gombo_id: "gombo_id",
   gomboid: "gombo_id",
   id: "gombo_id",
+  user_gombo_id: "gombo_id",
+  menu_gombo_id: "gombo_id",
 
   // Marketplace / Grand Marché
   grandmarket: "grandMarket",
   grandMarket: "grandMarket",
   marketplace: "grandMarket",
   grand_marche: "grandMarket",
+  user_grand_marche: "grandMarket",
+  user_grandmarket: "grandMarket",
+  user_ecosystem: "grandMarket",
+  menu_grand_marche: "grandMarket",
   market: "grandMarket",
 
   // Académie
   academie: "academie",
   academy: "academie",
+  user_academie: "academie",
+  menu_academie: "academie",
 
   // Profil / Héritage
   heritage: "heritage",
   profile: "heritage",
+  profil: "heritage",
   user_heritage: "heritage",
+  menu_heritage: "heritage",
 
   // Podcasts & Vibes
   podcasts: "podcasts",
   podcast: "podcasts",
   vibes: "podcasts",
+  user_vibes: "podcasts",
+  user_podcasts: "podcasts",
 
   // Events
   events: "events",
   event: "events",
   evenements: "events",
+  user_events: "events",
+  menu_events: "events",
 
   // Chat / Messagerie
   chat: "chat",
   messages: "chat",
   messagerie: "chat",
+  user_messages: "chat",
+  menu_msgs: "chat",
+  menu_comms: "chat",
 
   // Wallet
   wallet: "wallet",
   afripay: "wallet",
+  user_wallet: "wallet",
 
-  // Escrow
+  // Escrow / Contrats
   escrow: "escrow",
+  user_contracts: "escrow",
+  contracts: "escrow",
 
   // Premium / Abonnement
   premium: "premium",
   subscription: "premium",
   abonnement: "premium",
+  user_subscription_management: "premium",
+  user_gombo_plus: "premium",
+  gombo_plus: "premium",
 
   // Radar & Nearby
   radar: "radar",
+  user_radar: "radar",
   nearby: "nearby",
+  user_nearby: "nearby",
   nearbyopportunities: "nearbyOpportunities",
   nearbyOpportunities: "nearbyOpportunities",
+  user_opportunities: "nearbyOpportunities",
+  menu_near_opports: "nearbyOpportunities",
 
   // Renforts / Urgences
   renforts: "renforts",
   renfort: "renforts",
   urgences: "renforts",
+  user_renforts: "renforts",
 
   // Favorites
   favorites: "favorites",
   favoris: "favorites",
+  user_favorites: "favorites",
+  menu_favorites: "favorites",
 
   // Notifications
   notifications: "notifications",
+  user_notifications: "notifications",
+
+  // Groupes
+  mes_groupes: "mes_groupes",
+  user_mes_groupes: "mes_groupes",
+
+  // Gawa & Lots
+  gawa_center: "gawa_center",
+  user_gawa_center: "gawa_center",
+  mes_lots: "mes_lots",
+  user_mes_lots: "mes_lots",
+
+  // Système
+  downloads: "downloads",
+  user_downloads: "downloads",
+  backups: "backups",
+  user_backups: "backups",
+  updateJournal: "updateJournal",
+  update_journal: "updateJournal",
+  user_whats_new: "updateJournal",
+  menu_changelog: "updateJournal",
+  cahier: "cahier",
+  user_builders: "cahier",
+  user_command_center: "cahier",
+  verification: "verification",
+  user_verification: "verification",
+  support: "support",
+  user_support: "support",
+  user_help_center: "support",
+  menu_support_beta: "support",
+  menu_bug_report: "support",
+  menu_suggestion: "support",
 
   // Home
   home: "home",
   accueil: "home",
-  terrain: "home"
+  terrain: "home",
+  user_home: "home",
+  user_terrain: "home"
 };
 
 /**
@@ -194,7 +291,7 @@ export const CANONICAL_FEATURE_IDS: Record<string, string> = {
  */
 export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap): FeatureVisibilityStatus {
   const activeMap = flagsMap && Object.keys(flagsMap).length > 0 ? flagsMap : globalCachedFlagsMap;
-  if (!activeMap) {
+  if (!activeMap || Object.keys(activeMap).length === 0) {
     return "ACTIVE";
   }
 
@@ -204,7 +301,7 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
   // 2. Check canonical alias
   if (value === undefined && featureId) {
     const cleanId = featureId.toLowerCase().trim();
-    const mapped = CANONICAL_FEATURE_IDS[cleanId];
+    const mapped = CANONICAL_FEATURE_IDS[cleanId] || CANONICAL_FEATURE_IDS[featureId];
     if (mapped && activeMap[mapped] !== undefined) {
       value = activeMap[mapped];
     }
@@ -224,13 +321,13 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
   }
 
   if (typeof value === "string") {
-    const upper = value.toUpperCase();
+    const upper = value.toUpperCase().trim();
     if (upper === "ACTIVE" || upper === "COMING_SOON" || upper === "HIDDEN") {
       return upper as FeatureVisibilityStatus;
     }
     if (upper === "ENABLED" || upper === "TRUE" || upper === "VALIDATED") return "ACTIVE";
-    if (upper === "PENDING" || upper === "EXPERIMENTAL") return "COMING_SOON";
-    if (upper === "DISABLED" || upper === "FALSE") return "HIDDEN";
+    if (upper === "PENDING" || upper === "EXPERIMENTAL" || upper === "BIENTOT" || upper === "COMINGSOON") return "COMING_SOON";
+    if (upper === "DISABLED" || upper === "FALSE" || upper === "MASQUE" || upper === "HIDDEN") return "HIDDEN";
     return "ACTIVE";
   }
 
@@ -287,7 +384,7 @@ export function isModuleMaintenance(featureId: string, flagsMap?: FeatureFlagsMa
 
 /**
  * Gets effective visibility status for a given user.
- * SUPER FONDATEUR: Always sees "ACTIVE" (Can view and test everything).
+ * SUPER FONDATEUR: Always sees "ACTIVE" (Can view and test everything regardless of status).
  * Regular User: Gets the configured raw status ("ACTIVE", "COMING_SOON", or "HIDDEN").
  */
 export function getModuleVisibility(
@@ -306,8 +403,8 @@ export function getModuleVisibility(
 
 /**
  * Helper: Is module visible in menus, grids, and UI?
- * True if status is "ACTIVE" or "COMING_SOON".
- * False if status is "HIDDEN" (Must be completely removed from UI, leaving no gaps).
+ * True if status is "ACTIVE" or "COMING_SOON" (or user is Super Founder).
+ * False if status is "HIDDEN" (Must be completely removed from DOM, leaving no gaps).
  */
 export function isModuleVisible(
   featureId: string,
@@ -335,6 +432,7 @@ export function isModuleAccessible(
 
 /**
  * Helper: Is module in "COMING_SOON" state for regular users?
+ * Returns true only if raw status is COMING_SOON and user is NOT Super Founder.
  */
 export function isModuleComingSoon(
   featureId: string,
@@ -342,8 +440,10 @@ export function isModuleComingSoon(
   arg3?: any,
   arg4?: FeatureFlagsMap
 ): boolean {
-  const vis = getModuleVisibility(featureId, arg2, arg3, arg4);
-  return vis === "COMING_SOON";
+  const { isFounder, flagsMap } = parseModuleVisibilityArgs(featureId, arg2, arg3, arg4);
+  if (isFounder) return false;
+  const raw = getRawModuleStatus(featureId, flagsMap);
+  return raw === "COMING_SOON";
 }
 
 /**
@@ -367,7 +467,7 @@ export function subscribeToFeatureFlags(
   onError?: (error: Error) => void
 ): () => void {
   if (!db) {
-    onUpdate({});
+    onUpdate(globalCachedFlagsMap);
     return () => {};
   }
 
@@ -435,7 +535,7 @@ export function subscribeToFeatureFlags(
           } catch (mErr) {
             console.warn("[FeatureFlags Engine] Migration warning:", mErr);
           }
-          onUpdate({});
+          onUpdate(globalCachedFlagsMap);
           return;
         }
 
@@ -466,7 +566,7 @@ export function subscribeToFeatureFlags(
         const errorMsg = error?.message || String(error);
         console.warn("[FeatureFlags Engine] Firestore stream warning:", errorMsg);
         if (onError) onError(new Error(errorMsg));
-        onUpdate({});
+        onUpdate(globalCachedFlagsMap);
       }
     );
 
@@ -474,7 +574,7 @@ export function subscribeToFeatureFlags(
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.warn("[FeatureFlags Engine] Failed to subscribe:", errorMsg);
-    onUpdate({});
+    onUpdate(globalCachedFlagsMap);
     return () => {};
   }
 }
@@ -483,8 +583,8 @@ export function subscribeToFeatureFlags(
  * React hook for consuming real-time feature flags status.
  */
 export function useFeatureFlags(user?: any, profile?: any) {
-  const [flagsMap, setFlagsMap] = useState<FeatureFlagsMap>({});
-  const [loading, setLoading] = useState<boolean>(true);
+  const [flagsMap, setFlagsMap] = useState<FeatureFlagsMap>(() => ({ ...globalCachedFlagsMap }));
+  const [loading, setLoading] = useState<boolean>(() => Object.keys(globalCachedFlagsMap).length === 0);
 
   useEffect(() => {
     const unsubscribe = subscribeToFeatureFlags(
@@ -500,19 +600,34 @@ export function useFeatureFlags(user?: any, profile?: any) {
     return () => unsubscribe();
   }, []);
 
-  const checkEnabled = (featureId: string): boolean => {
-    return isModuleAccessible(featureId, user, profile, flagsMap);
-  };
+  const isFounder = useMemo(() => checkIsFounder(user, profile), [user, profile]);
+
+  const checkVisible = useCallback((id: string): boolean => {
+    return isModuleVisible(id, user, profile, flagsMap);
+  }, [user, profile, flagsMap]);
+
+  const checkAccessible = useCallback((id: string): boolean => {
+    return isModuleAccessible(id, user, profile, flagsMap);
+  }, [user, profile, flagsMap]);
+
+  const checkComingSoon = useCallback((id: string): boolean => {
+    return isModuleComingSoon(id, user, profile, flagsMap);
+  }, [user, profile, flagsMap]);
+
+  const checkVisibilityStatus = useCallback((id: string): FeatureVisibilityStatus => {
+    return getModuleVisibility(id, user, profile, flagsMap);
+  }, [user, profile, flagsMap]);
 
   return {
     flagsMap,
     loading,
-    isFeatureEnabled: checkEnabled,
-    getModuleVisibility: (id: string) => getModuleVisibility(id, user, profile, flagsMap),
-    isModuleVisible: (id: string) => isModuleVisible(id, user, profile, flagsMap),
-    isModuleAccessible: (id: string) => isModuleAccessible(id, user, profile, flagsMap),
-    isModuleComingSoon: (id: string) => isModuleComingSoon(id, user, profile, flagsMap),
-    isFounder: checkIsFounder(user, profile)
+    configLoaded: !loading,
+    isFeatureEnabled: checkAccessible,
+    getModuleVisibility: checkVisibilityStatus,
+    isModuleVisible: checkVisible,
+    isModuleAccessible: checkAccessible,
+    isModuleComingSoon: checkComingSoon,
+    isFounder
   };
 }
 

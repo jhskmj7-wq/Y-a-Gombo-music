@@ -2282,437 +2282,669 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <div className="space-y-4 overflow-y-auto max-h-[62vh] pb-3 pr-1">
 
           {/* 🚀 CROISSANCE */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-1.5 px-1 text-[10px] font-sans font-black text-[#D4AF37] uppercase tracking-widest">
-              <span>🚀</span>
-              <span>CROISSANCE</span>
+          {[
+            {
+              id: "boost_pub",
+              featureId: "premium",
+              title: "Booster une annonce",
+              tag: "GOMBO PLUS",
+              icon: "⭐",
+              tagColor: "text-amber-500",
+              bgColor: "bg-amber-500/10",
+              borderColor: "border-amber-500/20 group-hover:border-amber-500/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_gombo_plus"))
+            },
+            {
+              id: "pass_premium",
+              featureId: "premium",
+              title: "Passer Premium",
+              tag: "PRESTIGE",
+              icon: "👑",
+              tagColor: "text-[#D4AF37]",
+              bgColor: "bg-[#D4AF37]/10",
+              borderColor: "border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_gombo_plus"))
+            },
+            {
+              id: "vis_campaigns",
+              featureId: "premium",
+              title: "Mes campagnes de visibilité",
+              tag: "BOOST",
+              icon: "⚡",
+              tagColor: "text-emerald-400",
+              bgColor: "bg-emerald-500/10",
+              borderColor: "border-emerald-500/20 group-hover:border-emerald-500/55",
+              action: () => setLocalComingSoonKey("Mes campagnes de visibilité")
+            },
+            {
+              id: "gombo_id_verif",
+              featureId: "gombo_id",
+              title: "Vérification Gombo ID",
+              tag: "SÉCURITÉ",
+              icon: "🛡️",
+              tagColor: "text-sky-400",
+              bgColor: "bg-sky-500/10",
+              borderColor: "border-sky-500/20 group-hover:border-sky-500/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_gombo_id"))
+            }
+          ].filter(item => isModuleVisible(item.featureId)).length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 px-1 text-[10px] font-sans font-black text-[#D4AF37] uppercase tracking-widest">
+                <span>🚀</span>
+                <span>CROISSANCE</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                {[
+                  {
+                    id: "boost_pub",
+                    featureId: "premium",
+                    title: "Booster une annonce",
+                    tag: "GOMBO PLUS",
+                    icon: "⭐",
+                    tagColor: "text-amber-500",
+                    bgColor: "bg-amber-500/10",
+                    borderColor: "border-amber-500/20 group-hover:border-amber-500/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_gombo_plus"))
+                  },
+                  {
+                    id: "pass_premium",
+                    featureId: "premium",
+                    title: "Passer Premium",
+                    tag: "PRESTIGE",
+                    icon: "👑",
+                    tagColor: "text-[#D4AF37]",
+                    bgColor: "bg-[#D4AF37]/10",
+                    borderColor: "border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_gombo_plus"))
+                  },
+                  {
+                    id: "vis_campaigns",
+                    featureId: "premium",
+                    title: "Mes campagnes de visibilité",
+                    tag: "BOOST",
+                    icon: "⚡",
+                    tagColor: "text-emerald-400",
+                    bgColor: "bg-emerald-500/10",
+                    borderColor: "border-emerald-500/20 group-hover:border-emerald-500/55",
+                    action: () => setLocalComingSoonKey("Mes campagnes de visibilité")
+                  },
+                  {
+                    id: "gombo_id_verif",
+                    featureId: "gombo_id",
+                    title: "Vérification Gombo ID",
+                    tag: "SÉCURITÉ",
+                    icon: "🛡️",
+                    tagColor: "text-sky-400",
+                    bgColor: "bg-sky-500/10",
+                    borderColor: "border-sky-500/20 group-hover:border-sky-500/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_gombo_id"))
+                  }
+                ].filter(item => isModuleVisible(item.featureId)).map((item) => {
+                  const isComingSoon = isModuleComingSoon(item.featureId);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setIsPlusMenuOpen(false);
+                        if (isComingSoon) {
+                          setLocalComingSoonKey(item.title);
+                        } else {
+                          item.action();
+                        }
+                        try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                      }}
+                      className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+                    >
+                      {isComingSoon && (
+                        <span className="absolute top-2 right-2 text-[7.5px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-md">
+                          Bientôt
+                        </span>
+                      )}
+                      <div className={`w-8 h-8 rounded-xl ${item.bgColor} flex items-center justify-center border ${item.borderColor} transition`}>
+                        <span className="text-sm">{item.icon}</span>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">{item.title}</div>
+                        <span className={`text-[7.5px] font-mono ${item.tagColor} uppercase tracking-widest block leading-none mt-1 font-bold`}>{item.tag}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-              {/* Booster une annonce */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_gombo_plus");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500/55 transition">
-                  <span className="text-sm">⭐</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Booster une annonce</div>
-                  <span className="text-[7.5px] font-mono text-amber-500 uppercase tracking-widest block leading-none mt-1 font-bold">GOMBO PLUS</span>
-                </div>
-              </button>
-
-              {/* Passer Premium */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_gombo_plus");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55 transition">
-                  <span className="text-sm">👑</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Passer Premium</div>
-                  <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">PRESTIGE</span>
-                </div>
-              </button>
-
-              {/* Mes campagnes de visibilité */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  setLocalComingSoonKey("Mes campagnes de visibilité");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500/55 transition">
-                  <span className="text-sm">⚡</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mes campagnes de visibilité</div>
-                  <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">BOOST</span>
-                </div>
-              </button>
-
-              {/* Vérification Gombo ID */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_gombo_id");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20 group-hover:border-sky-500/55 transition">
-                  <span className="text-sm">🛡️</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Vérification Gombo ID</div>
-                  <span className="text-[7.5px] font-mono text-sky-400 uppercase tracking-widest block leading-none mt-1 font-bold">SÉCURITÉ</span>
-                </div>
-              </button>
-            </div>
-          </div>
+          )}
 
           {/* 💰 FINANCES */}
-          <div className="space-y-2 pt-1">
-            <div className="flex items-center gap-1.5 px-1 text-[10px] font-sans font-black text-emerald-400 uppercase tracking-widest">
-              <span>💰</span>
-              <span>FINANCES</span>
+          {[
+            {
+              id: "mon_wallet",
+              featureId: "wallet",
+              title: "Mon Wallet",
+              tag: "PORTEFEUILLE",
+              icon: "💼",
+              tagColor: "text-emerald-400",
+              bgColor: "bg-emerald-500/10",
+              borderColor: "border-emerald-500/20 group-hover:border-emerald-500/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_wallet"))
+            },
+            {
+              id: "revenus",
+              featureId: "wallet",
+              title: "Revenus",
+              tag: "GAINS",
+              icon: "💵",
+              tagColor: "text-emerald-400",
+              bgColor: "bg-emerald-500/10",
+              borderColor: "border-emerald-500/20 group-hover:border-emerald-500/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_wallet"))
+            },
+            {
+              id: "hist_financier",
+              featureId: "wallet",
+              title: "Historique financier",
+              tag: "TRANSACTIONS",
+              icon: "🕓",
+              tagColor: "text-blue-400",
+              bgColor: "bg-blue-500/10",
+              borderColor: "border-blue-500/20 group-hover:border-blue-500/55",
+              action: () => setIsHistoryModalOpen(true)
+            },
+            {
+              id: "contrats_sec",
+              featureId: "escrow",
+              title: "Contrats sécurisés",
+              tag: "CERTIFIÉS",
+              icon: "📜",
+              tagColor: "text-[#D4AF37]",
+              bgColor: "bg-[#D4AF37]/10",
+              borderColor: "border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_contracts"))
+            }
+          ].filter(item => isModuleVisible(item.featureId)).length > 0 && (
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-1.5 px-1 text-[10px] font-sans font-black text-emerald-400 uppercase tracking-widest">
+                <span>💰</span>
+                <span>FINANCES</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                {[
+                  {
+                    id: "mon_wallet",
+                    featureId: "wallet",
+                    title: "Mon Wallet",
+                    tag: "PORTEFEUILLE",
+                    icon: "💼",
+                    tagColor: "text-emerald-400",
+                    bgColor: "bg-emerald-500/10",
+                    borderColor: "border-emerald-500/20 group-hover:border-emerald-500/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_wallet"))
+                  },
+                  {
+                    id: "revenus",
+                    featureId: "wallet",
+                    title: "Revenus",
+                    tag: "GAINS",
+                    icon: "💵",
+                    tagColor: "text-emerald-400",
+                    bgColor: "bg-emerald-500/10",
+                    borderColor: "border-emerald-500/20 group-hover:border-emerald-500/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_wallet"))
+                  },
+                  {
+                    id: "hist_financier",
+                    featureId: "wallet",
+                    title: "Historique financier",
+                    tag: "TRANSACTIONS",
+                    icon: "🕓",
+                    tagColor: "text-blue-400",
+                    bgColor: "bg-blue-500/10",
+                    borderColor: "border-blue-500/20 group-hover:border-blue-500/55",
+                    action: () => setIsHistoryModalOpen(true)
+                  },
+                  {
+                    id: "contrats_sec",
+                    featureId: "escrow",
+                    title: "Contrats sécurisés",
+                    tag: "CERTIFIÉS",
+                    icon: "📜",
+                    tagColor: "text-[#D4AF37]",
+                    bgColor: "bg-[#D4AF37]/10",
+                    borderColor: "border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_contracts"))
+                  }
+                ].filter(item => isModuleVisible(item.featureId)).map((item) => {
+                  const isComingSoon = isModuleComingSoon(item.featureId);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setIsPlusMenuOpen(false);
+                        if (isComingSoon) {
+                          setLocalComingSoonKey(item.title);
+                        } else {
+                          item.action();
+                        }
+                        try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                      }}
+                      className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+                    >
+                      {isComingSoon && (
+                        <span className="absolute top-2 right-2 text-[7.5px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-md">
+                          Bientôt
+                        </span>
+                      )}
+                      <div className={`w-8 h-8 rounded-xl ${item.bgColor} flex items-center justify-center border ${item.borderColor} transition`}>
+                        <span className="text-sm">{item.icon}</span>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">{item.title}</div>
+                        <span className={`text-[7.5px] font-mono ${item.tagColor} uppercase tracking-widest block leading-none mt-1 font-bold`}>{item.tag}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-              {/* Mon Wallet */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_wallet");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500/55 transition">
-                  <span className="text-sm">💼</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mon Wallet</div>
-                  <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">PORTEFEUILLE</span>
-                </div>
-              </button>
-
-              {/* Revenus */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_wallet");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500/55 transition">
-                  <span className="text-sm">💵</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Revenus</div>
-                  <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">GAINS</span>
-                </div>
-              </button>
-
-              {/* Historique financier */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  setIsHistoryModalOpen(true);
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:border-blue-500/55 transition">
-                  <span className="text-sm">🕓</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Historique financier</div>
-                  <span className="text-[7.5px] font-mono text-blue-400 uppercase tracking-widest block leading-none mt-1 font-bold">TRANSACTIONS</span>
-                </div>
-              </button>
-
-              {/* Contrats sécurisés */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_contracts");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55 transition">
-                  <span className="text-sm">📜</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Contrats sécurisés</div>
-                  <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">CERTIFIÉS</span>
-                </div>
-              </button>
-            </div>
-          </div>
+          )}
 
           {/* 🎨 CRÉATEUR */}
-          <div className="space-y-2 pt-1">
-            <div className="flex items-center gap-1.5 px-1 text-[10px] font-sans font-black text-purple-400 uppercase tracking-widest">
-              <span>🎨</span>
-              <span>CRÉATEUR</span>
+          {[
+            {
+              id: "studio_audio",
+              featureId: "podcasts",
+              title: "Studio Audio",
+              tag: "STUDIO",
+              icon: "🎙️",
+              tagColor: "text-purple-400",
+              bgColor: "bg-purple-500/10",
+              borderColor: "border-purple-500/20 group-hover:border-purple-500/55",
+              action: () => setLocalComingSoonKey("Studio Audio")
+            },
+            {
+              id: "studio_video",
+              featureId: "reels",
+              title: "Studio Vidéo",
+              tag: "RÉELS",
+              icon: "🎥",
+              tagColor: "text-pink-400",
+              bgColor: "bg-pink-500/10",
+              borderColor: "border-pink-500/20 group-hover:border-pink-500/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_reels"))
+            },
+            {
+              id: "podcast_studio",
+              featureId: "podcasts",
+              title: "Podcast Studio",
+              tag: "PODCAST",
+              icon: "🎧",
+              tagColor: "text-[#D4AF37]",
+              bgColor: "bg-[#D4AF37]/10",
+              borderColor: "border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55",
+              action: () => setLocalComingSoonKey("Podcast Studio")
+            },
+            {
+              id: "galerie_medias",
+              featureId: "heritage",
+              title: "Galerie Médias",
+              tag: "HÉRITAGE",
+              icon: "🖼️",
+              tagColor: "text-indigo-400",
+              bgColor: "bg-indigo-500/10",
+              borderColor: "border-indigo-500/20 group-hover:border-indigo-500/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_heritage"))
+            }
+          ].filter(item => isModuleVisible(item.featureId)).length > 0 && (
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-1.5 px-1 text-[10px] font-sans font-black text-purple-400 uppercase tracking-widest">
+                <span>🎨</span>
+                <span>CRÉATEUR</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                {[
+                  {
+                    id: "studio_audio",
+                    featureId: "podcasts",
+                    title: "Studio Audio",
+                    tag: "STUDIO",
+                    icon: "🎙️",
+                    tagColor: "text-purple-400",
+                    bgColor: "bg-purple-500/10",
+                    borderColor: "border-purple-500/20 group-hover:border-purple-500/55",
+                    action: () => setLocalComingSoonKey("Studio Audio")
+                  },
+                  {
+                    id: "studio_video",
+                    featureId: "reels",
+                    title: "Studio Vidéo",
+                    tag: "RÉELS",
+                    icon: "🎥",
+                    tagColor: "text-pink-400",
+                    bgColor: "bg-pink-500/10",
+                    borderColor: "border-pink-500/20 group-hover:border-pink-500/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_reels"))
+                  },
+                  {
+                    id: "podcast_studio",
+                    featureId: "podcasts",
+                    title: "Podcast Studio",
+                    tag: "PODCAST",
+                    icon: "🎧",
+                    tagColor: "text-[#D4AF37]",
+                    bgColor: "bg-[#D4AF37]/10",
+                    borderColor: "border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55",
+                    action: () => setLocalComingSoonKey("Podcast Studio")
+                  },
+                  {
+                    id: "galerie_medias",
+                    featureId: "heritage",
+                    title: "Galerie Médias",
+                    tag: "HÉRITAGE",
+                    icon: "🖼️",
+                    tagColor: "text-indigo-400",
+                    bgColor: "bg-indigo-500/10",
+                    borderColor: "border-indigo-500/20 group-hover:border-indigo-500/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_heritage"))
+                  }
+                ].filter(item => isModuleVisible(item.featureId)).map((item) => {
+                  const isComingSoon = isModuleComingSoon(item.featureId);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setIsPlusMenuOpen(false);
+                        if (isComingSoon) {
+                          setLocalComingSoonKey(item.title);
+                        } else {
+                          item.action();
+                        }
+                        try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                      }}
+                      className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+                    >
+                      {isComingSoon && (
+                        <span className="absolute top-2 right-2 text-[7.5px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-md">
+                          Bientôt
+                        </span>
+                      )}
+                      <div className={`w-8 h-8 rounded-xl ${item.bgColor} flex items-center justify-center border ${item.borderColor} transition`}>
+                        <span className="text-sm">{item.icon}</span>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">{item.title}</div>
+                        <span className={`text-[7.5px] font-mono ${item.tagColor} uppercase tracking-widest block leading-none mt-1 font-bold`}>{item.tag}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-              {/* Studio Audio */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  setLocalComingSoonKey("Studio Audio");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500/55 transition">
-                  <span className="text-sm">🎙️</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Studio Audio</div>
-                  <span className="text-[7.5px] font-mono text-purple-400 uppercase tracking-widest block leading-none mt-1 font-bold">STUDIO</span>
-                </div>
-              </button>
-
-              {/* Studio Vidéo */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_reels");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-pink-500/10 flex items-center justify-center border border-pink-500/20 group-hover:border-pink-500/55 transition">
-                  <span className="text-sm">🎥</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Studio Vidéo</div>
-                  <span className="text-[7.5px] font-mono text-pink-400 uppercase tracking-widest block leading-none mt-1 font-bold">RÉELS</span>
-                </div>
-              </button>
-
-              {/* Podcast Studio */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  setLocalComingSoonKey("Podcast Studio");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55 transition">
-                  <span className="text-sm">🎧</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Podcast Studio</div>
-                  <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">PODCAST</span>
-                </div>
-              </button>
-
-              {/* Galerie Médias */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_heritage");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 group-hover:border-indigo-500/55 transition">
-                  <span className="text-sm">🖼️</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Galerie Médias</div>
-                  <span className="text-[7.5px] font-mono text-indigo-400 uppercase tracking-widest block leading-none mt-1 font-bold">HÉRITAGE</span>
-                </div>
-              </button>
-            </div>
-          </div>
+          )}
 
           {/* 🌍 COMMUNAUTÉ */}
-          <div className="space-y-2 pt-1">
-            <div className="flex items-center gap-1.5 px-1 text-[10px] font-sans font-black text-sky-400 uppercase tracking-widest">
-              <span>🌍</span>
-              <span>COMMUNAUTÉ</span>
+          {[
+            {
+              id: "univers_elite",
+              featureId: "cahier",
+              title: "Univers AFRIGOMBO ELITE",
+              tag: "BÂTISSEURS",
+              icon: "🌍",
+              tagColor: "text-red-400",
+              bgColor: "bg-red-500/10",
+              borderColor: "border-red-500/20 group-hover:border-red-500/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_builders"))
+            },
+            {
+              id: "hall_of_fame",
+              featureId: "heritage",
+              title: "Hall of Fame",
+              tag: "LÉGENDES",
+              icon: "🏆",
+              tagColor: "text-[#D4AF37]",
+              bgColor: "bg-[#D4AF37]/10",
+              borderColor: "border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55",
+              action: () => setIsLeaderboardModalOpen(true)
+            },
+            {
+              id: "defis_musicaux",
+              featureId: "podcasts",
+              title: "Défis musicaux",
+              tag: "VIBES",
+              icon: "🔥",
+              tagColor: "text-amber-500",
+              bgColor: "bg-amber-500/10",
+              borderColor: "border-amber-500/20 group-hover:border-amber-500/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_vibes"))
+            },
+            {
+              id: "evenements",
+              featureId: "events",
+              title: "Événements",
+              tag: "CALENDRIER",
+              icon: "📅",
+              tagColor: "text-sky-400",
+              bgColor: "bg-sky-500/10",
+              borderColor: "border-sky-500/20 group-hover:border-sky-500/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_events"))
+            }
+          ].filter(item => isModuleVisible(item.featureId)).length > 0 && (
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-1.5 px-1 text-[10px] font-sans font-black text-sky-400 uppercase tracking-widest">
+                <span>🌍</span>
+                <span>COMMUNAUTÉ</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                {[
+                  {
+                    id: "univers_elite",
+                    featureId: "cahier",
+                    title: "Univers AFRIGOMBO ELITE",
+                    tag: "BÂTISSEURS",
+                    icon: "🌍",
+                    tagColor: "text-red-400",
+                    bgColor: "bg-red-500/10",
+                    borderColor: "border-red-500/20 group-hover:border-red-500/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_builders"))
+                  },
+                  {
+                    id: "hall_of_fame",
+                    featureId: "heritage",
+                    title: "Hall of Fame",
+                    tag: "LÉGENDES",
+                    icon: "🏆",
+                    tagColor: "text-[#D4AF37]",
+                    bgColor: "bg-[#D4AF37]/10",
+                    borderColor: "border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55",
+                    action: () => setIsLeaderboardModalOpen(true)
+                  },
+                  {
+                    id: "defis_musicaux",
+                    featureId: "podcasts",
+                    title: "Défis musicaux",
+                    tag: "VIBES",
+                    icon: "🔥",
+                    tagColor: "text-amber-500",
+                    bgColor: "bg-amber-500/10",
+                    borderColor: "border-amber-500/20 group-hover:border-amber-500/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_vibes"))
+                  },
+                  {
+                    id: "evenements",
+                    featureId: "events",
+                    title: "Événements",
+                    tag: "CALENDRIER",
+                    icon: "📅",
+                    tagColor: "text-sky-400",
+                    bgColor: "bg-sky-500/10",
+                    borderColor: "border-sky-500/20 group-hover:border-sky-500/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_events"))
+                  }
+                ].filter(item => isModuleVisible(item.featureId)).map((item) => {
+                  const isComingSoon = isModuleComingSoon(item.featureId);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setIsPlusMenuOpen(false);
+                        if (isComingSoon) {
+                          setLocalComingSoonKey(item.title);
+                        } else {
+                          item.action();
+                        }
+                        try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                      }}
+                      className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+                    >
+                      {isComingSoon && (
+                        <span className="absolute top-2 right-2 text-[7.5px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-md">
+                          Bientôt
+                        </span>
+                      )}
+                      <div className={`w-8 h-8 rounded-xl ${item.bgColor} flex items-center justify-center border ${item.borderColor} transition`}>
+                        <span className="text-sm">{item.icon}</span>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">{item.title}</div>
+                        <span className={`text-[7.5px] font-mono ${item.tagColor} uppercase tracking-widest block leading-none mt-1 font-bold`}>{item.tag}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-              {/* Univers AFRIGOMBO ELITE */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_builders");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500/55 transition">
-                  <span className="text-sm">🌍</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Univers AFRIGOMBO ELITE</div>
-                  <span className="text-[7.5px] font-mono text-red-400 uppercase tracking-widest block leading-none mt-1 font-bold">BÂTISSEURS</span>
-                </div>
-              </button>
-
-              {/* Hall of Fame */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  setIsLeaderboardModalOpen(true);
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55 transition">
-                  <span className="text-sm">🏆</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Hall of Fame</div>
-                  <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">LÉGENDES</span>
-                </div>
-              </button>
-
-              {/* Défis musicaux */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_vibes");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500/55 transition">
-                  <span className="text-sm">🔥</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Défis musicaux</div>
-                  <span className="text-[7.5px] font-mono text-amber-500 uppercase tracking-widest block leading-none mt-1 font-bold">VIBES</span>
-                </div>
-              </button>
-
-              {/* Événements */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_events");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20 group-hover:border-sky-500/55 transition">
-                  <span className="text-sm">📅</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Événements</div>
-                  <span className="text-[7.5px] font-mono text-sky-400 uppercase tracking-widest block leading-none mt-1 font-bold">CALENDRIER</span>
-                </div>
-              </button>
-            </div>
-          </div>
+          )}
 
           {/* 📊 PERFORMANCE */}
-          <div className="space-y-2 pt-1">
-            <div className="flex items-center gap-1.5 px-1 text-[10px] font-sans font-black text-amber-400 uppercase tracking-widest">
-              <span>📊</span>
-              <span>PERFORMANCE</span>
+          {[
+            {
+              id: "stats_avancees",
+              featureId: "cahier",
+              title: "Statistiques avancées",
+              tag: "ANALYTICS",
+              icon: "📈",
+              tagColor: "text-emerald-400",
+              bgColor: "bg-emerald-500/10",
+              borderColor: "border-emerald-500/20 group-hover:border-emerald-500/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_command_center"))
+            },
+            {
+              id: "classements",
+              featureId: "heritage",
+              title: "Classements",
+              tag: "LEADERBOARD",
+              icon: "🎖️",
+              tagColor: "text-[#D4AF37]",
+              bgColor: "bg-[#D4AF37]/10",
+              borderColor: "border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55",
+              action: () => setIsLeaderboardModalOpen(true)
+            },
+            {
+              id: "reputation",
+              featureId: "gombo_id",
+              title: "Réputation",
+              tag: "SCORE",
+              icon: "⭐",
+              tagColor: "text-amber-400",
+              bgColor: "bg-amber-500/10",
+              borderColor: "border-amber-500/20 group-hover:border-amber-500/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_gombo_id"))
+            },
+            {
+              id: "progression",
+              featureId: "cahier",
+              title: "Progression",
+              tag: "NIVEAU",
+              icon: "📊",
+              tagColor: "text-[#D4AF37]",
+              bgColor: "bg-[#D4AF37]/10",
+              borderColor: "border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55",
+              action: () => requireAuthThen(() => setActiveMenu("user_command_center"))
+            }
+          ].filter(item => isModuleVisible(item.featureId)).length > 0 && (
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-1.5 px-1 text-[10px] font-sans font-black text-amber-400 uppercase tracking-widest">
+                <span>📊</span>
+                <span>PERFORMANCE</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                {[
+                  {
+                    id: "stats_avancees",
+                    featureId: "cahier",
+                    title: "Statistiques avancées",
+                    tag: "ANALYTICS",
+                    icon: "📈",
+                    tagColor: "text-emerald-400",
+                    bgColor: "bg-emerald-500/10",
+                    borderColor: "border-emerald-500/20 group-hover:border-emerald-500/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_command_center"))
+                  },
+                  {
+                    id: "classements",
+                    featureId: "heritage",
+                    title: "Classements",
+                    tag: "LEADERBOARD",
+                    icon: "🎖️",
+                    tagColor: "text-[#D4AF37]",
+                    bgColor: "bg-[#D4AF37]/10",
+                    borderColor: "border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55",
+                    action: () => setIsLeaderboardModalOpen(true)
+                  },
+                  {
+                    id: "reputation",
+                    featureId: "gombo_id",
+                    title: "Réputation",
+                    tag: "SCORE",
+                    icon: "⭐",
+                    tagColor: "text-amber-400",
+                    bgColor: "bg-amber-500/10",
+                    borderColor: "border-amber-500/20 group-hover:border-amber-500/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_gombo_id"))
+                  },
+                  {
+                    id: "progression",
+                    featureId: "cahier",
+                    title: "Progression",
+                    tag: "NIVEAU",
+                    icon: "📊",
+                    tagColor: "text-[#D4AF37]",
+                    bgColor: "bg-[#D4AF37]/10",
+                    borderColor: "border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55",
+                    action: () => requireAuthThen(() => setActiveMenu("user_command_center"))
+                  }
+                ].filter(item => isModuleVisible(item.featureId)).map((item) => {
+                  const isComingSoon = isModuleComingSoon(item.featureId);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setIsPlusMenuOpen(false);
+                        if (isComingSoon) {
+                          setLocalComingSoonKey(item.title);
+                        } else {
+                          item.action();
+                        }
+                        try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                      }}
+                      className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+                    >
+                      {isComingSoon && (
+                        <span className="absolute top-2 right-2 text-[7.5px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-md">
+                          Bientôt
+                        </span>
+                      )}
+                      <div className={`w-8 h-8 rounded-xl ${item.bgColor} flex items-center justify-center border ${item.borderColor} transition`}>
+                        <span className="text-sm">{item.icon}</span>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">{item.title}</div>
+                        <span className={`text-[7.5px] font-mono ${item.tagColor} uppercase tracking-widest block leading-none mt-1 font-bold`}>{item.tag}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-              {/* Statistiques avancées */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_command_center");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500/55 transition">
-                  <span className="text-sm">📈</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Statistiques avancées</div>
-                  <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">ANALYTICS</span>
-                </div>
-              </button>
-
-              {/* Classements */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  setIsLeaderboardModalOpen(true);
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55 transition">
-                  <span className="text-sm">🎖️</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Classements</div>
-                  <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">LEADERBOARD</span>
-                </div>
-              </button>
-
-              {/* Réputation */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_gombo_id");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500/55 transition">
-                  <span className="text-sm">⭐</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Réputation</div>
-                  <span className="text-[7.5px] font-mono text-amber-400 uppercase tracking-widest block leading-none mt-1 font-bold">SCORE</span>
-                </div>
-              </button>
-
-              {/* Progression */}
-              <button
-                onClick={() => {
-                  setIsPlusMenuOpen(false);
-                  requireAuthThen(() => {
-                    setActiveMenu("user_command_center");
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  });
-                }}
-                className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55 transition">
-                  <span className="text-sm">📊</span>
-                </div>
-                <div>
-                  <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Progression</div>
-                  <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">NIVEAU</span>
-                </div>
-              </button>
-            </div>
-          </div>
+          )}
 
         </div>
       </AndroidBottomSheet>
