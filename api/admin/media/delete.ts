@@ -1,26 +1,79 @@
-import { initializeApp as initializeAdminApp, getApps as getAdminApps } from "firebase-admin/app";
-import { getAuth as getAdminAuth } from "firebase-admin/auth";
-import { getFirestore as getAdminFirestore } from "firebase-admin/firestore";
 import { createClient } from "@supabase/supabase-js";
 
-function getAdminClients() {
+// Protected Founder Emails
+const PROTECTED_FOUNDER_EMAILS = ["jhs.kmj7@gmail.com"];
+
+// Firebase Config Fallback for REST Auth
+const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || "AIzaSyC3eJm2GfUMxGUNGu7uZeIP9-rtcLRljNk";
+const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || "afrigombo";
+
+// Safe Firebase ID Token Verification via official REST API
+async function verifyIdTokenREST(idToken: string): Promise<{ uid: string; email: string } | null> {
   try {
-    if (getAdminApps().length === 0) {
-      initializeAdminApp({
-        projectId: process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || "afrigombo",
-      });
+    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+
+    if (!response.ok) {
+      console.error("[SERVERLESS MEDIA DELETE] REST Auth Verification failed, status:", response.status);
+      return null;
     }
-    return {
-      adminAuth: getAdminAuth(),
-      adminDb: getAdminFirestore(),
-    };
+
+    const data = await response.json();
+    if (data.users && data.users.length > 0) {
+      const user = data.users[0];
+      return {
+        uid: user.localId,
+        email: (user.email || "").toLowerCase(),
+      };
+    }
+    return null;
   } catch (err) {
-    console.error("[SERVERLESS MEDIA DELETE] Error initializing Firebase Admin:", err);
-    return { adminAuth: null, adminDb: null };
+    console.error("[SERVERLESS MEDIA DELETE] REST Auth Exception:", err);
+    return null;
   }
 }
 
-const PROTECTED_FOUNDER_EMAILS = ["jhs.kmj7@gmail.com"];
+// Optional Firestore REST Role Check if user email is not in hardcoded founder list
+async function checkFirestoreUserRoleREST(uid: string): Promise<boolean> {
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${uid}`;
+    const response = await fetch(url);
+    if (!response.ok) return false;
+    const data = await response.json();
+    const fields = data.fields || {};
+    const isFounder = fields.isFounder?.booleanValue === true;
+    const superFounder = fields.superFounder?.booleanValue === true;
+    const role = fields.role?.stringValue;
+    return isFounder || superFounder || role === "super_founder" || role === "admin";
+  } catch (err) {
+    console.warn("[SERVERLESS MEDIA DELETE] Firestore REST Role Check warning:", err);
+    return false;
+  }
+}
+
+// Dynamic Firebase Admin verification if module is available
+async function verifyWithFirebaseAdmin(idToken: string): Promise<{ uid: string; email: string } | null> {
+  try {
+    const adminAppModule = await import("firebase-admin/app");
+    const adminAuthModule = await import("firebase-admin/auth");
+
+    if (adminAppModule.getApps().length === 0) {
+      adminAppModule.initializeApp({ projectId: FIREBASE_PROJECT_ID });
+    }
+    const adminAuth = adminAuthModule.getAuth();
+    const decoded = await adminAuth.verifyIdToken(idToken);
+    return {
+      uid: decoded.uid,
+      email: (decoded.email || "").toLowerCase(),
+    };
+  } catch (err) {
+    console.warn("[SERVERLESS MEDIA DELETE] Firebase Admin SDK unavailable/failed, using REST fallback:", err);
+    return null;
+  }
+}
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Content-Type", "application/json");
@@ -37,7 +90,12 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { idToken, storagePath, bucket = "afrigombo-media" } = req.body || {};
+    const rawBody = req.body;
+    if (!rawBody || typeof rawBody !== "object") {
+      return res.status(400).json({ success: false, error: "Corps de la requête invalide." });
+    }
+
+    const { idToken, storagePath, bucket = "afrigombo-media" } = rawBody;
 
     if (!idToken || !storagePath) {
       return res.status(400).json({
@@ -46,43 +104,22 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    const { adminAuth, adminDb } = getAdminClients();
-    if (!adminAuth) {
-      return res.status(503).json({
-        success: false,
-        error: "Service Firebase Admin temporairement indisponible."
-      });
+    let authUser = await verifyWithFirebaseAdmin(idToken);
+    if (!authUser) {
+      authUser = await verifyIdTokenREST(idToken);
     }
 
-    let decodedToken;
-    try {
-      decodedToken = await adminAuth.verifyIdToken(idToken);
-    } catch (authErr: any) {
+    if (!authUser) {
       return res.status(401).json({
         success: false,
         error: "Session administrateur invalide ou expirée."
       });
     }
 
-    const uid = decodedToken.uid;
-    const email = (decodedToken.email || "").toLowerCase();
-
+    const { uid, email } = authUser;
     let isSuperFounder = PROTECTED_FOUNDER_EMAILS.includes(email);
-
-    if (!isSuperFounder && adminDb) {
-      try {
-        const userDoc = await adminDb.collection("users").doc(uid).get();
-        if (userDoc.exists) {
-          const userData = userDoc.data();
-          isSuperFounder =
-            userData?.isFounder === true ||
-            userData?.superFounder === true ||
-            userData?.role === "super_founder" ||
-            userData?.role === "admin";
-        }
-      } catch (dbErr) {
-        console.warn("[SERVERLESS MEDIA DELETE DB CHECK WARNING]", dbErr);
-      }
+    if (!isSuperFounder) {
+      isSuperFounder = await checkFirestoreUserRoleREST(uid);
     }
 
     if (!isSuperFounder) {
@@ -99,6 +136,20 @@ export default async function handler(req: any, res: any) {
       process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
       process.env.VITE_SUPABASE_ANON_KEY ||
       "";
+
+    if (!supabaseUrl) {
+      return res.status(500).json({
+        success: false,
+        error: "Configuration serveur manquante : SUPABASE_URL"
+      });
+    }
+
+    if (!supabaseKey) {
+      return res.status(500).json({
+        success: false,
+        error: "Configuration serveur manquante : SUPABASE_SECRET_KEY"
+      });
+    }
 
     const targetBucket = bucket || "afrigombo-media";
     const serverSupabase = createClient(supabaseUrl, supabaseKey);
@@ -127,7 +178,7 @@ export default async function handler(req: any, res: any) {
   } catch (err: any) {
     return res.status(500).json({
       success: false,
-      error: err.message || "Erreur interne lors de la suppression."
+      error: err?.message || "Erreur interne lors de la suppression."
     });
   }
 }
