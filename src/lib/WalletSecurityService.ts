@@ -169,6 +169,44 @@ export class WalletSecurityService {
   }
 
   /**
+   * Safe parser helper that handles JSON and HTML/text error responses gracefully
+   */
+  private static async safeFetchJson(url: string, options: RequestInit): Promise<{ ok: boolean; status: number; data: any }> {
+    try {
+      const response = await fetch(url, options);
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        try {
+          const data = await response.json();
+          return { ok: response.ok, status: response.status, data };
+        } catch (e: any) {
+          return {
+            ok: false,
+            status: response.status,
+            data: { success: false, error: "Réponse serveur invalide (JSON corrompu)." }
+          };
+        }
+      } else {
+        const rawText = await response.text();
+        return {
+          ok: false,
+          status: response.status,
+          data: {
+            success: false,
+            error: `Le serveur a retourné une réponse non-JSON (${response.status}) : ${rawText.substring(0, 100)}`
+          }
+        };
+      }
+    } catch (netErr: any) {
+      return {
+        ok: false,
+        status: 0,
+        data: { success: false, error: netErr.message || "Erreur de connexion réseau au serveur." }
+      };
+    }
+  }
+
+  /**
    * Create initial PIN for wallet using secure backend hashing.
    */
   static async createPin(uid: string, pin: string): Promise<{ success: boolean; error?: string }> {
@@ -181,14 +219,13 @@ export class WalletSecurityService {
       const idToken = await auth.currentUser?.getIdToken();
       if (!idToken) throw new Error("Authentification requise.");
 
-      const response = await fetch("/api/wallet/set-pin", {
+      const { ok, data } = await this.safeFetchJson("/api/wallet/set-pin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken, pin })
       });
 
-      const data = await response.json();
-      if (!response.ok) {
+      if (!ok || data.error) {
         throw new Error(data.error || "Erreur lors de la création du code PIN.");
       }
 
@@ -258,15 +295,13 @@ export class WalletSecurityService {
       const idToken = await auth.currentUser?.getIdToken();
       if (!idToken) throw new Error("Session expirée. Veuillez vous reconnecter.");
 
-      const response = await fetch("/api/wallet/verify-pin", {
+      const { ok, data } = await this.safeFetchJson("/api/wallet/verify-pin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken, pin: enteredPin, action })
       });
-
-      const data = await response.json();
       
-      if (!response.ok) {
+      if (!ok) {
         if (data.result === "PIN_LOCKED") {
            return {
              result: "PIN_LOCKED",
@@ -308,14 +343,13 @@ export class WalletSecurityService {
       const idToken = await auth.currentUser?.getIdToken();
       if (!idToken) throw new Error("Authentification requise.");
 
-      const response = await fetch("/api/wallet/change-pin", {
+      const { ok, data } = await this.safeFetchJson("/api/wallet/change-pin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken, currentPin, newPin })
       });
 
-      const data = await response.json();
-      if (!response.ok) {
+      if (!ok || data.error) {
         throw new Error(data.error || "Erreur lors du changement de PIN.");
       }
 
@@ -334,14 +368,13 @@ export class WalletSecurityService {
       const idToken = await auth.currentUser?.getIdToken();
       if (!idToken) throw new Error("Authentification requise.");
 
-      const response = await fetch("/api/wallet/disable-pin", {
+      const { ok, data } = await this.safeFetchJson("/api/wallet/disable-pin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken, currentPin })
       });
 
-      const data = await response.json();
-      if (!response.ok) {
+      if (!ok || data.error) {
         throw new Error(data.error || "Erreur lors de la désactivation du PIN.");
       }
 

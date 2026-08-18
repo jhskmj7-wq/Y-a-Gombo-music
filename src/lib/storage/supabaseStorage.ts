@@ -299,7 +299,7 @@ export const supabaseStorage = {
       // Si un idToken Firebase est fourni (Super Fondateur), utiliser le proxy d'upload backend sécurisé
       if (options.idToken) {
         try {
-          console.log(`[SUPABASE STORAGE VIA BACKEND] Envoi du fichier ${storagePath} via API sécurisée...`);
+          console.log(`[SUPABASE STORAGE VIA BACKEND PROXY] Envoi du fichier ${storagePath}...`);
           const base64Data = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -322,7 +322,22 @@ export const supabaseStorage = {
             }),
           });
 
-          const json = await resp.json();
+          let json: any = {};
+          const cType = resp.headers.get("content-type") || "";
+          if (cType.includes("application/json")) {
+            try {
+              json = await resp.json();
+            } catch (jsonErr) {
+              json = { success: false, error: "Réponse du serveur corrompue (JSON invalide)." };
+            }
+          } else {
+            const rawText = await resp.text();
+            json = {
+              success: false,
+              error: `Le serveur a répondu au format non-JSON (${resp.status}) : ${rawText.substring(0, 120)}`
+            };
+          }
+
           if (!resp.ok || !json.success) {
             throw new Error(json.error || `Erreur d'upload sécurisé (HTTP ${resp.status})`);
           }
@@ -347,7 +362,7 @@ export const supabaseStorage = {
               state: "success",
               bytesTransferred: size,
               totalBytes: size,
-              log: "Téléversement terminé avec succès via API Sécurisée",
+              log: "Téléversement terminé avec succès via le Serveur Express (Super Fondateur)",
             });
           }
 
@@ -358,11 +373,9 @@ export const supabaseStorage = {
             metadata,
           };
         } catch (backendErr: any) {
-          console.error("[SUPABASE STORAGE] Échec de l'upload via proxy backend :", backendErr);
-          if (backendErr.message?.includes("Accès refusé") || backendErr.message?.includes("Seul le Super Fondateur")) {
-            throw backendErr;
-          }
-          // Fallback direct si nécessaire
+          console.error("[SUPABASE STORAGE] Échec strict de l'upload via proxy backend Express :", backendErr);
+          // NE PAS faire de fallback direct vers Supabase navigateur si idToken est fourni.
+          throw backendErr;
         }
       }
 
@@ -576,15 +589,26 @@ export const supabaseStorage = {
           }),
         });
 
-        const json = await resp.json();
+        let json: any = {};
+        const cType = resp.headers.get("content-type") || "";
+        if (cType.includes("application/json")) {
+          try {
+            json = await resp.json();
+          } catch (e) {
+            json = { success: false, error: "JSON invalide" };
+          }
+        }
+
         if (resp.ok && json.success) {
           console.log(`[SUPABASE STORAGE VIA BACKEND] Supprimé avec succès : ${storagePath}`);
           return true;
         } else {
           console.warn("[SUPABASE STORAGE VIA BACKEND] Refus de suppression :", json.error);
+          return false;
         }
       } catch (err) {
         console.error("[SUPABASE STORAGE VIA BACKEND] Échec de la suppression backend :", err);
+        return false;
       }
     }
 

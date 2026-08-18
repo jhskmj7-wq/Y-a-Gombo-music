@@ -825,8 +825,28 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       res.json({ success: true, report });
     } catch (err: any) {
       console.error("[RESET-ERROR]", err);
-      res.status(500).json({ error: "Erreur serveur lors de la réinitialisation.", details: err.message });
+      res.status(500).json({ success: false, error: "Erreur serveur lors de la réinitialisation.", details: err.message });
     }
+  });
+
+  // Guarantee JSON responses for all unhandled /api requests (never HTML)
+  app.use("/api", (req: express.Request, res: express.Response) => {
+    res.status(404).json({
+      success: false,
+      error: `Endpoint API non trouvé : ${req.method} ${req.path}`
+    });
+  });
+
+  // Global error handler for /api requests
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (req.path.startsWith("/api/")) {
+      console.error("🔥 Express API Middleware Error:", err);
+      return res.status(err.status || 500).json({
+        success: false,
+        error: err.message || "Erreur interne du serveur API."
+      });
+    }
+    next(err);
   });
 
   // Vite middleware for development

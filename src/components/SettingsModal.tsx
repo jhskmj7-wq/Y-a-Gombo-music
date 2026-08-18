@@ -950,12 +950,16 @@ export default function SettingsModal({
 
               <button
                 type="button"
-                onClick={async () => {
-                  await requestPinResetSOA("Demande de réinitialisation via les Paramètres Générales");
+                onClick={() => {
+                  try {
+                    requestPinResetSOA("Demande de réinitialisation PIN / assistance via les Paramètres").catch(() => {});
+                  } catch (e) {}
+                  supportConfig.openSupport("Demande d'assistance Wallet & Réinitialisation PIN auprès du Support Officiel AFRIGOMBO (S-O-A)");
                 }}
-                className="py-2.5 px-3 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white font-bold rounded-xl text-[10px] uppercase tracking-wider cursor-pointer active:scale-98"
+                className="py-2.5 px-3 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 hover:text-white font-black rounded-xl text-[10px] uppercase tracking-wider cursor-pointer active:scale-98 flex items-center justify-center gap-1.5 shadow-sm"
               >
-                Code oublié ? Contacter S-O-A
+                <span>🆘 CONTACTER S-O-A</span>
+                <span className="text-[9px] opacity-80">(SUPPORT OFFICIEL AFRIGOMBO)</span>
               </button>
             </div>
           </div>

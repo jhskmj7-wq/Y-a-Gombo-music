@@ -262,9 +262,8 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
       try {
         const res = await WalletSecurityService.createPin(currentUser.uid, pin);
         if (!res.success) {
-          setErrorMsg(res.error || "Erreur de création du code.");
-          setEnteredPin("");
-          setModalMode("SETUP_STEP1");
+          setErrorMsg(res.error || "Erreur lors de la sauvegarde du PIN.");
+          // Keep the PIN state intact on error so user can see error and retry
           return;
         }
         setSessionExpiry(Date.now() + 15 * 60 * 1000);
@@ -273,8 +272,6 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
         setResolver(null);
       } catch (e: any) {
         setErrorMsg(e.message || "Erreur de création.");
-        setEnteredPin("");
-        setModalMode("SETUP_STEP1");
       }
     }
   };

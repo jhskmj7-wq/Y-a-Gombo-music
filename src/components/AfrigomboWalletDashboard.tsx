@@ -822,7 +822,7 @@ export default function AfrigomboWalletDashboard({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                   {!walletSecurityStatus?.pinConfigured ? (
                     <button
                       type="button"
@@ -833,7 +833,7 @@ export default function AfrigomboWalletDashboard({
                           showToast("🔐 Votre code PIN Wallet sécurisé a été créé !");
                         }
                       }}
-                      className="col-span-2 py-2.5 px-3 rounded-lg bg-gradient-to-r from-[#D4AF37] to-amber-600 hover:from-amber-500 hover:to-amber-600 text-black font-black text-[10px] uppercase transition-all shadow active:scale-98 cursor-pointer"
+                      className="py-2.5 px-3 rounded-lg bg-gradient-to-r from-[#D4AF37] to-amber-600 hover:from-amber-500 hover:to-amber-600 text-black font-black text-[10px] uppercase transition-all shadow active:scale-98 cursor-pointer"
                     >
                       Créer un code PIN
                     </button>
@@ -868,6 +868,20 @@ export default function AfrigomboWalletDashboard({
                       </button>
                     </>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try {
+                        requestPinResetSOA("Demande d'assistance Wallet S-O-A").catch(() => {});
+                      } catch (e) {}
+                      supportConfig.openSupport("Demande d'assistance / Support Officiel AFRIGOMBO (S-O-A)");
+                    }}
+                    className="col-span-1 sm:col-span-2 py-2.5 px-3 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 hover:text-white font-black text-[10px] uppercase transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <span>🆘 CONTACTER S-O-A</span>
+                    <span className="text-[9px] opacity-80">(SUPPORT OFFICIEL AFRIGOMBO)</span>
+                  </button>
                 </div>
 
               </div>
