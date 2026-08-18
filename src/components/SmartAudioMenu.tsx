@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  Headphones, Music, Play, Pause, Volume2, VolumeX, RefreshCw, X, ChevronDown,
-  Volume1, Disc
+  Headphones, Music, Play, Pause, RefreshCw, Disc
 } from "lucide-react";
 import { globalAudioManager, AudioState } from "../lib/audioManager";
 
@@ -43,13 +42,13 @@ export const SmartAudioMenu: React.FC = () => {
     }
   };
 
-  const handleReplayIntro = () => {
-    globalAudioManager.playIntro(true);
-    setIsOpen(false);
-  };
-
-  const toggleMute = () => {
-    globalAudioManager.setIsMuted(!audioState.isMuted);
+  const handleToggleIntro = () => {
+    if (isPlayingIntro) {
+      if (audioState.isPaused) globalAudioManager.resume();
+      else globalAudioManager.pause();
+    } else {
+      globalAudioManager.playIntro(true);
+    }
   };
 
   return (
@@ -110,46 +109,26 @@ export const SmartAudioMenu: React.FC = () => {
 
             {/* Réécouter l'introduction */}
             <button
-              onClick={handleReplayIntro}
-              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-afri-bg-ter transition-colors cursor-pointer"
+              onClick={handleToggleIntro}
+              className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-afri-bg-ter transition-colors cursor-pointer group"
             >
-              <div className="w-8 h-8 rounded-lg bg-afri-bg/50 text-afri-text-sec flex items-center justify-center">
-                <RefreshCw className="w-4 h-4" />
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isPlayingIntro ? "bg-[#D4AF37]/20 text-[#D4AF37]" : "bg-afri-bg/50 text-afri-text-sec"}`}>
+                  <RefreshCw className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <p className={`text-xs font-bold ${isPlayingIntro ? "text-[#D4AF37]" : "text-afri-text"}`}>Réécouter l'intro</p>
+                  <p className="text-[9px] text-afri-text-sec font-mono">Vibration originelle</p>
+                </div>
               </div>
-              <div className="text-left">
-                <p className="text-xs font-bold text-afri-text">Réécouter l'intro</p>
-                <p className="text-[9px] text-afri-text-sec font-mono">Vibration originelle</p>
+              <div className="text-afri-text-sec group-hover:text-[#D4AF37] transition-colors">
+                {isPlayingIntro && !audioState.isPaused ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
               </div>
             </button>
 
-            {/* Volume Control */}
-            <div className="p-3 space-y-3 bg-afri-bg/20 rounded-xl mt-1">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={toggleMute}
-                    className="text-[#D4AF37] hover:scale-110 transition-transform cursor-pointer"
-                  >
-                    {audioState.isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  </button>
-                  <span className="text-[10px] font-black text-afri-text-sec uppercase tracking-wider">Volume</span>
-                </div>
-                <span className="text-[10px] font-mono text-[#D4AF37]">{Math.round(audioState.volume * 100)}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={audioState.volume}
-                onChange={(e) => globalAudioManager.setVolume(parseFloat(e.target.value))}
-                className="w-full h-1.5 bg-afri-border rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-              />
-            </div>
-
             {/* Close hint */}
             <div className="pt-2 text-center">
-              <span className="text-[8px] font-mono text-afri-text-sec uppercase">Appuyez ailleurs pour fermer</span>
+              <span className="text-[8px] font-mono text-afri-text-sec uppercase">Volume géré par les boutons physiques</span>
             </div>
           </motion.div>
         )}

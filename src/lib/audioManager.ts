@@ -9,9 +9,9 @@ import { collection, onSnapshot, query, limit } from "firebase/firestore";
 
 // Official Supabase Storage Assets Configuration (afrigombo-media bucket)
 export const AudioConfig = {
-  INTRO_URL: "https://qefnkgtstcisplbrjcxy.supabase.co/storage/v1/object/public/afrigombo-media/audio/AFRIGOMBO%20%E2%80%94%20Th%C3%A8me%20d'introduction%20officiel.mp3",
-  ANTHEM_URL: "https://qefnkgtstcisplbrjcxy.supabase.co/storage/v1/object/public/afrigombo-media/audio/AFRIGOMBO%20%E2%80%94%20Hymne%20officiel.mp3",
-  HYMN_URL: "https://qefnkgtstcisplbrjcxy.supabase.co/storage/v1/object/public/afrigombo-media/audio/AFRIGOMBO%20%E2%80%94%20Hymne%20officiel.mp3",
+  INTRO_URL: "https://qefnkgtstcisplbrjcxy.supabase.co/storage/v1/object/public/afrigombo-media/audios/jhs.kmj7_gmail.com/1787090766611-afrigombo___official_intro_theme.mp3",
+  ANTHEM_URL: "https://qefnkgtstcisplbrjcxy.supabase.co/storage/v1/object/public/afrigombo-media/audios/jhs.kmj7_gmail.com/afrigombo_official_anthem.mp3.mp3",
+  HYMN_URL: "https://qefnkgtstcisplbrjcxy.supabase.co/storage/v1/object/public/afrigombo-media/audios/jhs.kmj7_gmail.com/afrigombo_official_anthem.mp3.mp3",
   BASE_UI_SOUNDS: "https://raw.githubusercontent.com/jhskmj7-wq/Y-a-Gombo-music/principal/public/sounds/"
 };
 
