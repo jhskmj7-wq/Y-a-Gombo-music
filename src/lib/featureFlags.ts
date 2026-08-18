@@ -286,6 +286,42 @@ export const CANONICAL_FEATURE_IDS: Record<string, string> = {
   user_terrain: "home"
 };
 
+export const FEATURE_PARENT_MAP: Record<string, string> = {
+  wheel_1: "wheel",
+  wheel_2: "wheel",
+  wheel_3: "wheel",
+};
+
+/**
+ * Helper to parse status from string/boolean/object flag representation.
+ */
+function parseStatusValue(value: any): FeatureVisibilityStatus {
+  if (value === undefined) return "ACTIVE";
+  if (typeof value === "boolean") return value ? "ACTIVE" : "HIDDEN";
+  if (typeof value === "string") {
+    const upper = value.toUpperCase().trim();
+    if (upper === "ACTIVE" || upper === "COMING_SOON" || upper === "HIDDEN") {
+      return upper as FeatureVisibilityStatus;
+    }
+    if (upper === "ENABLED" || upper === "TRUE" || upper === "VALIDATED") return "ACTIVE";
+    if (upper === "PENDING" || upper === "EXPERIMENTAL" || upper === "BIENTOT" || upper === "COMINGSOON") return "COMING_SOON";
+    if (upper === "DISABLED" || upper === "FALSE" || upper === "MASQUE" || upper === "HIDDEN") return "HIDDEN";
+    return "ACTIVE";
+  }
+  if (typeof value === "object" && value !== null) {
+    if (value.visibilityStatus && ["ACTIVE", "COMING_SOON", "HIDDEN"].includes(value.visibilityStatus)) {
+      return value.visibilityStatus as FeatureVisibilityStatus;
+    }
+    if (value.status && ["ACTIVE", "COMING_SOON", "HIDDEN"].includes(value.status)) {
+      return value.status as FeatureVisibilityStatus;
+    }
+    if (value.enabled !== undefined) {
+      return value.enabled ? "ACTIVE" : "HIDDEN";
+    }
+  }
+  return "ACTIVE";
+}
+
 /**
  * Returns raw module status stored in Firestore ("ACTIVE", "COMING_SOON", "HIDDEN").
  */
@@ -293,6 +329,19 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
   const activeMap = flagsMap && Object.keys(flagsMap).length > 0 ? flagsMap : globalCachedFlagsMap;
   if (!activeMap || Object.keys(activeMap).length === 0) {
     return "ACTIVE";
+  }
+
+  // 0. Parent Check: If this feature has a parent module, check if parent is HIDDEN
+  const parentId = FEATURE_PARENT_MAP[featureId] || (typeof activeMap[featureId] === "object" && activeMap[featureId]?.parentId);
+  if (parentId && parentId !== featureId) {
+    const parentVal = activeMap[parentId];
+    if (parentVal !== undefined) {
+      const parentStatus = parseStatusValue(parentVal);
+      if (parentStatus === "HIDDEN") {
+        // Parent is hidden -> sub-module is automatically hidden for users
+        return "HIDDEN";
+      }
+    }
   }
 
   // 1. Check exact key
@@ -308,39 +357,11 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
   }
 
   // 3. Fallback for sub-flags (e.g. wheel_1, wheel_2 -> check parent wheel)
-  if (value === undefined && featureId && featureId.startsWith("wheel_") && activeMap["wheel"] !== undefined) {
-    value = activeMap["wheel"];
+  if (value === undefined && parentId && activeMap[parentId] !== undefined) {
+    value = activeMap[parentId];
   }
 
-  if (value === undefined) {
-    return "ACTIVE";
-  }
-
-  if (typeof value === "boolean") {
-    return value ? "ACTIVE" : "HIDDEN";
-  }
-
-  if (typeof value === "string") {
-    const upper = value.toUpperCase().trim();
-    if (upper === "ACTIVE" || upper === "COMING_SOON" || upper === "HIDDEN") {
-      return upper as FeatureVisibilityStatus;
-    }
-    if (upper === "ENABLED" || upper === "TRUE" || upper === "VALIDATED") return "ACTIVE";
-    if (upper === "PENDING" || upper === "EXPERIMENTAL" || upper === "BIENTOT" || upper === "COMINGSOON") return "COMING_SOON";
-    if (upper === "DISABLED" || upper === "FALSE" || upper === "MASQUE" || upper === "HIDDEN") return "HIDDEN";
-    return "ACTIVE";
-  }
-
-  if (typeof value === "object" && value !== null) {
-    if (value.status && ["ACTIVE", "COMING_SOON", "HIDDEN"].includes(value.status)) {
-      return value.status as FeatureVisibilityStatus;
-    }
-    if (value.enabled !== undefined) {
-      return value.enabled ? "ACTIVE" : "HIDDEN";
-    }
-  }
-
-  return "ACTIVE";
+  return parseStatusValue(value);
 }
 
 /**

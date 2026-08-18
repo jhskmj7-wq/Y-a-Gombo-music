@@ -14,6 +14,7 @@ import {
   collection, doc, onSnapshot, setDoc, updateDoc, addDoc, query, orderBy, limit, serverTimestamp
 } from "firebase/firestore";
 import { SecurityService } from "../../lib/SecurityService";
+import { FEATURE_PARENT_MAP } from "../../lib/featureFlags";
 
 export interface AdminDeploymentCenterProps {
   currentUser?: any;
@@ -45,6 +46,7 @@ export interface FeatureFlagItem {
   description?: string;
   updatedAt?: string;
   updatedBy?: string;
+  parentId?: string | null;
 }
 
 export default function AdminDeploymentCenter({
@@ -126,22 +128,22 @@ export default function AdminDeploymentCenter({
     { id: "gawa_center", name: "🟡 Centre Gawa", category: "Monétisation", enabled: true, status: "validated", description: "Boutique, recharge et missions Gawa pour les utilisateurs" },
     { id: "mes_lots", name: "🎁 Mes lots", category: "Monétisation", enabled: true, status: "validated", description: "Espace des récompenses et lots réellement gagnés par l'utilisateur" },
     { id: "wheel", name: "🎡 Roue AFRIGOMBO (Général)", category: "Monétisation", enabled: true, status: "validated", description: "Permet aux utilisateurs éligibles d'accéder à la Roue AFRIGOMBO et à ses récompenses." },
-    { id: "wheel_1", name: "🎡 Roue 1 (Classique)", category: "Monétisation", enabled: true, status: "validated", description: "Accès à la Roue Classique 20 GAWA" },
-    { id: "wheel_2", name: "🎡 Roue 2 (Élite)", category: "Monétisation", enabled: true, status: "validated", description: "Accès à la Roue Élite Prestige 50 GAWA" },
-    { id: "wheel_3", name: "🎡 Roue 3 (Premium)", category: "Monétisation", enabled: true, status: "validated", description: "Accès à la Roue Premium Souveraine 100 GAWA" },
+    { id: "wheel_1", name: "🎡 Roue 1 — Classique", category: "Monétisation", enabled: true, status: "validated", description: "Accès à la Roue Classique 20 GAWA", parentId: "wheel" },
+    { id: "wheel_2", name: "🎡 Roue 2 — Élite", category: "Monétisation", enabled: true, status: "validated", description: "Accès à la Roue Élite Prestige 50 GAWA", parentId: "wheel" },
+    { id: "wheel_3", name: "🎡 Roue 3 — Premium", category: "Monétisation", enabled: true, status: "validated", description: "Accès à la Roue Premium Souveraine 100 GAWA", parentId: "wheel" },
     { id: "lots_management", name: "🎁 Gestion des lots (Module)", category: "Monétisation", enabled: true, status: "validated", description: "Configuration et administration des lots du système" },
 
     // FINANCES
     { id: "wallet", name: "💳 Wallet Souverain AFRIPAY", category: "Finance", enabled: true, status: "validated", description: "Solde rechargeable et virements sécurisés" },
     { id: "escrow", name: "🔐 Séquestre & Contrats Dépôt", category: "Finance", enabled: true, status: "validated", description: "Système de séquestre de cachets et contrats" },
-    { id: "premium", name: "💎 Adhésion Premium ELITE", category: "Finance", enabled: true, status: "validated", description: "Abonnements Gold Prestige, Silver et VIP" },
+    { id: "premium", name: "💎 AFRIGOMBO ELITE PREMIUM", category: "Finance", enabled: true, status: "validated", description: "Gestion de la visibilité et de la disponibilité du véritable abonnement Premium AFRIGOMBO ELITE." },
     { id: "monetisation", name: "📈 Programme de Monétisation", category: "Finance", enabled: true, status: "validated", description: "Fonds créateurs et revenus partagés" },
 
     // UNIVERS
     { id: "grandMarket", name: "🛒 Grand Marché AFRIGOMBO", category: "Économie", enabled: true, status: "validated", description: "Plateforme de transactions et petites annonces" },
     { id: "academie", name: "🎓 Académie AFRIGOMBO ELITE", category: "Formation", enabled: false, status: "pending", description: "Tutoriels et certifications professionnelles" },
     { id: "gombo_id", name: "🪪 Gombo ID Souverain", category: "Sécurité", enabled: true, status: "validated", description: "Système de badges d'accréditation" },
-    { id: "avatar", name: "🎭 Avatar Personnalisé", category: "Profil", enabled: true, status: "validated", description: "Système de personnalisation d'avatars et boutiques" },
+    { id: "avatar", name: "AVATAR", category: "Profil", enabled: true, status: "validated", description: "Système de personnalisation d'avatars et boutique d'accessoires virtuels." },
     { id: "heritage", name: "👑 Mon Héritage & Portfolio", category: "Profil", enabled: true, status: "validated", description: "Portfolio artistique et palmarès du membre" },
 
     // COMMUNICATION
@@ -236,6 +238,7 @@ export default function AdminDeploymentCenter({
 
         return {
           ...f,
+          parentId: f.parentId || FEATURE_PARENT_MAP[f.id] || null,
           visibilityStatus,
           enabled: visibilityStatus === "ACTIVE",
           isPremium,
@@ -466,21 +469,24 @@ export default function AdminDeploymentCenter({
 
   const currentBetaRecord = deploymentHistory.find((d) => d.targetEnv === "beta") || null;
 
-  // Computed feature flags counts
-  const totalCount = featureFlags.length;
-  const activeCount = featureFlags.filter(f => (f.visibilityStatus || (f.enabled ? "ACTIVE" : "HIDDEN")) === "ACTIVE").length;
-  const comingSoonCount = featureFlags.filter(f => f.visibilityStatus === "COMING_SOON").length;
-  const hiddenCount = featureFlags.filter(f => (f.visibilityStatus || (f.enabled ? "ACTIVE" : "HIDDEN")) === "HIDDEN").length;
-  const premiumCount = featureFlags.filter(f => !!f.isPremium).length;
+  // Computed feature flags counts (Top-Level Parent Modules Only)
+  const topLevelFlags = featureFlags.filter(f => !f.parentId);
 
-  const filteredFlags = featureFlags.filter((f) => {
+  const totalCount = topLevelFlags.length;
+  const activeCount = topLevelFlags.filter(f => (f.visibilityStatus || (f.enabled ? "ACTIVE" : "HIDDEN")) === "ACTIVE").length;
+  const comingSoonCount = topLevelFlags.filter(f => f.visibilityStatus === "COMING_SOON").length;
+  const hiddenCount = topLevelFlags.filter(f => (f.visibilityStatus || (f.enabled ? "ACTIVE" : "HIDDEN")) === "HIDDEN").length;
+  const premiumCount = topLevelFlags.filter(f => !!f.isPremium).length;
+
+  const filteredFlags = topLevelFlags.filter((f) => {
     const currentVis = f.visibilityStatus || (f.enabled ? "ACTIVE" : "HIDDEN");
+    const subModules = featureFlags.filter((s) => s.parentId === f.id);
     
     // Tab filter
     if (activeFlagFilter === "active" && currentVis !== "ACTIVE") return false;
     if (activeFlagFilter === "coming_soon" && currentVis !== "COMING_SOON") return false;
     if (activeFlagFilter === "hidden" && currentVis !== "HIDDEN") return false;
-    if (activeFlagFilter === "premium" && !f.isPremium) return false;
+    if (activeFlagFilter === "premium" && !f.isPremium && !subModules.some((s) => s.isPremium)) return false;
 
     // Search query filter
     if (searchQuery.trim()) {
@@ -489,7 +495,13 @@ export default function AdminDeploymentCenter({
       const matchId = (f.id || "").toLowerCase().includes(q);
       const matchCat = (f.category || "").toLowerCase().includes(q);
       const matchDesc = (f.description || "").toLowerCase().includes(q);
-      if (!matchName && !matchId && !matchCat && !matchDesc) return false;
+      const matchSub = subModules.some((sub) =>
+        (sub.name || "").toLowerCase().includes(q) ||
+        (sub.id || "").toLowerCase().includes(q) ||
+        (sub.description || "").toLowerCase().includes(q)
+      );
+
+      if (!matchName && !matchId && !matchCat && !matchDesc && !matchSub) return false;
     }
 
     return true;
@@ -1183,6 +1195,119 @@ export default function AdminDeploymentCenter({
                             </button>
                           </div>
                         </div>
+
+                        {/* SOUS-MODULES GOVERNANCE SECTION */}
+                        {(() => {
+                          const subModules = featureFlags.filter((s) => s.parentId === flag.id);
+                          if (subModules.length === 0) return null;
+
+                          return (
+                            <div className="p-3.5 bg-black/60 border border-[#D4AF37]/30 rounded-2xl space-y-3 font-mono">
+                              <div className="flex items-center justify-between border-b border-afri-border/60 pb-2">
+                                <div className="flex items-center gap-2">
+                                  <SlidersHorizontal className="w-4 h-4 text-[#D4AF37]" />
+                                  <h5 className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">
+                                    SOUS-MODULES ({subModules.length})
+                                  </h5>
+                                </div>
+                                <span className="text-[9px] text-afri-text-muted">Gouvernance des sous-modules</span>
+                              </div>
+
+                              <div className="space-y-2">
+                                {subModules.map((sub) => {
+                                  const subVis = sub.visibilityStatus || (sub.enabled ? "ACTIVE" : "HIDDEN");
+                                  const isSavingSub = savingFlagId === sub.id;
+
+                                  return (
+                                    <div
+                                      key={sub.id}
+                                      className="p-3 bg-afri-bg-sec/90 border border-afri-border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-zinc-700 transition"
+                                    >
+                                      <div className="space-y-0.5 min-w-0 flex-1">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs font-bold text-white truncate">{sub.name}</span>
+                                          {sub.isPremium && (
+                                            <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
+                                              💎 PREMIUM
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="text-[9px] text-afri-text-muted font-mono truncate">
+                                          id: <strong className="text-zinc-300">{sub.id}</strong> — {sub.description}
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center gap-2 shrink-0">
+                                        {isSavingSub ? (
+                                          <div className="flex items-center gap-1 text-[10px] text-amber-400">
+                                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                            <span>Synchro...</span>
+                                          </div>
+                                        ) : (
+                                          <div className="grid grid-cols-3 gap-1.5">
+                                            {/* ACTIVE */}
+                                            <button
+                                              type="button"
+                                              disabled={isSavingSub}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleUpdateFlagVisibility(sub.id, "ACTIVE");
+                                              }}
+                                              className={`px-2.5 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer ${
+                                                subVis === "ACTIVE"
+                                                  ? "bg-emerald-500 text-black font-black shadow-sm"
+                                                  : "bg-zinc-900 text-zinc-400 hover:text-emerald-300 border border-zinc-800"
+                                              }`}
+                                            >
+                                              <span>🟢</span>
+                                              <span>ACTIF</span>
+                                            </button>
+
+                                            {/* COMING SOON */}
+                                            <button
+                                              type="button"
+                                              disabled={isSavingSub}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleUpdateFlagVisibility(sub.id, "COMING_SOON");
+                                              }}
+                                              className={`px-2.5 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer ${
+                                                subVis === "COMING_SOON"
+                                                  ? "bg-amber-500 text-black font-black shadow-sm"
+                                                  : "bg-zinc-900 text-zinc-400 hover:text-amber-300 border border-zinc-800"
+                                              }`}
+                                            >
+                                              <span>🟡</span>
+                                              <span>BIENTÔT</span>
+                                            </button>
+
+                                            {/* HIDDEN */}
+                                            <button
+                                              type="button"
+                                              disabled={isSavingSub}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleUpdateFlagVisibility(sub.id, "HIDDEN");
+                                              }}
+                                              className={`px-2.5 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer ${
+                                                subVis === "HIDDEN"
+                                                  ? "bg-rose-500 text-white font-black shadow-sm"
+                                                  : "bg-zinc-900 text-zinc-400 hover:text-rose-300 border border-zinc-800"
+                                              }`}
+                                            >
+                                              <span>🔴</span>
+                                              <span>MASQUER</span>
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* Metadata Footer */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[9px] text-afri-text-muted pt-2 border-t border-afri-border/60">
