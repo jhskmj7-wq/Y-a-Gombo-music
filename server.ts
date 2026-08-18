@@ -128,9 +128,10 @@ function getAI(): GoogleGenAI | null {
   return aiInstance;
 }
 
+export const app = express();
+
 async function startServer() {
-  const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
   app.use(express.json({ limit: '10mb' }));
 
@@ -925,3 +926,5 @@ function startMaintenanceBackgroundChecker() {
 startServer().catch((err) => {
   console.error("❌ Fatal error starting Express server:", err);
 });
+
+export default app;
