@@ -1202,7 +1202,7 @@ export default function SettingsModal({
                         if (isPaused) globalAudioManager.resume();
                         else globalAudioManager.pause();
                       } else {
-                        globalAudioManager.playHymn();
+                        globalAudioManager.playAnthem(true);
                       }
                     }}
                     className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${

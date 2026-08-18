@@ -4232,7 +4232,7 @@ export default function AdminFounderThrone({
                               Aperçu Intro
                               <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-[#D4AF37]/20 border border-[#D4AF37]/30 uppercase tracking-widest">ID: INTRO</span>
                             </span>
-                            <span className="text-[9px] text-afri-text-sec font-mono block mt-0.5">Introduction Officielle (GitHub Raw)</span>
+                            <span className="text-[9px] text-afri-text-sec font-mono block mt-0.5">Introduction Officielle (Supabase Storage)</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 w-24">
@@ -4254,7 +4254,7 @@ export default function AdminFounderThrone({
                               if (audioState.currentPlaying === 'hymne') {
                                 audioState.isPaused ? globalAudioManager.resume() : globalAudioManager.pause();
                               } else {
-                                globalAudioManager.playHymn();
+                                globalAudioManager.playAnthem(true);
                               }
                             }}
                             className="w-10 h-10 rounded-full bg-afri-bg-sec/20 hover:bg-afri-bg-sec/40 flex items-center justify-center text-amber-500 cursor-pointer border border-amber-500/30 shadow-md"
@@ -4266,7 +4266,7 @@ export default function AdminFounderThrone({
                               Aperçu Hymne
                               <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-amber-500/20 border border-amber-500/30 uppercase tracking-widest">ID: ANTHEM</span>
                             </span>
-                            <span className="text-[9px] text-afri-text-sec font-mono block mt-0.5">Hymne Officiel (GitHub Raw)</span>
+                            <span className="text-[9px] text-afri-text-sec font-mono block mt-0.5">Hymne Officiel (Supabase Storage)</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 w-24">

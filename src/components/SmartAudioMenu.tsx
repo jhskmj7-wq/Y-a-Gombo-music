@@ -39,7 +39,7 @@ export const SmartAudioMenu: React.FC = () => {
       if (audioState.isPaused) globalAudioManager.resume();
       else globalAudioManager.pause();
     } else {
-      globalAudioManager.playHymn();
+      globalAudioManager.playAnthem(true);
     }
   };
 

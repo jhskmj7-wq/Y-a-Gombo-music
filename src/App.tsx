@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { audioSynth } from "./lib/audio";
+import { globalAudioManager } from "./lib/audioManager";
 import { useAuth } from "./AuthContext";
 import { AuthGuard } from "./components/AuthGuard";
 import { WalletSecurityProvider } from "./context/WalletSecurityContext";
@@ -227,7 +228,8 @@ function App() {
   const handleSplashComplete = useCallback(() => {
     try {
       sessionStorage.setItem("afrigombo_splash_dismissed", "true");
-      // Silencing startup sound for professional Elite feel
+      // Trigger single auto-play of cinematic intro audio on very first open
+      globalAudioManager.playIntro(false);
     } catch (err) {
       // ignore
     }

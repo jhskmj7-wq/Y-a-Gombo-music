@@ -7,10 +7,11 @@
 import { db } from "./firebase";
 import { collection, onSnapshot, query, limit } from "firebase/firestore";
 
-// Official GitHub Assets Configuration
+// Official Supabase Storage Assets Configuration (afrigombo-media bucket)
 export const AudioConfig = {
-  INTRO_URL: "https://raw.githubusercontent.com/jhskmj7-wq/Y-a-Gombo-music/principal/public/audio/AFRIGOMBO%20%E2%80%94%20Th%C3%A8me%20d'introduction%20officiel.mp3",
-  HYMN_URL: "https://raw.githubusercontent.com/jhskmj7-wq/Y-a-Gombo-music/principal/public/audio/AFRIGOMBO%20%E2%80%94%20Hymne%20officiel.mp3",
+  INTRO_URL: "https://qefnkgtstcisplbrjcxy.supabase.co/storage/v1/object/public/afrigombo-media/audio/AFRIGOMBO%20%E2%80%94%20Th%C3%A8me%20d'introduction%20officiel.mp3",
+  ANTHEM_URL: "https://qefnkgtstcisplbrjcxy.supabase.co/storage/v1/object/public/afrigombo-media/audio/AFRIGOMBO%20%E2%80%94%20Hymne%20officiel.mp3",
+  HYMN_URL: "https://qefnkgtstcisplbrjcxy.supabase.co/storage/v1/object/public/afrigombo-media/audio/AFRIGOMBO%20%E2%80%94%20Hymne%20officiel.mp3",
   BASE_UI_SOUNDS: "https://raw.githubusercontent.com/jhskmj7-wq/Y-a-Gombo-music/principal/public/sounds/"
 };
 
@@ -267,11 +268,15 @@ class AudioManager {
     this.notify();
   }
 
-  public async playHymn() {
+  public async playAnthem(force = false) {
+    return this.playHymn(force);
+  }
+
+  public async playHymn(force = false) {
     if (typeof window === "undefined") return;
     
-    // If already playing or paused, toggle
-    if (this.currentPlaying === "hymne") {
+    // If already playing or paused and not force restart, toggle
+    if (!force && this.currentPlaying === "hymne") {
       if (this.isPaused) this.resume();
       else this.pause();
       return;
@@ -280,7 +285,8 @@ class AudioManager {
     this.stop();
     this.currentPlaying = "hymne";
     this.isPaused = false;
-    const audio = await this.loadAudio("hymn", AudioConfig.HYMN_URL, true, 0.7);
+    const anthemUrl = AudioConfig.ANTHEM_URL || AudioConfig.HYMN_URL;
+    const audio = await this.loadAudio("hymn", anthemUrl, true, 0.7);
     if (audio) {
       audio.play().catch(() => {
         console.warn("L'hymne officiel est momentanément indisponible.");

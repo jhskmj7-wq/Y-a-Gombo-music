@@ -7,12 +7,14 @@ export type FeatureVisibilityStatus = "ACTIVE" | "COMING_SOON" | "HIDDEN";
 
 export interface FeatureFlagValue {
   status: FeatureVisibilityStatus;
+  visibilityStatus?: FeatureVisibilityStatus;
   enabled?: boolean;
   isPremium?: boolean;
   isBeta?: boolean;
   maintenance?: boolean;
   updatedAt?: any;
   updatedBy?: string;
+  parentId?: string | null;
 }
 
 export type FeatureFlagsMap = Record<string, FeatureFlagValue | boolean | string>;

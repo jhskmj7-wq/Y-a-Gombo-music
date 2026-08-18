@@ -221,7 +221,7 @@ export default function AdminSettings({
                     if (isPaused) globalAudioManager.resume();
                     else globalAudioManager.pause();
                   } else {
-                    globalAudioManager.playHymn();
+                    globalAudioManager.playAnthem(true);
                   }
                 }}
                 className={`py-3 px-4 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-2 ${
