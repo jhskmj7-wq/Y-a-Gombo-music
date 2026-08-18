@@ -241,6 +241,7 @@ export const supabaseStorage = {
       bucket?: string;
       onProgress?: (info: ProgressInfo) => void;
       contentType?: string;
+      idToken?: string;
     } = {}
   ): Promise<StorageUploadResult> {
     const bucket = sanitizeBucketName(options.bucket || SUPABASE_BUCKET_NAME);
@@ -295,7 +296,77 @@ export const supabaseStorage = {
         throw new Error(validation.error || "Fichier non conforme.");
       }
 
-      console.log(`[SUPABASE STORAGE] Démarrage téléversement vers [${bucket}] : "${storagePath}" (${(size / 1024).toFixed(1)} Ko)...`);
+      // Si un idToken Firebase est fourni (Super Fondateur), utiliser le proxy d'upload backend sécurisé
+      if (options.idToken) {
+        try {
+          console.log(`[SUPABASE STORAGE VIA BACKEND] Envoi du fichier ${storagePath} via API sécurisée...`);
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const res = reader.result as string;
+              resolve(res.includes(",") ? res.split(",")[1] : res);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+
+          const resp = await fetch("/api/admin/media/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              idToken: options.idToken,
+              storagePath,
+              fileBase64: base64Data,
+              contentType: mimeType,
+              bucket,
+            }),
+          });
+
+          const json = await resp.json();
+          if (!resp.ok || !json.success) {
+            throw new Error(json.error || `Erreur d'upload sécurisé (HTTP ${resp.status})`);
+          }
+
+          const finalUrl = json.url;
+          const metadata: FirestoreMediaMetadata = {
+            provider: "supabase",
+            bucket,
+            storagePath: json.storagePath || storagePath,
+            mediaUrl: finalUrl,
+            mediaType,
+            size,
+            mimeType,
+            createdAt: new Date().toISOString(),
+            userId,
+            isPrivate,
+          };
+
+          if (options.onProgress) {
+            options.onProgress({
+              percentage: 100,
+              state: "success",
+              bytesTransferred: size,
+              totalBytes: size,
+              log: "Téléversement terminé avec succès via API Sécurisée",
+            });
+          }
+
+          return {
+            success: true,
+            url: finalUrl,
+            storagePath: json.storagePath || storagePath,
+            metadata,
+          };
+        } catch (backendErr: any) {
+          console.error("[SUPABASE STORAGE] Échec de l'upload via proxy backend :", backendErr);
+          if (backendErr.message?.includes("Accès refusé") || backendErr.message?.includes("Seul le Super Fondateur")) {
+            throw backendErr;
+          }
+          // Fallback direct si nécessaire
+        }
+      }
+
+      console.log(`[SUPABASE STORAGE] Démarrage téléversement direct vers [${bucket}] : "${storagePath}" (${(size / 1024).toFixed(1)} Ko)...`);
 
       const { data, error } = await client.storage.from(bucket).upload(storagePath, blob, {
         contentType: mimeType,
@@ -490,8 +561,33 @@ export const supabaseStorage = {
   /**
    * 5. SUPPRESSION DE FICHIER
    */
-  async deleteFile(storagePath: string, bucket = SUPABASE_BUCKET_NAME): Promise<boolean> {
+  async deleteFile(storagePath: string, bucket = SUPABASE_BUCKET_NAME, idToken?: string): Promise<boolean> {
     if (!storagePath) return false;
+
+    if (idToken) {
+      try {
+        const resp = await fetch("/api/admin/media/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            idToken,
+            storagePath,
+            bucket,
+          }),
+        });
+
+        const json = await resp.json();
+        if (resp.ok && json.success) {
+          console.log(`[SUPABASE STORAGE VIA BACKEND] Supprimé avec succès : ${storagePath}`);
+          return true;
+        } else {
+          console.warn("[SUPABASE STORAGE VIA BACKEND] Refus de suppression :", json.error);
+        }
+      } catch (err) {
+        console.error("[SUPABASE STORAGE VIA BACKEND] Échec de la suppression backend :", err);
+      }
+    }
+
     const client = getSupabaseClient();
     if (!client) return false;
 

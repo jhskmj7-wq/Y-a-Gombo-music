@@ -3,6 +3,7 @@ import { Coins, Wallet, Sparkles, Lock, AlertCircle } from 'lucide-react';
 import { CoinPackage } from '../../types/avatar';
 import { COIN_PACKAGES, AvatarEngine } from '../../lib/avatarEngine';
 import { useAuth } from '../../AuthContext';
+import { useWalletSecurity } from '../../context/WalletSecurityContext';
 import { AndroidBottomSheet } from '../common/AfriModal';
 
 interface CoinPurchaseModalProps {
@@ -107,14 +108,11 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
     setPinError("");
   };
 
-  const handleConfirmPurchase = () => {
-    const isPinEnabled = profile?.paymentSettings?.pinEnabled && profile?.paymentSettings?.pinHash;
-    if (isPinEnabled) {
-      setEnteredPin("");
-      setPinAttempts(0);
-      setPinError("");
-      setShowPinVerification(true);
-    } else {
+  const { requireWalletAuthentication } = useWalletSecurity();
+
+  const handleConfirmPurchase = async () => {
+    const ok = await requireWalletAuthentication("PURCHASE");
+    if (ok) {
       executePurchase();
     }
   };

@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { ShieldCheck, Lock, AlertTriangle, Key, HelpCircle, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { WalletSecurityService } from "../lib/WalletSecurityService";
+import { WalletSecurityService, WalletSecurityData, PinStatus } from "../lib/WalletSecurityService";
 import { useAuth } from "../AuthContext";
 import { db } from "../lib/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, onSnapshot } from "firebase/firestore";
 
 interface WalletSecurityContextValue {
   requireWalletAuthentication: (action: string, forceReauth?: boolean) => Promise<boolean>;
@@ -14,6 +14,9 @@ interface WalletSecurityContextValue {
   requestPinResetSOA: (reason?: string) => Promise<boolean>;
   isWalletSessionActive: boolean;
   clearWalletSession: () => void;
+  walletSecurityStatus: WalletSecurityData | null;
+  paymentSettings: any | null;
+  refreshWalletSecurityStatus: () => Promise<WalletSecurityData>;
 }
 
 const WalletSecurityContext = createContext<WalletSecurityContextValue | null>(null);
@@ -21,6 +24,77 @@ const WalletSecurityContext = createContext<WalletSecurityContextValue | null>(n
 export function WalletSecurityProvider({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
   const [sessionExpiry, setSessionExpiry] = useState<number | null>(null);
+  const [walletSecurityStatus, setWalletSecurityStatus] = useState<WalletSecurityData | null>(null);
+  const [paymentSettings, setPaymentSettings] = useState<any | null>(null);
+
+  // Real-time listener for user document walletSecurity & paymentSettings
+  useEffect(() => {
+    if (!currentUser?.uid) {
+      setWalletSecurityStatus(null);
+      setPaymentSettings(null);
+      return;
+    }
+
+    const unsub = onSnapshot(doc(db, "users", currentUser.uid), (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        const sec = data.walletSecurity || {};
+        const pay = data.paymentSettings || {};
+
+        const pinConfigured = !!(sec.pinHash || sec.pinConfigured || pay.pinConfigured);
+        const failedPinAttempts = sec.failedPinAttempts || 0;
+        const lockedUntil = sec.lockedUntil || null;
+        const pinResetRequested = !!sec.pinResetRequested;
+
+        let pinStatus: PinStatus = "NOT_CONFIGURED";
+        if (pinResetRequested) {
+          pinStatus = "RESET_PENDING";
+        } else if (lockedUntil && new Date(lockedUntil).getTime() > Date.now()) {
+          pinStatus = "LOCKED";
+        } else if (pinConfigured) {
+          pinStatus = "CONFIGURED";
+        }
+
+        setWalletSecurityStatus({
+          pinConfigured,
+          pinHash: sec.pinHash || pay.pinHash || undefined,
+          pinSalt: sec.pinSalt,
+          pinCreatedAt: sec.pinCreatedAt || null,
+          pinUpdatedAt: sec.pinUpdatedAt || null,
+          failedPinAttempts,
+          lastFailedAttemptAt: sec.lastFailedAttemptAt || null,
+          lockedUntil,
+          pinStatus,
+          pinResetRequested
+        });
+
+        setPaymentSettings({
+          pinConfigured,
+          pinEnabled: pay.pinEnabled ?? pinConfigured,
+          biometricAuth: pay.biometricAuth ?? true,
+          preferredMobileMoney: pay.preferredMobileMoney || "Orange Money",
+          currency: pay.currency || "FCFA (XOF)",
+          dailyLimit: pay.dailyLimit || 500000,
+          paymentConfirmation: pay.paymentConfirmation ?? true
+        });
+      }
+    }, (err) => {
+      console.warn("Wallet security snapshot listener error:", err);
+    });
+
+    return () => unsub();
+  }, [currentUser]);
+
+  const refreshWalletSecurityStatus = useCallback(async (): Promise<WalletSecurityData> => {
+    if (!currentUser?.uid) {
+      const def: WalletSecurityData = { pinConfigured: false, failedPinAttempts: 0, pinStatus: "NOT_CONFIGURED" };
+      setWalletSecurityStatus(def);
+      return def;
+    }
+    const status = await WalletSecurityService.getWalletSecurityStatus(currentUser.uid);
+    setWalletSecurityStatus(status);
+    return status;
+  }, [currentUser]);
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -240,7 +314,10 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
       disableWalletPin,
       requestPinResetSOA,
       isWalletSessionActive,
-      clearWalletSession
+      clearWalletSession,
+      walletSecurityStatus,
+      paymentSettings,
+      refreshWalletSecurityStatus
     }}>
       {children}
 

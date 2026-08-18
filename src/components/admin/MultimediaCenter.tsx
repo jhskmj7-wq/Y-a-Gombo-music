@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { gomboDB } from "../../firebase";
 import { db } from "../../lib/firebase";
+import { useAuth } from "../../AuthContext";
 import { useAudio } from "../../context/AudioContext";
 import { getAudioUrl } from "../../lib/audioUtils";
 import { supabaseStorage } from "../../lib/supabaseStorage";
@@ -164,6 +165,7 @@ const SYSTEM_SPOTS = [
 ];
 
 export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder }: MultimediaCenterProps) {
+  const { currentUser } = useAuth();
   const { currentTrack, isPlaying: isCentralPlaying, playTrack, pause } = useAudio();
   const [activeTab, setActiveTab] = useState<ActiveSection>("dashboard");
   const [mediaAssets, setMediaAssets] = useState<Record<string, MediaAsset>>({});
@@ -432,8 +434,10 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
       // 3. Téléversement réel vers Supabase Storage
       if (supabaseStorage.isConfigured()) {
+        const idToken = currentUser ? await currentUser.getIdToken() : undefined;
         const uploadResult = await supabaseStorage.uploadGenericFile(file, storagePath, {
           userId: founderId,
+          idToken,
           mediaType: sectionName === "audio" || sectionName === "sounds" ? "audio" : sectionName === "videos" ? "video" : sectionName === "images" ? "image" : "other",
           isPrivate: false,
           onProgress: (info) => {
@@ -831,6 +835,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     try {
       if (currentTrack?.id === id) {
         pause();
+      }
+
+      if (asset.storagePath || asset.url) {
+        const idToken = currentUser ? await currentUser.getIdToken() : undefined;
+        await supabaseStorage.deleteFile(asset.storagePath || asset.url, (asset as any).bucket || "afrigombo-media", idToken);
       }
 
       await gomboDB.deleteSystemMedia(id);

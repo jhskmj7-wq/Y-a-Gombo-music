@@ -77,7 +77,7 @@ export default function AfrigomboWalletDashboard({
   onNavigateToGomboAds
 }: AfrigomboWalletDashboardProps) {
   const { isModuleUnderMaintenance, maintenance } = useMaintenance();
-  const { requireWalletAuthentication, setupWalletPin, changeWalletPin, isWalletSessionActive } = useWalletSecurity();
+  const { requireWalletAuthentication, setupWalletPin, changeWalletPin, disableWalletPin, requestPinResetSOA, walletSecurityStatus, isWalletSessionActive } = useWalletSecurity();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const uid = currentUserProfile?.uid || currentUserProfile?.id;
   const historyRef = useRef<HTMLDivElement>(null);
@@ -800,14 +800,18 @@ export default function AfrigomboWalletDashboard({
                     <p className="text-[9px] text-zinc-400">Exiger un code secret pour valider vos transferts et retraits d'argent.</p>
                   </div>
                   <div>
-                    {walletPinSettings.pinHash ? (
-                      walletPinSettings.pinEnabled ? (
-                        <span className="px-2 py-0.5 text-[8px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded font-mono uppercase">
-                          ACTIVÉ ({walletPinSettings.pinLength}D)
+                    {walletSecurityStatus?.pinConfigured ? (
+                      walletSecurityStatus?.pinStatus === "LOCKED" ? (
+                        <span className="px-2 py-0.5 text-[8px] font-bold bg-red-500/10 text-red-400 border border-red-500/20 rounded font-mono uppercase">
+                          VERROUILLÉ (S-O-A)
+                        </span>
+                      ) : walletSecurityStatus?.pinStatus === "RESET_PENDING" ? (
+                        <span className="px-2 py-0.5 text-[8px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded font-mono uppercase">
+                          RÉINITIALISATION EN COURS
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 text-[8px] font-bold bg-zinc-800 text-zinc-400 border border-zinc-700 rounded font-mono uppercase">
-                          DÉSACTIVÉ
+                        <span className="px-2 py-0.5 text-[8px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded font-mono uppercase">
+                          ACTIVÉ (6 CHIFFRES)
                         </span>
                       )
                     ) : (
@@ -819,18 +823,17 @@ export default function AfrigomboWalletDashboard({
                 </div>
 
                 <div className="grid grid-cols-2 gap-2.5 pt-1">
-                  {!walletPinSettings.pinHash ? (
+                  {!walletSecurityStatus?.pinConfigured ? (
                     <button
                       type="button"
                       onClick={async () => {
                         playSound("click");
                         const ok = await setupWalletPin();
                         if (ok) {
-                            showToast("🔐 Votre code PIN Wallet sécurisé a été créé !");
-                            setWalletPinSettings({ pinHash: "SET", pinEnabled: true, pinLength: 6 });
+                          showToast("🔐 Votre code PIN Wallet sécurisé a été créé !");
                         }
                       }}
-                      className="col-span-2 py-2.5 px-3 rounded-lg bg-gradient-to-r from-[#D4AF37] to-amber-600 hover:from-amber-500 hover:to-amber-600 text-black font-black text-[10px] uppercase transition-all shadow active:scale-98"
+                      className="col-span-2 py-2.5 px-3 rounded-lg bg-gradient-to-r from-[#D4AF37] to-amber-600 hover:from-amber-500 hover:to-amber-600 text-black font-black text-[10px] uppercase transition-all shadow active:scale-98 cursor-pointer"
                     >
                       Créer un code PIN
                     </button>
@@ -845,48 +848,24 @@ export default function AfrigomboWalletDashboard({
                             showToast("🔐 Code PIN Wallet modifié avec succès !");
                           }
                         }}
-                        className="py-2.5 px-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-afri-text font-bold text-[10px] uppercase transition-all active:scale-98"
+                        className="py-2.5 px-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-afri-text font-bold text-[10px] uppercase transition-all active:scale-98 cursor-pointer"
                       >
                         Modifier le PIN
                       </button>
 
-                      {walletPinSettings.pinEnabled ? (
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            playSound("click");
-                            const ok = await requireWalletAuthentication("DESACTIVATION_PROTECTION_PIN", true);
-                            if (ok) {
-                                await updateDoc(doc(db, "users", uid), {
-                                    paymentSettings: { pinEnabled: false }
-                                });
-                                setWalletPinSettings(prev => ({ ...prev, pinEnabled: false }));
-                                showToast("🔓 Protection PIN désactivée.");
-                            }
-                          }}
-                          className="py-2.5 px-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/15 font-bold text-[10px] uppercase transition-all active:scale-98"
-                        >
-                          Désactiver le PIN
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            playSound("click");
-                            const ok = await requireWalletAuthentication("ACTIVATION_PROTECTION_PIN", true);
-                            if (ok) {
-                                await updateDoc(doc(db, "users", uid), {
-                                    paymentSettings: { pinEnabled: true }
-                                });
-                                setWalletPinSettings(prev => ({ ...prev, pinEnabled: true }));
-                                showToast("🔐 Protection PIN réactivée.");
-                            }
-                          }}
-                          className="py-2.5 px-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/15 font-bold text-[10px] uppercase transition-all active:scale-98"
-                        >
-                          Réactiver le PIN
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          playSound("click");
+                          const ok = await disableWalletPin();
+                          if (ok) {
+                            showToast("🔓 Protection PIN désactivée.");
+                          }
+                        }}
+                        className="py-2.5 px-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/15 font-bold text-[10px] uppercase transition-all active:scale-98 cursor-pointer"
+                      >
+                        Désactiver le PIN
+                      </button>
                     </>
                   )}
                 </div>

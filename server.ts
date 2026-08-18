@@ -496,6 +496,162 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
   });
 
+// SECURE SUPABASE STORAGE ADMIN PROXY - SUPER FOUNDER EXCLUSIVE
+  app.post("/api/admin/media/upload", async (req, res) => {
+    const { idToken, storagePath, fileBase64, contentType, bucket = "afrigombo-media" } = req.body;
+
+    if (!idToken) {
+      return res.status(401).json({ error: "Non authentifié (token manquant). L'accès anonyme est strictement interdit." });
+    }
+
+    if (!storagePath || !fileBase64) {
+      return res.status(400).json({ error: "Paramètres 'storagePath' et 'fileBase64' requis." });
+    }
+
+    try {
+      const adminAuth = getAdminAuthClient();
+      const adminDb = getAdminDb();
+      if (!adminAuth || !adminDb) {
+        return res.status(503).json({ error: "Service Firebase Admin temporairement indisponible." });
+      }
+
+      // 1. Vérification sécurisée du jeton d'authentification Firebase (ID Token)
+      let decodedToken;
+      try {
+        decodedToken = await adminAuth.verifyIdToken(idToken);
+      } catch (authErr: any) {
+        return res.status(401).json({ error: "Session invalide ou expirée. Seul le Super Fondateur authentifié est autorisé." });
+      }
+
+      const uid = decodedToken.uid;
+      const userDoc = await adminDb.collection("users").doc(uid).get();
+      const userData = userDoc.exists ? userDoc.data() : null;
+
+      // 2. Contrôle de rôle strict : Seul le Super Fondateur est autorisé
+      const isSuperFounder =
+        PROTECTED_FOUNDER_EMAILS.includes(decodedToken.email || "") ||
+        userData?.isFounder === true ||
+        userData?.superFounder === true ||
+        userData?.role === "super_founder" ||
+        userData?.role === "admin";
+
+      if (!isSuperFounder) {
+        return res.status(403).json({
+          error: "Accès refusé. Seul le Super Fondateur de la plateforme est autorisé à effectuer un téléversement dans le Centre Multimédia."
+        });
+      }
+
+      // 3. Conversion du fichier Base64 en Buffer
+      const base64Clean = fileBase64.includes(",") ? fileBase64.split(",")[1] : fileBase64;
+      const fileBuffer = Buffer.from(base64Clean, "base64");
+
+      // 4. Client Supabase côté serveur
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+      const { createClient } = await import("@supabase/supabase-js");
+      const serverSupabase = createClient(supabaseUrl, supabaseKey);
+
+      const { data: uploadData, error: uploadError } = await serverSupabase.storage
+        .from(bucket)
+        .upload(storagePath, fileBuffer, {
+          contentType: contentType || "application/octet-stream",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error("[SERVER MEDIA UPLOAD ERROR]", uploadError);
+        return res.status(500).json({ error: uploadError.message || "Échec du téléversement Storage." });
+      }
+
+      const { data: publicUrlData } = serverSupabase.storage.from(bucket).getPublicUrl(storagePath);
+      const publicUrl = publicUrlData?.publicUrl || `${supabaseUrl}/storage/v1/object/public/${bucket}/${storagePath}`;
+
+      console.log(`[SERVER MEDIA UPLOAD SUCCESS] Téléversé par Super Fondateur ${decodedToken.email} -> ${publicUrl}`);
+
+      return res.json({
+        success: true,
+        url: publicUrl,
+        storagePath: uploadData?.path || storagePath,
+        bucket,
+      });
+    } catch (err: any) {
+      console.error("[SERVER MEDIA UPLOAD FATAL ERROR]", err);
+      return res.status(500).json({ error: err.message || "Erreur interne lors du téléversement." });
+    }
+  });
+
+  app.post("/api/admin/media/delete", async (req, res) => {
+    const { idToken, storagePath, bucket = "afrigombo-media" } = req.body;
+
+    if (!idToken) {
+      return res.status(401).json({ error: "Non authentifié (token manquant). L'accès anonyme est strictly interdit." });
+    }
+
+    if (!storagePath) {
+      return res.status(400).json({ error: "Paramètre 'storagePath' requis." });
+    }
+
+    try {
+      const adminAuth = getAdminAuthClient();
+      const adminDb = getAdminDb();
+      if (!adminAuth || !adminDb) {
+        return res.status(503).json({ error: "Service Firebase Admin temporairement indisponible." });
+      }
+
+      // 1. Vérification sécurisée du jeton d'authentification Firebase (ID Token)
+      let decodedToken;
+      try {
+        decodedToken = await adminAuth.verifyIdToken(idToken);
+      } catch (authErr: any) {
+        return res.status(401).json({ error: "Session invalide ou expirée." });
+      }
+
+      const uid = decodedToken.uid;
+      const userDoc = await adminDb.collection("users").doc(uid).get();
+      const userData = userDoc.exists ? userDoc.data() : null;
+
+      // 2. Contrôle de rôle strict : Seul le Super Fondateur est autorisé
+      const isSuperFounder =
+        PROTECTED_FOUNDER_EMAILS.includes(decodedToken.email || "") ||
+        userData?.isFounder === true ||
+        userData?.superFounder === true ||
+        userData?.role === "super_founder" ||
+        userData?.role === "admin";
+
+      if (!isSuperFounder) {
+        return res.status(403).json({
+          error: "Accès refusé. Seul le Super Fondateur de la plateforme est autorisé à supprimer du contenu du Centre Multimédia."
+        });
+      }
+
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+      const { createClient } = await import("@supabase/supabase-js");
+      const serverSupabase = createClient(supabaseUrl, supabaseKey);
+
+      const cleanPath = storagePath.replace(
+        /^(?:https?:\/\/[^/]+\/storage\/v1\/object\/public\/[^/]+\/)/,
+        ""
+      );
+
+      const { error: deleteError } = await serverSupabase.storage
+        .from(bucket)
+        .remove([cleanPath]);
+
+      if (deleteError) {
+        console.error("[SERVER MEDIA DELETE ERROR]", deleteError);
+        return res.status(500).json({ error: deleteError.message || "Échec de la suppression Storage." });
+      }
+
+      console.log(`[SERVER MEDIA DELETE SUCCESS] Supprimé par Super Fondateur ${decodedToken.email} -> ${cleanPath}`);
+
+      return res.json({ success: true });
+    } catch (err: any) {
+      console.error("[SERVER MEDIA DELETE FATAL ERROR]", err);
+      return res.status(500).json({ error: err.message || "Erreur interne lors de la suppression." });
+    }
+  });
+
 // SECURE RESET API - PHASE 1 BUSINESS DATA RESET
   app.post("/api/admin/reset-environment", async (req, res) => {
     const { idToken, confirmationPhrase, dryRun = false } = req.body;
