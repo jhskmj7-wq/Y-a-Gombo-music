@@ -5359,7 +5359,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       onNavigateView={(view, tab) => {
                         if (view === "heritage") setActiveMenu("user_heritage");
                         else if (view === "home" || view === "terrain") setActiveMenu("user_terrain");
-                        else if (view === "settings") setActiveMenu("settings");
+                        else if (view === "settings") setActiveMenu("user_settings");
                         else if (view === "super_admin") {
                           navigate("/Le-Throne-Of-The-Founder?tab=founder");
                         }
@@ -6109,7 +6109,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {activeMenu === "user_settings" && (() => {
                 return (
-                  <div className="absolute inset-0 z-50 bg-afri-bg overflow-y-auto animate-fadeIn text-left">
+                  <div className="w-full h-full flex-1 flex flex-col min-h-0 bg-afri-bg animate-fadeIn text-left relative z-20">
                     <ErrorBoundary moduleName="Paramètres">
                       <SettingsModal 
                         isOpen={true} 

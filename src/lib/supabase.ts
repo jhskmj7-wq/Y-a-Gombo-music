@@ -10,19 +10,46 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 export const DEFAULT_SUPABASE_URL = "https://qefnkgtstcisplbrjcxy.supabase.co";
 
+const getEnvVar = (key: string): string => {
+  try {
+    if (typeof import.meta !== "undefined" && import.meta.env && import.meta.env[key]) {
+      return String(import.meta.env[key]);
+    }
+  } catch (_) {}
+  try {
+    if (typeof process !== "undefined" && process.env && process.env[key]) {
+      return String(process.env[key]);
+    }
+  } catch (_) {}
+  return "";
+};
+
 const supabaseUrl: string = (
-  import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL
+  getEnvVar("VITE_SUPABASE_URL") || DEFAULT_SUPABASE_URL
 ).trim();
 
 const supabaseKey: string = (
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  getEnvVar("VITE_SUPABASE_PUBLISHABLE_KEY") ||
+  getEnvVar("VITE_SUPABASE_ANON_KEY") ||
   ""
 ).trim();
 
-export const SUPABASE_BUCKET_NAME: string = (
-  import.meta.env.VITE_SUPABASE_BUCKET || "afrigombo-médias"
-).trim();
+export const sanitizeBucketName = (name: string): string => {
+  if (!name) return "afrigombo-media";
+  const clean = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9.-]/g, "-")
+    .toLowerCase()
+    .trim();
+  if (clean.includes("afrigombo")) {
+    return "afrigombo-media";
+  }
+  return clean;
+};
+
+const rawBucket = (getEnvVar("VITE_SUPABASE_BUCKET") || "afrigombo-media").trim();
+export const SUPABASE_BUCKET_NAME: string = sanitizeBucketName(rawBucket);
 
 export const isSupabaseConfigured = (): boolean => {
   return (

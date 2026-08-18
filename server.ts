@@ -10,19 +10,43 @@ import { getAuth as getAdminAuth } from "firebase-admin/auth";
 
 dotenv.config();
 
-// Initialize Firebase Admin for server-side operations
-try {
-  if (getAdminApps().length === 0) {
-    initializeAdminApp({
-      projectId: "afrigombo", // Explicit project ID as per client config
-    });
-    console.log("Firebase Admin initialized successfully.");
+// Safe Lazy Initializers for Server Operations
+let adminInitialized = false;
+function initAdmin() {
+  if (!adminInitialized) {
+    try {
+      if (getAdminApps().length === 0) {
+        initializeAdminApp({
+          projectId: process.env.VITE_FIREBASE_PROJECT_ID || "afrigombo",
+        });
+        console.log("Firebase Admin initialized successfully.");
+      }
+      adminInitialized = true;
+    } catch (e) {
+      console.warn("Firebase Admin initialization deferred/failed:", e);
+    }
   }
-} catch (e) {
-  console.error("Firebase Admin initialization error:", e);
 }
-const adminDb = getAdminFirestore();
-const adminAuth = getAdminAuth();
+
+function getAdminDb() {
+  initAdmin();
+  try {
+    return getAdminFirestore();
+  } catch (err) {
+    console.warn("Firestore Admin unavailable:", err);
+    return null;
+  }
+}
+
+function getAdminAuthClient() {
+  initAdmin();
+  try {
+    return getAdminAuth();
+  } catch (err) {
+    console.warn("Auth Admin unavailable:", err);
+    return null;
+  }
+}
 
 const PROTECTED_FOUNDER_EMAILS = ["jhs.kmj7@gmail.com"];
 const RESET_PHRASE = "RESET AFRIGOMBO TEST";
@@ -87,14 +111,22 @@ const COLLECTIONS_TO_RESET = [
   "security_incidents"
 ];
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || "",
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    }
+let aiInstance: GoogleGenAI | null = null;
+function getAI(): GoogleGenAI | null {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return null;
+  if (!aiInstance) {
+    aiInstance = new GoogleGenAI({
+      apiKey: key,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
   }
-});
+  return aiInstance;
+}
 
 async function startServer() {
   const app = express();
@@ -118,6 +150,12 @@ app.post("/api/wallet/set-pin", async (req, res) => {
   if (!idToken || !pin) return res.status(400).json({ error: "Paramètres manquants." });
 
   try {
+    const adminAuth = getAdminAuthClient();
+    const adminDb = getAdminDb();
+    if (!adminAuth || !adminDb) {
+      return res.status(503).json({ error: "Service Firebase temporairement indisponible." });
+    }
+
     const decodedToken = await adminAuth.verifyIdToken(idToken);
     const uid = decodedToken.uid;
 
@@ -164,6 +202,12 @@ app.post("/api/wallet/verify-pin", async (req, res) => {
   if (!idToken || !pin) return res.status(400).json({ error: "Paramètres manquants." });
 
   try {
+    const adminAuth = getAdminAuthClient();
+    const adminDb = getAdminDb();
+    if (!adminAuth || !adminDb) {
+      return res.status(503).json({ error: "Service Firebase temporairement indisponible." });
+    }
+
     const decodedToken = await adminAuth.verifyIdToken(idToken);
     const uid = decodedToken.uid;
 
@@ -258,6 +302,12 @@ app.post("/api/wallet/change-pin", async (req, res) => {
   if (!idToken || !currentPin || !newPin) return res.status(400).json({ error: "Paramètres manquants." });
 
   try {
+    const adminAuth = getAdminAuthClient();
+    const adminDb = getAdminDb();
+    if (!adminAuth || !adminDb) {
+      return res.status(503).json({ error: "Service Firebase temporairement indisponible." });
+    }
+
     const decodedToken = await adminAuth.verifyIdToken(idToken);
     const uid = decodedToken.uid;
 
@@ -312,6 +362,12 @@ app.post("/api/wallet/disable-pin", async (req, res) => {
   if (!idToken || !currentPin) return res.status(400).json({ error: "Paramètres manquants." });
 
   try {
+    const adminAuth = getAdminAuthClient();
+    const adminDb = getAdminDb();
+    if (!adminAuth || !adminDb) {
+      return res.status(503).json({ error: "Service Firebase temporairement indisponible." });
+    }
+
     const decodedToken = await adminAuth.verifyIdToken(idToken);
     const uid = decodedToken.uid;
 
@@ -360,6 +416,12 @@ app.post("/api/wallet/request-reset", async (req, res) => {
   if (!idToken) return res.status(401).json({ error: "Authentification requise." });
 
   try {
+    const adminAuth = getAdminAuthClient();
+    const adminDb = getAdminDb();
+    if (!adminAuth || !adminDb) {
+      return res.status(503).json({ error: "Service Firebase temporairement indisponible." });
+    }
+
     const decodedToken = await adminAuth.verifyIdToken(idToken);
     const uid = decodedToken.uid;
     const now = new Date().toISOString();
@@ -400,7 +462,8 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const { imageBase64 } = req.body;
       if (!imageBase64) return res.status(400).json({ error: "No image provided" });
 
-      if (!process.env.GEMINI_API_KEY) {
+      const ai = getAI();
+      if (!ai) {
         console.warn("⚠️ GEMINI_API_KEY environment variable is missing. Gracefully bypassing image analysis.");
         return res.json({ status: "safe", warning: "AI Moderation bypassed (no API key)" });
       }
@@ -410,7 +473,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const base64Data = imageBase64.split(",")[1] || imageBase64;
       
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
         contents: {
           parts: [
             { text: prompt },
@@ -444,6 +507,12 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
 
     try {
+      const adminAuth = getAdminAuthClient();
+      const adminDb = getAdminDb();
+      if (!adminAuth || !adminDb) {
+        return res.status(503).json({ error: "Service Firebase Admin non initialisé." });
+      }
+
       // 1. Verify token and roles
       const decodedToken = await adminAuth.verifyIdToken(idToken);
       const uid = decodedToken.uid;
@@ -642,12 +711,14 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 
 async function runMaintenanceCheck() {
   try {
+    const adminDb = getAdminDb();
+    if (!adminDb) return;
     const maintenanceRef = adminDb.collection("settings").doc("maintenance");
     const snap = await maintenanceRef.get();
     if (!snap.exists) return;
 
     const data = snap.data();
-    const isMaintenanceActive = data.globalMode === true || data.status === "maintenance";
+    const isMaintenanceActive = data?.globalMode === true || data?.status === "maintenance";
     console.log(`[BACKEND MAINTENANCE CHECK] Current state read successfully. Active: ${isMaintenanceActive}`);
   } catch (error: any) {
     // Gracefully handle permission-denied errors from unauthenticated reads without raising noisy red exceptions
@@ -668,9 +739,13 @@ async function runMaintenanceCheck() {
 function startMaintenanceBackgroundChecker() {
   console.log("🚀 Starting background maintenance window checker (running every 10s)...");
   // Run once immediately on startup
-  runMaintenanceCheck();
+  runMaintenanceCheck().catch(() => {});
   // Set interval to run every 10 seconds
-  setInterval(runMaintenanceCheck, 10000);
+  setInterval(() => {
+    runMaintenanceCheck().catch(() => {});
+  }, 10000);
 }
 
-startServer();
+startServer().catch((err) => {
+  console.error("❌ Fatal error starting Express server:", err);
+});

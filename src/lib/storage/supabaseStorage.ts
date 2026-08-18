@@ -1,4 +1,4 @@
-import { getSupabaseClient, SUPABASE_BUCKET_NAME, isSupabaseConfigured } from "../supabase";
+import { getSupabaseClient, SUPABASE_BUCKET_NAME, isSupabaseConfigured, sanitizeBucketName } from "../supabase";
 
 /**
  * Service centralisé pour le stockage de fichiers via Supabase Storage pour AfriGombo.
@@ -243,7 +243,7 @@ export const supabaseStorage = {
       contentType?: string;
     } = {}
   ): Promise<StorageUploadResult> {
-    const bucket = options.bucket || SUPABASE_BUCKET_NAME;
+    const bucket = sanitizeBucketName(options.bucket || SUPABASE_BUCKET_NAME);
     const mediaType = options.mediaType || "other";
     const isPrivate = options.isPrivate ?? false;
     const userId = options.userId || "anonymous";
@@ -251,6 +251,7 @@ export const supabaseStorage = {
 
     if (!client) {
       const errMsg = "Client Supabase non initialisé (VITE_SUPABASE_PUBLISHABLE_KEY manquante).";
+      console.error("[SUPABASE STORAGE]", errMsg);
       if (options.onProgress) {
         options.onProgress({ percentage: 0, state: "error", log: errMsg });
       }
@@ -276,7 +277,13 @@ export const supabaseStorage = {
 
     try {
       if (options.onProgress) {
-        options.onProgress({ percentage: 10, state: "uploading", log: "Préparation du fichier..." });
+        options.onProgress({
+          percentage: 0,
+          state: "uploading",
+          bytesTransferred: 0,
+          totalBytes: 0,
+          log: "Téléversement en cours…",
+        });
       }
 
       const { blob, name, size, type } = await convertToBlob(fileInput, "file");
@@ -288,31 +295,23 @@ export const supabaseStorage = {
         throw new Error(validation.error || "Fichier non conforme.");
       }
 
-      if (options.onProgress) {
-        options.onProgress({
-          percentage: 35,
-          state: "uploading",
-          bytesTransferred: 0,
-          totalBytes: size,
-          log: `Téléversement vers Supabase Storage [${bucket}]...`,
-        });
-      }
+      console.log(`[SUPABASE STORAGE] Démarrage téléversement vers [${bucket}] : "${storagePath}" (${(size / 1024).toFixed(1)} Ko)...`);
 
       const { data, error } = await client.storage.from(bucket).upload(storagePath, blob, {
         contentType: mimeType,
         upsert: true,
       });
 
-      if (error) throw error;
-
-      if (options.onProgress) {
-        options.onProgress({
-          percentage: 85,
-          state: "uploading",
-          bytesTransferred: size,
-          totalBytes: size,
-          log: "Résolution du lien sécurisé...",
+      if (error) {
+        console.error("[SUPABASE STORAGE RAW ERROR]", {
+          message: error.message,
+          name: error.name,
+          status: (error as any).status || (error as any).statusCode,
+          code: (error as any).code,
+          bucket,
+          path: storagePath
         });
+        throw error;
       }
 
       let finalUrl = "";
@@ -341,9 +340,11 @@ export const supabaseStorage = {
           state: "success",
           bytesTransferred: size,
           totalBytes: size,
-          log: "✅ Fichier téléversé avec succès sur Supabase Storage.",
+          log: "Téléversement terminé",
         });
       }
+
+      console.log(`[SUPABASE STORAGE] ✅ Succès téléversement : ${finalUrl}`);
 
       return {
         success: true,
@@ -352,8 +353,16 @@ export const supabaseStorage = {
         metadata,
       };
     } catch (err: any) {
-      console.error("[SUPABASE STORAGE] Erreur d'upload :", err);
-      const errorMsg = err?.message || "Erreur de téléversement Supabase Storage";
+      console.error("[SUPABASE STORAGE] Échec de l'upload :", err);
+      let errorMsg = err?.message || "Erreur de téléversement Supabase Storage";
+      if (err?.code === "InvalidBucketName") {
+        errorMsg = `Nom de bucket invalide ("${bucket}"). Les noms de bucket Supabase ne doivent comporter aucun accent ni majuscule.`;
+      } else if (err?.statusCode === "404" || err?.status === 404 || err?.message?.includes("not found")) {
+        errorMsg = `Bucket "${bucket}" introuvable dans le projet Supabase. Veuillez créer le bucket public "${bucket}" dans la console Supabase Storage.`;
+      } else if (err?.statusCode === "403" || err?.status === 403 || err?.code === "AccessDenied" || err?.message?.includes("security policy") || err?.message?.includes("row-level security")) {
+        errorMsg = `Permissions RLS insuffisantes sur le bucket "${bucket}". Veuillez ajouter une règle (policy) INSERT dans Supabase pour autoriser l'envoi public.`;
+      }
+
       if (options.onProgress) {
         options.onProgress({ percentage: 0, state: "error", log: `❌ ${errorMsg}` });
       }

@@ -424,13 +424,13 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     try {
       setUploadStatuses((prev) => ({
         ...prev,
-        [id]: { progress: 1, state: "uploading" }
+        [id]: { progress: 0, state: "uploading" }
       }));
 
       let downloadURL = "";
       let activeProvider = "supabase";
 
-      // 3. Téléversement réel vers Supabase Storage (bucket afrigombo-médias)
+      // 3. Téléversement réel vers Supabase Storage
       if (supabaseStorage.isConfigured()) {
         const uploadResult = await supabaseStorage.uploadGenericFile(file, storagePath, {
           userId: founderId,
@@ -440,7 +440,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
             setUploadStatuses((prev) => ({
               ...prev,
               [id]: {
-                progress: Math.max(1, Math.round(info.percentage)),
+                progress: info.percentage,
                 state: info.state,
                 error: info.state === "error" ? info.log : undefined
               }
@@ -468,17 +468,42 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           downloadURL = uploadResult.url;
           storagePath = uploadResult.storagePath;
           activeProvider = "supabase";
+        } else if (uploadResult.error) {
+          console.error(`[MULTIMEDIA CENTER] Échec Supabase pour "${id}" :`, uploadResult.error);
+          setUploadStatuses((prev) => ({
+            ...prev,
+            [id]: {
+              progress: 0,
+              state: "error",
+              error: uploadResult.error
+            }
+          }));
+          setDiagnostics((prev) => {
+            const current = prev[id] || { logs: [] };
+            return {
+              ...prev,
+              [id]: {
+                ...current,
+                errorDetails: {
+                  code: "SUPABASE_UPLOAD_FAILED",
+                  message: uploadResult.error || "Échec Supabase Storage",
+                  stack: ""
+                },
+                logs: [...current.logs, `ERREUR SUPABASE : ${uploadResult.error}`]
+              }
+            };
+          });
         }
       }
 
-      // Fallback transparent vers Firebase Storage si Supabase n'est pas encore actif
-      if (!downloadURL) {
+      // Fallback transparent vers Firebase Storage uniquement si Supabase n'est pas configuré
+      if (!downloadURL && !supabaseStorage.isConfigured()) {
         activeProvider = "firebase";
         downloadURL = await gomboDB.uploadFile(storagePath, file, (progress: number, details?: any) => {
           setUploadStatuses((prev) => ({
             ...prev,
             [id]: {
-              progress: Math.max(1, Math.round(progress)),
+              progress: Math.round(progress),
               state: details?.state || "uploading",
               error: details?.error ? `${details.error.code}: ${details.error.message}` : undefined
             }
@@ -890,7 +915,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[9px] text-afri-text-sec">
-          <div><span className="text-afri-text-sec font-bold">Bucket :</span> <span className="text-afri-text">{diag?.bucket || "GomboBucket"}</span></div>
+          <div><span className="text-afri-text-sec font-bold">Bucket :</span> <span className="text-afri-text">{diag?.bucket || "afrigombo-media"}</span></div>
           <div><span className="text-afri-text-sec font-bold">Projet ID :</span> <span className="text-afri-text">{diag?.projectId || "afrigombo-elite"}</span></div>
           <div><span className="text-zinc-605 font-bold">Fichier :</span> <span className="text-afri-text truncate block max-w-full" title={diag?.fileName}>{diag?.fileName || "En attente"}</span></div>
           <div><span className="text-zinc-605 font-bold">Taille :</span> <span className="text-afri-text">{diag?.fileSize ? (typeof diag.fileSize === "number" ? formatBytes(diag.fileSize) : diag.fileSize) : "Inconnue"}</span></div>
@@ -1341,7 +1366,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                   {isUploading ? (
                     <div className="space-y-1.5">
                       <Loader2 className="w-5 h-5 text-[#D4AF37] animate-spin mx-auto" />
-                      <span className="text-[9px] font-mono text-zinc-550">Progression : {progress}%</span>
+                      <span className="text-[10px] font-mono text-[#D4AF37] font-bold">Téléversement en cours…</span>
                     </div>
                   ) : (
                     <div className="w-full px-4 space-y-4">
