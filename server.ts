@@ -499,21 +499,22 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 
 // SECURE SUPABASE STORAGE ADMIN PROXY - SUPER FOUNDER EXCLUSIVE
   app.post("/api/admin/media/upload", async (req, res) => {
-    const { idToken, storagePath, fileBase64, contentType, bucket = "afrigombo-media" } = req.body;
+    res.setHeader("Content-Type", "application/json");
+    const { idToken, storagePath, fileBase64, contentType, bucket = "afrigombo-media" } = req.body || {};
 
     if (!idToken) {
-      return res.status(401).json({ error: "Non authentifié (token manquant). L'accès anonyme est strictement interdit." });
+      return res.status(401).json({ success: false, error: "Non authentifié (token manquant). L'accès anonyme est strictement interdit." });
     }
 
     if (!storagePath || !fileBase64) {
-      return res.status(400).json({ error: "Paramètres 'storagePath' et 'fileBase64' requis." });
+      return res.status(400).json({ success: false, error: "Paramètres 'storagePath' et 'fileBase64' requis." });
     }
 
     try {
       const adminAuth = getAdminAuthClient();
       const adminDb = getAdminDb();
       if (!adminAuth || !adminDb) {
-        return res.status(503).json({ error: "Service Firebase Admin temporairement indisponible." });
+        return res.status(503).json({ success: false, error: "Service Firebase Admin temporairement indisponible." });
       }
 
       // 1. Vérification sécurisée du jeton d'authentification Firebase (ID Token)
@@ -521,7 +522,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       try {
         decodedToken = await adminAuth.verifyIdToken(idToken);
       } catch (authErr: any) {
-        return res.status(401).json({ error: "Session invalide ou expirée. Seul le Super Fondateur authentifié est autorisé." });
+        return res.status(401).json({ success: false, error: "Session invalide ou expirée. Seul le Super Fondateur authentifié est autorisé." });
       }
 
       const uid = decodedToken.uid;
@@ -538,6 +539,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 
       if (!isSuperFounder) {
         return res.status(403).json({
+          success: false,
           error: "Accès refusé. Seul le Super Fondateur de la plateforme est autorisé à effectuer un téléversement dans le Centre Multimédia."
         });
       }
@@ -561,7 +563,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 
       if (uploadError) {
         console.error("[SERVER MEDIA UPLOAD ERROR]", uploadError);
-        return res.status(500).json({ error: uploadError.message || "Échec du téléversement Storage." });
+        return res.status(500).json({ success: false, error: uploadError.message || "Échec du téléversement Storage." });
       }
 
       const { data: publicUrlData } = serverSupabase.storage.from(bucket).getPublicUrl(storagePath);
@@ -572,12 +574,15 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       return res.json({
         success: true,
         url: publicUrl,
+        publicUrl: publicUrl,
+        path: uploadData?.path || storagePath,
         storagePath: uploadData?.path || storagePath,
         bucket,
+        message: "Média téléversé avec succès"
       });
     } catch (err: any) {
       console.error("[SERVER MEDIA UPLOAD FATAL ERROR]", err);
-      return res.status(500).json({ error: err.message || "Erreur interne lors du téléversement." });
+      return res.status(500).json({ success: false, error: err.message || "Erreur interne lors du téléversement." });
     }
   });
 
