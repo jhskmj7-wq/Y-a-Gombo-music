@@ -372,9 +372,12 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     return idx !== -1 ? idx + 1 : 1;
   };
 
-  // Handle uploading files safely with history saving and Supabase Storage integration
+  // Handle uploading files safely via secure backend route POST /api/admin/media/upload
   const handleFileUpload = async (id: string, file: File, sectionName: string) => {
-    if (!isAuthorizedSuperFounder) return;
+    if (!isAuthorizedSuperFounder) {
+      alert("Accès Super Fondateur refusé");
+      return;
+    }
 
     // 1. Validation de format audio strict
     if (sectionName === "audio" || sectionName === "sounds") {
@@ -388,17 +391,47 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     setUploadingId(id);
     setUploadStatuses((prev) => ({
       ...prev,
-      [id]: { progress: 1, state: "waiting" }
+      [id]: { progress: 0, state: "uploading" }
     }));
 
     setDiagnostics((prev) => ({
       ...prev,
       [id]: {
-        logs: ["Initialisation du transfert Supabase Storage..."]
+        logs: ["Préparation du transfert sécurisé vers le serveur..."]
       }
     }));
 
-    // 2. Génération du chemin unique normalisé
+    // 2. Récupération impérative du Firebase ID Token
+    let idToken: string | undefined = undefined;
+    try {
+      if (currentUser) {
+        idToken = await currentUser.getIdToken(true);
+      }
+    } catch (tokenErr) {
+      console.error("[MULTIMEDIA CENTER] Erreur obtention ID Token:", tokenErr);
+    }
+
+    if (!idToken) {
+      const errorMsg = "Session administrateur invalide (jeton d'authentification manquant). Veuillez vous reconnecter.";
+      setUploadStatuses((prev) => ({
+        ...prev,
+        [id]: { progress: 0, state: "error", error: errorMsg }
+      }));
+      setDiagnostics((prev) => ({
+        ...prev,
+        [id]: {
+          bucket: "afrigombo-media",
+          fileName: file.name,
+          fileSize: formatBytes(file.size),
+          logs: [`❌ 401: ${errorMsg}`]
+        }
+      }));
+      setUploadingId(null);
+      alert(errorMsg);
+      return;
+    }
+
+    // 3. Génération du chemin unique normalisé
     const safeFileName = file.name
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -421,192 +454,182 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     }
 
     const formattedSize = formatBytes(file.size);
-    const targetBucket = supabaseStorage.getBucketName();
+    const targetBucket = "afrigombo-media";
 
     try {
-      setUploadStatuses((prev) => ({
+      // Encodage Base64
+      setDiagnostics((prev) => ({
         ...prev,
-        [id]: { progress: 0, state: "uploading" }
+        [id]: {
+          bucket: targetBucket,
+          fileName: safeFileName,
+          fileSize: formattedSize,
+          logs: ["Encodage du fichier en cours...", "Envoi à la route backend POST /api/admin/media/upload..."]
+        }
       }));
 
-      let downloadURL = "";
-      let activeProvider = "supabase";
-
-      // 3. Téléversement réel vers Supabase Storage
-      if (supabaseStorage.isConfigured()) {
-        const idToken = currentUser ? await currentUser.getIdToken() : undefined;
-        const uploadResult = await supabaseStorage.uploadGenericFile(file, storagePath, {
-          userId: founderId,
-          idToken,
-          mediaType: sectionName === "audio" || sectionName === "sounds" ? "audio" : sectionName === "videos" ? "video" : sectionName === "images" ? "image" : "other",
-          isPrivate: false,
-          onProgress: (info) => {
-            setUploadStatuses((prev) => ({
-              ...prev,
-              [id]: {
-                progress: info.percentage,
-                state: info.state,
-                error: info.state === "error" ? info.log : undefined
-              }
-            }));
-
-            if (info.log) {
-              setDiagnostics((prev) => {
-                const current = prev[id] || { logs: [] };
-                return {
-                  ...prev,
-                  [id]: {
-                    ...current,
-                    bucket: targetBucket,
-                    fileName: safeFileName,
-                    fileSize: formattedSize,
-                    logs: [...current.logs, info.log!]
-                  }
-                };
-              });
-            }
-          }
-        });
-
-        if (uploadResult.success && uploadResult.url) {
-          downloadURL = uploadResult.url;
-          storagePath = uploadResult.storagePath;
-          activeProvider = "supabase";
-        } else if (uploadResult.error) {
-          console.error(`[MULTIMEDIA CENTER] Échec Supabase pour "${id}" :`, uploadResult.error);
-          setUploadStatuses((prev) => ({
-            ...prev,
-            [id]: {
-              progress: 0,
-              state: "error",
-              error: uploadResult.error
-            }
-          }));
-          setDiagnostics((prev) => {
-            const current = prev[id] || { logs: [] };
-            return {
-              ...prev,
-              [id]: {
-                ...current,
-                errorDetails: {
-                  code: "SUPABASE_UPLOAD_FAILED",
-                  message: uploadResult.error || "Échec Supabase Storage",
-                  stack: ""
-                },
-                logs: [...current.logs, `ERREUR SUPABASE : ${uploadResult.error}`]
-              }
-            };
-          });
-        }
-      }
-
-      // Fallback transparent vers Firebase Storage uniquement si Supabase n'est pas configuré
-      if (!downloadURL && !supabaseStorage.isConfigured()) {
-        activeProvider = "firebase";
-        downloadURL = await gomboDB.uploadFile(storagePath, file, (progress: number, details?: any) => {
-          setUploadStatuses((prev) => ({
-            ...prev,
-            [id]: {
-              progress: Math.round(progress),
-              state: details?.state || "uploading",
-              error: details?.error ? `${details.error.code}: ${details.error.message}` : undefined
-            }
-          }));
-        });
-      }
-
-      if (downloadURL) {
-        const existingAsset = mediaAssets[id];
-        const historyList: MediaHistoryItem[] = existingAsset?.history || [];
-        
-        if (existingAsset) {
-          historyList.unshift({
-            downloadURL: existingAsset.downloadURL,
-            storagePath: existingAsset.storagePath,
-            title: existingAsset.title,
-            updatedAt: existingAsset.updatedAt,
-            updatedBy: existingAsset.updatedBy,
-            fileSize: existingAsset.fileSize || "Inconnu"
-          });
-        }
-
-        const titleText = file.name.substring(0, file.name.lastIndexOf(".")) || file.name;
-        const spot = [...AUDIO_SPOTS, ...IMAGE_SPOTS, ...VIDEO_SPOTS, ...SOUND_SPOTS, ...NOTIFICATION_SPOTS, ...ANIMATION_SPOTS, ...SYSTEM_SPOTS].find(s => s.id === id);
-        const currentOrder = getSpotOrder(id, sectionName);
-
-        // 6. Métadonnées Firestore conformes à la spécification
-        const newAsset: MediaAsset & { [key: string]: any } = {
-          id,
-          title: titleText,
-          description: spot?.desc || "",
-          category: sectionName,
-          sourceType: "FIREBASE",
-          storagePath,
-          downloadURL,
-          firebaseUrl: downloadURL,
-          mediaUrl: downloadURL,
-          provider: activeProvider,
-          bucket: targetBucket,
-          mediaType: sectionName === "audio" || sectionName === "sounds" ? "audio" : sectionName === "videos" ? "video" : "image",
-          mimeType: file.type || "audio/mpeg",
-          fileName: file.name,
-          size: file.size,
-          uploadedBy: founderId,
-          githubPath: "",
-          externalUrl: "",
-          enabled: existingAsset?.enabled !== undefined ? existingAsset.enabled : true,
-          autoplay: existingAsset?.autoplay || false,
-          loop: existingAsset?.loop || false,
-          volume: existingAsset?.volume !== undefined ? existingAsset.volume : 0.8,
-          priority: existingAsset?.priority || 0,
-          updatedAt: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          updatedBy: adminEmail,
-          fileSize: formattedSize,
-          fileType: file.type || (typeof file.name === "string" ? file.name.split(".").pop() : ""),
-          useCount: existingAsset?.useCount || 0,
-          lastPlayed: existingAsset?.lastPlayed || "",
-          resolution: existingAsset?.resolution || "",
-          duration: existingAsset?.duration || "",
-          history: historyList.slice(0, 10),
-
-          // Exact synchronized keys required by Firebase requirements
-          nom: titleText,
-          catégorie: sectionName,
-          url: downloadURL,
-          ordre: currentOrder,
-          actif: existingAsset?.enabled !== undefined ? existingAsset.enabled : true,
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const res = reader.result as string;
+          resolve(res.includes(",") ? res.split(",")[1] : res);
         };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-        // 7. Enregistrement Firestore instantané
-        await setDoc(doc(db, "media", id), newAsset);
-        await gomboDB.addSystemMedia(newAsset);
-        await logAudit(
-          id,
-          newAsset.title,
-          "Téléversement",
-          `Nouveau média téléversé pour ${sectionName} (${formattedSize}) via ${activeProvider.toUpperCase()}`
-        );
-        
-        setUploadStatuses((prev) => ({
-          ...prev,
-          [id]: { progress: 100, state: "success" }
-        }));
+      // 4. Exécution directe de la requête POST vers la route API backend
+      const resp = await fetch("/api/admin/media/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idToken,
+          storagePath,
+          fileBase64: base64Data,
+          contentType: file.type || "application/octet-stream",
+          bucket: targetBucket,
+        }),
+      });
 
-        setTimeout(() => {
-          setUploadStatuses((prev) => {
-            const copy = { ...prev };
-            delete copy[id];
-            return copy;
-          });
-        }, 4000);
+      let json: any = {};
+      const contentTypeHeader = resp.headers.get("content-type") || "";
+
+      if (contentTypeHeader.includes("application/json")) {
+        try {
+          json = await resp.json();
+        } catch (e) {
+          json = { success: false, error: "Réponse serveur au format JSON corrompue." };
+        }
+      } else {
+        const textResp = await resp.text();
+        json = {
+          success: false,
+          error: `Le serveur a répondu au format non-JSON (${resp.status}) : ${textResp.substring(0, 100)}`
+        };
       }
+
+      // Gestion des codes d'erreur HTTP explicites
+      if (resp.status === 401) {
+        throw new Error(json.error || "Session administrateur invalide");
+      } else if (resp.status === 403) {
+        throw new Error(json.error || "Accès Super Fondateur refusé");
+      } else if (resp.status === 404) {
+        throw new Error("Service multimédia introuvable (/api/admin/media/upload non disponible)");
+      } else if (resp.status === 413) {
+        throw new Error("Fichier trop volumineux");
+      } else if (!resp.ok || !json.success) {
+        throw new Error(json.error || `Échec du téléversement (${resp.status})`);
+      }
+
+      const downloadURL = json.publicUrl || json.url;
+      const finalStoragePath = json.path || json.storagePath || storagePath;
+
+      if (!downloadURL) {
+        throw new Error("URL publique non retournée par le serveur.");
+      }
+
+      // 5. Enregistrement Firestore
+      const existingAsset = mediaAssets[id];
+      const historyList: MediaHistoryItem[] = existingAsset?.history || [];
+      
+      if (existingAsset) {
+        historyList.unshift({
+          downloadURL: existingAsset.downloadURL,
+          storagePath: existingAsset.storagePath,
+          title: existingAsset.title,
+          updatedAt: existingAsset.updatedAt,
+          updatedBy: existingAsset.updatedBy,
+          fileSize: existingAsset.fileSize || "Inconnu"
+        });
+      }
+
+      const titleText = file.name.substring(0, file.name.lastIndexOf(".")) || file.name;
+      const spot = [...AUDIO_SPOTS, ...IMAGE_SPOTS, ...VIDEO_SPOTS, ...SOUND_SPOTS, ...NOTIFICATION_SPOTS, ...ANIMATION_SPOTS, ...SYSTEM_SPOTS].find(s => s.id === id);
+      const currentOrder = getSpotOrder(id, sectionName);
+
+      const newAsset: MediaAsset & { [key: string]: any } = {
+        id,
+        title: titleText,
+        description: spot?.desc || "",
+        category: sectionName,
+        sourceType: "FIREBASE",
+        storagePath: finalStoragePath,
+        downloadURL,
+        firebaseUrl: downloadURL,
+        mediaUrl: downloadURL,
+        provider: "supabase",
+        bucket: targetBucket,
+        mediaType: sectionName === "audio" || sectionName === "sounds" ? "audio" : sectionName === "videos" ? "video" : "image",
+        mimeType: file.type || "application/octet-stream",
+        fileName: file.name,
+        size: file.size,
+        uploadedBy: founderId,
+        githubPath: "",
+        externalUrl: "",
+        enabled: existingAsset?.enabled !== undefined ? existingAsset.enabled : true,
+        autoplay: existingAsset?.autoplay || false,
+        loop: existingAsset?.loop || false,
+        volume: existingAsset?.volume !== undefined ? existingAsset.volume : 0.8,
+        priority: existingAsset?.priority || 0,
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedBy: adminEmail,
+        fileSize: formattedSize,
+        fileType: file.type || (typeof file.name === "string" ? file.name.split(".").pop() : ""),
+        useCount: existingAsset?.useCount || 0,
+        lastPlayed: existingAsset?.lastPlayed || "",
+        resolution: existingAsset?.resolution || "",
+        duration: existingAsset?.duration || "",
+        history: historyList.slice(0, 10),
+
+        nom: titleText,
+        catégorie: sectionName,
+        url: downloadURL,
+        ordre: currentOrder,
+        actif: existingAsset?.enabled !== undefined ? existingAsset.enabled : true,
+      };
+
+      await setDoc(doc(db, "media", id), newAsset);
+      await gomboDB.addSystemMedia(newAsset);
+      await logAudit(
+        id,
+        newAsset.title,
+        "Téléversement",
+        `Nouveau média téléversé pour ${sectionName} (${formattedSize}) vers Supabase Storage`
+      );
+
+      setUploadStatuses((prev) => ({
+        ...prev,
+        [id]: { progress: 100, state: "success" }
+      }));
+
+      setDiagnostics((prev) => {
+        const current = prev[id] || { logs: [] };
+        return {
+          ...prev,
+          [id]: {
+            ...current,
+            logs: [...current.logs, "✅ Téléversement terminé avec succès!", `URL publique: ${downloadURL}`]
+          }
+        };
+      });
+
+      setTimeout(() => {
+        setUploadStatuses((prev) => {
+          const copy = { ...prev };
+          delete copy[id];
+          return copy;
+        });
+      }, 4000);
     } catch (error: any) {
       console.error("Upload process failed:", error);
+      const errMessage = error.message || "Erreur de téléversement";
+      
       setUploadStatuses((prev) => ({
         ...prev,
-        [id]: { progress: 0, state: "error", error: error.message || "Erreur de téléversement" }
+        [id]: { progress: 0, state: "error", error: errMessage }
       }));
+
       setDiagnostics((prev) => {
         const current = prev[id] || { logs: [] };
         return {
@@ -615,10 +638,10 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
             ...current,
             errorDetails: {
               code: error?.code || "UPLOAD_FAILED",
-              message: error?.message || String(error),
+              message: errMessage,
               stack: error?.stack || ""
             },
-            logs: [...current.logs, `CRASH DU TRANSFERT : ${error?.message || error}`]
+            logs: [...current.logs, `❌ ÉCHEC DU TÉLÉVERSEMENT : ${errMessage}`]
           }
         };
       });
@@ -826,7 +849,10 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
   // Delete media item (resetting it back to empty placeholder)
   const handleDeleteMedia = async (id: string) => {
-    if (!isAuthorizedSuperFounder) return;
+    if (!isAuthorizedSuperFounder) {
+      alert("Accès Super Fondateur refusé");
+      return;
+    }
     const asset = mediaAssets[id];
     if (!asset) return;
 
@@ -838,8 +864,41 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       }
 
       if (asset.storagePath || asset.url) {
-        const idToken = currentUser ? await currentUser.getIdToken() : undefined;
-        await supabaseStorage.deleteFile(asset.storagePath || asset.url, (asset as any).bucket || "afrigombo-media", idToken);
+        let idToken: string | undefined = undefined;
+        if (currentUser) {
+          idToken = await currentUser.getIdToken(true);
+        }
+
+        if (idToken) {
+          const resp = await fetch("/api/admin/media/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              idToken,
+              storagePath: asset.storagePath || asset.url,
+              bucket: "afrigombo-media",
+            }),
+          });
+
+          let json: any = {};
+          try {
+            json = await resp.json();
+          } catch (_) {}
+
+          if (resp.status === 401) {
+            alert("Session administrateur invalide");
+            return;
+          } else if (resp.status === 403) {
+            alert("Accès Super Fondateur refusé");
+            return;
+          } else if (resp.status === 404) {
+            alert("Service multimédia introuvable (/api/admin/media/delete)");
+            return;
+          } else if (!resp.ok || !json.success) {
+            alert(`Erreur de suppression: ${json.error || "Échec serveur"}`);
+            return;
+          }
+        }
       }
 
       await gomboDB.deleteSystemMedia(id);
@@ -859,9 +918,9 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
         `Média système définitivement supprimé du catalogue`
       );
       alert("Média supprimé avec succès !");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Delete failed:", err);
-      alert("Erreur lors de la suppression.");
+      alert(`Erreur lors de la suppression : ${err.message || String(err)}`);
     }
   };
 

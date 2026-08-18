@@ -23,19 +23,18 @@ function getAdminClients() {
 const PROTECTED_FOUNDER_EMAILS = ["jhs.kmj7@gmail.com"];
 
 export default async function handler(req: any, res: any) {
+  res.setHeader("Content-Type", "application/json");
+
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    return res.status(200).end();
+    return res.status(200).json({ success: true });
   }
 
   if (req.method !== "POST") {
-    res.setHeader("Content-Type", "application/json");
     return res.status(405).json({ success: false, error: "Méthode non autorisée. Utilisez POST." });
   }
-
-  res.setHeader("Content-Type", "application/json");
 
   try {
     const { idToken, storagePath, fileBase64, contentType, bucket = "afrigombo-media" } = req.body || {};
@@ -43,7 +42,7 @@ export default async function handler(req: any, res: any) {
     if (!idToken) {
       return res.status(401).json({
         success: false,
-        error: "Non authentifié (token manquant). L'accès anonyme est strictly interdit."
+        error: "Session administrateur invalide (jeton d'authentification manquant)."
       });
     }
 
@@ -69,7 +68,7 @@ export default async function handler(req: any, res: any) {
       console.error("[SERVERLESS MEDIA UPLOAD AUTH ERROR]", authErr);
       return res.status(401).json({
         success: false,
-        error: "Session invalide ou expirée. Seul le Super Fondateur authentifié est autorisé."
+        error: "Session administrateur invalide ou expirée."
       });
     }
 
@@ -97,7 +96,7 @@ export default async function handler(req: any, res: any) {
     if (!isSuperFounder) {
       return res.status(403).json({
         success: false,
-        error: "Accès refusé. Seul le Super Fondateur de la plateforme est autorisé à effectuer un téléversement dans le Centre Multimédia."
+        error: "Accès Super Fondateur refusé. Seul le Super Fondateur est autorisé."
       });
     }
 
@@ -140,15 +139,10 @@ export default async function handler(req: any, res: any) {
     const { data: publicUrlData } = serverSupabase.storage.from(targetBucket).getPublicUrl(storagePath);
     const publicUrl = publicUrlData?.publicUrl || `${supabaseUrl}/storage/v1/object/public/${targetBucket}/${storagePath}`;
 
-    console.log(`[SERVERLESS MEDIA UPLOAD SUCCESS] Téléversé par Super Fondateur ${email} -> ${publicUrl}`);
-
     return res.status(200).json({
       success: true,
       path: uploadData?.path || storagePath,
-      storagePath: uploadData?.path || storagePath,
       publicUrl: publicUrl,
-      url: publicUrl,
-      bucket: targetBucket,
       message: "Média téléversé avec succès"
     });
   } catch (err: any) {

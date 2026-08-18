@@ -23,19 +23,18 @@ function getAdminClients() {
 const PROTECTED_FOUNDER_EMAILS = ["jhs.kmj7@gmail.com"];
 
 export default async function handler(req: any, res: any) {
+  res.setHeader("Content-Type", "application/json");
+
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    return res.status(200).end();
+    return res.status(200).json({ success: true });
   }
 
   if (req.method !== "POST") {
-    res.setHeader("Content-Type", "application/json");
     return res.status(405).json({ success: false, error: "Méthode non autorisée. Utilisez POST." });
   }
-
-  res.setHeader("Content-Type", "application/json");
 
   try {
     const { idToken, storagePath, bucket = "afrigombo-media" } = req.body || {};
@@ -61,7 +60,7 @@ export default async function handler(req: any, res: any) {
     } catch (authErr: any) {
       return res.status(401).json({
         success: false,
-        error: "Session invalide ou expirée. Seul le Super Fondateur est autorisé."
+        error: "Session administrateur invalide ou expirée."
       });
     }
 
@@ -89,7 +88,7 @@ export default async function handler(req: any, res: any) {
     if (!isSuperFounder) {
       return res.status(403).json({
         success: false,
-        error: "Accès refusé. Seul le Super Fondateur est autorisé."
+        error: "Accès Super Fondateur refusé. Seul le Super Fondateur est autorisé."
       });
     }
 
@@ -104,9 +103,14 @@ export default async function handler(req: any, res: any) {
     const targetBucket = bucket || "afrigombo-media";
     const serverSupabase = createClient(supabaseUrl, supabaseKey);
 
+    const cleanPath = storagePath.replace(
+      /^(?:https?:\/\/[^/]+\/storage\/v1\/object\/public\/[^/]+\/)/,
+      ""
+    );
+
     const { error: deleteError } = await serverSupabase.storage
       .from(targetBucket)
-      .remove([storagePath]);
+      .remove([cleanPath]);
 
     if (deleteError) {
       return res.status(500).json({
@@ -117,6 +121,7 @@ export default async function handler(req: any, res: any) {
 
     return res.status(200).json({
       success: true,
+      path: cleanPath,
       message: "Média supprimé avec succès de Supabase Storage"
     });
   } catch (err: any) {
