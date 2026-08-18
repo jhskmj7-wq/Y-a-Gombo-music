@@ -923,20 +923,28 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                    <strong className="text-afri-text font-mono font-black">{users.filter(u => u.status === 'active').length}</strong> dispos
                  </span>
                </div>
-               <div className="w-[0.5px] h-2.5 sm:h-4 bg-afri-bg-ter/40 shrink-0" />
-               <div className="flex items-center gap-1.5 shrink-0">
-                 <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-afri-gold stroke-[2.5]" />
-                 <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-afri-text-sec uppercase tracking-wider">
-                   <strong className="text-afri-text font-mono font-black">{renforts.filter(r => r.status === 'active').length}</strong> renforts
-                 </span>
-               </div>
-               <div className="w-[0.5px] h-2.5 sm:h-4 bg-afri-bg-ter/40 shrink-0" />
-               <div className="flex items-center gap-1.5 shrink-0">
-                 <Handshake className="w-3 h-3 sm:w-4 sm:h-4 text-afri-gold stroke-[2.5]" />
-                 <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-afri-text-sec uppercase tracking-wider">
-                   <strong className="text-afri-text font-mono font-black">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats
-                 </span>
-               </div>
+               {isModuleVisible("renforts") && (
+                 <>
+                   <div className="w-[0.5px] h-2.5 sm:h-4 bg-afri-bg-ter/40 shrink-0" />
+                   <div className="flex items-center gap-1.5 shrink-0">
+                     <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-afri-gold stroke-[2.5]" />
+                     <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-afri-text-sec uppercase tracking-wider">
+                       <strong className="text-afri-text font-mono font-black">{renforts.filter(r => r.status === 'active').length}</strong> renforts
+                     </span>
+                   </div>
+                 </>
+               )}
+               {isModuleVisible("escrow") && (
+                 <>
+                   <div className="w-[0.5px] h-2.5 sm:h-4 bg-afri-bg-ter/40 shrink-0" />
+                   <div className="flex items-center gap-1.5 shrink-0">
+                     <Handshake className="w-3 h-3 sm:w-4 sm:h-4 text-afri-gold stroke-[2.5]" />
+                     <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-afri-text-sec uppercase tracking-wider">
+                       <strong className="text-afri-text font-mono font-black">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats
+                     </span>
+                   </div>
+                 </>
+               )}
             </div>
           </div>
         </header>

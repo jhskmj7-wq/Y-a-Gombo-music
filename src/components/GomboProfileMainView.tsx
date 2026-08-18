@@ -171,7 +171,8 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       )}
 
       {/* 👑 AFRIGOMBO ELITE PREMIUM BANNER / CARD - CONDITIONNEL */}
-      {isSubscribed ? (
+      {isModuleVisible("premium") && (
+        isSubscribed ? (
         /* S'IL EST DÉJÀ ABONNÉ: Carte discrète MEMBRE PREMIUM ACTIF */
         <div className={`w-full flex items-center justify-between p-4 rounded-[18px] border shadow-sm ${
           isLight 
@@ -206,6 +207,11 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               : "bg-afri-bg-sec border-amber-300/40 dark:border-amber-500/20 text-afri-text"
           }`}
         >
+          {isModuleComingSoon("premium") && (
+            <span className="absolute top-3 right-3 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded z-20">
+              Bientôt disponible 🔒
+            </span>
+          )}
           <div className="flex items-center gap-4 relative z-10">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
               <span className="text-2xl">👑</span>
@@ -228,7 +234,13 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           
           <div className="flex flex-col sm:flex-row gap-2.5 pt-1 relative z-10">
             <button 
-              onClick={() => onNavigateView("user_gombo_plus")}
+              onClick={() => {
+                if (isModuleComingSoon("premium")) {
+                  setLocalComingSoon("Adhésion Premium & Gombo Plus");
+                  return;
+                }
+                onNavigateView("user_gombo_plus");
+              }}
               className="flex-1 py-3 min-h-[44px] bg-[#D4AF37] hover:bg-amber-400 text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <span>✨ Découvrir Premium</span>
@@ -261,7 +273,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </button>
           </div>
         </motion.div>
-      )}
+      ))}
 
       {/* ACCÈS ROUE DES AVANTAGES PREMIUM (VISIBLE SI NON MASQUÉE) */}
       {isModuleVisible("wheel") && (
@@ -479,54 +491,83 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       </div>
 
       {/* 4. GÉRER MON ABONNEMENT BUTTON (SCREENSHOT STYLE) */}
-      <button 
-        onClick={() => onNavigateView("user_subscription_management")}
-        className="w-full flex items-center justify-between py-3 px-5 bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text-sec font-mono font-black text-[10px] uppercase tracking-widest rounded-full shadow-md hover:text-afri-text transition-all active:scale-98 cursor-pointer"
-      >
-        <span />
-        <span className="text-center flex-1">GÉRER MON ABONNEMENT</span>
-        <ChevronRight className="w-3.5 h-3.5 text-afri-gold stroke-[3.5]" />
-      </button>
+      {isModuleVisible("premium") && (
+        <button 
+          onClick={() => {
+            if (isModuleComingSoon("premium")) {
+              setLocalComingSoon("Gestion de l'Abonnement");
+              return;
+            }
+            onNavigateView("user_subscription_management");
+          }}
+          className="w-full flex items-center justify-between py-3 px-5 bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text-sec font-mono font-black text-[10px] uppercase tracking-widest rounded-full shadow-md hover:text-afri-text transition-all active:scale-98 cursor-pointer relative"
+        >
+          {isModuleComingSoon("premium") && (
+            <span className="absolute top-1/2 -translate-y-1/2 left-4 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded">
+              🔒 Bientôt
+            </span>
+          )}
+          <span />
+          <span className="text-center flex-1">GÉRER MON ABONNEMENT</span>
+          <ChevronRight className="w-3.5 h-3.5 text-afri-gold stroke-[3.5]" />
+        </button>
+      )}
 
       {/* 4b. AVATAR AFRIGOMBO ELITE SECTION */}
-      <div className={`relative  rounded-[24px] p-5 border shadow-sm ${
-        isLight ? "bg-[#FDFBF7] border-[#D4AF37]/40" : "bg-afri-bg-sec border-afri-border"
-      }`}>
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-12 h-12 rounded-full bg-afri-gold/10 flex items-center justify-center border border-afri-gold/30">
-            <User className="w-6 h-6 text-afri-gold" />
+      {isModuleVisible("avatar") && (
+        <div className={`relative  rounded-[24px] p-5 border shadow-sm ${
+          isLight ? "bg-[#FDFBF7] border-[#D4AF37]/40" : "bg-afri-bg-sec border-afri-border"
+        }`}>
+          {isModuleComingSoon("avatar") && (
+            <span className="absolute top-3 right-3 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded">
+              Bientôt disponible 🔒
+            </span>
+          )}
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-full bg-afri-gold/10 flex items-center justify-center border border-afri-gold/30">
+              <User className="w-6 h-6 text-afri-gold" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-afri-text uppercase tracking-widest">Mon Avatar</h3>
+              <p className="text-[10px] text-afri-text-sec font-sans">Identité virtuelle & Accessoires</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-black text-afri-text uppercase tracking-widest">Mon Avatar</h3>
-            <p className="text-[10px] text-afri-text-sec font-sans">Identité virtuelle & Accessoires</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button 
+              onClick={() => {
+                if (isModuleComingSoon("avatar")) {
+                  setLocalComingSoon("Mon Avatar & Accessoires");
+                  return;
+                }
+                if (window.dispatchEvent) {
+                  window.dispatchEvent(new CustomEvent("gombo_open_avatar_editor"));
+                }
+              }}
+              className="flex-1 py-2.5 bg-afri-bg border border-afri-border hover:border-afri-gold/50 text-afri-text font-black text-[10px] uppercase tracking-widest rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <User className="w-4 h-4" /> Personnaliser
+            </button>
+            <button 
+              onClick={() => {
+                if (isModuleComingSoon("avatar")) {
+                  setLocalComingSoon("Boutique d'Accessoires Virtuels");
+                  return;
+                }
+                if (window.dispatchEvent) {
+                  window.dispatchEvent(new CustomEvent("gombo_open_avatar_store"));
+                }
+              }}
+              className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black font-black text-[10px] uppercase tracking-widest rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <ShoppingBag className="w-4 h-4" /> Boutique
+            </button>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button 
-            onClick={() => {
-              if (window.dispatchEvent) {
-                window.dispatchEvent(new CustomEvent("gombo_open_avatar_editor"));
-              }
-            }}
-            className="flex-1 py-2.5 bg-afri-bg border border-afri-border hover:border-afri-gold/50 text-afri-text font-black text-[10px] uppercase tracking-widest rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
-          >
-            <User className="w-4 h-4" /> Personnaliser
-          </button>
-          <button 
-            onClick={() => {
-              if (window.dispatchEvent) {
-                window.dispatchEvent(new CustomEvent("gombo_open_avatar_store"));
-              }
-            }}
-            className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black font-black text-[10px] uppercase tracking-widest rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
-          >
-            <ShoppingBag className="w-4 h-4" /> Boutique
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* 5. GRANDE CARTE PREMIUM GOMBO ID */}
-      {!isKycApproved ? (
+      {isModuleVisible("gombo_id") && (
+        !isKycApproved ? (
         currentUserProfile.kycStatus === "pending" ? (
           /* Demande en cours d'analyse */
           <div className={`relative  rounded-[32px] p-6 xs:p-7 border shadow-sm text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10 ${
@@ -728,150 +769,191 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </button>
           </div>
         </div>
+        )
       )}
 
       {/* 5b. AVANTAGES SECTION */}
-      <div className="bg-afri-bg border border-afri-border rounded-[28px] p-5 xs:p-6 shadow-md space-y-3 text-left">
-        <h4 className="text-[10px] font-mono font-black text-afri-gold uppercase tracking-[0.2em]">Grâce à votre GOMBO ID :</h4>
-        <div className="space-y-2">
-          {[
-            "Profil certifié",
-            "Plus de visibilité",
-            "Priorité dans les recherches",
-            "Accès aux contrats sécurisés",
-            "Plus de crédibilité",
-            "Protection contre les faux profils"
-          ].map((item, idx) => (
-            <div key={idx} className="flex gap-2.5 items-center">
-              <span className="text-emerald-400 font-bold shrink-0">✓</span>
-              <span className="text-[11px] font-bold text-afri-text uppercase tracking-wide block">{item}</span>
-            </div>
-          ))}
+      {/* 5b. GOMBO ID ADVANTAGES */}
+      {isModuleVisible("gombo_id") && (
+        <div className="bg-afri-bg border border-afri-border rounded-[28px] p-5 xs:p-6 shadow-md space-y-3 text-left">
+          <h4 className="text-[10px] font-mono font-black text-afri-gold uppercase tracking-[0.2em]">Grâce à votre GOMBO ID :</h4>
+          <div className="space-y-2">
+            {[
+              "Profil certifié",
+              "Plus de visibilité",
+              "Priorité dans les recherches",
+              "Accès aux contrats sécurisés",
+              "Plus de crédibilité",
+              "Protection contre les faux profils"
+            ].map((item, idx) => (
+              <div key={idx} className="flex gap-2.5 items-center">
+                <span className="text-emerald-400 font-bold shrink-0">✓</span>
+                <span className="text-[11px] font-bold text-afri-text uppercase tracking-wide block">{item}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 6. EXPANDABLE / SCROLLABLE TOOLS (PRESERVING APP RICH FEATURES) */}
-      <div className="pt-6 border-t border-afri-border/60 space-y-4">
-        <h3 className="text-xs font-mono uppercase font-black text-afri-text-sec tracking-[0.25em] px-1">
-          🛠️ Espace de Gestion & Créativité
-        </h3>
+      {(() => {
+        const rapidActions = [
+          { 
+            id: "edit",
+            label: "Modifier mon héritage", 
+            desc: "Éditer votre profil", 
+            icon: Edit3, 
+            action: () => setPanelView("edit"), 
+            color: "text-amber-400/90",
+            border: "hover:border-amber-400/25"
+          },
+          { 
+            id: "chat",
+            featureId: "chat",
+            label: "Messagerie", 
+            desc: "Vos correspondances", 
+            icon: MessageSquare, 
+            action: () => onNavigateView("user_messages"), 
+            color: "text-purple-400",
+            border: "hover:border-purple-400/25"
+          },
+          { 
+            id: "wallet",
+            featureId: "wallet",
+            label: "Coffre-fort", 
+            desc: "Gérer vos revenus", 
+            icon: Wallet, 
+            action: () => onNavigateView("user_wallet"), 
+            color: "text-amber-400",
+            border: "hover:border-afri-gold/25"
+          },
+          { 
+            id: "share",
+            label: "Transmettre mon profil", 
+            desc: "Diffuser votre ID", 
+            icon: Share2, 
+            action: handleShareProfile, 
+            color: "text-emerald-400",
+            border: "hover:border-emerald-400/25"
+          },
+        ].filter(item => !item.featureId || isModuleVisible(item.featureId));
 
-        {/* Rapid Actions Grid */}
-        <div className="grid grid-cols-2 gap-3.5">
-          {[
-            { 
-              label: "Modifier mon héritage", 
-              desc: "Éditer votre profil", 
-              icon: Edit3, 
-              action: () => setPanelView("edit"), 
-              color: "text-amber-400/90",
-              border: "hover:border-amber-400/25"
-            },
-            { 
-              label: "Messagerie", 
-              desc: "Vos correspondances", 
-              icon: MessageSquare, 
-              action: () => onNavigateView("user_messages"), 
-              color: "text-purple-400",
-              border: "hover:border-purple-400/25"
-            },
-            { 
-              label: "Coffre-fort", 
-              desc: "Gérer vos revenus", 
-              icon: Wallet, 
-              action: () => onNavigateView("user_wallet"), 
-              color: "text-amber-400",
-              border: "hover:border-afri-gold/25"
-            },
-            { 
-              label: "Transmettre mon profil", 
-              desc: "Diffuser votre ID", 
-              icon: Share2, 
-              action: handleShareProfile, 
-              color: "text-emerald-400",
-              border: "hover:border-emerald-400/25"
-            },
-          ].map((item, idx) => (
-            <button 
-              key={idx}
-              onClick={item.action}
-              className={`flex flex-col items-start p-4 rounded-2xl bg-afri-bg-sec/25 border border-afri-border/60 hover:bg-afri-bg-sec/50 ${item.border} active:scale-[0.98] transition-all duration-200 text-left h-32 justify-between shadow-sm`}
-            >
-              <div className="p-2.5 rounded-xl bg-afri-bg border border-afri-border">
-                <item.icon className={`w-5 h-5 ${item.color}`} />
+        if (rapidActions.length === 0) return null;
+
+        return (
+          <div className="pt-6 border-t border-afri-border/60 space-y-4">
+            <h3 className="text-xs font-mono uppercase font-black text-afri-text-sec tracking-[0.25em] px-1">
+              🛠️ Espace de Gestion & Créativité
+            </h3>
+
+            {/* Rapid Actions Grid */}
+            <div className="grid grid-cols-2 gap-3.5">
+              {rapidActions.map((item) => {
+                const isComing = item.featureId ? isModuleComingSoon(item.featureId) : false;
+                return (
+                  <button 
+                    key={item.id}
+                    onClick={() => {
+                      if (isComing) {
+                        setLocalComingSoon(`${item.label} 🔒`);
+                        return;
+                      }
+                      item.action();
+                    }}
+                    className={`flex flex-col items-start p-4 rounded-2xl bg-afri-bg-sec/25 border border-afri-border/60 hover:bg-afri-bg-sec/50 ${item.border} active:scale-[0.98] transition-all duration-200 text-left h-32 justify-between shadow-sm relative`}
+                  >
+                    {isComing && (
+                      <span className="absolute top-2 right-2 text-[7px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1 py-0.2 rounded">
+                        🔒
+                      </span>
+                    )}
+                    <div className="p-2.5 rounded-xl bg-afri-bg border border-afri-border">
+                      <item.icon className={`w-5 h-5 ${item.color}`} />
+                    </div>
+                    <div>
+                      <p className="text-[10.5px] font-black text-afri-text uppercase tracking-wide leading-tight">{item.label}</p>
+                      <p className="text-[9.5px] text-afri-text-sec mt-1">{item.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {shareSuccess && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 bg-emerald-950/40 border border-emerald-900/50 rounded-xl text-center text-xs text-emerald-300 font-mono"
+              >
+                ✓ Lien du profil copié ! Vous pouvez maintenant le coller.
+              </motion.div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* MON ACTIVITÉ */}
+      {(() => {
+        const activityItems = [
+          { id: "gombos", featureId: "gombos", label: "Publications", sub: `${myPosts.length} posts`, icon: Edit3, color: "text-emerald-400", action: () => onNavigateView("user_mes_gombos") },
+          { id: "escrow", featureId: "escrow", label: "Contrats", sub: "Sécurisés", icon: ShieldCheck, color: "text-afri-gold", action: () => onNavigateView("user_contracts") },
+          { id: "candidatures", featureId: "gombos", label: "Candidatures", sub: `${currentUserProfile.applicationsSent || 0} envois`, icon: Target, color: "text-purple-400", action: () => onNavigateView("user_opportunities") },
+          { id: "wallet", featureId: "wallet", label: "Revenus", sub: `${(currentUserProfile.totalRevenue || 0).toLocaleString()} F`, icon: Wallet, color: "text-amber-500", action: () => onNavigateView("user_wallet") },
+          { id: "favorites", featureId: "favorites", label: "Favoris", sub: "Sauvegardés", icon: Heart, color: "text-rose-500", action: () => onNavigateView("user_vibes") },
+          { id: "events", featureId: "events", label: "Calendrier", sub: "Mes dates", icon: Clock, color: "text-cyan-400", action: () => onNavigateView("user_events") },
+          { id: "grandMarket", featureId: "grandMarket", label: "Grand Marché", sub: "Achat/Vente", icon: Store, color: "text-[#D4AF37]", border: "border-[#D4AF37]/40", action: () => onNavigateView("user_grand_marche") },
+          { id: "academie", featureId: "academie", label: "Académie", sub: "Formations", icon: GraduationCap, color: "text-emerald-400", border: "border-emerald-500/40", action: () => onNavigateView("user_academie") }
+        ].filter(item => isModuleVisible(item.featureId));
+
+        if (activityItems.length === 0) return null;
+
+        return (
+          <div className="relative  rounded-2xl border border-afri-border bg-afri-bg-sec p-5 shadow-xl space-y-4 mt-8">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 blur-[35px] rounded-full pointer-events-none" />
+            
+            <div className="flex items-center gap-3 border-b border-afri-border pb-3">
+              <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                <Briefcase className="w-4.5 h-4.5 text-amber-400" />
               </div>
               <div>
-                <p className="text-[10.5px] font-black text-afri-text uppercase tracking-wide leading-tight">{item.label}</p>
-                <p className="text-[9.5px] text-afri-text-sec mt-1">{item.desc}</p>
+                <h4 className="text-[11px] font-mono uppercase font-black text-afri-text tracking-widest">💼 Mon Activité</h4>
+                <p className="text-[9.5px] text-afri-text-sec font-mono">Gérez l'ensemble de votre présence</p>
               </div>
-            </button>
-          ))}
-        </div>
-
-        {shareSuccess && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-3 bg-emerald-950/40 border border-emerald-900/50 rounded-xl text-center text-xs text-emerald-300 font-mono"
-          >
-            ✓ Lien du profil copié ! Vous pouvez maintenant le coller.
-          </motion.div>
-        )}
-
-        {/* MON ACTIVITÉ */}
-        <div className="relative  rounded-2xl border border-afri-border bg-afri-bg-sec p-5 shadow-xl space-y-4 mt-8">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 blur-[35px] rounded-full pointer-events-none" />
-          
-          <div className="flex items-center gap-3 border-b border-afri-border pb-3">
-            <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              <Briefcase className="w-4.5 h-4.5 text-amber-400" />
             </div>
-            <div>
-              <h4 className="text-[11px] font-mono uppercase font-black text-afri-text tracking-widest">💼 Mon Activité</h4>
-              <p className="text-[9.5px] text-afri-text-sec font-mono">Gérez l'ensemble de votre présence</p>
+
+            <div className="grid grid-cols-2 gap-3">
+              {activityItems.map((item) => {
+                const isComing = isModuleComingSoon(item.featureId);
+                const IconComp = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      if (isComing) {
+                        setLocalComingSoon(`${item.label} 🔒`);
+                        return;
+                      }
+                      item.action();
+                    }}
+                    className={`flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border ${item.border || "border-afri-border"} hover:bg-afri-bg-ter/80 transition-colors text-left relative cursor-pointer group`}
+                  >
+                    {isComing && (
+                      <span className="absolute top-1 right-1 text-[7px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1 py-0.2 rounded">
+                        🔒
+                      </span>
+                    )}
+                    <IconComp className={`w-4 h-4 ${item.color} shrink-0`} />
+                    <div className="truncate">
+                      <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">{item.label}</span>
+                      <span className="block text-[8px] text-afri-text-sec font-mono">{item.sub}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { id: "gombos", featureId: "gombos", label: "Publications", sub: `${myPosts.length} posts`, icon: Edit3, color: "text-emerald-400", action: () => onNavigateView("user_mes_gombos") },
-              { id: "escrow", featureId: "escrow", label: "Contrats", sub: "Sécurisés", icon: ShieldCheck, color: "text-afri-gold", action: () => onNavigateView("user_contracts") },
-              { id: "candidatures", featureId: "gombos", label: "Candidatures", sub: `${currentUserProfile.applicationsSent || 0} envois`, icon: Target, color: "text-purple-400", action: () => onNavigateView("user_opportunities") },
-              { id: "wallet", featureId: "wallet", label: "Revenus", sub: `${(currentUserProfile.totalRevenue || 0).toLocaleString()} F`, icon: Wallet, color: "text-amber-500", action: () => onNavigateView("user_wallet") },
-              { id: "favorites", featureId: "favorites", label: "Favoris", sub: "Sauvegardés", icon: Heart, color: "text-rose-500", action: () => onNavigateView("user_vibes") },
-              { id: "events", featureId: "events", label: "Calendrier", sub: "Mes dates", icon: Clock, color: "text-cyan-400", action: () => onNavigateView("user_events") },
-              { id: "grandMarket", featureId: "grandMarket", label: "Grand Marché", sub: "Achat/Vente", icon: Store, color: "text-[#D4AF37]", border: "border-[#D4AF37]/40", action: () => onNavigateView("user_grand_marche") },
-              { id: "academie", featureId: "academie", label: "Académie", sub: "Formations", icon: GraduationCap, color: "text-emerald-400", border: "border-emerald-500/40", action: () => onNavigateView("user_academie") }
-            ].filter(item => isModuleVisible(item.featureId)).map((item) => {
-              const isComing = isModuleComingSoon(item.featureId);
-              const IconComp = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    if (isComing) {
-                      setLocalComingSoon(`${item.label} 🔒`);
-                      return;
-                    }
-                    item.action();
-                  }}
-                  className={`flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border ${item.border || "border-afri-border"} hover:bg-afri-bg-ter/80 transition-colors text-left relative cursor-pointer group`}
-                >
-                  {isComing && (
-                    <span className="absolute top-1 right-1 text-[7px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1 py-0.2 rounded">
-                      🔒
-                    </span>
-                  )}
-                  <IconComp className={`w-4 h-4 ${item.color} shrink-0`} />
-                  <div className="truncate">
-                    <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">{item.label}</span>
-                    <span className="block text-[8px] text-afri-text-sec font-mono">{item.sub}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        );
+      })()}
 
         {/* CARTE ACCÈS CENTRE DE COMMANDEMENT (VISIBLE UNIQUEMENT POUR jhs.kmj7@gmail.com) */}
         {(currentUserProfile?.email || "").toLowerCase() === "jhs.kmj7@gmail.com" && (
@@ -899,7 +981,6 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </button>
           </div>
         )}
-      </div>
 
       {/* Interactive QR Code Modal */}
       <AndroidBottomSheet

@@ -371,30 +371,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const activeMenu = menuHistory[menuHistory.length - 1] || "user_terrain";
   const location = useLocation();
 
-  useEffect(() => {
-    const path = location.pathname.toLowerCase();
-    let targetMenu = "";
-    if (path === "/publish" || path === "/publier") targetMenu = "user_publish";
-    else if (path === "/vibes" || path === "/reels") targetMenu = "user_reels";
-    else if (path === "/my-gombos" || path === "/gombos" || path === "/gombo") targetMenu = "user_mes_gombos";
-    else if (path === "/heritage" || path === "/profil" || path === "/profile") targetMenu = "user_heritage";
-    else if (path === "/wallet") targetMenu = "user_wallet";
-    else if (path === "/gombo-id") targetMenu = "user_gombo_id";
-    else if (path === "/nearby") targetMenu = "nearby";
-    else if (path === "/messages" || path === "/chat") targetMenu = "user_messages";
-    else if (path === "/settings") targetMenu = "user_settings";
-    else if (path === "/grand-marche" || path === "/market") targetMenu = "user_grand_marche";
-    else if (path === "/academie") targetMenu = "user_academie";
-    else if (path === "/events") targetMenu = "user_events";
-    else if (path === "/contracts") targetMenu = "user_contracts";
-    else if (path === "/notifications") targetMenu = "user_notifications";
-    else if (path === "/home" || path === "/") targetMenu = "user_terrain";
-
-    if (targetMenu) {
-      setMenuHistory(prev => prev[prev.length - 1] === targetMenu ? prev : [...prev, targetMenu]);
-    }
-  }, [location.pathname]);
-
   // Reset scrolling of all panels/containers inside AdminCentre when switching views
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -1267,6 +1243,39 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     };
     return map[menu] || null;
   };
+
+  useEffect(() => {
+    const path = location.pathname.toLowerCase();
+    let targetMenu = "";
+    if (path === "/publish" || path === "/publier") targetMenu = "user_publish";
+    else if (path === "/vibes" || path === "/reels") targetMenu = "user_reels";
+    else if (path === "/my-gombos" || path === "/gombos" || path === "/gombo") targetMenu = "user_mes_gombos";
+    else if (path === "/heritage" || path === "/profil" || path === "/profile") targetMenu = "user_heritage";
+    else if (path === "/wallet") targetMenu = "user_wallet";
+    else if (path === "/gombo-id") targetMenu = "user_gombo_id";
+    else if (path === "/nearby") targetMenu = "nearby";
+    else if (path === "/messages" || path === "/chat") targetMenu = "user_messages";
+    else if (path === "/settings") targetMenu = "user_settings";
+    else if (path === "/grand-marche" || path === "/market") targetMenu = "user_grand_marche";
+    else if (path === "/academie") targetMenu = "user_academie";
+    else if (path === "/events") targetMenu = "user_events";
+    else if (path === "/contracts") targetMenu = "user_contracts";
+    else if (path === "/notifications") targetMenu = "user_notifications";
+    else if (path === "/home" || path === "/") targetMenu = "user_terrain";
+
+    if (targetMenu) {
+      const flag = getFlagForMenu(targetMenu);
+      if (flag && !checkIsModuleVisible(flag, systemFeatureFlags, isSuperFounderUser)) {
+        // Module is MASQUER (HIDDEN): redirect instantly to user_terrain without DOM leakage
+        setMenuHistory(["user_terrain"]);
+        if (location.pathname !== "/home" && location.pathname !== "/") {
+          window.history.replaceState(null, "", "/home");
+        }
+      } else {
+        setMenuHistory(prev => prev[prev.length - 1] === targetMenu ? prev : [...prev, targetMenu]);
+      }
+    }
+  }, [location.pathname, systemFeatureFlags, isSuperFounderUser]);
 
   const getFeatureNameForMenu = (menu: string): string => {
     switch (menu) {
@@ -2738,71 +2747,64 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         );
                       };
 
-                      return (
-                        <div className="space-y-4">
-                          
-                          {/* SECTION: ACTIONS RAPIDES */}
-                          <div className="space-y-1">
-                            <span className="px-3.5 text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest block mb-1">
-                              ⚡ Actions Rapides
-                            </span>
-                            {renderMenuItem("menu_events", "Événements (Calendrier)", "📅", () => {
+                      const sections = [
+                        {
+                          id: "quick_actions",
+                          title: "⚡ Actions Rapides",
+                          items: [
+                            { key: "menu_events", label: "Événements (Calendrier)", icon: "📅", action: () => {
                               setPerspective("user");
                               setActiveMenu("user_events");
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-afri-gold/10 text-afri-gold rounded border border-afri-gold/10 uppercase font-black">LIVE</span>)}
-                            {renderMenuItem("menu_near_opports", "Opportunités proches", "📍", () => {
+                            }, customBadge: <span className="text-[7px] font-mono py-0.5 px-1.5 bg-afri-gold/10 text-afri-gold rounded border border-afri-gold/10 uppercase font-black">LIVE</span> },
+                            { key: "menu_near_opports", label: "Opportunités proches", icon: "📍", action: () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_opportunities");
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
-                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/10 uppercase font-black">DISPO</span>)}
-                            {renderMenuItem("menu_msgs", "Messages", "📩", () => {
-                               requireAuthThen(() => {
+                            }, customBadge: <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/10 uppercase font-black">DISPO</span> },
+                            { key: "menu_msgs", label: "Messages", icon: "📩", action: () => {
+                              requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_messages");
-                               });
-                            }, false, totalUnreadMessages > 0 ? (
+                              });
+                            }, customBadge: totalUnreadMessages > 0 ? (
                               <span className="ml-2 bg-red-500 text-afri-text text-[9px] font-mono font-black px-1.5 py-0.5 rounded-full shadow-md">
                                 {totalUnreadMessages}
                               </span>
-                            ) : undefined)}
-                            {renderMenuItem("menu_favorites", "Favoris", "⭐", () => {
+                            ) : undefined },
+                            { key: "menu_favorites", label: "Favoris", icon: "⭐", action: () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_favorites");
                               });
-                            }, false)}
-                          </div>
-
-                          {/* SEPARATOR */}
-                          <div className="border-t border-afri-border my-1" />
-
-                          {/* SECTION: Univers AFRIGOMBO ELITE */}
-                          <div className="space-y-1">
-                            <span className="px-3.5 text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest block mb-1">
-                              🏛️ Univers AFRIGOMBO ELITE
-                            </span>
-                            {renderMenuItem("menu_grand_marche", "Le Grand Marché", "🛍️", () => {
+                            } }
+                          ]
+                        },
+                        {
+                          id: "universe",
+                          title: "🏛️ Univers AFRIGOMBO ELITE",
+                          items: [
+                            { key: "menu_grand_marche", label: "Le Grand Marché", icon: "🛍️", action: () => {
                               setPerspective("user");
                               setActiveMenu("user_grand_marche");
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/20 uppercase font-black">MARCHÉ</span>)}
-                            {renderMenuItem("menu_academie", "L'Académie", "🎓", () => {
+                            }, customBadge: <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/20 uppercase font-black">MARCHÉ</span> },
+                            { key: "menu_academie", label: "L'Académie", icon: "🎓", action: () => {
                               setPerspective("user");
                               setActiveMenu("user_academie");
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20 uppercase font-black">COURS</span>)}
-                            {(() => {
+                            }, customBadge: <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20 uppercase font-black">COURS</span> },
+                            { key: "menu_gombo_id", label: "GOMBO ID", icon: "🆔", action: () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_gombo_id");
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, customBadge: (() => {
                               const gInfo = getGomboIdStatusInfo(currentUser);
-                              return renderMenuItem("menu_gombo_id", "GOMBO ID", "🆔", () => {
-                                requireAuthThen(() => {
-                                  setPerspective("user");
-                                  setActiveMenu("user_gombo_id");
-                                  try { audioSynth.playValidationSuccess(); } catch (_) {}
-                                });
-                              }, false, (
+                              return (
                                 <span className={`text-[7px] font-mono py-0.5 px-1.5 rounded border uppercase font-black ${
                                   gInfo.statusCode === "ATTRIBUTED" 
                                     ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
@@ -2812,93 +2814,81 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 }`}>
                                   {gInfo.badgeLabel}
                                 </span>
-                              ));
-                            })()}
-                            {renderMenuItem("menu_gombo_ads", "GOMBO ADS", "📣", () => {
+                              );
+                            })() },
+                            { key: "menu_gombo_ads", label: "GOMBO ADS", icon: "📣", action: () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_gombo_ads");
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
-                            }, false)}
-                          </div>
-
-                          {/* SEPARATOR */}
-                          <div className="border-t border-afri-border my-1" />
-
-                          {/* SECTION: Outils Bêta */}
-                          <div className="space-y-1">
-                            <span className="px-3.5 text-[8.5px] font-mono font-black text-[#D4AF37] uppercase tracking-widest block mb-1">
-                              🧪 Outils Bêta
-                            </span>
-                            {renderMenuItem("menu_bug_report", "Signaler un bug", "📢", () => {
+                            } }
+                          ]
+                        },
+                        {
+                          id: "beta_tools",
+                          title: "🧪 Outils Bêta",
+                          items: [
+                            { key: "menu_bug_report", label: "Signaler un bug", icon: "📢", action: () => {
                               setIsBetaFeedbackOpen(true);
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false)}
-                            {renderMenuItem("menu_suggestion", "Faire une suggestion", "💡", () => {
+                            } },
+                            { key: "menu_suggestion", label: "Faire une suggestion", icon: "💡", action: () => {
                               setIsBetaFeedbackOpen(true);
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false)}
-                            {renderMenuItem("menu_changelog", "Journal des mises à jour (Bêta)", "📄", () => {
+                            } },
+                            { key: "menu_changelog", label: "Journal des mises à jour (Bêta)", icon: "📄", action: () => {
                               setIsChangelogModalOpen(true);
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false)}
-                            {renderMenuItem("menu_support_beta", "Contacter le support", "🎧", () => {
+                            } },
+                            { key: "menu_support_beta", label: "Contacter le support", icon: "🎧", action: () => {
                               supportConfig.openSupport("Bêta Publique - Support Client");
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false)}
-                          </div>
-
-                          {/* SEPARATOR */}
-                          <div className="border-t border-afri-border my-1" />
-
-                          {/* SECTION: Centre personnel */}
-                          <div className="space-y-1">
-                            <span className="px-3.5 text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest block mb-1">
-                              👤 Centre personnel
-                            </span>
-                            {renderMenuItem("menu_heritage", "Mon Héritage", "👑", () => {
+                            } }
+                          ]
+                        },
+                        {
+                          id: "personal_center",
+                          title: "👤 Centre personnel",
+                          items: [
+                            { key: "menu_heritage", label: "Mon Héritage", icon: "👑", action: () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_heritage");
                               });
-                            }, false)}
-                            {renderMenuItem("menu_pubs", "Publications", "📝", () => {
+                            } },
+                            { key: "menu_pubs", label: "Publications", icon: "📝", action: () => {
                               setPerspective("user");
                               setActiveMenu("user_mes_gombos");
-                            }, false)}
-                            {renderMenuItem("menu_comms", "Palabres", "💬", () => {
+                            } },
+                            { key: "menu_comms", label: "Palabres", icon: "💬", action: () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_comments");
                               });
-                            }, false)}
-                            {renderMenuItem("menu_settings", "Paramètres", "⚙", () => {
+                            } },
+                            { key: "menu_settings", label: "Paramètres", icon: "⚙", action: () => {
                               setPerspective("user");
                               setActiveMenu("user_settings");
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false)}
-                            {renderMenuItem("menu_lang", t('langue'), "🌐", () => {
+                            } },
+                            { key: "menu_lang", label: t('langue'), icon: "🌐", action: () => {
                               const nextL = lang === "fr" ? "nouchi" : (lang === "nouchi" ? "en" : "fr");
                               setLanguage(nextL);
                               try { audioSynth.playTamTam(true); } catch (e) {}
                               addToTerminal(`[LANGUE] Passage en mode ${nextL === "nouchi" ? "Nouchi" : (nextL === "en" ? "English" : "Français")}`);
-                            }, false, (
+                            }, customBadge: (
                               <span className="font-mono text-[8px] uppercase font-bold text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20 scale-90">
                                 {lang === "nouchi" ? "Nouchi 🇨🇮" : (lang === "en" ? "English 🇬🇧" : "Français 🇫🇷")}
                               </span>
-                            ))}
-                          </div>
-
-                          {/* SEPARATOR */}
-                          <div className="border-t border-afri-border my-1" />
-
-                          {/* SECTION: Système */}
-                          <div className="space-y-1">
-                            <span className="px-3.5 text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest block mb-1">
-                              🛠 Système
-                            </span>
-                            {renderMenuItem("menu_notifications", "Notifications", "🔔", () => {
+                            ) }
+                          ]
+                        },
+                        {
+                          id: "system",
+                          title: "🛠 Système",
+                          items: [
+                            { key: "menu_notifications", label: "Notifications", icon: "🔔", action: () => {
                               requireAuthThen(async () => {
                                 setPerspective("user");
                                 setActiveMenu("user_notifications");
@@ -2909,68 +2899,93 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   } catch (e) {}
                                 }
                               });
-                            }, false, unreadNotifsCount > 0 ? (
+                            }, customBadge: unreadNotifsCount > 0 ? (
                               <span className="bg-gradient-to-r from-red-600 to-amber-500 text-afri-text font-mono font-black text-[9px] px-1.5 py-0.5 rounded-full animate-pulse shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.5)]">
                                 {unreadNotifsCount > 9 ? "9+" : unreadNotifsCount}
                               </span>
-                            ) : null)}
-                            {renderMenuItem("menu_history", "Historique", "🕓", () => {
+                            ) : null },
+                            { key: "menu_history", label: "Historique", icon: "🕓", action: () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_history");
                               });
-                            }, false)}
-                            {renderMenuItem("menu_downloads", "Téléchargements", "📥", () => {
+                            } },
+                            { key: "menu_downloads", label: "Téléchargements", icon: "📥", action: () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_downloads");
                               });
-                            }, false)}
-                            {renderMenuItem("menu_backups", "Sauvegardes", "💾", () => {
+                            } },
+                            { key: "menu_backups", label: "Sauvegardes", icon: "💾", action: () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_backups");
                               });
-                            }, false)}
-                            {renderMenuItem("menu_help", "Centre d'aide", "🛟", () => {
+                            } },
+                            { key: "menu_help", label: "Centre d'aide", icon: "🛟", action: () => {
                               setPerspective("user");
                               setActiveMenu("user_help_center");
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false)}
-
-                            {renderMenuItem("menu_builders_1", "❤️ Soutenir AFRIGOMBO ELITE", "❤️", () => {
+                            } },
+                            { key: "menu_builders_1", label: "❤️ Soutenir AFRIGOMBO ELITE", icon: "❤️", action: () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_builders");
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
-                            }, false)}
-                            
-                            {currentUser && renderMenuItem("menu_logout", "Déconnexion", "🚪", () => {
-                              setShowLogoutConfirm(true);
-                              try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false, (
-                              <span className="text-[7.5px] font-mono py-0.5 px-1 bg-red-950/40 text-red-400 rounded border border-red-900/30 font-black scale-90">
-                                QUITTER
-                              </span>
-                            ))}
+                            } },
+                            ...(currentUser ? [{
+                              key: "menu_logout", label: "Déconnexion", icon: "🚪", action: () => {
+                                setShowLogoutConfirm(true);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              }, customBadge: (
+                                <span className="text-[7.5px] font-mono py-0.5 px-1 bg-red-950/40 text-red-400 rounded border border-red-900/30 font-black scale-90">
+                                  QUITTER
+                                </span>
+                              )
+                            }] : [])
+                          ]
+                        }
+                      ];
 
-                            {/* DIAGNOSTICS FIREBASE - SOUVERAIN (SUPER FONDATEUR UNIQUEMENT) */}
-                            {isAuthorizedSuperFounder && (
-                              <>
-                                <div className="border-t border-afri-border/60 my-2" />
-                                {renderMenuItem("menu_firebase_diagnostics", "Diagnostics Firebase (Fondateur uniquement)", "⚡", () => {
-                                  setIsDiagnosticOpen(true);
-                                  try { audioSynth.playValidationSuccess(); } catch (_) {}
-                                }, false, (
-                                  <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/20 text-[#D4AF37] rounded border border-[#D4AF37]/40 font-black tracking-wider uppercase">
-                                    Fondateur
-                                  </span>
-                                ))}
-                              </>
-                            )}
+                      const renderedSections = sections.map((sec, secIdx) => {
+                        const visibleItems = sec.items.filter(it => {
+                          const flagKey = getFlagForMenu(it.key);
+                          if (!flagKey) return true;
+                          return checkIsModuleVisible(flagKey, systemFeatureFlags, isSuperFounderUser);
+                        });
+
+                        if (visibleItems.length === 0) return null;
+
+                        return (
+                          <div key={sec.id} className="space-y-1">
+                            {secIdx > 0 && <div className="border-t border-afri-border my-2" />}
+                            <span className="px-3.5 text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest block mb-1">
+                              {sec.title}
+                            </span>
+                            {visibleItems.map(it => renderMenuItem(it.key, it.label, it.icon, it.action, false, it.customBadge))}
                           </div>
+                        );
+                      }).filter(Boolean);
 
+                      return (
+                        <div className="space-y-4">
+                          {renderedSections}
+
+                          {/* DIAGNOSTICS FIREBASE - SOUVERAIN (SUPER FONDATEUR UNIQUEMENT) */}
+                          {isAuthorizedSuperFounder && (
+                            <>
+                              <div className="border-t border-afri-border/60 my-2" />
+                              {renderMenuItem("menu_firebase_diagnostics", "Diagnostics Firebase (Fondateur uniquement)", "⚡", () => {
+                                setIsDiagnosticOpen(true);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              }, false, (
+                                <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/20 text-[#D4AF37] rounded border border-[#D4AF37]/40 font-black tracking-wider uppercase">
+                                  Fondateur
+                                </span>
+                              ))}
+                            </>
+                          )}
                         </div>
                       );
                     })()}

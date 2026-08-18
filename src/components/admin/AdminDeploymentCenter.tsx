@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { BUILD_ID, BUILD_TIME, COMMIT_SHA, COMMIT_SHORT_SHA } from "../../buildInfo";
 import {
   Rocket, ToggleRight, CheckCircle, History, Info, Clock, Check, X,
-  ShieldAlert, ChevronRight, User, Server, Database, GitBranch, Cpu,
+  ShieldAlert, ChevronRight, ChevronDown, ChevronUp, User, Server, Database, GitBranch, Cpu,
   AlertCircle, ShieldCheck, Terminal, Layers, RefreshCw, FileText, CheckCircle2,
-  XCircle, Zap, Globe, Smartphone, Cloud, Code, Settings, EyeOff
+  XCircle, Zap, Globe, Smartphone, Cloud, Code, Settings, EyeOff, Search, SlidersHorizontal,
+  Sparkles, Lock, Unlock, Eye, HelpCircle
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { gomboDB } from "../../firebase";
 import { db } from "../../lib/firebase";
 import {
@@ -99,6 +101,8 @@ export default function AdminDeploymentCenter({
 
   // Filter & Saving states for Feature Flags
   const [activeFlagFilter, setActiveFlagFilter] = useState<"all" | "active" | "coming_soon" | "hidden" | "premium">("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
   const [savingFlagId, setSavingFlagId] = useState<string | null>(null);
   const [flagError, setFlagError] = useState<string | null>(null);
   const [confirmHideFlag, setConfirmHideFlag] = useState<FeatureFlagItem | null>(null);
@@ -462,13 +466,33 @@ export default function AdminDeploymentCenter({
 
   const currentBetaRecord = deploymentHistory.find((d) => d.targetEnv === "beta") || null;
 
+  // Computed feature flags counts
+  const totalCount = featureFlags.length;
+  const activeCount = featureFlags.filter(f => (f.visibilityStatus || (f.enabled ? "ACTIVE" : "HIDDEN")) === "ACTIVE").length;
+  const comingSoonCount = featureFlags.filter(f => f.visibilityStatus === "COMING_SOON").length;
+  const hiddenCount = featureFlags.filter(f => (f.visibilityStatus || (f.enabled ? "ACTIVE" : "HIDDEN")) === "HIDDEN").length;
+  const premiumCount = featureFlags.filter(f => !!f.isPremium).length;
+
   const filteredFlags = featureFlags.filter((f) => {
-    if (activeFlagFilter === "all") return true;
-    if (activeFlagFilter === "active") return f.visibilityStatus === "ACTIVE";
-    if (activeFlagFilter === "coming_soon") return f.visibilityStatus === "COMING_SOON";
-    if (activeFlagFilter === "hidden") return f.visibilityStatus === "HIDDEN";
-    if (activeFlagFilter === "premium") return !!f.isPremium;
-    return f.status === activeFlagFilter;
+    const currentVis = f.visibilityStatus || (f.enabled ? "ACTIVE" : "HIDDEN");
+    
+    // Tab filter
+    if (activeFlagFilter === "active" && currentVis !== "ACTIVE") return false;
+    if (activeFlagFilter === "coming_soon" && currentVis !== "COMING_SOON") return false;
+    if (activeFlagFilter === "hidden" && currentVis !== "HIDDEN") return false;
+    if (activeFlagFilter === "premium" && !f.isPremium) return false;
+
+    // Search query filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchName = (f.name || "").toLowerCase().includes(q);
+      const matchId = (f.id || "").toLowerCase().includes(q);
+      const matchCat = (f.category || "").toLowerCase().includes(q);
+      const matchDesc = (f.description || "").toLowerCase().includes(q);
+      if (!matchName && !matchId && !matchCat && !matchDesc) return false;
+    }
+
+    return true;
   });
 
   return (
@@ -814,157 +838,374 @@ export default function AdminDeploymentCenter({
         </div>
       </section>
 
-      {/* 4. FEATURE FLAGS ENGINE */}
+      {/* 4. FEATURE FLAGS ENGINE - COMPACT ACCORDION UI */}
       <section className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-afri-border pb-2">
-          <h3 className="text-xs font-black uppercase text-afri-gold tracking-widest flex items-center gap-2 font-mono">
-            <ToggleRight className="w-4 h-4 text-[#D4AF37]" />
-            GESTIONNAIRE DE FEATURE FLAGS ({featureFlags.length})
-          </h3>
+        {/* Section Header & Toolbar */}
+        <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 sm:p-5 space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-afri-border/60 pb-3">
+            <div>
+              <h3 className="text-xs sm:text-sm font-black uppercase text-afri-gold tracking-widest flex items-center gap-2 font-mono">
+                <ToggleRight className="w-4 h-4 text-[#D4AF37]" />
+                <span>CENTRE DE CONTRÔLE DES MODULES ({filteredFlags.length}/{totalCount})</span>
+              </h3>
+              <p className="text-[11px] text-afri-text-sec font-mono mt-0.5">
+                Pilotez la visibilité des fonctionnalités en temps réel (Actif, Bientôt disponible, Masqué).
+              </p>
+            </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-            {[
-              { id: "all", label: "Tous" },
-              { id: "active", label: "🟢 Actifs" },
-              { id: "coming_soon", label: "🟡 Bientôt" },
-              { id: "hidden", label: "🔴 Masqués" },
-              { id: "premium", label: "💎 Premium" }
-            ].map((st) => (
+            {/* Quick Actions */}
+            <div className="flex items-center gap-2 shrink-0">
               <button
-                key={st.id}
-                onClick={() => setActiveFlagFilter(st.id as any)}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-mono uppercase font-bold transition whitespace-nowrap cursor-pointer ${
-                  activeFlagFilter === st.id ? "bg-[#D4AF37] text-black" : "bg-afri-bg text-afri-text-sec hover:text-white"
-                }`}
+                type="button"
+                onClick={() => setExpandedModuleId(expandedModuleId ? null : (filteredFlags[0]?.id || null))}
+                className="px-3 py-1.5 bg-afri-bg hover:bg-zinc-800 border border-afri-border text-zinc-300 hover:text-white rounded-xl text-[10px] font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer"
               >
-                {st.label}
+                <SlidersHorizontal className="w-3 h-3 text-[#D4AF37]" />
+                <span>{expandedModuleId ? "Tout replier" : "Déplier le premier"}</span>
               </button>
-            ))}
+
+              {(searchQuery || activeFlagFilter !== "all") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setActiveFlagFilter("all");
+                  }}
+                  className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 rounded-xl text-[10px] font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                  <span>Réinitialiser</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Search bar & Live Filter Badges */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Rechercher un module (ex: roue, chat, wallet, gombos, avatar)..."
+                className="w-full pl-9 pr-8 py-2 bg-afri-bg border border-afri-border rounded-xl text-white placeholder-zinc-500 text-xs font-mono focus:outline-none focus:border-[#D4AF37] transition"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-0.5 cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Tabs with Counts */}
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1 sm:pb-0 shrink-0">
+              {[
+                { id: "all", label: "Tous", count: totalCount, activeClass: "bg-[#D4AF37] text-black" },
+                { id: "active", label: "🟢 Actifs", count: activeCount, activeClass: "bg-emerald-500 text-black font-black" },
+                { id: "coming_soon", label: "🟡 Bientôt", count: comingSoonCount, activeClass: "bg-amber-500 text-black font-black" },
+                { id: "hidden", label: "🔴 Masqués", count: hiddenCount, activeClass: "bg-rose-500 text-white font-black" },
+                { id: "premium", label: "💎 Premium", count: premiumCount, activeClass: "bg-amber-400 text-black font-black" }
+              ].map((st) => (
+                <button
+                  key={st.id}
+                  onClick={() => setActiveFlagFilter(st.id as any)}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-mono uppercase font-bold transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                    activeFlagFilter === st.id
+                      ? st.activeClass
+                      : "bg-afri-bg text-afri-text-sec hover:text-white border border-afri-border hover:border-zinc-700"
+                  }`}
+                >
+                  <span>{st.label}</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${
+                    activeFlagFilter === st.id ? "bg-black/20 text-current font-black" : "bg-zinc-800 text-zinc-400"
+                  }`}>
+                    {st.count}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {flagError && (
-          <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs font-mono flex items-center justify-between animate-fadeIn">
-            <span>⚠️ {flagError}</span>
-            <button onClick={() => setFlagError(null)} className="text-rose-400 hover:text-white font-bold cursor-pointer">✕</button>
+          <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-400 text-xs font-mono flex items-center justify-between animate-fadeIn">
+            <span className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{flagError}</span>
+            </span>
+            <button onClick={() => setFlagError(null)} className="text-rose-400 hover:text-white font-bold cursor-pointer">
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredFlags.map((flag) => {
-            const currentVis = flag.visibilityStatus || (flag.enabled ? "ACTIVE" : "HIDDEN");
-            const isSavingThis = savingFlagId === flag.id;
+        {/* ACCORDION MODULES LIST */}
+        {filteredFlags.length === 0 ? (
+          <div className="p-12 bg-afri-bg-sec border border-dashed border-afri-border rounded-2xl text-center space-y-3 font-mono text-xs">
+            <SlidersHorizontal className="w-8 h-8 text-zinc-600 mx-auto" />
+            <p className="text-afri-text-sec font-bold">Aucun module ne correspond à vos critères de recherche.</p>
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setActiveFlagFilter("all");
+              }}
+              className="px-4 py-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 rounded-xl text-[10px] font-bold uppercase transition inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Réinitialiser les filtres</span>
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filteredFlags.map((flag) => {
+              const currentVis = flag.visibilityStatus || (flag.enabled ? "ACTIVE" : "HIDDEN");
+              const isSavingThis = savingFlagId === flag.id;
+              const isExpanded = expandedModuleId === flag.id;
 
-            return (
-              <div
-                key={flag.id}
-                className={`p-4 rounded-2xl border transition flex flex-col justify-between space-y-3 ${
-                  currentVis === "ACTIVE"
-                    ? "bg-afri-bg-sec border-[#D4AF37]/40 shadow-sm"
-                    : currentVis === "COMING_SOON"
-                    ? "bg-amber-500/5 border-amber-500/30"
-                    : "bg-afri-bg/50 border-afri-border opacity-70"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[9px] uppercase font-mono font-bold text-afri-text-muted">{flag.category}</span>
-                      {flag.isPremium && (
-                        <span className="px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                          💎 PREMIUM
-                        </span>
-                      )}
-                    </div>
-                    <h4 className="text-xs font-bold text-white leading-tight">{flag.name}</h4>
-                  </div>
-
-                  {/* Premium Switch */}
-                  <button
-                    type="button"
-                    title={flag.isPremium ? "Rendre accessible à tous" : "Réserver aux membres Premium"}
-                    disabled={isSavingThis}
-                    onClick={() => handleUpdateFlagVisibility(flag.id, currentVis, !flag.isPremium)}
-                    className={`px-2 py-1 rounded-lg text-[9px] font-mono font-bold transition flex items-center gap-1 cursor-pointer ${
-                      flag.isPremium
-                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 hover:bg-amber-500/30"
-                        : "bg-zinc-800 text-zinc-400 border border-zinc-700 hover:text-white"
-                    }`}
+              return (
+                <div
+                  key={flag.id}
+                  className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                    isExpanded
+                      ? "bg-afri-bg-sec border-[#D4AF37]/50 shadow-lg shadow-black/40"
+                      : currentVis === "ACTIVE"
+                      ? "bg-afri-bg-sec/80 border-afri-border hover:border-zinc-700"
+                      : currentVis === "COMING_SOON"
+                      ? "bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40"
+                      : "bg-afri-bg/60 border-rose-500/20 hover:border-rose-500/40 opacity-80"
+                  }`}
+                >
+                  {/* COMPACT ACCORDION ROW HEADER */}
+                  <div
+                    onClick={() => setExpandedModuleId(isExpanded ? null : flag.id)}
+                    className="p-3 sm:p-4 flex items-center justify-between gap-2.5 cursor-pointer select-none transition hover:bg-white/[0.02]"
                   >
-                    💎 {flag.isPremium ? "PREMIUM" : "GRATUIT"}
-                  </button>
-                </div>
+                    {/* Left: Category Badge & Title & Key */}
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <span className={`px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold uppercase shrink-0 border ${
+                        flag.category === "Finance"
+                          ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+                          : flag.category === "Monétisation"
+                          ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                          : flag.category === "Sécurité"
+                          ? "bg-rose-500/10 text-rose-300 border-rose-500/30"
+                          : flag.category === "Navigation"
+                          ? "bg-sky-500/10 text-sky-300 border-sky-500/30"
+                          : flag.category === "Profil"
+                          ? "bg-purple-500/10 text-purple-300 border-purple-500/30"
+                          : "bg-zinc-800 text-zinc-300 border-zinc-700"
+                      }`}>
+                        {flag.category}
+                      </span>
 
-                <p className="text-[11px] text-afri-text-sec font-mono line-clamp-2 leading-tight">
-                  {flag.description || "Fonctionnalité paramétrable du système"}
-                </p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs sm:text-sm font-bold text-white truncate leading-tight">
+                            {flag.name}
+                          </h4>
+                          {flag.isPremium && (
+                            <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
+                              💎 PREMIUM
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[9px] font-mono text-afri-text-muted block truncate mt-0.5">
+                          id: <span className="text-zinc-400">{flag.id}</span>
+                        </span>
+                      </div>
+                    </div>
 
-                {/* 3-STATE VISIBILITY CONTROL BUTTONS */}
-                <div className="space-y-1.5 pt-2 border-t border-afri-border">
-                  <div className="text-[9px] font-mono uppercase font-bold text-afri-text-muted">
-                    Visibilité du module :
+                    {/* Right: Status Pill, Saving Spinner & Chevron */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isSavingThis ? (
+                        <div className="flex items-center gap-1 text-[10px] font-mono text-amber-400">
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span className="hidden sm:inline">Synchro...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          {currentVis === "ACTIVE" && (
+                            <span className="px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-mono font-black uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              <span>ACTIF</span>
+                            </span>
+                          )}
+
+                          {currentVis === "COMING_SOON" && (
+                            <span className="px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-mono font-black uppercase bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                              <span>BIENTÔT</span>
+                            </span>
+                          )}
+
+                          {currentVis === "HIDDEN" && (
+                            <span className="px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-mono font-black uppercase bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                              <span>MASQUÉ</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className={`w-7 h-7 rounded-lg bg-afri-bg border border-afri-border flex items-center justify-center text-zinc-400 transition-transform duration-200 ${
+                        isExpanded ? "rotate-180 text-[#D4AF37] border-[#D4AF37]/50" : "hover:text-white"
+                      }`}>
+                        <ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-1">
-                    {/* ACTIVE */}
-                    <button
-                      type="button"
-                      disabled={isSavingThis}
-                      onClick={() => handleUpdateFlagVisibility(flag.id, "ACTIVE")}
-                      className={`px-2 py-1.5 rounded-lg text-[9px] font-mono font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
-                        currentVis === "ACTIVE"
-                          ? "bg-emerald-500 text-black font-black shadow-md"
-                          : "bg-zinc-800 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 border border-zinc-700"
-                      }`}
-                    >
-                      🟢 ACTIVE
-                    </button>
 
-                    {/* COMING SOON */}
-                    <button
-                      type="button"
-                      disabled={isSavingThis}
-                      onClick={() => handleUpdateFlagVisibility(flag.id, "COMING_SOON")}
-                      className={`px-2 py-1.5 rounded-lg text-[9px] font-mono font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
-                        currentVis === "COMING_SOON"
-                          ? "bg-amber-500 text-black font-black shadow-md"
-                          : "bg-zinc-800 text-zinc-400 hover:text-amber-400 hover:bg-amber-500/10 border border-zinc-700"
-                      }`}
-                    >
-                      🟡 BIENTÔT
-                    </button>
+                  {/* EXPANDED ACCORDION DRAWER */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        className="border-t border-afri-border/60 bg-black/40 px-3 py-3.5 sm:px-5 sm:py-4 space-y-4 font-mono"
+                      >
+                        {/* Description block */}
+                        <div className="p-3 bg-afri-bg border border-afri-border rounded-xl space-y-1">
+                          <span className="text-[9px] font-mono uppercase text-afri-text-muted font-bold block">
+                            Description du module :
+                          </span>
+                          <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+                            {flag.description || "Aucune description détaillée renseignée pour ce module."}
+                          </p>
+                        </div>
 
-                    {/* HIDDEN */}
-                    <button
-                      type="button"
-                      disabled={isSavingThis}
-                      onClick={() => {
-                        if (currentVis !== "HIDDEN") {
-                          setConfirmHideFlag(flag);
-                        }
-                      }}
-                      className={`px-2 py-1.5 rounded-lg text-[9px] font-mono font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
-                        currentVis === "HIDDEN"
-                          ? "bg-rose-500 text-white font-black shadow-md"
-                          : "bg-zinc-800 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 border border-zinc-700"
-                      }`}
-                    >
-                      🔴 MASQUÉ
-                    </button>
-                  </div>
+                        {/* Interactive Controls Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                          {/* 1. 3-State Visibility Selector */}
+                          <div className="space-y-2 bg-afri-bg/90 border border-afri-border rounded-xl p-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-white uppercase flex items-center gap-1.5">
+                                <ToggleRight className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                Visibilité Utilisateur :
+                              </span>
+                              <span className="text-[8px] text-afri-text-muted uppercase">Source de Vérité</span>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-1.5">
+                              {/* ACTIVE */}
+                              <button
+                                type="button"
+                                disabled={isSavingThis}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateFlagVisibility(flag.id, "ACTIVE");
+                                }}
+                                className={`px-2 py-2 rounded-xl text-[10px] font-mono font-bold uppercase transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                                  currentVis === "ACTIVE"
+                                    ? "bg-emerald-500 text-black font-black shadow-md shadow-emerald-500/20"
+                                    : "bg-zinc-900 text-zinc-400 hover:text-emerald-300 hover:bg-emerald-500/10 border border-zinc-800"
+                                }`}
+                              >
+                                <span className="text-xs">🟢</span>
+                                <span>ACTIF</span>
+                              </button>
+
+                              {/* COMING SOON */}
+                              <button
+                                type="button"
+                                disabled={isSavingThis}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateFlagVisibility(flag.id, "COMING_SOON");
+                                }}
+                                className={`px-2 py-2 rounded-xl text-[10px] font-mono font-bold uppercase transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                                  currentVis === "COMING_SOON"
+                                    ? "bg-amber-500 text-black font-black shadow-md shadow-amber-500/20"
+                                    : "bg-zinc-900 text-zinc-400 hover:text-amber-300 hover:bg-amber-500/10 border border-zinc-800"
+                                }`}
+                              >
+                                <span className="text-xs">🟡</span>
+                                <span>BIENTÔT</span>
+                              </button>
+
+                              {/* HIDDEN (With anchored smart confirmation modal) */}
+                              <button
+                                type="button"
+                                disabled={isSavingThis}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (currentVis !== "HIDDEN") {
+                                    setConfirmHideFlag(flag);
+                                  }
+                                }}
+                                className={`px-2 py-2 rounded-xl text-[10px] font-mono font-bold uppercase transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                                  currentVis === "HIDDEN"
+                                    ? "bg-rose-500 text-white font-black shadow-md shadow-rose-500/20"
+                                    : "bg-zinc-900 text-zinc-400 hover:text-rose-300 hover:bg-rose-500/10 border border-zinc-800"
+                                }`}
+                              >
+                                <span className="text-xs">🔴</span>
+                                <span>MASQUER</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* 2. Premium Access Level Switch */}
+                          <div className="space-y-2 bg-afri-bg/90 border border-afri-border rounded-xl p-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-white uppercase flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                                Accès Premium :
+                              </span>
+                              <span className="text-[8px] text-afri-text-muted uppercase">Gouvernance</span>
+                            </div>
+
+                            <button
+                              type="button"
+                              disabled={isSavingThis}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdateFlagVisibility(flag.id, currentVis, !flag.isPremium);
+                              }}
+                              className={`w-full py-2.5 px-3 rounded-xl text-[10px] font-mono font-bold uppercase transition flex items-center justify-between cursor-pointer border ${
+                                flag.isPremium
+                                  ? "bg-amber-500/20 text-amber-300 border-amber-500/50 hover:bg-amber-500/30"
+                                  : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white hover:bg-zinc-800"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm">{flag.isPremium ? "💎" : "🌐"}</span>
+                                <span>{flag.isPremium ? "RÉSERVÉ MEMBRES PREMIUM" : "GRATUIT (TOUS LES MEMBRES)"}</span>
+                              </div>
+                              <span className="text-[9px] underline">Basculer</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Metadata Footer */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[9px] text-afri-text-muted pt-2 border-t border-afri-border/60">
+                          <div className="flex items-center gap-3">
+                            <span>Clé technique : <strong className="text-zinc-300 font-mono">{flag.id}</strong></span>
+                            <span>Catégorie : <strong className="text-zinc-300">{flag.category}</strong></span>
+                          </div>
+                          <div>
+                            {flag.updatedAt ? (
+                              <span>Maj le {new Date(flag.updatedAt).toLocaleDateString("fr-FR")} {flag.updatedBy ? `par ${flag.updatedBy.split("@")[0]}` : ""}</span>
+                            ) : (
+                              <span>Configuration par défaut active</span>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-
-                <div className="flex items-center justify-between text-[9px] font-mono pt-1 text-afri-text-muted">
-                  <span className="truncate max-w-[180px]">
-                    {flag.updatedAt
-                      ? `Maj: ${new Date(flag.updatedAt).toLocaleDateString("fr-FR")} ${flag.updatedBy ? `par ${flag.updatedBy.split("@")[0]}` : ""}`
-                      : "Statut par défaut"}
-                  </span>
-                  {isSavingThis && <RefreshCw className="w-3 h-3 animate-spin text-amber-400" />}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* 5. ECOSYSTEM MODULES STATUS */}
