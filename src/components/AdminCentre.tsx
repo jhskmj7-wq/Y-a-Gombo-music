@@ -1261,7 +1261,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       menu_gombo_ads: "gombos",
       menu_heritage: "heritage",
       menu_pubs: "gombos",
-      menu_comms: "chat"
+      menu_comms: "chat",
+      menu_notifications: "notifications",
+      menu_changelog: "updateJournal"
     };
     return map[menu] || null;
   };
@@ -7949,7 +7951,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             </button>
 
             {/* 2. VIBES */}
-            {isModuleVisible("gombos") && (
+            {isModuleVisible("podcasts") && (
               <button
                 id="user-nav-vibes"
                 onClick={() => {
@@ -7976,23 +7978,25 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             )}
 
             {/* 3. PUBLIER */}
-            <button
-              id="user-nav-publish"
-              onClick={() => {
-                try { if (navigator?.vibrate) navigator.vibrate(12); } catch(_) {}
-                requireAuthThen(() => {
-                  setIsPlusMenuOpen(true);
-                  try { audioSynth.playValidationSuccess(); } catch (err) {}
-                });
-              }}
-              className="relative -top-2 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-1 select-none shrink-0 min-w-[48px] min-h-[48px] touch-manipulation"
-              aria-label="Publier"
-            >
-              <div className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center bg-gradient-to-tr from-afri-gold to-[#F1C40F] text-black rounded-full shadow-[0_4px_16px_rgba(212,175,55,0.4)] border-2 border-afri-bg hover:scale-105 active:scale-90 transition-transform">
-                <Plus className="w-5 h-5 stroke-[3.5]" />
-              </div>
-              <span className="text-[7.5px] xs:text-[8px] font-black uppercase tracking-wider text-afri-text mt-0.5">Publier</span>
-            </button>
+            {(isModuleVisible("gombos") || isModuleVisible("reels") || isModuleVisible("podcasts") || isModuleVisible("renforts")) && (
+              <button
+                id="user-nav-publish"
+                onClick={() => {
+                  try { if (navigator?.vibrate) navigator.vibrate(12); } catch(_) {}
+                  requireAuthThen(() => {
+                    setIsPlusMenuOpen(true);
+                    try { audioSynth.playValidationSuccess(); } catch (err) {}
+                  });
+                }}
+                className="relative -top-2 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-1 select-none shrink-0 min-w-[48px] min-h-[48px] touch-manipulation"
+                aria-label="Publier"
+              >
+                <div className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center bg-gradient-to-tr from-afri-gold to-[#F1C40F] text-black rounded-full shadow-[0_4px_16px_rgba(212,175,55,0.4)] border-2 border-afri-bg hover:scale-105 active:scale-90 transition-transform">
+                  <Plus className="w-5 h-5 stroke-[3.5]" />
+                </div>
+                <span className="text-[7.5px] xs:text-[8px] font-black uppercase tracking-wider text-afri-text mt-0.5">Publier</span>
+              </button>
+            )}
 
             {/* 4. MES GOMBOS */}
             {isModuleVisible("gombos") && (
