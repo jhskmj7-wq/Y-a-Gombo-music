@@ -130,10 +130,7 @@ function getAI(): GoogleGenAI | null {
 
 const app = express();
 
-async function startServer() {
-  const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
-
-  app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '10mb' }));
 
 // --- WALLET SECURITY BACKEND ENGINE ---
 
@@ -1001,6 +998,9 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     next(err);
   });
 
+async function startServer() {
+  const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");
@@ -1074,9 +1074,12 @@ function startMaintenanceBackgroundChecker() {
   }, 10000);
 }
 
-startServer().catch((err) => {
-  console.error("❌ Fatal error starting Express server:", err);
-});
+// Only start standalone HTTP server in non-serverless environments (local dev / Docker / Cloud Run)
+if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME && process.env.NODE_ENV !== "test") {
+  startServer().catch((err) => {
+    console.error("❌ Fatal error starting Express server:", err);
+  });
+}
 
 export { app };
 export default app;
