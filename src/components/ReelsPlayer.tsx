@@ -351,7 +351,8 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       {/* SNAP-Y VERTICAL FULLSCREEN STREAM */}
       <div 
         ref={containerRef}
-        className="w-full h-full overflow-y-auto snap-y snap-mandatory scrollbar-none"
+        className="w-full h-full overflow-y-auto snap-y snap-mandatory scrollbar-none overscroll-contain [-webkit-overflow-scrolling:touch]"
+        style={{ touchAction: "pan-y" }}
         onScroll={handleScroll}
       >
         {localReels.map((reel, index) => {
@@ -573,7 +574,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
             </div>
 
             {/* Comments List */}
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[45vh]">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[45vh] overscroll-contain [-webkit-overflow-scrolling:touch]" style={{ touchAction: "pan-y" }}>
               {commentsList.map(c => (
                 <div key={c.id} className="flex gap-3 items-start bg-zinc-900/60 p-2.5 rounded-2xl border border-afri-border">
                   <img src={c.avatar} alt="" className="w-8 h-8 rounded-full object-cover border border-[#D4AF37]/30 shrink-0" />

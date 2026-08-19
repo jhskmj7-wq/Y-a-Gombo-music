@@ -330,7 +330,11 @@ function parseStatusValue(value: any): FeatureVisibilityStatus {
 export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap): FeatureVisibilityStatus {
   const activeMap = flagsMap && Object.keys(flagsMap).length > 0 ? flagsMap : globalCachedFlagsMap;
   if (!activeMap || Object.keys(activeMap).length === 0) {
-    return "ACTIVE";
+    const cleanId = (featureId || "").toLowerCase().trim();
+    if (cleanId === "home" || cleanId === "user_home" || cleanId === "user_terrain" || cleanId === "audio") {
+      return "ACTIVE";
+    }
+    return "HIDDEN";
   }
 
   // 0. Parent Check: If this feature has a parent module, check if parent is HIDDEN

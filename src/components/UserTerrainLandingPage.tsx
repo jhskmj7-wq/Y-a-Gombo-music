@@ -2038,8 +2038,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           INTERACTIVE ACTIONS MODAL OVERLAYS (SOUVERAIN COMMANDE CENTRE)
          ========================================================================= */}
       {activeQuickActionModal && (
-        <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className={`bg-afri-bg-sec border border-afri-border rounded-3xl p-4 sm:p-6 w-full ${activeQuickActionModal === "search_member" ? "max-w-6xl h-[90vh] overflow-y-auto" : "max-w-md"} my-8 relative overflow-hidden select-none shadow-xl`}>
+        <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+          <div className={`bg-afri-bg-sec border border-afri-border rounded-3xl p-4 sm:p-6 w-full ${activeQuickActionModal === "search_member" ? "max-w-6xl max-h-[85vh] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]" : "max-w-md"} my-8 relative select-none shadow-xl`} style={{ touchAction: "pan-y" }}>
             
             <button
               onClick={() => {

@@ -63,7 +63,7 @@ export const AvatarStore: React.FC<AvatarStoreProps> = ({ currentUser, currentUs
             id="avatar-store-search-input"
           />
 
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2 w-full max-w-full touch-pan-x" id="avatar-store-categories-list">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2 w-full max-w-full touch-pan-x overscroll-contain [-webkit-overflow-scrolling:touch]" id="avatar-store-categories-list">
             {categories.map((cat) => (
               <AndroidChip
                 key={cat}

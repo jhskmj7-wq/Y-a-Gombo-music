@@ -250,7 +250,7 @@ export default function FounderThrone({
         </header>
 
         {/* LOCKED MAIN REGION (SCALES DOWN ON SMALLER WINDOWS) */}
-        <main className="flex-1 w-full flex bg-transparent p-4 pb-0 items-start justify-center relative overflow-y-auto custom-scrollbar">
+        <main className="flex-1 w-full flex bg-transparent p-4 pb-0 items-start justify-center relative overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] custom-scrollbar" style={{ touchAction: "pan-y" }}>
           
           {activeMenu === "decisions_strategiques" ? (
             <div className="w-full xl:max-w-[1500px] 2xl:max-w-[1800px] mx-auto pb-10">
