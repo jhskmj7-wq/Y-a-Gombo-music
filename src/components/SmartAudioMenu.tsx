@@ -261,8 +261,8 @@ export const SmartAudioMenu: React.FC = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative w-10 h-10 rounded-full flex items-center justify-center border transition-all z-40 cursor-pointer shadow-lg
-          ${isOpen ? "bg-afri-bg-sec border-[#D4AF37] text-[#D4AF37]" : "bg-afri-bg-sec/80 border-[#D4AF37]/30 text-afri-text-sec hover:text-[#D4AF37]"}
+        className={`relative w-10 h-10 rounded-full flex items-center justify-center border transition-all z-40 cursor-pointer shadow-md
+          ${isOpen ? "bg-afri-bg-sec border-[#D4AF37] text-[#D4AF37]" : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-[#D4AF37] hover:border-[#D4AF37]/40"}
         `}
         title="Centre Audio Impérial"
       >
@@ -285,10 +285,10 @@ export const SmartAudioMenu: React.FC = () => {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute top-12 right-0 w-72 sm:w-80 bg-[#080808] border border-[#D4AF37]/30 rounded-2xl shadow-2xl overflow-hidden z-50 p-2 space-y-1.5 backdrop-blur-xl"
+            className="absolute top-12 right-0 w-72 sm:w-80 bg-afri-bg-sec border border-afri-border rounded-2xl shadow-2xl overflow-hidden z-50 p-2 space-y-1.5 text-afri-text"
           >
             {/* Header */}
-            <div className="px-3 py-2 border-b border-[#D4AF37]/20 flex items-center justify-between">
+            <div className="px-3 py-2 border-b border-afri-border flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <Radio className="w-3.5 h-3.5 text-[#D4AF37] animate-pulse" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37]">
@@ -303,9 +303,9 @@ export const SmartAudioMenu: React.FC = () => {
             {/* Dynamic Public Tracks List */}
             <div className="max-h-72 overflow-y-auto space-y-1 scrollbar-thin pr-0.5">
               {publicAudios.length === 0 ? (
-                <div className="py-6 text-center text-afri-text-sec space-y-1">
-                  <Headphones className="w-6 h-6 mx-auto text-zinc-700" />
-                  <p className="text-[10px] font-mono uppercase">Aucune musique publique disponible</p>
+                <div className="py-6 text-center space-y-1">
+                  <Headphones className="w-6 h-6 mx-auto text-afri-text-muted" />
+                  <p className="text-[10px] font-mono uppercase text-afri-text-sec">Aucune musique publique disponible</p>
                 </div>
               ) : (
                 publicAudios.map((track) => {
@@ -318,8 +318,8 @@ export const SmartAudioMenu: React.FC = () => {
                       onClick={() => handleToggleTrack(track)}
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl transition-all cursor-pointer group text-left border ${
                         isTrackActive
-                          ? "bg-[#D4AF37]/10 border-[#D4AF37]/40 shadow-sm"
-                          : "hover:bg-white/5 border-transparent hover:border-white/10"
+                          ? "bg-[#D4AF37]/15 border-[#D4AF37]/50 shadow-sm"
+                          : "hover:bg-afri-bg-ter border-transparent hover:border-afri-border/60"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
@@ -327,7 +327,7 @@ export const SmartAudioMenu: React.FC = () => {
                           className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                             isTrackActive
                               ? "bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40"
-                              : "bg-white/5 text-afri-text-sec group-hover:text-white border border-white/5"
+                              : "bg-afri-bg-ter text-afri-text-sec group-hover:text-afri-text border border-afri-border/60"
                           }`}
                         >
                           {renderIcon(track.iconType, isTrackActive)}
@@ -335,13 +335,13 @@ export const SmartAudioMenu: React.FC = () => {
                         <div className="min-w-0 flex-1">
                           <p
                             className={`text-xs font-bold truncate leading-tight ${
-                              isTrackActive ? "text-[#D4AF37]" : "text-white group-hover:text-[#D4AF37]"
+                              isTrackActive ? "text-[#D4AF37]" : "text-afri-text group-hover:text-[#D4AF37]"
                             }`}
                             title={track.title}
                           >
                             {track.title}
                           </p>
-                          <p className="text-[9px] text-zinc-400 font-mono truncate mt-0.5">
+                          <p className="text-[9px] text-afri-text-sec font-mono truncate mt-0.5">
                             {track.subtitle}
                           </p>
                         </div>
@@ -352,7 +352,7 @@ export const SmartAudioMenu: React.FC = () => {
                         className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all ${
                           isTrackActive
                             ? "bg-[#D4AF37] text-black shadow-md"
-                            : "bg-white/5 text-zinc-400 group-hover:text-white group-hover:bg-[#D4AF37]/20"
+                            : "bg-afri-bg-ter text-afri-text-sec group-hover:text-afri-text group-hover:bg-[#D4AF37]/20 border border-afri-border/50"
                         }`}
                       >
                         {isTrackPlayingNow ? (
@@ -368,8 +368,8 @@ export const SmartAudioMenu: React.FC = () => {
             </div>
 
             {/* Bottom Hint */}
-            <div className="pt-1.5 px-2 border-t border-white/5 text-center">
-              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider">
+            <div className="pt-1.5 px-2 border-t border-afri-border text-center">
+              <span className="text-[8px] font-mono text-afri-text-muted uppercase tracking-wider">
                 Volume géré par les boutons physiques
               </span>
             </div>
