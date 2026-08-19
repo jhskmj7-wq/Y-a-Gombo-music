@@ -823,9 +823,11 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
   const isLiked = (id: string) => likedGombos.includes(id);
   const toggleLike = (id: string) => {
-    setLikedGombos(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
+    requireAuthThen(() => {
+      setLikedGombos(prev =>
+        prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+      );
+    });
   };
 
   return (
@@ -889,12 +891,10 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                {/* Profile Avatar */}
                <div 
                  onClick={() => { 
-                    if (!currentUser) {
-                      setShowHeritageLoginRequired && setShowHeritageLoginRequired(true);
-                    } else {
-                      setActiveMenu("user_edit_profile");
-                      setViewingGomboIdDetail && setViewingGomboIdDetail(false); 
-                    }
+                   requireAuthThen(() => {
+                     setActiveMenu("user_edit_profile");
+                     setViewingGomboIdDetail && setViewingGomboIdDetail(false); 
+                   });
                  }}
                  className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-afri-gold overflow-hidden bg-afri-bg-sec cursor-pointer hover:scale-105 transition-transform shadow-[0_0_12px_rgba(212,175,55,0.2)] relative shrink-0"
                >

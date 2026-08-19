@@ -360,7 +360,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   const requireAuthThen = (action: () => void) => {
     if (!currentUser) {
-      alert("🔒 Connectez-vous pour continuer");
       setIsAuthModalOpen(true);
     } else {
       action();
@@ -8048,13 +8047,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 id="user-nav-heritage"
                 onClick={() => {
                   try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
-                  if (!currentUser) {
-                    setShowHeritageLoginRequired(true);
-                  } else {
+                  requireAuthThen(() => {
                     setActiveMenu("user_heritage");
                     setViewingGomboIdDetail(false);
                     try { audioSynth.playValidationSuccess(); } catch (err) {}
-                  }
+                  });
                 }}
                 className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
               >
