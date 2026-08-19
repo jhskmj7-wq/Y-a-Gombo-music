@@ -657,6 +657,77 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
   });
 
+  // USER COVER UPLOAD ROUTE (Supabase Storage afrigombo-media)
+  app.post("/api/user/cover/upload", async (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    const { idToken, storagePath, fileBase64, contentType, bucket = "afrigombo-media" } = req.body || {};
+
+    if (!idToken) {
+      return res.status(401).json({ success: false, error: "Non authentifié (token manquant)." });
+    }
+
+    if (!storagePath || !fileBase64) {
+      return res.status(400).json({ success: false, error: "Paramètres 'storagePath' et 'fileBase64' requis." });
+    }
+
+    try {
+      const adminAuth = getAdminAuthClient();
+      if (!adminAuth) {
+        return res.status(503).json({ success: false, error: "Service Firebase Admin indisponible." });
+      }
+
+      let decodedToken;
+      try {
+        decodedToken = await adminAuth.verifyIdToken(idToken);
+      } catch (authErr: any) {
+        return res.status(401).json({ success: false, error: "Session invalide ou expirée." });
+      }
+
+      const uid = decodedToken.uid;
+
+      if (!storagePath.includes(`covers/${uid}/`) && !storagePath.startsWith(`covers/${uid}/`)) {
+        return res.status(403).json({ success: false, error: "Accès refusé. Chemin de stockage non autorisé pour cet utilisateur." });
+      }
+
+      const base64Clean = fileBase64.includes(",") ? fileBase64.split(",")[1] : fileBase64;
+      const fileBuffer = Buffer.from(base64Clean, "base64");
+
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+      const { createClient } = await import("@supabase/supabase-js");
+      const serverSupabase = createClient(supabaseUrl, supabaseKey);
+
+      const { data: uploadData, error: uploadError } = await serverSupabase.storage
+        .from(bucket)
+        .upload(storagePath, fileBuffer, {
+          contentType: contentType || "image/jpeg",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error("[USER COVER UPLOAD ERROR]", uploadError);
+        return res.status(500).json({ success: false, error: uploadError.message || "Échec du téléversement de la bannière." });
+      }
+
+      const { data: publicUrlData } = serverSupabase.storage.from(bucket).getPublicUrl(storagePath);
+      const publicUrl = publicUrlData?.publicUrl || `${supabaseUrl}/storage/v1/object/public/${bucket}/${storagePath}`;
+
+      console.log(`[USER COVER UPLOAD SUCCESS] Utilisateur ${uid} -> ${publicUrl}`);
+
+      return res.json({
+        success: true,
+        url: publicUrl,
+        publicUrl: publicUrl,
+        path: uploadData?.path || storagePath,
+        bucket,
+        message: "Bannière téléversée avec succès"
+      });
+    } catch (err: any) {
+      console.error("[USER COVER UPLOAD FATAL ERROR]", err);
+      return res.status(500).json({ success: false, error: err.message || "Erreur interne lors du téléversement de la bannière." });
+    }
+  });
+
   app.post("/api/admin/media/delete", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
     const { idToken, storagePath, bucket = "afrigombo-media" } = req.body || {};

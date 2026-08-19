@@ -543,19 +543,47 @@ export default function GomboProfile({
 
   const handleCoverUpload = async (file: File) => {
     setCoverUploading(true);
-    setCoverUploadProgress(0);
-    let downloadUrl = "";
+    setCoverUploadProgress(15);
     try {
-      const path = `covers/${currentUserProfile.uid}/${Date.now()}_${file.name}`;
-      try {
-        downloadUrl = await gomboDB.uploadFile(file, path, (progress) => {
-          setCoverUploadProgress(Math.round(progress));
-        });
-      } catch (uploadError) {
-        console.warn("Cover upload fallback", uploadError);
-        downloadUrl = URL.createObjectURL(file);
+      const storagePath = `covers/${currentUserProfile.uid}/${Date.now()}_${file.name}`;
+      
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error("Utilisateur non connecté.");
       }
+      const idToken = await currentUser.getIdToken();
+      setCoverUploadProgress(40);
 
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const res = reader.result as string;
+          resolve(res.includes(",") ? res.split(",")[1] : res);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      setCoverUploadProgress(65);
+
+      const resp = await fetch("/api/user/cover/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idToken,
+          storagePath,
+          fileBase64: base64Data,
+          contentType: file.type || "image/jpeg",
+          bucket: "afrigombo-media"
+        })
+      });
+
+      const json = await resp.json();
+      if (!json.success || !json.publicUrl) {
+        throw new Error(json.error || "Échec du téléversement de la bannière.");
+      }
+      setCoverUploadProgress(85);
+
+      const downloadUrl = json.publicUrl;
       setCoverUrl(downloadUrl);
       
       const payload = {
@@ -568,15 +596,18 @@ export default function GomboProfile({
           const userDocRef = doc(db, "users", currentUserProfile.uid);
           await updateDoc(userDocRef, payload);
         } catch (dbErr) {
+          console.warn("Direct updateDoc of coverUrl failed, calling gomboDB cache updater:", dbErr);
           await gomboDB.updateUserProfile(currentUserProfile.uid, payload);
         }
       } else {
         await gomboDB.updateUserProfile(currentUserProfile.uid, payload);
       }
 
+      setCoverUploadProgress(100);
       onRefreshProfile();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Cover upload error:", err);
+      alert(err.message || "Erreur lors du téléversement de la bannière.");
     } finally {
       setCoverUploading(false);
     }
