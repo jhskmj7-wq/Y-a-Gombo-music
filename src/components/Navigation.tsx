@@ -21,7 +21,7 @@ export default function Navigation() {
 
   const navItems = [
     { name: 'ACCUEIL', path: '/home', icon: Home, requiresAuth: false, featureId: 'home' },
-    { name: 'VIBES', path: '/vibes', icon: Flame, requiresAuth: false, featureId: 'podcasts' },
+    { name: 'VIBES', path: '/vibes', icon: Flame, requiresAuth: true, featureId: 'podcasts' },
     { name: 'PUBLIER', path: '/publish', icon: Plus, requiresAuth: true, featureId: 'gombos' },
     { name: 'MES GOMBOS', path: '/my-gombos', icon: Megaphone, requiresAuth: true, featureId: 'gombos' },
     { name: 'MON HÉRITAGE', path: '/heritage', icon: User, requiresAuth: true, featureId: 'heritage' },

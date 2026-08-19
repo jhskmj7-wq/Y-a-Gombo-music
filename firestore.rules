@@ -296,10 +296,19 @@ service cloud.firestore {
                     get(/databases/$(database)/documents/conversations/$(incoming().conversationId)).data.participants.hasAny([request.auth.uid]);
     }
 
-    // SYSTEM MEDIA & ADMIN LOGS
+    // SYSTEM MEDIA, MEDIA & ADMIN LOGS
+    match /media/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /system_media/{id} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+    match /media_logs/{id} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin();
     }
     match /admin_logs/{id} {
       allow read: if isAdmin();

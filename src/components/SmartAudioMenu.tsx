@@ -27,7 +27,7 @@ const DEFAULT_AUDIO_SPOTS: Record<string, { title: string; subtitle: string; ico
     title: "AFRIGOMBO — L'ÂME DU GOMBO",
     subtitle: "Musique d'ambiance principale",
     iconType: "ambient",
-    defaultPublic: false,
+    defaultPublic: true,
   },
   throne: {
     title: "Musique du Trône",
@@ -149,13 +149,14 @@ export const SmartAudioMenu: React.FC = () => {
       const defaultSpot = DEFAULT_AUDIO_SPOTS[id];
 
       // Check category: must be audio if specified
-      const category = sysItem?.category || legItem?.category || (defaultSpot ? "audio" : "");
-      if (category && category !== "audio" && category !== "sounds") continue;
+      const rawCategory = sysItem?.category || legItem?.category || (defaultSpot ? "audio" : "");
+      const category = rawCategory.toLowerCase().trim();
+      if (category && !["audio", "sounds", "audios", "ambient", "musique", "music"].includes(category)) continue;
 
       // Determine public visibility:
       // - Explicit true on sysItem or legItem -> true
       // - Explicit false on sysItem or legItem -> false
-      // - If undefined: fallback to defaultSpot?.defaultPublic (intro & anthem = true, others = false)
+      // - If undefined: fallback to defaultSpot?.defaultPublic (intro, anthem & ambient = true)
       let isPublic = false;
       if (sysItem?.publicVisible !== undefined) {
         isPublic = Boolean(sysItem.publicVisible);
@@ -189,6 +190,8 @@ export const SmartAudioMenu: React.FC = () => {
       if (!url) {
         if (id === "anthem") url = AudioConfig.ANTHEM_URL || AudioConfig.HYMN_URL;
         else if (id === "intro") url = AudioConfig.INTRO_URL;
+        else if (id === "ambient") url = AudioConfig.ANTHEM_URL;
+        else url = AudioConfig.ANTHEM_URL;
       }
 
       // Icon determination
