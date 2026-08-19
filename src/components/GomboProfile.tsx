@@ -21,6 +21,7 @@ import { GomboProfileMainView } from "./GomboProfileMainView";
 import { GomboProfileEditView } from "./GomboProfileEditView";
 import { GomboCertificationFlow } from "./GomboCertificationFlow";
 import { AndroidPageLayout } from "./layout/AndroidPageLayout";
+import { useNavigate } from "react-router-dom";
 import SettingsModal from "./SettingsModal";
 import { supportConfig } from "../supportConfig";
 
@@ -81,6 +82,7 @@ export default function GomboProfile({
   initialPanelView = "main",
   onViewPublicPortfolio
 }: GomboProfileProps) {
+  const navigate = useNavigate();
   const { currentTrack, isPlaying, playTrack, pause: pauseAudio } = useAudio();
 
   // Current Panel view: "main" | "edit" | "settings" | "support" | "certification"
@@ -1178,7 +1180,11 @@ export default function GomboProfile({
     if (panelView === "main") {
       onNavigateView("back");
     } else {
-      setPanelView("main");
+      if (initialPanelView === "edit") {
+        navigate(-1);
+      } else {
+        setPanelView("main");
+      }
     }
   };
 

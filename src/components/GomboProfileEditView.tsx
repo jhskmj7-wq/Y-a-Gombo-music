@@ -191,15 +191,6 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
     >
       <div className="pt-2 pb-16 space-y-4 w-full">
         
-        {/* HEADER */}
-        <div className="flex items-center justify-between gap-4">
-          <button onClick={onCancel} className="afri-btn-ghost p-3 min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl" id="profile-edit-back">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h3 className="afri-title-md flex-1 text-center truncate font-black text-sm" id="profile-edit-title">Édition d'Héritage</h3>
-          <div className="w-12 h-12" /> {/* Spacer */}
-        </div>
-
         {/* STATUS BAR */}
         <AnimatePresence>
           {autoSaveStatus !== "idle" && (
@@ -230,11 +221,11 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               <p className="afri-text-tiny uppercase tracking-widest text-[#D4AF37]">Couverture & Identité Visuelle</p>
               
               {/* Cover Card */}
-              <div className="relative h-36 sm:h-44 rounded-2xl  bg-afri-bg-sec border border-afri-border shadow-inner">
+              <div className="relative h-36 sm:h-44 rounded-2xl bg-afri-bg-sec border border-afri-border shadow-inner overflow-hidden">
                 {coverUrl ? (
-                  <img src={coverUrl} alt="Bannière" className="w-full  object-cover opacity-80" />
+                  <img src={coverUrl} alt="Bannière" className="w-full h-full object-cover opacity-80" referrerPolicy="no-referrer" />
                 ) : (
-                  <div className="w-full  flex items-center justify-center text-zinc-700 bg-gradient-to-r from-amber-500/10 via-zinc-900 to-[#D4AF37]/10">
+                  <div className="w-full h-full flex items-center justify-center text-zinc-700 bg-gradient-to-r from-amber-500/10 via-zinc-900 to-[#D4AF37]/10">
                     <Camera className="w-8 h-8 opacity-30 text-[#D4AF37]" />
                   </div>
                 )}
@@ -260,7 +251,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     {cameraActive ? (
                       <video id="webcam-preview" autoPlay playsInline className="w-full h-full object-cover scale-x-[-1]" />
                     ) : (
-                      <img src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200"} alt="Avatar" className="w-full h-full object-cover" />
+                      <img src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200"} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     )}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Camera className="w-8 h-8 text-[#D4AF37]" />
