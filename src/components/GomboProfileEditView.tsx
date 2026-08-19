@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   User, Check, Plus, Search, ChevronDown, Camera, Upload, 
@@ -306,7 +307,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 
           {/* ANDROID NATIVE AVATAR BOTTOM SHEET */}
           <AnimatePresence>
-            {isAvatarSheetOpen && (
+            {isAvatarSheetOpen && createPortal(
               <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex flex-col justify-end items-center overscroll-none animate-fadeIn">
                 <div className="absolute inset-0" onClick={() => setIsAvatarSheetOpen(false)} />
 
@@ -379,7 +380,8 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     </button>
                   </div>
                 </motion.div>
-              </div>
+              </div>,
+              document.body
             )}
           </AnimatePresence>
 
