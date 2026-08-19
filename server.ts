@@ -128,7 +128,7 @@ function getAI(): GoogleGenAI | null {
   return aiInstance;
 }
 
-export const app = express();
+const app = express();
 
 async function startServer() {
   const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -1076,4 +1076,5 @@ startServer().catch((err) => {
   console.error("❌ Fatal error starting Express server:", err);
 });
 
+export { app };
 export default app;

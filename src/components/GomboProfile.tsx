@@ -24,6 +24,7 @@ import { AndroidPageLayout } from "./layout/AndroidPageLayout";
 import { useNavigate } from "react-router-dom";
 import SettingsModal from "./SettingsModal";
 import { supportConfig } from "../supportConfig";
+import { compressImage } from "../utils/imageCompression";
 
 interface GomboProfileProps {
   currentUserProfile: UserProfile;
@@ -473,24 +474,17 @@ export default function GomboProfile({
     setUploading(true);
     setUploadProgress(15);
     try {
-      const storagePath = `avatars/${currentUserProfile.uid}/${Date.now()}_${file.name}`;
+      const storagePath = `avatars/${currentUserProfile.uid}/${Date.now()}_${file.name.replace(/\.[^/.]+$/, "")}.jpeg`;
       
       const currentUser = auth.currentUser;
       if (!currentUser) {
         throw new Error("Utilisateur non connecté.");
       }
       const idToken = await currentUser.getIdToken();
-      setUploadProgress(40);
+      setUploadProgress(35);
 
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const res = reader.result as string;
-          resolve(res.includes(",") ? res.split(",")[1] : res);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      // Client-side automatic compression (maxWidth: 1200px, JPEG 0.8) to keep payload < 500 KB
+      const compressed = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.8 });
       setUploadProgress(65);
 
       const resp = await fetch("/api/user/avatar/upload", {
@@ -499,8 +493,8 @@ export default function GomboProfile({
         body: JSON.stringify({
           idToken,
           storagePath,
-          fileBase64: base64Data,
-          contentType: file.type || "image/jpeg",
+          fileBase64: compressed.base64,
+          contentType: "image/jpeg",
           bucket: "afrigombo-media"
         })
       });
@@ -547,24 +541,17 @@ export default function GomboProfile({
     setCoverUploading(true);
     setCoverUploadProgress(15);
     try {
-      const storagePath = `covers/${currentUserProfile.uid}/${Date.now()}_${file.name}`;
+      const storagePath = `covers/${currentUserProfile.uid}/${Date.now()}_${file.name.replace(/\.[^/.]+$/, "")}.jpeg`;
       
       const currentUser = auth.currentUser;
       if (!currentUser) {
         throw new Error("Utilisateur non connecté.");
       }
       const idToken = await currentUser.getIdToken();
-      setCoverUploadProgress(40);
+      setCoverUploadProgress(35);
 
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const res = reader.result as string;
-          resolve(res.includes(",") ? res.split(",")[1] : res);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      // Client-side automatic compression (maxWidth: 1200px, JPEG 0.8) to keep payload < 500 KB
+      const compressed = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.8 });
       setCoverUploadProgress(65);
 
       const resp = await fetch("/api/user/cover/upload", {
@@ -573,8 +560,8 @@ export default function GomboProfile({
         body: JSON.stringify({
           idToken,
           storagePath,
-          fileBase64: base64Data,
-          contentType: file.type || "image/jpeg",
+          fileBase64: compressed.base64,
+          contentType: "image/jpeg",
           bucket: "afrigombo-media"
         })
       });
