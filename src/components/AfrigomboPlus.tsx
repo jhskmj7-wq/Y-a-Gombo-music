@@ -10,6 +10,7 @@ import { doc, getDoc, setDoc, addDoc, collection } from "firebase/firestore";
 import { recordWalletTransaction } from "../lib/financial";
 import { safeStringify } from "../lib/jsonUtils";
 import { subscribeToFeatureFlags, getModuleVisibility } from "../lib/featureFlags";
+import { useWalletSecurity } from "../context/WalletSecurityContext";
 
 
 interface AfrigomboPlusProps {
@@ -21,6 +22,7 @@ interface AfrigomboPlusProps {
 
 export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshProfile }: AfrigomboPlusProps) {
   const { t } = useLanguage();
+  const { formatWalletBalance } = useWalletSecurity();
   const [flagsMap, setFlagsMap] = useState<any>({});
   useEffect(() => {
     const unsub = subscribeToFeatureFlags((map) => setFlagsMap(map));
@@ -846,7 +848,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-afri-text-sec font-medium">Votre solde :</span>
                     <span className="font-mono font-bold text-white">
-                      {((currentUserProfile?.wallet?.soldeDisponible ?? 0)).toLocaleString('fr-FR')} FCFA
+                      {formatWalletBalance(currentUserProfile?.wallet?.soldeDisponible ?? 0, "FCFA")}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">

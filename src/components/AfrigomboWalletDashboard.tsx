@@ -77,7 +77,18 @@ export default function AfrigomboWalletDashboard({
   onNavigateToGomboAds
 }: AfrigomboWalletDashboardProps) {
   const { isModuleUnderMaintenance, maintenance } = useMaintenance();
-  const { requireWalletAuthentication, setupWalletPin, changeWalletPin, disableWalletPin, requestPinResetSOA, walletSecurityStatus, isWalletSessionActive } = useWalletSecurity();
+  const { 
+    requireWalletAuthentication, 
+    setupWalletPin, 
+    changeWalletPin, 
+    disableWalletPin, 
+    requestPinResetSOA, 
+    walletSecurityStatus, 
+    isWalletSessionActive,
+    isBalanceHidden,
+    toggleBalanceHidden,
+    formatWalletBalance
+  } = useWalletSecurity();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const uid = currentUserProfile?.uid || currentUserProfile?.id;
   const historyRef = useRef<HTMLDivElement>(null);
@@ -1103,23 +1114,33 @@ export default function AfrigomboWalletDashboard({
               <BetaEscrowInfoButton variant="badge" />
             </div>
 
-            <div className="flex items-baseline gap-1.5 flex-wrap">
+            <div className="flex items-baseline gap-2 flex-wrap items-center">
               <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-black text-afri-text font-mono tracking-tight text-shadow-sm break-all">
-                {wallet.soldeDisponible.toLocaleString('fr-FR')}
+                {isBalanceHidden ? "••••••" : wallet.soldeDisponible.toLocaleString('fr-FR')}
               </h1>
               <span className="text-base xs:text-lg sm:text-xl md:text-2xl font-black text-[#D4AF37] font-mono uppercase">
                 FCFA
               </span>
+              <button
+                type="button"
+                id="btn-toggle-wallet-balance-visibility"
+                onClick={toggleBalanceHidden}
+                title={isBalanceHidden ? "Afficher le montant" : "Masquer le montant"}
+                aria-label={isBalanceHidden ? "Afficher le solde" : "Masquer le solde"}
+                className="ml-1 p-2 rounded-xl bg-afri-bg/80 hover:bg-[#D4AF37]/20 border border-afri-border hover:border-[#D4AF37]/60 text-zinc-400 hover:text-[#D4AF37] transition-all cursor-pointer shadow-sm active:scale-95 flex items-center justify-center"
+              >
+                {isBalanceHidden ? <EyeOff className="w-5 h-5 text-[#D4AF37]" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
 
             <div className="pt-1 flex items-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-afri-bg/60 border border-afri-border text-[10px] font-mono text-amber-400 font-bold">
                 <Lock className="w-3 h-3 text-[#D4AF37]" />
-                Séquestre : {wallet.soldeBloque.toLocaleString('fr-FR')} FCFA
+                Séquestre : {isBalanceHidden ? "••••••" : wallet.soldeBloque.toLocaleString('fr-FR')} FCFA
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-afri-bg/60 border border-afri-border text-[10px] font-mono text-emerald-400 font-bold">
                 <TrendingUp className="w-3 h-3" />
-                Gains : +{computedGains.toLocaleString('fr-FR')} FCFA
+                Gains : {isBalanceHidden ? "••••••" : `+${computedGains.toLocaleString('fr-FR')}`} FCFA
               </span>
             </div>
           </div>
@@ -1274,7 +1295,7 @@ export default function AfrigomboWalletDashboard({
               💰 Solde disponible
             </span>
             <span className="text-sm xs:text-base font-black text-afri-text font-mono block truncate">
-              {wallet.soldeDisponible.toLocaleString('fr-FR')} <span className="text-[9px]">FCFA</span>
+              {isBalanceHidden ? "••••••" : wallet.soldeDisponible.toLocaleString('fr-FR')} <span className="text-[9px]">FCFA</span>
             </span>
           </div>
 
@@ -1724,7 +1745,7 @@ export default function AfrigomboWalletDashboard({
                     Montant à retirer (FCFA)
                   </label>
                   <span className="text-[9px] font-mono text-amber-400 font-bold">
-                    Max : {wallet.soldeDisponible.toLocaleString('fr-FR')} FCFA
+                    Max : {isBalanceHidden ? "••••••" : `${wallet.soldeDisponible.toLocaleString('fr-FR')} FCFA`}
                   </span>
                 </div>
                 <div className="relative">
@@ -1836,7 +1857,7 @@ export default function AfrigomboWalletDashboard({
                     Montant à transférer (FCFA)
                   </label>
                   <span className="text-[9px] font-mono text-purple-400 font-bold">
-                    Solde : {wallet.soldeDisponible.toLocaleString('fr-FR')} FCFA
+                    Solde : {isBalanceHidden ? "••••••" : `${wallet.soldeDisponible.toLocaleString('fr-FR')} FCFA`}
                   </span>
                 </div>
                 <input 

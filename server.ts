@@ -147,7 +147,7 @@ function generateSalt(): string {
 }
 
 app.post("/api/wallet/set-pin", async (req, res) => {
-  const { idToken, pin } = req.body;
+  const { idToken, pin, pinLength } = req.body;
   if (!idToken || !pin) return res.status(400).json({ error: "Paramètres manquants." });
 
   try {
@@ -163,12 +163,14 @@ app.post("/api/wallet/set-pin", async (req, res) => {
     const salt = generateSalt();
     const pinHash = hashPin(pin, salt, uid);
     const now = new Date().toISOString();
+    const resolvedLength = typeof pinLength === "number" ? pinLength : pin.length;
 
     await adminDb.collection("users").doc(uid).set({
       walletSecurity: {
         pinConfigured: true,
         pinHash,
         pinSalt: salt,
+        pinLength: resolvedLength,
         pinCreatedAt: now,
         pinUpdatedAt: now,
         failedPinAttempts: 0,

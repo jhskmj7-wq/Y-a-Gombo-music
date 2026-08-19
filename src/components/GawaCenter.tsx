@@ -40,7 +40,7 @@ export default function GawaCenter({
   const [purchasing, setPurchasing] = useState(false);
   const [successDetails, setSuccessDetails] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const { requireWalletAuthentication } = useWalletSecurity();
+  const { requireWalletAuthentication, formatWalletBalance } = useWalletSecurity();
 
   const handleBuyPack = async (pack: GawaPack) => {
     if (!currentUser?.uid) return;
@@ -141,7 +141,7 @@ export default function GawaCenter({
           <div className="grid grid-cols-2 gap-3 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
             <div className="space-y-1">
               <span className="text-[10px] font-mono text-zinc-500 block uppercase font-bold tracking-wider">Solde Wallet</span>
-              <p className="text-lg font-black font-mono text-[#D4AF37]">{(wallet?.soldeDisponible || 0).toLocaleString('fr-FR')} FCFA</p>
+              <p className="text-lg font-black font-mono text-[#D4AF37]">{formatWalletBalance(wallet?.soldeDisponible || 0, "FCFA")}</p>
             </div>
             <div className="space-y-1 border-l border-zinc-800 pl-4">
               <span className="text-[10px] font-mono text-zinc-500 block uppercase font-bold tracking-wider">Solde Gawa</span>

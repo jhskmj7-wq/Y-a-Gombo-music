@@ -26,7 +26,8 @@ import AdminGawaCenter from "./AdminGawaCenter";
 import { processUserBetaEligibility } from "../../lib/BetaSystemEngine";
 import AdminLotsManagement from "./AdminLotsManagement";
 import AdminRewardsManagement from "./AdminRewardsManagement";
-import AdminRevenueFeatures from "./AdminRevenueFeatures";
+import { lazyWithRetry } from "../../lib/lazyWithRetry";
+const AdminRevenueFeatures = lazyWithRetry(() => import("./AdminRevenueFeatures"));
 import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";
 import { AdminUserWalletDetailModal } from "./AdminUserWalletDetailModal";
 import { useMaintenance } from "../../hooks/useMaintenance";
@@ -3499,11 +3500,13 @@ export default function AdminFounderThrone({
                  DETAILED VIEW: 🎡 Gestion des Roues
                  ========================================================= */}
             {selectedSection === "wheels_management" && (
-              <AdminRevenueFeatures
-                currentUser={profile || currentUser}
-                userEmail={adminEmail || currentUser?.email || "admin@afrigombo.ci"}
-                audioSynth={audioSynth}
-              />
+              <React.Suspense fallback={<div className="p-8 text-center text-zinc-400 font-mono text-xs">Chargement de la gestion des roues...</div>}>
+                <AdminRevenueFeatures
+                  currentUser={profile || currentUser}
+                  userEmail={adminEmail || currentUser?.email || "admin@afrigombo.ci"}
+                  audioSynth={audioSynth}
+                />
+              </React.Suspense>
             )}
 
             {/* =========================================================

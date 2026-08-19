@@ -9,6 +9,7 @@ import { collection, onSnapshot, addDoc, doc, setDoc, getDoc } from "firebase/fi
 import { UserProfile } from "../types";
 import { recordWalletTransaction } from "../lib/financial";
 import { safeStringify } from "../lib/jsonUtils";
+import { useWalletSecurity } from "../context/WalletSecurityContext";
 
 interface AfrigomboBuildersProps {
   currentUser?: UserProfile | null;
@@ -63,6 +64,7 @@ const CONTRIBUTION_OPTIONS: ContributionOption[] = [
 ];
 
 export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: AfrigomboBuildersProps) {
+  const { formatWalletBalance } = useWalletSecurity();
   const [stats, setStats] = useState({
     buildersCount: 0,
     totalContributions: 0,
@@ -410,7 +412,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-afri-text-sec">Solde Wallet :</span>
                     <span className="font-mono font-bold text-afri-text">
-                      {((currentUser?.wallet?.soldeDisponible ?? 0)).toLocaleString('fr-FR')} FCFA
+                      {formatWalletBalance(currentUser?.wallet?.soldeDisponible ?? 0, "FCFA")}
                     </span>
                   </div>
                 </div>

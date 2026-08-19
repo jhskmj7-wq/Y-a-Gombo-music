@@ -8,6 +8,7 @@ export interface WalletSecurityData {
   pinConfigured: boolean;
   pinHash?: string;
   pinSalt?: string;
+  pinLength?: number;
   pinCreatedAt?: string | null;
   pinUpdatedAt?: string | null;
   failedPinAttempts: number;
@@ -19,36 +20,46 @@ export interface WalletSecurityData {
 
 // Common weak PINs blacklisted for financial security
 const WEAK_PINS_BLACKLIST = new Set([
+  // 6 digits
   "123456", "000000", "111111", "222222", "333333", "444444", "555555", "666666", "777777", "888888", "999999",
   "123123", "654321", "012345", "987654", "112233", "1234567", "0123456", "6543210", "121212", "696969",
-  "123321", "111222", "000111", "543210", "135791", "246802"
+  "123321", "111222", "000111", "543210", "135791", "246802",
+  // 4 digits
+  "1234", "0000", "1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999",
+  "4321", "2580", "1379", "1212", "6969", "1122", "2211", "0123", "3210", "2000", "2024", "2025", "2026", "1004", "1470"
 ]);
 
 export class WalletSecurityService {
   /**
-   * Validate strength of a proposed PIN (minimum 6 digits, no weak sequences)
+   * Validate strength of a proposed PIN (supports 4 or 6 digits, no weak sequences)
    */
-  static validatePinStrength(pin: string): { valid: boolean; reason?: string } {
+  static validatePinStrength(pin: string, requiredLength?: number): { valid: boolean; reason?: string } {
     if (!pin || typeof pin !== "string") {
       return { valid: false, reason: "Le code PIN est obligatoire." };
     }
 
-    // Must be numeric and at least 6 digits
-    if (!/^\d{6,8}$/.test(pin)) {
-      return { valid: false, reason: "Le code PIN doit comporter au moins 6 chiffres." };
+    if (requiredLength) {
+      if (pin.length !== requiredLength || !/^\d+$/.test(pin)) {
+        return { valid: false, reason: `Le code PIN doit comporter exactement ${requiredLength} chiffres.` };
+      }
+    } else {
+      // Must be numeric and either 4 or 6-8 digits
+      if (!/^\d{4,8}$/.test(pin)) {
+        return { valid: false, reason: "Le code PIN doit comporter 4 ou 6 chiffres." };
+      }
     }
 
     if (WEAK_PINS_BLACKLIST.has(pin)) {
-      return { valid: false, reason: "Ce code PIN est trop évidents ou facile à deviner. Choisissez un code plus robuste." };
+      return { valid: false, reason: "Ce code PIN est trop évident ou facile à deviner. Choisissez un code plus robuste." };
     }
 
-    // Check all identical digits (e.g. 444444)
+    // Check all identical digits (e.g. 4444 or 444444)
     const allSame = /^(\d)\1+$/.test(pin);
     if (allSame) {
       return { valid: false, reason: "Le code PIN ne peut pas être composé d'un même chiffre répété." };
     }
 
-    // Check strictly sequential ascending (e.g. 123456)
+    // Check strictly sequential ascending (e.g. 1234 or 123456)
     let isSequentialAsc = true;
     let isSequentialDesc = true;
     for (let i = 0; i < pin.length - 1; i++) {
@@ -146,10 +157,13 @@ export class WalletSecurityService {
         pinStatus = "CONFIGURED";
       }
 
+      const pinLength = sec.pinLength || (sec.pinHash ? 6 : 6);
+
       return {
         pinConfigured,
         pinHash: sec.pinHash,
         pinSalt: sec.pinSalt,
+        pinLength,
         pinCreatedAt: sec.pinCreatedAt || null,
         pinUpdatedAt: sec.pinUpdatedAt || null,
         failedPinAttempts,
@@ -222,7 +236,7 @@ export class WalletSecurityService {
       const { ok, data } = await this.safeFetchJson("/api/wallet/set-pin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken, pin })
+        body: JSON.stringify({ idToken, pin, pinLength: pin.length })
       });
 
       if (!ok || data.error) {
