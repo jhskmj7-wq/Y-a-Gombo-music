@@ -33,7 +33,11 @@ import {
   Lock,
   Download,
   Share2,
-  Maximize2
+  Maximize2,
+  Globe,
+  EyeOff,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { gomboDB } from "../../firebase";
 import { db } from "../../lib/firebase";
@@ -213,12 +217,17 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
   const [editTitle, setEditTitle] = useState("");
   const [editVolume, setEditVolume] = useState(0.8);
   const [editEnabled, setEditEnabled] = useState(true);
+  const [editPublicVisible, setEditPublicVisible] = useState(false);
   const [editAutoplay, setEditAutoplay] = useState(false);
   const [editLoop, setEditLoop] = useState(false);
   const [editDuration, setEditDuration] = useState("");
   const [editResolution, setEditResolution] = useState("");
   const [editContent, setEditContent] = useState("");
   const [editStatus, setEditStatus] = useState<"draft" | "published" | "archived">("published");
+
+  // Folding & Visibility Filter state
+  const [expandedSpots, setExpandedSpots] = useState<Record<string, boolean>>({});
+  const [audioVisibilityFilter, setAudioVisibilityFilter] = useState<"all" | "public" | "private">("all");
 
   // Audio / Video Preview state
   const [videoModalUrl, setVideoModalUrl] = useState<string | null>(null);
@@ -567,6 +576,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
         githubPath: "",
         externalUrl: "",
         enabled: existingAsset?.enabled !== undefined ? existingAsset.enabled : true,
+        publicVisible: existingAsset?.publicVisible !== undefined ? existingAsset.publicVisible : (id === "intro" || id === "anthem"),
         autoplay: existingAsset?.autoplay || false,
         loop: existingAsset?.loop || false,
         volume: existingAsset?.volume !== undefined ? existingAsset.volume : 0.8,
@@ -781,6 +791,83 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     }
   };
 
+  // Helpers for public visibility determination
+  const isDefaultPublicSpot = (id: string): boolean => {
+    return id === "intro" || id === "anthem";
+  };
+
+  const getIsPublicVisible = (spotId: string, asset?: MediaAsset): boolean => {
+    if (asset?.publicVisible !== undefined) {
+      return Boolean(asset.publicVisible);
+    }
+    return isDefaultPublicSpot(spotId);
+  };
+
+  const toggleExpand = (id: string) => {
+    setExpandedSpots((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  // Toggle public visibility (Super Founder exclusive)
+  const togglePublicVisibility = async (id: string) => {
+    if (!isAuthorizedSuperFounder) {
+      alert("Accès Super Fondateur requis pour modifier la visibilité publique.");
+      return;
+    }
+    const asset = mediaAssets[id];
+    const currentVal = getIsPublicVisible(id, asset);
+    const newVal = !currentVal;
+
+    const spot = [...AUDIO_SPOTS, ...IMAGE_SPOTS, ...VIDEO_SPOTS, ...SOUND_SPOTS, ...NOTIFICATION_SPOTS, ...ANIMATION_SPOTS, ...SYSTEM_SPOTS].find(s => s.id === id);
+    const spotTitle = asset?.title || spot?.title || id;
+
+    // Optimistic local state update
+    setMediaAssets((prev) => ({
+      ...prev,
+      [id]: {
+        ...(prev[id] || {}),
+        id,
+        title: spotTitle,
+        publicVisible: newVal,
+        updatedAt: new Date().toISOString(),
+        updatedBy: adminEmail,
+      } as MediaAsset,
+    }));
+
+    try {
+      // 1. Update in media collection
+      await setDoc(doc(db, "media", id), {
+        publicVisible: newVal,
+        updatedAt: new Date().toISOString(),
+        updatedBy: adminEmail,
+      }, { merge: true });
+
+      // 2. Update in system_media collection
+      if (asset) {
+        await gomboDB.updateSystemMedia(id, { publicVisible: newVal });
+      } else {
+        await gomboDB.addSystemMedia({
+          id,
+          title: spotTitle,
+          category: "audio",
+          publicVisible: newVal,
+        } as any);
+      }
+
+      await logAudit(
+        id,
+        spotTitle,
+        newVal ? "Visibilité Publique Activée" : "Visibilité Publique Masquée",
+        `Musique ${newVal ? "rendue visible dans le popup audio public" : "masquée du popup audio public"}`
+      );
+    } catch (err) {
+      console.error("Failed to toggle public visibility:", err);
+      alert("Erreur lors de la mise à jour de la visibilité.");
+    }
+  };
+
   // Save edits
   const handleSaveEdit = async () => {
     if (!isAuthorizedSuperFounder || !editingAsset) return;
@@ -790,6 +877,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       title: editTitle,
       volume: editVolume,
       enabled: editEnabled,
+      publicVisible: editPublicVisible,
       autoplay: editAutoplay,
       loop: editLoop,
       duration: editDuration,
@@ -806,11 +894,19 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
     try {
       await setDoc(doc(db, "media", editingAsset.id), updated);
+      await gomboDB.updateSystemMedia(editingAsset.id, {
+        title: editTitle,
+        volume: editVolume,
+        enabled: editEnabled,
+        publicVisible: editPublicVisible,
+        autoplay: editAutoplay,
+        loop: editLoop,
+      });
       await logAudit(
         editingAsset.id,
         editTitle,
         "Modification",
-        `Paramètres mis à jour par le Super Fondateur`
+        `Paramètres mis à jour par le Super Fondateur (Visibilité publique : ${editPublicVisible ? "Oui" : "Non"})`
       );
       setEditingAsset(null);
     } catch (err) {
@@ -1051,9 +1147,18 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
   // Reusable rendering grid for media cards
   const renderMediaGrid = (spots: { id: string; title: string; desc: string }[], sectionName: string, acceptType: string) => {
+    const filteredSpots = spots.filter((spot) => {
+      if (sectionName !== "audio") return true;
+      const asset = mediaAssets[spot.id];
+      const isPublic = getIsPublicVisible(spot.id, asset);
+      if (audioVisibilityFilter === "public") return isPublic;
+      if (audioVisibilityFilter === "private") return !isPublic;
+      return true;
+    });
+
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {spots.map((spot) => {
+        {filteredSpots.map((spot) => {
           const asset = mediaAssets[spot.id];
           const status = uploadStatuses[spot.id];
           const isUploading = status?.state === 'uploading' || status?.state === 'waiting';
@@ -1062,11 +1167,13 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           const errorMessage = status?.error;
           const isEditing = editingAsset?.id === spot.id;
           const isPlaying = currentTrack?.id === spot.id && isCentralPlaying;
+          const isPublic = getIsPublicVisible(spot.id, asset);
+          const isExpanded = Boolean(expandedSpots[spot.id]);
 
           return (
             <div
               key={spot.id}
-              className="p-5 bg-gradient-to-b from-[#050505] to-[#020202] border border-afri-border rounded-xl space-y-4 flex flex-col justify-between relative overflow-hidden group"
+              className="p-5 bg-gradient-to-b from-[#050505] to-[#020202] border border-afri-border rounded-xl space-y-4 flex flex-col justify-between relative overflow-hidden group transition-all"
             >
               {hasError && (
                 <div className="absolute inset-0 z-50 bg-rose-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center space-y-4">
@@ -1090,8 +1197,6 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                     </button>
                     <button 
                       onClick={() => {
-                        // We will trigger the global diagnostic modal from here
-                        // This requires passing a prop or using a custom event
                         window.dispatchEvent(new CustomEvent('open-firebase-diagnostic'));
                       }}
                       className="px-4 py-2 bg-amber-500 text-black text-[9px] font-black uppercase rounded-lg transition-all"
@@ -1101,9 +1206,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                   </div>
                 </div>
               )}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2">
+
+              {/* CARD HEADER */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-start flex-wrap gap-2">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-[8px] font-mono bg-afri-bg-sec/80 text-[#D4AF37] px-2 py-0.5 rounded border border-afri-border uppercase font-bold tracking-widest">
                       ID: {spot.id}
                     </span>
@@ -1117,399 +1224,507 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                       </span>
                     )}
                   </div>
-                  {asset && (
-                    <span className={`text-[8px] font-mono px-2 py-0.5 rounded border font-bold uppercase ${
-                      asset.enabled
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : "bg-red-500/10 text-red-400 border-red-500/20"
+                  <div className="flex items-center gap-1.5">
+                    {/* VISIBILITY BADGE */}
+                    <span className={`text-[8px] font-mono px-2 py-0.5 rounded border font-bold uppercase tracking-wider ${
+                      isPublic
+                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25 shadow-sm shadow-emerald-900/20"
+                        : "bg-zinc-800/80 text-zinc-400 border-zinc-700/60"
                     }`}>
-                      {asset.enabled ? "Actif" : "Inactif"}
+                      {isPublic ? "🌍 PUBLIC" : "🔒 PRIVÉ"}
                     </span>
-                  )}
+
+                    {asset && (
+                      <span className={`text-[8px] font-mono px-2 py-0.5 rounded border font-bold uppercase ${
+                        asset.enabled
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : "bg-red-500/10 text-red-400 border-red-500/20"
+                      }`}>
+                        {asset.enabled ? "Actif" : "Inactif"}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <h4 className="text-xs font-black text-afri-text group-hover:text-[#D4AF37] transition-all">{spot.title}</h4>
-                <p className="text-[10px] text-zinc-550 leading-relaxed line-clamp-1">{spot.desc}</p>
+
+                <div>
+                  <h4 className="text-xs font-black text-afri-text group-hover:text-[#D4AF37] transition-all">{spot.title}</h4>
+                  <p className="text-[10px] text-zinc-500 leading-relaxed line-clamp-1">{spot.desc}</p>
+                </div>
+
+                {/* QUICK ACTION HEADER STRIP (Always Visible) */}
+                <div className="pt-2 border-t border-afri-border/60 flex items-center gap-1.5 flex-wrap">
+                  {/* PUBLIC VISIBILITY TOGGLE */}
+                  <button
+                    onClick={() => togglePublicVisibility(spot.id)}
+                    disabled={!isAuthorizedSuperFounder}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[8.5px] font-mono font-bold uppercase transition-all ${
+                      !isAuthorizedSuperFounder ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                    } ${
+                      isPublic
+                        ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/25"
+                        : "bg-zinc-850 text-zinc-400 border border-zinc-700/80 hover:bg-zinc-800 hover:text-zinc-200"
+                    }`}
+                    title={
+                      isAuthorizedSuperFounder
+                        ? isPublic
+                          ? "Cliquer pour masquer du lecteur audio public"
+                          : "Cliquer pour rendre visible dans le lecteur audio public"
+                        : "Modification réservée au Super Fondateur"
+                    }
+                  >
+                    {isPublic ? (
+                      <>
+                        <Globe className="w-3 h-3 text-emerald-400" />
+                        <span>Visible public</span>
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff className="w-3 h-3 text-zinc-400" />
+                        <span>Masqué public</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* QUICK AUDIO PLAY/STOP BUTTON */}
+                  {(sectionName === "audio" || sectionName === "sounds") && asset && (
+                    <button
+                      onClick={() => togglePlayAudio(asset)}
+                      className={`px-2 py-1 rounded-lg text-[8.5px] font-mono font-bold uppercase border transition-all cursor-pointer flex items-center gap-1 ${
+                        isPlaying
+                          ? "bg-[#D4AF37] text-black border-[#D4AF37]"
+                          : "bg-afri-bg-sec/80 text-[#D4AF37] border-afri-border hover:border-[#D4AF37]"
+                      }`}
+                      title="Écouter un extrait"
+                    >
+                      {isPlaying ? <Square className="w-3 h-3 fill-black" /> : <Play className="w-3 h-3 fill-[#D4AF37]" />}
+                      <span>{isPlaying ? "Stop" : "Écouter"}</span>
+                    </button>
+                  )}
+
+                  {/* FOLD / UNFOLD TOGGLE BUTTON */}
+                  <button
+                    onClick={() => toggleExpand(spot.id)}
+                    className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10 text-[8.5px] font-mono font-bold uppercase rounded-lg transition-all cursor-pointer"
+                    title={isExpanded ? "Replier la vue détaillée" : "Déplier tous les réglages et outils"}
+                  >
+                    {isExpanded ? (
+                      <>
+                        <ChevronUp className="w-3 h-3 text-[#D4AF37]" />
+                        <span>Replier</span>
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-3 h-3 text-[#D4AF37]" />
+                        <span>Déplier</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
-              {/* SOURCE SELECTOR BAR */}
-              {isAuthorizedSuperFounder && asset && (
-                <div className="flex gap-1 p-1 bg-afri-bg/40 rounded-lg border border-afri-border">
-                  {(["FIREBASE", "GITHUB", "URL", "DISABLED"] as SourceType[]).map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => handleSourceChange(spot.id, type)}
-                      className={`flex-1 py-1 text-[7px] font-black uppercase rounded transition-all ${
-                        asset.sourceType === type 
-                          ? "bg-afri-bg-sec text-black" 
-                          : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
-                      }`}
-                    >
-                      {type === "FIREBASE" ? "Storage" : type}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {asset ? (
-                <div className="space-y-3 pt-3 border-t border-afri-border">
-                  {/* Preview Display Based on Asset Type */}
-                  {sectionName === "audio" || sectionName === "sounds" ? (
-                    <>
-                    <div className="flex items-center justify-between bg-afri-bg/40 p-2.5 rounded-lg border border-afri-border">
-                      <span className="text-[10px] font-mono text-afri-text-sec truncate max-w-[70%]" title={asset.title}>
-                        🎵 {asset.title}
-                      </span>
-                      <button
-                        onClick={() => togglePlayAudio(asset)}
-                        className={`p-2 rounded-lg cursor-pointer border transition-all ${
-                          isPlaying
-                            ? "bg-afri-bg-sec text-black border-[#D4AF37]"
-                            : "bg-afri-bg border-afri-border text-[#D4AF37] hover:border-[#D4AF37]"
-                        }`}
-                        title="Écouter l'extrait audio"
-                      >
-                        {isPlaying ? <Square className="w-3.5 h-3.5 fill-black" /> : <Play className="w-3.5 h-3.5 fill-[#D4AF37]" />}
-                      </button>
+              {/* DETAILED CONTENT BODY (Shown when Expanded or Uploading) */}
+              {(isExpanded || isUploading || isEditing) && (
+                <div className="space-y-4 pt-3 border-t border-afri-border/60 animate-fade-in">
+                  {/* SOURCE SELECTOR BAR */}
+                  {isAuthorizedSuperFounder && asset && (
+                    <div className="flex gap-1 p-1 bg-afri-bg/40 rounded-lg border border-afri-border">
+                      {(["FIREBASE", "GITHUB", "URL", "DISABLED"] as SourceType[]).map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => handleSourceChange(spot.id, type)}
+                          className={`flex-1 py-1 text-[7px] font-black uppercase rounded transition-all ${
+                            asset.sourceType === type 
+                              ? "bg-afri-bg-sec text-black" 
+                              : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
+                          }`}
+                        >
+                          {type === "FIREBASE" ? "Storage" : type}
+                        </button>
+                      ))}
                     </div>
-                    {/* NATIVE AUDIO PLAYER FOR MOBILE */}
-                    <audio 
-                      controls 
-                      className="w-full h-8 mt-2"
-                      src={getAudioUrl(asset.sourceType, (asset as any).mediaUrl || asset.downloadURL || asset.url || asset.firebaseUrl || asset.externalUrl || asset.storagePath)}
-                    />
-                    </>
-                  ) : sectionName === "images" || sectionName === "notifications" || sectionName === "system" ? (
-                    <div className="h-28 w-full bg-afri-bg border border-afri-border rounded-lg overflow-hidden flex items-center justify-center relative bg-grid-pattern">
-                      {asset.downloadURL ? (
-                        <img
-                          src={asset.downloadURL}
-                          alt={asset.title}
-                          referrerPolicy="no-referrer"
-                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-all duration-500"
-                          loading="lazy" // Cache intelligent et léger
+                  )}
+
+                  {asset ? (
+                    <div className="space-y-3">
+                      {/* Preview Display Based on Asset Type */}
+                      {sectionName === "audio" || sectionName === "sounds" ? (
+                        <>
+                        <div className="flex items-center justify-between bg-afri-bg/40 p-2.5 rounded-lg border border-afri-border">
+                          <span className="text-[10px] font-mono text-afri-text-sec truncate max-w-[70%]" title={asset.title}>
+                            🎵 {asset.title}
+                          </span>
+                          <button
+                            onClick={() => togglePlayAudio(asset)}
+                            className={`p-2 rounded-lg cursor-pointer border transition-all ${
+                              isPlaying
+                                ? "bg-afri-bg-sec text-black border-[#D4AF37]"
+                                : "bg-afri-bg border-afri-border text-[#D4AF37] hover:border-[#D4AF37]"
+                            }`}
+                            title="Écouter l'extrait audio"
+                          >
+                            {isPlaying ? <Square className="w-3.5 h-3.5 fill-black" /> : <Play className="w-3.5 h-3.5 fill-[#D4AF37]" />}
+                          </button>
+                        </div>
+                        {/* NATIVE AUDIO PLAYER FOR MOBILE */}
+                        <audio 
+                          controls 
+                          className="w-full h-8 mt-2"
+                          src={getAudioUrl(asset.sourceType, (asset as any).mediaUrl || asset.downloadURL || asset.url || asset.firebaseUrl || asset.externalUrl || asset.storagePath)}
                         />
+                        </>
+                      ) : sectionName === "images" || sectionName === "notifications" || sectionName === "system" ? (
+                        <div className="h-28 w-full bg-afri-bg border border-afri-border rounded-lg overflow-hidden flex items-center justify-center relative bg-grid-pattern">
+                          {asset.downloadURL ? (
+                            <img
+                              src={asset.downloadURL}
+                              alt={asset.title}
+                              referrerPolicy="no-referrer"
+                              className="max-h-full max-w-full object-contain group-hover:scale-105 transition-all duration-500"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <ImageIcon className="w-8 h-8 text-zinc-700" />
+                          )}
+                          <button
+                            onClick={() => window.open(asset.downloadURL, "_blank")}
+                            className="absolute bottom-2 right-2 p-1 bg-afri-bg/80 hover:bg-afri-bg-sec hover:text-black rounded text-afri-text transition-all cursor-pointer"
+                            title="Agrandir l'image"
+                          >
+                            <Maximize2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : sectionName === "videos" ? (
+                        <div className="h-28 bg-afri-bg border border-afri-border rounded-lg flex items-center justify-center relative overflow-hidden group/video">
+                          <div className="absolute inset-0 bg-afri-bg/60 group-hover/video:bg-afri-bg/40 transition-all z-10" />
+                          <VideoIcon className="w-8 h-8 text-zinc-650 z-20 group-hover/video:scale-110 transition-all" />
+                          <button
+                            onClick={() => setVideoModalUrl(asset.downloadURL)}
+                            className="absolute z-25 p-2 bg-afri-bg-sec text-black rounded-full shadow-lg scale-90 group-hover/video:scale-100 opacity-0 group-hover/video:opacity-100 transition-all cursor-pointer"
+                          >
+                            <Play className="w-4 h-4 fill-black" />
+                          </button>
+                        </div>
+                      ) : null}
+
+                      {/* Paramètres & Metadata Form Editor */}
+                      {isEditing ? (
+                        <div className="space-y-3 p-3 bg-afri-bg/40 rounded-xl border border-afri-border">
+                          <div>
+                            <label className="text-[8.5px] font-mono text-zinc-550 block mb-1 uppercase font-bold">Nom personnalisé du média</label>
+                            <input
+                              type="text"
+                              value={editTitle}
+                              onChange={(e) => setEditTitle(e.target.value)}
+                              className="w-full bg-afri-bg border border-afri-border rounded-lg p-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
+                            />
+                          </div>
+
+                          {/* Volume Slider for audios/sounds */}
+                          {(sectionName === "audio" || sectionName === "sounds") && (
+                            <div>
+                              <label className="text-[8.5px] font-mono text-zinc-550 block mb-1 uppercase font-bold">
+                                Volume de diffusion ({Math.round(editVolume * 100)}%)
+                              </label>
+                              <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.05"
+                                value={editVolume}
+                                onChange={(e) => setEditVolume(parseFloat(e.target.value))}
+                                className="w-full appearance-none h-1 bg-afri-bg-ter rounded accent-[#D4AF37] cursor-pointer"
+                              />
+                            </div>
+                          )}
+
+                          {/* Video Specifications */}
+                          {sectionName === "videos" && (
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="text-[8.5px] font-mono text-zinc-550 block mb-0.5">Durée (ex: 1m 20s)</label>
+                                <input
+                                  type="text"
+                                  value={editDuration}
+                                  onChange={(e) => setEditDuration(e.target.value)}
+                                  className="w-full bg-afri-bg border border-afri-border rounded p-1 text-[10px] text-afri-text"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[8.5px] font-mono text-zinc-550 block mb-0.5">Résolution (ex: 1080p)</label>
+                                <input
+                                  type="text"
+                                  value={editResolution}
+                                  onChange={(e) => setEditResolution(e.target.value)}
+                                  className="w-full bg-afri-bg border border-afri-border rounded p-1 text-[10px] text-afri-text"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Public visibility toggle check in form */}
+                          <div className="flex items-center justify-between pt-1">
+                            <span className="text-[10px] font-mono text-afri-text-sec flex items-center gap-1">
+                              <Globe className="w-3 h-3 text-[#D4AF37]" /> Visible dans le lecteur public
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={editPublicVisible}
+                              onChange={(e) => setEditPublicVisible(e.target.checked)}
+                              className="sr-only peer"
+                              id={`public-form-chk-${spot.id}`}
+                            />
+                            <label
+                              htmlFor={`public-form-chk-${spot.id}`}
+                              className="w-8 h-4.5 bg-zinc-800 peer-checked:bg-emerald-600 rounded-full relative cursor-pointer after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-white after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5"
+                            />
+                          </div>
+
+                          {/* Enabled check */}
+                          <div className="flex items-center justify-between pt-1">
+                            <span className="text-[10px] font-mono text-afri-text-sec">Activer le média en direct</span>
+                            <input
+                              type="checkbox"
+                              checked={editEnabled}
+                              onChange={(e) => setEditEnabled(e.target.checked)}
+                              className="sr-only peer"
+                              id={`enabled-chk-${spot.id}`}
+                            />
+                            <label
+                              htmlFor={`enabled-chk-${spot.id}`}
+                              className="w-8 h-4.5 bg-zinc-800 peer-checked:bg-afri-bg-sec rounded-full relative cursor-pointer after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-black after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5"
+                            />
+                          </div>
+
+                          <div className="flex gap-2 pt-1.5">
+                            <button
+                              onClick={handleSaveEdit}
+                              className="flex-1 py-1.5 bg-afri-bg-sec text-black font-black text-[9px] uppercase rounded-lg hover:opacity-95 transition-all cursor-pointer"
+                            >
+                              Enregistrer
+                            </button>
+                            <button
+                              onClick={() => setEditingAsset(null)}
+                              className="px-3 py-1.5 bg-afri-bg-sec text-afri-text-sec hover:text-afri-text text-[9px] uppercase rounded-lg transition-all cursor-pointer"
+                            >
+                              Fermer
+                            </button>
+                          </div>
+                        </div>
                       ) : (
-                        <ImageIcon className="w-8 h-8 text-zinc-700" />
-                      )}
-                      <button
-                        onClick={() => window.open(asset.downloadURL, "_blank")}
-                        className="absolute bottom-2 right-2 p-1 bg-afri-bg/80 hover:bg-afri-bg-sec hover:text-black rounded text-afri-text transition-all cursor-pointer"
-                        title="Agrandir l'image"
-                      >
-                        <Maximize2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ) : sectionName === "videos" ? (
-                    <div className="h-28 bg-afri-bg border border-afri-border rounded-lg flex items-center justify-center relative overflow-hidden group/video">
-                      <div className="absolute inset-0 bg-afri-bg/60 group-hover/video:bg-afri-bg/40 transition-all z-10" />
-                      <VideoIcon className="w-8 h-8 text-zinc-650 z-20 group-hover/video:scale-110 transition-all" />
-                      <button
-                        onClick={() => setVideoModalUrl(asset.downloadURL)}
-                        className="absolute z-25 p-2 bg-afri-bg-sec text-black rounded-full shadow-lg scale-90 group-hover/video:scale-100 opacity-0 group-hover/video:opacity-100 transition-all cursor-pointer"
-                      >
-                        <Play className="w-4 h-4 fill-black" />
-                      </button>
-                    </div>
-                  ) : null}
+                        <div className="space-y-1.5 text-[10px] font-mono text-zinc-550">
+                          <div className="flex justify-between">
+                            <span>Poids :</span>
+                            <span className="text-zinc-350">{asset.fileSize || "Inconnu"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Source :</span>
+                            <span className="text-afri-text-sec">{asset.sourceType || "FIREBASE"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Éditeur :</span>
+                            <span className="text-afri-text-sec truncate max-w-[60%]">{asset.updatedBy}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Synchro :</span>
+                            <span className="text-emerald-400 flex items-center gap-1">
+                              <Check className="w-3 h-3" /> Temps réel
+                            </span>
+                          </div>
 
-                  {/* Paramètres & Metadata Form Editor */}
-                  {isEditing ? (
-                    <div className="space-y-3 p-3 bg-afri-bg/40 rounded-xl border border-afri-border">
-                      <div>
-                        <label className="text-[8.5px] font-mono text-zinc-550 block mb-1 uppercase font-bold">Nom personnalisé du média</label>
-                        <input
-                          type="text"
-                          value={editTitle}
-                          onChange={(e) => setEditTitle(e.target.value)}
-                          className="w-full bg-afri-bg border border-afri-border rounded-lg p-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
-                        />
-                      </div>
+                          {/* Safety Replacement History Accordion */}
+                          {isAuthorizedSuperFounder && asset.history && asset.history.length > 0 && (
+                            <div className="mt-2.5 bg-afri-bg/20 p-2 rounded-lg border border-dashed border-afri-border space-y-1">
+                              <span className="text-[8px] text-amber-500/80 font-bold uppercase tracking-wider block flex items-center gap-1">
+                                <History className="w-2.5 h-2.5" /> Versions d'Historique :
+                              </span>
+                              <div className="max-h-16 overflow-y-auto space-y-1 scrollbar-thin">
+                                {asset.history.slice(0, 3).map((hist, idx) => (
+                                  <div key={idx} className="flex justify-between items-center text-[8.5px] bg-afri-bg/40 p-1 rounded border border-afri-border">
+                                    <span className="truncate max-w-[50%] text-afri-text-sec" title={hist.title}>{hist.title}</span>
+                                    <button
+                                      onClick={() => handleRollback(spot.id, idx)}
+                                      className="text-[8px] font-mono text-[#D4AF37] hover:underline uppercase"
+                                    >
+                                      Restaurer
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
-                      {/* Volume Slider for audios/sounds */}
-                      {(sectionName === "audio" || sectionName === "sounds") && (
-                        <div>
-                          <label className="text-[8.5px] font-mono text-zinc-550 block mb-1 uppercase font-bold">
-                            Volume de diffusion ({Math.round(editVolume * 100)}%)
-                          </label>
-                          <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.05"
-                            value={editVolume}
-                            onChange={(e) => setEditVolume(parseFloat(e.target.value))}
-                            className="w-full appearance-none h-1 bg-afri-bg-ter rounded accent-[#D4AF37] cursor-pointer"
-                          />
+                          {/* Management actions (Super Founder exclusive) */}
+                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-afri-border">
+                            {isAuthorizedSuperFounder ? (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setEditingAsset(asset);
+                                    setEditTitle(asset.title);
+                                    setEditVolume(asset.volume !== undefined ? asset.volume : 0.8);
+                                    setEditEnabled(asset.enabled !== undefined ? asset.enabled : true);
+                                    setEditPublicVisible(getIsPublicVisible(spot.id, asset));
+                                    setEditAutoplay(asset.autoplay || false);
+                                    setEditLoop(asset.loop || false);
+                                    setEditDuration(asset.duration || "");
+                                    setEditResolution(asset.resolution || "");
+                                  }}
+                                  className="px-3 py-1.5 bg-afri-bg-sec hover:bg-afri-bg-sec border border-afri-border text-afri-text text-[9px] font-bold uppercase rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1"
+                                >
+                                  <Edit3 className="w-3 h-3" /> Config
+                                </button>
+                                <label className="px-2.5 py-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 text-[9px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1">
+                                  <UploadCloud className="w-3 h-3" /> Storage
+                                  <input
+                                    type="file"
+                                    accept={acceptType}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleFileUpload(spot.id, file, sectionName);
+                                    }}
+                                    className="hidden"
+                                  />
+                                </label>
+                                <button
+                                  onClick={() => setIsChangingSource(isChangingSource === `${spot.id}_github` ? null : `${spot.id}_github`)}
+                                  className="px-2.5 py-1.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 text-[9px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1"
+                                >
+                                  <RefreshCw className={`w-3 h-3 ${isChangingSource === `${spot.id}_github` ? "animate-spin" : ""}`} /> GitHub
+                                </button>
+                                <button
+                                  onClick={() => setIsChangingSource(isChangingSource === `${spot.id}_url` ? null : `${spot.id}_url`)}
+                                  className="px-2.5 py-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 text-[9px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1"
+                                >
+                                  <SlidersHorizontal className="w-3 h-3" /> URL
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteMedia(spot.id)}
+                                  className="p-1.5 bg-red-950/20 hover:bg-red-950/40 border border-red-950/30 text-red-400 rounded-lg cursor-pointer transition-all ml-auto"
+                                  title="Effacer le média"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+
+                                {/* Inline Inputs for existing assets */}
+                                <div className="w-full">
+                                  {isChangingSource === `${spot.id}_github` && (
+                                    <div className="mt-2 p-2 bg-purple-500/5 border border-purple-500/20 rounded-lg space-y-2">
+                                      <input
+                                        type="text"
+                                        placeholder="Chemin GitHub..."
+                                        value={githubInput}
+                                        onChange={(e) => setGithubInput(e.target.value)}
+                                        className="w-full bg-afri-bg border border-purple-500/30 rounded p-1.5 text-[9px] text-afri-text"
+                                      />
+                                      <button onClick={() => handleGithubImport(spot.id, githubInput)} className="w-full py-1.5 bg-purple-600 text-afri-text text-[8px] font-black uppercase rounded">Importer GitHub</button>
+                                    </div>
+                                  )}
+                                  {isChangingSource === `${spot.id}_url` && (
+                                    <div className="mt-2 p-2 bg-amber-500/5 border border-amber-500/20 rounded-lg space-y-2">
+                                      <input
+                                        type="url"
+                                        placeholder="Lien URL..."
+                                        value={urlInput}
+                                        onChange={(e) => setUrlInput(e.target.value)}
+                                        className="w-full bg-afri-bg border border-amber-500/30 rounded p-1.5 text-[9px] text-afri-text"
+                                      />
+                                      <button onClick={() => handleUrlImport(spot.id, urlInput)} className="w-full py-1.5 bg-amber-600 text-afri-text text-[8px] font-black uppercase rounded">Importer URL</button>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            ) : (
+                              <div className="w-full flex items-center justify-center gap-1 py-1 text-[8.5px] text-afri-text-sec uppercase">
+                                <Lock className="w-3 h-3" /> Consultation Uniquement
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
-
-                      {/* Video Specifications */}
-                      {sectionName === "videos" && (
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[8.5px] font-mono text-zinc-550 block mb-0.5">Durée (ex: 1m 20s)</label>
-                            <input
-                              type="text"
-                              value={editDuration}
-                              onChange={(e) => setEditDuration(e.target.value)}
-                              className="w-full bg-afri-bg border border-afri-border rounded p-1 text-[10px] text-afri-text"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[8.5px] font-mono text-zinc-550 block mb-0.5">Résolution (ex: 1080p)</label>
-                            <input
-                              type="text"
-                              value={editResolution}
-                              onChange={(e) => setEditResolution(e.target.value)}
-                              className="w-full bg-afri-bg border border-afri-border rounded p-1 text-[10px] text-afri-text"
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Enabled check */}
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-[10px] font-mono text-afri-text-sec">Activer le média en direct</span>
-                        <input
-                          type="checkbox"
-                          checked={editEnabled}
-                          onChange={(e) => setEditEnabled(e.target.checked)}
-                          className="sr-only peer"
-                          id={`enabled-chk-${spot.id}`}
-                        />
-                        <label
-                          htmlFor={`enabled-chk-${spot.id}`}
-                          className="w-8 h-4.5 bg-afri-bg-sec peer-checked:bg-afri-bg-sec rounded-full relative cursor-pointer after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5"
-                        />
-                      </div>
-
-                      <div className="flex gap-2 pt-1.5">
-                        <button
-                          onClick={handleSaveEdit}
-                          className="flex-1 py-1.5 bg-afri-bg-sec text-black font-black text-[9px] uppercase rounded-lg hover:opacity-95 transition-all"
-                        >
-                          Enregistrer
-                        </button>
-                        <button
-                          onClick={() => setEditingAsset(null)}
-                          className="px-3 py-1.5 bg-afri-bg-sec text-afri-text-sec hover:text-afri-text text-[9px] uppercase rounded-lg transition-all"
-                        >
-                          Fermer
-                        </button>
-                      </div>
                     </div>
                   ) : (
-                    <div className="space-y-1.5 text-[10px] font-mono text-zinc-550">
-                      <div className="flex justify-between">
-                        <span>Poids :</span>
-                        <span className="text-zinc-350">{asset.fileSize || "Inconnu"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Source :</span>
-                        <span className="text-afri-text-sec">{asset.sourceType || "FIREBASE"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Éditeur :</span>
-                        <span className="text-afri-text-sec truncate max-w-[60%]">{asset.updatedBy}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Synchro :</span>
-                        <span className="text-emerald-400 flex items-center gap-1">
-                          <Check className="w-3 h-3" /> Temps réel
-                        </span>
-                      </div>
-
-                      {/* Safety Replacement History Accordion */}
-                      {isAuthorizedSuperFounder && asset.history && asset.history.length > 0 && (
-                        <div className="mt-2.5 bg-afri-bg/20 p-2 rounded-lg border border-dashed border-afri-border space-y-1">
-                          <span className="text-[8px] text-amber-500/80 font-bold uppercase tracking-wider block flex items-center gap-1">
-                            <History className="w-2.5 h-2.5" /> Versions d'Historique :
-                          </span>
-                          <div className="max-h-16 overflow-y-auto space-y-1 scrollbar-thin">
-                            {asset.history.slice(0, 3).map((hist, idx) => (
-                              <div key={idx} className="flex justify-between items-center text-[8.5px] bg-afri-bg/40 p-1 rounded border border-afri-border">
-                                <span className="truncate max-w-[50%] text-afri-text-sec" title={hist.title}>{hist.title}</span>
-                                <button
-                                  onClick={() => handleRollback(spot.id, idx)}
-                                  className="text-[8px] font-mono text-[#D4AF37] hover:underline uppercase"
-                                >
-                                  Restaurer
-                                </button>
-                              </div>
-                            ))}
-                          </div>
+                    <div className="py-6 bg-afri-bg/20 border border-dashed border-afri-border rounded-xl text-center mt-2 flex flex-col items-center justify-center space-y-4">
+                      {isUploading ? (
+                        <div className="space-y-1.5">
+                          <Loader2 className="w-5 h-5 text-[#D4AF37] animate-spin mx-auto" />
+                          <span className="text-[10px] font-mono text-[#D4AF37] font-bold">Téléversement en cours…</span>
                         </div>
-                      )}
+                      ) : (
+                        <div className="w-full px-4 space-y-4">
+                          <div className="space-y-1">
+                            <UploadCloud className="w-6 h-6 text-zinc-800 mx-auto" />
+                            <span className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">Aucun média</span>
+                          </div>
 
-                      {/* Management actions (Super Founder exclusive) */}
-                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-afri-border">
-                        {isAuthorizedSuperFounder ? (
-                          <>
-                            <button
-                              onClick={() => {
-                                setEditingAsset(asset);
-                                setEditTitle(asset.title);
-                                setEditVolume(asset.volume !== undefined ? asset.volume : 0.8);
-                                setEditEnabled(asset.enabled !== undefined ? asset.enabled : true);
-                                setEditAutoplay(asset.autoplay || false);
-                                setEditLoop(asset.loop || false);
-                                setEditDuration(asset.duration || "");
-                                setEditResolution(asset.resolution || "");
-                              }}
-                              className="px-3 py-1.5 bg-afri-bg-sec hover:bg-afri-bg-sec border border-afri-border text-afri-text text-[9px] font-bold uppercase rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1"
-                            >
-                              <Edit3 className="w-3 h-3" /> Config
-                            </button>
-                            <label className="px-2.5 py-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 text-[9px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1">
-                              <UploadCloud className="w-3 h-3" /> Storage
+                          {/* Multi-Source Import Grid */}
+                          <div className="grid grid-cols-3 gap-2">
+                            <label className="flex-1">
                               <input
                                 type="file"
                                 accept={acceptType}
+                                className="hidden"
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
                                   if (file) handleFileUpload(spot.id, file, sectionName);
                                 }}
-                                className="hidden"
+                                disabled={isUploading}
                               />
+                              <div className="h-10 flex flex-col items-center justify-center bg-afri-bg-sec/50 hover:bg-afri-bg-sec border border-afri-border rounded-xl cursor-pointer transition-all group/up">
+                                <UploadCloud className="w-4 h-4 text-afri-text-sec group-hover/up:text-blue-400" />
+                                <span className="text-[6px] font-black uppercase text-afri-text-sec">Storage</span>
+                              </div>
                             </label>
+
                             <button
                               onClick={() => setIsChangingSource(isChangingSource === `${spot.id}_github` ? null : `${spot.id}_github`)}
-                              className="px-2.5 py-1.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 text-[9px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1"
+                              className="h-10 flex flex-col items-center justify-center bg-afri-bg-sec/50 hover:bg-afri-bg-sec border border-afri-border rounded-xl cursor-pointer transition-all group/git"
                             >
-                              <RefreshCw className={`w-3 h-3 ${isChangingSource === `${spot.id}_github` ? "animate-spin" : ""}`} /> GitHub
+                              <RefreshCw className={`w-4 h-4 text-afri-text-sec group-hover/git:text-purple-400 ${isChangingSource === `${spot.id}_github` ? "animate-spin" : ""}`} />
+                              <span className="text-[6px] font-black uppercase text-afri-text-sec">GitHub</span>
                             </button>
+
                             <button
                               onClick={() => setIsChangingSource(isChangingSource === `${spot.id}_url` ? null : `${spot.id}_url`)}
-                              className="px-2.5 py-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 text-[9px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1"
+                              className="h-10 flex flex-col items-center justify-center bg-afri-bg-sec/50 hover:bg-afri-bg-sec border border-afri-border rounded-xl cursor-pointer transition-all group/url"
                             >
-                              <SlidersHorizontal className="w-3 h-3" /> URL
+                              <SlidersHorizontal className="w-4 h-4 text-afri-text-sec group-hover/url:text-amber-400" />
+                              <span className="text-[6px] font-black uppercase text-afri-text-sec">URL</span>
                             </button>
-                            <button
-                              onClick={() => handleDeleteMedia(spot.id)}
-                              className="p-1.5 bg-red-950/20 hover:bg-red-950/40 border border-red-950/30 text-red-400 rounded-lg cursor-pointer transition-all ml-auto"
-                              title="Effacer le média"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
+                          </div>
 
-                            {/* Inline Inputs for existing assets */}
-                            <div className="w-full">
-                              {isChangingSource === `${spot.id}_github` && (
-                                <div className="mt-2 p-2 bg-purple-500/5 border border-purple-500/20 rounded-lg space-y-2">
-                                  <input
-                                    type="text"
-                                    placeholder="Chemin GitHub..."
-                                    value={githubInput}
-                                    onChange={(e) => setGithubInput(e.target.value)}
-                                    className="w-full bg-afri-bg border border-purple-500/30 rounded p-1.5 text-[9px] text-afri-text"
-                                  />
-                                  <button onClick={() => handleGithubImport(spot.id, githubInput)} className="w-full py-1.5 bg-purple-600 text-afri-text text-[8px] font-black uppercase rounded">Importer GitHub</button>
-                                </div>
-                              )}
-                              {isChangingSource === `${spot.id}_url` && (
-                                <div className="mt-2 p-2 bg-amber-500/5 border border-amber-500/20 rounded-lg space-y-2">
-                                  <input
-                                    type="url"
-                                    placeholder="Lien URL..."
-                                    value={urlInput}
-                                    onChange={(e) => setUrlInput(e.target.value)}
-                                    className="w-full bg-afri-bg border border-amber-500/30 rounded p-1.5 text-[9px] text-afri-text"
-                                  />
-                                  <button onClick={() => handleUrlImport(spot.id, urlInput)} className="w-full py-1.5 bg-amber-600 text-afri-text text-[8px] font-black uppercase rounded">Importer URL</button>
-                                </div>
-                              )}
+                          {/* Import Inputs */}
+                          {isChangingSource === `${spot.id}_github` && (
+                            <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-xl space-y-2 text-left">
+                              <input
+                                type="text"
+                                placeholder="Chemin GitHub..."
+                                value={githubInput}
+                                onChange={(e) => setGithubInput(e.target.value)}
+                                className="w-full bg-afri-bg border border-purple-500/30 rounded-lg p-2 text-[10px] text-afri-text"
+                              />
+                              <button onClick={() => handleGithubImport(spot.id, githubInput)} className="w-full py-2 bg-purple-600 text-afri-text text-[8px] font-black uppercase rounded-lg">Valider GitHub</button>
                             </div>
-                          </>
-                        ) : (
-                          <div className="w-full flex items-center justify-center gap-1 py-1 text-[8.5px] text-afri-text-sec uppercase">
-                            <Lock className="w-3 h-3" /> Consultation Uniquement
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="py-6 bg-afri-bg/20 border border-dashed border-afri-border rounded-xl text-center mt-2 flex flex-col items-center justify-center space-y-4">
-                  {isUploading ? (
-                    <div className="space-y-1.5">
-                      <Loader2 className="w-5 h-5 text-[#D4AF37] animate-spin mx-auto" />
-                      <span className="text-[10px] font-mono text-[#D4AF37] font-bold">Téléversement en cours…</span>
-                    </div>
-                  ) : (
-                    <div className="w-full px-4 space-y-4">
-                      <div className="space-y-1">
-                        <UploadCloud className="w-6 h-6 text-zinc-800 mx-auto" />
-                        <span className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">Aucun média</span>
-                      </div>
+                          )}
 
-                      {/* Multi-Source Import Grid */}
-                      <div className="grid grid-cols-3 gap-2">
-                        <label className="flex-1">
-                          <input
-                            type="file"
-                            accept={acceptType}
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleFileUpload(spot.id, file, sectionName);
-                            }}
-                            disabled={isUploading}
-                          />
-                          <div className="h-10 flex flex-col items-center justify-center bg-afri-bg-sec/50 hover:bg-afri-bg-sec border border-afri-border rounded-xl cursor-pointer transition-all group/up">
-                            <UploadCloud className="w-4 h-4 text-afri-text-sec group-hover/up:text-blue-400" />
-                            <span className="text-[6px] font-black uppercase text-afri-text-sec">Storage</span>
-                          </div>
-                        </label>
-
-                        <button
-                          onClick={() => setIsChangingSource(isChangingSource === `${spot.id}_github` ? null : `${spot.id}_github`)}
-                          className="h-10 flex flex-col items-center justify-center bg-afri-bg-sec/50 hover:bg-afri-bg-sec border border-afri-border rounded-xl cursor-pointer transition-all group/git"
-                        >
-                          <RefreshCw className={`w-4 h-4 text-afri-text-sec group-hover/git:text-purple-400 ${isChangingSource === `${spot.id}_github` ? "animate-spin" : ""}`} />
-                          <span className="text-[6px] font-black uppercase text-afri-text-sec">GitHub</span>
-                        </button>
-
-                        <button
-                          onClick={() => setIsChangingSource(isChangingSource === `${spot.id}_url` ? null : `${spot.id}_url`)}
-                          className="h-10 flex flex-col items-center justify-center bg-afri-bg-sec/50 hover:bg-afri-bg-sec border border-afri-border rounded-xl cursor-pointer transition-all group/url"
-                        >
-                          <SlidersHorizontal className="w-4 h-4 text-afri-text-sec group-hover/url:text-amber-400" />
-                          <span className="text-[6px] font-black uppercase text-afri-text-sec">URL</span>
-                        </button>
-                      </div>
-
-                      {/* Import Inputs */}
-                      {isChangingSource === `${spot.id}_github` && (
-                        <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-xl space-y-2 text-left">
-                          <input
-                            type="text"
-                            placeholder="Chemin GitHub..."
-                            value={githubInput}
-                            onChange={(e) => setGithubInput(e.target.value)}
-                            className="w-full bg-afri-bg border border-purple-500/30 rounded-lg p-2 text-[10px] text-afri-text"
-                          />
-                          <button onClick={() => handleGithubImport(spot.id, githubInput)} className="w-full py-2 bg-purple-600 text-afri-text text-[8px] font-black uppercase rounded-lg">Valider GitHub</button>
-                        </div>
-                      )}
-
-                      {isChangingSource === `${spot.id}_url` && (
-                        <div className="p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-2 text-left">
-                          <input
-                            type="url"
-                            placeholder="URL Directe..."
-                            value={urlInput}
-                            onChange={(e) => setUrlInput(e.target.value)}
-                            className="w-full bg-afri-bg border border-amber-500/30 rounded-lg p-2 text-[10px] text-afri-text"
-                          />
-                          <button onClick={() => handleUrlImport(spot.id, urlInput)} className="w-full py-2 bg-amber-600 text-afri-text text-[8px] font-black uppercase rounded-lg">Valider URL</button>
+                          {isChangingSource === `${spot.id}_url` && (
+                            <div className="p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-2 text-left">
+                              <input
+                                type="url"
+                                placeholder="URL Directe..."
+                                value={urlInput}
+                                onChange={(e) => setUrlInput(e.target.value)}
+                                className="w-full bg-afri-bg border border-amber-500/30 rounded-lg p-2 text-[10px] text-afri-text"
+                              />
+                              <button onClick={() => handleUrlImport(spot.id, urlInput)} className="w-full py-2 bg-amber-600 text-afri-text text-[8px] font-black uppercase rounded-lg">Valider URL</button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
                   )}
+                  {renderDiagnostics(spot.id)}
                 </div>
               )}
-              {renderDiagnostics(spot.id)}
             </div>
           );
         })}
@@ -1810,13 +2025,78 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       {/* VIEW 2 : MUSIQUES */}
       {activeTab === "audio" && (
         <div className="space-y-6">
-          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-1">
-            <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
-              🎵 Gestion des musiques impériales
-            </h4>
-            <p className="text-[10px] text-afri-text-sec">
-              Gérez indépendamment l'identité sonore de l'écosystème : l'introduction, l'hymne officiel, la musique d'ambiance, le Thon, le Centre de Commandement, etc.
-            </p>
+          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-3">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="space-y-1">
+                <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
+                  🎵 Gestion des musiques impériales
+                </h4>
+                <p className="text-[10px] text-afri-text-sec">
+                  Gérez indépendamment l'identité sonore et la visibilité publique dans le lecteur audio (casque).
+                </p>
+              </div>
+
+              {/* Expand / Collapse All Controls */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const allExpanded: Record<string, boolean> = {};
+                    AUDIO_SPOTS.forEach(s => { allExpanded[s.id] = true; });
+                    setExpandedSpots(prev => ({ ...prev, ...allExpanded }));
+                  }}
+                  className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 text-[9px] font-mono font-bold uppercase rounded-lg transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <ChevronDown className="w-3 h-3 text-[#D4AF37]" /> Tout déplier
+                </button>
+                <button
+                  onClick={() => {
+                    const allCollapsed: Record<string, boolean> = {};
+                    AUDIO_SPOTS.forEach(s => { allCollapsed[s.id] = false; });
+                    setExpandedSpots(prev => ({ ...prev, ...allCollapsed }));
+                  }}
+                  className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 text-[9px] font-mono font-bold uppercase rounded-lg transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <ChevronUp className="w-3 h-3 text-[#D4AF37]" /> Tout replier
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Pills */}
+            <div className="pt-2 border-t border-afri-border/60 flex items-center gap-2 flex-wrap">
+              <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold mr-1">Filtrer :</span>
+              <button
+                onClick={() => setAudioVisibilityFilter("all")}
+                className={`px-3 py-1 rounded-lg text-[9px] font-mono font-bold uppercase transition-all cursor-pointer ${
+                  audioVisibilityFilter === "all"
+                    ? "bg-[#D4AF37] text-black font-black"
+                    : "bg-afri-bg-sec text-zinc-400 border border-afri-border hover:text-zinc-200"
+                }`}
+              >
+                Toutes ({AUDIO_SPOTS.length})
+              </button>
+              <button
+                onClick={() => setAudioVisibilityFilter("public")}
+                className={`px-3 py-1 rounded-lg text-[9px] font-mono font-bold uppercase transition-all cursor-pointer flex items-center gap-1 ${
+                  audioVisibilityFilter === "public"
+                    ? "bg-emerald-500 text-black font-black"
+                    : "bg-afri-bg-sec text-emerald-400/80 border border-emerald-500/20 hover:border-emerald-500/50"
+                }`}
+              >
+                <Globe className="w-3 h-3" />
+                <span>Publiques ({AUDIO_SPOTS.filter(s => getIsPublicVisible(s.id, mediaAssets[s.id])).length})</span>
+              </button>
+              <button
+                onClick={() => setAudioVisibilityFilter("private")}
+                className={`px-3 py-1 rounded-lg text-[9px] font-mono font-bold uppercase transition-all cursor-pointer flex items-center gap-1 ${
+                  audioVisibilityFilter === "private"
+                    ? "bg-zinc-700 text-white font-black"
+                    : "bg-afri-bg-sec text-zinc-400 border border-afri-border hover:border-zinc-500"
+                }`}
+              >
+                <EyeOff className="w-3 h-3" />
+                <span>Privées ({AUDIO_SPOTS.filter(s => !getIsPublicVisible(s.id, mediaAssets[s.id])).length})</span>
+              </button>
+            </div>
           </div>
           {renderMediaGrid(AUDIO_SPOTS, "audio", "audio/*")}
         </div>

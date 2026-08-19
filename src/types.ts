@@ -880,6 +880,7 @@ export interface SystemMedia {
   loop?: boolean;
   autoplay?: boolean;
   enabled: boolean;
+  publicVisible?: boolean;
   priority: number;
   updatedAt: string;
   updatedBy: string;
