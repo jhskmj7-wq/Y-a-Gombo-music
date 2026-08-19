@@ -68,10 +68,13 @@ export const AvatarThreeCanvas: React.FC<AvatarThreeCanvasProps> = ({
     avatarGroup.position.set(0, 0.15, 0);
     scene.add(avatarGroup);
 
-    // Toon Material Creator
-    const createToonMaterial = (color: string | number | THREE.Color, roughness = 0.4) => {
-      return new THREE.MeshToonMaterial({
-        color: new THREE.Color(color)
+    // Professional Stylized Material Creator (Bitmoji / 3D Memoji Elite quality)
+    const createToonMaterial = (color: string | number | THREE.Color, roughness = 0.35, metalness = 0.05) => {
+      return new THREE.MeshStandardMaterial({
+        color: new THREE.Color(color),
+        roughness: roughness,
+        metalness: metalness,
+        flatShading: false
       });
     };
 

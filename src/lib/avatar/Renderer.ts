@@ -330,25 +330,27 @@ export const AvatarRenderer = {
         <g id="elite_eyes_base">
           <g transform="rotate(${eyeTilt}, ${L_eyeX}, ${eyeY})">
             <path d="${leftEyePath}" fill="url(#scleraGrad3D)" />
-            <path d="${leftEyePath}" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8" />
-            <circle cx="${L_eyeX}" cy="${eyeY}" r="${irisSize}" fill="#3E271E" />
-            <circle cx="${L_eyeX}" cy="${eyeY}" r="${irisSize * 0.85}" fill="#24140D" />
-            <circle cx="${L_eyeX}" cy="${eyeY}" r="${irisSize * 0.42}" fill="#050302" />
-            <circle cx="${L_eyeX - irisSize * 0.38}" cy="${eyeY - irisSize * 0.38}" r="1.5" fill="#FFFFFF" />
-            <circle cx="${L_eyeX + irisSize * 0.35}" cy="${eyeY + irisSize * 0.35}" r="0.8" fill="#FFFFFF" opacity="0.7" />
+            <path d="${leftEyePath}" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="0.8" />
+            <path d="M ${L_eyeX - eyeW/2} ${eyeY - eyeH * 0.4} Q ${L_eyeX} ${eyeY - eyeH * 0.9} ${L_eyeX + eyeW/2} ${eyeY - eyeH * 0.4} Z" fill="rgba(0,0,0,0.14)" />
+            <circle cx="${L_eyeX}" cy="${eyeY}" r="${irisSize}" fill="#4A2F22" />
+            <circle cx="${L_eyeX}" cy="${eyeY}" r="${irisSize * 0.86}" fill="#27150C" />
+            <circle cx="${L_eyeX}" cy="${eyeY}" r="${irisSize * 0.45}" fill="#080403" />
+            <circle cx="${L_eyeX - irisSize * 0.35}" cy="${eyeY - irisSize * 0.35}" r="1.6" fill="#FFFFFF" />
+            <circle cx="${L_eyeX + irisSize * 0.35}" cy="${eyeY + irisSize * 0.35}" r="0.9" fill="#FFFFFF" opacity="0.8" />
             ${eyelashesLeft}
-            <path d="M ${L_eyeX - eyeW * 0.55} ${eyeY - eyeH - 1.8} Q ${L_eyeX} ${eyeY - eyeH - 4.5} ${L_eyeX + eyeW * 0.45} ${eyeY - eyeH - 2.5}" stroke="rgba(0,0,0,0.28)" stroke-width="1.4" fill="none" />
+            <path d="M ${L_eyeX - eyeW * 0.58} ${eyeY - eyeH - 1.8} Q ${L_eyeX} ${eyeY - eyeH - 4.8} ${L_eyeX + eyeW * 0.48} ${eyeY - eyeH - 2.5}" stroke="rgba(0,0,0,0.32)" stroke-width="1.5" stroke-linecap="round" fill="none" />
           </g>
           <g transform="rotate(${-eyeTilt}, ${R_eyeX}, ${eyeY})">
             <path d="${rightEyePath}" fill="url(#scleraGrad3D)" />
-            <path d="${rightEyePath}" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.8" />
-            <circle cx="${R_eyeX}" cy="${eyeY}" r="${irisSize}" fill="#3E271E" />
-            <circle cx="${R_eyeX}" cy="${eyeY}" r="${irisSize * 0.85}" fill="#24140D" />
-            <circle cx="${R_eyeX}" cy="${eyeY}" r="${irisSize * 0.42}" fill="#050302" />
-            <circle cx="${R_eyeX - irisSize * 0.38}" cy="${eyeY - irisSize * 0.38}" r="1.5" fill="#FFFFFF" />
-            <circle cx="${R_eyeX + irisSize * 0.35}" cy="${eyeY + irisSize * 0.35}" r="0.8" fill="#FFFFFF" opacity="0.7" />
+            <path d="${rightEyePath}" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="0.8" />
+            <path d="M ${R_eyeX - eyeW/2} ${eyeY - eyeH * 0.4} Q ${R_eyeX} ${eyeY - eyeH * 0.9} ${R_eyeX + eyeW/2} ${eyeY - eyeH * 0.4} Z" fill="rgba(0,0,0,0.14)" />
+            <circle cx="${R_eyeX}" cy="${eyeY}" r="${irisSize}" fill="#4A2F22" />
+            <circle cx="${R_eyeX}" cy="${eyeY}" r="${irisSize * 0.86}" fill="#27150C" />
+            <circle cx="${R_eyeX}" cy="${eyeY}" r="${irisSize * 0.45}" fill="#080403" />
+            <circle cx="${R_eyeX - irisSize * 0.35}" cy="${eyeY - irisSize * 0.35}" r="1.6" fill="#FFFFFF" />
+            <circle cx="${R_eyeX + irisSize * 0.35}" cy="${eyeY + irisSize * 0.35}" r="0.9" fill="#FFFFFF" opacity="0.8" />
             ${eyelashesRight}
-            <path d="M ${R_eyeX - eyeW * 0.45} ${eyeY - eyeH - 2.5} Q ${R_eyeX} ${eyeY - eyeH - 4.5} ${R_eyeX + eyeW * 0.55} ${eyeY - eyeH - 1.8}" stroke="rgba(0,0,0,0.28)" stroke-width="1.4" fill="none" />
+            <path d="M ${R_eyeX - eyeW * 0.48} ${eyeY - eyeH - 2.5} Q ${R_eyeX} ${eyeY - eyeH - 4.8} ${R_eyeX + eyeW * 0.58} ${eyeY - eyeH - 1.8}" stroke="rgba(0,0,0,0.32)" stroke-width="1.5" stroke-linecap="round" fill="none" />
           </g>
         </g>
       `);
