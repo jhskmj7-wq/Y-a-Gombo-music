@@ -8048,10 +8048,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 id="user-nav-mes-gombos"
                 onClick={() => {
                   try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
-                  requireAuthThen(() => {
-                    setActiveMenu("user_mes_gombos");
-                    try { audioSynth.playValidationSuccess(); } catch (err) {}
-                  });
+                  setActiveMenu("user_mes_gombos");
+                  try { audioSynth.playValidationSuccess(); } catch (err) {}
                 }}
                 className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
               >
@@ -8077,11 +8075,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 id="user-nav-heritage"
                 onClick={() => {
                   try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
-                  requireAuthThen(() => {
-                    setActiveMenu("user_heritage");
-                    setViewingGomboIdDetail(false);
-                    try { audioSynth.playValidationSuccess(); } catch (err) {}
-                  });
+                  setActiveMenu("user_heritage");
+                  setViewingGomboIdDetail(false);
+                  try { audioSynth.playValidationSuccess(); } catch (err) {}
                 }}
                 className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
               >
