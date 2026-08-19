@@ -1508,7 +1508,7 @@ export default function AdminDeploymentCenter({
       )}
 
       {/* CONFIRM HIDE MODULE MODAL */}
-      {confirmHideFlag && createPortal(
+      {typeof document !== "undefined" && confirmHideFlag && createPortal(
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-afri-bg-sec border border-rose-500/50 rounded-3xl w-full max-w-md p-6 space-y-4 shadow-2xl relative text-left font-mono">
             <div className="flex items-center justify-between border-b border-afri-border pb-3">
