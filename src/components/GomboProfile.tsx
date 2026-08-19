@@ -11,7 +11,7 @@ import {
 import { UserProfile, PaymentProvider } from "../types";
 import { safeStringify } from "../lib/jsonUtils";
 import { gomboDB, gomboAuth, isFirebaseMock } from "../firebase";
-import { db } from "../lib/firebase";
+import { db, auth } from "../lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { audioSynth } from "../lib/audio";
 import { useAudio } from "../context/AudioContext";
@@ -469,20 +469,47 @@ export default function GomboProfile({
 
   const handleFileUpload = async (file: File) => {
     setUploading(true);
-    setUploadProgress(0);
-    let downloadUrl = "";
+    setUploadProgress(15);
     try {
-      const path = `avatars/${currentUserProfile.uid}/${Date.now()}_${file.name}`;
-      try {
-        downloadUrl = await gomboDB.uploadFile(file, path, (progress) => {
-          setUploadProgress(Math.round(progress));
-        });
-      } catch (uploadError) {
-        console.warn("⚠️ Firebase Storage acts unavailable. Emulating fallback with current / base avatar URL.", uploadError);
-        // Fallback: create local object URL to display instantly
-        downloadUrl = URL.createObjectURL(file);
+      const storagePath = `avatars/${currentUserProfile.uid}/${Date.now()}_${file.name}`;
+      
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error("Utilisateur non connecté.");
       }
+      const idToken = await currentUser.getIdToken();
+      setUploadProgress(40);
 
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const res = reader.result as string;
+          resolve(res.includes(",") ? res.split(",")[1] : res);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      setUploadProgress(65);
+
+      const resp = await fetch("/api/user/avatar/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idToken,
+          storagePath,
+          fileBase64: base64Data,
+          contentType: file.type || "image/jpeg",
+          bucket: "afrigombo-media"
+        })
+      });
+
+      const json = await resp.json();
+      if (!json.success || !json.publicUrl) {
+        throw new Error(json.error || "Échec du téléversement de l'avatar.");
+      }
+      setUploadProgress(85);
+
+      const downloadUrl = json.publicUrl;
       setAvatarUrl(downloadUrl);
       
       const photoPayload = {
@@ -503,13 +530,12 @@ export default function GomboProfile({
         await gomboDB.updateUserProfile(currentUserProfile.uid, photoPayload);
       }
 
+      setUploadProgress(100);
       // Fire refresh callback so user header and app components receive the updated photo URL immediately
       onRefreshProfile();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upload error:", err);
-      // Fallback: use a safe placeholder or current URL to never block the app
-      const fallbackUrl = currentUserProfile.photoURL || currentUserProfile.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
-      setAvatarUrl(fallbackUrl);
+      alert(err.message || "Erreur lors du téléversement de la photo de profil.");
     } finally {
       setUploading(false);
     }
