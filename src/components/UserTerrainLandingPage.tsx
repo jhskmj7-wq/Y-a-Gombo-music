@@ -863,7 +863,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       }}>
                     AFRIGOMBO
                   </h1>
-                  <span className="hidden xs:block text-[9.5px] sm:text-[13px] text-afri-text font-black tracking-wide mt-1 sm:mt-1.5 font-sans antialiased whitespace-nowrap">
+                  <span className="block text-[8.5px] xs:text-[9.5px] sm:text-[13px] text-afri-text font-black tracking-wide mt-0.5 sm:mt-1.5 font-sans antialiased whitespace-nowrap">
                     Le Temple du Gombo Musical
                   </span>
                 </div>

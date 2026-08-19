@@ -456,6 +456,51 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     res.json({ status: "ok", timestamp: Date.now() });
   });
 
+  // Diagnostic route for serverless / deployment environment status
+  app.get("/api/debug-status", (req, res) => {
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseConfigured = Boolean(supabaseKey && supabaseKey.trim() !== "");
+
+    let firebaseAdminConfigured = false;
+    try {
+      const adminAuth = getAdminAuthClient();
+      const adminDb = getAdminDb();
+      firebaseAdminConfigured = Boolean(adminAuth && adminDb);
+    } catch (_) {
+      firebaseAdminConfigured = false;
+    }
+
+    const routesRegistered: string[] = [];
+    if ((app as any)._router && (app as any)._router.stack) {
+      (app as any)._router.stack.forEach((layer: any) => {
+        if (layer.route && layer.route.path) {
+          const methods = Object.keys(layer.route.methods || {}).map((m) => m.toUpperCase()).join(",");
+          const routePath = layer.route.path;
+          if (typeof routePath === "string" && routePath.startsWith("/api")) {
+            routesRegistered.push(methods ? `${methods} ${routePath}` : routePath);
+          }
+        } else if (layer.name === "router" && layer.handle && layer.handle.stack) {
+          layer.handle.stack.forEach((handler: any) => {
+            if (handler.route && handler.route.path) {
+              const methods = Object.keys(handler.route.methods || {}).map((m) => m.toUpperCase()).join(",");
+              const routePath = handler.route.path;
+              if (typeof routePath === "string" && routePath.startsWith("/api")) {
+                routesRegistered.push(methods ? `${methods} ${routePath}` : routePath);
+              }
+            }
+          });
+        }
+      });
+    }
+
+    res.json({
+      status: "ok",
+      supabaseConfigured,
+      firebaseAdminConfigured,
+      routesRegistered: Array.from(new Set(routesRegistered))
+    });
+  });
+
   // API to analyze image for contact info
   app.post("/api/analyze-image", async (req, res) => {
     try {
