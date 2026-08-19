@@ -924,7 +924,13 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
   ];
 
   return (
-    <div className="w-full max-w-xl mx-auto space-y-6 pt-2 text-left">
+    <div 
+      className="w-full h-full max-w-xl mx-auto space-y-6 pt-2 pb-28 text-left overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] px-1 sm:px-2"
+      style={{
+        WebkitOverflowScrolling: "touch",
+        touchAction: "pan-y"
+      }}
+    >
       {/* Header title */}
       <div className="flex items-center gap-3">
         <div>

@@ -1204,11 +1204,13 @@ export default function GomboProfile({
       )}
 
       {panelView === "certification" && (
-        <GomboCertificationFlow
-          currentUserProfile={syncedProfile}
-          onRefreshProfile={onRefreshProfile}
-          onBack={() => setPanelView("main")}
-        />
+        <div className="w-full h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+          <GomboCertificationFlow
+            currentUserProfile={syncedProfile}
+            onRefreshProfile={onRefreshProfile}
+            onBack={() => setPanelView("main")}
+          />
+        </div>
       )}
 
       {panelView === "edit" && (
