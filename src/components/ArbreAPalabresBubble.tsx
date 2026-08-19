@@ -10,6 +10,28 @@ interface ArbreAPalabresBubbleProps {
 const STORAGE_KEY = "afrigombo_palabre_bubble_pos";
 
 export const ArbreAPalabresBubble: React.FC<ArbreAPalabresBubbleProps> = ({ unreadCount = 0, onOpen }) => {
+  // Toggle state to enable/disable floating bubble globally
+  const [isEnabled, setIsEnabled] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("afrigombo_messaging_bubble_enabled") !== "false";
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    const handleBubbleToggle = () => {
+      if (typeof window !== "undefined") {
+        setIsEnabled(localStorage.getItem("afrigombo_messaging_bubble_enabled") !== "false");
+      }
+    };
+    window.addEventListener("afrigombo_messaging_bubble_changed", handleBubbleToggle);
+    window.addEventListener("storage", handleBubbleToggle);
+    return () => {
+      window.removeEventListener("afrigombo_messaging_bubble_changed", handleBubbleToggle);
+      window.removeEventListener("storage", handleBubbleToggle);
+    };
+  }, []);
+
   // State for coordinates (fixed in viewport)
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -56,7 +78,7 @@ export const ArbreAPalabresBubble: React.FC<ArbreAPalabresBubbleProps> = ({ unre
     setPosition({ x: Math.max(12, defaultX), y: Math.max(12, defaultY) });
   }, []);
 
-  if (!position) return null;
+  if (!isEnabled || !position) return null;
 
   // Touch / Mouse Start Handlers
   const handleStart = (clientX: number, clientY: number) => {

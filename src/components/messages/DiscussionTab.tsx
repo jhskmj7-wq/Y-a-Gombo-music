@@ -34,6 +34,7 @@ export default function DiscussionTab({
   const [mutedIds, setMutedIds] = useState<string[]>([]);
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
+  const [readConvoIds, setReadConvoIds] = useState<string[]>([]);
   const [activeMenuConvoId, setActiveMenuConvoId] = useState<string | null>(null);
 
   // Modals for Report
@@ -52,10 +53,22 @@ export default function DiscussionTab({
       setMutedIds(JSON.parse(localStorage.getItem(`muted_convos_${uid}`) || "[]"));
       setBlockedIds(JSON.parse(localStorage.getItem(`blocked_convos_${uid}`) || "[]"));
       setDeletedIds(JSON.parse(localStorage.getItem(`deleted_convos_${uid}`) || "[]"));
+      setReadConvoIds(JSON.parse(localStorage.getItem(`read_convos_${uid}`) || "[]"));
     } catch (e) {
       console.error(e);
     }
   }, [currentUser]);
+
+  const handleOpenConvo = (convo: any) => {
+    if (currentUser?.uid && convo?.id) {
+      const updated = Array.from(new Set([...readConvoIds, convo.id]));
+      setReadConvoIds(updated);
+      try {
+        localStorage.setItem(`read_convos_${currentUser.uid}`, JSON.stringify(updated));
+      } catch (e) {}
+    }
+    onSelectConversation(convo);
+  };
 
   // Save helpers
   const saveState = (key: string, list: string[]) => {
@@ -177,7 +190,8 @@ export default function DiscussionTab({
     if (activeCategory === "all") return true;
     if (activeCategory === "unread") {
       const unread = convo.unreadCount?.[currentUser?.uid] || 0;
-      return unread > 0;
+      const isLocallyRead = readConvoIds.includes(convo.id);
+      return unread > 0 && !isLocallyRead;
     }
     
     const cat = getConvoCategory(convo);
@@ -319,7 +333,7 @@ export default function DiscussionTab({
                   if (activeMenuConvoId === convo.id) {
                     setActiveMenuConvoId(null);
                   } else {
-                    onSelectConversation(convo);
+                    handleOpenConvo(convo);
                   }
                 }}
                 className={`p-3.5 bg-afri-bg-sec border rounded-2xl flex items-center justify-between cursor-pointer hover:border-[#D4AF37]/60 transition shadow-sm group relative ${

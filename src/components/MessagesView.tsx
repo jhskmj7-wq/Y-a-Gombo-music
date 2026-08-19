@@ -71,6 +71,23 @@ export default function MessagesView({
   const [showCallSoonAlert, setShowCallSoonAlert] = useState(false);
   const [supportConvo, setSupportConvo] = useState<any | null>(null);
 
+  // Floating Tree Bubble Toggle State
+  const [showFloatingBubble, setShowFloatingBubble] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("afrigombo_messaging_bubble_enabled") !== "false";
+    }
+    return true;
+  });
+
+  const toggleFloatingBubble = () => {
+    const newValue = !showFloatingBubble;
+    setShowFloatingBubble(newValue);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("afrigombo_messaging_bubble_enabled", String(newValue));
+      window.dispatchEvent(new Event("afrigombo_messaging_bubble_changed"));
+    }
+  };
+
   // 2. Core Messaging State
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvo, setActiveConvo] = useState<Conversation | null>(null);
@@ -235,6 +252,30 @@ export default function MessagesView({
 
     return () => unsub();
   }, [currentUser?.uid, openConvoWithUserId]);
+
+  // Mark active conversation as read in Firestore and local state
+  useEffect(() => {
+    if (!activeConvo?.id || !currentUser?.uid) return;
+
+    if (activeConvo.type !== "support" && activeConvo.id !== currentUser.uid) {
+      gomboDB.markConversationAsRead(activeConvo.id, currentUser.uid).catch((err) => {
+        console.warn("Could not mark conversation as read:", err);
+      });
+    }
+
+    setConversations(prev => prev.map(c => {
+      if (c.id === activeConvo.id) {
+        return {
+          ...c,
+          unreadCount: {
+            ...(c.unreadCount || {}),
+            [currentUser.uid]: 0
+          }
+        };
+      }
+      return c;
+    }));
+  }, [activeConvo?.id, currentUser?.uid]);
 
   // Support conversation listener
   useEffect(() => {
@@ -761,6 +802,21 @@ export default function MessagesView({
                 {activeTab === "parametres" && "Paramètres Messagerie"}
                 {activeTab === "afrigombo" && "Espace AFRIGOMBO ELITE"}
               </h2>
+
+              {/* Interrupteur Bulle Flottante (Arbre à Palabres) */}
+              <button
+                type="button"
+                onClick={toggleFloatingBubble}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 transition cursor-pointer active:scale-95 ml-2 shrink-0 select-none"
+                title={showFloatingBubble ? "Désactiver la bulle flottante Arbre à Palabres" : "Activer la bulle flottante Arbre à Palabres"}
+              >
+                <span className="text-[10px] font-bold text-afri-text-sec flex items-center gap-1">
+                  🌳 Bulle
+                </span>
+                <div className={`w-7 h-3.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out ${showFloatingBubble ? 'bg-[#D4AF37]' : 'bg-zinc-700'}`}>
+                  <div className={`w-2.5 h-2.5 rounded-full bg-black transition-transform duration-200 ease-in-out ${showFloatingBubble ? 'translate-x-3.5' : 'translate-x-0'}`} />
+                </div>
+              </button>
             </div>
           </div>
 
