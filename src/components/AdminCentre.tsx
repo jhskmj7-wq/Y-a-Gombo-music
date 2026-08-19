@@ -2611,13 +2611,21 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           id: profile.uid,
                           artisticName: profile.displayName || `${profile.firstName || 'Artiste'} ${profile.lastName || 'Gombo'}`.trim(),
                           commune: profile.commune || 'Cocody',
-                          avatarUrl: profile.avatarUrl || profile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+                          avatarUrl: profile.avatarUrl || profile.photoURL || "",
                           isCertified: true,
-                        } : (users.find(u => u.id === activeArtistId) || users[0]);
+                        } : (currentUser ? (users.find(u => u.id === activeArtistId) || users[0]) : null);
 
                         return (
                           <div className="flex flex-col gap-3">
-                            <div className="bg-afri-bg/80 border border-afri-gold/20 rounded-xl p-4 shadow-md flex flex-col relative overflow-hidden">
+                            <div 
+                              onClick={() => {
+                                if (!currentUser) {
+                                  setIsSidebarOpen(false);
+                                  requireAuthThen(() => {});
+                                }
+                              }}
+                              className="bg-afri-bg/80 border border-afri-gold/20 rounded-xl p-4 shadow-md flex flex-col relative overflow-hidden cursor-pointer hover:border-afri-gold/40 transition-colors"
+                            >
                               <div className="flex items-center gap-4">
                                 <div className="relative shrink-0">
                                   <div className="w-14 h-14 rounded-full border-2 border-afri-gold overflow-hidden bg-afri-bg-sec flex items-center justify-center font-display font-black shadow-[0_0_15px_rgba(212,175,55,0.2)]">
@@ -2629,12 +2637,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                         referrerPolicy="no-referrer"
                                       />
                                     ) : (
-                                      <Music className="w-5 h-5 text-afri-gold" />
+                                      <Music className="w-6 h-6 text-afri-gold" />
                                     )}
                                   </div>
-                                  <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-afri-gold rounded-full border-2 border-afri-border flex items-center justify-center shadow-sm" title="Vérifié">
-                                    <CheckCircle2 className="w-3 h-3 text-black" strokeWidth={4} />
-                                  </span>
+                                  {currentArtist && (
+                                    <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-afri-gold rounded-full border-2 border-afri-border flex items-center justify-center shadow-sm" title="Vérifié">
+                                      <CheckCircle2 className="w-3 h-3 text-black" strokeWidth={4} />
+                                    </span>
+                                  )}
                                 </div>
                                 
                                 <div className="min-w-0 flex-1">
@@ -2642,31 +2652,41 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
                                   </h3>
                                   <p className="text-[10px] text-afri-text-sec font-mono uppercase tracking-wide font-medium mt-1">
-                                    GOMBO ID: {getEffectiveGomboId(profile)}
+                                    GOMBO ID: {currentArtist ? getEffectiveGomboId(profile) : "Non connecté"}
                                   </p>
                                   <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                                    <span className="px-1.5 py-0.5 rounded border border-afri-gold/40 text-afri-gold text-[9px] font-sans uppercase font-bold flex items-center gap-1">
-                                      ⭐ Niveau Professionnel
-                                    </span>
+                                    {currentArtist ? (
+                                      <span className="px-1.5 py-0.5 rounded border border-afri-gold/40 text-afri-gold text-[9px] font-sans uppercase font-bold flex items-center gap-1">
+                                        ⭐ Niveau Professionnel
+                                      </span>
+                                    ) : (
+                                      <span className="px-2 py-0.5 rounded border border-afri-gold/60 bg-afri-gold/10 text-afri-gold text-[9px] font-sans uppercase font-black">
+                                        Se connecter / S'inscrire
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                               </div>
                               
-                              <div className="mt-4 flex items-center justify-between">
-                                <span className="text-[11px] font-sans text-afri-text font-medium">Réputation</span>
-                                <div className="flex items-center gap-1.5">
-                                  <div className="flex text-afri-gold text-[10px]">
-                                    <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                              {currentArtist && (
+                                <div className="mt-4 flex items-center justify-between">
+                                  <span className="text-[11px] font-sans text-afri-text font-medium">Réputation</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="flex text-afri-gold text-[10px]">
+                                      <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                                    </div>
+                                    <span className="text-[11px] text-afri-text-sec font-sans font-medium">(4.8)</span>
                                   </div>
-                                  <span className="text-[11px] text-afri-text-sec font-sans font-medium">(4.8)</span>
                                 </div>
-                              </div>
+                              )}
                             </div>
 
                             <button 
                               onClick={() => {
                                 setIsSidebarOpen(false);
-                                setActiveMenu("user_wallet");
+                                requireAuthThen(() => {
+                                  setActiveMenu("user_wallet");
+                                });
                               }}
                               className="bg-afri-bg-sec border border-afri-border hover:bg-afri-gold/5 transition-colors rounded-xl p-4 shadow-md flex items-center justify-between cursor-pointer"
                             >
@@ -2674,7 +2694,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 <CreditCard className="w-8 h-8 text-afri-gold" strokeWidth={1.5} />
                                 <div className="flex flex-col text-left">
                                   <span className="text-[11px] font-sans text-afri-text font-medium leading-none mb-1">Wallet</span>
-                                  <span className="text-lg font-black text-afri-gold leading-none">{((profile?.wallet?.soldeDisponible ?? profile?.walletBalance ?? profile?.balance ?? 0)).toLocaleString('fr-FR')} FCFA</span>
+                                  <span className="text-lg font-black text-afri-gold leading-none">{profile ? ((profile?.wallet?.soldeDisponible ?? profile?.walletBalance ?? profile?.balance ?? 0)).toLocaleString('fr-FR') : "0"} FCFA</span>
                                 </div>
                               </div>
                               <ChevronRight className="w-5 h-5 text-afri-gold" strokeWidth={2} />
@@ -2752,9 +2772,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           title: "⚡ Actions Rapides",
                           items: [
                             { key: "menu_events", label: "Événements (Calendrier)", icon: "📅", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_events");
-                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_events");
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
                             }, customBadge: <span className="text-[7px] font-mono py-0.5 px-1.5 bg-afri-gold/10 text-afri-gold rounded border border-afri-gold/10 uppercase font-black">LIVE</span> },
                             { key: "menu_near_opports", label: "Opportunités proches", icon: "📍", action: () => {
                               requireAuthThen(() => {
@@ -2786,14 +2808,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           title: "🏛️ Univers AFRIGOMBO ELITE",
                           items: [
                             { key: "menu_grand_marche", label: "Le Grand Marché", icon: "🛍️", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_grand_marche");
-                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_grand_marche");
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
                             }, customBadge: <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/20 uppercase font-black">MARCHÉ</span> },
                             { key: "menu_academie", label: "L'Académie", icon: "🎓", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_academie");
-                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_academie");
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
                             }, customBadge: <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20 uppercase font-black">COURS</span> },
                             { key: "menu_gombo_id", label: "GOMBO ID", icon: "🆔", action: () => {
                               requireAuthThen(() => {
@@ -2857,8 +2883,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               });
                             } },
                             { key: "menu_pubs", label: "Publications", icon: "📝", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_mes_gombos");
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_mes_gombos");
+                              });
                             } },
                             { key: "menu_comms", label: "Palabres", icon: "💬", action: () => {
                               requireAuthThen(() => {
@@ -2867,9 +2895,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               });
                             } },
                             { key: "menu_settings", label: "Paramètres", icon: "⚙", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_settings");
-                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_settings");
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
                             } },
                             { key: "menu_lang", label: t('langue'), icon: "🌐", action: () => {
                               const nextL = lang === "fr" ? "nouchi" : (lang === "nouchi" ? "en" : "fr");

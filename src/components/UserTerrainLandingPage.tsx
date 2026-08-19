@@ -875,7 +875,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                {/* Notification with Badge */}
                <button 
                  onClick={() => {
-                    setActiveMenu("user_notifications");
+                    requireAuthThen(() => {
+                      setActiveMenu("user_notifications");
+                    });
                  }} 
                  className="relative p-1.5 sm:p-2 text-afri-gold hover:scale-110 transition-transform cursor-pointer shrink-0"
                  title="Notifications"
@@ -2577,7 +2579,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               tagColor: "text-pink-400",
               bgColor: "bg-pink-500/10",
               borderColor: "border-pink-500/20 group-hover:border-pink-500/55",
-              action: () => requireAuthThen(() => setActiveMenu("user_reels"))
+              action: () => setActiveMenu("user_reels")
             },
             {
               id: "podcast_studio",
@@ -2629,7 +2631,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     tagColor: "text-pink-400",
                     bgColor: "bg-pink-500/10",
                     borderColor: "border-pink-500/20 group-hover:border-pink-500/55",
-                    action: () => requireAuthThen(() => setActiveMenu("user_reels"))
+                    action: () => setActiveMenu("user_reels")
                   },
                   {
                     id: "podcast_studio",
