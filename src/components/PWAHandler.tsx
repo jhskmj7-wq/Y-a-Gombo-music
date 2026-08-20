@@ -154,9 +154,16 @@ export default function PWAHandler() {
     } catch (err) {
       console.warn('[PWA Engine] Nettoyage du cache terminé avec avertissement:', err);
     } finally {
-      // Step D: Hard reload page with cache-busting timestamp parameter
-      const targetUrl = window.location.origin + window.location.pathname + '?_v=' + Date.now();
-      window.location.href = targetUrl;
+      // Rechargement propre de la page sans ajout de paramètre d'URL cassé (?_v=...)
+      try {
+        if (window.location.search && window.location.search.includes('_v=')) {
+          window.location.href = window.location.origin + window.location.pathname;
+        } else {
+          window.location.reload();
+        }
+      } catch (_) {
+        window.location.href = window.location.origin;
+      }
     }
   };
 

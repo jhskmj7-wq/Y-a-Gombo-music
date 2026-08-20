@@ -1315,25 +1315,27 @@ export default function GomboProfile({
       )}
 
       {panelView === "support" && (
-        <div className="afri-section">
-          <div className="afri-card p-6 space-y-6">
-            <div className="text-center space-y-2">
-              <div className="inline-flex p-3 bg-orange-100 dark:bg-orange-950 text-[#D4AF37] rounded-full">
-                <HelpCircle className="w-10 h-10" />
+        <div className="w-full h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pb-24">
+          <div className="afri-section">
+            <div className="afri-card p-6 space-y-6">
+              <div className="text-center space-y-2">
+                <div className="inline-flex p-3 bg-orange-100 dark:bg-orange-950 text-[#D4AF37] rounded-full">
+                  <HelpCircle className="w-10 h-10" />
+                </div>
+                <h2 className="afri-title-lg text-afri-text text-center font-display font-black uppercase">SUPPORT ASSISTANCE GOMBO</h2>
+                <p className="afri-text-body text-afri-text-sec text-center">Besoin d'aide pour une transaction Wave suspendue ou une annulation de gombo de dernière minute ? Le support d'AFRIGOMBO ELITE est disponible 24/7.</p>
               </div>
-              <h2 className="afri-title-lg text-afri-text text-center font-display font-black uppercase">SUPPORT ASSISTANCE GOMBO</h2>
-              <p className="afri-text-body text-afri-text-sec text-center">Besoin d'aide pour une transaction Wave suspendue ou une annulation de gombo de dernière minute ? Le support d'AFRIGOMBO ELITE est disponible 24/7.</p>
-            </div>
-            
-            <div className="space-y-3">
-              <button 
-                onClick={() => supportConfig.openSupport("Aide générale")} 
-                className="afri-btn-primary py-4 text-center bg-afri-bg-sec border-[#25D366] flex items-center justify-center gap-2 cursor-pointer w-full font-black uppercase"
-              >
-                <MessageSquare className="w-4 h-4" /> Contacter le Support AFRIGOMBO ELITE
-              </button>
-              <div className="text-center pt-2">
-                <p className="text-[10px] text-[#B9B9B9] font-mono font-bold uppercase">Assistance AFRIGOMBO ELITE 24h/7</p>
+              
+              <div className="space-y-3">
+                <button 
+                  onClick={() => supportConfig.openSupport("Aide générale")} 
+                  className="afri-btn-primary py-4 text-center bg-afri-bg-sec border-[#25D366] flex items-center justify-center gap-2 cursor-pointer w-full font-black uppercase"
+                >
+                  <MessageSquare className="w-4 h-4" /> Contacter le Support AFRIGOMBO ELITE
+                </button>
+                <div className="text-center pt-2">
+                  <p className="text-[10px] text-[#B9B9B9] font-mono font-bold uppercase">Assistance AFRIGOMBO ELITE 24h/7</p>
+                </div>
               </div>
             </div>
           </div>
