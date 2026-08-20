@@ -51,7 +51,20 @@ export const FILE_LIMITS = {
 };
 
 export const ALLOWED_MIME_TYPES = {
-  IMAGE: ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"],
+  IMAGE: [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "image/svg+xml",
+    "image/heic",
+    "image/heif",
+    "image/heic-sequence",
+    "image/heif-sequence",
+    "image/bmp",
+    "image/tiff"
+  ],
   AUDIO: ["audio/mpeg", "audio/mp3", "audio/wav", "audio/aac", "audio/ogg", "audio/m4a", "audio/x-m4a", "audio/webm"],
   VIDEO: ["video/mp4", "video/webm", "video/quicktime", "video/x-matroska"],
   DOCUMENT: ["application/pdf", "image/jpeg", "image/png", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],

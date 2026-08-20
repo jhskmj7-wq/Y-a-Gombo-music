@@ -2009,7 +2009,7 @@ export const gomboDB = {
         
         let mediaType: "image" | "video" | "audio" | "document" | "other" = "other";
         const lower = finalPath.toLowerCase();
-        if (lower.match(/\.(jpg|jpeg|png|webp|gif|svg)$/) || lower.includes("image") || lower.includes("avatar") || lower.includes("photo") || lower.includes("cover")) {
+        if (lower.match(/\.(jpg|jpeg|png|webp|gif|svg|heic|heif)$/) || lower.includes("image") || lower.includes("avatar") || lower.includes("photo") || lower.includes("cover")) {
           mediaType = "image";
         } else if (lower.match(/\.(mp3|wav|ogg|m4a|aac)$/) || lower.includes("audio")) {
           mediaType = "audio";
@@ -2017,6 +2017,23 @@ export const gomboDB = {
           mediaType = "video";
         } else if (lower.match(/\.(pdf|doc|docx)$/) || isKyc || lower.includes("doc")) {
           mediaType = "document";
+        }
+
+        // Automatic image optimization for image files
+        if (mediaType === "image" && finalFile) {
+          try {
+            const { optimizeImage } = await import("./lib/media/imageOptimizer");
+            let context: "avatar" | "cover" | "post" | "gallery" | "custom" = "custom";
+            if (lower.includes("avatar") || lower.includes("profile")) context = "avatar";
+            else if (lower.includes("cover") || lower.includes("banniere")) context = "cover";
+            else if (lower.includes("post") || lower.includes("publication")) context = "post";
+            else if (lower.includes("gallery") || lower.includes("portfolio")) context = "gallery";
+
+            const opt = await optimizeImage(finalFile, { context });
+            finalFile = opt.file;
+          } catch (optErr) {
+            console.warn("[STORAGE] Image optimization notice:", optErr);
+          }
         }
 
         const result = await supabaseStorage.uploadGenericFile(finalFile, finalPath, {

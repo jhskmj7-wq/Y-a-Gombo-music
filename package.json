@@ -21,6 +21,7 @@
     "express": "^5.2.1",
     "firebase": "^10.8.0",
     "firebase-admin": "^14.2.0",
+    "heic2any": "^0.0.4",
     "howler": "^2.2.4",
     "lucide-react": "0.344.0",
     "maplibre-gl": "^6.0.0",

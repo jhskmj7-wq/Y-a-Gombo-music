@@ -24,7 +24,7 @@ import { AndroidPageLayout } from "./layout/AndroidPageLayout";
 import { useNavigate } from "react-router-dom";
 import SettingsModal from "./SettingsModal";
 import { supportConfig } from "../supportConfig";
-import { compressImage } from "../utils/imageCompression";
+import { uploadOptimizedImage, safeFetchJson } from "../lib/media/imageOptimizer";
 
 interface GomboProfileProps {
   currentUserProfile: UserProfile;
@@ -482,38 +482,24 @@ export default function GomboProfile({
     setUploading(true);
     setUploadProgress(15);
     try {
-      const storagePath = `avatars/${currentUserProfile.uid}/${Date.now()}_${file.name.replace(/\.[^/.]+$/, "")}.jpeg`;
-      
       const currentUser = auth.currentUser;
-      if (!currentUser) {
-        throw new Error("Utilisateur non connecté.");
-      }
-      const idToken = await currentUser.getIdToken();
-      setUploadProgress(35);
+      const idToken = currentUser ? await currentUser.getIdToken() : undefined;
 
-      // Client-side automatic compression (maxWidth: 1200px, JPEG 0.8) to keep payload < 500 KB
-      const compressed = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.8 });
-      setUploadProgress(65);
-
-      const resp = await fetch("/api/user/avatar/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idToken,
-          storagePath,
-          fileBase64: compressed.base64,
-          contentType: "image/jpeg",
-          bucket: "afrigombo-media"
-        })
+      const result = await uploadOptimizedImage({
+        file,
+        context: "avatar",
+        userId: currentUserProfile.uid,
+        idToken,
+        onProgress: (stage, msg, pct) => {
+          if (pct) setUploadProgress(pct);
+        }
       });
 
-      const json = await resp.json();
-      if (!json.success || !json.publicUrl) {
-        throw new Error(json.error || "Échec du téléversement de l'avatar.");
+      if (!result.success || !result.url) {
+        throw new Error(result.error || "Échec du téléversement de la photo de profil.");
       }
-      setUploadProgress(85);
 
-      const downloadUrl = json.publicUrl;
+      const downloadUrl = result.url;
       setAvatarUrl(downloadUrl);
       
       const photoPayload = {
@@ -535,7 +521,6 @@ export default function GomboProfile({
       }
 
       setUploadProgress(100);
-      // Fire refresh callback so user header and app components receive the updated photo URL immediately
       onRefreshProfile();
     } catch (err: any) {
       console.error("Upload error:", err);
@@ -549,38 +534,24 @@ export default function GomboProfile({
     setCoverUploading(true);
     setCoverUploadProgress(15);
     try {
-      const storagePath = `covers/${currentUserProfile.uid}/${Date.now()}_${file.name.replace(/\.[^/.]+$/, "")}.jpeg`;
-      
       const currentUser = auth.currentUser;
-      if (!currentUser) {
-        throw new Error("Utilisateur non connecté.");
-      }
-      const idToken = await currentUser.getIdToken();
-      setCoverUploadProgress(35);
+      const idToken = currentUser ? await currentUser.getIdToken() : undefined;
 
-      // Client-side automatic compression (maxWidth: 1200px, JPEG 0.8) to keep payload < 500 KB
-      const compressed = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.8 });
-      setCoverUploadProgress(65);
-
-      const resp = await fetch("/api/user/cover/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idToken,
-          storagePath,
-          fileBase64: compressed.base64,
-          contentType: "image/jpeg",
-          bucket: "afrigombo-media"
-        })
+      const result = await uploadOptimizedImage({
+        file,
+        context: "cover",
+        userId: currentUserProfile.uid,
+        idToken,
+        onProgress: (stage, msg, pct) => {
+          if (pct) setCoverUploadProgress(pct);
+        }
       });
 
-      const json = await resp.json();
-      if (!json.success || !json.publicUrl) {
-        throw new Error(json.error || "Échec du téléversement de la bannière.");
+      if (!result.success || !result.url) {
+        throw new Error(result.error || "Échec du téléversement de la bannière.");
       }
-      setCoverUploadProgress(85);
 
-      const downloadUrl = json.publicUrl;
+      const downloadUrl = result.url;
       setCoverUrl(downloadUrl);
       
       const payload = {

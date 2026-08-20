@@ -45,6 +45,7 @@ import { useAuth } from "../../AuthContext";
 import { useAudio } from "../../context/AudioContext";
 import { getAudioUrl } from "../../lib/audioUtils";
 import { supabaseStorage } from "../../lib/supabaseStorage";
+import { optimizeImage } from "../../lib/media/imageOptimizer";
 import { SystemMedia, SourceType } from "../../types";
 import { SupabaseStorageDiagnostic } from "./SupabaseStorageDiagnostic";
 import {
@@ -388,12 +389,19 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       return;
     }
 
-    // 1. Validation de format audio strict
+    // 1. Validation de format audio strict & Optimisation image
     if (sectionName === "audio" || sectionName === "sounds") {
       const isAudio = file.type.startsWith("audio/") || /\.(mp3|wav|ogg|m4a|aac|webm|flac)$/i.test(file.name);
       if (!isAudio) {
         alert("Format audio non supporté. Veuillez sélectionner un fichier audio valide (MP3, WAV, AAC, M4A, OGG).");
         return;
+      }
+    } else if (sectionName === "images" || file.type.startsWith("image/")) {
+      try {
+        const opt = await optimizeImage(file, { context: "custom" });
+        file = opt.file;
+      } catch (optErr: any) {
+        console.warn("[MULTIMEDIA CENTER] Image optimization warning:", optErr);
       }
     }
 

@@ -177,7 +177,8 @@ function getAI(): GoogleGenAI | null {
 
 const app = express();
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // --- WALLET SECURITY BACKEND ENGINE ---
 
@@ -710,7 +711,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 
       const uid = decodedToken.uid;
 
-      if (!storagePath.includes(`avatars/${uid}/`) && !storagePath.startsWith(`avatars/${uid}/`)) {
+      if (!storagePath.includes(uid) || !storagePath.toLowerCase().includes("avatar")) {
         return res.status(403).json({ success: false, error: "Accès refusé. Chemin de stockage non autorisé pour cet utilisateur." });
       }
 
@@ -781,7 +782,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 
       const uid = decodedToken.uid;
 
-      if (!storagePath.includes(`covers/${uid}/`) && !storagePath.startsWith(`covers/${uid}/`)) {
+      if (!storagePath.includes(uid) || (!storagePath.toLowerCase().includes("cover") && !storagePath.toLowerCase().includes("banniere"))) {
         return res.status(403).json({ success: false, error: "Accès refusé. Chemin de stockage non autorisé pour cet utilisateur." });
       }
 
