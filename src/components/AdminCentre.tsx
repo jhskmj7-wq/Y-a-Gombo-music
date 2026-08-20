@@ -7952,7 +7952,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       {/* =========================================================================
                                      FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED & COLLAPSIBLE)
          ========================================================================= */}
-      {perspective === "user" && (
+      {(perspective === "user" || activeMenu === "user_heritage") && (
         activeMenu === "user_terrain" ||
         activeMenu === "user_vibes" ||
         activeMenu === "user_mes_gombos" ||
@@ -8115,7 +8115,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       {/* =========================================================================
                                      ADMIN FIXED BOTTOM NAVIGATION BAR
          ========================================================================= */}
-      {perspective === "admin" && activeMenu !== "super_admin" && activeMenu !== "user_settings" && (
+      {perspective === "admin" && activeMenu !== "super_admin" && activeMenu !== "user_settings" && activeMenu !== "user_heritage" && (
         <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-afri-bg/95 backdrop-blur-md border-t sm:border border-afri-gold/35 p-1.5 sm:p-2 px-2 xs:px-4 sm:px-6 flex items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.2)] w-full sm:w-auto min-w-[300px] xs:min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-0.5 xs:gap-1 sm:gap-4 select-none">
           {/* 1. DASHBOARD */}
           <button

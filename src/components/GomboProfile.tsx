@@ -1183,7 +1183,7 @@ export default function GomboProfile({
       )}
 
       {panelView === "certification" && (
-        <div className="w-full h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+        <div className="w-full pb-28">
           <GomboCertificationFlow
             currentUserProfile={syncedProfile}
             onRefreshProfile={onRefreshProfile}
@@ -1294,7 +1294,7 @@ export default function GomboProfile({
       )}
 
       {panelView === "support" && (
-        <div className="w-full h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pb-24">
+        <div className="w-full pb-28">
           <div className="afri-section">
             <div className="afri-card p-6 space-y-6">
               <div className="text-center space-y-2">

@@ -44,11 +44,11 @@ export function AndroidPageLayout({
       {headerContent}
       
       <main 
-        className={`flex-1 w-full min-h-0 box-border overflow-x-hidden ${scrollable ? "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]" : "overflow-hidden"}`}
+        className={`flex-1 w-full min-h-0 box-border overflow-x-hidden ${scrollable ? "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]" : "overflow-visible"}`}
         style={{
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-y",
-          paddingBottom: "max(100px, env(safe-area-inset-bottom))"
+          paddingBottom: scrollable ? "max(80px, env(safe-area-inset-bottom))" : undefined
         }}
       >
         {children}

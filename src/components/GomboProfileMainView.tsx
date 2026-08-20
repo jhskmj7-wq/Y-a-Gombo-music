@@ -125,7 +125,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="w-full h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] space-y-4 pt-2 pb-24 text-left"
+      className="w-full space-y-4 pt-2 pb-28 text-left"
     >
       
       {/* FOUNDER COMMAND CENTER CARD */}
