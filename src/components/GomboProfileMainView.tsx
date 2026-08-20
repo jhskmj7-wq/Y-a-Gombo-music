@@ -957,7 +957,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
         {/* CARTE ACCÈS CENTRE DE COMMANDEMENT (VISIBLE UNIQUEMENT POUR jhs.kmj7@gmail.com) */}
         {(currentUserProfile?.email || "").toLowerCase() === "jhs.kmj7@gmail.com" && (
-          <div className="mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-amber-500/10 to-white dark:from-amber-950/30 dark:to-black border border-amber-400/30 text-center space-y-4 relative  shadow-md">
+          <div className="mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-amber-500/10 to-afri-bg-sec dark:from-amber-950/30 dark:to-black border border-amber-400/30 text-center space-y-4 relative shadow-md">
             <div className="relative z-10 space-y-1.5">
               <span className="text-afri-gold text-[10px] font-mono uppercase tracking-[0.25em] font-bold block">
                 Espace Gouvernance Fondateur
