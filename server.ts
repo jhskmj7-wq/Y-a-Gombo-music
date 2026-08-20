@@ -12,6 +12,7 @@ dotenv.config();
 
 // Safe Lazy Initializers for Server Operations
 let adminInitialized = false;
+let firebaseAdminError: string | null = null;
 function initAdmin() {
   if (!adminInitialized) {
     try {
@@ -22,33 +23,54 @@ function initAdmin() {
           let serviceAccountObj;
           try {
             serviceAccountObj = JSON.parse(serviceAccountKey);
-          } catch (parseErr) {
+          } catch (parseErr: any) {
+            firebaseAdminError = `JSON.parse error: ${parseErr?.message || parseErr}`;
             console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:", parseErr);
+            throw parseErr;
           }
 
-          if (serviceAccountObj) {
-            initializeAdminApp({
-              credential: cert(serviceAccountObj),
-              projectId: serviceAccountObj.project_id || process.env.VITE_FIREBASE_PROJECT_ID || "afrigombo",
-            });
-            console.log("Firebase Admin initialized successfully with Service Account credentials.");
-          } else {
-            initializeAdminApp({
-              projectId: process.env.VITE_FIREBASE_PROJECT_ID || "afrigombo",
-            });
-            console.log("Firebase Admin initialized with default project ID.");
+          try {
+            if (serviceAccountObj) {
+              initializeAdminApp({
+                credential: cert(serviceAccountObj),
+                projectId: serviceAccountObj.project_id || process.env.VITE_FIREBASE_PROJECT_ID || "afrigombo",
+              });
+              console.log("Firebase Admin initialized successfully with Service Account credentials.");
+            } else {
+              initializeAdminApp({
+                projectId: process.env.VITE_FIREBASE_PROJECT_ID || "afrigombo",
+              });
+              console.log("Firebase Admin initialized with default project ID.");
+            }
+          } catch (initErr: any) {
+            firebaseAdminError = `initializeAdminApp error: ${initErr?.message || initErr}`;
+            console.error("Failed to initialize Firebase Admin app:", initErr);
+            throw initErr;
           }
         } else {
           // Fallback initialization
-          initializeAdminApp({
-            projectId: process.env.VITE_FIREBASE_PROJECT_ID || "afrigombo",
-          });
-          console.log("Firebase Admin initialized with project ID (no service account JSON provided).");
+          try {
+            initializeAdminApp({
+              projectId: process.env.VITE_FIREBASE_PROJECT_ID || "afrigombo",
+            });
+            console.log("Firebase Admin initialized with project ID (no service account JSON provided).");
+          } catch (fallbackErr: any) {
+            firebaseAdminError = `Fallback initializeAdminApp error: ${fallbackErr?.message || fallbackErr}`;
+            throw fallbackErr;
+          }
         }
       }
       adminInitialized = true;
-    } catch (e) {
+      firebaseAdminError = null;
+    } catch (e: any) {
+      if (!firebaseAdminError) {
+        firebaseAdminError = e?.message || String(e);
+      }
       console.warn("Firebase Admin initialization deferred/failed:", e);
+    }
+  } else {
+    if (getAdminApps().length > 0) {
+      firebaseAdminError = null;
     }
   }
 }
@@ -488,12 +510,16 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const supabaseConfigured = Boolean(supabaseKey && supabaseKey.trim() !== "");
 
       let firebaseAdminConfigured = false;
+      let firebaseAdminErrorVal: string | null = null;
       try {
+        initAdmin();
         const adminAuth = getAdminAuthClient();
         const adminDb = getAdminDb();
-        firebaseAdminConfigured = Boolean(adminAuth && adminDb);
-      } catch (_) {
+        firebaseAdminConfigured = Boolean(adminAuth && adminDb && getAdminApps().length > 0);
+        firebaseAdminErrorVal = firebaseAdminError;
+      } catch (err: any) {
         firebaseAdminConfigured = false;
+        firebaseAdminErrorVal = firebaseAdminError || err?.message || String(err);
       }
 
       const routesRegistered: string[] = [];
@@ -513,6 +539,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
         status: "ok",
         supabaseConfigured,
         firebaseAdminConfigured,
+        firebaseAdminError: firebaseAdminErrorVal,
         routesRegistered: Array.from(new Set(routesRegistered))
       });
     } catch (err: any) {
