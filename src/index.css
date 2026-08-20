@@ -188,15 +188,15 @@ html.text-size-grand {
   }
   
   .afri-btn-primary {
-    @apply w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-afri-gold hover:bg-afri-gold-light text-black font-black uppercase text-[11px] xs:text-xs tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-afri-gold/10;
+    @apply w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-afri-gold hover:bg-afri-gold-light text-black font-black uppercase text-[11px] xs:text-xs tracking-widest transition-transform active:scale-[0.98] shadow-lg shadow-afri-gold/10;
   }
 
   .afri-btn-secondary {
-    @apply w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-afri-text/5 border border-afri-border hover:bg-afri-text/10 text-afri-text font-bold uppercase text-[10px] xs:text-[11px] tracking-wider transition-all active:scale-[0.98];
+    @apply w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-afri-text/5 border border-afri-border hover:bg-afri-text/10 text-afri-text font-bold uppercase text-[10px] xs:text-[11px] tracking-wider transition-transform active:scale-[0.98];
   }
 
   .afri-btn-ghost {
-    @apply flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-afri-text-sec hover:text-afri-text hover:bg-afri-text/5 transition-all text-[10px] uppercase font-black tracking-widest;
+    @apply flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-afri-text-sec hover:text-afri-text hover:bg-afri-text/5 transition-transform text-[10px] uppercase font-black tracking-widest;
   }
   
   .afri-icon-wrapper {
