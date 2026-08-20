@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import * as admin from "firebase-admin";
-import { initializeApp as initializeAdminApp, getApps as getAdminApps } from "firebase-admin/app";
+import { initializeApp as initializeAdminApp, getApps as getAdminApps, cert } from "firebase-admin/app";
 import { getFirestore as getAdminFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth as getAdminAuth } from "firebase-admin/auth";
 
@@ -16,10 +16,35 @@ function initAdmin() {
   if (!adminInitialized) {
     try {
       if (getAdminApps().length === 0) {
-        initializeAdminApp({
-          projectId: process.env.VITE_FIREBASE_PROJECT_ID || "afrigombo",
-        });
-        console.log("Firebase Admin initialized successfully.");
+        const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_ADMIN_SDK_KEY;
+        
+        if (serviceAccountKey) {
+          let serviceAccountObj;
+          try {
+            serviceAccountObj = JSON.parse(serviceAccountKey);
+          } catch (parseErr) {
+            console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:", parseErr);
+          }
+
+          if (serviceAccountObj) {
+            initializeAdminApp({
+              credential: cert(serviceAccountObj),
+              projectId: serviceAccountObj.project_id || process.env.VITE_FIREBASE_PROJECT_ID || "afrigombo",
+            });
+            console.log("Firebase Admin initialized successfully with Service Account credentials.");
+          } else {
+            initializeAdminApp({
+              projectId: process.env.VITE_FIREBASE_PROJECT_ID || "afrigombo",
+            });
+            console.log("Firebase Admin initialized with default project ID.");
+          }
+        } else {
+          // Fallback initialization
+          initializeAdminApp({
+            projectId: process.env.VITE_FIREBASE_PROJECT_ID || "afrigombo",
+          });
+          console.log("Firebase Admin initialized with project ID (no service account JSON provided).");
+        }
       }
       adminInitialized = true;
     } catch (e) {
