@@ -247,13 +247,13 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   onClick={() => setIsAvatarSheetOpen(true)}
                   className="relative cursor-pointer group active:scale-95 transition-transform"
                 >
-                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-[2.5rem] border-4 border-[#080808] bg-afri-bg-sec shadow-2xl overflow-hidden relative">
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-[#080808] bg-afri-bg-sec shadow-2xl overflow-hidden relative aspect-square" style={{ borderRadius: '50%', overflow: 'hidden' }}>
                     {cameraActive ? (
-                      <video id="webcam-preview" autoPlay playsInline className="w-full h-full object-cover scale-x-[-1]" />
+                      <video id="webcam-preview" autoPlay playsInline className="w-full h-full object-cover scale-x-[-1] rounded-full aspect-square" style={{ borderRadius: '50%', objectFit: 'cover' }} />
                     ) : (
-                      <img src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200"} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <img src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200"} alt="Avatar" className="w-full h-full object-cover rounded-full aspect-square block" style={{ borderRadius: '50%', overflow: 'hidden', objectFit: 'cover' }} referrerPolicy="no-referrer" />
                     )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full" style={{ borderRadius: '50%' }}>
                       <Camera className="w-8 h-8 text-[#D4AF37]" />
                     </div>
                   </div>

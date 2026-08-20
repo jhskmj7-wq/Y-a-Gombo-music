@@ -9,6 +9,7 @@ import { gomboDB, storage } from "../firebase";
 import { audioSynth } from "../lib/audio";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { safeStringify } from "../lib/jsonUtils";
+import { AvatarCropModal } from "./ui/AvatarCropModal";
 
 const CIV_CITIES = [
   "Abidjan", "Bouaké", "Yamoussoukro", "San-Pédro", "Korhogo", "Daloa", "Man", "Gagnoa", "Grand-Bassam", "Bingerville", "Autre"
@@ -80,6 +81,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
   const initialGdPhoto = currentUserProfile?.photoURL || currentUserProfile?.avatarUrl || "";
   const [gdPhoto, setGdPhoto] = useState(initialGdPhoto);
   const [avatarUrl, setAvatarUrl] = useState(gdPhoto);
+  const [fileToCrop, setFileToCrop] = useState<File | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [errorMSG, setErrorMSG] = useState("");
@@ -188,21 +190,17 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processUploadFile = async (file: File) => {
     setUploading(true);
     setErrorMSG("");
 
     try {
-      // Try real firebase storage if available
       if (storage) {
         const fileRef = ref(storage, `users/${currentUserProfile.uid}/profile_${Date.now()}.jpg`);
         await uploadBytes(fileRef, file);
         const url = await getDownloadURL(fileRef);
         setAvatarUrl(url);
       } else {
-        // base64 fallback
         const reader = new FileReader();
         reader.onload = (event) => {
           if (event.target?.result) {
@@ -224,6 +222,13 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileToCrop(file);
+    e.target.value = "";
   };
 
   const validateStep = (step: number) => {
@@ -1269,6 +1274,16 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
         <p className="text-[8px] text-zinc-700 font-mono mt-8 uppercase tracking-widest text-center">
           VOTRE SÉCURITÉ ET VOTRE RETRAITE D'ARTISTE SONT GARANTIES PAR AFRIGOMBO ELITE
         </p>
+
+        <AvatarCropModal
+          isOpen={!!fileToCrop}
+          imageFile={fileToCrop}
+          onClose={() => setFileToCrop(null)}
+          onCropComplete={(croppedFile) => {
+            setFileToCrop(null);
+            processUploadFile(croppedFile);
+          }}
+        />
       </motion.div>
     </div>
   );

@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import SettingsModal from "./SettingsModal";
 import { supportConfig } from "../supportConfig";
 import { uploadOptimizedImage, safeFetchJson } from "../lib/media/imageOptimizer";
+import { AvatarCropModal } from "./ui/AvatarCropModal";
 
 interface GomboProfileProps {
   currentUserProfile: UserProfile;
@@ -305,6 +306,7 @@ export default function GomboProfile({
   const [showCommuneDropdown, setShowCommuneDropdown] = useState(false);
   const [bio, setBio] = useState(currentUserProfile?.bio || "");
   const [avatarUrl, setAvatarUrl] = useState(currentUserProfile?.avatarUrl || currentUserProfile?.photoURL || AVATARS[0]);
+  const [fileToCrop, setFileToCrop] = useState<File | null>(null);
   
   const [specialties, setSpecialties] = useState<string[]>(
     currentUserProfile?.specialties || 
@@ -474,8 +476,12 @@ export default function GomboProfile({
       if (!blob) return;
       const file = new File([blob], `captured_avatar_${Date.now()}.jpeg`, { type: "image/jpeg" });
       stopCamera();
-      await handleFileUpload(file);
+      setFileToCrop(file);
     }, "image/jpeg");
+  };
+
+  const handleFileSelectForCrop = (file: File) => {
+    setFileToCrop(file);
   };
 
   const handleFileUpload = async (file: File) => {
@@ -1264,7 +1270,7 @@ export default function GomboProfile({
           capturePhoto={capturePhoto}
           stopCamera={stopCamera}
           startCamera={startCamera}
-          handleFileUpload={handleFileUpload}
+          handleFileUpload={handleFileSelectForCrop}
           coverUrl={coverUrl}
           setCoverUrl={setCoverUrl}
           handleCoverUpload={handleCoverUpload}
@@ -1320,6 +1326,16 @@ export default function GomboProfile({
           </div>
         </div>
       )}
+
+      <AvatarCropModal
+        isOpen={!!fileToCrop}
+        imageFile={fileToCrop}
+        onClose={() => setFileToCrop(null)}
+        onCropComplete={(croppedFile) => {
+          setFileToCrop(null);
+          handleFileUpload(croppedFile);
+        }}
+      />
     </AndroidPageLayout>
   );
 }

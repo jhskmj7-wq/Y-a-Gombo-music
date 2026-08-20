@@ -319,16 +319,17 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         <div className="flex flex-row items-start gap-3 xs:gap-4 sm:gap-5">
           {/* LEFT: Premium double-ring avatar frame */}
           <div className="relative shrink-0 select-none">
-            <div className={`w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 rounded-full border-2 p-0.5 ${
+            <div className={`w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 rounded-full border-2 p-0.5 overflow-hidden aspect-square ${
               isLight ? "border-[#D4AF37] bg-[#FDFBF7]" : "border-amber-400 bg-afri-bg-sec"
-            }`}>
-              <div className={`w-full  rounded-full border  ${
+            }`} style={{ borderRadius: "50%", overflow: "hidden" }}>
+              <div className={`w-full h-full rounded-full border overflow-hidden aspect-square flex items-center justify-center ${
                 isLight ? "border-[#D4AF37]/35 bg-stone-100" : "border-amber-400/45 bg-afri-bg-ter"
-              }`}>
+              }`} style={{ borderRadius: "50%", overflow: "hidden" }}>
                 <img 
                   src={(isModuleVisible("avatar") && currentUserProfile.useAvatarAsProfile && currentUserProfile.avatarDataUri) ? currentUserProfile.avatarDataUri : (currentUserProfile.photoURL || currentUserProfile.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150")} 
                   alt="Artist Avatar" 
-                  className="w-full  object-cover rounded-full" 
+                  className="w-full h-full object-cover rounded-full aspect-square block" 
+                  style={{ borderRadius: "50%", overflow: "hidden", objectFit: "cover" }}
                   referrerPolicy="no-referrer"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
