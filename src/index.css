@@ -90,10 +90,7 @@ html, body {
   --afri-border: #DDD8CF;
 }
 
-/* Smooth 250-300ms transitions for colors, backgrounds, borders and shadows when theme is changed */
-html, body, #root, .afri-card, .afri-card-inset, input, select, textarea, aside, header, footer, nav, button, div, span, p, h1, h2, h3, h4, h5, h6 {
-  transition: background-color 280ms ease-in-out, border-color 280ms ease-in-out, color 280ms ease-in-out, box-shadow 280ms ease-in-out, text-shadow 280ms ease-in-out;
-}
+
 
 html.text-size-petit {
   font-size: 13px !important;
