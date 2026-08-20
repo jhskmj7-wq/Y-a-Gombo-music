@@ -2805,16 +2805,20 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, customBadge: <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/10 uppercase font-black">DISPO</span> },
                             { key: "menu_msgs", label: "Messages", icon: "📩", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_messages");
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_messages");
+                              });
                             }, customBadge: totalUnreadMessages > 0 ? (
                               <span className="ml-2 bg-red-500 text-afri-text text-[9px] font-mono font-black px-1.5 py-0.5 rounded-full shadow-md">
                                 {totalUnreadMessages}
                               </span>
                             ) : undefined },
                             { key: "menu_favorites", label: "Favoris", icon: "⭐", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_favorites");
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_favorites");
+                              });
                             } }
                           ]
                         },
@@ -2833,9 +2837,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, customBadge: <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20 uppercase font-black">COURS</span> },
                             { key: "menu_gombo_id", label: "GOMBO ID", icon: "🆔", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_gombo_id");
-                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_gombo_id");
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
                             }, customBadge: (() => {
                               const gInfo = getGomboIdStatusInfo(currentUser);
                               return (
@@ -2851,9 +2857,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               );
                             })() },
                             { key: "menu_gombo_ads", label: "GOMBO ADS", icon: "📣", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_gombo_ads");
-                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_gombo_ads");
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
                             } }
                           ]
                         },
@@ -2884,16 +2892,22 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           title: "👤 Centre personnel",
                           items: [
                             { key: "menu_heritage", label: "Mon Héritage", icon: "👑", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_heritage");
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_heritage");
+                              });
                             } },
                             { key: "menu_pubs", label: "Publications", icon: "📝", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_mes_gombos");
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_mes_gombos");
+                              });
                             } },
                             { key: "menu_comms", label: "Palabres", icon: "💬", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_comments");
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_comments");
+                              });
                             } },
                             { key: "menu_settings", label: "Paramètres", icon: "⚙", action: () => {
                               setPerspective("user");
@@ -2917,30 +2931,38 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           title: "🛠 Système",
                           items: [
                             { key: "menu_notifications", label: "Notifications", icon: "🔔", action: async () => {
-                              setPerspective("user");
-                              setActiveMenu("user_notifications");
-                              if (currentUser?.uid) {
-                                try {
-                                  await gomboDB.markAllUserNotificationsAsRead(currentUser.uid);
-                                  setRealNotifications(prev => prev.map(n => ({ ...n, read: true, isRead: true })));
-                                } catch (e) {}
-                              }
+                              requireAuthThen(async () => {
+                                setPerspective("user");
+                                setActiveMenu("user_notifications");
+                                if (currentUser?.uid) {
+                                  try {
+                                    await gomboDB.markAllUserNotificationsAsRead(currentUser.uid);
+                                    setRealNotifications(prev => prev.map(n => ({ ...n, read: true, isRead: true })));
+                                  } catch (e) {}
+                                }
+                              });
                             }, customBadge: unreadNotifsCount > 0 ? (
                               <span className="bg-gradient-to-r from-red-600 to-amber-500 text-afri-text font-mono font-black text-[9px] px-1.5 py-0.5 rounded-full animate-pulse shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.5)]">
                                 {unreadNotifsCount > 9 ? "9+" : unreadNotifsCount}
                               </span>
                             ) : null },
                             { key: "menu_history", label: "Historique", icon: "🕓", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_history");
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_history");
+                              });
                             } },
                             { key: "menu_downloads", label: "Téléchargements", icon: "📥", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_downloads");
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_downloads");
+                              });
                             } },
                             { key: "menu_backups", label: "Sauvegardes", icon: "💾", action: () => {
-                              setPerspective("user");
-                              setActiveMenu("user_backups");
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_backups");
+                              });
                             } },
                             { key: "menu_help", label: "Centre d'aide", icon: "🛟", action: () => {
                               setPerspective("user");
