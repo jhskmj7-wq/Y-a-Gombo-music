@@ -190,6 +190,22 @@ export const CANONICAL_FEATURE_IDS: Record<string, string> = {
   user_vibes: "podcasts",
   user_podcasts: "podcasts",
 
+  // Trends & Tendances
+  trends: "trends",
+  tendances: "trends",
+  user_trends: "trends",
+
+  // Reels & Vidéos
+  reels: "reels",
+  user_reels: "reels",
+  reels_artistes: "reels",
+  video: "reels",
+
+  // Talents
+  talents: "talents",
+  members: "talents",
+  user_talents: "talents",
+
   // Events
   events: "events",
   event: "events",

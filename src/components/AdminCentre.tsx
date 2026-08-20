@@ -234,7 +234,8 @@ import {
   ChevronLeft,
   Handshake,
   ArrowLeft,
-  Lightbulb
+  Lightbulb,
+  LogIn
 } from "lucide-react";
 
 // --- IVORY COAST LOCATIONS (COMMUNES) & DEFAULTS ---
@@ -2584,110 +2585,147 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     </button>
                   </div>
 
-                  {/* USER / ARTIST CARD (UNIFIED FOR GUESTS & LOGGED-IN USERS) */}
-                  <div className="p-5">
-                    {(() => {
-                      const currentArtist = profile ? {
-                        id: profile.uid,
-                        artisticName: profile.displayName || profile.artisticName || `${profile.firstName || 'Artiste'} ${profile.lastName || 'Gombo'}`.trim(),
-                        commune: profile.commune || 'Cocody',
-                        avatarUrl: profile.avatarUrl || profile.photoURL || "",
-                        isCertified: profile.kycStatus === 'approved' || profile.isCertified || false,
-                      } : (currentUser ? (users.find(u => u.id === activeArtistId) || users[0]) : null);
+                  {/* LOGGED IN USER CARD / UNCONNECTED PRESTIGE CONTAINER */}
+                  <div className="p-4 sm:p-5">
+                    {!currentUser ? (
+                      <div className="bg-gradient-to-b from-afri-bg-sec/95 via-afri-bg/95 to-afri-bg border border-afri-gold/40 rounded-2xl p-4 shadow-xl flex flex-col gap-3 relative overflow-hidden text-left">
+                        {/* Decorative subtle ambient backdrop element */}
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-afri-gold/10 rounded-full blur-xl pointer-events-none" />
+                        
+                        <div className="flex items-center gap-3 relative z-10">
+                          <div className="w-10 h-10 rounded-xl bg-afri-gold/15 border border-afri-gold/40 flex items-center justify-center text-afri-gold shadow-[0_0_12px_rgba(212,175,55,0.2)] shrink-0">
+                            <Sparkles className="w-5 h-5 text-afri-gold" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[8.5px] font-mono uppercase font-black text-afri-gold tracking-widest block">
+                              ACCÈS PRESTIGE
+                            </span>
+                            <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text leading-tight mt-0.5 truncate">
+                              Bienvenue sur AFRIGOMBO
+                            </h3>
+                          </div>
+                        </div>
 
-                      return (
-                        <div className="flex flex-col gap-3">
-                          <div 
-                            onClick={() => {
-                              if (!currentUser) {
+                        <p className="text-[10.5px] text-afri-text-sec font-sans leading-relaxed relative z-10">
+                          Connectez-vous pour débloquer votre GOMBO ID officiel, vos cachets, votre Wallet et vos opportunités exclusives.
+                        </p>
+
+                        <div className="flex flex-wrap gap-1 pt-0.5 relative z-10">
+                          <span className="text-[7.5px] font-mono uppercase font-bold text-afri-gold/90 bg-afri-gold/10 px-2 py-0.5 rounded-full border border-afri-gold/25">
+                            ✨ Cachets Sécurisés
+                          </span>
+                          <span className="text-[7.5px] font-mono uppercase font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/25">
+                            🆔 GOMBO ID
+                          </span>
+                          <span className="text-[7.5px] font-mono uppercase font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/25">
+                            ⚡ Renforts Live
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsSidebarOpen(false);
+                            setTimeout(() => {
+                              setIsAuthModalOpen(true);
+                              try { audioSynth.playKoraSuccess(); } catch (err) {}
+                            }, 250);
+                          }}
+                          className="w-full bg-gradient-to-r from-afri-gold via-amber-400 to-afri-gold hover:opacity-95 text-[#050505] rounded-xl py-2.5 px-3.5 text-center cursor-pointer font-sans font-black text-[11px] uppercase tracking-wider transition-all duration-200 shadow-[0_4px_15px_rgba(212,175,55,0.25)] flex items-center justify-center gap-2 border border-amber-300/40 active:scale-98 relative z-10"
+                        >
+                          <LogIn className="w-4 h-4 text-[#050505] stroke-[2.5]" />
+                          <span>Se Connecter / S'inscrire</span>
+                        </button>
+                      </div>
+                    ) : (
+                      (() => {
+                        const currentArtist = profile ? {
+                          id: profile.uid,
+                          artisticName: profile.artisticName || profile.displayName || `${profile.firstName || 'Artiste'} ${profile.lastName || 'Gombo'}`.trim(),
+                          commune: profile.commune || 'Cocody',
+                          avatarUrl: profile.avatarUrl || profile.photoURL || "",
+                          isCertified: profile.isCertified || profile.kycStatus === "approved",
+                        } : (currentUser ? (users.find(u => u.id === activeArtistId) || users[0]) : null);
+
+                        return (
+                          <div className="flex flex-col gap-3">
+                            <div 
+                              onClick={() => {
                                 setIsSidebarOpen(false);
-                                setTimeout(() => {
-                                  setIsAuthModalOpen(true);
-                                  try { audioSynth.playKoraSuccess(); } catch (err) {}
-                                }, 200);
-                              } else {
-                                setIsSidebarOpen(false);
-                                setActiveMenu("user_edit_profile");
-                              }
-                            }}
-                            className="bg-afri-bg/80 border border-afri-gold/20 rounded-xl p-4 shadow-md flex flex-col relative overflow-hidden cursor-pointer hover:border-afri-gold/40 transition-colors"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="relative shrink-0">
-                                <div className="w-14 h-14 rounded-full border-2 border-afri-gold overflow-hidden bg-afri-bg-sec flex items-center justify-center font-display font-black shadow-[0_0_15px_rgba(212,175,55,0.2)]">
-                                  {currentArtist && (currentArtist.avatarUrl || (currentArtist as any).photoURL) ? (
-                                    <img 
-                                      src={currentArtist.avatarUrl || (currentArtist as any).photoURL} 
-                                      alt={currentArtist.artisticName} 
-                                      className="w-full h-full object-cover"
-                                      referrerPolicy="no-referrer"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-afri-gold font-black text-xs sm:text-sm">
-                                      {currentUser ? (profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U") : "INV"}
-                                    </div>
+                                setPerspective("user");
+                                setActiveMenu("user_heritage");
+                              }}
+                              className="bg-afri-bg/80 border border-afri-gold/30 rounded-xl p-4 shadow-md flex flex-col relative overflow-hidden cursor-pointer hover:border-afri-gold/60 transition-colors"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className="relative shrink-0">
+                                  <div className="w-14 h-14 rounded-full border-2 border-afri-gold overflow-hidden bg-afri-bg-sec flex items-center justify-center font-display font-black shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                                    {currentArtist && (currentArtist.avatarUrl || (currentArtist as any).photoURL) ? (
+                                      <img 
+                                        src={currentArtist.avatarUrl || (currentArtist as any).photoURL} 
+                                        alt={currentArtist.artisticName} 
+                                        className="w-full h-full object-cover"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    ) : (
+                                      <Music className="w-6 h-6 text-afri-gold" />
+                                    )}
+                                  </div>
+                                  {currentArtist && currentArtist.isCertified && (
+                                    <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-afri-gold rounded-full border-2 border-afri-border flex items-center justify-center shadow-sm" title="Vérifié">
+                                      <CheckCircle2 className="w-3 h-3 text-black" strokeWidth={4} />
+                                    </span>
                                   )}
                                 </div>
-                                {currentArtist?.isCertified && (
-                                  <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-afri-gold rounded-full border-2 border-afri-border flex items-center justify-center shadow-sm" title="Vérifié">
-                                    <CheckCircle2 className="w-3 h-3 text-black" strokeWidth={4} />
-                                  </span>
-                                )}
-                              </div>
-                              
-                              <div className="min-w-0 flex-1">
-                                <h3 className="text-[15px] font-sans font-black text-afri-text leading-tight truncate">
-                                  {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
-                                </h3>
-                                <p className="text-[10px] text-afri-text-sec font-mono uppercase tracking-wide font-medium mt-1">
-                                  GOMBO ID: {currentArtist ? getEffectiveGomboId(profile) : "Non connecté (Invité)"}
-                                </p>
-                                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                                  {currentArtist ? (
+                                
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="text-[15px] font-sans font-black text-afri-text leading-tight truncate">
+                                    {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
+                                  </h3>
+                                  <p className="text-[10px] text-afri-text-sec font-mono uppercase tracking-wide font-medium mt-1">
+                                    GOMBO ID: {getEffectiveGomboId(profile)}
+                                  </p>
+                                  <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                                     <span className="px-1.5 py-0.5 rounded border border-afri-gold/40 text-afri-gold text-[9px] font-sans uppercase font-bold flex items-center gap-1">
                                       ⭐ Niveau Professionnel
                                     </span>
-                                  ) : (
-                                    <span className="px-2 py-0.5 rounded border border-afri-gold/60 bg-afri-gold/10 text-afri-gold text-[9px] font-sans uppercase font-black">
-                                      Se connecter / S'inscrire
-                                    </span>
-                                  )}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-4 flex items-center justify-between">
+                                <span className="text-[11px] font-sans text-afri-text font-medium">Réputation</span>
+                                <div className="flex items-center gap-1.5">
+                                  <div className="flex text-afri-gold text-[10px]">
+                                    <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                                  </div>
+                                  <span className="text-[11px] text-afri-text-sec font-sans font-medium">(4.8)</span>
                                 </div>
                               </div>
                             </div>
-                            
-                            <div className="mt-4 flex items-center justify-between">
-                              <span className="text-[11px] font-sans text-afri-text font-medium">Réputation</span>
-                              <div className="flex items-center gap-1.5">
-                                <div className="flex text-afri-gold text-[10px]">
-                                  <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                                </div>
-                                <span className="text-[11px] text-afri-text-sec font-sans font-medium">({currentArtist ? "4.8" : "5.0"})</span>
-                              </div>
-                            </div>
-                          </div>
 
-                          <button 
-                            onClick={() => {
-                              setIsSidebarOpen(false);
-                              requireAuthThen(() => {
+                            {/* Wallet Card - Only rendered when logged in */}
+                            <button 
+                              onClick={() => {
+                                setIsSidebarOpen(false);
+                                setPerspective("user");
                                 setActiveMenu("user_wallet");
-                              });
-                            }}
-                            className="bg-afri-bg-sec border border-afri-border hover:bg-afri-gold/5 transition-colors rounded-xl p-4 shadow-md flex items-center justify-between cursor-pointer"
-                          >
-                            <div className="flex items-center gap-4">
-                              <CreditCard className="w-8 h-8 text-afri-gold" strokeWidth={1.5} />
-                              <div className="flex flex-col text-left">
-                                <span className="text-[11px] font-sans text-afri-text font-medium leading-none mb-1">Wallet</span>
-                                <span className="text-lg font-black text-afri-gold leading-none">{profile ? ((profile?.wallet?.soldeDisponible ?? profile?.walletBalance ?? profile?.balance ?? 0)).toLocaleString('fr-FR') : "0"} FCFA</span>
+                              }}
+                              className="bg-afri-bg-sec border border-afri-border hover:bg-afri-gold/5 transition-colors rounded-xl p-4 shadow-md flex items-center justify-between cursor-pointer"
+                            >
+                              <div className="flex items-center gap-4">
+                                <CreditCard className="w-8 h-8 text-afri-gold" strokeWidth={1.5} />
+                                <div className="flex flex-col text-left">
+                                  <span className="text-[11px] font-sans text-afri-text font-medium leading-none mb-1">Wallet Souverain</span>
+                                  <span className="text-lg font-black text-afri-gold leading-none">{((profile?.wallet?.soldeDisponible ?? profile?.walletBalance ?? profile?.balance ?? 0)).toLocaleString('fr-FR')} FCFA</span>
+                                </div>
                               </div>
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-afri-gold" strokeWidth={2} />
-                          </button>
-                        </div>
-                      );
-                    })()}
+                              <ChevronRight className="w-5 h-5 text-afri-gold" strokeWidth={2} />
+                            </button>
+                          </div>
+                        );
+                      })()
+                    )}
                   </div>
 
                   {/* MAIN NAVIGATION GROUPS */}
@@ -2923,18 +2961,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   QUITTER
                                 </span>
                               )
-                            }] : [{
-                              key: "menu_login", label: "Connexion / Inscription", icon: "🔑", action: () => {
-                                setTimeout(() => {
-                                  setIsAuthModalOpen(true);
-                                  try { audioSynth.playKoraSuccess(); } catch (err) {}
-                                }, 200);
-                              }, customBadge: (
-                                <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-afri-gold/20 text-afri-gold rounded border border-afri-gold/40 font-black scale-90 uppercase">
-                                  REJOINDRE
-                                </span>
-                              )
-                            }])
+                            }] : [])
                           ]
                         }
                       ];
