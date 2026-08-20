@@ -340,17 +340,56 @@ function parseStatusValue(value: any): FeatureVisibilityStatus {
   return "ACTIVE";
 }
 
+// Set of sensitive / internal administrative modules that should be HIDDEN by default when unconfigured
+const DEFAULT_SENSITIVE_HIDDEN_MODULES = new Set([
+  "wallet",
+  "afripay",
+  "user_wallet",
+  "withdraw",
+  "deposit",
+  "payout",
+  "payouts",
+  "escrow",
+  "contracts",
+  "user_contracts",
+  "direct_deal",
+  "admin",
+  "admin_centre",
+  "system_admin",
+  "super_admin",
+  "moderation",
+  "admin_security",
+  "admin_audit",
+  "admin_roles",
+  "admin_deploy",
+  "kyc_strict",
+  "kyc_approval",
+  "bank_transfers"
+]);
+
+/**
+ * Helper to determine if a module is considered a public module that is ACTIVE by default
+ * unless explicitly set to HIDDEN in the deployment configuration.
+ */
+export function isDefaultPublicModule(featureId: string): boolean {
+  if (!featureId) return true;
+  const cleanId = featureId.toLowerCase().trim();
+  const canonical = CANONICAL_FEATURE_IDS[cleanId] || CANONICAL_FEATURE_IDS[featureId] || cleanId;
+  const canonicalClean = canonical.toLowerCase().trim();
+
+  if (DEFAULT_SENSITIVE_HIDDEN_MODULES.has(cleanId) || DEFAULT_SENSITIVE_HIDDEN_MODULES.has(canonicalClean)) {
+    return false;
+  }
+  return true;
+}
+
 /**
  * Returns raw module status stored in Firestore ("ACTIVE", "COMING_SOON", "HIDDEN").
  */
 export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap): FeatureVisibilityStatus {
   const activeMap = flagsMap && Object.keys(flagsMap).length > 0 ? flagsMap : globalCachedFlagsMap;
   if (!activeMap || Object.keys(activeMap).length === 0) {
-    const cleanId = (featureId || "").toLowerCase().trim();
-    if (cleanId === "home" || cleanId === "user_home" || cleanId === "user_terrain" || cleanId === "audio") {
-      return "ACTIVE";
-    }
-    return "HIDDEN";
+    return isDefaultPublicModule(featureId) ? "ACTIVE" : "HIDDEN";
   }
 
   // 0. Parent Check: If this feature has a parent module, check if parent is HIDDEN
@@ -381,6 +420,11 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
   // 3. Fallback for sub-flags (e.g. wheel_1, wheel_2 -> check parent wheel)
   if (value === undefined && parentId && activeMap[parentId] !== undefined) {
     value = activeMap[parentId];
+  }
+
+  // 4. If value is still undefined in activeMap, apply default public module behavior
+  if (value === undefined) {
+    return isDefaultPublicModule(featureId) ? "ACTIVE" : "HIDDEN";
   }
 
   return parseStatusValue(value);

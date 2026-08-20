@@ -428,6 +428,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isFounder() || isAdmin();
     }
+    match /parameters/{id} {
+      allow read: if true;
+      allow write: if isFounder() || isAdmin();
+    }
     match /systemConfig/{id} {
       allow read: if true;
       allow write: if isFounder() || isAdmin();
