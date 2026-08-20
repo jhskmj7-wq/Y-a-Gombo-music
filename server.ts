@@ -1096,7 +1096,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
   });
 
 async function startServer() {
-  const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+  const PORT = 3000;
 
   // Vite middleware for development (bypassed on Vercel)
   if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
