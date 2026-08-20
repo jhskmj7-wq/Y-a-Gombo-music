@@ -27,7 +27,8 @@ export default function Navigation() {
     { name: 'MON HÉRITAGE', path: '/heritage', icon: User, requiresAuth: true, featureId: 'heritage' },
   ].filter(item => isModuleVisible(item.featureId));
 
-  if (navItems.length === 0) return null;
+  const allowedPaths = ['/home', '/vibes', '/my-gombos', '/heritage'];
+  if (!allowedPaths.includes(location.pathname) || navItems.length === 0) return null;
 
   return (
     <nav

@@ -10,9 +10,10 @@ interface HeritagePageProps {
   setDarkMode?: (val: boolean) => void;
   initialPanelView?: "main" | "edit" | "settings" | "support" | "certification";
   onViewPublicPortfolio?: (userId: string) => void;
+  onSubPanelChange?: (isSubPanel: boolean) => void;
 }
 
-export default function HeritagePage({ onNavigateView, darkMode, setDarkMode, initialPanelView, onViewPublicPortfolio }: HeritagePageProps) {
+export default function HeritagePage({ onNavigateView, darkMode, setDarkMode, initialPanelView, onViewPublicPortfolio, onSubPanelChange }: HeritagePageProps) {
   const { profile, currentUser, refreshProfile, logout } = useAuth();
 
   const activeProfile = profile || (currentUser ? ({
@@ -40,6 +41,7 @@ export default function HeritagePage({ onNavigateView, darkMode, setDarkMode, in
             setDarkMode={setDarkMode}
             initialPanelView={initialPanelView}
             onViewPublicPortfolio={onViewPublicPortfolio}
+            onSubPanelChange={onSubPanelChange}
           />
         ) : (
           <div className="flex justify-center items-center h-[50vh]">

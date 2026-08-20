@@ -35,6 +35,7 @@ interface GomboProfileProps {
   setDarkMode?: (val: boolean) => void;
   initialPanelView?: "main" | "edit" | "settings" | "support" | "certification";
   onViewPublicPortfolio?: (userId: string) => void;
+  onSubPanelChange?: (isSubPanel: boolean) => void;
 }
 
 const ABIDJAN_COMMUNES = [
@@ -81,13 +82,20 @@ export default function GomboProfile({
   darkMode,
   setDarkMode,
   initialPanelView = "main",
-  onViewPublicPortfolio
+  onViewPublicPortfolio,
+  onSubPanelChange
 }: GomboProfileProps) {
   const navigate = useNavigate();
   const { currentTrack, isPlaying, playTrack, pause: pauseAudio } = useAudio();
 
   // Current Panel view: "main" | "edit" | "settings" | "support" | "certification"
   const [panelView, setPanelView] = useState<"main" | "edit" | "settings" | "support" | "certification">(initialPanelView);
+
+  useEffect(() => {
+    if (onSubPanelChange) {
+      onSubPanelChange(panelView !== "main");
+    }
+  }, [panelView, onSubPanelChange]);
 
   // States for KYC/Identity validation
   // (Removed redundant declarations as they exist below)

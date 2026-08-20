@@ -518,6 +518,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [openConvoWithUserId, setOpenConvoWithUserId] = useState<string | null>(null);
   const [openConvoWithGomboId, setOpenConvoWithGomboId] = useState<string | null>(null);
   const [publicProfileTargetUserId, setPublicProfileTargetUserId] = useState<string | null>(null);
+  const [isHeritageSubPanelActive, setIsHeritageSubPanelActive] = useState(false);
+
+  useEffect(() => {
+    if (activeMenu !== "user_heritage") {
+      setIsHeritageSubPanelActive(false);
+    }
+  }, [activeMenu]);
 
   // Pending payment modal state
   const [showPendingPaymentModal, setShowPendingPaymentModal] = useState(false);
@@ -5428,6 +5435,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       darkMode={darkMode}
                       setDarkMode={setDarkMode}
                       onViewPublicPortfolio={(userId) => setPublicProfileTargetUserId(userId)}
+                      onSubPanelChange={(isSubPanel) => setIsHeritageSubPanelActive(isSubPanel)}
                     />
                   </Suspense>
                 </div>
@@ -7945,6 +7953,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                      FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED & COLLAPSIBLE)
          ========================================================================= */}
       {perspective === "user" && (
+        activeMenu === "user_terrain" ||
+        activeMenu === "user_vibes" ||
+        activeMenu === "user_mes_gombos" ||
+        (activeMenu === "user_heritage" && !isHeritageSubPanelActive)
+      ) && (
         <>
           {/* COLLAPSED RE-OPEN BUTTON (when collapsed, stays on bottom-left) */}
           {isNavCollapsed && (

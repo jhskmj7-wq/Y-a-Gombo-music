@@ -925,17 +925,25 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
 
   return (
     <div 
-      className="w-full h-full max-w-xl mx-auto space-y-6 pt-2 pb-28 text-left overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] px-1 sm:px-2"
+      className="w-full h-full max-w-xl mx-auto space-y-5 pt-2 pb-6 text-left overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] px-1 sm:px-2"
       style={{
         WebkitOverflowScrolling: "touch",
         touchAction: "pan-y"
       }}
     >
-      {/* Header title */}
-      <div className="flex items-center gap-3">
-        <div>
-          <h2 className="text-lg font-serif font-black uppercase tracking-wider text-afri-text">Certification GOMBO ID</h2>
-          <p className="text-[10px] text-afri-text-sec font-mono uppercase tracking-widest">Le parcours d'excellence et de souveraineté</p>
+      {/* Header title with back button */}
+      <div className="flex items-center gap-3 pt-1 pb-1">
+        <button
+          type="button"
+          onClick={onBack}
+          className="p-2.5 rounded-full bg-afri-bg-sec border border-afri-border text-afri-text hover:text-afri-gold hover:border-afri-gold/50 transition-all cursor-pointer shrink-0"
+          aria-label="Retour"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-base sm:text-lg font-serif font-black uppercase tracking-wider text-afri-text leading-tight">Certification GOMBO ID</h2>
+          <p className="text-[10px] text-afri-text-sec font-mono uppercase tracking-widest leading-normal">Le parcours d'excellence et de souveraineté</p>
         </div>
       </div>
 
