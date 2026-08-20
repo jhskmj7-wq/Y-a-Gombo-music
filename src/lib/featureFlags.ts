@@ -408,12 +408,24 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
   // 1. Check exact key
   let value = activeMap[featureId];
 
-  // 2. Check canonical alias
+  // 2. Check canonical alias and lowercase normalized matches
   if (value === undefined && featureId) {
     const cleanId = featureId.toLowerCase().trim();
-    const mapped = CANONICAL_FEATURE_IDS[cleanId] || CANONICAL_FEATURE_IDS[featureId];
-    if (mapped && activeMap[mapped] !== undefined) {
-      value = activeMap[mapped];
+    if (activeMap[cleanId] !== undefined) {
+      value = activeMap[cleanId];
+    } else {
+      const mapped = CANONICAL_FEATURE_IDS[cleanId] || CANONICAL_FEATURE_IDS[featureId];
+      if (mapped && activeMap[mapped] !== undefined) {
+        value = activeMap[mapped];
+      } else if (mapped && activeMap[mapped.toLowerCase()] !== undefined) {
+        value = activeMap[mapped.toLowerCase()];
+      } else {
+        // Search for case-insensitive match in activeMap
+        const foundKey = Object.keys(activeMap).find(k => k.toLowerCase().trim() === cleanId || (mapped && k.toLowerCase().trim() === mapped.toLowerCase().trim()));
+        if (foundKey && activeMap[foundKey] !== undefined) {
+          value = activeMap[foundKey];
+        }
+      }
     }
   }
 
