@@ -853,11 +853,11 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const finalSpecialtyDisplay = specialty === "Autre" ? (customSpecialty || "Spécialité personnalisée") : specialty;
 
   return (
-    <div className="max-w-xl mx-auto py-2 sm:py-4 px-2 select-none">
+    <div className="max-w-xl mx-auto py-2 sm:py-4 px-2">
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-afri-bg-sec text-afri-text rounded-3xl p-5 sm:p-7 border border-afri-border/90 shadow-[0_0_35px_rgba(212,175,55,0.12)] relative overflow-hidden"
+        className="bg-afri-bg-sec text-afri-text rounded-3xl p-5 sm:p-7 border border-afri-border/90 shadow-[0_0_35px_rgba(212,175,55,0.12)] relative"
       >
         {/* Top Gold Bar Accent */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#D4AF37] via-amber-400 to-[#D4AF37]" />

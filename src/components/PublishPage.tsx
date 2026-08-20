@@ -45,7 +45,7 @@ export default function PublishPage() {
               navigate("/home");
             }}
             onCancel={() => {
-              navigate("/home");
+              navigate(-1);
             }}
           />
         ) : (
@@ -55,7 +55,7 @@ export default function PublishPage() {
               navigate("/home");
             }}
             onCancel={() => {
-              navigate("/home");
+              navigate(-1);
             }}
           />
         )
