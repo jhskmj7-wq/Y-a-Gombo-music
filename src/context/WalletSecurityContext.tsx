@@ -94,7 +94,9 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
           pinStatus = "CONFIGURED";
         }
 
-        const pinLength = sec.pinLength || (sec.pinHash ? 6 : 6);
+        const pinLength = typeof sec.pinLength === "number" && (sec.pinLength === 4 || sec.pinLength === 6)
+          ? sec.pinLength
+          : 6;
 
         setWalletSecurityStatus({
           pinConfigured,
@@ -145,6 +147,7 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
 
   const [modalMode, setModalMode] = useState<"VERIFY" | "SETUP_STEP1" | "SETUP_STEP2" | "SOA_RECOVERY" | "SUCCESS">("VERIFY");
   const [selectedPinLength, setSelectedPinLength] = useState<4 | 6>(6);
+  const [verifyPinLengthOverride, setVerifyPinLengthOverride] = useState<number | null>(null);
   const [actionDesc, setActionDesc] = useState("");
   const [enteredPin, setEnteredPin] = useState("");
   const [tempPin, setTempPin] = useState("");
@@ -281,9 +284,9 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
     }
   }, []);
 
-  // Effective PIN length based on mode: if verifying, use configured length (or default 6), else selected length
+  // Effective PIN length based on mode: if verifying, use configured length or override, else selected length
   const effectivePinLength: number = modalMode === "VERIFY"
-    ? (walletSecurityStatus?.pinLength || 6)
+    ? (verifyPinLengthOverride || walletSecurityStatus?.pinLength || 6)
     : selectedPinLength;
 
   const handlePinSubmit = async (pin: string) => {
@@ -364,6 +367,7 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
     setErrorMsg("");
     setAttemptsRemaining(null);
     setLockedMins(null);
+    setVerifyPinLengthOverride(null);
   };
 
   const toggleBalanceWithPin = useCallback(async (): Promise<boolean> => {
@@ -472,18 +476,22 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
                   </p>
                 </div>
                 
-                {/* 4 vs 6 Digits Selector during initial configuration */}
-                {modalMode === "SETUP_STEP1" && (
+                {/* 4 vs 6 Digits Selector during initial configuration or verification */}
+                {(modalMode === "SETUP_STEP1" || modalMode === "VERIFY") && (
                   <div className="flex items-center justify-center gap-1.5 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-[220px] mx-auto">
                     <button
                       type="button"
                       onClick={() => {
-                        setSelectedPinLength(4);
+                        if (modalMode === "VERIFY") {
+                          setVerifyPinLengthOverride(4);
+                        } else {
+                          setSelectedPinLength(4);
+                        }
                         setEnteredPin("");
                         setErrorMsg("");
                       }}
                       className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        selectedPinLength === 4
+                        effectivePinLength === 4
                           ? "bg-[#D4AF37] text-black shadow-md"
                           : "text-zinc-400 hover:text-white"
                       }`}
@@ -493,12 +501,16 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
                     <button
                       type="button"
                       onClick={() => {
-                        setSelectedPinLength(6);
+                        if (modalMode === "VERIFY") {
+                          setVerifyPinLengthOverride(6);
+                        } else {
+                          setSelectedPinLength(6);
+                        }
                         setEnteredPin("");
                         setErrorMsg("");
                       }}
                       className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        selectedPinLength === 6
+                        effectivePinLength === 6
                           ? "bg-[#D4AF37] text-black shadow-md"
                           : "text-zinc-400 hover:text-white"
                       }`}

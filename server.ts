@@ -289,12 +289,16 @@ app.post("/api/wallet/verify-pin", async (req, res) => {
 
     const computedHash = hashPin(pin, sec.pinSalt, uid);
     if (computedHash === sec.pinHash) {
-      // SUCCESS
-      await adminDb.collection("users").doc(uid).update({
+      // SUCCESS: Auto-repair pinLength if missing or mismatched
+      const updatePayload: Record<string, any> = {
         "walletSecurity.failedPinAttempts": 0,
         "walletSecurity.lockedUntil": null,
         "walletSecurity.lastAuthSensitiveAt": new Date().toISOString()
-      });
+      };
+      if (typeof sec.pinLength !== "number" || sec.pinLength !== pin.length) {
+        updatePayload["walletSecurity.pinLength"] = pin.length;
+      }
+      await adminDb.collection("users").doc(uid).update(updatePayload);
 
       // Create a secure session token
       const sessionToken = `wsess_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
@@ -346,7 +350,7 @@ app.post("/api/wallet/verify-pin", async (req, res) => {
 });
 
 app.post("/api/wallet/change-pin", async (req, res) => {
-  const { idToken, currentPin, newPin } = req.body;
+  const { idToken, currentPin, newPin, pinLength } = req.body;
   if (!idToken || !currentPin || !newPin) return res.status(400).json({ error: "Paramètres manquants." });
 
   try {
@@ -377,11 +381,13 @@ app.post("/api/wallet/change-pin", async (req, res) => {
     const newSalt = generateSalt();
     const newPinHash = hashPin(newPin, newSalt, uid);
     const now = new Date().toISOString();
+    const resolvedLength = typeof pinLength === "number" ? pinLength : newPin.length;
 
     await adminDb.collection("users").doc(uid).update({
       "walletSecurity.pinConfigured": true,
       "walletSecurity.pinHash": newPinHash,
       "walletSecurity.pinSalt": newSalt,
+      "walletSecurity.pinLength": resolvedLength,
       "walletSecurity.pinUpdatedAt": now,
       "walletSecurity.failedPinAttempts": 0,
       "walletSecurity.lockedUntil": null,

@@ -822,7 +822,7 @@ export default function AfrigomboWalletDashboard({
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 text-[8px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded font-mono uppercase">
-                          ACTIVÉ (6 CHIFFRES)
+                          ACTIVÉ ({walletSecurityStatus?.pinLength || 6} CHIFFRES)
                         </span>
                       )
                     ) : (

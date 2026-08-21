@@ -157,7 +157,7 @@ export class WalletSecurityService {
         pinStatus = "CONFIGURED";
       }
 
-      const pinLength = sec.pinLength || (sec.pinHash ? 6 : 6);
+      const pinLength = typeof sec.pinLength === "number" && (sec.pinLength === 4 || sec.pinLength === 6) ? sec.pinLength : 6;
 
       return {
         pinConfigured,
@@ -360,7 +360,7 @@ export class WalletSecurityService {
       const { ok, data } = await this.safeFetchJson("/api/wallet/change-pin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken, currentPin, newPin })
+        body: JSON.stringify({ idToken, currentPin, newPin, pinLength: newPin.length })
       });
 
       if (!ok || data.error) {
@@ -423,6 +423,7 @@ export class WalletSecurityService {
           pinConfigured: true,
           pinHash,
           pinSalt: salt,
+          pinLength: newPin.length,
           pinUpdatedAt: now,
           failedPinAttempts: 0,
           lockedUntil: null,
