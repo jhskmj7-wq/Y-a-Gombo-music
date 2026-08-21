@@ -115,6 +115,67 @@ export default function AdminUsers({
   // Custom PIN/Secret Reveal status
   const [revealedWalletCodes, setRevealedWalletCodes] = useState<Record<string, boolean>>({});
   
+  // KYC Signed URLs for private bucket documents
+  const [kycSignedUrls, setKycSignedUrls] = useState<Record<string, Record<string, string>>>({});
+  const [kycLoading, setKycLoading] = useState<Record<string, boolean>>({});
+  const [kycPreviewUrl, setKycPreviewUrl] = useState<string | null>(null);
+
+  const fetchKycSignedUrls = async (targetUser: User) => {
+    const uid = targetUser.id || targetUser.uid;
+    if (!uid) return;
+
+    const rawPaths = [
+      targetUser.kycDocs?.identityCardUrl,
+      targetUser.kycDocs?.identityCardBackUrl,
+      targetUser.kycDocs?.selfieUrl,
+      targetUser.kycDocs?.activityUrl || targetUser.kycDocUrl,
+    ].filter(Boolean) as string[];
+
+    if (rawPaths.length === 0) return;
+    if (kycSignedUrls[uid] && Object.keys(kycSignedUrls[uid]).length > 0) return;
+
+    setKycLoading(prev => ({ ...prev, [uid]: true }));
+
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        console.error("Token admin Firebase manquant");
+        setKycLoading(prev => ({ ...prev, [uid]: false }));
+        return;
+      }
+
+      const response = await fetch("/api/admin/kyc/view", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idToken,
+          storagePaths: rawPaths,
+          bucket: "afrigombo-private"
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.results)) {
+          const urlMap: Record<string, string> = {};
+          data.results.forEach((item: any) => {
+            if (item.path && item.signedUrl) {
+              urlMap[item.path] = item.signedUrl;
+            }
+          });
+          setKycSignedUrls(prev => ({
+            ...prev,
+            [uid]: urlMap
+          }));
+        }
+      }
+    } catch (err) {
+      console.error("Erreur récupération KYC signés:", err);
+    } finally {
+      setKycLoading(prev => ({ ...prev, [uid]: false }));
+    }
+  };
+
   // Modal Confirmation overlay state
   const [confirmationModal, setConfirmationModal] = useState<{
     title: string;
@@ -847,7 +908,12 @@ export default function AdminUsers({
                       {/* ACCORDION 3: IDENTITÉ & VÉRIFICATION */}
                       <div className="border border-zinc-900 bg-zinc-900/10 rounded-xl overflow-hidden">
                         <button 
-                          onClick={() => toggleSection("kyc")}
+                          onClick={() => {
+                            toggleSection("kyc");
+                            if (!openSections["kyc"]) {
+                              fetchKycSignedUrls(user);
+                            }
+                          }}
                           className="w-full p-3 flex justify-between items-center text-xs font-bold text-zinc-200 hover:text-[#D4AF37]"
                         >
                           <div className="flex items-center gap-2">
@@ -872,26 +938,83 @@ export default function AdminUsers({
 
                             {/* DOCUMENT PREVIEWS */}
                             <div className="p-3 bg-zinc-950/60 border border-zinc-900 rounded-lg space-y-2 font-mono">
-                              <span className="text-[9px] uppercase text-zinc-500 font-extrabold block">Preuves fournies :</span>
-                              <div className="space-y-1.5 text-[11px]">
-                                <div className="flex justify-between">
-                                  <span className="text-zinc-400">1. Carte d'identité</span>
-                                  {user.kycDocs?.identityCardUrl ? (
-                                    <a href={user.kycDocs.identityCardUrl} target="_blank" rel="noreferrer" className="text-[#D4AF37] underline">Consulter ↗</a>
-                                  ) : <span className="text-zinc-600">Non fournie</span>}
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-zinc-400">2. Selfie de contrôle</span>
-                                  {user.kycDocs?.selfieUrl ? (
-                                    <a href={user.kycDocs.selfieUrl} target="_blank" rel="noreferrer" className="text-[#D4AF37] underline">Consulter ↗</a>
-                                  ) : <span className="text-zinc-600">Non fournie</span>}
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-zinc-400">3. Preuve d'activité</span>
-                                  {user.kycDocs?.activityUrl || user.kycDocUrl ? (
-                                    <a href={user.kycDocs?.activityUrl || user.kycDocUrl} target="_blank" rel="noreferrer" className="text-[#D4AF37] underline">Consulter ↗</a>
-                                  ) : <span className="text-zinc-600">Non fournie</span>}
-                                </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-[9px] uppercase text-zinc-500 font-extrabold block">Preuves fournies :</span>
+                                {user.id && kycLoading[user.id] && (
+                                  <span className="text-[9px] text-[#D4AF37] animate-pulse">Chargement des documents...</span>
+                                )}
+                              </div>
+                              <div className="space-y-2 text-[11px]">
+                                {[
+                                  { label: "1. Carte d'identité (Recto)", path: user.kycDocs?.identityCardUrl },
+                                  { label: "2. Carte d'identité (Verso)", path: user.kycDocs?.identityCardBackUrl },
+                                  { label: "3. Selfie de contrôle", path: user.kycDocs?.selfieUrl },
+                                  { label: "4. Preuve d'activité", path: user.kycDocs?.activityUrl || user.kycDocUrl }
+                                ].map((docItem, idx) => {
+                                  if (!docItem.path) {
+                                    return (
+                                      <div key={idx} className="flex justify-between items-center py-1 border-b border-zinc-900/40 last:border-0">
+                                        <span className="text-zinc-400">{docItem.label}</span>
+                                        <span className="text-zinc-600">Non fournie</span>
+                                      </div>
+                                    );
+                                  }
+
+                                  const userMap = user.id ? kycSignedUrls[user.id] : undefined;
+                                  const signedUrl = userMap ? userMap[docItem.path] : undefined;
+                                  const isLoading = user.id ? kycLoading[user.id] : false;
+
+                                  return (
+                                    <div key={idx} className="flex items-center justify-between py-1.5 border-b border-zinc-900/40 last:border-0">
+                                      <div className="space-y-1">
+                                        <span className="text-zinc-300 font-medium block">{docItem.label}</span>
+                                        {signedUrl ? (
+                                          <button
+                                            type="button"
+                                            onClick={() => setKycPreviewUrl(signedUrl)}
+                                            className="text-[#D4AF37] hover:underline text-[10px] flex items-center gap-1"
+                                          >
+                                            Agrandir <ArrowUpRight className="w-3 h-3" />
+                                          </button>
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            onClick={() => fetchKycSignedUrls(user)}
+                                            disabled={isLoading}
+                                            className="text-[#D4AF37] underline text-[10px]"
+                                          >
+                                            {isLoading ? "Chargement..." : "Consulter ↗"}
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      <div className="shrink-0">
+                                        {isLoading ? (
+                                          <div className="w-16 h-16 rounded bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[9px] text-zinc-500 animate-pulse">
+                                            ...
+                                          </div>
+                                        ) : signedUrl ? (
+                                          <img
+                                            src={signedUrl}
+                                            alt={docItem.label}
+                                            onClick={() => setKycPreviewUrl(signedUrl)}
+                                            className="w-16 h-16 object-cover rounded cursor-pointer border border-zinc-700 hover:border-[#D4AF37] transition-all shadow-md"
+                                            title="Cliquer pour voir en grand"
+                                          />
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            onClick={() => fetchKycSignedUrls(user)}
+                                            className="w-16 h-16 rounded bg-zinc-900/80 border border-zinc-800 hover:border-[#D4AF37]/50 flex flex-col items-center justify-center text-zinc-400 hover:text-[#D4AF37] text-[9px] transition-all"
+                                          >
+                                            <Eye className="w-4 h-4 mb-0.5" />
+                                            <span>Consulter</span>
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
 
@@ -1745,6 +1868,55 @@ export default function AdminUsers({
                 >
                   {confirmationModal.confirmLabel || "Confirmer"}
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* KYC SECURE DOCUMENT LIGHTBOX MODAL */}
+      <AnimatePresence>
+        {kycPreviewUrl && (
+          <div 
+            className="fixed inset-0 bg-black/90 backdrop-blur-md z-[10000] flex items-center justify-center p-4 select-none"
+            onClick={() => setKycPreviewUrl(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-zinc-950 border border-[#D4AF37] max-w-2xl w-full rounded-2xl p-4 space-y-3 text-left shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-zinc-900 pb-2 text-[#D4AF37]">
+                <div className="flex items-center gap-2">
+                  <Award className="w-5 h-5 shrink-0" />
+                  <h4 className="text-xs font-mono font-extrabold uppercase tracking-wide">Document KYC Sécurisé</h4>
+                </div>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={kycPreviewUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] font-mono text-[#D4AF37] hover:underline flex items-center gap-1"
+                  >
+                    Ouvrir en grand <ArrowUpRight className="w-3.5 h-3.5" />
+                  </a>
+                  <button
+                    onClick={() => setKycPreviewUrl(null)}
+                    className="text-zinc-400 hover:text-white p-1 rounded"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center p-2 bg-black/60 rounded-xl min-h-[250px] max-h-[70vh] overflow-hidden">
+                <img
+                  src={kycPreviewUrl}
+                  alt="Aperçu Document KYC"
+                  className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-xl"
+                />
               </div>
             </motion.div>
           </div>
