@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
-import { ShieldCheck, Lock, AlertTriangle, Key, HelpCircle, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { ShieldCheck, Lock, AlertTriangle, Key, HelpCircle, CheckCircle, Eye, EyeOff, Check } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { WalletSecurityService, WalletSecurityData, PinStatus } from "../lib/WalletSecurityService";
 import { useAuth } from "../AuthContext";
@@ -147,7 +147,6 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
 
   const [modalMode, setModalMode] = useState<"VERIFY" | "SETUP_STEP1" | "SETUP_STEP2" | "SOA_RECOVERY" | "SUCCESS">("VERIFY");
   const [selectedPinLength, setSelectedPinLength] = useState<4 | 6>(6);
-  const [verifyPinLengthOverride, setVerifyPinLengthOverride] = useState<number | null>(null);
   const [actionDesc, setActionDesc] = useState("");
   const [enteredPin, setEnteredPin] = useState("");
   const [tempPin, setTempPin] = useState("");
@@ -284,9 +283,9 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
     }
   }, []);
 
-  // Effective PIN length based on mode: if verifying, use configured length or override, else selected length
+  // Effective PIN length based on mode: if verifying, use configured length (default 6), else selected length
   const effectivePinLength: number = modalMode === "VERIFY"
-    ? (verifyPinLengthOverride || walletSecurityStatus?.pinLength || 6)
+    ? (walletSecurityStatus?.pinLength || 6)
     : selectedPinLength;
 
   const handlePinSubmit = async (pin: string) => {
@@ -367,7 +366,6 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
     setErrorMsg("");
     setAttemptsRemaining(null);
     setLockedMins(null);
-    setVerifyPinLengthOverride(null);
   };
 
   const toggleBalanceWithPin = useCallback(async (): Promise<boolean> => {
@@ -476,22 +474,18 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
                   </p>
                 </div>
                 
-                {/* 4 vs 6 Digits Selector during initial configuration or verification */}
-                {(modalMode === "SETUP_STEP1" || modalMode === "VERIFY") && (
+                {/* 4 vs 6 Digits Selector during initial configuration */}
+                {modalMode === "SETUP_STEP1" && (
                   <div className="flex items-center justify-center gap-1.5 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-[220px] mx-auto">
                     <button
                       type="button"
                       onClick={() => {
-                        if (modalMode === "VERIFY") {
-                          setVerifyPinLengthOverride(4);
-                        } else {
-                          setSelectedPinLength(4);
-                        }
+                        setSelectedPinLength(4);
                         setEnteredPin("");
                         setErrorMsg("");
                       }}
                       className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        effectivePinLength === 4
+                        selectedPinLength === 4
                           ? "bg-[#D4AF37] text-black shadow-md"
                           : "text-zinc-400 hover:text-white"
                       }`}
@@ -501,16 +495,12 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
                     <button
                       type="button"
                       onClick={() => {
-                        if (modalMode === "VERIFY") {
-                          setVerifyPinLengthOverride(6);
-                        } else {
-                          setSelectedPinLength(6);
-                        }
+                        setSelectedPinLength(6);
                         setEnteredPin("");
                         setErrorMsg("");
                       }}
                       className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        effectivePinLength === 6
+                        selectedPinLength === 6
                           ? "bg-[#D4AF37] text-black shadow-md"
                           : "text-zinc-400 hover:text-white"
                       }`}
@@ -629,7 +619,8 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
                         key={num}
                         type="button"
                         onClick={() => {
-                          if (enteredPin.length >= effectivePinLength) return;
+                          const maxLen = modalMode === "VERIFY" ? 6 : effectivePinLength;
+                          if (enteredPin.length >= maxLen) return;
                           const nextPin = enteredPin + num;
                           setEnteredPin(nextPin);
                           if (nextPin.length === effectivePinLength) {
@@ -652,7 +643,8 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
                       key={0}
                       type="button"
                       onClick={() => {
-                        if (enteredPin.length >= effectivePinLength) return;
+                        const maxLen = modalMode === "VERIFY" ? 6 : effectivePinLength;
+                        if (enteredPin.length >= maxLen) return;
                         const nextPin = enteredPin + "0";
                         setEnteredPin(nextPin);
                         if (nextPin.length === effectivePinLength) {
@@ -674,6 +666,19 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
                       ⌫
                     </button>
                   </div>
+
+                  {/* Manual Submit "Valider" Button */}
+                  {enteredPin.length > 0 && (
+                    <div className="pt-2 max-w-[240px] mx-auto relative z-10">
+                      <button
+                        type="button"
+                        onClick={() => handlePinSubmit(enteredPin)}
+                        className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] to-amber-600 hover:from-amber-400 hover:to-[#D4AF37] text-black font-extrabold text-xs uppercase tracking-wider transition-all shadow-lg active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <Check className="w-4 h-4 stroke-[3]" /> Valider ({enteredPin.length} chiffre{enteredPin.length > 1 ? "s" : ""})
+                      </button>
+                    </div>
+                  )}
 
                   {/* Footer recovery link */}
                   {modalMode === "VERIFY" && (

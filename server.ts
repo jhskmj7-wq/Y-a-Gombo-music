@@ -290,27 +290,34 @@ app.post("/api/wallet/verify-pin", async (req, res) => {
     const computedHash = hashPin(pin, sec.pinSalt, uid);
     if (computedHash === sec.pinHash) {
       // SUCCESS: Auto-repair pinLength if missing or mismatched
-      const updatePayload: Record<string, any> = {
-        "walletSecurity.failedPinAttempts": 0,
-        "walletSecurity.lockedUntil": null,
-        "walletSecurity.lastAuthSensitiveAt": new Date().toISOString()
-      };
-      if (typeof sec.pinLength !== "number" || sec.pinLength !== pin.length) {
-        updatePayload["walletSecurity.pinLength"] = pin.length;
+      try {
+        const updatePayload: Record<string, any> = {
+          "walletSecurity.failedPinAttempts": 0,
+          "walletSecurity.lockedUntil": null,
+          "walletSecurity.lastAuthSensitiveAt": new Date().toISOString()
+        };
+        if (typeof sec.pinLength !== "number" || sec.pinLength !== pin.length) {
+          updatePayload["walletSecurity.pinLength"] = pin.length;
+        }
+        await adminDb.collection("users").doc(uid).update(updatePayload);
+      } catch (dbErr) {
+        console.error("verify-pin: failed to update user walletSecurity on success:", dbErr);
       }
-      await adminDb.collection("users").doc(uid).update(updatePayload);
 
       // Create a secure session token
       const sessionToken = `wsess_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
-      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
-
-      await adminDb.collection("wallet_sessions").doc(uid).set({
-        token: sessionToken,
-        uid,
-        action,
-        expiresAt: expiresAt.toISOString(),
-        createdAt: new Date().toISOString()
-      });
+      try {
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+        await adminDb.collection("wallet_sessions").doc(uid).set({
+          token: sessionToken,
+          uid,
+          action,
+          expiresAt: expiresAt.toISOString(),
+          createdAt: new Date().toISOString()
+        });
+      } catch (sessionErr) {
+        console.error("verify-pin: failed to write wallet_session:", sessionErr);
+      }
 
       return res.json({ success: true, sessionToken });
     }
@@ -328,11 +335,15 @@ app.post("/api/wallet/verify-pin", async (req, res) => {
       lockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
     }
 
-    await adminDb.collection("users").doc(uid).update({
-      "walletSecurity.failedPinAttempts": currentAttempts,
-      "walletSecurity.lastFailedAttemptAt": new Date().toISOString(),
-      "walletSecurity.lockedUntil": lockedUntil
-    });
+    try {
+      await adminDb.collection("users").doc(uid).update({
+        "walletSecurity.failedPinAttempts": currentAttempts,
+        "walletSecurity.lastFailedAttemptAt": new Date().toISOString(),
+        "walletSecurity.lockedUntil": lockedUntil
+      });
+    } catch (dbErr) {
+      console.error("verify-pin: failed to update failedPinAttempts:", dbErr);
+    }
 
     const remaining = 5 - currentAttempts;
 
