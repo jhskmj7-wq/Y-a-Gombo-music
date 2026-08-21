@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { 
   Disc, Sparkles, AlertCircle, Award, Zap, Crown, RefreshCw, 
   ChevronRight, Info, History, X, Check, ShieldAlert, Ticket, Gift,
-  Target, Coins, ShoppingBag, ArrowRight, Loader2, CheckCircle2
+  Target, Coins, ShoppingBag, ArrowRight, Loader2, CheckCircle2, Eye, EyeOff
 } from "lucide-react";
 import { AfriGomboWheel, WheelSegment, WheelSpinRecord, UserExtraSpinRecord, GawaPack, GawaMission, UserGawaMission, GawaTransaction, UserLotRecord } from "../../types";
 import { WheelEngineService } from "../../lib/WheelEngineService";
@@ -12,6 +12,7 @@ import { GawaEngineService } from "../../lib/GawaEngineService";
 import { getCanonicalWalletBalance } from "../../lib/financial";
 import { db } from "../../lib/firebase";
 import { onSnapshot, doc } from "firebase/firestore";
+import { useWalletSecurity } from "../../context/WalletSecurityContext";
 
 interface GomboWheelSectionProps {
   currentUserProfile?: any;
@@ -36,6 +37,7 @@ export default function GomboWheelSection({
   onRefreshProfile,
   audioSynth
 }: GomboWheelSectionProps) {
+  const { formatWalletBalance, isBalanceHidden, toggleBalanceWithPin } = useWalletSecurity();
   // Wheels state from Firestore
   const [wheels, setWheels] = useState<AfriGomboWheel[]>([]);
   const [selectedWheelId, setSelectedWheelId] = useState<string | null>(null);
@@ -634,13 +636,23 @@ export default function GomboWheelSection({
                    <span className="text-xs font-black text-[#D4AF37]">{selectedPack.priceFCFA.toLocaleString()} FCFA</span>
                 </div>
                 <div className="flex justify-between items-center pt-1.5 border-t border-zinc-900">
-                   <span className="text-[9px] text-zinc-400 uppercase">Solde FCFA Actuel</span>
-                   <span className="text-[10px] font-bold text-white">{(gawaWallet?.soldeDisponible || 0).toLocaleString()} FCFA</span>
+                   <div className="flex items-center gap-1">
+                     <span className="text-[9px] text-zinc-400 uppercase">Solde FCFA Actuel</span>
+                     <button
+                       type="button"
+                       onClick={toggleBalanceWithPin}
+                       title={isBalanceHidden ? "Révéler le solde (Code PIN requis)" : "Masquer le solde"}
+                       className="p-0.5 rounded text-zinc-400 hover:text-[#D4AF37] transition cursor-pointer"
+                     >
+                       {isBalanceHidden ? <EyeOff className="w-3 h-3 text-[#D4AF37]" /> : <Eye className="w-3 h-3" />}
+                     </button>
+                   </div>
+                   <span className="text-[10px] font-bold text-white">{formatWalletBalance(gawaWallet?.soldeDisponible || 0, "FCFA")}</span>
                 </div>
                 <div className="flex justify-between items-center">
                    <span className="text-[9px] text-zinc-400 uppercase">Solde FCFA Après</span>
                    <span className="text-[10px] font-bold text-amber-400">
-                     {Math.max(0, (gawaWallet?.soldeDisponible || 0) - selectedPack.priceFCFA).toLocaleString()} FCFA
+                     {isBalanceHidden ? "•••••• FCFA" : `${Math.max(0, (gawaWallet?.soldeDisponible || 0) - selectedPack.priceFCFA).toLocaleString()} FCFA`}
                    </span>
                 </div>
              </div>
@@ -846,9 +858,19 @@ export default function GomboWheelSection({
               {/* Dual Wallet Display Bar */}
               <div className="flex items-center gap-1.5">
                 {/* FCFA Wallet */}
-                <div className="bg-zinc-900 border border-amber-500/30 px-2 py-0.5 rounded-lg text-right">
-                  <span className="text-[7px] font-black text-amber-500 uppercase block">Wallet FCFA</span>
-                  <span className="text-[9px] font-black text-white">{(gawaWallet?.soldeDisponible || 0).toLocaleString()} F</span>
+                <div className="bg-zinc-900 border border-amber-500/30 px-2 py-0.5 rounded-lg text-right flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={toggleBalanceWithPin}
+                    title={isBalanceHidden ? "Révéler le solde (Code PIN requis)" : "Masquer le solde"}
+                    className="p-0.5 rounded text-zinc-400 hover:text-[#D4AF37] transition cursor-pointer"
+                  >
+                    {isBalanceHidden ? <EyeOff className="w-3 h-3 text-[#D4AF37]" /> : <Eye className="w-3 h-3" />}
+                  </button>
+                  <div>
+                    <span className="text-[7px] font-black text-amber-500 uppercase block">Wallet FCFA</span>
+                    <span className="text-[9px] font-black text-white">{formatWalletBalance(gawaWallet?.soldeDisponible || 0, "F")}</span>
+                  </div>
                 </div>
                 {/* Solde GAWA */}
                 <div className="bg-amber-950/40 border border-amber-400/50 px-2 py-0.5 rounded-lg text-right">

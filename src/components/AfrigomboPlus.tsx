@@ -1,6 +1,6 @@
 import { NotificationService } from "../lib/NotificationService";
 import React, { useState, useEffect } from "react";
-import { Sparkles, Check, Coins, ChevronLeft, CreditCard, Award, Shield, Music, BarChart3, Radio, X, Zap, Calculator, KeyRound, MessageCircle } from "lucide-react";
+import { Sparkles, Check, Coins, ChevronLeft, CreditCard, Award, Shield, Music, BarChart3, Radio, X, Zap, Calculator, KeyRound, MessageCircle, Eye, EyeOff } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
 import { supportConfig } from "../supportConfig";
 import { createPendingSubscriptionRequest, validateAndActivatePremiumCode } from "../lib/premiumSubscriptionEngine";
@@ -22,7 +22,7 @@ interface AfrigomboPlusProps {
 
 export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshProfile }: AfrigomboPlusProps) {
   const { t } = useLanguage();
-  const { formatWalletBalance } = useWalletSecurity();
+  const { formatWalletBalance, isBalanceHidden, toggleBalanceWithPin } = useWalletSecurity();
   const [flagsMap, setFlagsMap] = useState<any>({});
   useEffect(() => {
     const unsub = subscribeToFeatureFlags((map) => setFlagsMap(map));
@@ -846,7 +846,17 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
               <div className="space-y-3">
                 <div className="p-3.5 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-xl space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-afri-text-sec font-medium">Votre solde :</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-afri-text-sec font-medium">Votre solde :</span>
+                      <button
+                        type="button"
+                        onClick={toggleBalanceWithPin}
+                        title={isBalanceHidden ? "Révéler le solde (Code PIN requis)" : "Masquer le solde"}
+                        className="p-1 rounded text-zinc-400 hover:text-[#D4AF37] hover:bg-zinc-800/60 transition cursor-pointer"
+                      >
+                        {isBalanceHidden ? <EyeOff className="w-3 h-3 text-[#D4AF37]" /> : <Eye className="w-3 h-3" />}
+                      </button>
+                    </div>
                     <span className="font-mono font-bold text-white">
                       {formatWalletBalance(currentUserProfile?.wallet?.soldeDisponible ?? 0, "FCFA")}
                     </span>

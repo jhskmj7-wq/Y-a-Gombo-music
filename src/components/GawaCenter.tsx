@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { 
   X, Check, AlertCircle, Sparkles, Loader2, 
   History, Target, ShieldCheck, TrendingUp, Coins,
-  ShoppingBag, HelpCircle, ArrowRight
+  ShoppingBag, HelpCircle, ArrowRight, Eye, EyeOff
 } from "lucide-react";
 import { collection, query, where, getDocs, doc, setDoc, updateDoc, onSnapshot, serverTimestamp, orderBy, limit } from "firebase/firestore";
 import { db } from "../lib/firebase";
@@ -40,7 +40,7 @@ export default function GawaCenter({
   const [purchasing, setPurchasing] = useState(false);
   const [successDetails, setSuccessDetails] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const { requireWalletAuthentication, formatWalletBalance } = useWalletSecurity();
+  const { requireWalletAuthentication, formatWalletBalance, isBalanceHidden, toggleBalanceWithPin } = useWalletSecurity();
 
   const handleBuyPack = async (pack: GawaPack) => {
     if (!currentUser?.uid) return;
@@ -140,7 +140,17 @@ export default function GawaCenter({
           {/* Header Balance Info Block */}
           <div className="grid grid-cols-2 gap-3 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
             <div className="space-y-1">
-              <span className="text-[10px] font-mono text-zinc-500 block uppercase font-bold tracking-wider">Solde Wallet</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono text-zinc-500 block uppercase font-bold tracking-wider">Solde Wallet</span>
+                <button
+                  type="button"
+                  onClick={toggleBalanceWithPin}
+                  title={isBalanceHidden ? "Révéler le solde (Code PIN requis)" : "Masquer le solde"}
+                  className="p-1 rounded-md text-zinc-500 hover:text-[#D4AF37] hover:bg-zinc-800 transition cursor-pointer"
+                >
+                  {isBalanceHidden ? <EyeOff className="w-3.5 h-3.5 text-[#D4AF37]" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
               <p className="text-lg font-black font-mono text-[#D4AF37]">{formatWalletBalance(wallet?.soldeDisponible || 0, "FCFA")}</p>
             </div>
             <div className="space-y-1 border-l border-zinc-800 pl-4">

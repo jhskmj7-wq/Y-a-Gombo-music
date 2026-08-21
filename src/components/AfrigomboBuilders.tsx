@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   Heart, Coffee, Music, Rocket, Gem, CheckCircle2, 
-  ArrowLeft, Users, Sparkles, Coins, ShieldCheck
+  ArrowLeft, Users, Sparkles, Coins, ShieldCheck, Eye, EyeOff
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { db } from "../lib/firebase";
@@ -64,7 +64,7 @@ const CONTRIBUTION_OPTIONS: ContributionOption[] = [
 ];
 
 export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: AfrigomboBuildersProps) {
-  const { formatWalletBalance } = useWalletSecurity();
+  const { formatWalletBalance, isBalanceHidden, toggleBalanceWithPin } = useWalletSecurity();
   const [stats, setStats] = useState({
     buildersCount: 0,
     totalContributions: 0,
@@ -410,7 +410,17 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
               <div className="space-y-4">
                 <div className="p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl space-y-1 mb-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-afri-text-sec">Solde Wallet :</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-afri-text-sec">Solde Wallet :</span>
+                      <button
+                        type="button"
+                        onClick={toggleBalanceWithPin}
+                        title={isBalanceHidden ? "Révéler le solde (Code PIN requis)" : "Masquer le solde"}
+                        className="p-1 rounded text-zinc-400 hover:text-[#D4AF37] hover:bg-zinc-800/60 transition cursor-pointer"
+                      >
+                        {isBalanceHidden ? <EyeOff className="w-3 h-3 text-[#D4AF37]" /> : <Eye className="w-3 h-3" />}
+                      </button>
+                    </div>
                     <span className="font-mono font-bold text-afri-text">
                       {formatWalletBalance(currentUser?.wallet?.soldeDisponible ?? 0, "FCFA")}
                     </span>

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Music, Calendar, Clock, MapPin, Search, Plus, User, 
   Flame, Sparkles, Filter, Check, X, Phone, Users, 
-  ChevronDown, MessageCircle, AlertCircle, RefreshCw, Send, Trash2, Wallet
+  ChevronDown, MessageCircle, AlertCircle, RefreshCw, Send, Trash2, Wallet, Eye, EyeOff
 } from "lucide-react";
 import { gomboDB } from "../firebase";
 import { db } from "../lib/firebase";
@@ -16,6 +16,7 @@ import { PremiumEngine } from "../lib/premiumEngine";
 import { AndroidBottomSheet } from "./common/AfriModal";
 import { useLocations } from "../hooks/useLocations";
 import UserLocationProposalModal from "./common/UserLocationProposalModal";
+import { useWalletSecurity } from "../context/WalletSecurityContext";
 
 // Static Options
 const REQUEST_TYPES = [
@@ -64,6 +65,7 @@ interface RenfortExpressProps {
 }
 
 export default function RenfortExpress({ currentUserProfile, onShowAuth }: RenfortExpressProps) {
+  const { formatWalletBalance, isBalanceHidden, toggleBalanceWithPin } = useWalletSecurity();
   const { locations, communeNames } = useLocations();
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   // DB States
@@ -1420,13 +1422,23 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
               </div>
 
               <div className="pt-2 border-t border-dashed border-afri-border/60 flex justify-between items-center">
-                <span className="text-afri-text-sec">Solde avant opération :</span>
-                <span className="font-bold text-afri-text">{renfortPublishConfirmData.soldeAvant.toLocaleString('fr-FR')} FCFA</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-afri-text-sec">Solde avant opération :</span>
+                  <button
+                    type="button"
+                    onClick={toggleBalanceWithPin}
+                    title={isBalanceHidden ? "Révéler le solde (Code PIN requis)" : "Masquer le solde"}
+                    className="p-1 rounded text-zinc-400 hover:text-[#D4AF37] hover:bg-zinc-800/60 transition cursor-pointer"
+                  >
+                    {isBalanceHidden ? <EyeOff className="w-3.5 h-3.5 text-[#D4AF37]" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+                <span className="font-bold text-afri-text">{formatWalletBalance(renfortPublishConfirmData.soldeAvant, "FCFA")}</span>
               </div>
 
               <div className="flex justify-between items-center">
                 <span className="text-afri-text-sec">Solde après opération :</span>
-                <span className="font-bold text-emerald-400">{renfortPublishConfirmData.soldeApres.toLocaleString('fr-FR')} FCFA</span>
+                <span className="font-bold text-emerald-400">{formatWalletBalance(renfortPublishConfirmData.soldeApres, "FCFA")}</span>
               </div>
             </div>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Coins, Wallet, Sparkles, Lock, AlertCircle } from 'lucide-react';
+import { Coins, Wallet, Sparkles, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { CoinPackage } from '../../types/avatar';
 import { COIN_PACKAGES, AvatarEngine } from '../../lib/avatarEngine';
 import { useAuth } from '../../AuthContext';
@@ -108,7 +108,7 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
     setPinError("");
   };
 
-  const { requireWalletAuthentication } = useWalletSecurity();
+  const { requireWalletAuthentication, formatWalletBalance, isBalanceHidden, toggleBalanceWithPin } = useWalletSecurity();
 
   const handleConfirmPurchase = async () => {
     const ok = await requireWalletAuthentication("PURCHASE");
@@ -234,8 +234,18 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
 
             <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 space-y-2.5 font-mono text-xs">
               <div className="flex justify-between items-center text-afri-text-sec">
-                <span>Solde actuel :</span>
-                <span className="font-bold text-afri-text">{walletBalance.toLocaleString("fr-FR")} FCFA</span>
+                <div className="flex items-center gap-1.5">
+                  <span>Solde actuel :</span>
+                  <button
+                    type="button"
+                    onClick={toggleBalanceWithPin}
+                    title={isBalanceHidden ? "Révéler le solde (Code PIN requis)" : "Masquer le solde"}
+                    className="p-1 rounded text-zinc-400 hover:text-[#D4AF37] hover:bg-zinc-800/60 transition cursor-pointer"
+                  >
+                    {isBalanceHidden ? <EyeOff className="w-3.5 h-3.5 text-[#D4AF37]" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+                <span className="font-bold text-afri-text">{formatWalletBalance(walletBalance, "FCFA")}</span>
               </div>
               <div className="flex justify-between items-center text-afri-text-sec">
                 <span>Montant nécessaire :</span>
@@ -243,7 +253,7 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
               </div>
               <div className="flex justify-between items-center text-rose-400 border-t border-afri-border pt-2 font-black">
                 <span>Il manque :</span>
-                <span>-{(selectedPkg.priceFcfa - walletBalance).toLocaleString("fr-FR")} FCFA</span>
+                <span>{isBalanceHidden ? "•••••• FCFA" : `-${(selectedPkg.priceFcfa - walletBalance).toLocaleString("fr-FR")} FCFA`}</span>
               </div>
             </div>
 
@@ -362,8 +372,18 @@ export default function CoinPurchaseModal({ onClose, onSuccess }: CoinPurchaseMo
                     <Wallet className="w-5 h-5 text-[#D4AF37]" />
                   </div>
                   <div>
-                    <div className="text-xs font-black uppercase text-afri-text">Solde Wallet</div>
-                    <div className="text-[10px] text-afri-text-muted font-mono">{walletBalance.toLocaleString("fr-FR")} FCFA disponible</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-black uppercase text-afri-text">Solde Wallet</span>
+                      <button
+                        type="button"
+                        onClick={toggleBalanceWithPin}
+                        title={isBalanceHidden ? "Révéler le solde (Code PIN requis)" : "Masquer le solde"}
+                        className="p-0.5 rounded text-zinc-400 hover:text-[#D4AF37] transition cursor-pointer"
+                      >
+                        {isBalanceHidden ? <EyeOff className="w-3 h-3 text-[#D4AF37]" /> : <Eye className="w-3 h-3" />}
+                      </button>
+                    </div>
+                    <div className="text-[10px] text-afri-text-muted font-mono">{formatWalletBalance(walletBalance, "FCFA")} disponible</div>
                   </div>
                 </div>
                 <div className="text-right">

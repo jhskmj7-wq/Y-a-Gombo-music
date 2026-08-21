@@ -20,6 +20,7 @@ export interface WalletSecurityContextValue {
   // Global Balance Visibility State
   isBalanceHidden: boolean;
   toggleBalanceHidden: () => void;
+  toggleBalanceWithPin: () => Promise<boolean>;
   formatWalletBalance: (amount?: number | null, suffix?: string) => string;
 }
 
@@ -37,12 +38,13 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
   const [walletSecurityStatus, setWalletSecurityStatus] = useState<WalletSecurityData | null>(null);
   const [paymentSettings, setPaymentSettings] = useState<any | null>(null);
 
-  // Global Balance Privacy State persisted in localStorage
+  // Global Balance Privacy State persisted in localStorage (defaults to true for privacy outside wallet)
   const [isBalanceHidden, setIsBalanceHidden] = useState<boolean>(() => {
     try {
-      return localStorage.getItem("afrigombo_wallet_hide_balance") === "true";
+      const stored = localStorage.getItem("afrigombo_wallet_hide_balance");
+      return stored === null ? true : stored === "true";
     } catch {
-      return false;
+      return true;
     }
   });
 
@@ -364,8 +366,33 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
     setLockedMins(null);
   };
 
+  const toggleBalanceWithPin = useCallback(async (): Promise<boolean> => {
+    if (isBalanceHidden) {
+      // User wants to reveal balance outside wallet: require PIN verification (uses session if active)
+      const ok = await requireWalletAuthentication("CONSULTATION_SOLDE");
+      if (ok) {
+        setIsBalanceHidden(false);
+        try {
+          localStorage.setItem("afrigombo_wallet_hide_balance", "false");
+        } catch {}
+        return true;
+      }
+      return false;
+    } else {
+      // User wants to hide balance: free toggle without PIN
+      setIsBalanceHidden(true);
+      try {
+        localStorage.setItem("afrigombo_wallet_hide_balance", "true");
+      } catch {}
+      return true;
+    }
+  }, [isBalanceHidden, requireWalletAuthentication]);
+
   const getFriendlyActionTitle = (act: string) => {
     switch (act) {
+      case "CONSULTATION_SOLDE":
+      case "REVEAL_BALANCE":
+      case "AFFICHAGE_SOLDE": return "Affichage du Solde";
       case "CONSULTATION_WALLET": return "Accès au Wallet";
       case "PURCHASE":
       case "ACHAT_GOMBO_ADS": return "Validation d'Achat Financier";
@@ -394,6 +421,7 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
       refreshWalletSecurityStatus,
       isBalanceHidden,
       toggleBalanceHidden,
+      toggleBalanceWithPin,
       formatWalletBalance
     }}>
       {children}
