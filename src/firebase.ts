@@ -2001,6 +2001,62 @@ export const gomboDB = {
 
     let progressCallback = typeof callbackOrMetadata === "function" ? callbackOrMetadata : undefined;
 
+    const isKyc = finalPath.startsWith("kyc/") || finalPath.includes("/kyc/");
+
+    // --- DOCUMENTS KYC : upload sécurisé via le backend (jamais en direct) ---
+    if (isKyc) {
+      console.log("[STORAGE] Document KYC détecté, upload via route sécurisée...");
+
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error("Utilisateur non authentifié.");
+      }
+      const idToken = await currentUser.getIdToken();
+
+      const fileForUpload = finalFile as File;
+
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const res = reader.result as string;
+          resolve(res.includes(",") ? res.split(",")[1] : res);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(fileForUpload);
+      });
+
+      const contentType = fileForUpload.type || "application/octet-stream";
+
+      if (progressCallback) {
+        progressCallback(50, { state: "uploading", log: "Envoi sécurisé du document..." });
+      }
+
+      const response = await fetch("/api/user/kyc/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idToken,
+          storagePath: finalPath,
+          fileBase64: base64Data,
+          contentType,
+          bucket: "afrigombo-private"
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Échec du téléversement sécurisé du document.");
+      }
+
+      if (progressCallback) {
+        progressCallback(100, { state: "done", log: "Document envoyé avec succès." });
+      }
+
+      console.log("[STORAGE] Document KYC envoyé avec succès, chemin :", result.path);
+      return result.path;
+    }
+
     // --- PRIORITÉ 1 : SUPABASE STORAGE ---
     if (supabaseStorage.isConfigured()) {
       try {
