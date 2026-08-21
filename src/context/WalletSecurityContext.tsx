@@ -80,7 +80,8 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
         const sec = data.walletSecurity || {};
         const pay = data.paymentSettings || {};
 
-        const pinConfigured = !!(sec.pinHash || sec.pinConfigured || pay.pinConfigured);
+        const hasPinHash = !!(sec.pinHash || pay.pinHash);
+        const pinConfigured = hasPinHash;
         const failedPinAttempts = sec.failedPinAttempts || 0;
         const lockedUntil = sec.lockedUntil || null;
         const pinResetRequested = !!sec.pinResetRequested;

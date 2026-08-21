@@ -360,7 +360,7 @@ export function AdminUserWalletDetailModal({
         {/* TAB 4: SÉCURITÉ */}
         {activeTab === "security" && (() => {
           const sec = user.walletSecurity || {};
-          const isPinConfigured = !!(sec.pinHash || sec.pinConfigured);
+          const isPinConfigured = !!sec.pinHash;
           const pinUpdatedAt = sec.pinUpdatedAt ? new Date(sec.pinUpdatedAt).toLocaleString() : (sec.pinCreatedAt ? new Date(sec.pinCreatedAt).toLocaleString() : "Aucune");
           const lastAuth = sec.lastAuthSensitiveAt ? new Date(sec.lastAuthSensitiveAt).toLocaleString() : "Aucune";
           const failedAttempts = sec.failedPinAttempts || 0;

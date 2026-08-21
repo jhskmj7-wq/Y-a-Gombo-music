@@ -143,7 +143,7 @@ export class WalletSecurityService {
       const data = snap.data();
       const sec = data.walletSecurity || data.paymentSettings || {};
 
-      const pinConfigured = !!(sec.pinHash || sec.pinConfigured);
+      const pinConfigured = !!sec.pinHash;
       const failedPinAttempts = sec.failedPinAttempts || 0;
       const lockedUntil = sec.lockedUntil || null;
       const pinResetRequested = !!sec.pinResetRequested;
@@ -265,7 +265,7 @@ export class WalletSecurityService {
     const data = snap.data();
     const sec = data.walletSecurity || data.paymentSettings || {};
     
-    const pinConfigured = !!(sec.pinHash || sec.pinConfigured);
+    const pinConfigured = !!sec.pinHash;
     const lockedUntil = sec.lockedUntil || null;
     
     if (lockedUntil && new Date(lockedUntil).getTime() > Date.now()) {
