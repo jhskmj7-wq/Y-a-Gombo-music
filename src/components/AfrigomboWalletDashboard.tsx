@@ -85,6 +85,7 @@ export default function AfrigomboWalletDashboard({
     requestPinResetSOA, 
     walletSecurityStatus, 
     isWalletSessionActive,
+    clearWalletSession,
     isBalanceHidden,
     toggleBalanceHidden,
     formatWalletBalance
@@ -200,7 +201,11 @@ export default function AfrigomboWalletDashboard({
       }
     };
     checkAuth();
-  }, [requireWalletAuthentication, onBack]);
+
+    return () => {
+      clearWalletSession();
+    };
+  }, [requireWalletAuthentication, onBack, clearWalletSession]);
 
   // Session expiry monitor
   useEffect(() => {
