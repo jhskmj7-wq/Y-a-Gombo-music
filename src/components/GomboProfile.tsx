@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   User, Phone, MapPin, Music, Award, Wallet, Send, FileText, Check, Users, Clipboard, 
@@ -91,6 +91,7 @@ export default function GomboProfile({
 
   // Current Panel view: "main" | "edit" | "settings" | "support" | "certification"
   const [panelView, setPanelView] = useState<"main" | "edit" | "settings" | "support" | "certification">(initialPanelView);
+  const profileContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (onSubPanelChange) {
@@ -99,9 +100,9 @@ export default function GomboProfile({
   }, [panelView, onSubPanelChange]);
 
   useEffect(() => {
-    const mainEl = document.getElementById("android-main-scroll");
-    if (mainEl) {
-      mainEl.scrollTop = 0;
+    const container = profileContainerRef.current?.closest(".overflow-y-auto");
+    if (container) {
+      container.scrollTop = 0;
     }
     window.scrollTo(0, 0);
   }, [panelView]);
@@ -1169,11 +1170,12 @@ export default function GomboProfile({
   };
 
   return (
-    <AndroidPageLayout 
-      title={getPageTitle()} 
-      onBack={panelView === "main" ? undefined : handleBack}
-      scrollable={panelView === "certification"}
-    >
+    <div ref={profileContainerRef} className="w-full h-full">
+      <AndroidPageLayout 
+        title={getPageTitle()} 
+        onBack={panelView === "main" ? undefined : handleBack}
+        scrollable={false}
+      >
         {panelView === "main" && (
         <GomboProfileMainView
           currentUserProfile={syncedProfile}
@@ -1345,5 +1347,6 @@ export default function GomboProfile({
         }}
       />
     </AndroidPageLayout>
+    </div>
   );
 }
