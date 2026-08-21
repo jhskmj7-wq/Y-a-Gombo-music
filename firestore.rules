@@ -82,10 +82,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn(); // Allow users to see each other's basic profile
       allow create: if isOwner(userId) && isValidUser(incoming());
-      allow update: if (isOwner(userId) && (
-        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'firstName', 'lastName', 'photoURL', 'avatarUrl', 'bio', 'phone', 'commune', 'orangeMoneyNumber', 'moovMoneyNumber', 'waveNumber', 'paymentMethods']) ||
-        incoming().diff(existing()).affectedKeys().hasOnly(['walletBalance', 'balance', 'wallet', 'gawaBalance', 'updatedAt', 'walletSecurity', 'paymentSettings', 'forceLogoutAt'])
-      )) || isFounder() || isAdmin();
+      allow update: if (isOwner(userId) && !incoming().diff(existing()).affectedKeys().hasAny(['role', 'isAdmin', 'isFounder'])) || isFounder() || isAdmin();
       allow delete: if isFounder();
     }
 
