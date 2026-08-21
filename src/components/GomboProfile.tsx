@@ -98,6 +98,13 @@ export default function GomboProfile({
     }
   }, [panelView, onSubPanelChange]);
 
+  useEffect(() => {
+    const mainEl = document.getElementById("android-main-scroll");
+    if (mainEl) {
+      mainEl.scrollTop = 0;
+    }
+  }, [panelView]);
+
   // States for KYC/Identity validation
   // (Removed redundant declarations as they exist below)
 

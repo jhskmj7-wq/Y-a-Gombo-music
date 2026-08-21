@@ -44,6 +44,7 @@ export function AndroidPageLayout({
       {headerContent}
       
       <main 
+        id="android-main-scroll"
         className={`flex-1 w-full min-h-0 box-border overflow-x-hidden ${scrollable ? "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]" : "overflow-visible"}`}
         style={{
           WebkitOverflowScrolling: "touch",
