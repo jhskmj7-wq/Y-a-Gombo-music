@@ -990,6 +990,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
           return (
             <div 
               key={idx}
+              style={{ touchAction: "pan-y" }}
               className={`bg-afri-bg border rounded-2xl overflow-hidden transition-all duration-300 ${
                 isOpen 
                   ? "border-afri-gold/45 shadow-[0_4px_15px_rgba(212,175,55,0.06)]" 

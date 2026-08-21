@@ -103,6 +103,7 @@ export default function GomboProfile({
     if (mainEl) {
       mainEl.scrollTop = 0;
     }
+    window.scrollTo(0, 0);
   }, [panelView]);
 
   // States for KYC/Identity validation
