@@ -134,7 +134,7 @@ export default function GomboMapViewModal({
             href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-black rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex items-center gap-1 shrink-0"
+            className="px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-black rounded-xl text-[10px] font-black uppercase cursor-pointer flex items-center gap-1 shrink-0"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             <span>GPS App</span>
@@ -151,7 +151,7 @@ export default function GomboMapViewModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-3 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold text-xs rounded-xl transition cursor-pointer min-h-[48px]"
+            className="px-4 py-3 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold text-xs rounded-xl cursor-pointer min-h-[48px]"
           >
             Fermer
           </button>
@@ -165,7 +165,7 @@ export default function GomboMapViewModal({
                 window.open(googleMapsUrl, "_blank");
               }
             }}
-            className="px-5 py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-xs rounded-xl transition cursor-pointer flex items-center gap-2 shadow-lg shadow-[#D4AF37]/20 min-h-[48px]"
+            className="px-5 py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-xs rounded-xl cursor-pointer flex items-center gap-2 shadow-lg shadow-[#D4AF37]/20 min-h-[48px]"
           >
             <Navigation className="w-4 h-4 fill-current" />
             <span>🧭 Itinéraire</span>

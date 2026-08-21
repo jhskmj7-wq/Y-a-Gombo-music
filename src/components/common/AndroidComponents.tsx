@@ -24,7 +24,7 @@ export const AndroidButton: React.FC<AndroidButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseClasses = "relative inline-flex items-center justify-center font-bold tracking-wider uppercase select-none transition-all duration-150 active:scale-[0.97] touch-manipulation cursor-pointer disabled:opacity-50 disabled:pointer-events-none";
+  const baseClasses = "relative inline-flex items-center justify-center font-bold tracking-wider uppercase select-none transition-transform duration-150 active:scale-[0.97] touch-manipulation cursor-pointer disabled:opacity-50 disabled:pointer-events-none";
 
   const sizeClasses = {
     sm: "min-h-[40px] px-3.5 py-1.5 text-[11px] rounded-xl gap-1.5",
@@ -166,7 +166,7 @@ export const AndroidTopBar: React.FC<AndroidTopBarProps> = ({
 
   return (
     <div
-      className={`sticky top-0 z-30 w-full bg-afri-bg/95 backdrop-blur-md border-b border-afri-border/60 px-3 py-2 flex items-center justify-between min-h-[56px] box-border transition-colors select-none ${className}`}
+      className={`sticky top-0 z-30 w-full bg-afri-bg/95 backdrop-blur-md border-b border-afri-border/60 px-3 py-2 flex items-center justify-between min-h-[56px] box-border select-none ${className}`}
       style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 8px)' }}
     >
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -218,7 +218,7 @@ export const AndroidChip: React.FC<AndroidChipProps> = ({
     <button
       type="button"
       onClick={onClick}
-      className={`min-h-[38px] px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer shrink-0 touch-manipulation ${
+      className={`min-h-[38px] px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5 transition-transform duration-150 active:scale-95 cursor-pointer shrink-0 touch-manipulation ${
         selected
           ? 'bg-[#D4AF37] text-black border-[#D4AF37] font-black shadow-sm'
           : 'bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text'

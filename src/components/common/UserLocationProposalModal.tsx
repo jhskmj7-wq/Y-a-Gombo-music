@@ -212,7 +212,7 @@ export default function UserLocationProposalModal({
                     type="button"
                     onClick={handleUseMyPosition}
                     disabled={locating}
-                    className="p-2.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] rounded-xl text-[10px] font-bold text-afri-text flex items-center justify-center gap-1.5 transition cursor-pointer min-h-[44px]"
+                    className="p-2.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] rounded-xl text-[10px] font-bold text-afri-text flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]"
                   >
                     <Navigation className="w-3.5 h-3.5 text-[#D4AF37]" />
                     <span>{locating ? "Recherche..." : "Utiliser ma position"}</span>
@@ -221,7 +221,7 @@ export default function UserLocationProposalModal({
                   <button
                     type="button"
                     onClick={() => setIsMapPickerOpen(true)}
-                    className="p-2.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] rounded-xl text-[10px] font-bold text-afri-text flex items-center justify-center gap-1.5 transition cursor-pointer min-h-[44px]"
+                    className="p-2.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] rounded-xl text-[10px] font-bold text-afri-text flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]"
                   >
                     <Map className="w-3.5 h-3.5 text-[#D4AF37]" />
                     <span>Choisir sur la carte</span>
@@ -244,14 +244,14 @@ export default function UserLocationProposalModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-3 bg-afri-bg-sec text-afri-text-sec rounded-xl hover:bg-afri-bg-ter transition cursor-pointer min-h-[48px] font-bold"
+                  className="px-4 py-3 bg-afri-bg-sec text-afri-text-sec rounded-xl hover:bg-afri-bg-ter cursor-pointer min-h-[48px] font-bold"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-3 bg-[#D4AF37] text-black font-black uppercase rounded-xl hover:bg-[#b8952b] transition cursor-pointer flex items-center gap-2 min-h-[48px] shadow-lg shadow-[#D4AF37]/20 disabled:opacity-50"
+                  className="px-5 py-3 bg-[#D4AF37] text-black font-black uppercase rounded-xl hover:bg-[#b8952b] cursor-pointer flex items-center gap-2 min-h-[48px] shadow-lg shadow-[#D4AF37]/20 disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                   <span>{submitting ? "Transmission..." : "Soumettre la proposition"}</span>

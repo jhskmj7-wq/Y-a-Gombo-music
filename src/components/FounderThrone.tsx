@@ -173,7 +173,7 @@ export default function FounderThrone({
               <button
                 key={item.id}
                 onClick={() => { setActiveMenu(item.id); try{ audioSynth.playTamTam(false); }catch(e){} }}
-                className={`w-full flex items-center justify-center 2xl:justify-start gap-5 px-4 py-3.5 2xl:py-4 rounded-xl text-[10px] 2xl:text-xs font-black uppercase tracking-widest font-mono transition-all group ${
+                className={`w-full flex items-center justify-center 2xl:justify-start gap-5 px-4 py-3.5 2xl:py-4 rounded-xl text-[10px] 2xl:text-xs font-black uppercase tracking-widest font-mono group ${
                   isActive ? "bg-gradient-to-r from-[#D4AF37]/20 to-transparent text-[#D4AF37] border-l-2 border-[#D4AF37]" : "text-afri-text-sec hover:text-[#D4AF37] hover:bg-afri-bg-sec/5 border-l-2 border-transparent"
                 }`}
               >
@@ -242,7 +242,7 @@ export default function FounderThrone({
           
           <button 
             onClick={onClose} 
-            className="absolute right-4 top-4 sm:right-6 sm:top-1/2 sm:-translate-y-1/2 bg-afri-bg/50 border border-red-500/50 hover:bg-red-500/10 text-red-500 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 transition-all cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.2)] active:scale-95 z-50"
+            className="absolute right-4 top-4 sm:right-6 sm:top-1/2 sm:-translate-y-1/2 bg-afri-bg/50 border border-red-500/50 hover:bg-red-500/10 text-red-500 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 transition-transform cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.2)] active:scale-95 z-50"
           >
             <UserX className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="hidden sm:block text-[9px] font-black uppercase tracking-wider">Retour Utilisateur</span>
@@ -304,7 +304,7 @@ export default function FounderThrone({
                      </div>
                    </div>
                    <div className="w-full max-w-lg flex justify-between items-center mt-3 font-mono text-[10px] sm:text-xs font-black text-afri-text">
-                      <button className="flex items-center gap-2 text-[#D4AF37] border border-[#D4AF37]/50 hover:bg-afri-bg-sec hover:text-black px-4 py-1.5 rounded-lg transition-all uppercase tracking-widest shadow-[0_0_10px_rgba(212,175,55,0.1)]">
+                      <button className="flex items-center gap-2 text-[#D4AF37] border border-[#D4AF37]/50 hover:bg-afri-bg-sec hover:text-black px-4 py-1.5 rounded-lg uppercase tracking-widest shadow-[0_0_10px_rgba(212,175,55,0.1)]">
                          Modifier le profil <PenTool className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                       <span className="uppercase tracking-widest">NIVEAU MAX <span className="text-[#D4AF37] ml-2 text-sm">100%</span></span>

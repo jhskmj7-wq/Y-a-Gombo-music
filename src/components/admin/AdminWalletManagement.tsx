@@ -406,7 +406,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
       <div className="flex items-center gap-2 p-1.5 bg-afri-bg-sec border border-afri-border rounded-2xl w-fit max-w-full overflow-x-auto">
         <button
           onClick={() => setWalletSubTab("wallet_central")}
-          className={`px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-2 shrink-0 cursor-pointer ${
+          className={`px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase flex items-center gap-2 shrink-0 cursor-pointer ${
             walletSubTab === "wallet_central"
               ? "bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20 font-black"
               : "text-afri-text-sec hover:text-afri-text"
@@ -418,7 +418,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
         <button
           onClick={() => setWalletSubTab("founder_vault")}
-          className={`px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-2 shrink-0 cursor-pointer ${
+          className={`px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase flex items-center gap-2 shrink-0 cursor-pointer ${
             walletSubTab === "founder_vault"
               ? "bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20 font-black"
               : "text-afri-text-sec hover:text-afri-text"
@@ -452,14 +452,14 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={exportCSV}
-            className="px-3.5 py-2 bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border text-afri-text-sec hover:text-afri-text rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer"
+            className="px-3.5 py-2 bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border text-afri-text-sec hover:text-afri-text rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
             <span>Export CSV</span>
           </button>
           <button
             onClick={exportJSON}
-            className="px-3.5 py-2 bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border text-afri-text-sec hover:text-afri-text rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer"
+            className="px-3.5 py-2 bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border text-afri-text-sec hover:text-afri-text rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 text-amber-400" />
             <span>Export JSON</span>
@@ -654,7 +654,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                   <div className="pt-2 border-t border-zinc-800/60 grid grid-cols-2 xs:grid-cols-5 sm:grid-cols-5 gap-2">
                     <button
                       onClick={() => { setSelectedUser(usr); setActionType("credit"); setAmountInput(""); setReasonInput(""); }}
-                      className="py-1.5 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-lg text-[9px] font-mono font-bold uppercase transition text-center cursor-pointer flex items-center justify-center gap-1"
+                      className="py-1.5 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-lg text-[9px] font-mono font-bold uppercase text-center cursor-pointer flex items-center justify-center gap-1"
                       title="Créditer le solde"
                     >
                       <Plus className="w-3 h-3" />
@@ -663,7 +663,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
                     <button
                       onClick={() => { setSelectedUser(usr); setActionType("debit"); setAmountInput(""); setReasonInput(""); }}
-                      className="py-1.5 px-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-lg text-[9px] font-mono font-bold uppercase transition text-center cursor-pointer flex items-center justify-center gap-1"
+                      className="py-1.5 px-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-lg text-[9px] font-mono font-bold uppercase text-center cursor-pointer flex items-center justify-center gap-1"
                       title="Débiter le solde"
                     >
                       <Minus className="w-3 h-3" />
@@ -672,7 +672,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
                     <button
                       onClick={() => { setSelectedUser(usr); setActionType("correction"); setAmountInput(String(solde)); setReasonInput(""); }}
-                      className="py-1.5 px-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-400 rounded-lg text-[9px] font-mono font-bold uppercase transition text-center cursor-pointer flex items-center justify-center gap-1"
+                      className="py-1.5 px-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-400 rounded-lg text-[9px] font-mono font-bold uppercase text-center cursor-pointer flex items-center justify-center gap-1"
                       title="Fixer un solde exact"
                     >
                       <RotateCcw className="w-3 h-3" />
@@ -681,7 +681,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
                     <button
                       onClick={() => { setSelectedUser(usr); setActionType(isBlocked ? "unblock" : "block"); setAmountInput(""); setReasonInput(""); }}
-                      className={`py-1.5 px-2 border rounded-lg text-[9px] font-mono font-bold uppercase transition text-center cursor-pointer flex items-center justify-center gap-1 ${
+                      className={`py-1.5 px-2 border rounded-lg text-[9px] font-mono font-bold uppercase text-center cursor-pointer flex items-center justify-center gap-1 ${
                         isBlocked
                           ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                           : "bg-rose-500/10 border-rose-500/30 text-rose-400"
@@ -694,7 +694,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
 
                     <button
                       onClick={() => { setSelectedUser(usr); setActionType(isFrozen ? "unfreeze" : "freeze"); setAmountInput(""); setReasonInput(""); }}
-                      className={`py-1.5 px-2 border rounded-lg text-[9px] font-mono font-bold uppercase transition text-center cursor-pointer flex items-center justify-center gap-1 ${
+                      className={`py-1.5 px-2 border rounded-lg text-[9px] font-mono font-bold uppercase text-center cursor-pointer flex items-center justify-center gap-1 ${
                         isFrozen
                           ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                           : "bg-amber-500/10 border-amber-500/30 text-amber-400"
@@ -746,7 +746,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                 <button
                   key={f.id}
                   onClick={() => setTxFilterType(f.id)}
-                  className={`py-1 px-2.5 rounded-lg text-[9px] font-mono font-bold uppercase transition cursor-pointer border ${
+                  className={`py-1 px-2.5 rounded-lg text-[9px] font-mono font-bold uppercase cursor-pointer border ${
                     txFilterType === f.id
                       ? "bg-[#D4AF37] text-black border-[#D4AF37]"
                       : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
@@ -839,7 +839,7 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
                           setRefundReason(""); 
                           setRefundAmountInput(String(tx.amount || tx.montant || 0));
                         }}
-                        className="py-1 px-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 rounded text-[9px] font-mono font-bold uppercase transition cursor-pointer inline-flex items-center gap-1"
+                        className="py-1 px-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 rounded text-[9px] font-mono font-bold uppercase cursor-pointer inline-flex items-center gap-1"
                       >
                         <RotateCcw className="w-2.5 h-2.5" />
                         <span>Rembourser</span>
@@ -913,14 +913,14 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
             <button
               onClick={handleExecuteAdjustment}
               disabled={processing}
-              className="flex-1 py-4 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-xs tracking-wider rounded-xl transition cursor-pointer disabled:opacity-50 shadow-lg shadow-[#D4AF37]/20"
+              className="flex-1 py-4 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-xs tracking-wider rounded-xl cursor-pointer disabled:opacity-50 shadow-lg shadow-[#D4AF37]/20"
             >
               {processing ? "Traitement..." : "Exécuter l'action impériale"}
             </button>
             <button
               onClick={() => setActionType(null)}
               disabled={processing}
-              className="py-4 px-6 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold uppercase text-xs tracking-wider rounded-xl border border-afri-border transition cursor-pointer"
+              className="py-4 px-6 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold uppercase text-xs tracking-wider rounded-xl border border-afri-border cursor-pointer"
             >
               Annuler
             </button>
@@ -980,14 +980,14 @@ export default function AdminWalletManagement({ currentUser }: AdminWalletManage
             <button
               onClick={handleExecuteRefund}
               disabled={processing}
-              className="flex-1 py-4 bg-rose-500 hover:bg-rose-600 text-afri-text font-black uppercase text-xs tracking-wider rounded-xl transition cursor-pointer disabled:opacity-50 shadow-lg shadow-rose-900/20"
+              className="flex-1 py-4 bg-rose-500 hover:bg-rose-600 text-afri-text font-black uppercase text-xs tracking-wider rounded-xl cursor-pointer disabled:opacity-50 shadow-lg shadow-rose-900/20"
             >
               {processing ? "Remboursement..." : "Confirmer le Remboursement"}
             </button>
             <button
               onClick={() => setSelectedTxForRefund(null)}
               disabled={processing}
-              className="py-4 px-6 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold uppercase text-xs tracking-wider rounded-xl border border-afri-border transition cursor-pointer"
+              className="py-4 px-6 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text-sec font-bold uppercase text-xs tracking-wider rounded-xl border border-afri-border cursor-pointer"
             >
               Annuler
             </button>

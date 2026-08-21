@@ -321,7 +321,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     </div>
 
                     <div className="space-y-3 pt-2">
-                      <label className="min-h-[52px] w-full bg-afri-bg border border-afri-border hover:border-[#D4AF37] rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-afri-text active:scale-[0.98] cursor-pointer shadow-sm transition-all">
+                      <label className="min-h-[52px] w-full bg-afri-bg border border-afri-border hover:border-[#D4AF37] rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-afri-text active:scale-[0.98] cursor-pointer shadow-sm transition-transform">
                         <ImageIcon className="w-5 h-5 text-[#D4AF37]" />
                         <span>Choisir une photo (Album)</span>
                         <input 
@@ -344,7 +344,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                           setIsAvatarSheetOpen(false);
                           startCamera();
                         }}
-                        className="min-h-[52px] w-full bg-afri-bg border border-afri-border hover:border-[#D4AF37] rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-afri-text active:scale-[0.98] cursor-pointer shadow-sm transition-all"
+                        className="min-h-[52px] w-full bg-afri-bg border border-afri-border hover:border-[#D4AF37] rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-afri-text active:scale-[0.98] cursor-pointer shadow-sm transition-transform"
                       >
                         <Camera className="w-5 h-5 text-[#D4AF37]" />
                         <span>Prendre une photo (Appareil photo)</span>
@@ -356,7 +356,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                           setAvatarUrl("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200");
                           setIsAvatarSheetOpen(false);
                         }}
-                        className="min-h-[52px] w-full bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-rose-400 active:scale-[0.98] cursor-pointer transition-all"
+                        className="min-h-[52px] w-full bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-rose-400 active:scale-[0.98] cursor-pointer transition-transform"
                       >
                         <Trash2 className="w-5 h-5 text-rose-400" />
                         <span>Supprimer la photo</span>
@@ -365,7 +365,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                       <button
                         type="button"
                         onClick={() => setIsAvatarSheetOpen(false)}
-                        className="min-h-[52px] w-full bg-afri-bg-ter border border-afri-border rounded-2xl flex items-center justify-center gap-2 text-xs font-bold text-afri-text-sec active:scale-[0.98] cursor-pointer transition-all mt-2"
+                        className="min-h-[52px] w-full bg-afri-bg-ter border border-afri-border rounded-2xl flex items-center justify-center gap-2 text-xs font-bold text-afri-text-sec active:scale-[0.98] cursor-pointer transition-transform mt-2"
                       >
                         <X className="w-5 h-5" />
                         <span>Annuler</span>
@@ -435,7 +435,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                         setCommune("À compléter plus tard");
                         setQuartier("À compléter");
                       }}
-                      className="text-[10px] font-mono text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+                      className="text-[10px] font-mono text-zinc-400 hover:text-zinc-200 cursor-pointer"
                       title="Sauter la saisie du lieu pour l'instant"
                     >
                       <span>Je compléterai plus tard</span>
@@ -488,7 +488,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {SPECIALTIES_LIST.map(spec => {
                     const active = specialties.includes(spec);
                     return (
-                      <button key={spec} type="button" onClick={() => active ? setSpecialties(specialties.filter(s => s !== spec)) : setSpecialties([...specialties, spec])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={spec} type="button" onClick={() => active ? setSpecialties(specialties.filter(s => s !== spec)) : setSpecialties([...specialties, spec])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {spec}
                       </button>
                     );
@@ -515,7 +515,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {INSTRUMENTS_LIST.map(inst => {
                     const active = instruments.includes(inst);
                     return (
-                      <button key={inst} type="button" onClick={() => active ? setInstruments(instruments.filter(i => i !== inst)) : setInstruments([...instruments, inst])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={inst} type="button" onClick={() => active ? setInstruments(instruments.filter(i => i !== inst)) : setInstruments([...instruments, inst])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {inst}
                       </button>
                     );
@@ -542,7 +542,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {GENRES_LIST.map(gen => {
                     const active = musicGenres.includes(gen);
                     return (
-                      <button key={gen} type="button" onClick={() => active ? setMusicGenres(musicGenres.filter(g => g !== gen)) : setMusicGenres([...musicGenres, gen])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-amber-500 border-amber-500 text-afri-text" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={gen} type="button" onClick={() => active ? setMusicGenres(musicGenres.filter(g => g !== gen)) : setMusicGenres([...musicGenres, gen])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-amber-500 border-amber-500 text-afri-text" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {gen}
                       </button>
                     );
@@ -569,7 +569,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {EXPERIENCES.map(exp => {
                     const active = experience === exp;
                     return (
-                      <button key={exp} type="button" onClick={() => setExperience(exp)} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-[#D4AF37] border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={exp} type="button" onClick={() => setExperience(exp)} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-[#D4AF37] border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {exp}
                       </button>
                     );
@@ -584,7 +584,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {AVAILABILITIES_LIST.map(avail => {
                     const active = availabilities.includes(avail);
                     return (
-                      <button key={avail} type="button" onClick={() => active ? setAvailabilities(availabilities.filter(a => a !== avail)) : setAvailabilities([...availabilities, avail])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-emerald-600 border-emerald-600 text-afri-text" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={avail} type="button" onClick={() => active ? setAvailabilities(availabilities.filter(a => a !== avail)) : setAvailabilities([...availabilities, avail])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-emerald-600 border-emerald-600 text-afri-text" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {avail}
                       </button>
                     );
@@ -599,7 +599,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   {LANGUAGES_LIST.map(lang => {
                     const active = languages.includes(lang);
                     return (
-                      <button key={lang} type="button" onClick={() => active ? setLanguages(languages.filter(l => l !== lang)) : setLanguages([...languages, lang])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
+                      <button key={lang} type="button" onClick={() => active ? setLanguages(languages.filter(l => l !== lang)) : setLanguages([...languages, lang])} className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider border inline-flex items-center justify-center min-h-[40px] ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {lang}
                       </button>
                     );

@@ -620,7 +620,7 @@ export default function SettingsModal({
                         }
                         setThemePreset(th.id as any);
                       }}
-                      className={`flex items-center justify-between gap-2 p-3 rounded-xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
+                      className={`flex items-center justify-between gap-2 p-3 rounded-xl border text-left cursor-pointer relative overflow-hidden group ${
                         isSelected 
                           ? "bg-afri-gold/10 border-afri-gold text-afri-gold font-black" 
                           : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text-sec"
@@ -665,7 +665,7 @@ export default function SettingsModal({
                       key={ts.id}
                       type="button"
                       onClick={() => setTextSize(ts.id as any)}
-                      className={`py-2 px-3 rounded-xl border text-[11px] font-bold text-center transition-all cursor-pointer ${
+                      className={`py-2 px-3 rounded-xl border text-[11px] font-bold text-center cursor-pointer ${
                         isSelected 
                           ? "bg-afri-gold/10 border-afri-gold text-afri-gold" 
                           : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text-sec"
@@ -717,7 +717,7 @@ export default function SettingsModal({
                     key={c.color}
                     type="button"
                     onClick={() => updateProfileCustomizationPref('profileColor', c.color)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all cursor-pointer flex items-center justify-center ${
+                    className={`w-8 h-8 rounded-full border-2 cursor-pointer flex items-center justify-center ${
                       profileCustomization.profileColor === c.color ? "border-afri-gold scale-110 shadow-lg" : "border-transparent opacity-80 hover:opacity-100"
                     }`}
                     style={{ backgroundColor: c.color }}
@@ -1186,7 +1186,7 @@ export default function SettingsModal({
                   <button
                     type="button"
                     onClick={() => globalAudioManager.playIntro(true)}
-                    className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center cursor-pointer flex items-center justify-center gap-1.5 ${
                       activeMusicPlay === "intro"
                         ? "bg-afri-gold/20 border-afri-gold text-afri-text"
                         : "bg-afri-bg border-afri-border text-afri-text hover:text-afri-gold"
@@ -1205,7 +1205,7 @@ export default function SettingsModal({
                         globalAudioManager.playAnthem(true);
                       }
                     }}
-                    className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center cursor-pointer flex items-center justify-center gap-1.5 ${
                       activeMusicPlay === "hymne"
                         ? "bg-afri-gold/20 border-afri-gold text-afri-text"
                         : "bg-afri-bg border-afri-border text-afri-text hover:text-afri-gold"
@@ -1220,7 +1220,7 @@ export default function SettingsModal({
                   <button
                     type="button"
                     onClick={() => globalAudioManager.stop()}
-                    className="w-full py-1.5 bg-red-950/20 hover:bg-red-950/35 border border-red-900/30 text-red-400 rounded-lg text-[9.5px] font-bold uppercase transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    className="w-full py-1.5 bg-red-950/20 hover:bg-red-950/35 border border-red-900/30 text-red-400 rounded-lg text-[9.5px] font-bold uppercase cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <Square className="w-3 h-3 fill-current" />
                     {mt("stop_music")}
@@ -1449,14 +1449,14 @@ export default function SettingsModal({
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => clearAppCache()}
-                className="py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 font-bold text-[10.5px] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                className="py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 font-bold text-[10.5px] cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 {mt("clear_cache")}
               </button>
               <button
                 onClick={() => showToast("✓ Données synchronisées avec Firebase central !", "success")}
-                className="py-2.5 px-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-[10.5px] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                className="py-2.5 px-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-[10.5px] cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <RefreshCw className="w-3.5 h-3.5 text-afri-gold" />
                 {mt("refresh_data")}
@@ -1484,7 +1484,7 @@ export default function SettingsModal({
                   key={lang.id}
                   type="button"
                   onClick={() => handleLanguageChange(lang.id as any)}
-                  className={`flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border text-center transition-all cursor-pointer ${
+                  className={`flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border text-center cursor-pointer ${
                     isSelected 
                       ? "bg-afri-gold/10 border-afri-gold text-afri-gold" 
                       : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text-sec"
@@ -1524,7 +1524,7 @@ export default function SettingsModal({
                     setActiveSupportPage(s.page as any);
                     try { audioSynth.playValidationSuccess(); } catch (_) {}
                   }}
-                  className="flex items-center justify-between p-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text transition-all cursor-pointer"
+                  className="flex items-center justify-between p-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5">
                     <Icon className="w-4 h-4 text-afri-gold/75" />
@@ -1545,7 +1545,7 @@ export default function SettingsModal({
                 }
                 showToast("❤️ Merci pour votre soutien précieux à la culture et aux artistes d'Afrique !", "success");
               }}
-              className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-afri-gold/20 to-amber-500/10 border border-afri-gold/50 hover:border-afri-gold text-afri-gold transition-all cursor-pointer font-black"
+              className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-afri-gold/20 to-amber-500/10 border border-afri-gold/50 hover:border-afri-gold text-afri-gold cursor-pointer font-black"
             >
               <div className="flex items-center gap-2.5">
                 <Star className="w-4 h-4 fill-current text-afri-gold" />
@@ -1560,7 +1560,7 @@ export default function SettingsModal({
                 setShowDeleteConfirm(true);
                 try { audioSynth.playTamTam(true); } catch (_) {}
               }}
-              className="flex items-center justify-between p-3 rounded-xl bg-red-550/5 border border-red-500/20 hover:border-red-500 text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
+              className="flex items-center justify-between p-3 rounded-xl bg-red-550/5 border border-red-500/20 hover:border-red-500 text-red-400 hover:bg-red-500/10 cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
                 <Trash2 className="w-4 h-4" />
@@ -1587,7 +1587,7 @@ export default function SettingsModal({
                     onNavigateToFounder();
                   }
                 }}
-                className="flex items-center justify-between p-3 rounded-xl bg-amber-500/20 border border-amber-500/50 hover:bg-amber-500/30 text-amber-500 transition-all cursor-pointer"
+                className="flex items-center justify-between p-3 rounded-xl bg-amber-500/20 border border-amber-500/50 hover:bg-amber-500/30 text-amber-500 cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
                   <Shield className="w-4 h-4" />
@@ -1604,7 +1604,7 @@ export default function SettingsModal({
                     onNavigateToThrone();
                   }
                 }}
-                className="flex items-center justify-between p-3 rounded-xl bg-afri-gold/20 border border-afri-gold/60 hover:bg-afri-gold/30 text-afri-gold transition-all cursor-pointer"
+                className="flex items-center justify-between p-3 rounded-xl bg-afri-gold/20 border border-afri-gold/60 hover:bg-afri-gold/30 text-afri-gold cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
                   <span className="text-base">👑</span>

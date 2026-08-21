@@ -438,14 +438,14 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <button
                   onClick={() => setItemToDelete(null)}
-                  className="px-4 py-2.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 text-zinc-300 font-mono text-xs font-bold transition cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 text-zinc-300 font-mono text-xs font-bold cursor-pointer"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={confirmDelete}
                   disabled={actionLoadingId === itemToDelete.id}
-                  className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold transition shadow-lg cursor-pointer flex items-center justify-center gap-2"
+                  className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold shadow-lg cursor-pointer flex items-center justify-center gap-2"
                 >
                   {actionLoadingId === itemToDelete.id ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
@@ -505,7 +505,7 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id as any)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold cursor-pointer flex items-center gap-2 whitespace-nowrap ${
                 activeTab === t.id
                   ? "bg-[#D4AF37] text-black shadow-md font-black"
                   : "bg-zinc-900/80 text-zinc-400 hover:text-white border border-zinc-800"
@@ -627,7 +627,7 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
                   {/* VOIR */}
                   <button
                     onClick={() => setSelectedItem(item)}
-                    className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-[#D4AF37] text-zinc-100 rounded-xl font-mono text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-[#D4AF37] text-zinc-100 rounded-xl font-mono text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
                   >
                     <Eye className="w-3.5 h-3.5 text-[#D4AF37]" />
                     <span>VOIR</span>
@@ -637,7 +637,7 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
                   <button
                     onClick={() => handleArchive(item)}
                     disabled={isLoading}
-                    className={`px-3 py-2 border rounded-xl font-mono text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                    className={`px-3 py-2 border rounded-xl font-mono text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
                       item.status === "ARCHIVEE"
                         ? "bg-zinc-800 border-zinc-600 text-zinc-200 hover:bg-zinc-700"
                         : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
@@ -651,7 +651,7 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
                   <button
                     onClick={() => setItemToDelete(item)}
                     disabled={isLoading}
-                    className="px-3 py-2 bg-red-950/40 hover:bg-red-900/60 border border-red-800/60 hover:border-red-600 text-red-300 rounded-xl font-mono text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-3 py-2 bg-red-950/40 hover:bg-red-900/60 border border-red-800/60 hover:border-red-600 text-red-300 rounded-xl font-mono text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     <Trash2 className="w-3.5 h-3.5 text-red-400" />
                     <span>SUPPRIMER</span>
@@ -773,19 +773,19 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">
               <button
                 onClick={() => handleToggleSuspend(selectedItem)}
-                className="px-4 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 rounded-xl text-xs font-mono font-bold transition cursor-pointer"
+                className="px-4 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 rounded-xl text-xs font-mono font-bold cursor-pointer"
               >
                 {selectedItem.status === "SUSPENDUE" ? "RÉACTIVER" : "SUSPENDRE"}
               </button>
               <button
                 onClick={() => handleArchive(selectedItem)}
-                className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 rounded-xl text-xs font-mono font-bold transition cursor-pointer"
+                className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 rounded-xl text-xs font-mono font-bold cursor-pointer"
               >
                 {selectedItem.status === "ARCHIVEE" ? "DÉSARCHIVER" : "ARCHIVER"}
               </button>
               <button
                 onClick={() => setItemToDelete(selectedItem)}
-                className="px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-mono font-bold transition cursor-pointer shadow-md"
+                className="px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-mono font-bold cursor-pointer shadow-md"
               >
                 SUPPRIMER DÉFINITIVEMENT
               </button>

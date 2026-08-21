@@ -233,7 +233,7 @@ function renderModalBody(
           </div>
           <button
             onClick={onClose}
-            className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-xs tracking-wider rounded-xl transition-all cursor-pointer shadow-md"
+            className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-xs tracking-wider rounded-xl cursor-pointer shadow-md"
           >
             Fermer
           </button>
@@ -251,7 +251,7 @@ function renderModalBody(
           </div>
           <button
             onClick={onClose}
-            className="w-full py-2.5 bg-rose-500 hover:bg-rose-400 text-afri-text font-black uppercase text-xs tracking-wider rounded-xl transition-all cursor-pointer shadow-md"
+            className="w-full py-2.5 bg-rose-500 hover:bg-rose-400 text-afri-text font-black uppercase text-xs tracking-wider rounded-xl cursor-pointer shadow-md"
           >
             Fermer
           </button>
@@ -277,7 +277,7 @@ function renderModalBody(
                 if (onCancel) onCancel();
                 onClose();
               }}
-              className="flex-1 py-2.5 bg-afri-bg border border-afri-border hover:bg-afri-bg-ter text-afri-text-sec text-xs font-bold uppercase rounded-xl transition-all cursor-pointer"
+              className="flex-1 py-2.5 bg-afri-bg border border-afri-border hover:bg-afri-bg-ter text-afri-text-sec text-xs font-bold uppercase rounded-xl cursor-pointer"
             >
               {cancelText}
             </button>
@@ -287,7 +287,7 @@ function renderModalBody(
                 onClose();
               }}
               disabled={isConfirming}
-              className="flex-1 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50"
+              className="flex-1 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black text-xs font-black uppercase tracking-wider rounded-xl cursor-pointer shadow-md disabled:opacity-50"
             >
               {isConfirming ? "..." : confirmText}
             </button>
@@ -317,7 +317,7 @@ function renderModalBody(
                 onClose();
               }}
               disabled={isConfirming}
-              className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-xs tracking-widest rounded-xl transition-all shadow-lg flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-xs tracking-widest rounded-xl shadow-lg flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <span>{isConfirming ? "Traitement..." : confirmText || "Valider le paiement"}</span>
               <ChevronRight className="w-4 h-4 stroke-[3]" />
@@ -337,7 +337,7 @@ function renderModalBody(
           </div>
           <button
             onClick={onClose}
-            className="w-full py-2.5 bg-afri-bg border border-afri-border hover:bg-afri-bg-ter text-afri-text text-xs font-bold uppercase rounded-xl transition-all cursor-pointer"
+            className="w-full py-2.5 bg-afri-bg border border-afri-border hover:bg-afri-bg-ter text-afri-text text-xs font-bold uppercase rounded-xl cursor-pointer"
           >
             Compris
           </button>
@@ -357,7 +357,7 @@ function renderModalBody(
                   if (item.onClick) item.onClick();
                   onClose();
                 }}
-                className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full p-3 rounded-xl border text-left flex items-center justify-between cursor-pointer ${
                   item.danger
                     ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20'
                     : 'bg-afri-bg border-afri-border hover:border-[#D4AF37]/50 text-afri-text'
