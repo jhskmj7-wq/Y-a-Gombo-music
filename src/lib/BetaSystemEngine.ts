@@ -9,7 +9,8 @@ import {
   where, 
   orderBy, 
   setDoc,
-  serverTimestamp 
+  serverTimestamp,
+  runTransaction
 } from "firebase/firestore";
 import { User, BetaRankType, BetaBenefit } from "../types";
 import { logAdminAction } from "./auditLogger";
@@ -102,152 +103,144 @@ export async function processUserBetaEligibility(
   }
 
   try {
-    const userRef = doc(db, "users", userId);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      return { success: false, reason: "USER_NOT_FOUND" };
-    }
-
-    const userData = userSnap.data() as User;
-
-    // RULE 1: User MUST be KYC Verified
-    const isKycApproved = userData.kycStatus === "approved" || userData.isVerified === true || userData.isCertified === true;
-    if (!isKycApproved) {
-      return { success: false, reason: "KYC_NOT_VERIFIED" };
-    }
-
-    // RULE 2: Anti-Double Attribution (User cannot receive two ranks or re-attribute)
-    if (userData.betaRankType && userData.betaRankType !== "NONE" && userData.betaRankNumber) {
-      return { 
-        success: false, 
-        reason: "ALREADY_ASSIGNED", 
-        rankType: userData.betaRankType, 
-        rankNumber: userData.betaRankNumber 
-      };
-    }
-
-    // Check Deployment Center controls
     const config = await getBetaDeploymentConfig();
+    const userRef = doc(db, "users", userId);
+    const counterRef = doc(db, "systemConfig", "betaCounters");
 
-    // Query all existing users with assigned Beta Ranks to compute accurate positions
-    const usersSnap = await getDocs(collection(db, "users"));
-    const allUsers = usersSnap.docs.map(d => ({ id: d.id, ...d.data() })) as User[];
+    const result = await runTransaction(db, async (transaction) => {
+      const userSnap = await transaction.get(userRef);
+      const counterSnap = await transaction.get(counterRef);
 
-    const assignedBetaUsers = allUsers
-      .filter(u => u.betaRankType && u.betaRankType !== "NONE" && typeof u.betaRankNumber === "number")
-      .sort((a, b) => (a.betaRankNumber || 999) - (b.betaRankNumber || 999));
+      if (!userSnap.exists()) {
+        return { success: false, reason: "USER_NOT_FOUND" };
+      }
 
-    const ambassadors = assignedBetaUsers.filter(u => u.betaRankType === "AMBASSADOR" || (u.betaRankNumber && u.betaRankNumber <= 20));
-    const builders = assignedBetaUsers.filter(u => u.betaRankType === "BUILDER" || (u.betaRankNumber && u.betaRankNumber > 20 && u.betaRankNumber <= 100));
+      const userData = userSnap.data() as User;
 
-    const ambassadorCount = ambassadors.length;
-    const totalCount = assignedBetaUsers.length;
+      const isKycApproved = userData.kycStatus === "approved" || userData.isVerified === true || userData.isCertified === true;
+      if (!isKycApproved) {
+        return { success: false, reason: "KYC_NOT_VERIFIED" };
+      }
 
-    let targetRankType: BetaRankType = "NONE";
-    let targetRankNumber = 0;
-    let durationMonths = 0;
-    let referencePrice = 0;
-    let title = "";
+      if (userData.betaRankType && userData.betaRankType !== "NONE" && userData.betaRankNumber) {
+        return { 
+          success: false, 
+          reason: "ALREADY_ASSIGNED", 
+          rankType: userData.betaRankType, 
+          rankNumber: userData.betaRankNumber 
+        };
+      }
 
-    // Position 1 to 20 -> AMBASSADEUR
-    if (ambassadorCount < 20 && config.ambassadorsEnabled) {
-      targetRankType = "AMBASSADOR";
-      targetRankNumber = ambassadorCount + 1;
-      durationMonths = 12;
-      referencePrice = 10000;
-      title = "AMBASSADEUR DE L'ÉCOSYSTÈME";
-    } 
-    // Position 21 to 100 -> BÂTISSEUR
-    else if (totalCount < 100 && config.buildersEnabled) {
-      targetRankType = "BUILDER";
-      targetRankNumber = totalCount + 1;
-      durationMonths = 6;
-      referencePrice = 5000;
-      title = "BÂTISSEUR DE L'ÉCOSYSTÈME";
-    } 
-    else {
-      // After 100 or disabled -> No automatic rank
-      return { success: false, reason: "BETA_SLOTS_FULL_OR_DISABLED" };
-    }
+      const counterData = counterSnap.exists() ? (counterSnap.data() as { ambassadorCount?: number; totalCount?: number }) : {};
+      const ambassadorCount = counterData.ambassadorCount || 0;
+      const totalCount = counterData.totalCount || 0;
 
-    const now = new Date();
-    const startedAt = now.toISOString();
-    const expiresAtDate = new Date(now);
-    expiresAtDate.setMonth(expiresAtDate.getMonth() + durationMonths);
-    const expiresAt = expiresAtDate.toISOString();
+      let targetRankType: BetaRankType = "NONE";
+      let targetRankNumber = 0;
+      let durationMonths = 0;
+      let referencePrice = 0;
+      let title = "";
 
-    const betaBenefit: BetaBenefit = {
-      type: targetRankType as "AMBASSADOR" | "BUILDER",
-      rankNumber: targetRankNumber,
-      title,
-      durationMonths,
-      price: 0,
-      referencePrice,
-      startedAt,
-      expiresAt,
-      status: "active",
-      assignedBy: performedByAdmin?.email || "SYSTEM_KYC_AUTO"
-    };
+      if (ambassadorCount < 20 && config.ambassadorsEnabled) {
+        targetRankType = "AMBASSADOR";
+        targetRankNumber = ambassadorCount + 1;
+        durationMonths = 12;
+        referencePrice = 10000;
+        title = "AMBASSADEUR DE L'ÉCOSYSTÈME";
+      } else if (totalCount < 100 && config.buildersEnabled) {
+        targetRankType = "BUILDER";
+        targetRankNumber = totalCount + 1;
+        durationMonths = 6;
+        referencePrice = 5000;
+        title = "BÂTISSEUR DE L'ÉCOSYSTÈME";
+      } else {
+        return { success: false, reason: "BETA_SLOTS_FULL_OR_DISABLED" };
+      }
 
-    // Update user document in Firestore
-    await updateDoc(userRef, {
-      betaRankType: targetRankType,
-      betaRankNumber: targetRankNumber,
-      betaRankTitle: title,
-      betaRankAssignedAt: startedAt,
-      betaBenefit: betaBenefit,
-      // Privileges activation
-      isSubscribed: true,
-      premium: true,
-      isPremium: true,
-      premiumStatus: "active",
-      premiumPlan: targetRankType === "AMBASSADOR" ? "elite" : "pro",
-      subscriptionPlan: targetRankType === "AMBASSADOR" ? "GOMBO ELITE AMBASSADOR" : "GOMBO PRO BUILDER",
-      premiumUntil: expiresAt
-    });
+      const now = new Date();
+      const startedAt = now.toISOString();
+      const expiresAtDate = new Date(now);
+      expiresAtDate.setMonth(expiresAtDate.getMonth() + durationMonths);
+      const expiresAt = expiresAtDate.toISOString();
 
-    // Write Audit Log
-    await logAdminAction({
-      adminUid: performedByAdmin?.uid || "SYSTEM_KYC",
-      adminEmail: performedByAdmin?.email || "system@afrigombo.com",
-      action: "BETA_RANK_ASSIGNED",
-      targetUserId: userId,
-      reason: `Attribution officielle du rang Bêta ${title} #${targetRankNumber} (Avantage ${durationMonths} mois offerts).`,
-      newValue: {
+      const betaBenefit: BetaBenefit = {
+        type: targetRankType as "AMBASSADOR" | "BUILDER",
+        rankNumber: targetRankNumber,
+        title,
+        durationMonths,
+        price: 0,
+        referencePrice,
+        startedAt,
+        expiresAt,
+        status: "active",
+        assignedBy: performedByAdmin?.email || "SYSTEM_KYC_AUTO"
+      };
+
+      transaction.update(userRef, {
         betaRankType: targetRankType,
         betaRankNumber: targetRankNumber,
-        betaBenefit
-      }
+        betaRankTitle: title,
+        betaRankAssignedAt: startedAt,
+        betaBenefit: betaBenefit,
+        isSubscribed: true,
+        premium: true,
+        isPremium: true,
+        premiumStatus: "active",
+        premiumPlan: targetRankType === "AMBASSADOR" ? "elite" : "pro",
+        subscriptionPlan: targetRankType === "AMBASSADOR" ? "GOMBO ELITE AMBASSADOR" : "GOMBO PRO BUILDER",
+        premiumUntil: expiresAt
+      });
+
+      transaction.set(counterRef, {
+        ambassadorCount: targetRankType === "AMBASSADOR" ? ambassadorCount + 1 : ambassadorCount,
+        totalCount: totalCount + 1,
+        updatedAt: startedAt
+      }, { merge: true });
+
+      return {
+        success: true,
+        rankType: targetRankType,
+        rankNumber: targetRankNumber,
+        expiresAt,
+        benefit: betaBenefit
+      };
     });
 
-    // Send Real-Time Notification
-    try {
-      const notifTitle = targetRankType === "AMBASSADOR" 
-        ? "🏆 Distinction Ambassadeur !" 
-        : "🏗️ Distinction Bâtisseur !";
-      const notifBody = targetRankType === "AMBASSADOR" 
-        ? "🎉 Félicitations ! Vous êtes officiellement Ambassadeur de l'écosystème AFRIGOMBO." 
-        : "🎉 Félicitations ! Vous êtes officiellement Bâtisseur de l'écosystème AFRIGOMBO.";
+    if (result.success) {
+      try {
+        await logAdminAction({
+          adminUid: performedByAdmin?.uid || "SYSTEM_KYC",
+          adminEmail: performedByAdmin?.email || "system@afrigombo.com",
+          action: "BETA_RANK_ASSIGNED",
+          targetUserId: userId,
+          reason: `Attribution officielle du rang Bêta ${result.rankType} #${result.rankNumber} (transaction atomique).`,
+          newValue: { betaRankType: result.rankType, betaRankNumber: result.rankNumber, benefit: result.benefit }
+        });
+      } catch (e) {
+        console.warn("Could not write audit log for beta rank:", e);
+      }
 
-      await gomboDB.publishNotification({
-        userId,
-        type: "beta_rank_assigned",
-        title: notifTitle,
-        message: notifBody,
-        priority: "high"
-      });
-    } catch (e) {
-      console.warn("Could not publish notification for beta rank:", e);
+      try {
+        const notifTitle = result.rankType === "AMBASSADOR" 
+          ? "🏆 Distinction Ambassadeur !" 
+          : "🏗️ Distinction Bâtisseur !";
+        const notifBody = result.rankType === "AMBASSADOR" 
+          ? "🎉 Félicitations ! Vous êtes officiellement Ambassadeur de l'écosystème AFRIGOMBO." 
+          : "🎉 Félicitations ! Vous êtes officiellement Bâtisseur de l'écosystème AFRIGOMBO.";
+
+        await gomboDB.publishNotification({
+          userId,
+          type: "beta_rank_assigned",
+          title: notifTitle,
+          message: notifBody,
+          priority: "high"
+        });
+      } catch (e) {
+        console.warn("Could not publish notification for beta rank:", e);
+      }
     }
 
-    return {
-      success: true,
-      rankType: targetRankType,
-      rankNumber: targetRankNumber,
-      expiresAt,
-      benefit: betaBenefit
-    };
+    return result;
 
   } catch (err: any) {
     console.error("Error processing user beta eligibility:", err);

@@ -307,12 +307,15 @@ export function PublicProfileModal({
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
                     {/* Avatar */}
                     <div className="relative shrink-0">
-                      <div className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 rounded-full border-2 border-afri-gold p-1 bg-afri-bg shadow-lg">
-                        <img
-                          src={(profile.useAvatarAsProfile && profile.avatarDataUri) ? profile.avatarDataUri : (profile.avatarUrl || profile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200")}
-                          alt={displayName}
-                          className="w-full h-full rounded-full object-cover"
-                        />
+                      <div className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 rounded-full border-2 border-afri-gold p-1 bg-afri-bg shadow-lg" style={{ borderRadius: "50%", overflow: "hidden" }}>
+                        <div className="w-full h-full aspect-square flex items-center justify-center" style={{ borderRadius: "50%", overflow: "hidden" }}>
+                          <img
+                            src={(profile.useAvatarAsProfile && profile.avatarDataUri) ? profile.avatarDataUri : (profile.avatarUrl || profile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200")}
+                            alt={displayName}
+                            className="w-full h-full object-cover rounded-full aspect-square block"
+                            style={{ borderRadius: "50%", overflow: "hidden", objectFit: "cover" }}
+                          />
+                        </div>
                       </div>
                       {isPremium && (
                         <div className="absolute -top-1 -right-1 bg-gradient-to-br from-amber-500 to-afri-gold text-black rounded-full w-7 h-7 flex items-center justify-center shadow-md font-bold text-xs border border-amber-300">
