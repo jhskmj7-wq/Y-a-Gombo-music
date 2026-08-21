@@ -133,100 +133,22 @@ async function handleVerifyPin(req: any, res: any) {
     return res.status(400).json({ success: false, error: "Paramètres manquants (idToken et pin requis)." });
   }
 
+  // --- TEST MINIMAL D'ISOLATION FIRESTORE ---
+  // On teste si l'accès à verifyUserToken fonctionne et on bypasse getAdminFirestoreInstance()
   const authUser = await verifyUserToken(idToken);
   if (!authUser) {
     return res.status(401).json({ success: false, error: "Session invalide ou expirée." });
   }
 
-  const { uid } = authUser;
-  const adminDb = await getAdminFirestoreInstance();
-
-  if (!adminDb) {
-    return res.status(503).json({ success: false, error: "Service de base de données temporairement indisponible." });
-  }
-
-  const userDoc = await adminDb.collection("users").doc(uid).get();
-  if (!userDoc.exists) {
-    return res.status(404).json({ success: false, error: "Utilisateur introuvable." });
-  }
-
-  const data = userDoc.data();
-  const sec = data?.walletSecurity || {};
-
-  if (!sec.pinHash || !sec.pinSalt) {
-    return res.status(400).json({ result: "PIN_NOT_CONFIGURED", error: "Aucun code PIN configuré." });
-  }
-
-  if (sec.pinResetRequested) {
-    return res.status(403).json({ result: "PIN_RESET_PENDING", error: "Une réinitialisation du PIN est en attente." });
-  }
-
-  if (sec.lockedUntil) {
-    const lockTime = new Date(sec.lockedUntil).getTime();
-    const now = Date.now();
-    if (lockTime > now) {
-      const minsLeft = Math.ceil((lockTime - now) / 60000);
-      return res.status(403).json({
-        result: "PIN_LOCKED",
-        error: `Wallet verrouillé. Réessayez dans ${minsLeft} minute(s).`,
-        lockedMinutesRemaining: minsLeft,
-      });
-    }
-  }
-
-  const computedHash = hashPin(pin, sec.pinSalt, uid);
-
-  if (computedHash === sec.pinHash) {
-    await adminDb.collection("users").doc(uid).update({
-      "walletSecurity.failedPinAttempts": 0,
-      "walletSecurity.lockedUntil": null,
-      "walletSecurity.lastAuthSensitiveAt": new Date().toISOString(),
-    });
-
-    const sessionToken = `wsess_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-
-    try {
-      await adminDb.collection("wallet_sessions").doc(uid).set({
-        token: sessionToken,
-        uid,
-        action,
-        expiresAt: expiresAt.toISOString(),
-        createdAt: new Date().toISOString(),
-      });
-    } catch {
-      // Non-blocking
-    }
-
-    return res.status(200).json({ success: true, sessionToken });
-  }
-
-  const currentAttempts = (sec.failedPinAttempts || 0) + 1;
-  let lockedUntil: string | null = null;
-  let lockMins = 0;
-
-  if (currentAttempts >= 5) {
-    lockMins = 60;
-    lockedUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-  } else if (currentAttempts >= 3) {
-    lockMins = 15;
-    lockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-  }
-
-  await adminDb.collection("users").doc(uid).update({
-    "walletSecurity.failedPinAttempts": currentAttempts,
-    "walletSecurity.lastFailedAttemptAt": new Date().toISOString(),
-    "walletSecurity.lockedUntil": lockedUntil,
+  return res.status(200).json({
+    success: true,
+    debug: "firestore bypass test",
+    uid: authUser.uid,
+    email: authUser.email,
+    requestedAction: action,
+    message: "Le module et l'authentification ont fonctionné sans crash ! Firestore est bypassé.",
   });
-
-  const remaining = 5 - currentAttempts;
-
-  return res.status(401).json({
-    result: lockedUntil ? "PIN_LOCKED" : "PIN_INVALID",
-    error: lockedUntil ? `Trop d'échecs. Wallet verrouillé pour ${lockMins} mins.` : "Code PIN incorrect.",
-    attemptsRemaining: remaining > 0 ? remaining : 0,
-    lockedMinutesRemaining: lockMins,
-  });
+  // ------------------------------------------
 }
 
 // 3. CHANGE-PIN
