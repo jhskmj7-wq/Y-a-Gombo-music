@@ -13,7 +13,7 @@ import SuperFounderMaintenanceModal from "./SuperFounderMaintenanceModal";
 import { useMaintenance } from "../../hooks/useMaintenance";
 import { useAdminLocations } from "../../hooks/useLocations";
 
-import AdminFounderThrone from "./AdminFounderThrone";
+const AdminFounderThrone = lazyWithRetry(() => import("./AdminFounderThrone"));
 
 // Lazy load the independent modules
 import AdminDashboard from "./AdminDashboard";

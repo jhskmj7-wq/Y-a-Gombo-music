@@ -49,7 +49,6 @@ const AdminRevenue = lazyWithRetry(() => import("./admin/AdminRevenue"));
 const AdminRevenueFeatures = lazyWithRetry(() => import("./admin/AdminRevenueFeatures"));
 const AdminSettings = lazyWithRetry(() => import("./admin/AdminSettings"));
 const AdminSecurity = lazyWithRetry(() => import("./admin/AdminSecurity"));
-import AdminFounderThrone from "./admin/AdminFounderThrone";
 import AdminSuperFounderHub from "./admin/AdminSuperFounderHub";
 import ThroneCinematicIntro from "./admin/ThroneCinematicIntro";
 const AdminAvatarStore = lazyWithRetry(() => import("./admin/AdminAvatarStore"));

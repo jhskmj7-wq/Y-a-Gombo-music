@@ -110,6 +110,112 @@ export default function AdminDeploymentCenter({
   const [flagError, setFlagError] = useState<string | null>(null);
   const [confirmHideFlag, setConfirmHideFlag] = useState<FeatureFlagItem | null>(null);
 
+  // 10 LOGICAL SECTIONS DEFINITION FOR THE 36 MODULES
+  const DEPLOYMENT_SECTIONS = [
+    {
+      id: "geolocation",
+      title: "📍 GÉOLOCALISATION",
+      description: "Cartographie interactive, découverte à proximité et radar géolocalisé",
+      moduleIds: ["nearby", "nearbyOpportunities", "radar"],
+      color: "from-sky-500/10 to-blue-500/10 border-sky-500/30 text-sky-400"
+    },
+    {
+      id: "home_content",
+      title: "🏠 ACCUEIL & CONTENU",
+      description: "Fil d'actualité, publications de Gombos, vidéos Reels, renforts et favoris",
+      moduleIds: ["home", "gombos", "reels", "renforts", "favorites"],
+      color: "from-amber-500/10 to-orange-500/10 border-amber-500/30 text-amber-400"
+    },
+    {
+      id: "media_culture",
+      title: "🎙️ MÉDIA & CULTURE",
+      description: "Diffusions audio Kora, podcasts résonants et téléchargements de documents",
+      moduleIds: ["podcasts", "downloads"],
+      color: "from-purple-500/10 to-pink-500/10 border-purple-500/30 text-purple-400"
+    },
+    {
+      id: "community",
+      title: "👥 COMMUNAUTÉ",
+      description: "Événements, billetterie culturelle et cercles/groupes de talents",
+      moduleIds: ["events", "mes_groupes"],
+      color: "from-indigo-500/10 to-violet-500/10 border-indigo-500/30 text-indigo-400"
+    },
+    {
+      id: "gamification",
+      title: "🟡 GAMIFICATION & MONÉTISATION",
+      description: "Centre Gawa, boutique de jetons, récompenses, roues et gestion des lots",
+      moduleIds: ["gawa_center", "mes_lots", "wheel", "wheel_1", "wheel_2", "wheel_3", "lots_management"],
+      color: "from-yellow-500/10 to-amber-500/10 border-yellow-500/30 text-yellow-400"
+    },
+    {
+      id: "finance",
+      title: "💳 FINANCE",
+      description: "Wallet Souverain AFRIPAY, séquestre de contrats, abonnements et fonds créateurs",
+      moduleIds: ["wallet", "escrow", "premium", "monetisation"],
+      color: "from-emerald-500/10 to-teal-500/10 border-emerald-500/30 text-emerald-400"
+    },
+    {
+      id: "economy_education",
+      title: "🛒 ÉCONOMIE & FORMATION",
+      description: "Grand Marché des petites annonces et Académie de formation Élite",
+      moduleIds: ["grandMarket", "academie"],
+      color: "from-cyan-500/10 to-sky-500/10 border-cyan-500/30 text-cyan-400"
+    },
+    {
+      id: "profile_identity",
+      title: "🪪 PROFIL & IDENTITÉ",
+      description: "Gombo ID souverain, avatars virtuels, héritage artistique et KYC biométrique",
+      moduleIds: ["gombo_id", "avatar", "heritage", "verification"],
+      color: "from-fuchsia-500/10 to-purple-500/10 border-fuchsia-500/30 text-fuchsia-400"
+    },
+    {
+      id: "communication",
+      title: "💬 COMMUNICATION",
+      description: "Messagerie instantanée V2, appels WebRTC directs et diffusions mégaphoniques",
+      moduleIds: ["chat", "appels", "notifications"],
+      color: "from-emerald-500/10 to-green-500/10 border-emerald-500/30 text-emerald-400"
+    },
+    {
+      id: "system_governance",
+      title: "🛡️ SYSTÈME & GOUVERNANCE",
+      description: "Sauvegardes de sécurité, journal de mises à jour, carnet du fondateur et support",
+      moduleIds: ["backups", "updateJournal", "cahier", "support"],
+      color: "from-rose-500/10 to-red-500/10 border-rose-500/30 text-rose-400"
+    }
+  ];
+
+  // Section collapse state (all open by default)
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSectionCollapse = (sectionId: string) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
+
+  const expandAllSections = () => {
+    setCollapsedSections({});
+  };
+
+  const collapseAllSections = () => {
+    const allCollapsed: Record<string, boolean> = {};
+    DEPLOYMENT_SECTIONS.forEach(s => {
+      allCollapsed[s.id] = true;
+    });
+    setCollapsedSections(allCollapsed);
+  };
+
+  // Batch update for all top-level modules in a group
+  const handleBatchUpdateSection = async (sectionModuleIds: string[], targetVis: FeatureVisibilityStatus) => {
+    const targets = topLevelFlags.filter(f => sectionModuleIds.includes(f.id));
+    if (targets.length === 0) return;
+
+    for (const flag of targets) {
+      await handleUpdateFlagVisibility(flag.id, targetVis, flag.isPremium);
+    }
+  };
+
   // 1. DEFAULT FEATURE FLAGS INITIALIZER
   const defaultFlags: FeatureFlagItem[] = [
     // APPLICATION & NAVIGATION
@@ -870,11 +976,20 @@ export default function AdminDeploymentCenter({
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
-                onClick={() => setExpandedModuleId(expandedModuleId ? null : (filteredFlags[0]?.id || null))}
+                onClick={expandAllSections}
                 className="px-3 py-1.5 bg-afri-bg hover:bg-zinc-800 border border-afri-border text-zinc-300 hover:text-white rounded-xl text-[10px] font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer"
               >
                 <SlidersHorizontal className="w-3 h-3 text-[#D4AF37]" />
-                <span>{expandedModuleId ? "Tout replier" : "Déplier le premier"}</span>
+                <span>Tout déplier</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={collapseAllSections}
+                className="px-3 py-1.5 bg-afri-bg hover:bg-zinc-800 border border-afri-border text-zinc-300 hover:text-white rounded-xl text-[10px] font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <ChevronUp className="w-3 h-3 text-zinc-400" />
+                <span>Tout replier</span>
               </button>
 
               {(searchQuery || activeFlagFilter !== "all") && (
@@ -958,7 +1073,7 @@ export default function AdminDeploymentCenter({
           </div>
         )}
 
-        {/* ACCORDION MODULES LIST */}
+        {/* 10 GROUPED SECTIONS VIEW */}
         {filteredFlags.length === 0 ? (
           <div className="p-12 bg-afri-bg-sec border border-dashed border-afri-border rounded-2xl text-center space-y-3 font-mono text-xs">
             <SlidersHorizontal className="w-8 h-8 text-zinc-600 mx-auto" />
@@ -975,358 +1090,452 @@ export default function AdminDeploymentCenter({
             </button>
           </div>
         ) : (
-          <div className="space-y-2">
-            {filteredFlags.map((flag) => {
-              const currentVis = flag.visibilityStatus || (flag.enabled ? "ACTIVE" : "HIDDEN");
-              const isSavingThis = savingFlagId === flag.id;
-              const isExpanded = expandedModuleId === flag.id;
+          <div className="space-y-6">
+            {DEPLOYMENT_SECTIONS.map((section) => {
+              // Get all top-level flags belonging to this section that pass active filters
+              const sectionFlags = filteredFlags.filter(f => section.moduleIds.includes(f.id));
+              
+              // If searching or filtering and no items match in this section, hide section
+              if (sectionFlags.length === 0) return null;
+
+              const isCollapsed = !!collapsedSections[section.id];
+              
+              // Calculate section statistics based on all top-level modules in this section (unfiltered)
+              const allSectionFlags = topLevelFlags.filter(f => section.moduleIds.includes(f.id));
+              const sectionActiveCount = allSectionFlags.filter(f => (f.visibilityStatus || (f.enabled ? "ACTIVE" : "HIDDEN")) === "ACTIVE").length;
+              const sectionComingCount = allSectionFlags.filter(f => f.visibilityStatus === "COMING_SOON").length;
+              const sectionHiddenCount = allSectionFlags.filter(f => (f.visibilityStatus || (f.enabled ? "ACTIVE" : "HIDDEN")) === "HIDDEN").length;
 
               return (
                 <div
-                  key={flag.id}
-                  className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
-                    isExpanded
-                      ? "bg-afri-bg-sec border-[#D4AF37]/50 shadow-lg shadow-black/40"
-                      : currentVis === "ACTIVE"
-                      ? "bg-afri-bg-sec/80 border-afri-border hover:border-zinc-700"
-                      : currentVis === "COMING_SOON"
-                      ? "bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40"
-                      : "bg-afri-bg/60 border-rose-500/20 hover:border-rose-500/40 opacity-80"
-                  }`}
+                  key={section.id}
+                  className="bg-afri-bg-sec/90 border border-afri-border/90 rounded-3xl overflow-hidden shadow-xl"
                 >
-                  {/* COMPACT ACCORDION ROW HEADER */}
+                  {/* SECTION HEADER ACCORDION */}
                   <div
-                    onClick={() => setExpandedModuleId(isExpanded ? null : flag.id)}
-                    className="p-3 sm:p-4 flex items-center justify-between gap-2.5 cursor-pointer select-none transition hover:bg-white/[0.02]"
+                    onClick={() => toggleSectionCollapse(section.id)}
+                    className={`p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer select-none bg-gradient-to-r ${section.color} hover:opacity-95 transition-all border-b border-afri-border/50`}
                   >
-                    {/* Left: Category Badge & Title & Key */}
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <span className={`px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold uppercase shrink-0 border ${
-                        flag.category === "Finance"
-                          ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
-                          : flag.category === "Monétisation"
-                          ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
-                          : flag.category === "Sécurité"
-                          ? "bg-rose-500/10 text-rose-300 border-rose-500/30"
-                          : flag.category === "Navigation"
-                          ? "bg-sky-500/10 text-sky-300 border-sky-500/30"
-                          : flag.category === "Profil"
-                          ? "bg-purple-500/10 text-purple-300 border-purple-500/30"
-                          : "bg-zinc-800 text-zinc-300 border-zinc-700"
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-xl bg-black/40 border border-current/30 flex items-center justify-center font-bold text-base shadow-inner transition-transform duration-200 ${
+                        isCollapsed ? "" : "rotate-180"
                       }`}>
-                        {flag.category}
-                      </span>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs sm:text-sm font-bold text-white truncate leading-tight">
-                            {flag.name}
+                        <ChevronDown className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2.5">
+                          <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white font-mono">
+                            {section.title}
                           </h4>
-                          {flag.isPremium && (
-                            <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
-                              💎 PREMIUM
-                            </span>
-                          )}
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-black/40 text-zinc-300 border border-white/10">
+                            {sectionFlags.length} {sectionFlags.length > 1 ? "modules" : "module"}
+                          </span>
                         </div>
-                        <span className="text-[9px] font-mono text-afri-text-muted block truncate mt-0.5">
-                          id: <span className="text-zinc-400">{flag.id}</span>
-                        </span>
+                        <p className="text-[11px] text-zinc-400 font-sans mt-0.5">
+                          {section.description}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Right: Status Pill, Saving Spinner & Chevron */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      {isSavingThis ? (
-                        <div className="flex items-center gap-1 text-[10px] font-mono text-amber-400">
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          <span className="hidden sm:inline">Synchro...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          {currentVis === "ACTIVE" && (
-                            <span className="px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-mono font-black uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                              <span>ACTIF</span>
-                            </span>
-                          )}
+                    {/* Section Stat Badges & Batch Action Helper */}
+                    <div className="flex items-center gap-2 shrink-0 self-end md:self-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="hidden sm:flex items-center gap-1.5 text-[9px] font-mono">
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
+                          {sectionActiveCount} Actif{sectionActiveCount > 1 ? "s" : ""}
+                        </span>
+                        {sectionComingCount > 0 && (
+                          <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
+                            {sectionComingCount} Bientôt
+                          </span>
+                        )}
+                        {sectionHiddenCount > 0 && (
+                          <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold">
+                            {sectionHiddenCount} Masqué{sectionHiddenCount > 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </div>
 
-                          {currentVis === "COMING_SOON" && (
-                            <span className="px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-mono font-black uppercase bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                              <span>BIENTÔT</span>
-                            </span>
-                          )}
-
-                          {currentVis === "HIDDEN" && (
-                            <span className="px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-mono font-black uppercase bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                              <span>MASQUÉ</span>
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      <div className={`w-7 h-7 rounded-lg bg-afri-bg border border-afri-border flex items-center justify-center text-zinc-400 transition-transform duration-200 ${
-                        isExpanded ? "rotate-180 text-[#D4AF37] border-[#D4AF37]/50" : "hover:text-white"
-                      }`}>
-                        <ChevronDown className="w-4 h-4" />
+                      {/* Group Quick Action Buttons */}
+                      <div className="flex items-center gap-1 bg-black/60 p-1 rounded-xl border border-white/10">
+                        <button
+                          type="button"
+                          title="Activer tous les modules du groupe"
+                          onClick={() => handleBatchUpdateSection(section.moduleIds, "ACTIVE")}
+                          className="px-2 py-1 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-black rounded-lg text-[9px] font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>🟢 Tout Activer</span>
+                        </button>
+                        <button
+                          type="button"
+                          title="Masquer tous les modules du groupe"
+                          onClick={() => handleBatchUpdateSection(section.moduleIds, "HIDDEN")}
+                          className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white rounded-lg text-[9px] font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>🔴 Tout Masquer</span>
+                        </button>
                       </div>
                     </div>
                   </div>
 
-                  {/* EXPANDED ACCORDION DRAWER */}
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2, ease: "easeInOut" }}
-                        className="border-t border-afri-border/60 bg-black/40 px-3 py-3.5 sm:px-5 sm:py-4 space-y-4 font-mono"
-                      >
-                        {/* Description block */}
-                        <div className="p-3 bg-afri-bg border border-afri-border rounded-xl space-y-1">
-                          <span className="text-[9px] font-mono uppercase text-afri-text-muted font-bold block">
-                            Description du module :
-                          </span>
-                          <p className="text-xs text-zinc-300 leading-relaxed font-sans">
-                            {flag.description || "Aucune description détaillée renseignée pour ce module."}
-                          </p>
-                        </div>
+                  {/* SECTION CARDS CONTAINER */}
+                  {!isCollapsed && (
+                    <div className="p-3 sm:p-4 space-y-2.5 bg-black/30">
+                      {sectionFlags.map((flag) => {
+                        const currentVis = flag.visibilityStatus || (flag.enabled ? "ACTIVE" : "HIDDEN");
+                        const isSavingThis = savingFlagId === flag.id;
+                        const isExpanded = expandedModuleId === flag.id;
 
-                        {/* Interactive Controls Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                          {/* 1. 3-State Visibility Selector */}
-                          <div className="space-y-2 bg-afri-bg/90 border border-afri-border rounded-xl p-3">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-bold text-white uppercase flex items-center gap-1.5">
-                                <ToggleRight className="w-3.5 h-3.5 text-[#D4AF37]" />
-                                Visibilité Utilisateur :
-                              </span>
-                              <span className="text-[8px] text-afri-text-muted uppercase">Source de Vérité</span>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-1.5">
-                              {/* ACTIVE */}
-                              <button
-                                type="button"
-                                disabled={isSavingThis}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleUpdateFlagVisibility(flag.id, "ACTIVE");
-                                }}
-                                className={`px-2 py-2 rounded-xl text-[10px] font-mono font-bold uppercase transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
-                                  currentVis === "ACTIVE"
-                                    ? "bg-emerald-500 text-black font-black shadow-md shadow-emerald-500/20"
-                                    : "bg-zinc-900 text-zinc-400 hover:text-emerald-300 hover:bg-emerald-500/10 border border-zinc-800"
-                                }`}
-                              >
-                                <span className="text-xs">🟢</span>
-                                <span>ACTIF</span>
-                              </button>
-
-                              {/* COMING SOON */}
-                              <button
-                                type="button"
-                                disabled={isSavingThis}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleUpdateFlagVisibility(flag.id, "COMING_SOON");
-                                }}
-                                className={`px-2 py-2 rounded-xl text-[10px] font-mono font-bold uppercase transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
-                                  currentVis === "COMING_SOON"
-                                    ? "bg-amber-500 text-black font-black shadow-md shadow-amber-500/20"
-                                    : "bg-zinc-900 text-zinc-400 hover:text-amber-300 hover:bg-amber-500/10 border border-zinc-800"
-                                }`}
-                              >
-                                <span className="text-xs">🟡</span>
-                                <span>BIENTÔT</span>
-                              </button>
-
-                              {/* HIDDEN (With anchored smart confirmation modal) */}
-                              <button
-                                type="button"
-                                disabled={isSavingThis}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (currentVis !== "HIDDEN") {
-                                    setConfirmHideFlag(flag);
-                                  }
-                                }}
-                                className={`px-2 py-2 rounded-xl text-[10px] font-mono font-bold uppercase transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
-                                  currentVis === "HIDDEN"
-                                    ? "bg-rose-500 text-white font-black shadow-md shadow-rose-500/20"
-                                    : "bg-zinc-900 text-zinc-400 hover:text-rose-300 hover:bg-rose-500/10 border border-zinc-800"
-                                }`}
-                              >
-                                <span className="text-xs">🔴</span>
-                                <span>MASQUER</span>
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* 2. Premium Access Level Switch */}
-                          <div className="space-y-2 bg-afri-bg/90 border border-afri-border rounded-xl p-3">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-bold text-white uppercase flex items-center gap-1.5">
-                                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                                Accès Premium :
-                              </span>
-                              <span className="text-[8px] text-afri-text-muted uppercase">Gouvernance</span>
-                            </div>
-
-                            <button
-                              type="button"
-                              disabled={isSavingThis}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUpdateFlagVisibility(flag.id, currentVis, !flag.isPremium);
-                              }}
-                              className={`w-full py-2.5 px-3 rounded-xl text-[10px] font-mono font-bold uppercase transition flex items-center justify-between cursor-pointer border ${
-                                flag.isPremium
-                                  ? "bg-amber-500/20 text-amber-300 border-amber-500/50 hover:bg-amber-500/30"
-                                  : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white hover:bg-zinc-800"
-                              }`}
+                        return (
+                          <div
+                            key={flag.id}
+                            className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                              isExpanded
+                                ? "bg-afri-bg-sec border-[#D4AF37]/50 shadow-lg shadow-black/40"
+                                : currentVis === "ACTIVE"
+                                ? "bg-afri-bg-sec/80 border-afri-border hover:border-zinc-700"
+                                : currentVis === "COMING_SOON"
+                                ? "bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40"
+                                : "bg-afri-bg/60 border-rose-500/20 hover:border-rose-500/40 opacity-80"
+                            }`}
+                          >
+                            {/* COMPACT ACCORDION ROW HEADER */}
+                            <div
+                              onClick={() => setExpandedModuleId(isExpanded ? null : flag.id)}
+                              className="p-3 sm:p-4 flex items-center justify-between gap-2.5 cursor-pointer select-none transition hover:bg-white/[0.02]"
                             >
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm">{flag.isPremium ? "💎" : "🌐"}</span>
-                                <span>{flag.isPremium ? "RÉSERVÉ MEMBRES PREMIUM" : "GRATUIT (TOUS LES MEMBRES)"}</span>
-                              </div>
-                              <span className="text-[9px] underline">Basculer</span>
-                            </button>
-                          </div>
-                        </div>
+                              {/* Left: Category Badge & Title & Key */}
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                <span className={`px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold uppercase shrink-0 border ${
+                                  flag.category === "Finance"
+                                    ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+                                    : flag.category === "Monétisation"
+                                    ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                                    : flag.category === "Sécurité"
+                                    ? "bg-rose-500/10 text-rose-300 border-rose-500/30"
+                                    : flag.category === "Navigation"
+                                    ? "bg-sky-500/10 text-sky-300 border-sky-500/30"
+                                    : flag.category === "Profil"
+                                    ? "bg-purple-500/10 text-purple-300 border-purple-500/30"
+                                    : "bg-zinc-800 text-zinc-300 border-zinc-700"
+                                }`}>
+                                  {flag.category}
+                                </span>
 
-                        {/* SOUS-MODULES GOVERNANCE SECTION */}
-                        {(() => {
-                          const subModules = featureFlags.filter((s) => s.parentId === flag.id);
-                          if (subModules.length === 0) return null;
-
-                          return (
-                            <div className="p-3.5 bg-black/60 border border-[#D4AF37]/30 rounded-2xl space-y-3 font-mono">
-                              <div className="flex items-center justify-between border-b border-afri-border/60 pb-2">
-                                <div className="flex items-center gap-2">
-                                  <SlidersHorizontal className="w-4 h-4 text-[#D4AF37]" />
-                                  <h5 className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">
-                                    SOUS-MODULES ({subModules.length})
-                                  </h5>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="text-xs sm:text-sm font-bold text-white truncate leading-tight">
+                                      {flag.name}
+                                    </h4>
+                                    {flag.isPremium && (
+                                      <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
+                                        💎 PREMIUM
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-[9px] font-mono text-afri-text-muted block truncate mt-0.5">
+                                    id: <span className="text-zinc-400">{flag.id}</span>
+                                  </span>
                                 </div>
-                                <span className="text-[9px] text-afri-text-muted">Gouvernance des sous-modules</span>
                               </div>
 
-                              <div className="space-y-2">
-                                {subModules.map((sub) => {
-                                  const subVis = sub.visibilityStatus || (sub.enabled ? "ACTIVE" : "HIDDEN");
-                                  const isSavingSub = savingFlagId === sub.id;
+                              {/* Right: Status Pill, Saving Spinner & Chevron */}
+                              <div className="flex items-center gap-2 shrink-0">
+                                {isSavingThis ? (
+                                  <div className="flex items-center gap-1 text-[10px] font-mono text-amber-400">
+                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                    <span className="hidden sm:inline">Synchro...</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1.5">
+                                    {currentVis === "ACTIVE" && (
+                                      <span className="px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-mono font-black uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                        <span>ACTIF</span>
+                                      </span>
+                                    )}
 
-                                  return (
-                                    <div
-                                      key={sub.id}
-                                      className="p-3 bg-afri-bg-sec/90 border border-afri-border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-zinc-700 transition"
-                                    >
-                                      <div className="space-y-0.5 min-w-0 flex-1">
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs font-bold text-white truncate">{sub.name}</span>
-                                          {sub.isPremium && (
-                                            <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
-                                              💎 PREMIUM
-                                            </span>
-                                          )}
-                                        </div>
-                                        <div className="text-[9px] text-afri-text-muted font-mono truncate">
-                                          id: <strong className="text-zinc-300">{sub.id}</strong> — {sub.description}
-                                        </div>
+                                    {currentVis === "COMING_SOON" && (
+                                      <span className="px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-mono font-black uppercase bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                                        <span>BIENTÔT</span>
+                                      </span>
+                                    )}
+
+                                    {currentVis === "HIDDEN" && (
+                                      <span className="px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-mono font-black uppercase bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                        <span>MASQUÉ</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+
+                                <div className={`w-7 h-7 rounded-lg bg-afri-bg border border-afri-border flex items-center justify-center text-zinc-400 transition-transform duration-200 ${
+                                  isExpanded ? "rotate-180 text-[#D4AF37] border-[#D4AF37]/50" : "hover:text-white"
+                                }`}>
+                                  <ChevronDown className="w-4 h-4" />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* EXPANDED ACCORDION DRAWER */}
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                                  className="border-t border-afri-border/60 bg-black/40 px-3 py-3.5 sm:px-5 sm:py-4 space-y-4 font-mono"
+                                >
+                                  {/* Description block */}
+                                  <div className="p-3 bg-afri-bg border border-afri-border rounded-xl space-y-1">
+                                    <span className="text-[9px] font-mono uppercase text-afri-text-muted font-bold block">
+                                      Description du module :
+                                    </span>
+                                    <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+                                      {flag.description || "Aucune description détaillée renseignée pour ce module."}
+                                    </p>
+                                  </div>
+
+                                  {/* Interactive Controls Grid */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    {/* 1. 3-State Visibility Selector */}
+                                    <div className="space-y-2 bg-afri-bg/90 border border-afri-border rounded-xl p-3">
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-bold text-white uppercase flex items-center gap-1.5">
+                                          <ToggleRight className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                          Visibilité Utilisateur :
+                                        </span>
+                                        <span className="text-[8px] text-afri-text-muted uppercase">Source de Vérité</span>
                                       </div>
 
-                                      <div className="flex items-center gap-2 shrink-0">
-                                        {isSavingSub ? (
-                                          <div className="flex items-center gap-1 text-[10px] text-amber-400">
-                                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                            <span>Synchro...</span>
-                                          </div>
-                                        ) : (
-                                          <div className="grid grid-cols-3 gap-1.5">
-                                            {/* ACTIVE */}
-                                            <button
-                                              type="button"
-                                              disabled={isSavingSub}
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleUpdateFlagVisibility(sub.id, "ACTIVE");
-                                              }}
-                                              className={`px-2.5 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer ${
-                                                subVis === "ACTIVE"
-                                                  ? "bg-emerald-500 text-black font-black shadow-sm"
-                                                  : "bg-zinc-900 text-zinc-400 hover:text-emerald-300 border border-zinc-800"
-                                              }`}
-                                            >
-                                              <span>🟢</span>
-                                              <span>ACTIF</span>
-                                            </button>
+                                      <div className="grid grid-cols-3 gap-1.5">
+                                        {/* ACTIVE */}
+                                        <button
+                                          type="button"
+                                          disabled={isSavingThis}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleUpdateFlagVisibility(flag.id, "ACTIVE");
+                                          }}
+                                          className={`px-2 py-2 rounded-xl text-[10px] font-mono font-bold uppercase transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                                            currentVis === "ACTIVE"
+                                              ? "bg-emerald-500 text-black font-black shadow-md shadow-emerald-500/20"
+                                              : "bg-zinc-900 text-zinc-400 hover:text-emerald-300 hover:bg-emerald-500/10 border border-zinc-800"
+                                          }`}
+                                        >
+                                          <span className="text-xs">🟢</span>
+                                          <span>ACTIF</span>
+                                        </button>
 
-                                            {/* COMING SOON */}
-                                            <button
-                                              type="button"
-                                              disabled={isSavingSub}
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleUpdateFlagVisibility(sub.id, "COMING_SOON");
-                                              }}
-                                              className={`px-2.5 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer ${
-                                                subVis === "COMING_SOON"
-                                                  ? "bg-amber-500 text-black font-black shadow-sm"
-                                                  : "bg-zinc-900 text-zinc-400 hover:text-amber-300 border border-zinc-800"
-                                              }`}
-                                            >
-                                              <span>🟡</span>
-                                              <span>BIENTÔT</span>
-                                            </button>
+                                        {/* COMING SOON */}
+                                        <button
+                                          type="button"
+                                          disabled={isSavingThis}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleUpdateFlagVisibility(flag.id, "COMING_SOON");
+                                          }}
+                                          className={`px-2 py-2 rounded-xl text-[10px] font-mono font-bold uppercase transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                                            currentVis === "COMING_SOON"
+                                              ? "bg-amber-500 text-black font-black shadow-md shadow-amber-500/20"
+                                              : "bg-zinc-900 text-zinc-400 hover:text-amber-300 hover:bg-amber-500/10 border border-zinc-800"
+                                          }`}
+                                        >
+                                          <span className="text-xs">🟡</span>
+                                          <span>BIENTÔT</span>
+                                        </button>
 
-                                            {/* HIDDEN */}
-                                            <button
-                                              type="button"
-                                              disabled={isSavingSub}
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleUpdateFlagVisibility(sub.id, "HIDDEN");
-                                              }}
-                                              className={`px-2.5 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer ${
-                                                subVis === "HIDDEN"
-                                                  ? "bg-rose-500 text-white font-black shadow-sm"
-                                                  : "bg-zinc-900 text-zinc-400 hover:text-rose-300 border border-zinc-800"
-                                              }`}
-                                            >
-                                              <span>🔴</span>
-                                              <span>MASQUER</span>
-                                            </button>
-                                          </div>
-                                        )}
+                                        {/* HIDDEN (With anchored smart confirmation modal) */}
+                                        <button
+                                          type="button"
+                                          disabled={isSavingThis}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (currentVis !== "HIDDEN") {
+                                              setConfirmHideFlag(flag);
+                                            }
+                                          }}
+                                          className={`px-2 py-2 rounded-xl text-[10px] font-mono font-bold uppercase transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                                            currentVis === "HIDDEN"
+                                              ? "bg-rose-500 text-white font-black shadow-md shadow-rose-500/20"
+                                              : "bg-zinc-900 text-zinc-400 hover:text-rose-300 hover:bg-rose-500/10 border border-zinc-800"
+                                          }`}
+                                        >
+                                          <span className="text-xs">🔴</span>
+                                          <span>MASQUER</span>
+                                        </button>
                                       </div>
                                     </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })()}
 
-                        {/* Metadata Footer */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[9px] text-afri-text-muted pt-2 border-t border-afri-border/60">
-                          <div className="flex items-center gap-3">
-                            <span>Clé technique : <strong className="text-zinc-300 font-mono">{flag.id}</strong></span>
-                            <span>Catégorie : <strong className="text-zinc-300">{flag.category}</strong></span>
+                                    {/* 2. Premium Access Level Switch */}
+                                    <div className="space-y-2 bg-afri-bg/90 border border-afri-border rounded-xl p-3">
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-bold text-white uppercase flex items-center gap-1.5">
+                                          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                                          Accès Premium :
+                                        </span>
+                                        <span className="text-[8px] text-afri-text-muted uppercase">Gouvernance</span>
+                                      </div>
+
+                                      <button
+                                        type="button"
+                                        disabled={isSavingThis}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleUpdateFlagVisibility(flag.id, currentVis, !flag.isPremium);
+                                        }}
+                                        className={`w-full py-2.5 px-3 rounded-xl text-[10px] font-mono font-bold uppercase transition flex items-center justify-between cursor-pointer border ${
+                                          flag.isPremium
+                                            ? "bg-amber-500/20 text-amber-300 border-amber-500/50 hover:bg-amber-500/30"
+                                            : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white hover:bg-zinc-800"
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm">{flag.isPremium ? "💎" : "🌐"}</span>
+                                          <span>{flag.isPremium ? "RÉSERVÉ MEMBRES PREMIUM" : "GRATUIT (TOUS LES MEMBRES)"}</span>
+                                        </div>
+                                        <span className="text-[9px] underline">Basculer</span>
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* SOUS-MODULES GOVERNANCE SECTION */}
+                                  {(() => {
+                                    const subModules = featureFlags.filter((s) => s.parentId === flag.id);
+                                    if (subModules.length === 0) return null;
+
+                                    return (
+                                      <div className="p-3.5 bg-black/60 border border-[#D4AF37]/30 rounded-2xl space-y-3 font-mono">
+                                        <div className="flex items-center justify-between border-b border-afri-border/60 pb-2">
+                                          <div className="flex items-center gap-2">
+                                            <SlidersHorizontal className="w-4 h-4 text-[#D4AF37]" />
+                                            <h5 className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">
+                                              SOUS-MODULES ({subModules.length})
+                                            </h5>
+                                          </div>
+                                          <span className="text-[9px] text-afri-text-muted">Gouvernance des sous-modules</span>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                          {subModules.map((sub) => {
+                                            const subVis = sub.visibilityStatus || (sub.enabled ? "ACTIVE" : "HIDDEN");
+                                            const isSavingSub = savingFlagId === sub.id;
+
+                                            return (
+                                              <div
+                                                key={sub.id}
+                                                className="p-3 bg-afri-bg-sec/90 border border-afri-border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-zinc-700 transition"
+                                              >
+                                                <div className="space-y-0.5 min-w-0 flex-1">
+                                                  <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-bold text-white truncate">{sub.name}</span>
+                                                    {sub.isPremium && (
+                                                      <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
+                                                        💎 PREMIUM
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                  <div className="text-[9px] text-afri-text-muted font-mono truncate">
+                                                    id: <strong className="text-zinc-300">{sub.id}</strong> — {sub.description}
+                                                  </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                  {isSavingSub ? (
+                                                    <div className="flex items-center gap-1 text-[10px] text-amber-400">
+                                                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                                      <span>Synchro...</span>
+                                                    </div>
+                                                  ) : (
+                                                    <div className="grid grid-cols-3 gap-1.5">
+                                                      {/* ACTIVE */}
+                                                      <button
+                                                        type="button"
+                                                        disabled={isSavingSub}
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          handleUpdateFlagVisibility(sub.id, "ACTIVE");
+                                                        }}
+                                                        className={`px-2.5 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer ${
+                                                          subVis === "ACTIVE"
+                                                            ? "bg-emerald-500 text-black font-black shadow-sm"
+                                                            : "bg-zinc-900 text-zinc-400 hover:text-emerald-300 border border-zinc-800"
+                                                        }`}
+                                                      >
+                                                        <span>🟢</span>
+                                                        <span>ACTIF</span>
+                                                      </button>
+
+                                                      {/* COMING SOON */}
+                                                      <button
+                                                        type="button"
+                                                        disabled={isSavingSub}
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          handleUpdateFlagVisibility(sub.id, "COMING_SOON");
+                                                        }}
+                                                        className={`px-2.5 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer ${
+                                                          subVis === "COMING_SOON"
+                                                            ? "bg-amber-500 text-black font-black shadow-sm"
+                                                            : "bg-zinc-900 text-zinc-400 hover:text-amber-300 border border-zinc-800"
+                                                        }`}
+                                                      >
+                                                        <span>🟡</span>
+                                                        <span>BIENTÔT</span>
+                                                      </button>
+
+                                                      {/* HIDDEN */}
+                                                      <button
+                                                        type="button"
+                                                        disabled={isSavingSub}
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          handleUpdateFlagVisibility(sub.id, "HIDDEN");
+                                                        }}
+                                                        className={`px-2.5 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition flex items-center gap-1 cursor-pointer ${
+                                                          subVis === "HIDDEN"
+                                                            ? "bg-rose-500 text-white font-black shadow-sm"
+                                                            : "bg-zinc-900 text-zinc-400 hover:text-rose-300 border border-zinc-800"
+                                                        }`}
+                                                      >
+                                                        <span>🔴</span>
+                                                        <span>MASQUER</span>
+                                                      </button>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
+
+                                  {/* Metadata Footer */}
+                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[9px] text-afri-text-muted pt-2 border-t border-afri-border/60">
+                                    <div className="flex items-center gap-3">
+                                      <span>Clé technique : <strong className="text-zinc-300 font-mono">{flag.id}</strong></span>
+                                      <span>Catégorie : <strong className="text-zinc-300">{flag.category}</strong></span>
+                                    </div>
+                                    <div>
+                                      {flag.updatedAt ? (
+                                        <span>Maj le {new Date(flag.updatedAt).toLocaleDateString("fr-FR")} {flag.updatedBy ? `par ${flag.updatedBy.split("@")[0]}` : ""}</span>
+                                      ) : (
+                                        <span>Configuration par défaut active</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
-                          <div>
-                            {flag.updatedAt ? (
-                              <span>Maj le {new Date(flag.updatedAt).toLocaleDateString("fr-FR")} {flag.updatedBy ? `par ${flag.updatedBy.split("@")[0]}` : ""}</span>
-                            ) : (
-                              <span>Configuration par défaut active</span>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}
