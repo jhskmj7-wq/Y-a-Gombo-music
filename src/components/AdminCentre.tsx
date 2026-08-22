@@ -7988,7 +7988,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
             </button>
 
-            {/* 1. ACCUEIL */}
+            {/* 1. ACCUEIL (Point d'entrée principal - toujours visible pour tout le monde) */}
             <button
               id="user-nav-terrain"
               onClick={() => {
@@ -8014,99 +8014,107 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             </button>
 
             {/* 2. VIBES */}
-            <button
-              id="user-nav-vibes"
-              onClick={() => {
-                try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
-                setActiveMenu("user_vibes");
-                try { audioSynth.playValidationSuccess(); } catch (err) {}
-              }}
-              className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
-            >
-              <div className="relative px-3 py-0.5 rounded-full flex items-center justify-center overflow-hidden">
-                {activeMenu === "user_vibes" && (
-                  <motion.div
-                    layoutId="userActiveNavPill"
-                    className="absolute inset-0 bg-[#D4AF37]/20 rounded-full border border-[#D4AF37]/30"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <Music className={`w-4 h-4 sm:w-4.5 sm:h-4.5 relative z-10 transition-colors ${activeMenu === "user_vibes" ? "text-afri-gold stroke-[2.5]" : "text-afri-text-sec stroke-[1.8]"}`} />
-              </div>
-              <span className={`text-[7.5px] xs:text-[8px] tracking-wider uppercase truncate max-w-full mt-0.5 whitespace-nowrap transition-colors ${activeMenu === "user_vibes" ? "font-black text-afri-gold" : "font-semibold text-afri-text-sec"}`}>
-                Vibes
-              </span>
-            </button>
+            {isModuleVisible("podcasts") && (
+              <button
+                id="user-nav-vibes"
+                onClick={() => {
+                  try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
+                  setActiveMenu("user_vibes");
+                  try { audioSynth.playValidationSuccess(); } catch (err) {}
+                }}
+                className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
+              >
+                <div className="relative px-3 py-0.5 rounded-full flex items-center justify-center overflow-hidden">
+                  {activeMenu === "user_vibes" && (
+                    <motion.div
+                      layoutId="userActiveNavPill"
+                      className="absolute inset-0 bg-[#D4AF37]/20 rounded-full border border-[#D4AF37]/30"
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <Music className={`w-4 h-4 sm:w-4.5 sm:h-4.5 relative z-10 transition-colors ${activeMenu === "user_vibes" ? "text-afri-gold stroke-[2.5]" : "text-afri-text-sec stroke-[1.8]"}`} />
+                </div>
+                <span className={`text-[7.5px] xs:text-[8px] tracking-wider uppercase truncate max-w-full mt-0.5 whitespace-nowrap transition-colors ${activeMenu === "user_vibes" ? "font-black text-afri-gold" : "font-semibold text-afri-text-sec"}`}>
+                  Vibes
+                </span>
+              </button>
+            )}
 
             {/* 3. PUBLIER */}
-            <button
-              id="user-nav-publish"
-              onClick={() => {
-                try { if (navigator?.vibrate) navigator.vibrate(12); } catch(_) {}
-                requireAuthThen(() => {
-                  setIsPlusMenuOpen(true);
-                  try { audioSynth.playValidationSuccess(); } catch (err) {}
-                });
-              }}
-              className="relative -top-2 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-1 select-none shrink-0 min-w-[48px] min-h-[48px] touch-manipulation"
-              aria-label="Publier"
-            >
-              <div className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center bg-gradient-to-tr from-afri-gold to-[#F1C40F] text-black rounded-full shadow-[0_4px_16px_rgba(212,175,55,0.4)] border-2 border-afri-bg hover:scale-105 active:scale-90 transition-transform">
-                <Plus className="w-5 h-5 stroke-[3.5]" />
-              </div>
-              <span className="text-[7.5px] xs:text-[8px] font-black uppercase tracking-wider text-afri-text mt-0.5">Publier</span>
-            </button>
+            {isModuleVisible("gombos") && (
+              <button
+                id="user-nav-publish"
+                onClick={() => {
+                  try { if (navigator?.vibrate) navigator.vibrate(12); } catch(_) {}
+                  requireAuthThen(() => {
+                    setIsPlusMenuOpen(true);
+                    try { audioSynth.playValidationSuccess(); } catch (err) {}
+                  });
+                }}
+                className="relative -top-2 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-1 select-none shrink-0 min-w-[48px] min-h-[48px] touch-manipulation"
+                aria-label="Publier"
+              >
+                <div className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center bg-gradient-to-tr from-afri-gold to-[#F1C40F] text-black rounded-full shadow-[0_4px_16px_rgba(212,175,55,0.4)] border-2 border-afri-bg hover:scale-105 active:scale-90 transition-transform">
+                  <Plus className="w-5 h-5 stroke-[3.5]" />
+                </div>
+                <span className="text-[7.5px] xs:text-[8px] font-black uppercase tracking-wider text-afri-text mt-0.5">Publier</span>
+              </button>
+            )}
 
             {/* 4. GOMBOS */}
-            <button
-              id="user-nav-mes-gombos"
-              onClick={() => {
-                try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
-                setActiveMenu("user_mes_gombos");
-                try { audioSynth.playValidationSuccess(); } catch (err) {}
-              }}
-              className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
-            >
-              <div className="relative px-3 py-0.5 rounded-full flex items-center justify-center overflow-hidden">
-                {activeMenu === "user_mes_gombos" && (
-                  <motion.div
-                    layoutId="userActiveNavPill"
-                    className="absolute inset-0 bg-[#D4AF37]/20 rounded-full border border-[#D4AF37]/30"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <Briefcase className={`w-4 h-4 sm:w-4.5 sm:h-4.5 relative z-10 transition-colors ${activeMenu === "user_mes_gombos" ? "text-afri-gold stroke-[2.5]" : "text-afri-text-sec stroke-[1.8]"}`} />
-              </div>
-              <span className={`text-[7.5px] xs:text-[8px] tracking-wider uppercase truncate max-w-full mt-0.5 whitespace-nowrap transition-colors ${activeMenu === "user_mes_gombos" ? "font-black text-afri-gold" : "font-semibold text-afri-text-sec"}`}>
-                Gombos
-              </span>
-            </button>
+            {isModuleVisible("gombos") && (
+              <button
+                id="user-nav-mes-gombos"
+                onClick={() => {
+                  try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
+                  setActiveMenu("user_mes_gombos");
+                  try { audioSynth.playValidationSuccess(); } catch (err) {}
+                }}
+                className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
+              >
+                <div className="relative px-3 py-0.5 rounded-full flex items-center justify-center overflow-hidden">
+                  {activeMenu === "user_mes_gombos" && (
+                    <motion.div
+                      layoutId="userActiveNavPill"
+                      className="absolute inset-0 bg-[#D4AF37]/20 rounded-full border border-[#D4AF37]/30"
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <Briefcase className={`w-4 h-4 sm:w-4.5 sm:h-4.5 relative z-10 transition-colors ${activeMenu === "user_mes_gombos" ? "text-afri-gold stroke-[2.5]" : "text-afri-text-sec stroke-[1.8]"}`} />
+                </div>
+                <span className={`text-[7.5px] xs:text-[8px] tracking-wider uppercase truncate max-w-full mt-0.5 whitespace-nowrap transition-colors ${activeMenu === "user_mes_gombos" ? "font-black text-afri-gold" : "font-semibold text-afri-text-sec"}`}>
+                  Gombos
+                </span>
+              </button>
+            )}
 
             {/* 5. HÉRITAGE */}
-            <button
-              id="user-nav-heritage"
-              onClick={() => {
-                try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
-                setActiveMenu("user_heritage");
-                setViewingGomboIdDetail(false);
-                try { audioSynth.playValidationSuccess(); } catch (err) {}
-              }}
-              className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
-            >
-              <div className="relative px-3 py-0.5 rounded-full flex items-center justify-center overflow-hidden">
-                {activeMenu === "user_heritage" && (
-                  <motion.div
-                    layoutId="userActiveNavPill"
-                    className="absolute inset-0 bg-[#D4AF37]/20 rounded-full border border-[#D4AF37]/30"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <UserIcon className={`w-4 h-4 sm:w-4.5 sm:h-4.5 relative z-10 transition-colors ${activeMenu === "user_heritage" ? "text-afri-gold stroke-[2.5]" : "text-afri-text-sec stroke-[1.8]"}`} />
-              </div>
-              <span className={`text-[7.5px] xs:text-[8px] tracking-wider uppercase truncate max-w-full mt-0.5 whitespace-nowrap transition-colors ${activeMenu === "user_heritage" ? "font-black text-afri-gold" : "font-semibold text-afri-text-sec"}`}>
-                Héritage
-              </span>
-            </button>
+            {isModuleVisible("heritage") && (
+              <button
+                id="user-nav-heritage"
+                onClick={() => {
+                  try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
+                  setActiveMenu("user_heritage");
+                  setViewingGomboIdDetail(false);
+                  try { audioSynth.playValidationSuccess(); } catch (err) {}
+                }}
+                className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
+              >
+                <div className="relative px-3 py-0.5 rounded-full flex items-center justify-center overflow-hidden">
+                  {activeMenu === "user_heritage" && (
+                    <motion.div
+                      layoutId="userActiveNavPill"
+                      className="absolute inset-0 bg-[#D4AF37]/20 rounded-full border border-[#D4AF37]/30"
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <UserIcon className={`w-4 h-4 sm:w-4.5 sm:h-4.5 relative z-10 transition-colors ${activeMenu === "user_heritage" ? "text-afri-gold stroke-[2.5]" : "text-afri-text-sec stroke-[1.8]"}`} />
+                </div>
+                <span className={`text-[7.5px] xs:text-[8px] tracking-wider uppercase truncate max-w-full mt-0.5 whitespace-nowrap transition-colors ${activeMenu === "user_heritage" ? "font-black text-afri-gold" : "font-semibold text-afri-text-sec"}`}>
+                  Héritage
+                </span>
+              </button>
+            )}
           </nav>
         </>
       )}
