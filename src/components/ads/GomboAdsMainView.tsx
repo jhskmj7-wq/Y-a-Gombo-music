@@ -25,7 +25,6 @@ import { GomboAdsCampaign, GomboAdsType } from "../../types";
 import { GomboAdsService } from "../../services/GomboAdsService";
 import { GawaEngineService } from "../../lib/GawaEngineService";
 import { GomboAdsCreationWizard } from "./GomboAdsCreationWizard";
-import { AndroidPageLayout } from "../layout/AndroidPageLayout";
 import { AndroidCard } from "../layout/AndroidCard";
 
 interface GomboAdsMainViewProps {
@@ -124,30 +123,31 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
   const overallCtr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0.00";
 
   return (
-    <AndroidPageLayout
-      scrollable={true}
-      className="pb-safe bg-afri-bg"
-    >
-      <div className="w-full max-w-5xl mx-auto px-3 sm:px-4 py-4 space-y-5 font-sans">
+    <div className="w-full max-w-5xl mx-auto space-y-5 font-sans pb-12">
 
-        {/* Top Control Bar: Back button & Gawa Balance Pill */}
-        <div className="flex items-center justify-between gap-2 pb-1">
-          {onBack ? (
-            <button 
-              type="button"
-              onClick={onBack}
-              className="px-3 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 flex items-center gap-2 text-xs font-bold text-zinc-300 hover:text-white active:scale-95 transition-transform"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 text-zinc-300" />
-              <span>Retour</span>
-            </button>
-          ) : <div />}
+      {/* Top Status Row: Subtitle & Gawa Balance Pill */}
+      <div className="flex items-center justify-between gap-2 pb-1">
+        <p className="text-xs text-afri-text-sec font-medium hidden sm:block">
+          Régie publicitaire native AFRIGOMBO
+        </p>
 
+        <div className="flex items-center gap-2 ml-auto">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs text-white font-mono shadow-sm">
             <Coins className="w-3.5 h-3.5 text-[#D4AF37]" />
             <span className="font-extrabold text-[#D4AF37]">{gawaBalance.toLocaleString("fr-FR")} G</span>
           </div>
+
+          {onOpenWalletDeposit && (
+            <button
+              type="button"
+              onClick={onOpenWalletDeposit}
+              className="px-3 py-1.5 rounded-full bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-bold transition-all active:scale-95 cursor-pointer"
+            >
+              Recharger
+            </button>
+          )}
         </div>
+      </div>
 
         {/* HERO BANNER */}
         <div className="relative w-full rounded-3xl bg-gradient-to-br from-[#18181b] via-[#0d0d0f] to-black border border-[#D4AF37]/40 p-5 shadow-2xl shadow-black overflow-hidden">
@@ -503,8 +503,6 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
           )}
         </div>
 
-      </div>
-
       {/* Creation Wizard Sheet */}
       <GomboAdsCreationWizard 
         isOpen={isWizardOpen}
@@ -517,7 +515,7 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
         }}
         onOpenWalletDeposit={onOpenWalletDeposit}
       />
-    </AndroidPageLayout>
+    </div>
   );
 };
 
