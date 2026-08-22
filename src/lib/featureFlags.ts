@@ -41,9 +41,11 @@ function loadInitialCachedFlags(): FeatureFlagsMap {
 
 // Module-level global cached flags map for instantaneous access anywhere in the app
 let globalCachedFlagsMap: FeatureFlagsMap = loadInitialCachedFlags();
+let firestoreHasResponded: boolean = (typeof window !== "undefined" && Object.keys(globalCachedFlagsMap).length > 0);
 
 export function setGlobalCachedFeatureFlags(flags: FeatureFlagsMap): void {
   globalCachedFlagsMap = { ...globalCachedFlagsMap, ...flags };
+  firestoreHasResponded = true;
   try {
     if (typeof window !== "undefined" && window.localStorage) {
       localStorage.setItem(FEATURE_FLAGS_CACHE_KEY, JSON.stringify(globalCachedFlagsMap));
@@ -95,27 +97,29 @@ export function parseModuleVisibilityArgs(
   let flagsMap: FeatureFlagsMap | undefined = undefined;
 
   // Pattern 1: 4 arguments provided (featureId, user, profile, flagsMap)
-  if (arg4 && typeof arg4 === "object") {
+  if (arg4 !== undefined && arg4 !== null && typeof arg4 === "object" && !isUserLikeObject(arg4)) {
     flagsMap = arg4;
     isFounder = checkIsFounder(arg2, arg3);
   } 
-  // Pattern 2: 2nd argument is flagsMap (e.g., checkIsModuleVisible(flagId, systemFeatureFlags, isSuperFounderUser))
-  else if (arg2 && typeof arg2 === "object" && !isUserLikeObject(arg2)) {
+  // Pattern 2: 3rd argument is flagsMap (e.g., isModuleVisible(flagId, user, flagsMap) or isModuleVisible(flagId, null, flagsMap))
+  else if (arg3 !== undefined && arg3 !== null && typeof arg3 === "object" && !isUserLikeObject(arg3)) {
+    flagsMap = arg3;
+    isFounder = checkIsFounder(arg2, undefined);
+  }
+  // Pattern 3: 2nd argument is flagsMap (e.g., checkIsModuleVisible(flagId, systemFeatureFlags, isSuperFounderUser))
+  else if (arg2 !== undefined && arg2 !== null && typeof arg2 === "object" && !isUserLikeObject(arg2)) {
     flagsMap = arg2;
     if (typeof arg3 === "boolean") {
       isFounder = arg3;
-    } else if (arg3 && typeof arg3 === "object") {
+    } else if (arg3 && typeof arg3 === "object" && isUserLikeObject(arg3)) {
       isFounder = checkIsFounder(arg3, undefined);
     } else {
       isFounder = false;
     }
   } 
-  // Pattern 3: Standard (featureId, user, profile) or 3rd argument is flagsMap
+  // Pattern 4: Standard (featureId, user, profile)
   else {
     isFounder = checkIsFounder(arg2, arg3);
-    if (arg3 && typeof arg3 === "object" && !isUserLikeObject(arg3) && !isFounder) {
-      flagsMap = arg3;
-    }
   }
 
   return { isFounder, flagsMap };
@@ -314,25 +318,21 @@ export const FEATURE_PARENT_MAP: Record<string, string> = {
  * Helper to parse status from string/boolean/object flag representation.
  */
 function parseStatusValue(value: any): FeatureVisibilityStatus {
-  if (value === undefined) return "ACTIVE";
+  if (value === undefined || value === null) return "ACTIVE";
   if (typeof value === "boolean") return value ? "ACTIVE" : "HIDDEN";
   if (typeof value === "string") {
     const upper = value.toUpperCase().trim();
-    if (upper === "ACTIVE" || upper === "COMING_SOON" || upper === "HIDDEN") {
-      return upper as FeatureVisibilityStatus;
-    }
-    if (upper === "ENABLED" || upper === "TRUE" || upper === "VALIDATED") return "ACTIVE";
-    if (upper === "PENDING" || upper === "EXPERIMENTAL" || upper === "BIENTOT" || upper === "COMINGSOON") return "COMING_SOON";
-    if (upper === "DISABLED" || upper === "FALSE" || upper === "MASQUE" || upper === "HIDDEN") return "HIDDEN";
+    if (upper === "ACTIVE" || upper === "ENABLED" || upper === "TRUE" || upper === "VALIDATED") return "ACTIVE";
+    if (upper === "COMING_SOON" || upper === "PENDING" || upper === "EXPERIMENTAL" || upper === "BIENTOT" || upper === "COMINGSOON") return "COMING_SOON";
+    if (upper === "HIDDEN" || upper === "DISABLED" || upper === "FALSE" || upper === "MASQUE") return "HIDDEN";
     return "ACTIVE";
   }
   if (typeof value === "object" && value !== null) {
-    if (value.visibilityStatus && ["ACTIVE", "COMING_SOON", "HIDDEN"].includes(value.visibilityStatus)) {
-      return value.visibilityStatus as FeatureVisibilityStatus;
-    }
-    if (value.status && ["ACTIVE", "COMING_SOON", "HIDDEN"].includes(value.status)) {
-      return value.status as FeatureVisibilityStatus;
-    }
+    const statusVal = (value.visibilityStatus || value.status || "").toString().toUpperCase().trim();
+    if (statusVal === "ACTIVE" || statusVal === "ENABLED" || statusVal === "TRUE" || statusVal === "VALIDATED") return "ACTIVE";
+    if (statusVal === "COMING_SOON" || statusVal === "PENDING" || statusVal === "EXPERIMENTAL" || statusVal === "BIENTOT" || statusVal === "COMINGSOON") return "COMING_SOON";
+    if (statusVal === "HIDDEN" || statusVal === "DISABLED" || statusVal === "FALSE" || statusVal === "MASQUE") return "HIDDEN";
+
     if (value.enabled !== undefined) {
       return value.enabled ? "ACTIVE" : "HIDDEN";
     }
@@ -388,7 +388,12 @@ export function isDefaultPublicModule(featureId: string): boolean {
  */
 export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap): FeatureVisibilityStatus {
   const activeMap = flagsMap && Object.keys(flagsMap).length > 0 ? flagsMap : globalCachedFlagsMap;
+  const hasRealFlagsLoaded = (flagsMap && Object.keys(flagsMap).length > 0) || firestoreHasResponded || Object.keys(globalCachedFlagsMap).length > 0;
+
   if (!activeMap || Object.keys(activeMap).length === 0) {
+    if (!hasRealFlagsLoaded) {
+      return isDefaultPublicModule(featureId) ? "ACTIVE" : "HIDDEN";
+    }
     return isDefaultPublicModule(featureId) ? "ACTIVE" : "HIDDEN";
   }
 
@@ -434,12 +439,17 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
     value = activeMap[parentId];
   }
 
-  // 4. If value is still undefined in activeMap, apply default public module behavior
-  if (value === undefined) {
+  // 4. If value is found in activeMap, respect its status 100% (especially HIDDEN)
+  if (value !== undefined) {
+    return parseStatusValue(value);
+  }
+
+  // 5. If value is still undefined in activeMap:
+  if (!hasRealFlagsLoaded) {
     return isDefaultPublicModule(featureId) ? "ACTIVE" : "HIDDEN";
   }
 
-  return parseStatusValue(value);
+  return isDefaultPublicModule(featureId) ? "ACTIVE" : "HIDDEN";
 }
 
 /**
@@ -575,6 +585,7 @@ export function subscribeToFeatureFlags(
     const unsubscribe = onSnapshot(
       sysConfigRef,
       async (snapshot) => {
+        firestoreHasResponded = true;
         if (!snapshot.exists()) {
           // Check legacy settings/feature_flags or parameters/feature_flags as migration fallback
           try {

@@ -28,7 +28,8 @@ import {
   isModuleVisible as checkIsModuleVisible, 
   isModuleAccessible as checkIsModuleAccessible, 
   isModuleComingSoon as checkIsModuleComingSoon, 
-  subscribeToFeatureFlags 
+  subscribeToFeatureFlags,
+  getGlobalCachedFeatureFlags
 } from "../lib/featureFlags";
 import { FeatureUnavailable } from "./FeatureUnavailable";
 import { getEffectiveCommissionRate, calculatePublicationFinancials, recordWalletTransaction, getCanonicalWalletBalance } from "../lib/financial";
@@ -436,6 +437,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   };
 
   const setActiveMenu = (menu: string) => {
+    // Security check: if the menu corresponds to a HIDDEN module and user is not super founder, block navigation!
+    const flag = getFlagForMenu(menu);
+    if (flag && !checkIsModuleVisible(flag, systemFeatureFlags, isSuperFounderUser)) {
+      setMenuHistory(["user_terrain"]);
+      return;
+    }
     // Silence navigation sounds
     try {
       window.history.pushState({ menu }, "", "");
@@ -1150,7 +1157,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   }, [adminEmail]);
 
   // REAL-TIME GLOBAL FEATURE FLAGS ENGINE
-  const [systemFeatureFlags, setSystemFeatureFlags] = useState<Record<string, any>>({});
+  const [systemFeatureFlags, setSystemFeatureFlags] = useState<Record<string, any>>(() => getGlobalCachedFeatureFlags());
 
   useEffect(() => {
     const unsubSys = subscribeToFeatureFlags((updatedFlags) => {
@@ -1282,6 +1289,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       }
     }
   }, [location.pathname, systemFeatureFlags, isSuperFounderUser]);
+
+  // Active menu security check: immediately redirect if activeMenu points to a HIDDEN module
+  useEffect(() => {
+    if (!activeMenu || activeMenu === "user_terrain" || activeMenu === "user_home") return;
+    const flag = getFlagForMenu(activeMenu);
+    if (flag && !checkIsModuleVisible(flag, systemFeatureFlags, isSuperFounderUser)) {
+      setMenuHistory(["user_terrain"]);
+      if (location.pathname !== "/home" && location.pathname !== "/") {
+        window.history.replaceState(null, "", "/home");
+      }
+    }
+  }, [activeMenu, systemFeatureFlags, isSuperFounderUser, location.pathname]);
 
   const getFeatureNameForMenu = (menu: string): string => {
     switch (menu) {
