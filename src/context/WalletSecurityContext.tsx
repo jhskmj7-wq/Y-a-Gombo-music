@@ -196,8 +196,10 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
         return true;
       }
 
+      const requiresForcedAuth = ["PURCHASE", "WITHDRAWAL", "TRANSFER", "PAYMENT_METHOD_CHANGE", "PIN_CHANGE", "DESACTIVATION_PROTECTION_PIN"].includes(action);
+      
       const currentExpiry = sessionExpiryRef.current;
-      if (!forceReauth && currentExpiry !== null && Date.now() < currentExpiry) {
+      if (!forceReauth && !requiresForcedAuth && currentExpiry !== null && Date.now() < currentExpiry) {
         return true;
       }
 

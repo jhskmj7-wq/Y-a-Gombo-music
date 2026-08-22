@@ -3376,7 +3376,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
                 className={`flex-1 min-h-0 h-full w-full ${
-                  ["user_settings", "user_notifications", "user_messages", "user_reels", "super_admin", "user_wallet"].includes(activeMenu)
+                  ["user_settings", "user_notifications", "user_messages", "user_reels", "user_wallet", "super_admin"].includes(activeMenu)
                     ? "flex flex-col overflow-hidden"
                     : "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
                 } ${
@@ -5326,7 +5326,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {/* 7b. PORTESECURE / AFRIGOMBO ELITE WALLET (USER) */}
               {activeMenu === "user_wallet" && (
-                <div className="w-full animate-fadeIn text-left">
+                <div className="w-full h-full flex-1 flex flex-col min-h-0 bg-afri-bg animate-fadeIn text-left">
                   <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
                     <AfrigomboWalletDashboard 
                       currentUserProfile={profile || (currentUser as any)} 

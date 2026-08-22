@@ -905,43 +905,6 @@ export default function AfrigomboWalletDashboard({
   const gawaMissions = gawaHistory.filter(r => r.type === "MISSION").reduce((acc, r) => acc + r.amount, 0);
   const gawaBonus = gawaHistory.filter(r => r.type !== "PURCHASE" && r.type !== "MISSION").reduce((acc, r) => acc + r.amount, 0);
 
-  if (!isAuthorized) {
-    return (
-      <AndroidPageLayout scrollable={false} className="bg-afri-bg flex items-center justify-center p-6 text-center">
-        <div className="flex flex-col items-center gap-4 max-w-xs mx-auto">
-          <div className="w-16 h-16 rounded-3xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-xl">
-            <Lock className="w-8 h-8" />
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-base font-black text-white uppercase tracking-wider font-display">
-              🔐 WALLET PROTÉGÉ
-            </h3>
-            <p className="text-xs text-zinc-400 font-mono">
-              Authentification par code secret requise pour consulter votre portefeuille.
-            </p>
-          </div>
-          <button
-            onClick={async () => {
-              const ok = await requireWalletAuthentication("CONSULTATION_WALLET");
-              if (ok) setIsAuthorized(true);
-            }}
-            className="w-full py-3.5 px-4 rounded-xl bg-[#D4AF37] text-zinc-950 font-black uppercase text-xs tracking-wider shadow-lg active:scale-98 cursor-pointer font-mono"
-          >
-            Déverrouiller le Wallet
-          </button>
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="text-xs text-zinc-500 hover:text-zinc-300 uppercase font-mono tracking-wider transition-colors cursor-pointer"
-            >
-              ← Retour
-            </button>
-          )}
-        </div>
-      </AndroidPageLayout>
-    );
-  }
-
   if (showWalletSettings) {
     return (
       <AndroidPageLayout
@@ -1293,6 +1256,43 @@ export default function AfrigomboWalletDashboard({
         </AndroidPageLayout>
       );
     }
+  
+    if (!isAuthorized) {
+      return (
+        <AndroidPageLayout scrollable={false} className="bg-afri-bg flex items-center justify-center p-6 text-center">
+          <div className="flex flex-col items-center gap-4 max-w-xs mx-auto">
+            <div className="w-16 h-16 rounded-3xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-xl">
+              <Lock className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-black text-white uppercase tracking-wider font-display">
+                🔐 WALLET PROTÉGÉ
+              </h3>
+              <p className="text-xs text-zinc-400 font-mono">
+                Authentification par code secret requise pour consulter votre portefeuille.
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                const ok = await requireWalletAuthentication("CONSULTATION_WALLET");
+                if (ok) setIsAuthorized(true);
+              }}
+              className="w-full py-3.5 px-4 rounded-xl bg-[#D4AF37] text-zinc-950 font-black uppercase text-xs tracking-wider shadow-lg active:scale-98 cursor-pointer font-mono"
+            >
+              Déverrouiller le Wallet
+            </button>
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="text-xs text-zinc-500 hover:text-zinc-300 uppercase font-mono tracking-wider transition-colors cursor-pointer"
+              >
+                ← Retour
+              </button>
+            )}
+          </div>
+        </AndroidPageLayout>
+      );
+    }
 
     const customHeader = (
     <header className="flex-none bg-afri-bg/95 backdrop-blur-md border-b border-afri-border/60 px-3 py-2.5 flex items-center justify-between gap-2 z-35 shrink-0" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))', paddingLeft: 'max(12px, env(safe-area-inset-left))', paddingRight: 'max(12px, env(safe-area-inset-right))' }}>
@@ -1359,8 +1359,8 @@ export default function AfrigomboWalletDashboard({
   }
 
   return (
-    <AndroidPageLayout header={customHeader} scrollable={false} className="pb-safe">
-      <div className="w-full space-y-4 text-left animate-fadeIn">
+    <AndroidPageLayout header={customHeader} scrollable={true} className="pb-safe bg-afri-bg">
+      <div className="w-full max-w-5xl mx-auto space-y-4 text-left animate-fadeIn px-3 sm:px-4 py-3 sm:py-4">
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           1. 💰 SOLDE DISPONIBLE (EN TRÈS GRAND)
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
