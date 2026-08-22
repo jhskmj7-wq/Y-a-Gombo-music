@@ -150,8 +150,10 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
           </div>
         </header>
       }
+      scrollable={true}
+      className="pb-safe bg-afri-bg"
     >
-      <div className="space-y-5 pb-12 font-sans">
+      <div className="w-full max-w-5xl mx-auto px-3 sm:px-4 py-4 space-y-5 font-sans">
 
         {/* HERO BANNER */}
         <div className="relative w-full rounded-3xl bg-gradient-to-br from-[#18181b] via-[#0d0d0f] to-black border border-[#D4AF37]/40 p-5 shadow-2xl shadow-black overflow-hidden">

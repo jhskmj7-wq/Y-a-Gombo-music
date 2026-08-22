@@ -3177,7 +3177,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
             </header>
           ) : (
-            ["user_terrain", "user_wallet", "user_messages", "user_notifications", "user_settings", "user_heritage", "user_edit_profile", "nearby"].includes(activeMenu) ? null : (
+            ["user_terrain", "user_wallet", "user_messages", "user_notifications", "user_settings", "user_heritage", "user_edit_profile", "nearby", "user_gombo_ads"].includes(activeMenu) ? null : (
               <header className="flex items-center justify-between px-4 py-3 bg-afri-bg border-b border-afri-border/50 z-[40] relative shrink-0 shadow-md">
                 <div className="flex items-center gap-3">
           {!["user_terrain", "user_wallet", "user_vibes", "user_mes_gombos", "user_heritage", "user_publish", "dashboard", "users", "notifications", "contracts", "reports", "revenue"].includes(activeMenu) && (
@@ -3376,13 +3376,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
                 className={`flex-1 min-h-0 h-full w-full ${
-                  ["user_settings", "user_notifications", "user_messages", "user_reels", "user_wallet", "super_admin"].includes(activeMenu)
+                  ["user_settings", "user_notifications", "user_messages", "user_reels", "user_wallet", "user_gombo_ads", "super_admin"].includes(activeMenu)
                     ? "flex flex-col overflow-hidden"
                     : "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
                 } ${
                   activeMenu === "super_admin" || activeMenu === "user_builders" || activeMenu === "dashboard" || activeMenu === "user_terrain" || activeMenu === "user_vibes" || activeMenu === "user_mes_gombos" || activeMenu === "user_heritage"
                     ? "px-4 xs:px-5 sm:px-8 max-w-5xl mx-auto w-full pt-0 pb-16 sm:pb-20 space-y-6"
-                    : ["user_messages", "user_settings", "user_notifications", "user_reels", "user_wallet"].includes(activeMenu)
+                    : ["user_messages", "user_settings", "user_notifications", "user_reels", "user_wallet", "user_gombo_ads"].includes(activeMenu)
                     ? "p-0 m-0"
                     : "afri-container afri-section"
                 }`}
@@ -6379,7 +6379,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   </div>
                 )}
                 {activeMenu === "user_gombo_ads" && (
-                  <div className="animate-fadeIn">
+                  <div className="w-full h-full flex-1 flex flex-col min-h-0 bg-afri-bg animate-fadeIn text-left">
                     <GomboAdsMainView 
                       currentUserProfile={profile || currentUser}
                       onBack={() => goBackMenu()}
