@@ -905,6 +905,43 @@ export default function AfrigomboWalletDashboard({
   const gawaMissions = gawaHistory.filter(r => r.type === "MISSION").reduce((acc, r) => acc + r.amount, 0);
   const gawaBonus = gawaHistory.filter(r => r.type !== "PURCHASE" && r.type !== "MISSION").reduce((acc, r) => acc + r.amount, 0);
 
+  if (!isAuthorized) {
+    return (
+      <AndroidPageLayout scrollable={false} className="bg-afri-bg flex items-center justify-center p-6 text-center">
+        <div className="flex flex-col items-center gap-4 max-w-xs mx-auto">
+          <div className="w-16 h-16 rounded-3xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-xl">
+            <Lock className="w-8 h-8" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-black text-white uppercase tracking-wider font-display">
+              🔐 WALLET PROTÉGÉ
+            </h3>
+            <p className="text-xs text-zinc-400 font-mono">
+              Authentification par code secret requise pour consulter votre portefeuille.
+            </p>
+          </div>
+          <button
+            onClick={async () => {
+              const ok = await requireWalletAuthentication("CONSULTATION_WALLET");
+              if (ok) setIsAuthorized(true);
+            }}
+            className="w-full py-3.5 px-4 rounded-xl bg-[#D4AF37] text-zinc-950 font-black uppercase text-xs tracking-wider shadow-lg active:scale-98 cursor-pointer font-mono"
+          >
+            Déverrouiller le Wallet
+          </button>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="text-xs text-zinc-500 hover:text-zinc-300 uppercase font-mono tracking-wider transition-colors cursor-pointer"
+            >
+              ← Retour
+            </button>
+          )}
+        </div>
+      </AndroidPageLayout>
+    );
+  }
+
   if (showWalletSettings) {
     return (
       <AndroidPageLayout
@@ -1253,43 +1290,6 @@ export default function AfrigomboWalletDashboard({
         </div>
 
         {/* Immersive PIN settings Flow modal overlay removed - handled by WalletSecurityContext */}
-        </AndroidPageLayout>
-      );
-    }
-  
-    if (!isAuthorized) {
-      return (
-        <AndroidPageLayout scrollable={false} className="bg-afri-bg flex items-center justify-center p-6 text-center">
-          <div className="flex flex-col items-center gap-4 max-w-xs mx-auto">
-            <div className="w-16 h-16 rounded-3xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-xl">
-              <Lock className="w-8 h-8" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-base font-black text-white uppercase tracking-wider font-display">
-                🔐 WALLET PROTÉGÉ
-              </h3>
-              <p className="text-xs text-zinc-400 font-mono">
-                Authentification par code secret requise pour consulter votre portefeuille.
-              </p>
-            </div>
-            <button
-              onClick={async () => {
-                const ok = await requireWalletAuthentication("CONSULTATION_WALLET");
-                if (ok) setIsAuthorized(true);
-              }}
-              className="w-full py-3.5 px-4 rounded-xl bg-[#D4AF37] text-zinc-950 font-black uppercase text-xs tracking-wider shadow-lg active:scale-98 cursor-pointer font-mono"
-            >
-              Déverrouiller le Wallet
-            </button>
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="text-xs text-zinc-500 hover:text-zinc-300 uppercase font-mono tracking-wider transition-colors cursor-pointer"
-              >
-                ← Retour
-              </button>
-            )}
-          </div>
         </AndroidPageLayout>
       );
     }
