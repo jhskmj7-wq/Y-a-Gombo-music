@@ -24,7 +24,7 @@ export const AndroidBottomSheet: React.FC<AndroidBottomSheetProps> = ({
   className = "",
   showCloseButton = true,
   closeOnOutsideClick = true,
-  maxHeight = "90vh"
+  maxHeight = "85vh"
 }) => {
   // Lock body scroll when BottomSheet is open
   useEffect(() => {
@@ -33,6 +33,7 @@ export const AndroidBottomSheet: React.FC<AndroidBottomSheetProps> = ({
     const origTouchAction = document.body.style.touchAction;
     
     document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
     
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();

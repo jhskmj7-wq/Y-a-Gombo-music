@@ -125,35 +125,29 @@ export const GomboAdsMainView: React.FC<GomboAdsMainViewProps> = ({
 
   return (
     <AndroidPageLayout
-      header={
-        <header className="flex-none bg-zinc-950/95 backdrop-blur-md border-b border-zinc-800/80 px-3.5 py-2.5 flex items-center justify-between gap-2 z-35 shrink-0 font-sans">
-          <div className="flex items-center gap-2.5 min-w-0">
-            {onBack && (
-              <button 
-                onClick={onBack}
-                className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-            )}
-            <div>
-              <h1 className="text-sm font-black uppercase tracking-wider text-white">
-                GOMBO ADS
-              </h1>
-              <p className="text-[10px] text-[#D4AF37] font-bold">Régie Publicitaire Native</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-white font-mono">
-            <Coins className="w-3.5 h-3.5 text-[#D4AF37]" />
-            <span className="font-extrabold text-[#D4AF37]">{gawaBalance.toLocaleString("fr-FR")} G</span>
-          </div>
-        </header>
-      }
       scrollable={true}
       className="pb-safe bg-afri-bg"
     >
       <div className="w-full max-w-5xl mx-auto px-3 sm:px-4 py-4 space-y-5 font-sans">
+
+        {/* Top Control Bar: Back button & Gawa Balance Pill */}
+        <div className="flex items-center justify-between gap-2 pb-1">
+          {onBack ? (
+            <button 
+              type="button"
+              onClick={onBack}
+              className="px-3 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 flex items-center gap-2 text-xs font-bold text-zinc-300 hover:text-white active:scale-95 transition-transform"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-zinc-300" />
+              <span>Retour</span>
+            </button>
+          ) : <div />}
+
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs text-white font-mono shadow-sm">
+            <Coins className="w-3.5 h-3.5 text-[#D4AF37]" />
+            <span className="font-extrabold text-[#D4AF37]">{gawaBalance.toLocaleString("fr-FR")} G</span>
+          </div>
+        </div>
 
         {/* HERO BANNER */}
         <div className="relative w-full rounded-3xl bg-gradient-to-br from-[#18181b] via-[#0d0d0f] to-black border border-[#D4AF37]/40 p-5 shadow-2xl shadow-black overflow-hidden">

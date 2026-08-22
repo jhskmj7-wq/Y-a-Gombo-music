@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { 
   X, 
   Megaphone, 
@@ -68,6 +69,27 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [showInsufficientBalanceSheet, setShowInsufficientBalanceSheet] = useState<boolean>(false);
+
+  // Lock body scroll when wizard is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const origOverflow = document.body.style.overflow;
+    const origTouchAction = document.body.style.touchAction;
+    
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = origOverflow || "";
+      document.body.style.touchAction = origTouchAction || "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   // Sync initial type when changed
   useEffect(() => {
@@ -327,15 +349,15 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <>
-      <div className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden font-sans">
-        <div className="relative w-full max-w-lg bg-[#09090b] border border-[#D4AF37]/30 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-black overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden font-sans">
+        <div className="relative w-full max-w-lg bg-[#09090b] border border-[#D4AF37]/30 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-black overflow-hidden flex flex-col max-h-[85vh] h-[85vh] sm:h-auto">
           
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-sm">
+          <div className="flex items-center justify-between p-4 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-sm shrink-0">
             <div className="flex items-center gap-2.5">
               {step > 1 && (
                 <button 
@@ -367,7 +389,7 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
           </div>
 
           {/* Progress bar */}
-          <div className="w-full bg-zinc-900 h-1">
+          <div className="w-full bg-zinc-900 h-1 shrink-0">
             <div 
               className="bg-gradient-to-r from-[#D4AF37] to-[#f1d06b] h-full transition-all duration-300"
               style={{ width: `${(step / (selectedType === "profile" ? 3 : 4)) * 100}%` }}
@@ -375,7 +397,7 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
           </div>
 
           {/* Scrollable Content Body */}
-          <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
+          <div className="p-4 sm:p-5 overflow-y-auto overscroll-contain space-y-4 flex-1 min-h-0 custom-scrollbar">
 
             {errorMsg && (
               <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-start gap-3">
@@ -797,7 +819,8 @@ export const GomboAdsCreationWizard: React.FC<GomboAdsCreationWizardProps> = ({
           </div>
         </div>
       </AndroidBottomSheet>
-    </>
+    </>,
+    document.body
   );
 };
 
