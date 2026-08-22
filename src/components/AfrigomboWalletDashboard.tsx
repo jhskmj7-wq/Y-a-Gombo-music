@@ -31,7 +31,9 @@ import {
   EyeOff,
   Shield,
   Fingerprint,
-  Landmark
+  Landmark,
+  BellRing,
+  Download
 } from "lucide-react";
 import FounderFeesVault from "./admin/FounderFeesVault";
 import { motion, AnimatePresence } from "motion/react";
@@ -187,6 +189,126 @@ export default function AfrigomboWalletDashboard({
         if (type === "success") AudioSynth.playValidationSuccess();
       }
     } catch (_) {}
+  };
+
+  // PDF Statement Download Generator
+  const handleDownloadPDFStatement = () => {
+    try {
+      showToast("📄 Génération de votre relevé PDF en cours...");
+      const now = new Date();
+      const monthNames = [
+        "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+        "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+      ];
+      const currentMonthStr = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+      const userName = currentUserProfile?.nomComplet || currentUserProfile?.pseudo || "Utilisateur AFRIGOMBO";
+      const userRef = currentUserProfile?.gomboRef || "GOMBO-USER";
+      const currentMonthTxs = filteredTxs.length > 0 ? filteredTxs : transactions;
+
+      const htmlContent = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Relevé de Transactions - ${currentMonthStr}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px; color: #1e293b; background: #fff; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px; }
+    .logo { font-size: 22px; font-weight: 900; color: #b45309; letter-spacing: 1px; }
+    .subtitle { font-size: 11px; color: #64748b; margin-top: 4px; }
+    .meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; }
+    .meta-label { color: #64748b; font-size: 10px; text-transform: uppercase; font-weight: 700; margin-bottom: 2px; }
+    .meta-val { font-weight: 800; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 12px; }
+    th { background: #f1f5f9; text-align: left; padding: 10px 12px; font-size: 10px; text-transform: uppercase; color: #475569; font-weight: 700; border-bottom: 2px solid #cbd5e1; }
+    td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
+    .credit { color: #16a34a; font-weight: 800; }
+    .debit { color: #dc2626; font-weight: 800; }
+    .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 16px; font-size: 10px; color: #94a3b8; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="logo">AFRIGOMBO WALLET</div>
+      <div class="subtitle">Relevé officiel des transactions et mouvements de fonds</div>
+    </div>
+    <div style="text-align: right;">
+      <div style="font-size: 14px; font-weight: 800;">RELEVÉ DU MOIS</div>
+      <div style="font-size: 12px; color: #b45309; font-weight: 700;">${currentMonthStr}</div>
+    </div>
+  </div>
+
+  <div class="meta-box">
+    <div>
+      <div class="meta-label">Titulaire du compte</div>
+      <div class="meta-val">${userName}</div>
+      <div style="font-size: 11px; color: #64748b;">ID Ref: ${userRef}</div>
+    </div>
+    <div>
+      <div class="meta-label">Solde disponible actuel</div>
+      <div class="meta-val" style="color: #b45309; font-size: 16px;">${wallet.soldeDisponible.toLocaleString('fr-FR')} FCFA</div>
+    </div>
+  </div>
+
+  <h3 style="font-size: 13px; font-weight: 800; margin-bottom: 8px;">Détail des transactions (${currentMonthTxs.length})</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type / Description</th>
+        <th>Référence</th>
+        <th>Statut</th>
+        <th style="text-align: right;">Montant (FCFA)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${currentMonthTxs.map(tx => {
+        const isCredit = tx.type?.toLowerCase().includes("depot") || tx.type?.toLowerCase().includes("recharge") || tx.amount > 0 || tx.montant > 0;
+        const amountVal = Math.abs(tx.amount || tx.montant || 0);
+        const dateStr = tx.createdAt?.seconds ? new Date(tx.createdAt.seconds * 1000).toLocaleDateString('fr-FR') : (tx.date || "N/A");
+        return `
+          <tr>
+            <td>${dateStr}</td>
+            <td><strong>${tx.type || tx.label || "Transaction"}</strong><br/><span style="color:#64748b; font-size:10px;">${tx.description || tx.moyenPaiement || ""}</span></td>
+            <td style="font-family: monospace;">${tx.id?.substring(0, 10) || "N/A"}</td>
+            <td><span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">${tx.status || "Terminé"}</span></td>
+            <td style="text-align: right;" class="${isCredit ? 'credit' : 'debit'}">${isCredit ? '+' : '-'}${amountVal.toLocaleString('fr-FR')} FCFA</td>
+          </tr>
+        `;
+      }).join('')}
+    </tbody>
+  </table>
+
+  <div class="footer">
+    Document généré automatiquement par AFRIGOMBO WALLET — Certification de sécurité intégrée — Support S-O-A.
+  </div>
+  <script>
+    window.onload = function() {
+      setTimeout(function() { window.print(); }, 500);
+    };
+  </script>
+</body>
+</html>
+      `;
+
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+      } else {
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Releve_AFRIGOMBO_${now.getFullYear()}_${now.getMonth() + 1}.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      showToast("✅ Relevé PDF généré avec succès !");
+    } catch (e) {
+      showToast("❌ Erreur lors de la génération du relevé.");
+    }
   };
 
   // Ref to stabilize onBack reference
@@ -998,6 +1120,134 @@ export default function AfrigomboWalletDashboard({
                 />
                 <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border shrink-0"></div>
               </label>
+            </div>
+          </div>
+
+          {/* Section 3: Additional Preferences */}
+          <div className="space-y-3">
+            <h2 className="text-[10px] font-mono font-black tracking-widest text-zinc-500 uppercase flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
+              🛡️ PRÉFÉRENCES SUPPLÉMENTAIRES
+            </h2>
+
+            <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4">
+              {/* 1. Verrouillage automatique du Wallet */}
+              <div className="space-y-2 pb-2 border-b border-afri-border/60">
+                <label className="flex items-center justify-between cursor-pointer group">
+                  <div className="space-y-0.5 flex-1 pr-4">
+                    <div className="flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Verrouillage automatique du Wallet</span>
+                    </div>
+                    <p className="text-[9px] text-zinc-400 leading-tight">Verrouiller le Wallet et demander le PIN après une période d'inactivité.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={payments.autoLockEnabled ?? true}
+                    onChange={(e) => updatePaymentPref('autoLockEnabled', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border shrink-0"></div>
+                </label>
+
+                {(payments.autoLockEnabled ?? true) && (
+                  <div className="space-y-1 pl-5 pt-1">
+                    <label className="text-[9px] font-mono text-zinc-400 uppercase block font-bold">Délai d'inactivité avant verrouillage</label>
+                    <select
+                      value={payments.autoLockDelay ?? "5 min"}
+                      onChange={(e) => updatePaymentPref('autoLockDelay', e.target.value)}
+                      className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text focus:outline-none focus:border-afri-gold font-sans"
+                    >
+                      <option value="1 min">1 minute</option>
+                      <option value="5 min">5 minutes</option>
+                      <option value="15 min">15 minutes</option>
+                      <option value="Jamais">Jamais</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Alerte solde bas */}
+              <div className="space-y-2 pb-2 border-b border-afri-border/60">
+                <label className="flex items-center justify-between cursor-pointer group">
+                  <div className="space-y-0.5 flex-1 pr-4">
+                    <div className="flex items-center gap-1.5">
+                      <BellRing className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Alerte solde bas</span>
+                    </div>
+                    <p className="text-[9px] text-zinc-400 leading-tight">Recevoir une notification automatique quand le solde passe sous le seuil défini.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={payments.lowBalanceAlertEnabled ?? false}
+                    onChange={(e) => updatePaymentPref('lowBalanceAlertEnabled', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border shrink-0"></div>
+                </label>
+
+                {(payments.lowBalanceAlertEnabled ?? false) && (
+                  <div className="space-y-1 pl-5 pt-1">
+                    <label className="text-[9px] font-mono text-zinc-400 uppercase block font-bold">Seuil d'alerte solde bas (FCFA)</label>
+                    <input
+                      type="number"
+                      step="1000"
+                      min="1000"
+                      value={payments.lowBalanceThreshold ?? 10000}
+                      onChange={(e) => updatePaymentPref('lowBalanceThreshold', parseInt(e.target.value, 10) || 0)}
+                      className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text focus:outline-none focus:border-afri-gold font-sans"
+                      placeholder="Ex: 10000"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Solde masqué par défaut */}
+              <div className="pb-2 border-b border-afri-border/60">
+                <label className="flex items-center justify-between cursor-pointer group">
+                  <div className="space-y-0.5 flex-1 pr-4">
+                    <div className="flex items-center gap-1.5">
+                      <EyeOff className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Solde masqué par défaut</span>
+                    </div>
+                    <p className="text-[9px] text-zinc-400 leading-tight">Masquer automatiquement les montants à l'ouverture du Wallet et dans l'app.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={payments.hideBalanceByDefault ?? false}
+                    onChange={(e) => {
+                      const val = e.target.checked;
+                      updatePaymentPref('hideBalanceByDefault', val);
+                      try {
+                        localStorage.setItem("afrigombo_wallet_hide_balance", String(val));
+                      } catch {}
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border shrink-0"></div>
+                </label>
+              </div>
+
+              {/* 4. Export de mes transactions */}
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5 pr-2">
+                    <div className="flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      <span className="text-[11px] font-bold text-afri-text">Export de mes transactions</span>
+                    </div>
+                    <p className="text-[9px] text-zinc-400 leading-tight">Générer et télécharger un relevé officiel des mouvements du mois en cours.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDownloadPDFStatement}
+                  className="w-full py-2.5 px-4 rounded-xl bg-afri-gold/10 hover:bg-afri-gold/20 border border-afri-gold/40 text-afri-gold hover:text-white font-bold text-xs uppercase transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Télécharger mon relevé (PDF)</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

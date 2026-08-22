@@ -73,6 +73,11 @@ export interface PaymentSettings {
   pinEnabled?: boolean;
   pinLength?: number;
   pinHash?: string;
+  autoLockEnabled?: boolean;
+  autoLockDelay?: string;
+  lowBalanceAlertEnabled?: boolean;
+  lowBalanceThreshold?: number;
+  hideBalanceByDefault?: boolean;
 }
 
 export interface NetworkSettings {
@@ -315,6 +320,11 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     currency: safeGetItem("gombo_pay_curr", "FCFA (XOF)"),
     dailyLimit: parseInt(safeGetItem("gombo_pay_limit", "500000"), 10),
     paymentConfirmation: safeGetItem("gombo_pay_confirm", "true") !== "false",
+    autoLockEnabled: safeGetItem("gombo_pay_autolock", "true") !== "false",
+    autoLockDelay: safeGetItem("gombo_pay_lockdelay", "5 min"),
+    lowBalanceAlertEnabled: safeGetItem("gombo_pay_lowalert", "false") === "true",
+    lowBalanceThreshold: parseInt(safeGetItem("gombo_pay_lowthresh", "10000"), 10),
+    hideBalanceByDefault: safeGetItem("gombo_pay_hidedefault", "false") === "true",
   }));
 
   const updatePaymentPref = (key: keyof PaymentSettings, value: boolean | string | number) => {
@@ -331,6 +341,11 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
       dailyLimit: `Limite quotidienne fixée à ${Number(value).toLocaleString()} FCFA`,
       paymentConfirmation: value ? "Confirmation obligatoire des paiements activée" : "Confirmation instantanée",
       pinConfigured: "Code PIN sécurisé mis à jour",
+      autoLockEnabled: value ? "Verrouillage automatique du Wallet activé" : "Verrouillage automatique désactivé",
+      autoLockDelay: `Délai de verrouillage réglé sur ${value}`,
+      lowBalanceAlertEnabled: value ? "Alerte solde bas activée 🔔" : "Alerte solde bas désactivée",
+      lowBalanceThreshold: `Seuil d'alerte solde bas réglé à ${Number(value).toLocaleString()} FCFA`,
+      hideBalanceByDefault: value ? "Solde masqué par défaut activé 👁️‍🗨️" : "Affichage du solde par défaut activé",
     };
 
     showToast(payMsgs[key] || "Paramètre de paiement mis à jour");
