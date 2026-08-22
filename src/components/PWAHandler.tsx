@@ -154,16 +154,8 @@ export default function PWAHandler() {
     } catch (err) {
       console.warn('[PWA Engine] Nettoyage du cache terminé avec avertissement:', err);
     } finally {
-      // Rechargement propre de la page sans ajout de paramètre d'URL cassé (?_v=...)
-      try {
-        if (window.location.search && window.location.search.includes('_v=')) {
-          window.location.href = window.location.origin + window.location.pathname;
-        } else {
-          window.location.reload();
-        }
-      } catch (_) {
-        window.location.href = window.location.origin;
-      }
+      // Rechargement direct de la page courante pour appliquer la mise à jour sans changer d'URL
+      window.location.reload();
     }
   };
 

@@ -7990,29 +7990,31 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             </button>
 
             {/* 1. ACCUEIL (Point d'entrée principal - toujours visible pour tout le monde) */}
-            <button
-              id="user-nav-terrain"
-              onClick={() => {
-                try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
-                setActiveMenu("user_terrain");
-                try { audioSynth.playValidationSuccess(); } catch (err) {}
-              }}
-              className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
-            >
-              <div className="relative px-3 py-0.5 rounded-full flex items-center justify-center overflow-hidden">
-                {activeMenu === "user_terrain" && (
-                  <motion.div
-                    layoutId="userActiveNavPill"
-                    className="absolute inset-0 bg-[#D4AF37]/20 rounded-full border border-[#D4AF37]/30"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <Home className={`w-4 h-4 sm:w-4.5 sm:h-4.5 relative z-10 transition-colors ${activeMenu === "user_terrain" ? "text-afri-gold stroke-[2.5]" : "text-afri-text-sec stroke-[1.8]"}`} />
-              </div>
-              <span className={`text-[7.5px] xs:text-[8px] tracking-wider uppercase truncate max-w-full mt-0.5 whitespace-nowrap transition-colors ${activeMenu === "user_terrain" ? "font-black text-afri-gold" : "font-semibold text-afri-text-sec"}`}>
-                Accueil
-              </span>
-            </button>
+            {(isModuleVisible("home") || true) && (
+              <button
+                id="user-nav-terrain"
+                onClick={() => {
+                  try { if (navigator?.vibrate) navigator.vibrate(10); } catch(_) {}
+                  setActiveMenu("user_terrain");
+                  try { audioSynth.playValidationSuccess(); } catch (err) {}
+                }}
+                className="relative flex flex-col items-center justify-center cursor-pointer transition-all min-w-[52px] xs:min-w-[56px] min-h-[48px] px-1 py-0.5 rounded-2xl touch-manipulation active:scale-95 flex-1"
+              >
+                <div className="relative px-3 py-0.5 rounded-full flex items-center justify-center overflow-hidden">
+                  {activeMenu === "user_terrain" && (
+                    <motion.div
+                      layoutId="userActiveNavPill"
+                      className="absolute inset-0 bg-[#D4AF37]/20 rounded-full border border-[#D4AF37]/30"
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <Home className={`w-4 h-4 sm:w-4.5 sm:h-4.5 relative z-10 transition-colors ${activeMenu === "user_terrain" ? "text-afri-gold stroke-[2.5]" : "text-afri-text-sec stroke-[1.8]"}`} />
+                </div>
+                <span className={`text-[7.5px] xs:text-[8px] tracking-wider uppercase truncate max-w-full mt-0.5 whitespace-nowrap transition-colors ${activeMenu === "user_terrain" ? "font-black text-afri-gold" : "font-semibold text-afri-text-sec"}`}>
+                  Accueil
+                </span>
+              </button>
+            )}
 
             {/* 2. VIBES */}
             {isModuleVisible("podcasts") && (
