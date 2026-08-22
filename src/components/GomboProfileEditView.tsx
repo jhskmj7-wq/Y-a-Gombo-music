@@ -187,7 +187,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] space-y-4 pb-24"
+      className="w-full space-y-4 pb-24"
     >
       <div className="pt-2 pb-16 space-y-4 w-full">
         

@@ -1174,7 +1174,7 @@ export default function GomboProfile({
       <AndroidPageLayout 
         title={getPageTitle()} 
         onBack={panelView === "main" ? undefined : handleBack}
-        scrollable={false}
+        scrollable={true}
       >
         {panelView === "main" && (
         <GomboProfileMainView
