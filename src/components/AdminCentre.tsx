@@ -1,7 +1,7 @@
 import { NotificationService } from "../lib/NotificationService";
 import { useGeoEngine } from "../hooks/useGeoEngine";
 import { ErrorBoundary } from "./ErrorBoundary";
-import React, { useState, useEffect, useRef, useLayoutEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect, useCallback, lazy, Suspense } from "react";
 import {
   collection,
   onSnapshot,
@@ -447,7 +447,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     });
   };
 
-  const goBackMenu = () => {
+  const goBackMenu = useCallback(() => {
     // Silence navigation sounds
     setMenuHistory(prev => {
       if (prev.length > 1) {
@@ -457,7 +457,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       const parent = defaultBackParents[current] || "user_terrain";
       return [parent];
     });
-  };
+  }, []);
 
   // Hardware and browser back button support (Chrome Android)
   useEffect(() => {
@@ -5331,7 +5331,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <AfrigomboWalletDashboard 
                       currentUserProfile={profile || (currentUser as any)} 
                       addToTerminal={addToTerminal}
-                      onBack={() => goBackMenu()}
+                      onBack={goBackMenu}
                       onNavigateToMessages={(targetId) => {
                         if (setOpenConvoWithUserId) setOpenConvoWithUserId(targetId || "admin");
                         setActiveMenu("user_messages");

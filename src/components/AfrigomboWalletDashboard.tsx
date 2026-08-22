@@ -189,37 +189,45 @@ export default function AfrigomboWalletDashboard({
     } catch (_) {}
   };
 
-  // Initial Security Authorization
+  // Ref to stabilize onBack reference
+  const onBackRef = useRef(onBack);
+  useEffect(() => {
+    onBackRef.current = onBack;
+  }, [onBack]);
+
+  // Initial Security Authorization (runs once on mount)
   useEffect(() => {
     const checkAuth = async () => {
-      // Small delay to ensure context is ready and UI transition is smooth
       const ok = await requireWalletAuthentication("CONSULTATION_WALLET");
       if (ok) {
         setIsAuthorized(true);
-      } else if (onBack) {
-        onBack();
+      } else if (onBackRef.current) {
+        onBackRef.current();
       }
     };
     checkAuth();
+  }, []);
 
+  // Invalidate Wallet session ONLY on real component unmount (when leaving Wallet)
+  useEffect(() => {
     return () => {
       clearWalletSession();
     };
-  }, [requireWalletAuthentication, onBack, clearWalletSession]);
+  }, []);
 
   // Session expiry monitor
   useEffect(() => {
     const interval = setInterval(() => {
-        if (!isWalletSessionActive && isAuthorized) {
-            setIsAuthorized(false);
-            requireWalletAuthentication("SESSION_EXPIREE").then(ok => {
-                if (ok) setIsAuthorized(true);
-                else if (onBack) onBack();
-            });
-        }
+      if (!isWalletSessionActive && isAuthorized) {
+        setIsAuthorized(false);
+        requireWalletAuthentication("SESSION_EXPIREE").then(ok => {
+          if (ok) setIsAuthorized(true);
+          else if (onBackRef.current) onBackRef.current();
+        });
+      }
     }, 60000); // Check every minute
     return () => clearInterval(interval);
-  }, [isWalletSessionActive, isAuthorized, onBack, requireWalletAuthentication]);
+  }, [isWalletSessionActive, isAuthorized, requireWalletAuthentication]);
 
   // Real-time listener for user profile wallet & transactions from Firestore
   useEffect(() => {
