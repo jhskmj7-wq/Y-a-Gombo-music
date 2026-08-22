@@ -376,10 +376,14 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
   return (
     <div className="w-full bg-afri-bg text-afri-text font-sans transition-colors duration-300">
       {/* HEADER SECTION - COMPACT & EXPRESSIVE */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-afri-bg-ter to-afri-bg border-b border-afri-border px-4 py-5 sm:py-6 text-center">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[160px] bg-[#D4AF37]/5 rounded-full blur-[90px] pointer-events-none"></div>
+      <div className="relative overflow-hidden bg-gradient-to-b from-afri-bg-ter to-afri-bg border-b border-afri-border px-4 py-6 sm:py-8 text-center">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-[#D4AF37]/5 rounded-full blur-[90px] pointer-events-none"></div>
 
         <div className="max-w-3xl mx-auto space-y-2.5 relative z-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
+            👑 AFRIGOMBO ELITE PREMIUM
+          </div>
+          
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-afri-text uppercase leading-tight">
             Développez votre <span className="text-[#D4AF37]">carrière</span>
           </h1>

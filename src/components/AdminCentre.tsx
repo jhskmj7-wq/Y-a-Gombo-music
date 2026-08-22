@@ -3177,7 +3177,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
             </header>
           ) : (
-            ["user_terrain", "user_wallet", "user_messages", "user_notifications", "user_settings", "user_heritage", "user_edit_profile", "nearby", "user_gombo_ads"].includes(activeMenu) ? null : (
+            ["user_terrain", "user_wallet", "user_messages", "user_notifications", "user_settings", "user_heritage", "user_edit_profile", "nearby"].includes(activeMenu) ? null : (
               <header className="flex items-center justify-between px-4 py-3 bg-afri-bg border-b border-afri-border/50 z-[40] relative shrink-0 shadow-md">
                 <div className="flex items-center gap-3">
           {!["user_terrain", "user_wallet", "user_vibes", "user_mes_gombos", "user_heritage", "user_publish", "dashboard", "users", "notifications", "contracts", "reports", "revenue"].includes(activeMenu) && (
@@ -3376,13 +3376,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
                 className={`flex-1 min-h-0 h-full w-full ${
-                  ["user_settings", "user_notifications", "user_messages", "user_reels", "user_wallet", "user_heritage", "user_edit_profile", "user_gombo_ads", "super_admin"].includes(activeMenu)
+                  ["user_settings", "user_notifications", "user_messages", "user_reels", "user_wallet", "super_admin"].includes(activeMenu)
                     ? "flex flex-col overflow-hidden"
                     : "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
                 } ${
-                  activeMenu === "super_admin" || activeMenu === "user_builders" || activeMenu === "dashboard" || activeMenu === "user_terrain" || activeMenu === "user_vibes" || activeMenu === "user_mes_gombos"
+                  activeMenu === "super_admin" || activeMenu === "user_builders" || activeMenu === "dashboard" || activeMenu === "user_terrain" || activeMenu === "user_vibes" || activeMenu === "user_mes_gombos" || activeMenu === "user_heritage"
                     ? "px-4 xs:px-5 sm:px-8 max-w-5xl mx-auto w-full pt-0 pb-16 sm:pb-20 space-y-6"
-                    : ["user_messages", "user_settings", "user_notifications", "user_reels", "user_wallet", "user_heritage", "user_edit_profile", "user_gombo_ads"].includes(activeMenu)
+                    : ["user_messages", "user_settings", "user_notifications", "user_reels", "user_wallet"].includes(activeMenu)
                     ? "p-0 m-0"
                     : "afri-container afri-section"
                 }`}
@@ -5417,7 +5417,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {activeMenu === "user_heritage" && (
-                <div className="w-full h-full flex-1 flex flex-col min-h-0 bg-afri-bg animate-fadeIn text-left">
+                <div className="w-full animate-fadeIn">
                   <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
                     <HeritagePage 
                       onNavigateView={(view, tab) => {
@@ -6203,53 +6203,51 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "user_notifications" && (() => {
                 if (!currentUser) {
                   return (
-                    <AndroidPageLayout title="Notifications" onBack={() => goBackMenu()} scrollable={true} className="p-4 flex items-center justify-center">
-                      <div className="max-w-md mx-auto py-12 text-center animate-fadeIn select-none">
-                        <div className="w-16 h-16 bg-afri-gold/10 border border-afri-gold/35 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_15px_rgba(212,175,55,0.15)] animate-pulse">
-                          <Bell className="w-8 h-8 text-afri-gold" />
-                        </div>
-                        <h2 className="text-xl font-display font-black text-afri-text uppercase tracking-wider mb-2">
-                          Accès Réservé 🔒
-                        </h2>
-                        <p className="text-xs text-afri-text-sec font-sans leading-relaxed mb-8">
-                          Connectez-vous pour accéder à vos notifications et rester synchronisé en temps réel avec AFRIGOMBO ELITE.
-                        </p>
-                        
-                        <div className="space-y-3">
-                          <button
-                            onClick={async () => {
-                              try {
-                                if (audioSynth) audioSynth.playValidationSuccess();
-                                await loginWithGoogle();
-                                setIsAuthModalOpen(false);
-                                if (setShowAuthPopup) setShowAuthPopup(false);
-                              } catch (err) {
-                                console.error("Google Auth failed in notification gate:", err);
-                                setIsAuthModalOpen(true);
-                              }
-                            }}
-                            className="w-full py-3.5 px-6 rounded-2xl bg-[#D4AF37] hover:bg-[#e5bd3c] text-zinc-950 text-xs font-mono font-black uppercase tracking-widest transition-all shadow-[0_4px_20px_rgba(212,175,55,0.3)] cursor-pointer select-none active:scale-95 flex items-center justify-center gap-2.5"
-                          >
-                            <svg className="w-4 h-4 mr-1 shrink-0" viewBox="0 0 24 24">
-                              <path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 1.56-1.56 2.95-3.24 3.5v2.9h5.1c2.98-2.75 4.7-6.8 4.7-11.63c0-.52-.04-1.04-.1-1.5z" />
-                              <path fill="currentColor" d="M12.18 21.43c2.43 0 4.47-.8 5.96-2.2l-5.1-2.9c-.83.56-1.9.9-3.08.9c-2.33 0-4.3-1.58-5-3.7H1.7v3.08c1.5 3 4.58 4.92 8.1 4.92z" />
-                              <path fill="currentColor" d="M7.18 13.53c-.18-.55-.28-1.13-.28-1.73s.1-1.18.28-1.73V7H1.7a10.2 10.2 0 0 0 0 9.6l5.48-3.07z" />
-                              <path fill="currentColor" d="M12.18 5.57c1.33 0 2.5.46 3.44 1.36l2.58-2.58C16.65 2.9 14.6 2 12.18 2c-3.52 0-6.6 1.92-8.1 4.92l5.48 3.07c.7-2.12 2.67-3.7 5.02-3.7z" />
-                            </svg>
-                            Continuer avec Google
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setIsAuthModalOpen(true);
-                            }}
-                            className="w-full py-3 px-6 rounded-2xl bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white text-xs font-mono font-bold uppercase tracking-widest border border-[#D4AF37]/30 hover:border-[#D4AF37]/60 transition-all cursor-pointer select-none"
-                          >
-                            Autres options de connexion
-                          </button>
-                        </div>
+                    <div className="max-w-md mx-auto px-4 py-16 text-center animate-fadeIn select-none">
+                      <div className="w-16 h-16 bg-afri-gold/10 border border-afri-gold/35 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_15px_rgba(212,175,55,0.15)] animate-pulse">
+                        <Bell className="w-8 h-8 text-afri-gold" />
                       </div>
-                    </AndroidPageLayout>
+                      <h2 className="text-xl font-display font-black text-afri-text uppercase tracking-wider mb-2">
+                        Accès Réservé 🔒
+                      </h2>
+                      <p className="text-xs text-afri-text-sec font-sans leading-relaxed mb-8">
+                        Connectez-vous pour accéder à vos notifications et rester synchronisé en temps réel avec AFRIGOMBO ELITE.
+                      </p>
+                      
+                      <div className="space-y-3">
+                        <button
+                          onClick={async () => {
+                            try {
+                              if (audioSynth) audioSynth.playValidationSuccess();
+                              await loginWithGoogle();
+                              setIsAuthModalOpen(false);
+                              if (setShowAuthPopup) setShowAuthPopup(false);
+                            } catch (err) {
+                              console.error("Google Auth failed in notification gate:", err);
+                              setIsAuthModalOpen(true);
+                            }
+                          }}
+                          className="w-full py-3.5 px-6 rounded-2xl bg-[#D4AF37] hover:bg-[#e5bd3c] text-zinc-950 text-xs font-mono font-black uppercase tracking-widest transition-all shadow-[0_4px_20px_rgba(212,175,55,0.3)] cursor-pointer select-none active:scale-95 flex items-center justify-center gap-2.5"
+                        >
+                          <svg className="w-4 h-4 mr-1 shrink-0" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 1.56-1.56 2.95-3.24 3.5v2.9h5.1c2.98-2.75 4.7-6.8 4.7-11.63c0-.52-.04-1.04-.1-1.5z" />
+                            <path fill="currentColor" d="M12.18 21.43c2.43 0 4.47-.8 5.96-2.2l-5.1-2.9c-.83.56-1.9.9-3.08.9c-2.33 0-4.3-1.58-5-3.7H1.7v3.08c1.5 3 4.58 4.92 8.1 4.92z" />
+                            <path fill="currentColor" d="M7.18 13.53c-.18-.55-.28-1.13-.28-1.73s.1-1.18.28-1.73V7H1.7a10.2 10.2 0 0 0 0 9.6l5.48-3.07z" />
+                            <path fill="currentColor" d="M12.18 5.57c1.33 0 2.5.46 3.44 1.36l2.58-2.58C16.65 2.9 14.6 2 12.18 2c-3.52 0-6.6 1.92-8.1 4.92l5.48 3.07c.7-2.12 2.67-3.7 5.02-3.7z" />
+                          </svg>
+                          Continuer avec Google
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setIsAuthModalOpen(true);
+                          }}
+                          className="w-full py-3 px-6 rounded-2xl bg-zinc-900 hover:bg-zinc-850 text-zinc-300 hover:text-white text-xs font-mono font-bold uppercase tracking-widest border border-[#D4AF37]/30 hover:border-[#D4AF37]/60 transition-all cursor-pointer select-none"
+                        >
+                          Autres options de connexion
+                        </button>
+                      </div>
+                    </div>
                   );
                 }
 
@@ -6381,7 +6379,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   </div>
                 )}
                 {activeMenu === "user_gombo_ads" && (
-                  <div className="w-full h-full flex-1 flex flex-col min-h-0 bg-afri-bg animate-fadeIn text-left">
+                  <div className="animate-fadeIn">
                     <GomboAdsMainView 
                       currentUserProfile={profile || currentUser}
                       onBack={() => goBackMenu()}
@@ -6402,7 +6400,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
 
               {activeMenu === "user_edit_profile" && (
-                <div className="w-full h-full flex-1 flex flex-col min-h-0 bg-afri-bg animate-fadeIn text-left">
+                <div className="w-full animate-fadeIn">
                   {profile ? (
                     <HeritagePage 
                       onNavigateView={(view) => {
