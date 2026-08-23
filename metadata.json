@@ -1,6 +1,6 @@
 {
   "name": "AFRIGOMBO",
   "description": "AFRIGOMBO PRODUCTION. Plateforme professionnelle de mise en relation musicale certifiée. Sécurité financière par séquestre et arbitrage.",
-  "requestFramePermissions": ["geolocation"],
+  "requestFramePermissions": ["geolocation", "camera", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

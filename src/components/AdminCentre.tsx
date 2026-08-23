@@ -98,6 +98,7 @@ import NotificationCenter from "./NotificationCenter";
 import SettingsModal from "./SettingsModal";
 const ComingSoon = lazyWithRetry(() => import("./ComingSoon"));
 import AfrigomboPlus from "./AfrigomboPlus";
+import ReelCreatorScreen from "./reels/ReelCreatorScreen";
 const PublicProfileModal = lazyWithRetry(() => import("./PublicProfileModal").then(m => ({ default: m.PublicProfileModal })));
 const ArbreAPalabresBubble = lazyWithRetry(() => import("./ArbreAPalabresBubble").then(m => ({ default: m.ArbreAPalabresBubble })));
 const ReelsPlayer = lazyWithRetry(() => import("./ReelsPlayer").then(m => ({ default: m.ReelsPlayer })));
@@ -4847,33 +4848,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       onBack={() => goBackMenu()}
                     />
                   ) : activePublishType === "reel" ? (
-                    <div className="max-w-xl mx-auto py-8 px-4 text-center">
-                      <div className="bg-afri-bg-sec border border-afri-border rounded-3xl p-8 shadow-xl space-y-6">
-                        <div className="w-16 h-16 rounded-2xl bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center mx-auto shadow-lg">
-                          <Video className="w-8 h-8" />
-                        </div>
-                        <div className="space-y-2">
-                          <span className="inline-block px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full text-xs font-mono font-bold uppercase tracking-wider">
-                            Bientôt disponible 🔒
-                          </span>
-                          <h2 className="text-xl font-display font-black text-afri-text uppercase tracking-wide">
-                            Publication de Réels Vidéo
-                          </h2>
-                          <p className="text-xs text-afri-text-sec max-w-md mx-auto leading-relaxed">
-                            Le module de création et publication de vidéos courtes et démos scéniques sera déployé très prochainement après la phase Bêta.
-                          </p>
-                        </div>
-                        <div className="pt-2">
-                          <button
-                            type="button"
-                            onClick={() => goBackMenu()}
-                            className="px-6 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer active:scale-95 shadow-md"
-                          >
-                            Retour au menu
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <ReelCreatorScreen
+                      onClose={() => goBackMenu()}
+                      onVideoReady={(file) => {
+                        console.log("[REEL] Vidéo prête pour la phase suivante (compression) :", file);
+                        // TODO Phase 2 : compression puis Phase 3 : filtres puis Phase 4 : publication
+                      }}
+                    />
                   ) : (
                     <GomboPublish
                       currentUserProfile={
