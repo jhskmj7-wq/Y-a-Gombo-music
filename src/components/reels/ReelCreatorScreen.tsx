@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Camera, RotateCcw, Circle, Square, Image as ImageIcon, X, ChevronRight } from "lucide-react";
 
 interface ReelCreatorScreenProps {
@@ -43,8 +44,18 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
       });
       streamRef.current = stream;
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play().catch(() => {});
+        const videoEl = videoRef.current;
+        videoEl.muted = true;
+        videoEl.playsInline = true;
+        videoEl.srcObject = stream;
+        await new Promise<void>((resolve) => {
+          videoEl.onloadedmetadata = () => {
+            videoEl.play().catch((playErr) => {
+              console.warn("[REEL CREATOR] Play error:", playErr);
+            });
+            resolve();
+          };
+        });
       }
     } catch (err) {
       console.error("[REEL CREATOR] Camera access error:", err);
@@ -151,7 +162,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
 
   // PREVIEW MODE (after recording or import)
   if (recordedUrl) {
-    return (
+    return createPortal(
       <div className="fixed inset-0 bg-black z-[9999] flex flex-col">
         <div className="flex items-center justify-between p-4">
           <button onClick={handleRetake} className="text-white p-2 rounded-full bg-black/40">
@@ -165,12 +176,13 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
         <div className="flex-1 flex items-center justify-center overflow-hidden">
           <video ref={previewRef} src={recordedUrl} controls autoPlay loop playsInline className="max-h-full max-w-full" />
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   // CAMERA / RECORDING MODE
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black z-[9999] flex flex-col">
       <div className="flex items-center justify-between p-4 relative z-10">
         <button onClick={onClose} className="text-white p-2 rounded-full bg-black/40">
@@ -229,6 +241,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
         className="hidden"
         onChange={handleGalleryFile}
       />
-    </div>
+    </div>,
+    document.body
   );
 }
