@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Music, Calendar, Clock, MapPin, Search, Plus, User, 
   Flame, Sparkles, Filter, Check, X, Phone, Users, 
-  ChevronDown, MessageCircle, AlertCircle, RefreshCw, Send, Trash2, Wallet, Eye, EyeOff
+  ChevronDown, MessageCircle, AlertCircle, RefreshCw, Send, Trash2, Wallet, Eye, EyeOff, ArrowLeft
 } from "lucide-react";
 import { gomboDB } from "../firebase";
 import { db } from "../lib/firebase";
@@ -62,9 +62,11 @@ const GENRES_LIST = [
 interface RenfortExpressProps {
   currentUserProfile: UserProfile | null;
   onShowAuth: () => void;
+  onClose?: () => void;
+  onBack?: () => void;
 }
 
-export default function RenfortExpress({ currentUserProfile, onShowAuth }: RenfortExpressProps) {
+export default function RenfortExpress({ currentUserProfile, onShowAuth, onClose, onBack }: RenfortExpressProps) {
   const { formatWalletBalance, isBalanceHidden, toggleBalanceWithPin } = useWalletSecurity();
   const { locations, communeNames } = useLocations();
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
@@ -575,7 +577,35 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
   });
 
   return (
-    <div className="space-y-8" id="renfort-express-container">
+    <div className="space-y-6" id="renfort-express-container">
+      {/* Top Navigation Bar with Back & Close buttons */}
+      {(onBack || onClose) && (
+        <div className="flex items-center justify-between pb-1 animate-fadeIn">
+          <button
+            type="button"
+            onClick={() => {
+              if (onBack) onBack();
+              else if (onClose) onClose();
+            }}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border text-xs font-bold text-afri-text transition cursor-pointer active:scale-95 shadow-sm"
+          >
+            <ArrowLeft className="w-4 h-4 text-afri-gold" />
+            <span>Retour</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (onClose) onClose();
+              else if (onBack) onBack();
+            }}
+            className="w-8 h-8 rounded-full bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-afri-text transition cursor-pointer"
+            title="Fermer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Toast notifications panel */}
       <AnimatePresence>
         {notificationMsg && (

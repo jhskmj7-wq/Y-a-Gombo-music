@@ -377,6 +377,12 @@ const DEFAULT_SENSITIVE_HIDDEN_MODULES = new Set([
   "bank_transfers"
 ]);
 
+// Set of modules that are by default in COMING_SOON status until ready
+const DEFAULT_COMING_SOON_MODULES = new Set([
+  "publish_reel",
+  "verification"
+]);
+
 /**
  * Helper to determine if a module is considered a public module that is ACTIVE by default
  * unless explicitly set to HIDDEN in the deployment configuration.
@@ -455,6 +461,14 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
   }
 
   // 5. If value is still undefined in activeMap:
+  const cleanId = (featureId || "").toLowerCase().trim();
+  const canonical = CANONICAL_FEATURE_IDS[cleanId] || CANONICAL_FEATURE_IDS[featureId] || cleanId;
+  const canonicalClean = canonical.toLowerCase().trim();
+
+  if (DEFAULT_COMING_SOON_MODULES.has(cleanId) || DEFAULT_COMING_SOON_MODULES.has(canonicalClean)) {
+    return "COMING_SOON";
+  }
+
   if (!hasRealFlagsLoaded) {
     return isDefaultPublicModule(featureId) ? "ACTIVE" : "HIDDEN";
   }
