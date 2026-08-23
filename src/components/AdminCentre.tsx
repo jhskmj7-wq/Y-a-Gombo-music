@@ -4850,9 +4850,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   ) : activePublishType === "reel" ? (
                     <ReelCreatorScreen
                       onClose={() => goBackMenu()}
-                      onVideoReady={(file) => {
-                        console.log("[REEL] Vidéo prête pour la phase suivante (compression) :", file);
-                        // TODO Phase 2 : compression puis Phase 3 : filtres puis Phase 4 : publication
+                      onVideoReady={(file, filterId) => {
+                        console.log("[REEL] Vidéo prête :", file, "| Filtre sélectionné :", filterId);
+                        // TODO Phase 4 : publication
                       }}
                     />
                   ) : (

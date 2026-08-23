@@ -132,9 +132,9 @@ export default function PWAHandler() {
   const handleApplyUpdate = async () => {
     setIsUpdating(true);
     try {
-      // Step A: Trigger Workbox SW skipWaiting
+      // Step A: Trigger Workbox SW skipWaiting without forcing pwa-register auto-reload
       if (updateServiceWorkerRef.current) {
-        await updateServiceWorkerRef.current(true);
+        await updateServiceWorkerRef.current(false);
       }
 
       // Step B: Purge all stale CacheStorage entries to guarantee fresh assets from Vercel
@@ -154,7 +154,7 @@ export default function PWAHandler() {
     } catch (err) {
       console.warn('[PWA Engine] Nettoyage du cache terminé avec avertissement:', err);
     } finally {
-      // Rechargement direct de la page courante pour appliquer la mise à jour sans changer d'URL
+      // Rechargement direct et simple de la page courante pour appliquer la mise à jour
       window.location.reload();
     }
   };

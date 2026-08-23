@@ -1,10 +1,25 @@
 import React, { useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Image as ImageIcon, X, ChevronRight } from "lucide-react";
+import { Image as ImageIcon, X, ChevronRight, Sparkles } from "lucide-react";
 import { compressVideoFile } from "../../lib/media/videoCompressor";
 
+export interface VideoFilter {
+  id: string;
+  name: string;
+  filterCss: string;
+}
+
+export const REEL_VIDEO_FILTERS: VideoFilter[] = [
+  { id: "naturel", name: "Naturel", filterCss: "none" },
+  { id: "gold_afrigombo", name: "Gold AfriGombo", filterCss: "sepia(0.3) contrast(1.1) brightness(1.05) saturate(1.3) hue-rotate(-10deg)" },
+  { id: "vintage_concert", name: "Vintage Concert", filterCss: "sepia(0.5) contrast(1.2) brightness(0.9) saturate(0.8)" },
+  { id: "noir_blanc", name: "Noir & Blanc Studio", filterCss: "grayscale(1) contrast(1.25) brightness(1.05)" },
+  { id: "vibrant_pop", name: "Vibrant Pop", filterCss: "saturate(1.8) contrast(1.15) brightness(1.05)" },
+  { id: "warm_sunset", name: "Warm Sunset", filterCss: "sepia(0.4) saturate(1.4) hue-rotate(-20deg) contrast(1.1)" },
+];
+
 interface ReelCreatorScreenProps {
-  onVideoReady: (file: File) => void;
+  onVideoReady: (file: File, filterId: string) => void;
   onClose: () => void;
 }
 
@@ -14,8 +29,12 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
 
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<string>("naturel");
   const [isCompressing, setIsCompressing] = useState(false);
   const [compressionProgress, setCompressionProgress] = useState(0);
+
+  const activeFilterCss =
+    REEL_VIDEO_FILTERS.find((f) => f.id === selectedFilter)?.filterCss ?? "none";
 
   const handleGalleryFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -32,6 +51,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     setRecordedBlob(null);
     setRecordedUrl(null);
+    setSelectedFilter("naturel");
   };
 
   const handleNext = async () => {
@@ -48,10 +68,10 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
       console.log(
         `[REEL COMPRESSION] Taille avant: ${(result.originalSizeBytes / 1024 / 1024).toFixed(2)} Mo, Taille après: ${(result.compressedSizeBytes / 1024 / 1024).toFixed(2)} Mo`
       );
-      onVideoReady(result.file);
+      onVideoReady(result.file, selectedFilter);
     } catch (err) {
       console.warn("[REEL COMPRESSION] Erreur de compression, fallback fichier original:", err);
-      onVideoReady(file);
+      onVideoReady(file, selectedFilter);
     } finally {
       setIsCompressing(false);
     }
@@ -61,21 +81,33 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   if (recordedUrl) {
     return createPortal(
       <div className="fixed inset-0 bg-black z-[9999] flex flex-col">
-        <div className="flex items-center justify-between p-4">
+        <div className="flex items-center justify-between p-4 z-10 bg-gradient-to-b from-black/80 to-transparent">
           <button onClick={handleRetake} disabled={isCompressing} className="text-white p-2 rounded-full bg-black/40 disabled:opacity-40">
             <X className="w-6 h-6" />
           </button>
-          <span className="text-white text-sm font-mono">Aperçu</span>
+          <span className="text-white text-sm font-mono flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-[#D4AF37]" /> Aperçu & Filtres
+          </span>
           <button
             onClick={handleNext}
             disabled={isCompressing}
-            className="flex items-center gap-1 bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-full text-sm disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+            className="flex items-center gap-1 bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-full text-sm disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shadow-md hover:brightness-110 active:scale-95 transition-all"
           >
             {isCompressing ? "Compression..." : <>Suivant <ChevronRight className="w-4 h-4" /></>}
           </button>
         </div>
-        <div className="flex-1 flex items-center justify-center overflow-hidden relative">
-          <video ref={previewRef} src={recordedUrl} controls={!isCompressing} autoPlay loop playsInline className="max-h-full max-w-full" />
+
+        <div className="flex-1 flex items-center justify-center overflow-hidden relative bg-black">
+          <video
+            ref={previewRef}
+            src={recordedUrl}
+            controls={!isCompressing}
+            autoPlay
+            loop
+            playsInline
+            style={{ filter: activeFilterCss }}
+            className="max-h-full max-w-full transition-all duration-300"
+          />
           {isCompressing && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center text-white gap-3 z-20">
               <div className="w-8 h-8 border-3 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin" />
@@ -84,6 +116,55 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
               </div>
             </div>
           )}
+        </div>
+
+        {/* Carousel des filtres visuels */}
+        <div className="p-4 bg-black/90 border-t border-white/10 z-10">
+          <div className="text-xs font-mono text-zinc-400 mb-2.5 flex items-center gap-1.5 px-1 uppercase tracking-wider">
+            <span>Style visuel :</span>
+            <span className="text-[#D4AF37] font-bold">
+              {REEL_VIDEO_FILTERS.find((f) => f.id === selectedFilter)?.name}
+            </span>
+          </div>
+          <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none snap-x">
+            {REEL_VIDEO_FILTERS.map((f) => {
+              const isSelected = selectedFilter === f.id;
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => !isCompressing && setSelectedFilter(f.id)}
+                  disabled={isCompressing}
+                  className={`flex flex-col items-center gap-1.5 snap-start shrink-0 cursor-pointer transition-all ${
+                    isSelected ? "scale-105" : "opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <div
+                    className={`w-14 h-14 rounded-2xl overflow-hidden border-2 flex items-center justify-center relative shadow-lg transition-all ${
+                      isSelected
+                        ? "border-[#D4AF37] ring-2 ring-[#D4AF37]/40 shadow-[#D4AF37]/20"
+                        : "border-white/20 hover:border-white/50"
+                    }`}
+                  >
+                    <div
+                      className="absolute inset-0 bg-gradient-to-br from-amber-500 via-rose-500 to-indigo-600"
+                      style={{ filter: f.filterCss }}
+                    />
+                    <div className="absolute inset-0 bg-black/20" />
+                    <span className="relative z-10 text-[10px] font-bold text-white uppercase text-center px-1 leading-tight drop-shadow">
+                      {f.name.split(" ")[0]}
+                    </span>
+                  </div>
+                  <span
+                    className={`text-[11px] font-mono tracking-tight transition-colors ${
+                      isSelected ? "text-[#D4AF37] font-bold" : "text-zinc-400"
+                    }`}
+                  >
+                    {f.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>,
       document.body
