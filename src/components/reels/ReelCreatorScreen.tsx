@@ -124,15 +124,10 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
             autoPlay
             loop
             playsInline
+            muted
             style={{ filter: activeFilterCss }}
             className="max-h-full max-w-full transition-all duration-300"
           />
-          {isCompressing && !compressedResult && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-black/70 backdrop-blur-md border border-[#D4AF37]/30 shadow-lg z-20">
-              <div className="w-3.5 h-3.5 border-2 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin" />
-              <span className="text-white text-xs font-mono font-medium">Optimisation... {compressionProgress}%</span>
-            </div>
-          )}
         </div>
 
         {/* Carousel des filtres visuels */}
@@ -143,7 +138,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
               {REEL_VIDEO_FILTERS.find((f) => f.id === selectedFilter)?.name}
             </span>
           </div>
-          <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none snap-x">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none snap-x">
             {REEL_VIDEO_FILTERS.map((f) => {
               const isSelected = selectedFilter === f.id;
               return (

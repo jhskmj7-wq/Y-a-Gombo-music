@@ -148,10 +148,11 @@ function validateFile(
   }
 
   if (mimeType && allowedList.length > 0) {
+    const baseMimeType = mimeType.split(";")[0].trim().toLowerCase();
     const isAllowed = allowedList.some(
       (allowed) =>
-        mimeType.toLowerCase() === allowed.toLowerCase() ||
-        (allowed.endsWith("/*") && mimeType.startsWith(allowed.replace("/*", "")))
+        baseMimeType === allowed.toLowerCase() ||
+        (allowed.endsWith("/*") && baseMimeType.startsWith(allowed.replace("/*", "")))
     );
     if (!isAllowed) {
       return {

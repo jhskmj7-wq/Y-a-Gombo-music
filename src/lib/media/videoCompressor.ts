@@ -19,7 +19,7 @@ export async function compressVideoFile(
 
   return new Promise((resolve, reject) => {
     const videoEl = document.createElement("video");
-    videoEl.muted = false;
+    videoEl.muted = true;
     videoEl.playsInline = true;
     videoEl.src = URL.createObjectURL(file);
 
