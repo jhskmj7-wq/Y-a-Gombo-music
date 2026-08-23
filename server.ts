@@ -637,7 +637,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       try {
         decodedToken = await adminAuth.verifyIdToken(idToken);
       } catch (authErr: any) {
-        return res.status(401).json({ success: false, error: "Session invalide ou expirée. Seul le Super Fondateur authentifié est autorisé." });
+        return res.status(401).json({ success: false, error: "Session invalide ou expirée. Veuillez vous reconnecter." });
       }
 
       const uid = decodedToken.uid;
@@ -656,15 +656,22 @@ app.post("/api/wallet/request-reset", async (req, res) => {
         storagePath.startsWith("video/") ||
         storagePath.startsWith("videos/") ||
         storagePath.startsWith("reels/") ||
+        storagePath.startsWith("reel/") ||
         storagePath.startsWith("audio/") ||
         storagePath.startsWith("audios/") ||
         storagePath.startsWith("images/") ||
-        storagePath.startsWith("media/");
+        storagePath.startsWith("image/") ||
+        storagePath.startsWith("media/") ||
+        storagePath.startsWith("avatars/") ||
+        storagePath.startsWith("banners/") ||
+        storagePath.startsWith("proofs/") ||
+        storagePath.startsWith("documents/") ||
+        storagePath.startsWith("users/");
 
       if (!isSuperFounder && !isUserMediaUpload) {
         return res.status(403).json({
           success: false,
-          error: "Accès refusé. Seul le Super Fondateur de la plateforme est autorisé à effectuer ce téléversement."
+          error: "Accès refusé. Chemin de stockage non autorisé pour le téléversement utilisateur."
         });
       }
 

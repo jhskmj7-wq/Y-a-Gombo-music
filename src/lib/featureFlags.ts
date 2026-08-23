@@ -379,7 +379,6 @@ const DEFAULT_SENSITIVE_HIDDEN_MODULES = new Set([
 
 // Set of modules that are by default in COMING_SOON status until ready
 const DEFAULT_COMING_SOON_MODULES = new Set([
-  "publish_reel",
   "verification"
 ]);
 
