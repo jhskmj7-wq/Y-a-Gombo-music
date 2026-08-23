@@ -13,6 +13,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const videoRef = useRef<HTMLVideoElement>(null);
   const previewRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const audioStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -26,28 +27,62 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(true);
 
-  const stopStream = useCallback(() => {
+  const stopVideoTracks = useCallback(() => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current.getVideoTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
   }, []);
 
+  const stopAllStreams = useCallback(() => {
+    stopVideoTracks();
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
+    }
+  }, [stopVideoTracks]);
+
+  const stopStream = stopVideoTracks;
+
   const startCamera = useCallback(async (mode: "user" | "environment") => {
     setCameraError(null);
     setIsStarting(true);
-    stopStream();
+    
+    // Stop only previous video tracks so audio remains untouched
+    stopVideoTracks();
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: mode, width: { ideal: 720 }, height: { ideal: 1280 } },
-        audio: true
+      // 1. Get audio stream only once if not already available or active
+      let audioStream = audioStreamRef.current;
+      const isAudioActive = audioStream && audioStream.getAudioTracks().some((t) => t.readyState === "live");
+      if (!isAudioActive) {
+        try {
+          audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioStreamRef.current = audioStream;
+        } catch (audioErr) {
+          console.warn("[REEL CREATOR] Audio permission/access warning:", audioErr);
+        }
+      }
+
+      // 2. Request only video on camera switch (with optimized preview resolution: 480x854)
+      const videoStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: mode, width: { ideal: 480 }, height: { ideal: 854 } },
+        audio: false
       });
-      streamRef.current = stream;
+
+      // 3. Combine video tracks and audio tracks into a single stream
+      const combinedTracks = [
+        ...videoStream.getVideoTracks(),
+        ...(audioStreamRef.current ? audioStreamRef.current.getAudioTracks() : [])
+      ];
+      const combinedStream = new MediaStream(combinedTracks);
+      streamRef.current = combinedStream;
+
       if (videoRef.current) {
         const videoEl = videoRef.current;
         videoEl.muted = true;
         videoEl.playsInline = true;
-        videoEl.srcObject = stream;
+        videoEl.srcObject = combinedStream;
         await new Promise<void>((resolve) => {
           videoEl.onloadedmetadata = () => {
             videoEl.play().catch((playErr) => {
@@ -63,16 +98,19 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     } finally {
       setIsStarting(false);
     }
-  }, [stopStream]);
+  }, [stopVideoTracks]);
 
   useEffect(() => {
     startCamera(facingMode);
-    return () => {
-      stopStream();
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [facingMode]);
+
+  useEffect(() => {
+    return () => {
+      stopAllStreams();
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [stopAllStreams]);
 
   const switchCamera = () => {
     if (isRecording) return;
@@ -204,8 +242,11 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
           <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
         )}
         {isStarting && !cameraError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <span className="text-white text-sm">Chargement de la caméra...</span>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 text-white text-xs font-mono shadow-lg border border-white/10">
+              <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>Changement...</span>
+            </div>
           </div>
         )}
       </div>
