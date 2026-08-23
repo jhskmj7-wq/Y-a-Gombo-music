@@ -31,6 +31,9 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const [compressionProgress, setCompressionProgress] = useState(0);
 
   const stopVideoTracks = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     if (streamRef.current) {
       streamRef.current.getVideoTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -67,11 +70,31 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
         }
       }
 
-      // 2. Request only video on camera switch (with resolution: 720x1280)
-      const videoStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: mode, width: { ideal: 720 }, height: { ideal: 1280 } },
-        audio: false
-      });
+      // 2. Request video stream with fallback constraints for hardware/driver compatibility
+      let videoStream: MediaStream | null = null;
+      const constraintsList = [
+        { facingMode: mode, width: { ideal: 720 }, height: { ideal: 1280 }, aspectRatio: { ideal: 9 / 16 } },
+        { facingMode: mode, width: { ideal: 720 }, height: { ideal: 1280 } },
+        { facingMode: mode },
+        { facingMode: { ideal: mode } },
+        true
+      ];
+
+      for (const videoConstraint of constraintsList) {
+        try {
+          videoStream = await navigator.mediaDevices.getUserMedia({
+            video: videoConstraint,
+            audio: false
+          });
+          if (videoStream) break;
+        } catch (e) {
+          console.warn(`[REEL CREATOR] getUserMedia failed with constraint:`, videoConstraint, e);
+        }
+      }
+
+      if (!videoStream) {
+        throw new Error("Could not start video source on any constraint");
+      }
 
       // 3. Combine video tracks and audio tracks into a single stream
       const combinedTracks = [
@@ -271,7 +294,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
             <p className="text-zinc-400 text-sm">{cameraError}</p>
           </div>
         ) : (
-          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-contain" />
+          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
         )}
 
       </div>
