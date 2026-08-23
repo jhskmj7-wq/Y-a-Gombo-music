@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Camera, RotateCcw, Circle, Square, Image as ImageIcon, X, ChevronRight } from "lucide-react";
+import { compressVideoFile } from "../../lib/media/videoCompressor";
 
 interface ReelCreatorScreenProps {
   onVideoReady: (file: File) => void;
@@ -26,6 +27,8 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(true);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressionProgress, setCompressionProgress] = useState(0);
 
   const stopVideoTracks = useCallback(() => {
     if (streamRef.current) {
@@ -64,9 +67,9 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
         }
       }
 
-      // 2. Request only video on camera switch (with optimized preview resolution: 480x854)
+      // 2. Request only video on camera switch (with resolution: 720x1280)
       const videoStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: mode, width: { ideal: 480 }, height: { ideal: 854 } },
+        video: { facingMode: mode, width: { ideal: 720 }, height: { ideal: 1280 } },
         audio: false
       });
 
@@ -178,6 +181,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   };
 
   const handleRetake = () => {
+    if (isCompressing) return;
     if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     setRecordedBlob(null);
     setRecordedUrl(null);
@@ -185,11 +189,27 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     startCamera(facingMode);
   };
 
-  const handleNext = () => {
-    if (!recordedBlob) return;
+  const handleNext = async () => {
+    if (!recordedBlob || isCompressing) return;
     const ext = recordedBlob.type.includes("mp4") ? "mp4" : "webm";
     const file = new File([recordedBlob], `reel_${Date.now()}.${ext}`, { type: recordedBlob.type });
-    onVideoReady(file);
+
+    setIsCompressing(true);
+    setCompressionProgress(0);
+    try {
+      const result = await compressVideoFile(file, {
+        onProgress: setCompressionProgress
+      });
+      console.log(
+        `[REEL COMPRESSION] Taille avant: ${(result.originalSizeBytes / 1024 / 1024).toFixed(2)} Mo, Taille après: ${(result.compressedSizeBytes / 1024 / 1024).toFixed(2)} Mo`
+      );
+      onVideoReady(result.file);
+    } catch (err) {
+      console.warn("[REEL COMPRESSION] Erreur de compression, fallback fichier original:", err);
+      onVideoReady(file);
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const formatTime = (s: number) => {
@@ -203,16 +223,28 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     return createPortal(
       <div className="fixed inset-0 bg-black z-[9999] flex flex-col">
         <div className="flex items-center justify-between p-4">
-          <button onClick={handleRetake} className="text-white p-2 rounded-full bg-black/40">
+          <button onClick={handleRetake} disabled={isCompressing} className="text-white p-2 rounded-full bg-black/40 disabled:opacity-40">
             <X className="w-6 h-6" />
           </button>
           <span className="text-white text-sm font-mono">Aperçu</span>
-          <button onClick={handleNext} className="flex items-center gap-1 bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-full text-sm">
-            Suivant <ChevronRight className="w-4 h-4" />
+          <button
+            onClick={handleNext}
+            disabled={isCompressing}
+            className="flex items-center gap-1 bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-full text-sm disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+          >
+            {isCompressing ? "Compression..." : <>Suivant <ChevronRight className="w-4 h-4" /></>}
           </button>
         </div>
-        <div className="flex-1 flex items-center justify-center overflow-hidden">
-          <video ref={previewRef} src={recordedUrl} controls autoPlay loop playsInline className="max-h-full max-w-full" />
+        <div className="flex-1 flex items-center justify-center overflow-hidden relative">
+          <video ref={previewRef} src={recordedUrl} controls={!isCompressing} autoPlay loop playsInline className="max-h-full max-w-full" />
+          {isCompressing && (
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center text-white gap-3 z-20">
+              <div className="w-8 h-8 border-3 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin" />
+              <div className="text-sm font-mono font-medium">
+                Compression en cours... {compressionProgress}%
+              </div>
+            </div>
+          )}
         </div>
       </div>,
       document.body
