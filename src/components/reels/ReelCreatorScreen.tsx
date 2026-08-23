@@ -32,6 +32,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const [selectedFilter, setSelectedFilter] = useState<string>("naturel");
   const [isCompressing, setIsCompressing] = useState(false);
   const [compressionProgress, setCompressionProgress] = useState(0);
+  const [compressedResult, setCompressedResult] = useState<{ file: File } | null>(null);
 
   const activeFilterCss =
     REEL_VIDEO_FILTERS.find((f) => f.id === selectedFilter)?.filterCss ?? "none";
@@ -39,42 +40,41 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const handleGalleryFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("video/")) {
-      return;
-    }
+    if (!file.type.startsWith("video/")) return;
+
     setRecordedBlob(file);
     setRecordedUrl(URL.createObjectURL(file));
+    setCompressedResult(null);
+    setIsCompressing(true);
+    setCompressionProgress(0);
+
+    compressVideoFile(file, { onProgress: setCompressionProgress })
+      .then((result) => {
+        console.log(
+          `[REEL COMPRESSION] Taille avant: ${(result.originalSizeBytes / 1024 / 1024).toFixed(2)} Mo, Taille après: ${(result.compressedSizeBytes / 1024 / 1024).toFixed(2)} Mo`
+        );
+        setCompressedResult({ file: result.file });
+      })
+      .catch((err) => {
+        console.warn("[REEL COMPRESSION] Erreur de compression, fallback fichier original:", err);
+        setCompressedResult({ file });
+      })
+      .finally(() => {
+        setIsCompressing(false);
+      });
   };
 
   const handleRetake = () => {
-    if (isCompressing) return;
     if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     setRecordedBlob(null);
     setRecordedUrl(null);
+    setCompressedResult(null);
     setSelectedFilter("naturel");
   };
 
-  const handleNext = async () => {
-    if (!recordedBlob || isCompressing) return;
-    const ext = recordedBlob.type.includes("mp4") ? "mp4" : "webm";
-    const file = new File([recordedBlob], `reel_${Date.now()}.${ext}`, { type: recordedBlob.type });
-
-    setIsCompressing(true);
-    setCompressionProgress(0);
-    try {
-      const result = await compressVideoFile(file, {
-        onProgress: setCompressionProgress
-      });
-      console.log(
-        `[REEL COMPRESSION] Taille avant: ${(result.originalSizeBytes / 1024 / 1024).toFixed(2)} Mo, Taille après: ${(result.compressedSizeBytes / 1024 / 1024).toFixed(2)} Mo`
-      );
-      onVideoReady(result.file, selectedFilter);
-    } catch (err) {
-      console.warn("[REEL COMPRESSION] Erreur de compression, fallback fichier original:", err);
-      onVideoReady(file, selectedFilter);
-    } finally {
-      setIsCompressing(false);
-    }
+  const handleNext = () => {
+    if (!compressedResult) return;
+    onVideoReady(compressedResult.file, selectedFilter);
   };
 
   // PREVIEW MODE (after selecting a video)
@@ -82,7 +82,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     return createPortal(
       <div className="fixed inset-0 bg-black z-[9999] flex flex-col">
         <div className="flex items-center justify-between p-4 z-10 bg-gradient-to-b from-black/80 to-transparent">
-          <button onClick={handleRetake} disabled={isCompressing} className="text-white p-2 rounded-full bg-black/40 disabled:opacity-40">
+          <button onClick={handleRetake} className="text-white p-2 rounded-full bg-black/40">
             <X className="w-6 h-6" />
           </button>
           <span className="text-white text-sm font-mono flex items-center gap-1.5">
@@ -90,10 +90,10 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
           </span>
           <button
             onClick={handleNext}
-            disabled={isCompressing}
+            disabled={!compressedResult}
             className="flex items-center gap-1 bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-full text-sm disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shadow-md hover:brightness-110 active:scale-95 transition-all"
           >
-            {isCompressing ? "Compression..." : <>Suivant <ChevronRight className="w-4 h-4" /></>}
+            <>Suivant <ChevronRight className="w-4 h-4" /></>
           </button>
         </div>
 
@@ -101,19 +101,17 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
           <video
             ref={previewRef}
             src={recordedUrl}
-            controls={!isCompressing}
+            controls={true}
             autoPlay
             loop
             playsInline
             style={{ filter: activeFilterCss }}
             className="max-h-full max-w-full transition-all duration-300"
           />
-          {isCompressing && (
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center text-white gap-3 z-20">
-              <div className="w-8 h-8 border-3 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin" />
-              <div className="text-sm font-mono font-medium">
-                Compression en cours... {compressionProgress}%
-              </div>
+          {isCompressing && !compressedResult && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-black/70 backdrop-blur-md border border-[#D4AF37]/30 shadow-lg z-20">
+              <div className="w-3.5 h-3.5 border-2 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin" />
+              <span className="text-white text-xs font-mono font-medium">Optimisation... {compressionProgress}%</span>
             </div>
           )}
         </div>
@@ -132,8 +130,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
               return (
                 <button
                   key={f.id}
-                  onClick={() => !isCompressing && setSelectedFilter(f.id)}
-                  disabled={isCompressing}
+                  onClick={() => setSelectedFilter(f.id)}
                   className={`flex flex-col items-center gap-1.5 snap-start shrink-0 cursor-pointer transition-all ${
                     isSelected ? "scale-105" : "opacity-70 hover:opacity-100"
                   }`}
