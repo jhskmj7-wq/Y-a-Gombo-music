@@ -130,31 +130,33 @@ export default function PWAHandler() {
 
   // 3. APPLY UPDATE & CLEAR STALE CACHES
   const handleApplyUpdate = async () => {
+    console.log("🔍 [DIAGNOSTIC PWA] 1. Clic sur le bouton Actualiser déclenché.");
+    console.log("🔍 [DIAGNOSTIC PWA] URL actuelle avant mise à jour:", window.location.href);
     setIsUpdating(true);
     try {
-      // Step A: Trigger Workbox SW skipWaiting without forcing pwa-register auto-reload
       if (updateServiceWorkerRef.current) {
+        console.log("🔍 [DIAGNOSTIC PWA] 2. Appel de updateServiceWorkerRef(false)...");
         await updateServiceWorkerRef.current(false);
       }
 
-      // Step B: Purge all stale CacheStorage entries to guarantee fresh assets from Vercel
       if (typeof window !== 'undefined' && 'caches' in window) {
         const cacheKeys = await caches.keys();
+        console.log("🔍 [DIAGNOSTIC PWA] 3. Purge des caches en cours, clés:", cacheKeys);
         await Promise.all(
           cacheKeys.map(key => caches.delete(key))
         );
       }
 
-      // Step C: Force SW update if available
       if (swRegistrationRef.current) {
         try {
+          console.log("🔍 [DIAGNOSTIC PWA] 4. Forçage r.update()...");
           await swRegistrationRef.current.update();
         } catch (_) {}
       }
     } catch (err) {
       console.warn('[PWA Engine] Nettoyage du cache terminé avec avertissement:', err);
     } finally {
-      // Rechargement direct et simple de la page courante pour appliquer la mise à jour
+      console.log("🔍 [DIAGNOSTIC PWA] 5. Lancement de window.location.reload() vers:", window.location.href);
       window.location.reload();
     }
   };

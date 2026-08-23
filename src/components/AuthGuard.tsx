@@ -12,6 +12,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!currentUser) {
+    console.log("🔍 [DIAGNOSTIC AUTHGUARD] Utilisateur non authentifié détecté sur route protégée:", location.pathname, "-> Redirection vers /home");
     setTimeout(() => {
       setShowAuthPopup(true);
     }, 100);

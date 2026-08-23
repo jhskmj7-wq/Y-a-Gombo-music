@@ -99,6 +99,7 @@ import SettingsModal from "./SettingsModal";
 const ComingSoon = lazyWithRetry(() => import("./ComingSoon"));
 import AfrigomboPlus from "./AfrigomboPlus";
 import ReelCreatorScreen from "./reels/ReelCreatorScreen";
+import ReelPublishScreen from "./reels/ReelPublishScreen";
 const PublicProfileModal = lazyWithRetry(() => import("./PublicProfileModal").then(m => ({ default: m.PublicProfileModal })));
 const ArbreAPalabresBubble = lazyWithRetry(() => import("./ArbreAPalabresBubble").then(m => ({ default: m.ArbreAPalabresBubble })));
 const ReelsPlayer = lazyWithRetry(() => import("./ReelsPlayer").then(m => ({ default: m.ReelsPlayer })));
@@ -289,6 +290,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [activeBoostItem, setActiveBoostItem] = useState<{id: string, title?: string, type: 'gombo' | 'candidature' | 'profile'} | null>(null);
   const [isDiagnosticOpen, setIsDiagnosticOpen] = useState<boolean>(false);
   const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(false);
+  const [reelToPublish, setReelToPublish] = useState<{ file: File; filterId: string } | null>(null);
   
   // Avatar modals state
   const [isAvatarEditorOpen, setIsAvatarEditorOpen] = useState<boolean>(false);
@@ -4848,13 +4850,23 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       onBack={() => goBackMenu()}
                     />
                   ) : activePublishType === "reel" ? (
-                    <ReelCreatorScreen
-                      onClose={() => goBackMenu()}
-                      onVideoReady={(file, filterId) => {
-                        console.log("[REEL] Vidéo prête :", file, "| Filtre sélectionné :", filterId);
-                        // TODO Phase 4 : publication
-                      }}
-                    />
+                    <>
+                      <ReelCreatorScreen
+                        onClose={() => goBackMenu()}
+                        onVideoReady={(file, filterId) => setReelToPublish({ file, filterId })}
+                      />
+                      {reelToPublish && (
+                        <ReelPublishScreen
+                          videoFile={reelToPublish.file}
+                          filterId={reelToPublish.filterId}
+                          onClose={() => setReelToPublish(null)}
+                          onPublished={() => {
+                            setReelToPublish(null);
+                            goBackMenu();
+                          }}
+                        />
+                      )}
+                    </>
                   ) : (
                     <GomboPublish
                       currentUserProfile={
