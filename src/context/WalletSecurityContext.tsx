@@ -26,6 +26,16 @@ export interface WalletSecurityContextValue {
 
 const WalletSecurityContext = createContext<WalletSecurityContextValue | null>(null);
 
+// Fisher-Yates array shuffle utility
+function shuffleArray<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export function WalletSecurityProvider({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
   const currentUserRef = useRef(currentUser);
@@ -155,6 +165,14 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
   const [successMsg, setSuccessMsg] = useState("");
   const [attemptsRemaining, setAttemptsRemaining] = useState<number | null>(null);
   const [lockedMins, setLockedMins] = useState<number | null>(null);
+  const [shuffledDigits, setShuffledDigits] = useState<number[]>(() => shuffleArray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
+
+  // Shuffle keypad numbers on each modal opening for enhanced security
+  useEffect(() => {
+    if (showModal) {
+      setShuffledDigits(shuffleArray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
+    }
+  }, [showModal]);
 
   const resolverRef = useRef<((val: boolean) => void) | null>(null);
   const [, setResolver] = useState<((val: boolean) => void) | null>(null);
@@ -615,7 +633,7 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
 
                   {/* 3x4 Keypad Grid */}
                   <div className="grid grid-cols-3 gap-y-3 gap-x-4 max-w-[240px] mx-auto pt-1 relative z-10">
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                    {shuffledDigits.slice(0, 9).map((num) => (
                       <button
                         key={num}
                         type="button"
@@ -641,12 +659,13 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
                       Annuler
                     </button>
                     <button
-                      key={0}
+                      key={shuffledDigits[9] ?? 0}
                       type="button"
                       onClick={() => {
+                        const digit = shuffledDigits[9] ?? 0;
                         const maxLen = modalMode === "VERIFY" ? 6 : effectivePinLength;
                         if (enteredPin.length >= maxLen) return;
-                        const nextPin = enteredPin + "0";
+                        const nextPin = enteredPin + digit;
                         setEnteredPin(nextPin);
                         if (nextPin.length === effectivePinLength) {
                           handlePinSubmit(nextPin);
@@ -654,7 +673,7 @@ export function WalletSecurityProvider({ children }: { children: React.ReactNode
                       }}
                       className="w-13 h-13 rounded-2xl bg-zinc-900/90 border border-zinc-800 hover:bg-zinc-800 hover:border-[#D4AF37]/40 text-lg font-bold font-mono text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-md"
                     >
-                      0
+                      {shuffledDigits[9] ?? 0}
                     </button>
                     <button
                       type="button"
