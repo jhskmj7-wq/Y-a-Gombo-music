@@ -271,16 +271,9 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
             <p className="text-zinc-400 text-sm">{cameraError}</p>
           </div>
         ) : (
-          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-contain" />
         )}
-        {isStarting && !cameraError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 text-white text-xs font-mono shadow-lg border border-white/10">
-              <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span>Changement...</span>
-            </div>
-          </div>
-        )}
+
       </div>
 
       <div className="p-6 flex items-center justify-between relative z-10">
