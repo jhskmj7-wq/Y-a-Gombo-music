@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Image as ImageIcon, X, ChevronRight, Sparkles } from "lucide-react";
 import { compressVideoFile } from "../../lib/media/videoCompressor";
@@ -33,6 +33,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const [isCompressing, setIsCompressing] = useState(false);
   const [compressionProgress, setCompressionProgress] = useState(0);
   const [compressedResult, setCompressedResult] = useState<{ file: File } | null>(null);
+  const [waitingToPublish, setWaitingToPublish] = useState(false);
 
   const activeFilterCss =
     REEL_VIDEO_FILTERS.find((f) => f.id === selectedFilter)?.filterCss ?? "none";
@@ -69,13 +70,24 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     setRecordedBlob(null);
     setRecordedUrl(null);
     setCompressedResult(null);
+    setWaitingToPublish(false);
     setSelectedFilter("naturel");
   };
 
   const handleNext = () => {
-    if (!compressedResult) return;
-    onVideoReady(compressedResult.file, selectedFilter);
+    if (compressedResult) {
+      onVideoReady(compressedResult.file, selectedFilter);
+    } else {
+      setWaitingToPublish(true);
+    }
   };
+
+  useEffect(() => {
+    if (waitingToPublish && compressedResult) {
+      onVideoReady(compressedResult.file, selectedFilter);
+      setWaitingToPublish(false);
+    }
+  }, [waitingToPublish, compressedResult, selectedFilter, onVideoReady]);
 
   // PREVIEW MODE (after selecting a video)
   if (recordedUrl) {
@@ -90,10 +102,17 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
           </span>
           <button
             onClick={handleNext}
-            disabled={!compressedResult}
-            className="flex items-center gap-1 bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-full text-sm disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shadow-md hover:brightness-110 active:scale-95 transition-all"
+            disabled={waitingToPublish}
+            className="flex items-center gap-1 bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-full text-sm disabled:opacity-70 cursor-pointer shadow-md hover:brightness-110 active:scale-95 transition-all"
           >
-            <>Suivant <ChevronRight className="w-4 h-4" /></>
+            {waitingToPublish ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                Patiente...
+              </>
+            ) : (
+              <>Suivant <ChevronRight className="w-4 h-4" /></>
+            )}
           </button>
         </div>
 
