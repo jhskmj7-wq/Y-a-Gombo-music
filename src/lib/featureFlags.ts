@@ -305,7 +305,17 @@ export const CANONICAL_FEATURE_IDS: Record<string, string> = {
   accueil: "home",
   terrain: "home",
   user_home: "home",
-  user_terrain: "home"
+  user_terrain: "home",
+
+  // Publications Menu
+  publish_gombo: "publish_gombo",
+  publish_reel: "publish_reel",
+  publish_demo: "publish_demo",
+  publish_renfort: "publish_renfort",
+  publier_gombo: "publish_gombo",
+  publier_reel: "publish_reel",
+  publier_demo: "publish_demo",
+  publier_renfort: "publish_renfort"
 };
 
 export const FEATURE_PARENT_MAP: Record<string, string> = {

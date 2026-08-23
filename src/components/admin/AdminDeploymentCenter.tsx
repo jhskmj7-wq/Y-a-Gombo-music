@@ -181,6 +181,13 @@ export default function AdminDeploymentCenter({
       description: "Sauvegardes de sécurité, journal de mises à jour, carnet du fondateur et support",
       moduleIds: ["backups", "updateJournal", "cahier", "support"],
       color: "from-rose-500/10 to-red-500/10 border-rose-500/30 text-rose-400"
+    },
+    {
+      id: "publications",
+      title: "📢 PUBLICATIONS",
+      description: "Options du menu de publication (Gombo, Réel vidéo, Démo musicale, Renfort Express)",
+      moduleIds: ["publish_gombo", "publish_reel", "publish_demo", "publish_renfort"],
+      color: "from-amber-500/10 to-orange-500/10 border-amber-500/30 text-amber-400"
     }
   ];
 
@@ -264,7 +271,13 @@ export default function AdminDeploymentCenter({
     { id: "updateJournal", name: "📰 Journal des Mises à jour", category: "Système", enabled: true, status: "validated", description: "Registre de modifications et notes de version" },
     { id: "cahier", name: "📓 Cahier Numérique du Fondateur", category: "Gouvernance", enabled: true, status: "validated", description: "Carnet de notes Firestore professionnel" },
     { id: "verification", name: "🆔 Vérification KYC Biométrique", category: "Sécurité", enabled: false, status: "pending", description: "Contrôle d'identité par IA" },
-    { id: "support", name: "🛟 Support Client & Aide", category: "Système", enabled: true, status: "validated", description: "Signalements de bugs et assistance" }
+    { id: "support", name: "🛟 Support Client & Aide", category: "Système", enabled: true, status: "validated", description: "Signalements de bugs et assistance" },
+
+    // PUBLICATIONS
+    { id: "publish_gombo", name: "📢 Publier un Gombo", category: "Application", enabled: true, status: "validated", description: "Formulaire de recrutement et d'opportunités musicales" },
+    { id: "publish_reel", name: "🎬 Publier un Réel Vidéo", category: "Application", enabled: false, status: "pending", description: "Publication de clips vidéo et shorts créatifs" },
+    { id: "publish_demo", name: "🎙️ Démo Musicale", category: "Application", enabled: true, status: "validated", description: "Formulaire d'upload et diffusion de démo audio" },
+    { id: "publish_renfort", name: "⚡ Renfort Express", category: "Application", enabled: true, status: "validated", description: "Formulaire d'alerte et de dépannage urgent de musiciens" }
   ];
 
   // 2. LISTEN TO FIRESTORE REAL DEPLOYMENTS & FEATURE FLAGS & BUG REPORTS

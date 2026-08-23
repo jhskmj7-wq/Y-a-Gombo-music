@@ -65,6 +65,8 @@ const GomboMusikEcosystem = lazyWithRetry(() => import("./GomboMusikEcosystem"))
 // Optimized Static Imports for instant opening without loading screens
 import GrandMarcheView from "./GrandMarcheView";
 import GomboPublish from "./GomboPublish";
+import AudioPublishForm from "./AudioPublishForm";
+import RenfortExpress from "./RenfortExpress";
 import AcademieView from "./AcademieView";
 import MessagesView from "./MessagesView";
 import AfrigomboWalletDashboard from "./AfrigomboWalletDashboard";
@@ -1384,6 +1386,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       case "user_support":
       case "user_help_center":
         return "Support & Aide";
+      case "publish_gombo":
+        return "Publier un Gombo";
+      case "publish_reel":
+        return "Publier un Réel";
+      case "publish_demo":
+        return "Démo Musicale";
+      case "publish_renfort":
+        return "Renfort Express";
       default:
         return "Fonctionnalité";
     }
@@ -4801,31 +4811,64 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {/* 3. USER PUBLISH VIEW */}
               {activeMenu === "user_publish" && (
                 <div className="animate-fadeIn">
-                  <GomboPublish
-                    currentUserProfile={
-                      profile || {
-                        uid: currentUser?.uid || "user_guest",
-                        name: currentUser?.displayName || "Artiste Gombo",
-                        displayName: currentUser?.displayName || "Artiste Gombo",
-                        photoURL: currentUser?.photoURL || "",
-                        avatarUrl: currentUser?.photoURL || "",
-                        email: currentUser?.email || "",
-                        phone: currentUser?.phoneNumber || "",
-                        walletBalance: 0,
-                        balance: 0,
-                        wallet: { soldeDisponible: 0, soldeBloque: 0 }
-                      } as any
-                    }
-                    onSuccess={() => {
-                      try {
-                        audioSynth.playValidationSuccess();
-                      } catch (_) {}
-                      setActiveMenu("user_mes_gombos");
-                    }}
-                    onCancel={() => {
-                      goBackMenu();
-                    }}
-                  />
+                  {activePublishType === "demo" ? (
+                    <AudioPublishForm
+                      currentUserProfile={
+                        profile || {
+                          uid: currentUser?.uid || "user_guest",
+                          name: currentUser?.displayName || "Artiste Gombo",
+                          displayName: currentUser?.displayName || "Artiste Gombo",
+                          photoURL: currentUser?.photoURL || "",
+                          avatarUrl: currentUser?.photoURL || "",
+                          email: currentUser?.email || "",
+                          phone: currentUser?.phoneNumber || "",
+                          walletBalance: 0,
+                          balance: 0,
+                          wallet: { soldeDisponible: 0, soldeBloque: 0 }
+                        } as any
+                      }
+                      onSuccess={() => {
+                        try {
+                          audioSynth.playValidationSuccess();
+                        } catch (_) {}
+                        setActiveMenu("user_podcasts");
+                      }}
+                      onCancel={() => {
+                        goBackMenu();
+                      }}
+                    />
+                  ) : activePublishType === "renfort" ? (
+                    <RenfortExpress
+                      currentUserProfile={profile}
+                      onShowAuth={() => setIsAuthModalOpen(true)}
+                    />
+                  ) : (
+                    <GomboPublish
+                      currentUserProfile={
+                        profile || {
+                          uid: currentUser?.uid || "user_guest",
+                          name: currentUser?.displayName || "Artiste Gombo",
+                          displayName: currentUser?.displayName || "Artiste Gombo",
+                          photoURL: currentUser?.photoURL || "",
+                          avatarUrl: currentUser?.photoURL || "",
+                          email: currentUser?.email || "",
+                          phone: currentUser?.phoneNumber || "",
+                          walletBalance: 0,
+                          balance: 0,
+                          wallet: { soldeDisponible: 0, soldeBloque: 0 }
+                        } as any
+                      }
+                      onSuccess={() => {
+                        try {
+                          audioSynth.playValidationSuccess();
+                        } catch (_) {}
+                        setActiveMenu("user_mes_gombos");
+                      }}
+                      onCancel={() => {
+                        goBackMenu();
+                      }}
+                    />
+                  )}
                 </div>
               )}
 
@@ -7824,12 +7867,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         title="Que souhaitez-vous publier ?"
       >
         <div className="space-y-2.5">
-          {isModuleVisible("gombos") && (
+          {isModuleVisible("publish_gombo") && (
             <button
               onClick={() => {
-                if (isModuleComingSoon("gombos")) {
+                if (isModuleComingSoon("publish_gombo")) {
                   setIsPlusMenuOpen(false);
-                  setComingSoonFeatureKey("user_gombos");
+                  setComingSoonFeatureKey("publish_gombo");
                   return;
                 }
                 setActivePublishType("gombo");
@@ -7838,7 +7881,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               }}
               className="w-full flex items-center gap-4 bg-gradient-to-r from-afri-gold/10 to-transparent hover:from-afri-gold/20 border border-afri-gold/20 rounded-2xl py-3 px-3.5 text-left transition-all group cursor-pointer relative"
             >
-              {isModuleComingSoon("gombos") && (
+              {isModuleComingSoon("publish_gombo") && (
                 <span className="absolute top-2 right-2 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
                   Bientôt disponible 🔒
                 </span>
@@ -7853,12 +7896,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             </button>
           )}
 
-          {isModuleVisible("reels") && (
+          {isModuleVisible("publish_reel") && (
             <button
               onClick={() => {
-                if (isModuleComingSoon("reels")) {
+                if (isModuleComingSoon("publish_reel")) {
                   setIsPlusMenuOpen(false);
-                  setComingSoonFeatureKey("user_reels");
+                  setComingSoonFeatureKey("publish_reel");
                   return;
                 }
                 setActivePublishType("reel");
@@ -7867,7 +7910,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               }}
               className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl py-3 px-3.5 text-left transition-all group cursor-pointer relative"
             >
-              {isModuleComingSoon("reels") && (
+              {isModuleComingSoon("publish_reel") && (
                 <span className="absolute top-2 right-2 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
                   Bientôt disponible 🔒
                 </span>
@@ -7882,12 +7925,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             </button>
           )}
 
-          {isModuleVisible("podcasts") && (
+          {isModuleVisible("publish_demo") && (
             <button
               onClick={() => {
-                if (isModuleComingSoon("podcasts")) {
+                if (isModuleComingSoon("publish_demo")) {
                   setIsPlusMenuOpen(false);
-                  setComingSoonFeatureKey("user_podcasts");
+                  setComingSoonFeatureKey("publish_demo");
                   return;
                 }
                 setActivePublishType("demo");
@@ -7896,7 +7939,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               }}
               className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl py-3 px-3.5 text-left transition-all group cursor-pointer relative"
             >
-              {isModuleComingSoon("podcasts") && (
+              {isModuleComingSoon("publish_demo") && (
                 <span className="absolute top-2 right-2 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
                   Bientôt disponible 🔒
                 </span>
@@ -7911,12 +7954,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             </button>
           )}
 
-          {isModuleVisible("renforts") && (
+          {isModuleVisible("publish_renfort") && (
             <button
               onClick={() => {
-                if (isModuleComingSoon("renforts")) {
+                if (isModuleComingSoon("publish_renfort")) {
                   setIsPlusMenuOpen(false);
-                  setComingSoonFeatureKey("user_renforts");
+                  setComingSoonFeatureKey("publish_renfort");
                   return;
                 }
                 setActivePublishType("renfort");
@@ -7925,7 +7968,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               }}
               className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl py-3 px-3.5 text-left transition-all group relative overflow-hidden cursor-pointer"
             >
-              {isModuleComingSoon("renforts") && (
+              {isModuleComingSoon("publish_renfort") && (
                 <span className="absolute top-2 right-2 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
                   Bientôt disponible 🔒
                 </span>
