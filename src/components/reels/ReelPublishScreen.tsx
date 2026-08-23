@@ -49,14 +49,15 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
     try {
       const uid = currentUserProfile?.uid || currentUser?.uid || "anonymous";
       const publicationId = `reel_${Date.now()}`;
-      const idToken = currentUser ? await currentUser.getIdToken() : undefined;
+      const idToken = currentUser ? await currentUser.getIdToken(true) : undefined;
 
       const uploadResult = await supabaseStorage.uploadVideo(
         videoFile,
         uid,
         publicationId,
         (progress) => setUploadProgress(10 + Math.round(progress.percentage * 0.8)),
-        idToken
+        idToken,
+        true
       );
 
       if (!uploadResult.success || !uploadResult.url) {

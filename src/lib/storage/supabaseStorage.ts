@@ -1,4 +1,5 @@
 import { getSupabaseClient, SUPABASE_BUCKET_NAME, isSupabaseConfigured, sanitizeBucketName } from "../supabase";
+import { auth } from "../../firebase";
 
 /**
  * Service centralisé pour le stockage de fichiers via Supabase Storage pour AfriGombo.
@@ -256,6 +257,7 @@ export const supabaseStorage = {
       onProgress?: (info: ProgressInfo) => void;
       contentType?: string;
       idToken?: string;
+      useBackendProxy?: boolean;
     } = {}
   ): Promise<StorageUploadResult> {
     const bucket = sanitizeBucketName(options.bucket || SUPABASE_BUCKET_NAME);
@@ -310,8 +312,20 @@ export const supabaseStorage = {
         throw new Error(validation.error || "Fichier non conforme.");
       }
 
-      // Si un idToken Firebase est fourni (Super Fondateur), utiliser le proxy d'upload backend sécurisé
-      if (options.idToken) {
+      // Tenter d'obtenir l'idToken Firebase si non fourni et que le proxy est requis/demandé
+      let idToken = options.idToken;
+      if (!idToken && (options.useBackendProxy || options.mediaType === "video" || options.idToken)) {
+        try {
+          if (auth?.currentUser) {
+            idToken = await auth.currentUser.getIdToken();
+          }
+        } catch (tokenErr) {
+          console.warn("[SUPABASE STORAGE] Impossible de récupérer automatiquement l'idToken :", tokenErr);
+        }
+      }
+
+      // Si un idToken Firebase est disponible ou que useBackendProxy est activé, utiliser le proxy d'upload backend sécurisé
+      if (idToken || options.useBackendProxy) {
         try {
           console.log(`[SUPABASE STORAGE VIA BACKEND PROXY] Envoi du fichier ${storagePath}...`);
           const base64Data = await new Promise<string>((resolve, reject) => {
@@ -521,7 +535,8 @@ export const supabaseStorage = {
     userId: string,
     publicationId = "general",
     onProgress?: (progress: ProgressInfo) => void,
-    idToken?: string
+    idToken?: string,
+    useBackendProxy = true
   ): Promise<StorageUploadResult> {
     const timestamp = Date.now();
     const fileName = sanitizeFileName(
@@ -535,6 +550,7 @@ export const supabaseStorage = {
       isPrivate: false,
       onProgress,
       idToken,
+      useBackendProxy: useBackendProxy ?? true,
     });
   },
 
