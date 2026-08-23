@@ -130,35 +130,15 @@ export default function PWAHandler() {
 
   // 3. APPLY UPDATE & CLEAR STALE CACHES
   const handleApplyUpdate = async () => {
-    console.log("🔍 [DIAGNOSTIC PWA] 1. Clic sur le bouton Actualiser déclenché.");
-    console.log("🔍 [DIAGNOSTIC PWA] URL actuelle avant mise à jour:", window.location.href);
     setIsUpdating(true);
     try {
       if (updateServiceWorkerRef.current) {
-        console.log("🔍 [DIAGNOSTIC PWA] 2. Appel de updateServiceWorkerRef(false)...");
-        await updateServiceWorkerRef.current(false);
-      }
-
-      if (typeof window !== 'undefined' && 'caches' in window) {
-        const cacheKeys = await caches.keys();
-        console.log("🔍 [DIAGNOSTIC PWA] 3. Purge des caches en cours, clés:", cacheKeys);
-        await Promise.all(
-          cacheKeys.map(key => caches.delete(key))
-        );
-      }
-
-      if (swRegistrationRef.current) {
-        try {
-          console.log("🔍 [DIAGNOSTIC PWA] 4. Forçage r.update()...");
-          await swRegistrationRef.current.update();
-        } catch (_) {}
+        await updateServiceWorkerRef.current(true);
       }
     } catch (err) {
-      console.warn('[PWA Engine] Nettoyage du cache terminé avec avertissement:', err);
-    } finally {
-      console.log("🔍 [DIAGNOSTIC PWA] 5. Lancement de window.location.reload() vers:", window.location.href);
-      window.location.reload();
+      console.warn('[PWA Engine] Update warning:', err);
     }
+    window.location.reload();
   };
 
   // 4. INSTALLATION PROMPT HANDLER
