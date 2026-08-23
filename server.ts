@@ -614,13 +614,14 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 // SECURE SUPABASE STORAGE ADMIN PROXY - SUPER FOUNDER EXCLUSIVE
   app.post("/api/admin/media/upload", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
-    const { idToken, storagePath, fileBase64, contentType, bucket = "afrigombo-media" } = req.body || {};
+    const { idToken, storagePath, fileBase64, fileData, fichierBase64, contentType, bucket = "afrigombo-media" } = req.body || {};
+    const rawFile = fileBase64 || fileData || fichierBase64;
 
     if (!idToken) {
       return res.status(401).json({ success: false, error: "Non authentifié (token manquant). L'accès anonyme est strictement interdit." });
     }
 
-    if (!storagePath || !fileBase64) {
+    if (!storagePath || !rawFile) {
       return res.status(400).json({ success: false, error: "Paramètres 'storagePath' et 'fileBase64' requis." });
     }
 
@@ -668,7 +669,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       }
 
       // 3. Conversion du fichier Base64 en Buffer
-      const base64Clean = fileBase64.includes(",") ? fileBase64.split(",")[1] : fileBase64;
+      const base64Clean = rawFile.includes(",") ? rawFile.split(",")[1] : rawFile;
       const fileBuffer = Buffer.from(base64Clean, "base64");
 
       // 4. Client Supabase côté serveur

@@ -331,6 +331,7 @@ export const supabaseStorage = {
               idToken: options.idToken,
               storagePath,
               fileBase64: base64Data,
+              fileData: base64Data,
               contentType: mimeType,
               bucket,
             }),
