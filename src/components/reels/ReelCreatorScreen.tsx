@@ -70,31 +70,14 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
         }
       }
 
-      // 2. Request video stream with fallback constraints for hardware/driver compatibility
-      let videoStream: MediaStream | null = null;
-      const constraintsList = [
-        { facingMode: mode, width: { ideal: 720 }, height: { ideal: 1280 }, aspectRatio: { ideal: 9 / 16 } },
-        { facingMode: mode, width: { ideal: 720 }, height: { ideal: 1280 } },
-        { facingMode: mode },
-        { facingMode: { ideal: mode } },
-        true
-      ];
+      // 2. Request video stream
+      const videoStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: mode },
+        audio: false
+      });
 
-      for (const videoConstraint of constraintsList) {
-        try {
-          videoStream = await navigator.mediaDevices.getUserMedia({
-            video: videoConstraint,
-            audio: false
-          });
-          if (videoStream) break;
-        } catch (e) {
-          console.warn(`[REEL CREATOR] getUserMedia failed with constraint:`, videoConstraint, e);
-        }
-      }
-
-      if (!videoStream) {
-        throw new Error("Could not start video source on any constraint");
-      }
+      const settings = videoStream.getVideoTracks()[0]?.getSettings();
+      console.log("[REEL CREATOR] Réglages caméra réels:", settings);
 
       // 3. Combine video tracks and audio tracks into a single stream
       const combinedTracks = [
