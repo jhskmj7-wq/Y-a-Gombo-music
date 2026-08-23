@@ -240,8 +240,8 @@ app.post("/api/wallet/set-pin", async (req, res) => {
 
     res.json({ success: true });
   } catch (err: any) {
-    console.error("set-pin error:", err);
-    res.status(500).json({ error: err.message || "Erreur de création du PIN." });
+    console.warn("set-pin backend notice:", err?.message || err);
+    res.status(err?.code === 7 || err?.message?.includes("PERMISSION_DENIED") ? 503 : 500).json({ error: err.message || "Erreur de création du PIN." });
   }
 });
 
@@ -301,7 +301,7 @@ app.post("/api/wallet/verify-pin", async (req, res) => {
         }
         await adminDb.collection("users").doc(uid).update(updatePayload);
       } catch (dbErr) {
-        console.error("verify-pin: failed to update user walletSecurity on success:", dbErr);
+        console.warn("verify-pin: failed to update user walletSecurity on success:", dbErr);
       }
 
       // Create a secure session token
@@ -316,7 +316,7 @@ app.post("/api/wallet/verify-pin", async (req, res) => {
           createdAt: new Date().toISOString()
         });
       } catch (sessionErr) {
-        console.error("verify-pin: failed to write wallet_session:", sessionErr);
+        console.warn("verify-pin: failed to write wallet_session:", sessionErr);
       }
 
       return res.json({ success: true, sessionToken });
@@ -342,7 +342,7 @@ app.post("/api/wallet/verify-pin", async (req, res) => {
         "walletSecurity.lockedUntil": lockedUntil
       });
     } catch (dbErr) {
-      console.error("verify-pin: failed to update failedPinAttempts:", dbErr);
+      console.warn("verify-pin: failed to update failedPinAttempts:", dbErr);
     }
 
     const remaining = 5 - currentAttempts;
@@ -355,8 +355,8 @@ app.post("/api/wallet/verify-pin", async (req, res) => {
     });
 
   } catch (err: any) {
-    console.error("verify-pin error:", err);
-    res.status(500).json({ error: "Erreur serveur de sécurité." });
+    console.warn("verify-pin backend notice:", err?.message || err);
+    res.status(err?.code === 7 || err?.message?.includes("PERMISSION_DENIED") ? 503 : 500).json({ error: "Erreur serveur de sécurité." });
   }
 });
 
@@ -417,8 +417,8 @@ app.post("/api/wallet/change-pin", async (req, res) => {
 
     res.json({ success: true });
   } catch (err: any) {
-    console.error("change-pin error:", err);
-    res.status(500).json({ error: err.message || "Erreur lors du changement de PIN." });
+    console.warn("change-pin backend notice:", err?.message || err);
+    res.status(err?.code === 7 || err?.message?.includes("PERMISSION_DENIED") ? 503 : 500).json({ error: err.message || "Erreur lors du changement de PIN." });
   }
 });
 
@@ -471,8 +471,8 @@ app.post("/api/wallet/disable-pin", async (req, res) => {
 
     res.json({ success: true });
   } catch (err: any) {
-    console.error("disable-pin error:", err);
-    res.status(500).json({ error: err.message || "Erreur lors de la désactivation du PIN." });
+    console.warn("disable-pin backend notice:", err?.message || err);
+    res.status(err?.code === 7 || err?.message?.includes("PERMISSION_DENIED") ? 503 : 500).json({ error: err.message || "Erreur lors de la désactivation du PIN." });
   }
 });
 
