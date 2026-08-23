@@ -34,6 +34,7 @@ import {
 import { FeatureUnavailable } from "./FeatureUnavailable";
 import { getEffectiveCommissionRate, calculatePublicationFinancials, recordWalletTransaction, getCanonicalWalletBalance } from "../lib/financial";
 import { isMenuProtected } from "../auth/accessPolicy";
+import { useWalletSecurity } from "../context/WalletSecurityContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { lazyWithRetry } from "../lib/lazyWithRetry";
 import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
@@ -273,6 +274,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   ]);
   const { currentUser, profile, logout, refreshProfile, setProfile, loginWithGoogle, showAuthPopup, setShowAuthPopup } = useAuth();
   const { network, showToast: appShowToast } = useAppSettings();
+  const { formatWalletBalance } = useWalletSecurity();
   const geo = useGeoEngine(profile);
   const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
@@ -2752,7 +2754,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 <CreditCard className="w-8 h-8 text-afri-gold" strokeWidth={1.5} />
                                 <div className="flex flex-col text-left">
                                   <span className="text-[11px] font-sans text-afri-text font-medium leading-none mb-1">Wallet Souverain</span>
-                                  <span className="text-lg font-black text-afri-gold leading-none">{((profile?.wallet?.soldeDisponible ?? profile?.walletBalance ?? profile?.balance ?? 0)).toLocaleString('fr-FR')} FCFA</span>
+                                  <span className="text-lg font-black text-afri-gold leading-none">{formatWalletBalance(profile?.wallet?.soldeDisponible ?? profile?.walletBalance ?? profile?.balance ?? 0)}</span>
                                 </div>
                               </div>
                               <ChevronRight className="w-5 h-5 text-afri-gold" strokeWidth={2} />
