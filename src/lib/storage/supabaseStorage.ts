@@ -519,7 +519,8 @@ export const supabaseStorage = {
     file: File | Blob | string,
     userId: string,
     publicationId = "general",
-    onProgress?: (progress: ProgressInfo) => void
+    onProgress?: (progress: ProgressInfo) => void,
+    idToken?: string
   ): Promise<StorageUploadResult> {
     const timestamp = Date.now();
     const fileName = sanitizeFileName(
@@ -532,6 +533,7 @@ export const supabaseStorage = {
       mediaType: "video",
       isPrivate: false,
       onProgress,
+      idToken,
     });
   },
 

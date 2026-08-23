@@ -643,7 +643,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const userDoc = await adminDb.collection("users").doc(uid).get();
       const userData = userDoc.exists ? userDoc.data() : null;
 
-      // 2. Contrôle de rôle strict : Seul le Super Fondateur est autorisé
+      // 2. Contrôle de rôle : Super Fondateur ou Utilisateur authentifié téléversant ses médias (vidéo/réel/image/audio)
       const isSuperFounder =
         PROTECTED_FOUNDER_EMAILS.includes(decodedToken.email || "") ||
         userData?.isFounder === true ||
@@ -651,10 +651,19 @@ app.post("/api/wallet/request-reset", async (req, res) => {
         userData?.role === "super_founder" ||
         userData?.role === "admin";
 
-      if (!isSuperFounder) {
+      const isUserMediaUpload =
+        storagePath.startsWith("video/") ||
+        storagePath.startsWith("videos/") ||
+        storagePath.startsWith("reels/") ||
+        storagePath.startsWith("audio/") ||
+        storagePath.startsWith("audios/") ||
+        storagePath.startsWith("images/") ||
+        storagePath.startsWith("media/");
+
+      if (!isSuperFounder && !isUserMediaUpload) {
         return res.status(403).json({
           success: false,
-          error: "Accès refusé. Seul le Super Fondateur de la plateforme est autorisé à effectuer un téléversement dans le Centre Multimédia."
+          error: "Accès refusé. Seul le Super Fondateur de la plateforme est autorisé à effectuer ce téléversement."
         });
       }
 
