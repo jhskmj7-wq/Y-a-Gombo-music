@@ -1277,11 +1277,11 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           2. ACTIONS RAPIDES (NOUVELLE VERSION BÊTA FINALE - 4 ACTIONS CLÉS)
          ========================================== */}
       {[
-        { id: "pres_de_moi", featureId: "nearby", isFounderOnly: true },
+        { id: "pres_de_moi", featureId: "nearby" },
         { id: "urgences", featureId: "renforts" },
         { id: "mes_favoris", featureId: "favorites" },
         { id: "mes_candidatures", featureId: "gombos" }
-      ].some(action => (action.isFounderOnly ? (isFounder && isModuleVisible(action.featureId)) : isModuleVisible(action.featureId))) && (
+      ].some(action => isModuleVisible(action.featureId)) && (
         <div className={`afri-card transition-all duration-300 shadow-[0_4px_25px_rgba(212,175,55,0.08)] ${isQuickActionsOpen ? "p-3 sm:p-5 space-y-3 sm:space-y-4" : "py-2 px-3 sm:px-4"}`}>
           <button
             onClick={() => {
@@ -1317,23 +1317,23 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               animate={isQuickActionsOpen ? "show" : "hidden"}
               className={`grid ${
                 [
-                  { id: "pres_de_moi", featureId: "nearby", isFounderOnly: true },
+                  { id: "pres_de_moi", featureId: "nearby" },
                   { id: "urgences", featureId: "renforts" },
                   { id: "mes_favoris", featureId: "favorites" },
                   { id: "mes_candidatures", featureId: "gombos" }
-                ].filter(action => (action.isFounderOnly ? (isFounder && isModuleVisible(action.featureId)) : isModuleVisible(action.featureId))).length === 4 ? "grid-cols-4" :
+                ].filter(action => isModuleVisible(action.featureId)).length === 4 ? "grid-cols-4" :
                 [
-                  { id: "pres_de_moi", featureId: "nearby", isFounderOnly: true },
+                  { id: "pres_de_moi", featureId: "nearby" },
                   { id: "urgences", featureId: "renforts" },
                   { id: "mes_favoris", featureId: "favorites" },
                   { id: "mes_candidatures", featureId: "gombos" }
-                ].filter(action => (action.isFounderOnly ? (isFounder && isModuleVisible(action.featureId)) : isModuleVisible(action.featureId))).length === 3 ? "grid-cols-3" :
+                ].filter(action => isModuleVisible(action.featureId)).length === 3 ? "grid-cols-3" :
                 [
-                  { id: "pres_de_moi", featureId: "nearby", isFounderOnly: true },
+                  { id: "pres_de_moi", featureId: "nearby" },
                   { id: "urgences", featureId: "renforts" },
                   { id: "mes_favoris", featureId: "favorites" },
                   { id: "mes_candidatures", featureId: "gombos" }
-                ].filter(action => (action.isFounderOnly ? (isFounder && isModuleVisible(action.featureId)) : isModuleVisible(action.featureId))).length === 2 ? "grid-cols-2" :
+                ].filter(action => isModuleVisible(action.featureId)).length === 2 ? "grid-cols-2" :
                 "grid-cols-1"
               } gap-1.5 xs:gap-2 sm:gap-4 w-full select-none`}
             >
@@ -1341,7 +1341,6 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                { 
                  id: "pres_de_moi", 
                  featureId: "nearby",
-                 isFounderOnly: true,
                  label: "Près de moi", 
                  emoji: "📍", 
                  action: () => { 
@@ -1406,7 +1405,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                    });
                  } 
                }
-             ].filter(action => (action.isFounderOnly ? (isFounder && isModuleVisible(action.featureId)) : isModuleVisible(action.featureId))).map(action => {
+             ].filter(action => isModuleVisible(action.featureId)).map(action => {
                const isComingSoon = isModuleComingSoon(action.featureId);
                return (
                  <motion.button

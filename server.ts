@@ -644,34 +644,29 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const userDoc = await adminDb.collection("users").doc(uid).get();
       const userData = userDoc.exists ? userDoc.data() : null;
 
-      // 2. Contrôle de rôle : Super Fondateur ou Utilisateur authentifié téléversant ses médias (vidéo/réel/image/audio)
-      const isSuperFounder =
-        PROTECTED_FOUNDER_EMAILS.includes(decodedToken.email || "") ||
-        userData?.isFounder === true ||
-        userData?.superFounder === true ||
-        userData?.role === "super_founder" ||
-        userData?.role === "admin";
+      // 2. Contrôle de sécurité : Tout utilisateur Firebase authentifié (idToken valide) est autorisé à téléverser vers les chemins médias autorisés
+      const isAllowedMedia =
+        !storagePath.includes("..") && (
+          storagePath.startsWith("video/") ||
+          storagePath.startsWith("videos/") ||
+          storagePath.startsWith("reels/") ||
+          storagePath.startsWith("reel/") ||
+          storagePath.startsWith("audio/") ||
+          storagePath.startsWith("audios/") ||
+          storagePath.startsWith("images/") ||
+          storagePath.startsWith("image/") ||
+          storagePath.startsWith("media/") ||
+          storagePath.startsWith("avatars/") ||
+          storagePath.startsWith("banners/") ||
+          storagePath.startsWith("proofs/") ||
+          storagePath.startsWith("documents/") ||
+          storagePath.startsWith("users/")
+        );
 
-      const isUserMediaUpload =
-        storagePath.startsWith("video/") ||
-        storagePath.startsWith("videos/") ||
-        storagePath.startsWith("reels/") ||
-        storagePath.startsWith("reel/") ||
-        storagePath.startsWith("audio/") ||
-        storagePath.startsWith("audios/") ||
-        storagePath.startsWith("images/") ||
-        storagePath.startsWith("image/") ||
-        storagePath.startsWith("media/") ||
-        storagePath.startsWith("avatars/") ||
-        storagePath.startsWith("banners/") ||
-        storagePath.startsWith("proofs/") ||
-        storagePath.startsWith("documents/") ||
-        storagePath.startsWith("users/");
-
-      if (!isSuperFounder && !isUserMediaUpload) {
+      if (!isAllowedMedia) {
         return res.status(403).json({
           success: false,
-          error: "Accès refusé. Chemin de stockage non autorisé pour le téléversement utilisateur."
+          error: "Accès refusé. Chemin de stockage non autorisé pour le téléversement."
         });
       }
 
@@ -700,7 +695,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const { data: publicUrlData } = serverSupabase.storage.from(bucket).getPublicUrl(storagePath);
       const publicUrl = publicUrlData?.publicUrl || `${supabaseUrl}/storage/v1/object/public/${bucket}/${storagePath}`;
 
-      console.log(`[SERVER MEDIA UPLOAD SUCCESS] Téléversé par Super Fondateur ${decodedToken.email} -> ${publicUrl}`);
+      console.log(`[SERVER MEDIA UPLOAD SUCCESS] Téléversé par ${decodedToken.email || decodedToken.uid} -> ${publicUrl}`);
 
       return res.json({
         success: true,
@@ -1167,6 +1162,7 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`SUPABASE_SERVICE_ROLE_KEY: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? "définie" : "non définie"}`);
     startMaintenanceBackgroundChecker();
   });
 }
