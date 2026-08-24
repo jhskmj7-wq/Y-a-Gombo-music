@@ -43,7 +43,7 @@ export default function PremiumWheelPage({
         <div className="flex items-center gap-1.5 min-w-0 shrink">
           <span className="text-xs sm:text-sm font-black font-mono tracking-wider uppercase flex items-center gap-1.5 text-[#D4AF37] truncate">
             <Gift className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">ROUE DES AVANTAGES & GAWA</span>
+            <span className="truncate">Roue Premium</span>
           </span>
         </div>
       </div>
