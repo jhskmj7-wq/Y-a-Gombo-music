@@ -24,7 +24,7 @@ export default function PremiumWheelPage({
       className={`w-full max-w-full flex flex-col font-sans box-border ${
         isLight ? "bg-[#FDFBF7] text-gray-900" : "bg-[#050505] text-white"
       }`}
-      style={{ height: "100dvh", minHeight: "100dvh", maxHeight: "100dvh", overflow: "hidden", overscrollBehavior: "none" }}
+      style={{ height: "100dvh", minHeight: "100dvh", maxHeight: "100dvh", overflowY: "auto", overscrollBehavior: "none" }}
     >
       {/* Top Header Navigation - Only single return arrow */}
       <div className={`px-2.5 sm:px-4 py-2 border-b flex items-center justify-between gap-2 max-w-full shrink-0 box-border ${
@@ -48,8 +48,8 @@ export default function PremiumWheelPage({
         </div>
       </div>
 
-      {/* Main Wheel Viewport Container - Zero scroll on main view */}
-      <div className="flex-1 min-h-0 w-full max-w-2xl mx-auto px-1 sm:px-2 py-1 flex flex-col justify-center items-center box-border overflow-hidden">
+      {/* Main Wheel Viewport Container */}
+      <div className="flex-1 w-full max-w-2xl mx-auto px-1 sm:px-2 py-1 flex flex-col items-center box-border">
         <GomboWheelSection
           currentUserProfile={currentUserProfile}
           onRefreshProfile={onRefreshProfile}
