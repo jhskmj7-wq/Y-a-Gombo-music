@@ -614,35 +614,52 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 // SECURE SUPABASE STORAGE ADMIN PROXY - SUPER FOUNDER EXCLUSIVE
   app.post("/api/admin/media/upload", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
+    console.log("[DIAG-1] Réception requête - Clés reçues dans req.body:", Object.keys(req.body || {}));
     const { idToken, storagePath, fileBase64, fileData, fichierBase64, contentType, bucket = "afrigombo-media" } = req.body || {};
     const rawFile = fileBase64 || fileData || fichierBase64;
 
     if (!idToken) {
-      return res.status(401).json({ success: false, error: "Non authentifié (token manquant). L'accès anonyme est strictement interdit." });
+      const errResp = { success: false, error: "Non authentifié (token manquant). L'accès anonyme est strictement interdit." };
+      console.log("[DIAG-6] Réponse HTTP finale - Status: 401 - Body:", JSON.stringify(errResp));
+      return res.status(401).json(errResp);
     }
 
     if (!storagePath || !rawFile) {
-      return res.status(400).json({ success: false, error: "Paramètres 'storagePath' et 'fileBase64' requis." });
+      const errResp = { success: false, error: "Paramètres 'storagePath' et 'fileBase64' requis." };
+      console.log("[DIAG-6] Réponse HTTP finale - Status: 400 - Body:", JSON.stringify(errResp));
+      return res.status(400).json(errResp);
     }
 
     try {
       const adminAuth = getAdminAuthClient();
       const adminDb = getAdminDb();
       if (!adminAuth || !adminDb) {
-        return res.status(503).json({ success: false, error: "Service Firebase Admin temporairement indisponible." });
+        const errResp = { success: false, error: "Service Firebase Admin temporairement indisponible." };
+        console.log("[DIAG-6] Réponse HTTP finale - Status: 503 - Body:", JSON.stringify(errResp));
+        return res.status(503).json(errResp);
       }
 
       // 1. Vérification sécurisée du jeton d'authentification Firebase (ID Token)
       let decodedToken;
       try {
         decodedToken = await adminAuth.verifyIdToken(idToken);
+        console.log("[DIAG-2] Vérification idToken: SUCCÈS - uid:", decodedToken.uid);
       } catch (authErr: any) {
-        return res.status(401).json({ success: false, error: "Session invalide ou expirée. Veuillez vous reconnecter." });
+        console.error("[DIAG-2] Vérification idToken: ÉCHEC - message:", authErr?.message || authErr);
+        const errResp = { success: false, error: "Session invalide ou expirée. Veuillez vous reconnecter." };
+        console.log("[DIAG-6] Réponse HTTP finale - Status: 401 - Body:", JSON.stringify(errResp));
+        return res.status(401).json(errResp);
       }
 
       const uid = decodedToken.uid;
-      const userDoc = await adminDb.collection("users").doc(uid).get();
-      const userData = userDoc.exists ? userDoc.data() : null;
+      let userData: any = null;
+      try {
+        const userDoc = await adminDb.collection("users").doc(uid).get();
+        userData = userDoc.exists ? userDoc.data() : null;
+        console.log("[DIAG-3] Lecture Firestore: SUCCÈS - document exists:", Boolean(userDoc.exists));
+      } catch (firestoreErr: any) {
+        console.warn("[DIAG-3] Lecture Firestore: ÉCHEC - message:", firestoreErr?.message || String(firestoreErr));
+      }
 
       // 2. Contrôle de sécurité : Tout utilisateur Firebase authentifié (idToken valide) est autorisé à téléverser vers les chemins médias autorisés
       const isAllowedMedia =
@@ -664,10 +681,12 @@ app.post("/api/wallet/request-reset", async (req, res) => {
         );
 
       if (!isAllowedMedia) {
-        return res.status(403).json({
+        const errResp = {
           success: false,
           error: "Accès refusé. Chemin de stockage non autorisé pour le téléversement."
-        });
+        };
+        console.log("[DIAG-6] Réponse HTTP finale - Status: 403 - Body:", JSON.stringify(errResp));
+        return res.status(403).json(errResp);
       }
 
       // 3. Conversion du fichier Base64 en Buffer
@@ -680,14 +699,18 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 
       if (!supabaseKey) {
         console.error("[SERVER MEDIA UPLOAD ERROR] SUPABASE_SERVICE_ROLE_KEY manquante dans l'environnement serveur.");
-        return res.status(503).json({
+        const errResp = {
           success: false,
           error: "Configuration serveur incomplète : SUPABASE_SERVICE_ROLE_KEY non configurée pour les uploads sécurisés."
-        });
+        };
+        console.log("[DIAG-6] Réponse HTTP finale - Status: 503 - Body:", JSON.stringify(errResp));
+        return res.status(503).json(errResp);
       }
 
       const { createClient } = await import("@supabase/supabase-js");
       const serverSupabase = createClient(supabaseUrl, supabaseKey);
+
+      console.log("[DIAG-4] Avant Supabase upload - storagePath:", storagePath, "- bucket:", bucket, "- bufferSize (bytes):", fileBuffer.length);
 
       const { data: uploadData, error: uploadError } = await serverSupabase.storage
         .from(bucket)
@@ -697,16 +720,20 @@ app.post("/api/wallet/request-reset", async (req, res) => {
         });
 
       if (uploadError) {
-        console.error("[SERVER MEDIA UPLOAD ERROR]", uploadError);
-        return res.status(500).json({ success: false, error: uploadError.message || "Échec du téléversement Storage." });
+        console.error("[DIAG-5] Supabase upload: ÉCHEC - uploadError complet:", JSON.stringify(uploadError, null, 2));
+        const errResp = { success: false, error: uploadError.message || "Échec du téléversement Storage." };
+        console.log("[DIAG-6] Réponse HTTP finale - Status: 500 - Body:", JSON.stringify(errResp));
+        return res.status(500).json(errResp);
       }
+
+      console.log("[DIAG-5] Supabase upload: SUCCÈS - uploadData:", JSON.stringify(uploadData, null, 2));
 
       const { data: publicUrlData } = serverSupabase.storage.from(bucket).getPublicUrl(storagePath);
       const publicUrl = publicUrlData?.publicUrl || `${supabaseUrl}/storage/v1/object/public/${bucket}/${storagePath}`;
 
       console.log(`[SERVER MEDIA UPLOAD SUCCESS] Téléversé par ${decodedToken.email || decodedToken.uid} -> ${publicUrl}`);
 
-      return res.json({
+      const successResp = {
         success: true,
         url: publicUrl,
         publicUrl: publicUrl,
@@ -714,10 +741,14 @@ app.post("/api/wallet/request-reset", async (req, res) => {
         storagePath: uploadData?.path || storagePath,
         bucket,
         message: "Média téléversé avec succès"
-      });
+      };
+      console.log("[DIAG-6] Réponse HTTP finale - Status: 200 - Body:", JSON.stringify(successResp));
+      return res.json(successResp);
     } catch (err: any) {
       console.error("[SERVER MEDIA UPLOAD FATAL ERROR]", err);
-      return res.status(500).json({ success: false, error: err.message || "Erreur interne lors du téléversement." });
+      const errResp = { success: false, error: err.message || "Erreur interne lors du téléversement." };
+      console.log("[DIAG-6] Réponse HTTP finale - Status: 500 - Body:", JSON.stringify(errResp));
+      return res.status(500).json(errResp);
     }
   });
 

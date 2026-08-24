@@ -51,17 +51,23 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
       const publicationId = `reel_${Date.now()}`;
       const idToken = currentUser ? await currentUser.getIdToken(true) : undefined;
 
-      const uploadResult = await supabaseStorage.uploadVideo(
-        videoFile,
-        uid,
-        publicationId,
-        (progress) => setUploadProgress(10 + Math.round(progress.percentage * 0.8)),
-        idToken,
-        true
-      );
+      let uploadResult: any;
+      try {
+        uploadResult = await supabaseStorage.uploadVideo(
+          videoFile,
+          uid,
+          publicationId,
+          (progress) => setUploadProgress(10 + Math.round(progress.percentage * 0.8)),
+          idToken,
+          true
+        );
 
-      if (!uploadResult.success || !uploadResult.url) {
-        throw new Error(uploadResult.error || "Échec de l'upload de la vidéo.");
+        if (!uploadResult?.success || !uploadResult?.url) {
+          throw new Error(uploadResult?.error || "Échec de l'upload de la vidéo.");
+        }
+      } catch (uploadErr: any) {
+        console.error("[REEL UPLOAD ERROR]", uploadErr);
+        throw new Error(uploadErr?.message || "Échec de l'upload de la vidéo.");
       }
 
       setUploadProgress(90);
@@ -88,8 +94,19 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
         createdAt: new Date().toISOString()
       };
 
-      if (db) {
-        await addDoc(collection(db, "posts"), payload);
+      try {
+        if (db) {
+          await addDoc(collection(db, "posts"), payload);
+        } else {
+          throw new Error("Base de données non initialisée.");
+        }
+      } catch (firestoreErr: any) {
+        console.error("[REEL FIRESTORE SAVE ERROR]", firestoreErr);
+        throw new Error(
+          firestoreErr?.code === "permission-denied"
+            ? "Permission refusée lors de l'enregistrement de la publication dans la base de données."
+            : `Échec de l'enregistrement de la publication : ${firestoreErr?.message || "Erreur base de données."}`
+        );
       }
 
       setUploadProgress(100);
