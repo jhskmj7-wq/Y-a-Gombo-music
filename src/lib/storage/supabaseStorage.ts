@@ -342,7 +342,7 @@ export const supabaseStorage = {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              idToken: options.idToken,
+              idToken: idToken,
               storagePath,
               fileBase64: base64Data,
               fileData: base64Data,
