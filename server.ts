@@ -674,9 +674,18 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const base64Clean = rawFile.includes(",") ? rawFile.split(",")[1] : rawFile;
       const fileBuffer = Buffer.from(base64Clean, "base64");
 
-      // 4. Client Supabase côté serveur
+      // 4. Client Supabase côté serveur (nécessite obligatoirement la clé de service)
       const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!supabaseKey) {
+        console.error("[SERVER MEDIA UPLOAD ERROR] SUPABASE_SERVICE_ROLE_KEY manquante dans l'environnement serveur.");
+        return res.status(503).json({
+          success: false,
+          error: "Configuration serveur incomplète : SUPABASE_SERVICE_ROLE_KEY non configurée pour les uploads sécurisés."
+        });
+      }
+
       const { createClient } = await import("@supabase/supabase-js");
       const serverSupabase = createClient(supabaseUrl, supabaseKey);
 
@@ -748,7 +757,16 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const fileBuffer = Buffer.from(base64Clean, "base64");
 
       const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!supabaseKey) {
+        console.error("[USER AVATAR UPLOAD ERROR] SUPABASE_SERVICE_ROLE_KEY manquante dans l'environnement serveur.");
+        return res.status(503).json({
+          success: false,
+          error: "Configuration serveur incomplète : SUPABASE_SERVICE_ROLE_KEY non configurée pour les uploads sécurisés."
+        });
+      }
+
       const { createClient } = await import("@supabase/supabase-js");
       const serverSupabase = createClient(supabaseUrl, supabaseKey);
 
@@ -819,7 +837,16 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const fileBuffer = Buffer.from(base64Clean, "base64");
 
       const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!supabaseKey) {
+        console.error("[USER COVER UPLOAD ERROR] SUPABASE_SERVICE_ROLE_KEY manquante dans l'environnement serveur.");
+        return res.status(503).json({
+          success: false,
+          error: "Configuration serveur incomplète : SUPABASE_SERVICE_ROLE_KEY non configurée pour les uploads sécurisés."
+        });
+      }
+
       const { createClient } = await import("@supabase/supabase-js");
       const serverSupabase = createClient(supabaseUrl, supabaseKey);
 
@@ -901,7 +928,16 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       }
 
       const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!supabaseKey) {
+        console.error("[SERVER MEDIA DELETE ERROR] SUPABASE_SERVICE_ROLE_KEY manquante dans l'environnement serveur.");
+        return res.status(503).json({
+          success: false,
+          error: "Configuration serveur incomplète : SUPABASE_SERVICE_ROLE_KEY non configurée pour les opérations Storage."
+        });
+      }
+
       const { createClient } = await import("@supabase/supabase-js");
       const serverSupabase = createClient(supabaseUrl, supabaseKey);
 
