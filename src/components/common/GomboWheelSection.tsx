@@ -364,17 +364,25 @@ export default function GomboWheelSection({
         return;
       }
 
-      // Find index of winning segment among 16 active segments
-      const winningSegIndex = activeSegments.findIndex((s) => 
-        s.id === res.winningSegment?.id || 
-        (s.type === res.winningSegment?.type && s.rewardValue === res.winningSegment?.rewardValue)
-      );
-      const segIndex = winningSegIndex >= 0 ? winningSegIndex : 0;
+      // CORRECTION A & B: Use exact winningSegmentIndex directly returned by spinWheel
+      let segIndex = 0;
+      if (typeof res.winningSegmentIndex === "number" && res.winningSegmentIndex >= 0 && res.winningSegmentIndex < activeSegments.length) {
+        segIndex = res.winningSegmentIndex;
+      } else {
+        const found = activeSegments.findIndex((s) => s.id === res.winningSegment?.id);
+        segIndex = found >= 0 ? found : 0;
+      }
       
-      const segAngle = 360 / numSegments;
-      const targetSegmentCenter = segIndex * segAngle;
+      // CORRECTION C: Normalize current rotation to prevent cumulative angle drift
+      const currentNormalized = ((spinDegree % 360) + 360) % 360;
+      const segAngle = 360 / numSegments; // 22.5 deg for 16 segments
+      const targetSegmentAngle = segIndex * segAngle;
       const extraRotations = 360 * 6; // 6 full turns for smooth visual slowdown
-      const totalRotation = spinDegree + extraRotations + (360 - targetSegmentCenter);
+      
+      // Target calculation: bringing segment at targetSegmentAngle to 12 o'clock pointer (0 deg / 360 deg)
+      // Difference to rotate clockwise from normalized position to target
+      const angleNeeded = ((360 - targetSegmentAngle) - currentNormalized + 360) % 360;
+      const totalRotation = spinDegree + extraRotations + (angleNeeded === 0 ? 360 : angleNeeded);
       
       setSpinDegree(totalRotation);
 
@@ -391,7 +399,20 @@ export default function GomboWheelSection({
           spinRecord: res.spinRecord,
           balanceAfter: res.balanceAfter
         });
-        try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
+        // Sound & Haptic Vibration feedback depending on result
+        const isRealWin = seg && seg.type !== "NO_REWARD";
+        if (isRealWin) {
+          try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
+          if (typeof navigator !== "undefined" && navigator.vibrate) {
+            try { navigator.vibrate([100, 50, 100]); } catch (e) {}
+          }
+        } else {
+          try { audioSynth?.playPop?.(); } catch (e) {}
+          if (typeof navigator !== "undefined" && navigator.vibrate) {
+            try { navigator.vibrate(50); } catch (e) {}
+          }
+        }
+
         if (onRefreshProfile) {
           onRefreshProfile();
         }

@@ -119,12 +119,14 @@ export default function GomboWheelUserModal({
 
     setTimeout(async () => {
       if (isTestMode) {
-        const winningSeg = WheelEngineService.pickWinningSegment(currentWheel.segments);
-        const winningSegIndex = activeSegments.findIndex((s) => s.id === winningSeg?.id);
-        const segIndex = winningSegIndex >= 0 ? winningSegIndex : 0;
+        const winningResult = WheelEngineService.pickWinningSegment(currentWheel.segments);
+        const winningSeg = winningResult.segment;
+        const segIndex = winningResult.index;
+        const currentNormalized = ((spinDegree % 360) + 360) % 360;
         const segAngle = 360 / numSegments;
-        const targetSegmentCenter = (segIndex * segAngle) + (segAngle / 2);
-        const totalRotation = spinDegree + 1800 + (360 - targetSegmentCenter);
+        const targetSegmentAngle = segIndex * segAngle;
+        const angleNeeded = ((360 - targetSegmentAngle) - currentNormalized + 360) % 360;
+        const totalRotation = spinDegree + 1800 + (angleNeeded === 0 ? 360 : angleNeeded);
         setSpinDegree(totalRotation);
 
         setIsSpinning(false);
@@ -149,11 +151,14 @@ export default function GomboWheelUserModal({
         setSpinError(res.error || "Une erreur est survenue lors du tirage.");
         try { audioSynth?.playError?.(); } catch (e) {}
       } else {
-        const winningSegIndex = activeSegments.findIndex((s) => s.id === res.winningSegment?.id);
-        const segIndex = winningSegIndex >= 0 ? winningSegIndex : 0;
+        const segIndex = (typeof res.winningSegmentIndex === "number" && res.winningSegmentIndex >= 0)
+          ? res.winningSegmentIndex
+          : 0;
+        const currentNormalized = ((spinDegree % 360) + 360) % 360;
         const segAngle = 360 / numSegments;
-        const targetSegmentCenter = (segIndex * segAngle) + (segAngle / 2);
-        const totalRotation = spinDegree + 1800 + (360 - targetSegmentCenter);
+        const targetSegmentAngle = segIndex * segAngle;
+        const angleNeeded = ((360 - targetSegmentAngle) - currentNormalized + 360) % 360;
+        const totalRotation = spinDegree + 1800 + (angleNeeded === 0 ? 360 : angleNeeded);
         setSpinDegree(totalRotation);
 
         setIsSpinning(false);

@@ -346,7 +346,8 @@ export default function AdminRevenueFeatures({
     activeSegs.forEach((s) => { counts[s.id] = 0; });
 
     for (let i = 0; i < 100; i++) {
-      const winner = WheelEngineService.pickWinningSegment(activeSegs);
+      const winnerResult = WheelEngineService.pickWinningSegment(targetWheel.segments);
+      const winner = winnerResult?.segment;
       if (winner) {
         counts[winner.id] = (counts[winner.id] || 0) + 1;
       }

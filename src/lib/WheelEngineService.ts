@@ -31,20 +31,22 @@ export const DEFAULT_WHEELS: AfriGomboWheel[] = [
     createdBy: "jhs.kmj7@gmail.com",
     rulesText: "Chaque tirage coûte 20 GAWA. Tentez votre chance pour remporter du Premium, des Boosts et des Boîtes Surprise.",
     segments: [
-      { id: "c_1", label: "👑 Premium 1j", type: "PREMIUM_DAYS", rewardValue: 1, rewardDuration: 1, probability: 8, enabled: true, color: "#D4AF37", promoValueFCFA: 100, minAccountLevel: "all" },
-      { id: "c_2", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#4B5563", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "c_3", label: "⚡ Boost 24h", type: "VISIBILITY_BOOST", rewardValue: "Boost 24h", rewardDuration: 1, probability: 8, enabled: true, color: "#10B981", promoValueFCFA: 150, minAccountLevel: "all" },
-      { id: "c_4", label: "❌ Pas de gain", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#3F3F46", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "c_5", label: "⭐ Profil 24h", type: "PROFILE_BOOST", rewardValue: "Profil 24h", rewardDuration: 1, probability: 8, enabled: true, color: "#EC4899", promoValueFCFA: 150, minAccountLevel: "all" },
-      { id: "c_6", label: "🛑 Cette fois non", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#27272A", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "c_7", label: "🎁 Boîte Surprise", type: "SURPRISE_BOX", rewardValue: "Mystery Box", rewardDuration: 1, probability: 8, enabled: true, color: "#F59E0B", promoValueFCFA: 300, minAccountLevel: "all" },
-      { id: "c_8", label: "⏳ À la prochaine", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "c_9", label: "📈 Post 24h", type: "PUBLICATION_BOOST", rewardValue: "Post 24h", rewardDuration: 1, probability: 8, enabled: true, color: "#3B82F6", promoValueFCFA: 100, minAccountLevel: "all" },
-      { id: "c_10", label: "🚫 Pas de récompense", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#52525B", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "c_11", label: "🎧 Créateur 24h", type: "PREMIUM_BOOST", rewardValue: "Creator Kit", rewardDuration: 1, probability: 8, enabled: true, color: "#06B6D4", promoValueFCFA: 200, minAccountLevel: "all" },
-      { id: "c_12", label: "💨 Chance manquée", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#71717A", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "c_13", label: "🎟️ Spin Bonus", type: "EXTRA_SPIN", rewardValue: 1, probability: 10, enabled: true, color: "#8B5CF6", promoValueFCFA: 200, minAccountLevel: "all" },
-      { id: "c_14", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 9, enabled: true, color: "#4B5563", promoValueFCFA: 0, minAccountLevel: "all" }
+      { id: "c_1", label: "👑 Premium 3j", type: "PREMIUM_DAYS", rewardValue: 3, rewardDuration: 3, probability: 8, enabled: true, color: "#D4AF37", promoValueFCFA: 300, minAccountLevel: "all" },
+      { id: "c_2", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "c_3", label: "⚡ Boost 24h", type: "VISIBILITY_BOOST", rewardValue: "Boost 24h", rewardDuration: 1, probability: 8, enabled: true, color: "#F59E0B", promoValueFCFA: 150, minAccountLevel: "all" },
+      { id: "c_4", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "c_5", label: "🎁 Boîte Bronze", type: "SURPRISE_BOX", rewardValue: "Mystery Box Bronze", rewardDuration: 1, probability: 8, enabled: true, color: "#8B5CF6", promoValueFCFA: 300, minAccountLevel: "all" },
+      { id: "c_6", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "c_7", label: "⭐ Profil Vedette", type: "PROFILE_BOOST", rewardValue: "Profil 24h", rewardDuration: 1, probability: 8, enabled: true, color: "#EC4899", promoValueFCFA: 150, minAccountLevel: "all" },
+      { id: "c_8", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "c_9", label: "👑 Premium 1j", type: "PREMIUM_DAYS", rewardValue: 1, rewardDuration: 1, probability: 8, enabled: true, color: "#FBBF24", promoValueFCFA: 100, minAccountLevel: "all" },
+      { id: "c_10", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "c_11", label: "📈 Post 24h", type: "PUBLICATION_BOOST", rewardValue: "Post 24h", rewardDuration: 1, probability: 8, enabled: true, color: "#3B82F6", promoValueFCFA: 100, minAccountLevel: "all" },
+      { id: "c_12", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "c_13", label: "🎟️ Spin Offert", type: "EXTRA_SPIN", rewardValue: 1, probability: 10, enabled: true, color: "#10B981", promoValueFCFA: 200, minAccountLevel: "all" },
+      { id: "c_14", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 9, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "c_15", label: "⚡ Boost Visibilité 2j", type: "VISIBILITY_BOOST", rewardValue: "Boost Visibilité 2j", rewardDuration: 2, probability: 8, enabled: true, color: "#06B6D4", promoValueFCFA: 250, minAccountLevel: "all" },
+      { id: "c_16", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" }
     ]
   },
   {
@@ -63,17 +65,22 @@ export const DEFAULT_WHEELS: AfriGomboWheel[] = [
     createdBy: "jhs.kmj7@gmail.com",
     rulesText: "Chaque tirage coûte 50 GAWA. Récompenses plus élevées et boîtes surprise prestige.",
     segments: [
-      { id: "p_1", label: "👑 Premium 7j", type: "PREMIUM_DAYS", rewardValue: 7, rewardDuration: 7, probability: 12, enabled: true, color: "#D4AF37", promoValueFCFA: 500, minAccountLevel: "all" },
-      { id: "p_2", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#4B5563", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "p_3", label: "⭐ Profil 72h", type: "PROFILE_BOOST", rewardValue: "Vedette 72h", rewardDuration: 3, probability: 10, enabled: true, color: "#EC4899", promoValueFCFA: 400, minAccountLevel: "all" },
-      { id: "p_4", label: "❌ Pas de gain", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#3F3F46", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "p_5", label: "🎁 Boîte Surprise", type: "SURPRISE_BOX", rewardValue: "Box Prestige", rewardDuration: 3, probability: 12, enabled: true, color: "#F59E0B", promoValueFCFA: 600, minAccountLevel: "all" },
-      { id: "p_6", label: "🛑 Cette fois non", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#27272A", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "p_7", label: "📢 Sponsoring 3j", type: "PUBLICATION_BOOST", rewardValue: "Sponsoring 3j", rewardDuration: 3, probability: 10, enabled: true, color: "#3B82F6", promoValueFCFA: 300, minAccountLevel: "all" },
-      { id: "p_8", label: "⏳ À la prochaine", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "p_9", label: "🎁 2 Spins", type: "EXTRA_SPIN", rewardValue: 2, probability: 10, enabled: true, color: "#8B5CF6", promoValueFCFA: 600, minAccountLevel: "all" },
-      { id: "p_10", label: "🚫 Pas de récompense", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#52525B", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "p_11", label: "🔥 Super Boost", type: "GOMBO_BOOST", rewardValue: "Super Boost", rewardDuration: 3, probability: 10, enabled: true, color: "#F97316", promoValueFCFA: 450, minAccountLevel: "all" }
+      { id: "p_1", label: "👑 Premium 7j", type: "PREMIUM_DAYS", rewardValue: 7, rewardDuration: 7, probability: 12, enabled: true, color: "#D4AF37", promoValueFCFA: 700, minAccountLevel: "all" },
+      { id: "p_2", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "p_3", label: "🚀 Super Boost 48h", type: "GOMBO_BOOST", rewardValue: "Super Boost", rewardDuration: 2, probability: 10, enabled: true, color: "#F59E0B", promoValueFCFA: 300, minAccountLevel: "all" },
+      { id: "p_4", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "p_5", label: "🎁 Boîte Élite", type: "SURPRISE_BOX", rewardValue: "Box Prestige", rewardDuration: 3, probability: 12, enabled: true, color: "#8B5CF6", promoValueFCFA: 500, minAccountLevel: "all" },
+      { id: "p_6", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "p_7", label: "⭐ Profil 48h", type: "PROFILE_BOOST", rewardValue: "Vedette 48h", rewardDuration: 2, probability: 10, enabled: true, color: "#EC4899", promoValueFCFA: 300, minAccountLevel: "all" },
+      { id: "p_8", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "p_9", label: "👑 Premium 3j", type: "PREMIUM_DAYS", rewardValue: 3, rewardDuration: 3, probability: 10, enabled: true, color: "#FBBF24", promoValueFCFA: 300, minAccountLevel: "all" },
+      { id: "p_10", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "p_11", label: "📢 Sponsoring 48h", type: "PUBLICATION_BOOST", rewardValue: "Sponsoring 48h", rewardDuration: 2, probability: 10, enabled: true, color: "#3B82F6", promoValueFCFA: 250, minAccountLevel: "all" },
+      { id: "p_12", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "p_13", label: "🎟️ 2 Spins Élite", type: "EXTRA_SPIN", rewardValue: 2, probability: 10, enabled: true, color: "#10B981", promoValueFCFA: 500, minAccountLevel: "all" },
+      { id: "p_14", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "p_15", label: "💰 +50 Gawa Bonus", type: "GAWA_POINTS", rewardValue: 50, probability: 8, enabled: true, color: "#06B6D4", promoValueFCFA: 500, minAccountLevel: "all" },
+      { id: "p_16", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" }
     ]
   },
   {
@@ -92,13 +99,22 @@ export const DEFAULT_WHEELS: AfriGomboWheel[] = [
     createdBy: "jhs.kmj7@gmail.com",
     rulesText: "Tirage souverain à 100 GAWA. Récompenses majeures de haut niveau et boîtes surprise d'élite.",
     segments: [
-      { id: "e_1", label: "🏆 30j Premium", type: "PREMIUM_DAYS", rewardValue: 30, rewardDuration: 30, probability: 20, enabled: true, color: "#D4AF37", promoValueFCFA: 2000, minAccountLevel: "all" },
-      { id: "e_2", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 10, enabled: true, color: "#4B5563", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "e_3", label: "🚀 Super Gombo", type: "GOMBO_BOOST", rewardValue: "Gombo Élite", rewardDuration: 7, probability: 20, enabled: true, color: "#10B981", promoValueFCFA: 1000, minAccountLevel: "all" },
-      { id: "e_4", label: "❌ Pas de gain", type: "NO_REWARD", rewardValue: 0, probability: 5, enabled: true, color: "#3F3F46", promoValueFCFA: 0, minAccountLevel: "all" },
-      { id: "e_5", label: "🎁 Boîte Élite", type: "SURPRISE_BOX", rewardValue: "Box Élite", rewardDuration: 7, probability: 20, enabled: true, color: "#F59E0B", promoValueFCFA: 1500, minAccountLevel: "all" },
-      { id: "e_6", label: "🌍 National 7j", type: "VISIBILITY_BOOST", rewardValue: "National 7j", rewardDuration: 7, probability: 15, enabled: true, color: "#3B82F6", promoValueFCFA: 800, minAccountLevel: "all" },
-      { id: "e_7", label: "🎟️ Pass Élite", type: "PREMIUM_CODE", rewardValue: "ELITE-PASS", rewardDuration: 14, probability: 10, enabled: true, color: "#8B5CF6", promoValueFCFA: 1000, minAccountLevel: "all" }
+      { id: "e_1", label: "🏆 Premium 15j", type: "PREMIUM_DAYS", rewardValue: 15, rewardDuration: 15, probability: 15, enabled: true, color: "#D4AF37", promoValueFCFA: 1200, minAccountLevel: "all" },
+      { id: "e_2", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 10, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "e_3", label: "🚀 Super Gombo 72h", type: "GOMBO_BOOST", rewardValue: "Gombo Élite", rewardDuration: 3, probability: 15, enabled: true, color: "#F59E0B", promoValueFCFA: 600, minAccountLevel: "all" },
+      { id: "e_4", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 5, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "e_5", label: "🎁 Boîte Souveraine", type: "SURPRISE_BOX", rewardValue: "Box Souveraine", rewardDuration: 5, probability: 15, enabled: true, color: "#8B5CF6", promoValueFCFA: 900, minAccountLevel: "all" },
+      { id: "e_6", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 5, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "e_7", label: "⭐ Vedette 72h", type: "PROFILE_BOOST", rewardValue: "Vedette 72h", rewardDuration: 3, probability: 15, enabled: true, color: "#EC4899", promoValueFCFA: 700, minAccountLevel: "all" },
+      { id: "e_8", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 5, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "e_9", label: "👑 Premium 7j", type: "PREMIUM_DAYS", rewardValue: 7, rewardDuration: 7, probability: 15, enabled: true, color: "#FBBF24", promoValueFCFA: 700, minAccountLevel: "all" },
+      { id: "e_10", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 5, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "e_11", label: "🌍 National 5j", type: "VISIBILITY_BOOST", rewardValue: "National 5j", rewardDuration: 5, probability: 15, enabled: true, color: "#3B82F6", promoValueFCFA: 800, minAccountLevel: "all" },
+      { id: "e_12", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 5, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "e_13", label: "🎟️ 3 Spins Souverains", type: "EXTRA_SPIN", rewardValue: 3, probability: 10, enabled: true, color: "#10B981", promoValueFCFA: 1000, minAccountLevel: "all" },
+      { id: "e_14", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 5, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
+      { id: "e_15", label: "🎟️ 1 Spin Souverain", type: "EXTRA_SPIN", rewardValue: 1, probability: 10, enabled: true, color: "#06B6D4", promoValueFCFA: 500, minAccountLevel: "all" },
+      { id: "e_16", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 5, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" }
     ]
   }
 ];
@@ -438,20 +454,32 @@ export class WheelEngineService {
 
   /**
    * Pick winning segment deterministically using weighted random sampling
+   * Returns both the segment object AND its exact index in the original segments array
    */
-  static pickWinningSegment(segments: WheelSegment[]): WheelSegment {
-    const activeSegments = (segments || []).filter((s) => s.enabled);
-    const totalWeight = activeSegments.reduce((sum, s) => sum + (Number(s.probability) || 0), 0);
+  static pickWinningSegment(segments: WheelSegment[]): { segment: WheelSegment; index: number } {
+    const originalSegments = segments || [];
+    // Pair each segment with its original index
+    const indexedSegments = originalSegments.map((s, idx) => ({ segment: s, index: idx }));
+    const activeIndexedSegments = indexedSegments.filter((item) => item.segment.enabled);
+
+    if (activeIndexedSegments.length === 0) {
+      return { 
+        segment: originalSegments[0] || { id: "default", label: "Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 100, enabled: true, color: "#18181B" }, 
+        index: 0 
+      };
+    }
+
+    const totalWeight = activeIndexedSegments.reduce((sum, item) => sum + (Number(item.segment.probability) || 0), 0);
     
     let rand = Math.random() * totalWeight;
-    for (const seg of activeSegments) {
-      const weight = Number(seg.probability) || 0;
+    for (const item of activeIndexedSegments) {
+      const weight = Number(item.segment.probability) || 0;
       if (rand <= weight) {
-        return seg;
+        return item;
       }
       rand -= weight;
     }
-    return activeSegments[0];
+    return activeIndexedSegments[0];
   }
 
   /**
@@ -466,6 +494,7 @@ export class WheelEngineService {
   }): Promise<{
     success: boolean;
     winningSegment?: WheelSegment;
+    winningSegmentIndex?: number;
     spinRecord?: WheelSpinRecord;
     balanceAfter?: number;
     insufficientGawa?: boolean;
@@ -666,8 +695,8 @@ export class WheelEngineService {
       }
     }
 
-    // 8. Deterministic Winning Segment Pick
-    const winningSegment = this.pickWinningSegment(wheel.segments);
+    // 8. Deterministic Winning Segment Pick (with exact index)
+    const { segment: winningSegment, index: winningSegmentIndex } = this.pickWinningSegment(wheel.segments);
     const spinId = `spin_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const nowISO = new Date().toISOString();
 
@@ -708,6 +737,7 @@ export class WheelEngineService {
     return {
       success: true,
       winningSegment,
+      winningSegmentIndex,
       spinRecord,
       balanceAfter
     };
