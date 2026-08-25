@@ -972,6 +972,49 @@ export class WheelEngineService {
           activatedAt: nowISO
         });
 
+      } else if (rewardType === "GAWA_POINTS") {
+        // Direct GAWA Bonus Credit on User Wallet and History
+        const gawaToAdd = Number(lot.rewardValue) || 50;
+        const userRef = doc(db, "users", userId);
+        const userSnap = await getDoc(userRef);
+
+        let currentGawa = 0;
+        if (userSnap.exists()) {
+          const uData = userSnap.data();
+          currentGawa = typeof uData.gawaBalance === "number"
+            ? uData.gawaBalance
+            : (typeof uData.wallet?.soldeGawa === "number" ? uData.wallet.soldeGawa : 0);
+        }
+
+        const newGawa = currentGawa + gawaToAdd;
+        await updateDoc(userRef, {
+          gawaBalance: newGawa,
+          "wallet.soldeGawa": newGawa,
+          updatedAt: nowISO
+        });
+
+        // Add transaction log in gawaHistory
+        const gawaTxId = `tx_gawa_reward_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        const gawaTxRef = doc(db, "gawaHistory", gawaTxId);
+        await setDoc(gawaTxRef, {
+          id: gawaTxId,
+          userId,
+          uid: userId,
+          amount: gawaToAdd,
+          gawaAmount: gawaToAdd,
+          type: "wheel_reward",
+          description: `Gain Roue Élite (+${gawaToAdd} GAWA Bonus)`,
+          createdAt: nowISO,
+          date: new Date().toLocaleDateString("fr-FR"),
+          heure: new Date().toLocaleTimeString("fr-FR"),
+          source: "AFRIGOMBO_WHEEL"
+        });
+
+        await updateDoc(lotRef, {
+          status: "ACTIVATED",
+          activatedAt: nowISO
+        });
+
       } else {
         // Generic Lot Activation
         await updateDoc(lotRef, {

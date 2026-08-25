@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { 
   Disc, Sparkles, AlertCircle, Award, Zap, Crown, RefreshCw, 
   ChevronRight, Info, History, X, Check, ShieldAlert, Ticket, Gift,
@@ -38,7 +39,7 @@ export const WHEEL_16_SEGMENTS_MAP: Record<string, WheelSegment[]> = {
     { id: "c_12", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" },
     { id: "c_13", label: "🎟️ Spin Offert", type: "EXTRA_SPIN", rewardValue: 1, probability: 10, enabled: true, color: "#10B981", promoValueFCFA: 200, minAccountLevel: "all" },
     { id: "c_14", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 9, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
-    { id: "c_15", label: "🎧 Kit Créateur", type: "PREMIUM_BOOST", rewardValue: "Creator Kit", rewardDuration: 1, probability: 8, enabled: true, color: "#06B6D4", promoValueFCFA: 200, minAccountLevel: "all" },
+    { id: "c_15", label: "⚡ Boost Visibilité 2j", type: "VISIBILITY_BOOST", rewardValue: "Boost Visibilité 2j", rewardDuration: 2, probability: 8, enabled: true, color: "#06B6D4", promoValueFCFA: 250, minAccountLevel: "all" },
     { id: "c_16", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" }
   ],
   wheel_elite: [
@@ -56,7 +57,7 @@ export const WHEEL_16_SEGMENTS_MAP: Record<string, WheelSegment[]> = {
     { id: "p_12", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 7, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" },
     { id: "p_13", label: "🎟️ 2 Spins Élite", type: "EXTRA_SPIN", rewardValue: 2, probability: 10, enabled: true, color: "#10B981", promoValueFCFA: 500, minAccountLevel: "all" },
     { id: "p_14", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
-    { id: "p_15", label: "🎧 Studio VIP 48h", type: "PREMIUM_BOOST", rewardValue: "Studio VIP 48h", rewardDuration: 2, probability: 8, enabled: true, color: "#06B6D4", promoValueFCFA: 300, minAccountLevel: "all" },
+    { id: "p_15", label: "💰 +50 Gawa Bonus", type: "GAWA_POINTS", rewardValue: 50, probability: 8, enabled: true, color: "#06B6D4", promoValueFCFA: 500, minAccountLevel: "all" },
     { id: "p_16", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 8, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" }
   ],
   wheel_premium: [
@@ -74,7 +75,7 @@ export const WHEEL_16_SEGMENTS_MAP: Record<string, WheelSegment[]> = {
     { id: "e_12", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 5, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" },
     { id: "e_13", label: "🎟️ 3 Spins Souverains", type: "EXTRA_SPIN", rewardValue: 3, probability: 10, enabled: true, color: "#10B981", promoValueFCFA: 1000, minAccountLevel: "all" },
     { id: "e_14", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 5, enabled: true, color: "#18181B", promoValueFCFA: 0, minAccountLevel: "all" },
-    { id: "e_15", label: "🎟️ Pass Élite", type: "PREMIUM_CODE", rewardValue: "ELITE-PASS", rewardDuration: 7, probability: 10, enabled: true, color: "#06B6D4", promoValueFCFA: 700, minAccountLevel: "all" },
+    { id: "e_15", label: "🎟️ 1 Spin Souverain", type: "EXTRA_SPIN", rewardValue: 1, probability: 10, enabled: true, color: "#06B6D4", promoValueFCFA: 500, minAccountLevel: "all" },
     { id: "e_16", label: "🔄 Réessayez", type: "NO_REWARD", rewardValue: 0, probability: 5, enabled: true, color: "#09090B", promoValueFCFA: 0, minAccountLevel: "all" }
   ]
 };
@@ -472,7 +473,7 @@ export default function GomboWheelSection({
             {/* ========================================================= */}
             {/* 1. CONTAINER ROUE */}
             {/* ========================================================= */}
-            <div className="bg-zinc-950 border border-[#D4AF37]/30 rounded-[20px] sm:rounded-[28px] p-3 sm:p-5 space-y-3 shadow-2xl relative overflow-hidden flex flex-col items-center w-full max-w-full box-border">
+            <div className="bg-zinc-950 border border-[#D4AF37]/30 rounded-[20px] sm:rounded-[28px] p-2 sm:p-3 space-y-2 shadow-2xl relative overflow-hidden flex flex-col items-center w-full max-w-full box-border">
               <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-[#D4AF37]/5 rounded-full blur-[60px] pointer-events-none" />
 
               {/* Header Bar: Wheel Title & GAWA Balance */}
@@ -559,7 +560,7 @@ export default function GomboWheelSection({
               </div>
 
               {/* Visual Wheel Stage */}
-              <div className="relative flex flex-col items-center justify-center py-6 sm:py-8 w-full max-w-full">
+              <div className="relative flex flex-col items-center justify-center py-2 sm:py-3 w-full max-w-full">
                 {/* Top Pointer Arrow */}
                 <div className="absolute top-1 sm:top-2 z-30 flex flex-col items-center pointer-events-none drop-shadow-[0_4px_12px_rgba(212,175,55,0.9)]">
                   <div className="w-0 h-0 border-l-[11px] border-l-transparent border-r-[11px] border-r-transparent border-t-[20px] border-t-[#FBBF24] filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
@@ -567,10 +568,10 @@ export default function GomboWheelSection({
                 </div>
 
                 {/* Rotating SVG Wheel Stage */}
-                <div className="w-full flex items-center justify-center p-2 sm:p-4">
+                <div className="w-full flex items-center justify-center p-1 sm:p-2">
                   <svg
                     viewBox="0 0 360 360"
-                    className="w-[min(86vw,350px)] h-[min(86vw,350px)] aspect-square drop-shadow-[0_0_35px_rgba(212,175,55,0.25)] select-none mx-auto"
+                    className="w-[min(78vw,42vh,320px)] h-[min(78vw,42vh,320px)] aspect-square drop-shadow-[0_0_35px_rgba(212,175,55,0.25)] select-none mx-auto"
                     style={{ 
                       transform: `rotate(${spinDegree}deg)`,
                       transition: "transform 3500ms cubic-bezier(0.15, 0.9, 0.25, 1)"
@@ -668,11 +669,11 @@ export default function GomboWheelSection({
                 </div>
 
                 {/* Action Button: Directly spins, NO modal popup */}
-                <div className="mt-2.5 w-full max-w-xs space-y-1.5">
+                <div className="mt-2 w-full max-w-xs space-y-1.5">
                   <button
                     onClick={handleExecuteSpin}
                     disabled={isSpinning || remainingDailySpins <= 0}
-                    className={`w-full py-2.5 px-4 rounded-xl font-black uppercase text-xs font-mono tracking-wider transition cursor-pointer flex items-center justify-center gap-2 shadow-xl ${
+                    className={`w-full py-2.5 sm:py-3 px-4 rounded-xl font-black uppercase text-xs font-mono tracking-wider transition cursor-pointer flex items-center justify-center gap-2 shadow-xl ${
                       isSpinning || remainingDailySpins <= 0
                         ? "bg-zinc-900 text-zinc-600 border border-zinc-800"
                         : "bg-[#D4AF37] hover:bg-amber-400 text-black shadow-[#D4AF37]/30 border border-[#D4AF37] active:scale-95"
@@ -718,32 +719,63 @@ export default function GomboWheelSection({
                   </button>
                 </div>
               )}
-
-              {/* Direct Result Banner Display after Stop */}
-              {spinResult?.winningSegment && (
-                <div className="w-full p-3 bg-zinc-900/90 border border-[#D4AF37]/50 rounded-2xl text-center space-y-1.5 font-mono animate-fadeIn shadow-xl">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[9px] font-black uppercase tracking-widest">
-                    <Sparkles className="w-3 h-3" />
-                    <span>🎉 RÉSULTAT DU TIRAGE</span>
-                  </div>
-                  <h3 className="text-base font-black text-[#D4AF37] uppercase tracking-tight">
-                    « {spinResult.winningSegment.label} »
-                  </h3>
-                  <p className="text-[10px] text-zinc-300 max-w-xs mx-auto">
-                    {spinResult.winningSegment.type === "PREMIUM_DAYS"
-                      ? `+${spinResult.winningSegment.rewardValue} jour(s) Premium crédités !`
-                      : spinResult.winningSegment.type === "EXTRA_SPIN"
-                      ? "Un ticket de tirage bonus vous a été offert !"
-                      : "Félicitations pour votre participation !"}
-                  </p>
-                </div>
-              )}
             </div>
 
           </div>
         )}
 
       </div>
+
+      {/* ========================================================= */}
+      {/* 7. PORTAL MODALE DU RÉSULTAT DU TIRAGE (Superposée) */}
+      {/* ========================================================= */}
+      {typeof document !== "undefined" && spinResult?.winningSegment && createPortal(
+        <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          {/* Backdrop Click */}
+          <div 
+            className="fixed inset-0 cursor-pointer"
+            onClick={() => setSpinResult(null)}
+          />
+
+          {/* Modal Box */}
+          <div className="bg-[#0B0B0C] border border-[#D4AF37]/50 rounded-[28px] p-5 w-full max-w-xs text-center space-y-3 shadow-2xl relative overflow-hidden box-border animate-scaleUp z-10">
+            {/* Background Glow */}
+            <div className="absolute top-0 right-0 w-[120px] h-[120px] bg-[#D4AF37]/10 rounded-full blur-[40px] pointer-events-none" />
+
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{spinResult.winningSegment.type === "NO_REWARD" ? "RÉSULTAT DU TIRAGE" : "🎉 FÉLICITATIONS !"}</span>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base sm:text-lg font-black text-[#D4AF37] uppercase tracking-tight">
+                « {spinResult.winningSegment.label} »
+              </h3>
+              <p className="text-[11px] text-zinc-300">
+                {spinResult.winningSegment.type === "PREMIUM_DAYS"
+                  ? `+${spinResult.winningSegment.rewardValue} jour(s) Premium crédités sur votre compte !`
+                  : spinResult.winningSegment.type === "EXTRA_SPIN"
+                  ? "Un ticket de tirage bonus vous a été offert !"
+                  : spinResult.winningSegment.type === "GAWA_POINTS"
+                  ? `+${spinResult.winningSegment.rewardValue} GAWA Bonus crédités !`
+                  : spinResult.winningSegment.type === "NO_REWARD"
+                  ? "Pas de chance cette fois-ci, retentez votre chance !"
+                  : "Votre récompense a été enregistrée dans « Mes Lots » !"}
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => setSpinResult(null)}
+                className="w-full py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black uppercase text-xs rounded-xl font-mono tracking-wider transition cursor-pointer shadow-lg active:scale-95"
+              >
+                SUPER !
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* ========================================================= */}
       {/* MODALS SECTION */}
