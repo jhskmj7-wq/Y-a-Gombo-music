@@ -127,7 +127,7 @@ export class GawaEngineService {
             id: "gawa_pack_2",
             name: "Pack Premium",
             priceFCFA: 500,
-            gawaAmount: 55,
+            gawaAmount: 60,
             enabled: true,
             createdAt: new Date().toISOString()
           },

@@ -1100,20 +1100,36 @@ export default function GomboWheelSection({
                   {/* BUY TAB (Packs) */}
                   {gawaActiveTab === "buy" && (
                     <div className="grid grid-cols-3 gap-1.5 w-full box-border">
-                      {gawaPacks.map(pack => (
-                        <div key={pack.id} className="p-2 bg-zinc-900/80 border border-zinc-800 hover:border-amber-400/40 rounded-xl space-y-1.5 text-center transition shadow-md flex flex-col justify-between">
-                          <div>
-                            <span className="text-[8px] font-black text-zinc-400 uppercase tracking-tight block truncate">{pack.name}</span>
-                            <p className="text-sm font-black text-amber-400 tracking-tighter">+{pack.gawaAmount} GAWA</p>
+                      {gawaPacks.map(pack => {
+                        const isPremium = pack.id === "gawa_pack_2" || pack.name?.toLowerCase().includes("premium");
+                        const isElite = pack.id === "gawa_pack_3" || pack.name?.toLowerCase().includes("élite") || pack.name?.toLowerCase().includes("elite");
+                        const displayedAmount = isPremium ? 60 : pack.gawaAmount;
+                        const breakdown = isElite 
+                          ? "100 base + 20 bonus" 
+                          : isPremium 
+                          ? "50 base + 10 bonus" 
+                          : "20 base";
+
+                        const effectivePack = isPremium ? { ...pack, gawaAmount: 60 } : pack;
+
+                        return (
+                          <div key={pack.id} className="p-2 bg-zinc-900/80 border border-zinc-800 hover:border-amber-400/40 rounded-xl space-y-1 text-center transition shadow-md flex flex-col justify-between">
+                            <div>
+                              <span className="text-[8px] font-black text-zinc-400 uppercase tracking-tight block truncate">{pack.name}</span>
+                              <p className="text-sm font-black text-amber-400 tracking-tighter">+{displayedAmount} GAWA</p>
+                              <span className="text-[7.5px] text-zinc-500 font-mono block leading-tight mt-0.5">
+                                {breakdown}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => { setSelectedPack(effectivePack); setError(null); }}
+                              className="w-full py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black rounded-lg text-[9px] uppercase tracking-wider transition cursor-pointer shadow-sm active:scale-95 mt-1"
+                            >
+                              {pack.priceFCFA.toLocaleString()} FCFA
+                            </button>
                           </div>
-                          <button
-                            onClick={() => { setSelectedPack(pack); setError(null); }}
-                            className="w-full py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black rounded-lg text-[9px] uppercase tracking-wider transition cursor-pointer shadow-sm active:scale-95"
-                          >
-                            {pack.priceFCFA.toLocaleString()} FCFA
-                          </button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 

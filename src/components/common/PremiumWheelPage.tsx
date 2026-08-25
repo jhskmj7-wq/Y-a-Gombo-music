@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import GomboWheelSection from "./GomboWheelSection";
 import { ArrowLeft, Gift } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
@@ -18,9 +18,30 @@ export default function PremiumWheelPage({
 }: PremiumWheelPageProps) {
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const elementRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkHeight = () => {
+      if (elementRef.current) {
+        console.log(
+          "[WHEEL PAGE HEIGHT] scrollHeight:",
+          elementRef.current.scrollHeight,
+          "clientHeight:",
+          elementRef.current.clientHeight,
+          "différence (px à retirer):",
+          elementRef.current.scrollHeight - elementRef.current.clientHeight
+        );
+      }
+    };
+    // Instant check + short delay check to capture SVG/DOM settlement
+    checkHeight();
+    const timer = setTimeout(checkHeight, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div 
+      ref={elementRef}
       className={`w-full max-w-full flex flex-col font-sans box-border ${
         isLight ? "bg-[#FDFBF7] text-gray-900" : "bg-[#050505] text-white"
       }`}
