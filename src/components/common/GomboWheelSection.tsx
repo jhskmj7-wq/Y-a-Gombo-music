@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   Disc, Sparkles, AlertCircle, Award, Zap, Crown, RefreshCw, 
   ChevronRight, Info, History, X, Check, ShieldAlert, Ticket, Gift,
@@ -995,177 +996,196 @@ export default function GomboWheelSection({
       )}
 
       {/* CENTRE GAWA BOTTOM SHEET */}
-      {showGawaBottomSheet && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center animate-fadeIn p-0">
-          {/* Backdrop click to close */}
-          <div 
-            className="fixed inset-0" 
-            onClick={() => setShowGawaBottomSheet(false)} 
-          />
-
-          {/* Bottom Sheet Panel anchored at bottom */}
-          <div className="relative z-10 w-full max-w-md bg-[#0B0B0C] border-t-2 border-[#D4AF37]/40 rounded-t-[24px] sm:rounded-t-[32px] p-3 sm:p-4 space-y-2.5 shadow-2xl text-white font-mono flex flex-col animate-slideUp overflow-hidden box-border">
-            
-            {/* Top Pull Handle */}
+      <AnimatePresence>
+        {showGawaBottomSheet && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end justify-center"
+          >
+            {/* Backdrop click to close */}
             <div 
-              className="w-10 h-1 bg-zinc-700 hover:bg-zinc-500 rounded-full mx-auto shrink-0 cursor-pointer transition"
-              onClick={() => setShowGawaBottomSheet(false)}
+              className="fixed inset-0" 
+              onClick={() => setShowGawaBottomSheet(false)} 
             />
 
-            {/* Header Bar */}
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 shrink-0">
-              <div className="flex items-center gap-1.5">
-                <Coins className="w-4 h-4 text-amber-400 shrink-0" />
-                <div>
-                  <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">CENTRE GAWA</h3>
-                  <p className="text-[8px] text-zinc-400 font-normal">Rechargez vos jetons Gawa</p>
-                </div>
+            {/* Bottom Sheet Panel anchored at bottom */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="relative z-10 w-full max-w-md bg-gradient-to-b from-[#0F0F10] to-[#0B0B0C] border-t-2 border-[#D4AF37]/50 rounded-t-[28px] sm:rounded-t-[32px] shadow-[0_-10px_40px_rgba(212,175,55,0.15)] text-white font-mono flex flex-col overflow-hidden box-border max-h-[85vh]"
+            >
+              
+              {/* Top Pull Handle */}
+              <div className="pt-3 pb-1 shrink-0">
+                <div 
+                  className="w-12 h-1.5 bg-zinc-700 hover:bg-[#D4AF37]/60 rounded-full mx-auto cursor-pointer transition-colors"
+                  onClick={() => setShowGawaBottomSheet(false)}
+                />
               </div>
 
-              {/* Dual Wallet Display Bar */}
-              <div className="flex items-center gap-1.5">
-                {/* FCFA Wallet */}
-                <div className="bg-zinc-900 border border-amber-500/30 px-2 py-0.5 rounded-lg text-right flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={toggleBalanceWithPin}
-                    title={isBalanceHidden ? "Révéler le solde (Code PIN requis)" : "Masquer le solde"}
-                    className="p-0.5 rounded text-zinc-400 hover:text-[#D4AF37] transition cursor-pointer"
-                  >
-                    {isBalanceHidden ? <EyeOff className="w-3 h-3 text-[#D4AF37]" /> : <Eye className="w-3 h-3" />}
-                  </button>
-                  <div>
-                    <span className="text-[7px] font-black text-amber-500 uppercase block">Wallet FCFA</span>
-                    <span className="text-[9px] font-black text-white">{formatWalletBalance(gawaWallet?.soldeDisponible || 0, "F")}</span>
+              {/* Scrollable Container with Content */}
+              <div className="overflow-y-auto px-4 sm:px-5 pb-5 pt-2 space-y-3">
+                {/* Header Bar */}
+                <div className="flex items-center justify-between border-b border-zinc-900 pb-2 shrink-0">
+                  <div className="flex items-center gap-1.5">
+                    <Coins className="w-4 h-4 text-amber-400 shrink-0" />
+                    <div>
+                      <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">CENTRE GAWA</h3>
+                      <p className="text-[8px] text-zinc-400 font-normal">Rechargez vos jetons Gawa</p>
+                    </div>
+                  </div>
+
+                  {/* Dual Wallet Display Bar */}
+                  <div className="flex items-center gap-1.5">
+                    {/* FCFA Wallet */}
+                    <div className="bg-zinc-900 border border-amber-500/30 px-2 py-0.5 rounded-lg text-right flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={toggleBalanceWithPin}
+                        title={isBalanceHidden ? "Révéler le solde (Code PIN requis)" : "Masquer le solde"}
+                        className="p-0.5 rounded text-zinc-400 hover:text-[#D4AF37] transition cursor-pointer"
+                      >
+                        {isBalanceHidden ? <EyeOff className="w-3 h-3 text-[#D4AF37]" /> : <Eye className="w-3 h-3" />}
+                      </button>
+                      <div>
+                        <span className="text-[7px] font-black text-amber-500 uppercase block">Wallet FCFA</span>
+                        <span className="text-[9px] font-black text-white">{formatWalletBalance(gawaWallet?.soldeDisponible || 0, "F")}</span>
+                      </div>
+                    </div>
+                    {/* Solde GAWA */}
+                    <div className="bg-amber-950/40 border border-amber-400/50 px-2 py-0.5 rounded-lg text-right">
+                      <span className="text-[7px] font-black text-amber-400 uppercase block">Solde GAWA</span>
+                      <span className="text-[9px] font-black text-amber-400 flex items-center justify-end gap-0.5">
+                        <Zap className="w-2.5 h-2.5 fill-amber-400 text-amber-400 shrink-0" />
+                        {(gawaWallet?.soldeGawa || 0).toLocaleString()} GAWA
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => setShowGawaBottomSheet(false)}
+                      className="w-7 h-7 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 flex items-center justify-center transition cursor-pointer shrink-0 ml-0.5"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
-                {/* Solde GAWA */}
-                <div className="bg-amber-950/40 border border-amber-400/50 px-2 py-0.5 rounded-lg text-right">
-                  <span className="text-[7px] font-black text-amber-400 uppercase block">Solde GAWA</span>
-                  <span className="text-[9px] font-black text-amber-400 flex items-center justify-end gap-0.5">
-                    <Zap className="w-2.5 h-2.5 fill-amber-400 text-amber-400 shrink-0" />
-                    {(gawaWallet?.soldeGawa || 0).toLocaleString()} GAWA
-                  </span>
-                </div>
-                <button 
-                  onClick={() => setShowGawaBottomSheet(false)}
-                  className="w-7 h-7 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 flex items-center justify-center transition cursor-pointer shrink-0 ml-0.5"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
 
-            {/* Navigation Tabs (Acheter / Missions / Historique) */}
-            <div className="flex items-center justify-center gap-1 bg-zinc-900/80 p-0.5 rounded-lg border border-zinc-800 w-full shrink-0">
-              {[
-                { id: "buy", label: "🛒 ACHETER GAWA" },
-                { id: "missions", label: "🎯 MISSIONS" },
-                { id: "history", label: "📜 HISTORIQUE" }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setGawaActiveTab(tab.id as any)}
-                  className={`flex-1 py-1.5 px-1 rounded-md text-[9px] font-black uppercase font-mono tracking-wider transition whitespace-nowrap cursor-pointer ${
-                    gawaActiveTab === tab.id ? "bg-amber-400 text-black shadow-sm" : "text-zinc-400 hover:text-white"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab Content - No internal scroll, compact cards */}
-            <div className="w-full space-y-2 overflow-hidden py-1">
-              {/* BUY TAB (Packs) */}
-              {gawaActiveTab === "buy" && (
-                <div className="grid grid-cols-3 gap-1.5 w-full box-border">
-                  {gawaPacks.map(pack => (
-                    <div key={pack.id} className="p-2 bg-zinc-900/80 border border-zinc-800 hover:border-amber-400/40 rounded-xl space-y-1.5 text-center transition shadow-md flex flex-col justify-between">
-                      <div>
-                        <span className="text-[8px] font-black text-zinc-400 uppercase tracking-tight block truncate">{pack.name}</span>
-                        <p className="text-sm font-black text-amber-400 tracking-tighter">+{pack.gawaAmount} GAWA</p>
-                      </div>
-                      <button
-                        onClick={() => { setSelectedPack(pack); setError(null); }}
-                        className="w-full py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black rounded-lg text-[9px] uppercase tracking-wider transition cursor-pointer shadow-sm active:scale-95"
-                      >
-                        {pack.priceFCFA.toLocaleString()} FCFA
-                      </button>
-                    </div>
+                {/* Navigation Tabs (Acheter / Missions / Historique) */}
+                <div className="flex items-center justify-center gap-1 bg-zinc-900/80 p-0.5 rounded-lg border border-zinc-800 w-full shrink-0">
+                  {[
+                    { id: "buy", label: "🛒 ACHETER GAWA" },
+                    { id: "missions", label: "🎯 MISSIONS" },
+                    { id: "history", label: "📜 HISTORIQUE" }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setGawaActiveTab(tab.id as any)}
+                      className={`flex-1 py-1.5 px-1 rounded-md text-[9px] font-black uppercase font-mono tracking-wider transition whitespace-nowrap cursor-pointer ${
+                        gawaActiveTab === tab.id ? "bg-amber-400 text-black shadow-sm" : "text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
                   ))}
                 </div>
-              )}
 
-              {/* MISSIONS TAB */}
-              {gawaActiveTab === "missions" && (
-                <div className="space-y-1.5 w-full box-border">
-                  {missions.map(m => {
-                    const done = userMissions.some(um => um.missionId === m.id);
-                    return (
-                      <div key={m.id} className={`p-2 bg-zinc-900/50 border border-zinc-800 rounded-xl flex items-center justify-between gap-2 ${done ? "opacity-60" : ""}`}>
-                        <div className="min-w-0">
-                           <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] font-black text-white uppercase truncate">{m.title}</span>
-                              <span className="text-[9px] font-black text-amber-400 shrink-0">+{m.rewardGawa} GAWA</span>
-                           </div>
-                           <p className="text-[8px] text-zinc-400 truncate">{m.description}</p>
+                {/* Tab Content */}
+                <div className="w-full space-y-2 py-1">
+                  {/* BUY TAB (Packs) */}
+                  {gawaActiveTab === "buy" && (
+                    <div className="grid grid-cols-3 gap-1.5 w-full box-border">
+                      {gawaPacks.map(pack => (
+                        <div key={pack.id} className="p-2 bg-zinc-900/80 border border-zinc-800 hover:border-amber-400/40 rounded-xl space-y-1.5 text-center transition shadow-md flex flex-col justify-between">
+                          <div>
+                            <span className="text-[8px] font-black text-zinc-400 uppercase tracking-tight block truncate">{pack.name}</span>
+                            <p className="text-sm font-black text-amber-400 tracking-tighter">+{pack.gawaAmount} GAWA</p>
+                          </div>
+                          <button
+                            onClick={() => { setSelectedPack(pack); setError(null); }}
+                            className="w-full py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black rounded-lg text-[9px] uppercase tracking-wider transition cursor-pointer shadow-sm active:scale-95"
+                          >
+                            {pack.priceFCFA.toLocaleString()} FCFA
+                          </button>
                         </div>
-                        <button
-                          disabled={done || evaluatingMissions[m.id]}
-                          onClick={() => handleClaimMission(m)}
-                          className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase shrink-0 transition cursor-pointer ${
-                            done 
-                              ? "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed" 
-                              : "bg-[#D4AF37] hover:bg-amber-400 text-black shadow-sm"
-                          }`}
-                        >
-                          {evaluatingMissions[m.id] ? "..." : done ? "Terminé" : "Réclamer"}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* HISTORY TAB */}
-              {gawaActiveTab === "history" && (
-                <div className="space-y-1 w-full box-border">
-                  {gawaHistory.length === 0 ? (
-                    <div className="py-6 text-center space-y-1">
-                       <History className="w-6 h-6 text-zinc-700 mx-auto" />
-                       <p className="text-[9px] text-zinc-500 uppercase font-black">Aucun historique GAWA</p>
+                      ))}
                     </div>
-                  ) : (
-                    gawaHistory.slice(0, 4).map(tx => (
-                      <div key={tx.id} className="p-2 bg-zinc-900/50 border border-zinc-900 rounded-lg flex justify-between items-center gap-2">
-                        <div className="min-w-0 truncate">
-                           <p className="text-[9px] font-black text-white uppercase truncate">{tx.description}</p>
-                           <p className="text-[7px] text-zinc-500 font-mono">{new Date(tx.createdAt).toLocaleDateString("fr-FR")}</p>
+                  )}
+
+                  {/* MISSIONS TAB */}
+                  {gawaActiveTab === "missions" && (
+                    <div className="space-y-1.5 w-full box-border">
+                      {missions.map(m => {
+                        const done = userMissions.some(um => um.missionId === m.id);
+                        return (
+                          <div key={m.id} className={`p-2 bg-zinc-900/50 border border-zinc-800 rounded-xl flex items-center justify-between gap-2 ${done ? "opacity-60" : ""}`}>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] font-black text-white uppercase truncate">{m.title}</span>
+                                  <span className="text-[9px] font-black text-amber-400 shrink-0">+{m.rewardGawa} GAWA</span>
+                              </div>
+                              <p className="text-[8px] text-zinc-400 truncate">{m.description}</p>
+                            </div>
+                            <button
+                              disabled={done || evaluatingMissions[m.id]}
+                              onClick={() => handleClaimMission(m)}
+                              className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase shrink-0 transition cursor-pointer ${
+                                done 
+                                  ? "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed" 
+                                  : "bg-[#D4AF37] hover:bg-amber-400 text-black shadow-sm"
+                              }`}
+                            >
+                              {evaluatingMissions[m.id] ? "..." : done ? "Terminé" : "Réclamer"}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* HISTORY TAB */}
+                  {gawaActiveTab === "history" && (
+                    <div className="space-y-1 w-full box-border">
+                      {gawaHistory.length === 0 ? (
+                        <div className="py-6 text-center space-y-1">
+                          <History className="w-6 h-6 text-zinc-700 mx-auto" />
+                          <p className="text-[9px] text-zinc-500 uppercase font-black">Aucun historique GAWA</p>
                         </div>
-                        <span className={`font-black text-[10px] shrink-0 ${tx.amount > 0 ? "text-amber-400" : "text-zinc-400"}`}>
-                          {tx.amount > 0 ? "+" : ""}{tx.amount} GAWA
-                        </span>
-                      </div>
-                    ))
+                      ) : (
+                        gawaHistory.slice(0, 4).map(tx => (
+                          <div key={tx.id} className="p-2 bg-zinc-900/50 border border-zinc-900 rounded-lg flex justify-between items-center gap-2">
+                            <div className="min-w-0 truncate">
+                              <p className="text-[9px] font-black text-white uppercase truncate">{tx.description}</p>
+                              <p className="text-[7px] text-zinc-500 font-mono">{new Date(tx.createdAt).toLocaleDateString("fr-FR")}</p>
+                            </div>
+                            <span className={`font-black text-[10px] shrink-0 ${tx.amount > 0 ? "text-amber-400" : "text-zinc-400"}`}>
+                              {tx.amount > 0 ? "+" : ""}{tx.amount} GAWA
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
 
-            {/* Footer Close Button */}
-            <div className="pt-1.5 border-t border-zinc-900 shrink-0">
-              <button
-                onClick={() => setShowGawaBottomSheet(false)}
-                className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white font-black uppercase text-[9px] rounded-xl border border-zinc-800 transition cursor-pointer"
-              >
-                FERMER
-              </button>
-            </div>
+                {/* Footer Close Button */}
+                <div className="pt-1.5 border-t border-zinc-900 shrink-0">
+                  <button
+                    onClick={() => setShowGawaBottomSheet(false)}
+                    className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white font-black uppercase text-[9px] rounded-xl border border-zinc-800 transition cursor-pointer"
+                  >
+                    FERMER
+                  </button>
+                </div>
+              </div>
 
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ========================================================= */}
       {/* 3. BOTTOM SHEET "MES LOTS" */}
