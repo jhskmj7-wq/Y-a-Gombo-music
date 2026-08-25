@@ -1258,6 +1258,7 @@ export interface AfriGomboWheel {
   type: WheelType | string;
   enabled: boolean;
   cost: number;
+  costGawa?: number;
   currency: string;
   segments: WheelSegment[];
   maxDailyParticipations: number;

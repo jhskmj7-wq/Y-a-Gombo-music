@@ -456,8 +456,8 @@ export default function GomboWheelSection({
   };
 
   return (
-    <div className="w-full max-w-full bg-[#050505] text-white p-1 sm:p-2 font-sans box-border flex flex-col items-center">
-      <div className="w-full max-w-lg mx-auto box-border flex flex-col items-center justify-center">
+    <div className="w-full max-w-full bg-[#050505] text-white p-1 sm:p-2 font-sans box-border flex flex-col items-center flex-1 h-full">
+      <div className="w-full max-w-lg mx-auto box-border flex flex-col items-center justify-center flex-1 h-full">
 
         {/* LOADING STATE */}
         {(loading || flagsLoading) && (
@@ -469,12 +469,12 @@ export default function GomboWheelSection({
 
         {/* MAIN CONTAINER */}
         {!loading && !flagsLoading && (isWheelGlobalEnabled || isFounder) && currentWheel && (
-          <div className="w-full max-w-full box-border animate-fadeIn">
+          <div className="w-full max-w-full box-border animate-fadeIn flex-1 flex flex-col h-full">
             
             {/* ========================================================= */}
             {/* 1. CONTAINER ROUE */}
             {/* ========================================================= */}
-            <div className="bg-zinc-950 border border-[#D4AF37]/30 rounded-[20px] sm:rounded-[28px] p-2 sm:p-3 space-y-2 shadow-2xl relative overflow-hidden flex flex-col items-center w-full max-w-full box-border">
+            <div className="bg-zinc-950 border border-[#D4AF37]/30 rounded-[20px] sm:rounded-[28px] p-2 sm:p-3 space-y-2 shadow-2xl relative overflow-hidden flex flex-col items-center justify-between flex-1 w-full max-w-full box-border">
               <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-[#D4AF37]/5 rounded-full blur-[60px] pointer-events-none" />
 
               {/* Header Bar: Wheel Title & GAWA Balance */}
@@ -530,34 +530,36 @@ export default function GomboWheelSection({
               </div>
 
               {/* Wheels Selection Tabs */}
-              {wheels.length > 1 && (
-                <div className="flex items-center gap-1 overflow-x-auto scrollbar-none py-0.5 w-full justify-center px-1 box-border">
-                  {wheels.map((w) => (
+              <div className="flex gap-2 w-full overflow-x-auto pb-1 scrollbar-none snap-x">
+                {wheels.map((w) => {
+                  const isSelected = w.id === selectedWheelId;
+                  return (
                     <button
                       key={w.id}
                       onClick={() => {
-                        if (!isSpinning) {
-                          setSelectedWheelId(w.id);
-                          setSpinResult(null);
-                          setSpinError(null);
-                          setInsufficientGawaState(null);
-                        }
+                        if (isSpinning) return;
+                        setSelectedWheelId(w.id);
+                        setSpinResult(null);
+                        setSpinError(null);
+                        setInsufficientGawaState(null);
                       }}
-                      className={`px-3 py-1 rounded-lg text-[9px] font-mono font-black uppercase tracking-wider transition shrink-0 cursor-pointer border ${
-                        currentWheel?.id === w.id
-                          ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-sm"
-                          : "bg-zinc-900/60 text-zinc-400 border-zinc-800"
+                      disabled={isSpinning}
+                      className={`shrink-0 snap-start px-3.5 py-2 rounded-xl border flex flex-col items-center justify-center transition-all min-w-[92px] ${
+                        isSelected
+                          ? "bg-[#D4AF37]/15 border-[#D4AF37] text-white shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+                          : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700"
                       }`}
                     >
-                      {w.type || w.name} ({w.cost} GAWA)
+                      <span className="text-[11px] font-black uppercase tracking-tight whitespace-nowrap">{w.name}</span>
+                      <span className="text-[10px] font-mono text-[#D4AF37] font-bold mt-0.5 whitespace-nowrap">{w.costGawa || w.cost} GAWA</span>
                     </button>
-                  ))}
-                </div>
-              )}
+                  );
+                })}
+              </div>
 
               {/* Cost Badge */}
               <div className="px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[#D4AF37] text-[10px] font-mono font-black uppercase tracking-wider">
-                ⚡ COÛT DU LANCEMENT : {hasExtraSpinToken ? "0 GAWA (Spin Offert)" : `${currentWheel?.cost || 20} GAWA`}
+                ⚡ COÛT DU LANCEMENT : {hasExtraSpinToken ? "0 GAWA (Spin Offert)" : `${currentWheel?.costGawa || currentWheel?.cost || 20} GAWA`}
               </div>
 
               {/* Visual Wheel Stage */}
@@ -572,7 +574,7 @@ export default function GomboWheelSection({
                 <div className="w-full flex items-center justify-center p-1 sm:p-2">
                   <svg
                     viewBox="0 0 360 360"
-                    className="w-[min(78vw,42vh,320px)] h-[min(78vw,42vh,320px)] aspect-square drop-shadow-[0_0_35px_rgba(212,175,55,0.25)] select-none mx-auto"
+                    className="w-[min(80vw,48vh,340px)] h-[min(80vw,48vh,340px)] aspect-square drop-shadow-[0_0_35px_rgba(212,175,55,0.25)] select-none mx-auto"
                     style={{ 
                       transform: `rotate(${spinDegree}deg)`,
                       transition: "transform 3500ms cubic-bezier(0.15, 0.9, 0.25, 1)"
