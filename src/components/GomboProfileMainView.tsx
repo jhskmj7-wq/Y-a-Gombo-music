@@ -25,6 +25,7 @@ interface GomboProfileMainViewProps {
   dynamicFavsCount: number;
   dynamicAppsCount: number;
   myPosts: any[];
+  myGombosCount?: number;
   mediaGallery: any[];
   setMediaGallery: (gallery: any[]) => void;
   verifyingIdentity?: boolean;
@@ -40,6 +41,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
   setPanelView,
   dynamicAppsCount,
   myPosts,
+  myGombosCount = 0,
   verifyingIdentity = false,
   kycProgress = 0,
   handleIdentityVerifyUpload,
@@ -468,7 +470,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         </div>
         <div className="bg-afri-bg border border-afri-border/95 rounded-[16px] p-2.5 flex flex-col items-center justify-center text-center gap-0.5 shadow-md">
           <span className="text-[16px] xs:text-[18px] sm:text-[22px] font-serif font-black text-afri-gold tracking-tight leading-none">
-            {myPosts.length || 0}
+            {(myPosts.length || 0) + (myGombosCount || 0)}
           </span>
           <span className="text-[7px] xs:text-[8px] font-mono font-black text-afri-text-sec uppercase tracking-widest mt-0.5">
             POSTS
@@ -895,8 +897,9 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
       {/* MON ACTIVITÉ */}
       {(() => {
+        const totalPubsCount = (myPosts.length || 0) + (myGombosCount || 0);
         const activityItems = [
-          { id: "gombos", featureId: "gombos", label: "Publications", sub: `${myPosts.length} posts`, icon: Edit3, color: "text-emerald-400", action: () => onNavigateView("user_mes_gombos") },
+          { id: "gombos", featureId: "gombos", label: "Publications", sub: `${totalPubsCount} post${totalPubsCount > 1 ? "s" : ""}`, icon: Edit3, color: "text-emerald-400", action: () => onNavigateView("user_mes_gombos") },
           { id: "escrow", featureId: "escrow", label: "Contrats", sub: "Sécurisés", icon: ShieldCheck, color: "text-afri-gold", action: () => onNavigateView("user_contracts") },
           { id: "candidatures", featureId: "gombos", label: "Candidatures", sub: `${currentUserProfile.applicationsSent || 0} envois`, icon: Target, color: "text-purple-400", action: () => onNavigateView("user_opportunities") },
           { id: "wallet", featureId: "wallet", label: "Revenus", sub: `${(currentUserProfile.totalRevenue || 0).toLocaleString()} F`, icon: Wallet, color: "text-amber-500", action: () => onNavigateView("user_wallet") },

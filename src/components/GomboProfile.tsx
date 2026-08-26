@@ -12,7 +12,7 @@ import { UserProfile, PaymentProvider } from "../types";
 import { safeStringify } from "../lib/jsonUtils";
 import { gomboDB, gomboAuth, isFirebaseMock } from "../firebase";
 import { db, auth } from "../lib/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, collection, onSnapshot } from "firebase/firestore";
 import { audioSynth } from "../lib/audio";
 import { useAudio } from "../context/AudioContext";
 import { ProfileCompletionScore } from "./ProfileCompletionScore";
@@ -161,14 +161,54 @@ export default function GomboProfile({
   const [editPostCaption, setEditPostCaption] = useState("");
   const [savingPostEdit, setSavingPostEdit] = useState(false);
 
+  // Real-time synchronization of current user posts & gombos (Mes publications)
+  const [myGombosCount, setMyGombosCount] = useState<number>(0);
+
   useEffect(() => {
+    if (!syncedProfile?.uid) return;
     setLoadingPosts(true);
-    const unsubscribe = gomboDB.listenSocialPosts((allPosts) => {
-      const filtered = allPosts.filter(p => p.authorId === syncedProfile.uid || p.userId === syncedProfile.uid);
-      setMyPosts(filtered);
+
+    let unsubPosts = () => {};
+    let unsubGombos = () => {};
+
+    if (db) {
+      try {
+        const postsRef = collection(db, "posts");
+        unsubPosts = onSnapshot(postsRef, (snapshot) => {
+          const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          const filtered = list.filter((p: any) => p.userId === syncedProfile.uid || p.authorId === syncedProfile.uid);
+          setMyPosts(filtered);
+          setLoadingPosts(false);
+        }, (err) => {
+          console.warn("⚠️ [GOMBO_PROFILE_POSTS] Error listening posts:", err);
+          setLoadingPosts(false);
+        });
+
+        const gombosRef = collection(db, "gombos");
+        unsubGombos = onSnapshot(gombosRef, (snapshot) => {
+          const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          const filtered = list.filter((g: any) =>
+            g.organizerId === syncedProfile.uid ||
+            g.clientId === syncedProfile.uid ||
+            g.selectedTalentId === syncedProfile.uid ||
+            (Array.isArray(g.applicantIds) && g.applicantIds.includes(syncedProfile.uid))
+          );
+          setMyGombosCount(filtered.length);
+        }, (err) => {
+          console.warn("⚠️ [GOMBO_PROFILE_GOMBOS] Error listening gombos:", err);
+        });
+      } catch (err) {
+        console.error("❌ [GOMBO_PROFILE] Firestore error:", err);
+        setLoadingPosts(false);
+      }
+    } else {
       setLoadingPosts(false);
-    });
-    return () => unsubscribe();
+    }
+
+    return () => {
+      unsubPosts();
+      unsubGombos();
+    };
   }, [syncedProfile?.uid]);
 
   const handleSkipUpdate = async () => {
@@ -1189,6 +1229,7 @@ export default function GomboProfile({
           dynamicFavsCount={dynamicFavsCount}
           dynamicAppsCount={dynamicAppsCount}
           myPosts={myPosts}
+          myGombosCount={myGombosCount}
           mediaGallery={mediaGallery}
           setMediaGallery={setMediaGallery}
           verifyingIdentity={verifyingIdentity}

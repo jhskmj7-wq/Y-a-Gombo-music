@@ -5591,6 +5591,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   (currentArtist && g.selectedTalentId === currentArtist.id)
                 );
 
+                const myUserPosts = posts.filter(p =>
+                  Boolean((myUid && (p.userId === myUid || (p as any).authorId === myUid)) ||
+                  (currentArtist && (p.userId === currentArtist.id || (p as any).authorId === currentArtist.id)))
+                );
+
                 const filteredGombos = myGombos.filter(g => {
                   if (pubFilter === "all") return true;
                   if (pubFilter === "en_cours") {
@@ -6037,6 +6042,88 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             </div>
                           );
                         })
+                      )}
+                    </div>
+
+                    {/* SECTION 2 : MES RÉELS & VIDÉOS (lues depuis la collection posts) */}
+                    <div className="mt-8 pt-6 border-t border-afri-border/60 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm sm:text-base font-black uppercase text-[#D4AF37] tracking-widest flex items-center gap-2">
+                            <span>🎥</span> Mes Réels & Vidéos Artistiques
+                          </h3>
+                          <p className="text-xs text-afri-text-sec mt-0.5">
+                            Vos vidéos et réels publiés sur le Fil Réel d'AFRIGOMBO.
+                          </p>
+                        </div>
+                        <span className="px-3 py-1 bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-mono font-bold rounded-full">
+                          {myUserPosts.length} Réel{myUserPosts.length > 1 ? "s" : ""}
+                        </span>
+                      </div>
+
+                      {myUserPosts.length === 0 ? (
+                        <div className="p-6 text-center border border-dashed border-afri-border bg-afri-bg-sec/20 rounded-2xl space-y-3">
+                          <p className="text-xs text-afri-text font-bold">📹 Aucun Réel vidéo publié pour le moment</p>
+                          <p className="text-[10px] text-afri-text-sec">Publiez votre premier Réel artistique pour captiver les recruteurs et les fans !</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPerspective("user");
+                              setActiveMenu("user_reels");
+                            }}
+                            className="px-4 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black text-xs font-black uppercase rounded-xl transition shadow-md inline-flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <span>🎥 Studio Vidéo Réels</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {myUserPosts.map((post) => {
+                            const videoSrc = post.mediaUrl || (post as any).imageUrl || (post as any).videoUrl;
+                            return (
+                              <div
+                                key={post.id}
+                                className="bg-afri-bg border border-afri-border hover:border-[#D4AF37]/40 rounded-2xl overflow-hidden shadow-md flex flex-col justify-between transition-all"
+                              >
+                                {videoSrc && (
+                                  <div className="relative aspect-video bg-black/80 flex items-center justify-center overflow-hidden">
+                                    <video
+                                      src={videoSrc}
+                                      className="w-full h-full object-cover"
+                                      controls
+                                      preload="metadata"
+                                    />
+                                  </div>
+                                )}
+                                <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
+                                  <div>
+                                    <div className="flex items-center justify-between text-[10px] text-afri-text-sec font-mono mb-1">
+                                      <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-2 py-0.5 rounded font-bold uppercase">
+                                        {post.type || "video"}
+                                      </span>
+                                      <span>
+                                        {post.timestamp ? new Date(post.timestamp).toLocaleDateString("fr-FR") : (post.createdAt ? new Date(post.createdAt).toLocaleDateString("fr-FR") : "")}
+                                      </span>
+                                    </div>
+                                    {post.content && (
+                                      <p className="text-xs text-afri-text font-medium line-clamp-2">
+                                        {post.content}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center justify-between text-[11px] text-afri-text-sec pt-2 border-t border-afri-border/40">
+                                    <span className="flex items-center gap-1">
+                                      ❤️ <strong className="text-afri-text">{post.likes || 0}</strong>
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      💬 <strong className="text-afri-text">{Array.isArray(post.comments) ? post.comments.length : (typeof post.comments === "number" ? post.comments : 0)}</strong>
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
                   </div>
