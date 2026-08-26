@@ -1202,7 +1202,7 @@ export const gomboDB = {
 
   async createSocialPost(post: Partial<SocialPost>) {
     if (db) {
-      const ref = await addDoc(collection(db, "social_posts"), {
+      const socialPostData = {
         ...post,
         status: post.status || "pending_deposit",
         paymentMethod: post.paymentMethod || "manual_beta",
@@ -1214,7 +1214,55 @@ export const gomboDB = {
         likesCount: 0,
         comments: [],
         createdAt: new Date().toISOString()
-      });
+      };
+
+      const ref = await addDoc(collection(db, "social_posts"), socialPostData);
+
+      // Harmonisation : si la publication est une vidéo/réel, écrire également dans la collection "posts"
+      const isVideo =
+        post.type === "video" ||
+        post.type === "reel" ||
+        Boolean((post as any).videoUrl) ||
+        (typeof post.mediaUrl === "string" &&
+          (post.mediaUrl.includes(".mp4") ||
+            post.mediaUrl.includes(".webm") ||
+            post.mediaUrl.includes(".mov") ||
+            post.mediaUrl.includes("video")));
+
+      if (isVideo) {
+        try {
+          const videoUrl = (post as any).videoUrl || post.mediaUrl || (post as any).imageUrl || "";
+          const postsPayload = {
+            id: ref.id,
+            userId: post.userId || post.authorId || "anonymous",
+            authorName: (post as any).authorName || (post as any).userName || (post as any).artistName || "Artiste Gombo",
+            authorArtisticName: (post as any).authorArtisticName || post.title || (post as any).artistName || "Titre",
+            authorAvatar: (post as any).authorAvatar || (post as any).userAvatar || "",
+            commune: (post as any).commune || "",
+            content: post.content || (post as any).caption || (post as any).text || "",
+            mediaUrl: videoUrl,
+            videoUrl: videoUrl,
+            type: "video",
+            hashtags: (post as any).hashtags || (post as any).tags || [],
+            appliedFilter: (post as any).appliedFilter || "normal",
+            allowComments: (post as any).allowComments ?? true,
+            likes: 0,
+            likesCount: 0,
+            comments: 0,
+            commentsCount: 0,
+            likedBy: [],
+            bookmarkedBy: [],
+            status: post.status || "published",
+            visible: post.visible ?? true,
+            adminValidated: post.adminValidated ?? true,
+            timestamp: new Date().toISOString(),
+            createdAt: new Date().toISOString()
+          };
+          await setDoc(doc(db, "posts", ref.id), postsPayload, { merge: true });
+        } catch (postsErr) {
+          console.warn("⚠️ [CREATE_SOCIAL_POST] Failed to sync video to 'posts' collection:", postsErr);
+        }
+      }
 
       try {
         await this.createFounderNotification({

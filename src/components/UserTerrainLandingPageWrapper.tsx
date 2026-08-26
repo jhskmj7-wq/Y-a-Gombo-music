@@ -55,13 +55,27 @@ export default function UserTerrainLandingPageWrapper() {
       setGombos(publicGombos);
     });
 
-    // 2. Posts (listening to 'posts' collection where Reels & Publications are stored)
+    // 2. Posts (listening to 'posts' AND 'social_posts' collections where Reels & Publications are stored)
     let unsubscribePosts = () => {};
+    let unsubscribeSocial = () => {};
+
     if (db) {
       try {
-        const postsRef = collection(db, "posts");
-        unsubscribePosts = onSnapshot(postsRef, (snapshot) => {
-          const rawList = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any));
+        let postsList: any[] = [];
+        let socialList: any[] = [];
+
+        const syncCombinedPosts = () => {
+          const map = new Map<string, any>();
+          
+          // Add posts first, then social_posts (merging fields)
+          [...postsList, ...socialList].forEach(item => {
+            if (item && item.id) {
+              const existing = map.get(item.id) || {};
+              map.set(item.id, { ...existing, ...item });
+            }
+          });
+
+          const rawList = Array.from(map.values());
           const publicList = rawList.filter(social =>
             social.status !== "pending_deposit" &&
             social.visible !== false &&
@@ -74,16 +88,16 @@ export default function UserTerrainLandingPageWrapper() {
 
           const mappedPosts: Post[] = publicList.map((social) => ({
             id: social.id,
-            userId: social.userId,
-            authorName: social.authorName || social.userName || "Artiste Gombo",
-            authorArtisticName: social.authorArtisticName || social.title || "Titre",
+            userId: social.userId || social.authorId,
+            authorName: social.authorName || social.userName || social.artistName || "Artiste Gombo",
+            authorArtisticName: social.authorArtisticName || social.title || social.artistName || "Titre",
             authorAvatar: social.authorAvatar || social.userAvatar,
-            content: social.content || social.caption,
-            mediaUrl: social.mediaUrl || social.imageUrl || social.videoUrl,
-            timestamp: social.createdAt || social.timestamp,
+            content: social.content || social.caption || social.text,
+            mediaUrl: social.mediaUrl || social.videoUrl || social.imageUrl,
+            timestamp: social.createdAt || social.timestamp || social.publishedAt,
             likes: social.likesCount || social.likes || 0,
             comments: Array.isArray(social.comments) ? social.comments.length : (typeof social.comments === "number" ? social.comments : (social.commentsCount || 0)),
-            type: social.type,
+            type: social.type || (social.videoUrl ? "video" : "post"),
             isFlagged: social.isFlagged,
             flagReason: social.flagReason,
           }));
@@ -93,8 +107,22 @@ export default function UserTerrainLandingPageWrapper() {
           );
 
           setPosts(mappedPosts);
+        };
+
+        const postsRef = collection(db, "posts");
+        unsubscribePosts = onSnapshot(postsRef, (snapshot) => {
+          postsList = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any));
+          syncCombinedPosts();
         }, (err) => {
           console.warn("⚠️ [POSTS_LISTEN] Firestore snapshot listener warning:", err);
+        });
+
+        const socialRef = collection(db, "social_posts");
+        unsubscribeSocial = onSnapshot(socialRef, (snapshot) => {
+          socialList = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any));
+          syncCombinedPosts();
+        }, (err) => {
+          console.warn("⚠️ [SOCIAL_POSTS_LISTEN] Firestore snapshot listener warning:", err);
         });
       } catch (err) {
         console.error("❌ [POSTS_LISTEN] Exception setting up listener:", err);
@@ -116,6 +144,7 @@ export default function UserTerrainLandingPageWrapper() {
     return () => {
       unsubscribeGombos();
       unsubscribePosts();
+      unsubscribeSocial();
       unsubscribeRenforts();
     };
   }, []);
