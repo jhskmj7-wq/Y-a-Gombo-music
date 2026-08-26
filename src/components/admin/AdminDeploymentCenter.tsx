@@ -494,27 +494,37 @@ export default function AdminDeploymentCenter({
         return f;
       });
 
-      const flagsRef = doc(db, "settings", "feature_flags");
-      await setDoc(flagsRef, {
-        flags: updatedFlags,
-        updatedAt: nowIso,
-        updatedBy: founderEmail || "Super Fondateur"
-      }, { merge: true });
+      // Synchronize legacy settings/feature_flags safely
+      try {
+        const flagsRef = doc(db, "settings", "feature_flags");
+        await setDoc(flagsRef, {
+          flags: updatedFlags,
+          updatedAt: nowIso,
+          updatedBy: founderEmail || "Super Fondateur"
+        }, { merge: true });
+      } catch (legacyErr) {
+        console.warn("Avertissement synchronisation legacy flags:", legacyErr);
+      }
 
-      await SecurityService.logSecurityEvent({
-        userId: founderEmail,
-        userEmail: founderEmail,
-        action: "feature_flag_visibility_update",
-        severity: "medium",
-        details: `Module '${flagId}' visibility set to '${targetVisibility}' (isPremium: ${targetPremium}) by ${founderEmail}`,
-        result: "allowed"
-      });
+      try {
+        await SecurityService.logSecurityEvent({
+          userId: founderEmail,
+          userEmail: founderEmail,
+          action: "feature_flag_visibility_update",
+          severity: "medium",
+          details: `Module '${flagId}' visibility set to '${targetVisibility}' (isPremium: ${targetPremium}) by ${founderEmail}`,
+          result: "allowed"
+        });
+      } catch (logErr) {
+        console.warn("Avertissement log sécurité:", logErr);
+      }
 
       setFeatureFlags(updatedFlags);
       try { audioSynth?.playValidationSuccess?.(); } catch (e) {}
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erreur feature flag update:", err);
-      setFlagError("Impossible de modifier le statut du module.");
+      const errMsg = err?.message || String(err);
+      setFlagError(`Impossible de modifier le statut du module : ${errMsg}`);
     } finally {
       setSavingFlagId(null);
       setConfirmHideFlag(null);

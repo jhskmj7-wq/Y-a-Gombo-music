@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { User, Gombo, Renfort, UserProfile } from "../types";
 import { gomboDB } from "../firebase";
 import { calculateDistance, obfuscateCoordinates } from "../lib/geoUtils";
+import { resolveGomboCoordinates } from "../components/AfrigoRadarMap";
 
 interface GeoLocationState {
   latitude: number | null;
@@ -132,15 +133,28 @@ export function useGeoEngine(profile: UserProfile | null) {
   };
 
   // 5. Sort functions for Nearby sections
-  const getNearbyItems = useCallback(<T extends { latitude?: number; longitude?: number }>(items: T[], maxDistance = 50): T[] => {
-    if (!geoState.latitude || !geoState.longitude) return [];
+  const getNearbyItems = useCallback(<T extends Record<string, any>>(items: T[], maxDistance = 50): T[] => {
+    const userLat = geoState.latitude || 5.3600;
+    const userLng = geoState.longitude || -4.0083;
 
     return items
-      .filter(item => item.latitude && item.longitude)
-      .map(item => ({
-        ...item,
-        distance: calculateDistance(geoState.latitude!, geoState.longitude!, item.latitude!, item.longitude!)
-      }))
+      .map(item => {
+        let itemLat = (item as any).latitude;
+        let itemLng = (item as any).longitude;
+
+        if (typeof itemLat !== "number" || typeof itemLng !== "number" || isNaN(itemLat) || isNaN(itemLng)) {
+          const coords = resolveGomboCoordinates(item as any);
+          itemLat = coords.latitude;
+          itemLng = coords.longitude;
+        }
+
+        return {
+          ...item,
+          latitude: itemLat,
+          longitude: itemLng,
+          distance: calculateDistance(userLat, userLng, itemLat, itemLng)
+        };
+      })
       .filter((item: any) => item.distance <= maxDistance)
       .sort((a: any, b: any) => a.distance - b.distance);
   }, [geoState.latitude, geoState.longitude]);
