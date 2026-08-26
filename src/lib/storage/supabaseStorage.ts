@@ -563,9 +563,24 @@ export const supabaseStorage = {
       })
     });
 
-    const urlJson = await urlResp.json();
+    let urlJson: any = {};
+    const cType = urlResp.headers.get("content-type") || "";
+    if (cType.includes("application/json")) {
+      try {
+        urlJson = await urlResp.json();
+      } catch (jsonErr) {
+        urlJson = { success: false, error: "Réponse du serveur corrompue (JSON invalide)." };
+      }
+    } else {
+      const rawText = await urlResp.text();
+      urlJson = {
+        success: false,
+        error: `Le serveur a répondu au format non-JSON (${urlResp.status}) : ${rawText.substring(0, 120)}`
+      };
+    }
+
     if (!urlResp.ok || !urlJson.success || !urlJson.signedUrl) {
-      throw new Error(urlJson.error || "Impossible d'obtenir l'autorisation de téléversement direct.");
+      throw new Error(urlJson.error || `Impossible d'obtenir l'autorisation de téléversement direct (HTTP ${urlResp.status}).`);
     }
 
     const { signedUrl, publicUrl } = urlJson;
