@@ -612,6 +612,89 @@ app.post("/api/wallet/request-reset", async (req, res) => {
   });
 
 // SECURE SUPABASE STORAGE ADMIN PROXY - SUPER FOUNDER EXCLUSIVE
+  // 1. ENDPOINT POUR OBTENIR UNE URL D'UPLOAD SIGNÉE (UPLOAD BINAIRE DIRECT SANS BASE64)
+  app.post("/api/admin/media/signed-upload-url", async (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    const { idToken, storagePath, bucket = "afrigombo-media" } = req.body || {};
+
+    if (!idToken) {
+      return res.status(401).json({ success: false, error: "Non authentifié (token manquant)." });
+    }
+
+    if (!storagePath) {
+      return res.status(400).json({ success: false, error: "Paramètre 'storagePath' requis." });
+    }
+
+    try {
+      const adminAuth = getAdminAuthClient();
+      if (!adminAuth) {
+        return res.status(503).json({ success: false, error: "Service Firebase Admin temporairement indisponible." });
+      }
+
+      // Vérification systématique du jeton d'authentification Firebase
+      let decodedToken;
+      try {
+        decodedToken = await adminAuth.verifyIdToken(idToken);
+      } catch (authErr: any) {
+        console.error("[SIGNED URL AUTH ERROR]", authErr?.message || authErr);
+        return res.status(401).json({ success: false, error: "Session invalide ou expirée. Veuillez vous reconnecter." });
+      }
+
+      const uid = decodedToken.uid;
+
+      // Verrouillage strict du chemin pour empêcher un utilisateur d'écrire ailleurs
+      const isAllowedReelsPath = storagePath.startsWith(`reels/${uid}/`) || storagePath.startsWith(`video/${uid}/`);
+      if (!isAllowedReelsPath) {
+        console.warn(`[SIGNED URL FORBIDDEN] Tentative d'écriture non autorisée par ${uid} sur le chemin: ${storagePath}`);
+        return res.status(403).json({
+          success: false,
+          error: "Accès refusé. Vous ne pouvez téléverser que dans votre propre dossier utilisateur."
+        });
+      }
+
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!supabaseKey) {
+        return res.status(503).json({
+          success: false,
+          error: "Configuration serveur incomplète : SUPABASE_SERVICE_ROLE_KEY manquante."
+        });
+      }
+
+      const { createClient } = await import("@supabase/supabase-js");
+      const serverSupabase = createClient(supabaseUrl, supabaseKey);
+
+      // Création de l'URL d'upload signée (valide 10 minutes)
+      const { data, error } = await serverSupabase.storage
+        .from(bucket)
+        .createSignedUploadUrl(storagePath);
+
+      if (error || !data?.signedUrl) {
+        console.error("[SIGNED URL GENERATION ERROR]", error);
+        return res.status(500).json({ success: false, error: error?.message || "Échec de génération de l'URL signée." });
+      }
+
+      const { data: publicUrlData } = serverSupabase.storage.from(bucket).getPublicUrl(storagePath);
+      const publicUrl = publicUrlData?.publicUrl || `${supabaseUrl}/storage/v1/object/public/${bucket}/${storagePath}`;
+
+      console.log(`[SIGNED URL CREATED] Pour ${decodedToken.email || uid} -> ${storagePath}`);
+
+      return res.json({
+        success: true,
+        signedUrl: data.signedUrl,
+        token: data.token,
+        path: data.path || storagePath,
+        publicUrl,
+        bucket
+      });
+    } catch (err: any) {
+      console.error("[SIGNED URL SERVER ERROR]", err);
+      return res.status(500).json({ success: false, error: err?.message || "Erreur interne du serveur." });
+    }
+  });
+
+  // 2. ENDPOINT CLASSIQUE BASE64 EXISTANT INTACT
   app.post("/api/admin/media/upload", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
     console.log("[DIAG-1] Réception requête - Clés reçues dans req.body:", Object.keys(req.body || {}));

@@ -44,7 +44,7 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
     if (loading) return;
     setErrorMsg("");
     setLoading(true);
-    setUploadProgress(10);
+    setUploadProgress(0);
 
     try {
       const uid = currentUserProfile?.uid || currentUser?.uid || "anonymous";
@@ -60,24 +60,23 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
 
       let uploadResult: any;
       try {
-        uploadResult = await supabaseStorage.uploadVideo(
+        uploadResult = await supabaseStorage.uploadVideoDirectSigned(
           videoFile,
           uid,
           publicationId,
-          (progress) => setUploadProgress(10 + Math.round(progress.percentage * 0.8)),
-          idToken,
-          true
+          (progress) => setUploadProgress(progress.percentage),
+          idToken
         );
 
         if (!uploadResult?.success || !uploadResult?.url) {
-          throw new Error(uploadResult?.error || "Échec de l'upload de la vidéo.");
+          throw new Error(uploadResult?.error || "Échec du téléversement direct de la vidéo.");
         }
       } catch (uploadErr: any) {
         console.error("[REEL UPLOAD ERROR]", uploadErr);
         throw new Error(uploadErr?.message || "Échec de l'upload de la vidéo.");
       }
 
-      setUploadProgress(90);
+      setUploadProgress(95);
 
       const payload = {
         userId: uid,

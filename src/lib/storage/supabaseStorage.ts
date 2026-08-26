@@ -526,7 +526,124 @@ export const supabaseStorage = {
   },
 
   /**
-   * 2. UPLOAD VIDÉO
+   * 2. UPLOAD VIDÉO DIRECT VIA URL SIGNÉE (POUR REELS / GROS MÉDIAS)
+   * Envoi binaire pur (0 conversion Base64, contourne les proxys Express et Cloud Run)
+   * Progression réelle 0% -> 100% via XMLHttpRequest.upload.onprogress
+   */
+  async uploadVideoDirectSigned(
+    file: File | Blob,
+    userId: string,
+    publicationId = "general",
+    onProgress?: (progress: ProgressInfo) => void,
+    idToken?: string
+  ): Promise<StorageUploadResult> {
+    const timestamp = Date.now();
+    const isFile = file instanceof File;
+    const originalName = isFile ? file.name : `reel_${timestamp}.webm`;
+    const fileName = sanitizeFileName(originalName);
+    const storagePath = `reels/${userId}/${timestamp}_${fileName}`;
+    const bucket = SUPABASE_BUCKET_NAME;
+
+    if (!idToken) {
+      throw new Error("Authentification requise pour téléverser ce média (idToken manquant).");
+    }
+
+    if (onProgress) {
+      onProgress({ percentage: 5, state: "uploading", log: "Obtention de l'autorisation de stockage..." });
+    }
+
+    // 1. Demande d'URL signée au serveur Express
+    const urlResp = await fetch("/api/admin/media/signed-upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        idToken,
+        storagePath,
+        bucket
+      })
+    });
+
+    const urlJson = await urlResp.json();
+    if (!urlResp.ok || !urlJson.success || !urlJson.signedUrl) {
+      throw new Error(urlJson.error || "Impossible d'obtenir l'autorisation de téléversement direct.");
+    }
+
+    const { signedUrl, publicUrl } = urlJson;
+    const blob = isFile ? file : new Blob([file], { type: "video/webm" });
+    const mimeType = blob.type || "video/webm";
+
+    if (onProgress) {
+      onProgress({ percentage: 10, state: "uploading", log: "Démarrage du transfert binaire..." });
+    }
+
+    // 2. Upload binaire direct sur l'URL signée via XMLHttpRequest
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", signedUrl, true);
+      xhr.setRequestHeader("Content-Type", mimeType);
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable && onProgress) {
+          const rawPercent = Math.round((event.loaded / event.total) * 100);
+          // Scale from 10% to 95% during pure data transfer
+          const scaledPercent = Math.min(95, Math.max(10, 10 + Math.round(rawPercent * 0.85)));
+          onProgress({
+            percentage: scaledPercent,
+            bytesTransferred: event.loaded,
+            totalBytes: event.total,
+            state: "uploading",
+            log: `Transfert binaire direct : ${scaledPercent}%`
+          });
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          if (onProgress) {
+            onProgress({ percentage: 100, state: "success", log: "Transfert terminé avec succès" });
+          }
+          resolve();
+        } else {
+          console.error("[DIRECT BINARY UPLOAD FAILED]", xhr.status, xhr.responseText);
+          reject(new Error(`Échec du transfert binaire vers le stockage (HTTP ${xhr.status}).`));
+        }
+      };
+
+      xhr.onerror = () => {
+        console.error("[DIRECT BINARY UPLOAD NETWORK ERROR]", xhr.statusText);
+        reject(new Error("Erreur réseau pendant le transfert binaire vers le stockage."));
+      };
+
+      xhr.onabort = () => {
+        reject(new Error("Transfert binaire interrompu."));
+      };
+
+      xhr.send(blob);
+    });
+
+    const metadata: FirestoreMediaMetadata = {
+      provider: "supabase",
+      bucket,
+      storagePath,
+      mediaUrl: publicUrl,
+      mediaType: "video",
+      size: blob.size,
+      mimeType,
+      createdAt: new Date().toISOString(),
+      userId,
+      isPrivate: false,
+    };
+
+    return {
+      success: true,
+      url: publicUrl,
+      storagePath,
+      metadata,
+    };
+  },
+
+  /**
+   * 2. UPLOAD VIDÉO CLASSIQUE (COMPATIBILITÉ EXISTANTE)
    * Chemin : video/{userId}/{publicationId}/...
    */
   async uploadVideo(
