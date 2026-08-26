@@ -1721,6 +1721,18 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         )}
 
         {/* 8. RÉELS D'ARTISTES (Redirige vers l'écran dédié Fil Réel) */}
+        <div id="reels-debug-banner" style={{ background: "red", color: "white", padding: "8px", fontSize: "10px", fontWeight: "bold", zIndex: 9999, position: "relative", borderRadius: "8px", margin: "4px 0" }}>
+          DEBUG: visible={String(isModuleVisible("reels"))} comingSoon={String(isModuleComingSoon("reels"))} length={reelsData.length}
+        </div>
+        {(() => {
+          console.log("[REELS DEBUG]", {
+            isModuleVisible: isModuleVisible("reels"),
+            isModuleComingSoon: isModuleComingSoon("reels"),
+            reelsDataLength: reelsData.length,
+            reelsData: reelsData
+          });
+          return null;
+        })()}
         {isModuleVisible("reels") && (
           <div className="relative">
             {isModuleComingSoon("reels") && (

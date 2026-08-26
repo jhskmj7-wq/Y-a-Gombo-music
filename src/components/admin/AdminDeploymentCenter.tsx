@@ -110,7 +110,7 @@ export default function AdminDeploymentCenter({
   const [flagError, setFlagError] = useState<string | null>(null);
   const [confirmHideFlag, setConfirmHideFlag] = useState<FeatureFlagItem | null>(null);
 
-  // 10 LOGICAL SECTIONS DEFINITION FOR THE 36 MODULES
+  // 11 LOGICAL SECTIONS DEFINITION FOR THE 40 MODULES
   const DEPLOYMENT_SECTIONS = [
     {
       id: "geolocation",
@@ -274,10 +274,10 @@ export default function AdminDeploymentCenter({
     { id: "support", name: "🛟 Support Client & Aide", category: "Système", enabled: true, status: "validated", description: "Signalements de bugs et assistance" },
 
     // PUBLICATIONS
-    { id: "publish_gombo", name: "📢 Publier un Gombo", category: "Application", enabled: true, status: "validated", description: "Formulaire de recrutement et d'opportunités musicales" },
-    { id: "publish_reel", name: "🎬 Publier un Réel Vidéo", category: "Application", enabled: false, status: "pending", description: "Publication de clips vidéo et shorts créatifs" },
-    { id: "publish_demo", name: "🎙️ Démo Musicale", category: "Application", enabled: true, status: "validated", description: "Formulaire d'upload et diffusion de démo audio" },
-    { id: "publish_renfort", name: "⚡ Renfort Express", category: "Application", enabled: true, status: "validated", description: "Formulaire d'alerte et de dépannage urgent de musiciens" }
+    { id: "publish_gombo", name: "📢 Publier un Gombo", category: "Publication", enabled: true, status: "validated", description: "Formulaire de recrutement et d'opportunités musicales" },
+    { id: "publish_reel", name: "🎬 Publier un Réel Vidéo", category: "Publication", enabled: false, status: "pending", description: "Publication de clips vidéo et shorts créatifs" },
+    { id: "publish_demo", name: "🎙️ Démo Musicale", category: "Publication", enabled: true, status: "validated", description: "Formulaire d'upload et diffusion de démo audio" },
+    { id: "publish_renfort", name: "⚡ Renfort Express", category: "Publication", enabled: true, status: "validated", description: "Formulaire d'alerte et de dépannage urgent de musiciens" }
   ];
 
   // 2. LISTEN TO FIRESTORE REAL DEPLOYMENTS & FEATURE FLAGS & BUG REPORTS
@@ -1233,6 +1233,8 @@ export default function AdminDeploymentCenter({
                                     ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
                                     : flag.category === "Monétisation"
                                     ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                                    : flag.category === "Publication"
+                                    ? "bg-orange-500/10 text-orange-300 border-orange-500/30"
                                     : flag.category === "Sécurité"
                                     ? "bg-rose-500/10 text-rose-300 border-rose-500/30"
                                     : flag.category === "Navigation"
