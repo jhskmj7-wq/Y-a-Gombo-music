@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { UserTerrainLandingPage } from "./UserTerrainLandingPage";
-import { gomboDB } from "../firebase";
+import { gomboDB, db } from "../firebase";
+import { collection, onSnapshot } from "firebase/firestore";
 import { audioSynth } from "../lib/audio";
 import { useAuth } from "../AuthContext";
 import { Gombo, User, Post, Renfort } from "../types";
@@ -54,26 +55,51 @@ export default function UserTerrainLandingPageWrapper() {
       setGombos(publicGombos);
     });
 
-    // 2. Posts
-    const unsubscribePosts = gomboDB.listenSocialPosts((list) => {
-      const publicList = list.filter(social => social.status !== "pending_deposit" && (social as any).visible !== false && (social as any).adminValidated !== false && social.status !== "draft" && social.status !== "cancelled" && (social as any).status !== "refuse" && (social as any).status !== "rejected");
-      const mappedPosts: Post[] = publicList.map((social) => ({
-        id: social.id,
-        userId: social.userId,
-        authorName: social.userName || "Artiste Gombo",
-        authorArtisticName: social.title || "Titre",
-        authorAvatar: social.userAvatar,
-        content: social.caption,
-        mediaUrl: social.imageUrl || social.videoUrl,
-        timestamp: social.createdAt,
-        likes: social.likesCount || 0,
-        comments: social.comments ? social.comments.length : 0,
-        type: social.type,
-        isFlagged: social.isFlagged,
-        flagReason: social.flagReason,
-      }));
-      setPosts(mappedPosts);
-    });
+    // 2. Posts (listening to 'posts' collection where Reels & Publications are stored)
+    let unsubscribePosts = () => {};
+    if (db) {
+      try {
+        const postsRef = collection(db, "posts");
+        unsubscribePosts = onSnapshot(postsRef, (snapshot) => {
+          const rawList = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any));
+          const publicList = rawList.filter(social =>
+            social.status !== "pending_deposit" &&
+            social.visible !== false &&
+            social.adminValidated !== false &&
+            social.status !== "draft" &&
+            social.status !== "cancelled" &&
+            social.status !== "refuse" &&
+            social.status !== "rejected"
+          );
+
+          const mappedPosts: Post[] = publicList.map((social) => ({
+            id: social.id,
+            userId: social.userId,
+            authorName: social.authorName || social.userName || "Artiste Gombo",
+            authorArtisticName: social.authorArtisticName || social.title || "Titre",
+            authorAvatar: social.authorAvatar || social.userAvatar,
+            content: social.content || social.caption,
+            mediaUrl: social.mediaUrl || social.imageUrl || social.videoUrl,
+            timestamp: social.createdAt || social.timestamp,
+            likes: social.likesCount || social.likes || 0,
+            comments: Array.isArray(social.comments) ? social.comments.length : (typeof social.comments === "number" ? social.comments : (social.commentsCount || 0)),
+            type: social.type,
+            isFlagged: social.isFlagged,
+            flagReason: social.flagReason,
+          }));
+
+          mappedPosts.sort((a, b) =>
+            new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
+          );
+
+          setPosts(mappedPosts);
+        }, (err) => {
+          console.warn("⚠️ [POSTS_LISTEN] Firestore snapshot listener warning:", err);
+        });
+      } catch (err) {
+        console.error("❌ [POSTS_LISTEN] Exception setting up listener:", err);
+      }
+    }
 
     // 3. Renforts
     const unsubscribeRenforts = gomboDB.listenAllRenforts((list) => {
