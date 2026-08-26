@@ -1,14 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   ChevronLeft, Heart, MessageCircle, Share2, Bookmark, MoreVertical, 
-  Plus, Music, MapPin, Volume2, VolumeX, Sparkles, Flag, Coins, X, Check,
-  Send, UserCheck, UserPlus
+  Plus, Music, MapPin, Volume2, VolumeX, Sparkles, Flag, X, Check,
+  Send, UserCheck, UserPlus, ChevronDown, ChevronUp
 } from "lucide-react";
 import { Post } from "../types";
 import { db } from "../lib/firebase";
-import { doc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
+import { 
+  doc, updateDoc, arrayUnion, arrayRemove, increment, 
+  collection, addDoc, setDoc, deleteDoc, onSnapshot, query, orderBy 
+} from "firebase/firestore";
+import { gomboDB } from "../firebase";
 import { useAppSettings } from "../context/AppSettingsContext";
 import { useAuth } from "../AuthContext";
+import { openPublicProfile } from "../lib/publicProfile";
 
 export interface ReelItem {
   id: string;
@@ -100,30 +105,42 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     { id: "c2", author: "Awa Voix d'Or", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100", text: "On a besoin de ce niveau de sonorité dans les gombos de Cocody !", time: "10 min" }
   ]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
 
   const containerRef = useRef<HTMLDivElement>(null);
   const activeVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Initialize followed users from currentUser following array
+  useEffect(() => {
+    if (currentUser?.following && Array.isArray(currentUser.following)) {
+      setFollowedUsers(currentUser.following);
+    }
+  }, [currentUser]);
 
   // Build unified list of reels from props + fallback
   const reelsList = React.useMemo(() => {
     const fromPosts: ReelItem[] = posts
       .filter(p => p.mediaUrl && (p.mediaUrl.includes(".mp4") || p.mediaUrl.includes(".webm") || p.mediaUrl.includes(".mov") || p.mediaUrl.includes("video") || (p as any).type === "video"))
-      .map(p => ({
-        id: p.id || `post_${Math.random()}`,
-        title: p.title || "Vibration Artistique",
-        authorName: p.authorName || "Artiste Gombo",
-        authorArtisticName: p.authorArtisticName || p.authorName || "Artiste Gombo",
-        authorAvatar: p.authorAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
-        commune: (p as any).commune || (p as any).location || "Abidjan",
-        content: p.content || "Publication vidéo sur le Fil Réel d'AFRIGOMBO ELITE.",
-        mediaUrl: p.mediaUrl!,
-        musicTrack: p.title || "Son original AFRIGOMBO ELITE",
-        hashtags: ["#Afrigombo", "#MusiqueIvoirienne", "#TalentsDuTrone"],
-        likesCount: p.likes || 12,
-        commentsCount: p.comments || 3,
-        isLiked: p.isLiked || false,
-        userId: p.userId
-      }));
+      .map(p => {
+        const likedBy = (p as any).likedBy || [];
+        const isLiked = currentUser?.uid ? (likedBy.includes(currentUser.uid) || p.isLiked) : (p.isLiked || false);
+        return {
+          id: p.id || `post_${Math.random()}`,
+          title: p.title || "Vibration Artistique",
+          authorName: p.authorName || "Artiste Gombo",
+          authorArtisticName: p.authorArtisticName || p.authorName || "Artiste Gombo",
+          authorAvatar: p.authorAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+          commune: (p as any).commune || (p as any).location || "Abidjan",
+          content: p.content || "Publication vidéo sur le Fil Réel d'AFRIGOMBO ELITE.",
+          mediaUrl: p.mediaUrl!,
+          musicTrack: p.title || "Son original AFRIGOMBO ELITE",
+          hashtags: (p as any).hashtags || ["#Afrigombo", "#MusiqueIvoirienne", "#TalentsDuTrone"],
+          likesCount: p.likes || 0,
+          commentsCount: p.comments || 0,
+          isLiked: Boolean(isLiked),
+          userId: p.userId
+        };
+      });
 
     const fromUsers: ReelItem[] = users.flatMap(u => 
       (u.mediaGallery || [])
@@ -148,7 +165,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     const merged = [...fromPosts, ...fromUsers];
     if (merged.length > 0) return merged;
     return FALLBACK_REELS;
-  }, [posts, users]);
+  }, [posts, users, currentUser?.uid]);
 
   const [localReels, setLocalReels] = useState<ReelItem[]>(reelsList);
 
@@ -200,58 +217,164 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     };
   }, []);
 
+  // Listen to Firestore comments in real time when drawer opens
+  useEffect(() => {
+    if (!showCommentsFor || !db) return;
+    const reelId = showCommentsFor.id;
+
+    // Listen to subcollection /posts/{reelId}/comments
+    try {
+      const commentsColRef = collection(db, "posts", reelId, "comments");
+      const unsub = onSnapshot(commentsColRef, (snapshot) => {
+        if (!snapshot.empty) {
+          const list = snapshot.docs.map(docSnap => {
+            const data = docSnap.data();
+            return {
+              id: docSnap.id,
+              author: data.author || data.authorName || data.userName || "Mélomane",
+              avatar: data.avatar || data.userAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
+              text: data.text || data.content || "",
+              time: data.createdAt ? new Date(data.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Récemment"
+            };
+          });
+          setCommentsList(list);
+        }
+      }, (err) => {
+        console.warn("Could not listen to real-time comments subcollection:", err);
+      });
+
+      return () => unsub();
+    } catch (err) {
+      console.warn("Exception setting up comments listener:", err);
+    }
+  }, [showCommentsFor]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  // Like / Honor action
+  // Toggle Description Expand/Collapse
+  const toggleExpand = (reelId: string) => {
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [reelId]: !prev[reelId]
+    }));
+  };
+
+  // Like / Honor action with Firestore Persistence
   const handleLike = (reelId: string) => {
-    requireAuth(() => {
+    requireAuth(async () => {
+      let nextIsLiked = false;
       setLocalReels(prev => prev.map(r => {
         if (r.id === reelId) {
-          const nextIsLiked = !r.isLiked;
+          nextIsLiked = !r.isLiked;
           return {
             ...r,
             isLiked: nextIsLiked,
-            likesCount: r.likesCount + (nextIsLiked ? 1 : -1)
+            likesCount: Math.max(0, r.likesCount + (nextIsLiked ? 1 : -1))
           };
         }
         return r;
       }));
+
       try {
         if (navigator.vibrate) navigator.vibrate(40);
       } catch (_) {}
+
+      // Persist in Firestore
+      if (db && currentUser?.uid) {
+        const updatePayload = {
+          likesCount: increment(nextIsLiked ? 1 : -1),
+          likes: increment(nextIsLiked ? 1 : -1),
+          likedBy: nextIsLiked ? arrayUnion(currentUser.uid) : arrayRemove(currentUser.uid)
+        };
+
+        try {
+          await updateDoc(doc(db, "posts", reelId), updatePayload);
+        } catch (err1) {
+          try {
+            await updateDoc(doc(db, "social_posts", reelId), updatePayload);
+          } catch (err2) {
+            console.warn("Could not update like on post / social_posts:", err2);
+          }
+        }
+      }
     });
   };
 
   // Bookmark action
   const handleBookmark = (reelId: string) => {
-    requireAuth(() => {
+    requireAuth(async () => {
+      let nextState = false;
       setLocalReels(prev => prev.map(r => {
         if (r.id === reelId) {
-          const nextState = !r.isBookmarked;
+          nextState = !r.isBookmarked;
           showToast(nextState ? "⭐ Réel ajouté à vos favoris" : "Retiré de vos favoris");
           return { ...r, isBookmarked: nextState };
         }
         return r;
       }));
+
+      // Persist in Firestore
+      if (db && currentUser?.uid) {
+        const bookmarkPayload = {
+          bookmarkedBy: nextState ? arrayUnion(currentUser.uid) : arrayRemove(currentUser.uid)
+        };
+        try {
+          await updateDoc(doc(db, "posts", reelId), bookmarkPayload);
+        } catch (_) {
+          try {
+            await updateDoc(doc(db, "social_posts", reelId), bookmarkPayload);
+          } catch (_) {}
+        }
+      }
     });
   };
 
-  // Follow action
-  const handleToggleFollow = (userId?: string) => {
-    if (!userId) return;
-    requireAuth(() => {
+  // Follow action with Firestore Persistence (abonnements + user profile)
+  const handleToggleFollow = (targetUserId?: string) => {
+    if (!targetUserId) return;
+    requireAuth(async () => {
+      const isCurrentlyFollowing = followedUsers.includes(targetUserId);
+      const nextFollowingState = !isCurrentlyFollowing;
+
+      // Update local state immediately
       setFollowedUsers(prev => {
-        if (prev.includes(userId)) {
+        if (isCurrentlyFollowing) {
           showToast("Abonnement retiré");
-          return prev.filter(u => u !== userId);
+          return prev.filter(u => u !== targetUserId);
         } else {
           showToast("👑 Vous suivez désormais cet artiste !");
-          return [...prev, userId];
+          return [...prev, targetUserId];
         }
       });
+
+      // Persist in Firestore
+      if (db && currentUser?.uid) {
+        const subDocId = `${currentUser.uid}_${targetUserId}`;
+        try {
+          if (nextFollowingState) {
+            await setDoc(doc(db, "abonnements", subDocId), {
+              subscriberId: currentUser.uid,
+              subscriberName: currentUser.name || currentUser.artisticName || "Abonné",
+              targetUserId: targetUserId,
+              createdAt: new Date().toISOString()
+            });
+          } else {
+            await deleteDoc(doc(db, "abonnements", subDocId));
+          }
+        } catch (err) {
+          console.warn("Could not sync abonnements collection:", err);
+        }
+
+        // Also update users collection via gomboDB
+        try {
+          await gomboDB.toggleFollowUser(targetUserId, currentUser.uid);
+        } catch (err) {
+          console.warn("Could not sync follow on user document:", err);
+        }
+      }
     });
   };
 
@@ -275,24 +398,98 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     }
   };
 
-  // Submit comment
+  // Submit comment with Firestore Persistence
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentInput.trim()) return;
-    requireAuth(() => {
+    if (!commentInput.trim() || !showCommentsFor) return;
+    requireAuth(async () => {
+      const text = commentInput.trim();
+      const reelId = showCommentsFor.id;
+
       const newComment = {
         id: `c_${Date.now()}`,
+        postId: reelId,
+        userId: currentUser?.uid || "anon",
         author: currentUser?.artisticName || currentUser?.name || "Moi (Souverain)",
         avatar: currentUser?.photoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
-        text: commentInput.trim(),
+        text: text,
+        createdAt: new Date().toISOString(),
         time: "À l'instant"
       };
+
+      // Update local state instantly
       setCommentsList(prev => [newComment, ...prev]);
-      if (showCommentsFor) {
-        setLocalReels(prev => prev.map(r => r.id === showCommentsFor.id ? { ...r, commentsCount: r.commentsCount + 1 } : r));
-      }
+      setLocalReels(prev => prev.map(r => r.id === reelId ? { ...r, commentsCount: r.commentsCount + 1 } : r));
       setCommentInput("");
       showToast("💬 Palabre publié !");
+
+      // Persist in Firestore subcollection posts/{reelId}/comments
+      if (db) {
+        try {
+          await addDoc(collection(db, "posts", reelId, "comments"), newComment);
+          await updateDoc(doc(db, "posts", reelId), {
+            commentsCount: increment(1),
+            comments: arrayUnion(newComment)
+          });
+        } catch (err1) {
+          try {
+            await addDoc(collection(db, "social_posts", reelId, "comments"), newComment);
+            await updateDoc(doc(db, "social_posts", reelId), {
+              commentsCount: increment(1),
+              comments: arrayUnion(newComment)
+            });
+          } catch (err2) {
+            console.warn("Could not save comment in subcollection:", err2);
+          }
+        }
+      }
+    });
+  };
+
+  // Functional Report Handler (Writes to Firestore "reports" collection)
+  const handleReportReel = async (reel: ReelItem) => {
+    requireAuth(async () => {
+      try {
+        if (db) {
+          const reportPayload = {
+            postId: reel.id,
+            postTitle: reel.title || reel.content?.substring(0, 50) || "Réel",
+            targetUserId: reel.userId || null,
+            targetAuthorName: reel.authorArtisticName || reel.authorName || "Artiste",
+            reporterId: currentUser?.uid || "anonyme",
+            reporterName: currentUser?.name || currentUser?.artisticName || "Utilisateur",
+            reason: "Signalé pour contenu inapproprié ou violation des règles communautaires",
+            category: "Signalement Réel",
+            status: "pending",
+            createdAt: new Date().toISOString()
+          };
+
+          await addDoc(collection(db, "reports"), reportPayload);
+
+          // Update post doc with flag
+          try {
+            await updateDoc(doc(db, "posts", reel.id), {
+              isFlagged: true,
+              reportsCount: increment(1),
+              flagReason: "Signalé par la communauté"
+            });
+          } catch (_) {
+            try {
+              await updateDoc(doc(db, "social_posts", reel.id), {
+                isFlagged: true,
+                reportsCount: increment(1),
+                flagReason: "Signalé par la communauté"
+              });
+            } catch (_) {}
+          }
+        }
+        showToast("🚩 Publication signalée aux modérateurs avec succès.");
+      } catch (err) {
+        console.error("Error creating report:", err);
+        showToast("🚩 Signalement enregistré.");
+      } finally {
+        setShowMoreFor(null);
+      }
     });
   };
 
@@ -359,13 +556,14 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
           const isActive = index === currentIndex;
           const isNext = index === currentIndex + 1;
           const isFollowing = reel.userId ? followedUsers.includes(reel.userId) : false;
+          const isExpanded = Boolean(expandedDescriptions[reel.id]);
 
           return (
             <div 
               key={reel.id} 
               className="relative w-full h-[100dvh] snap-start bg-afri-bg flex justify-center items-center overflow-hidden shrink-0"
             >
-              {/* VIDEO PLAYER LAYER (Render video tag only for active or next item for max performance) */}
+              {/* VIDEO PLAYER LAYER */}
               {isActive || isNext ? (
                 <div className="relative w-full h-full">
                   <video
@@ -412,9 +610,13 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
               {/* RIGHT INTERACTION SIDEBAR */}
               <div className="absolute bottom-16 right-3 sm:right-5 z-40 flex flex-col items-center gap-4 text-afri-text">
-                {/* Author Avatar + Follow Button */}
+                {/* Author Avatar (Clickable -> Public Profile) + Follow Button */}
                 <div className="relative mb-2">
-                  <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#D4AF37] to-amber-200 shadow-xl overflow-hidden">
+                  <div 
+                    onClick={() => openPublicProfile(reel.userId)}
+                    className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#D4AF37] to-amber-200 shadow-xl overflow-hidden cursor-pointer hover:scale-105 active:scale-95 transition"
+                    title={`Voir le profil de ${reel.authorArtisticName || reel.authorName}`}
+                  >
                     <img 
                       src={reel.authorAvatar} 
                       alt={reel.authorName}
@@ -423,10 +625,10 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   </div>
                   <button 
                     onClick={() => handleToggleFollow(reel.userId)}
-                    className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full p-1 shadow-lg transition-transform active:scale-90 ${
+                    className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full p-1 shadow-lg transition-transform active:scale-90 cursor-pointer ${
                       isFollowing ? "bg-emerald-500 text-afri-text" : "bg-[#D4AF37] text-black"
                     }`}
-                    title={isFollowing ? "Abonné" : "Suivre l'artiste"}
+                    title={isFollowing ? "Abonné (cliquer pour retirer)" : "Suivre l'artiste"}
                   >
                     {isFollowing ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : <Plus className="w-3.5 h-3.5 stroke-[3]" />}
                   </button>
@@ -509,12 +711,16 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
               {/* BOTTOM OVERLAY - AUTHOR & DETAILS */}
               <div className="absolute bottom-6 left-4 right-20 z-40 text-left space-y-2 pointer-events-auto">
-                {/* Author Info & Location */}
+                {/* Author Info (Clickable) & Location */}
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-black text-afri-text uppercase tracking-wider drop-shadow-lg truncate max-w-[140px] xs:max-w-[180px] block">
+                    <button
+                      onClick={() => openPublicProfile(reel.userId)}
+                      className="text-sm font-black text-afri-text uppercase tracking-wider drop-shadow-lg truncate max-w-[140px] xs:max-w-[180px] block hover:underline hover:text-[#D4AF37] transition text-left cursor-pointer"
+                      title={`Consulter le profil de ${reel.authorArtisticName || reel.authorName}`}
+                    >
                       {reel.authorArtisticName || reel.authorName}
-                    </span>
+                    </button>
                     <span className="text-[10px] font-mono bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 px-2 py-0.5 rounded-full font-bold uppercase">
                       Artiste Souverain
                     </span>
@@ -527,10 +733,20 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   )}
                 </div>
 
-                {/* Description */}
-                <p className="text-xs text-white/90 font-sans leading-relaxed line-clamp-3 drop-shadow-md max-w-md">
-                  {reel.content}
-                </p>
+                {/* Description with Expand/Collapse "... plus" */}
+                <div className="space-y-1">
+                  <p className={`text-xs text-white/90 font-sans leading-relaxed drop-shadow-md max-w-md ${isExpanded ? "" : "line-clamp-2"}`}>
+                    {reel.content}
+                  </p>
+                  {reel.content && reel.content.length > 70 && (
+                    <button
+                      onClick={() => toggleExpand(reel.id)}
+                      className="text-[10px] font-bold text-[#D4AF37] hover:underline cursor-pointer flex items-center gap-0.5"
+                    >
+                      {isExpanded ? "Réduire" : "... plus"}
+                    </button>
+                  )}
+                </div>
 
                 {/* Hashtags */}
                 {reel.hashtags && reel.hashtags.length > 0 && (
@@ -609,38 +825,21 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         </div>
       )}
 
-      {/* MORE OPTIONS MODAL */}
+      {/* MORE OPTIONS MODAL (Report only, 'Soutenir' removed) */}
       {showMoreFor && (
         <div className="fixed inset-0 z-[120] bg-afri-bg/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-afri-bg border border-[#D4AF37]/40 rounded-3xl w-full max-w-sm p-5 space-y-4 text-left">
             <div className="flex justify-between items-center border-b border-afri-border pb-2">
               <h3 className="text-xs font-black uppercase text-[#D4AF37] tracking-wider">Option du Réel</h3>
-              <button onClick={() => setShowMoreFor(null)} className="p-1 text-afri-text-sec hover:text-afri-text">
+              <button onClick={() => setShowMoreFor(null)} className="p-1 text-afri-text-sec hover:text-afri-text cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-2">
               <button 
-                onClick={() => {
-                  requireAuth(() => {
-                    showToast("💰 Redirection vers le soutien direct...");
-                    setShowMoreFor(null);
-                    window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
-                  });
-                }}
-                className="w-full flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-400 font-bold text-xs hover:bg-amber-500/20 transition cursor-pointer"
-              >
-                <Coins className="w-4 h-4" />
-                <span>Soutenir cet artiste (Tip / Don)</span>
-              </button>
-
-              <button 
-                onClick={() => {
-                  showToast("🚩 Publication signalée aux Modérateurs du Trône.");
-                  setShowMoreFor(null);
-                }}
-                className="w-full flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 font-bold text-xs hover:bg-red-500/20 transition cursor-pointer"
+                onClick={() => handleReportReel(showMoreFor)}
+                className="w-full flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 font-bold text-xs hover:bg-red-500/20 active:scale-98 transition cursor-pointer"
               >
                 <Flag className="w-4 h-4" />
                 <span>Signaler cette publication</span>

@@ -60,6 +60,18 @@ const getIconForType = (type: BlockType) => {
   }
 };
 
+const isVideoMedia = (url?: string) => {
+  if (!url || typeof url !== "string") return false;
+  return (
+    url.includes(".webm") ||
+    url.includes(".mp4") ||
+    url.includes(".mov") ||
+    url.includes(".m4v") ||
+    url.includes("video") ||
+    url.startsWith("blob:")
+  );
+};
+
 export const SmartBlock: React.FC<SmartBlockProps> = ({ 
   type, 
   title, 
@@ -96,67 +108,83 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
       </div>
 
       <div className="flex overflow-x-auto pb-4 gap-3 no-scrollbar scroll-smooth snap-x touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch]">
-        {data.map((item, idx) => (
-          <motion.div
-            key={item.id || `${type}-${idx}`}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => onAction?.(item)}
-            className="flex-none w-64 bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer snap-start"
-          >
-            {/* Card Content based on type */}
-            <div className="relative aspect-video">
-              <img 
-                src={item.imageUrl || item.thumbnail || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"} 
-                className="w-full h-full object-cover opacity-80" 
-                alt={item.title}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-afri-bg to-transparent" />
-              {item.isPremium && (
-                <div className="absolute top-2 right-2 bg-afri-bg-sec/80 border border-[#D4AF37]/50 px-2 py-0.5 rounded-full">
-                  <span className="text-[8px] font-black text-[#D4AF37] uppercase">Premium</span>
-                </div>
-              )}
-              {type === "POPULAR_REELS" && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-8 h-8 rounded-full bg-afri-bg/40 backdrop-blur-sm border border-[#D4AF37] flex items-center justify-center">
-                    <Video className="w-4 h-4 text-[#D4AF37] ml-0.5" />
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="p-3 space-y-1.5">
-              <div className="flex justify-between items-start gap-2">
-                <h4 className="text-[11px] font-bold text-afri-text leading-tight truncate">
-                  {item.title || item.name}
-                </h4>
-                {item.budget && (
-                  <span className="text-[9px] font-mono text-[#D4AF37] shrink-0 font-bold">
-                    {item.budget.toLocaleString()} F
-                  </span>
+        {data.map((item, idx) => {
+          const mediaSrc = item.imageUrl || item.thumbnail || item.url;
+          const isVideo = type === "POPULAR_REELS" || isVideoMedia(mediaSrc);
+
+          return (
+            <motion.div
+              key={item.id || `${type}-${idx}`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onAction?.(item)}
+              className="flex-none w-64 bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer snap-start"
+            >
+              {/* Card Content based on type */}
+              <div className="relative aspect-video bg-zinc-900 overflow-hidden flex items-center justify-center">
+                {isVideo && mediaSrc ? (
+                  <video 
+                    src={mediaSrc} 
+                    muted 
+                    playsInline 
+                    preload="metadata"
+                    className="w-full h-full object-cover opacity-85 pointer-events-none"
+                  />
+                ) : (
+                  <img 
+                    src={mediaSrc || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"} 
+                    className="w-full h-full object-cover opacity-80" 
+                    alt={item.title || "Média"}
+                    loading="lazy"
+                  />
                 )}
-              </div>
-              <p className="text-[10px] text-afri-text-sec line-clamp-2 leading-relaxed">
-                {item.description || item.bio || "Découvrez cette opportunité unique sur AFRIGOMBO ELITE."}
-              </p>
-              <div className="flex items-center gap-2 pt-1">
-                {item.location && (
-                  <div className="flex items-center gap-1 text-[9px] text-afri-text-sec font-mono">
-                    <MapPin className="w-3 h-3 text-[#D4AF37]" />
-                    <span>{item.location}</span>
+                <div className="absolute inset-0 bg-gradient-to-t from-afri-bg via-transparent to-transparent pointer-events-none" />
+                {item.isPremium && (
+                  <div className="absolute top-2 right-2 bg-afri-bg-sec/80 border border-[#D4AF37]/50 px-2 py-0.5 rounded-full">
+                    <span className="text-[8px] font-black text-[#D4AF37] uppercase">Premium</span>
                   </div>
                 )}
-                {item.authorName && (
-                  <div className="flex items-center gap-1 text-[9px] text-afri-text-sec font-mono border-l border-afri-border pl-2">
-                    <Users className="w-3 h-3 text-sky-400" />
-                    <span className="truncate max-w-[80px]">{item.authorName}</span>
+                {type === "POPULAR_REELS" && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm border border-[#D4AF37] flex items-center justify-center shadow-lg">
+                      <Video className="w-4 h-4 text-[#D4AF37] ml-0.5" />
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
-          </motion.div>
-        ))}
+              
+              <div className="p-3 space-y-1.5">
+                <div className="flex justify-between items-start gap-2">
+                  <h4 className="text-[11px] font-bold text-afri-text leading-tight truncate">
+                    {item.title || item.name}
+                  </h4>
+                  {item.budget && (
+                    <span className="text-[9px] font-mono text-[#D4AF37] shrink-0 font-bold">
+                      {item.budget.toLocaleString()} F
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-afri-text-sec line-clamp-2 leading-relaxed">
+                  {item.description || item.bio || "Découvrez cette opportunité unique sur AFRIGOMBO ELITE."}
+                </p>
+                <div className="flex items-center gap-2 pt-1">
+                  {item.location && (
+                    <div className="flex items-center gap-1 text-[9px] text-afri-text-sec font-mono">
+                      <MapPin className="w-3 h-3 text-[#D4AF37]" />
+                      <span>{item.location}</span>
+                    </div>
+                  )}
+                  {item.authorName && (
+                    <div className="flex items-center gap-1 text-[9px] text-afri-text-sec font-mono border-l border-afri-border pl-2">
+                      <Users className="w-3 h-3 text-sky-400" />
+                      <span className="truncate max-w-[80px]">{item.authorName}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </motion.div>
   );
