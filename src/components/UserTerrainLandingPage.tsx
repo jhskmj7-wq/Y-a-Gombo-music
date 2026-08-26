@@ -777,13 +777,28 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     return GombosToRender.slice(0, 8);
   }, [GombosToRender]);
 
-  // Section 8: Réels d'artistes
-  const reelsData = React.useMemo(() => [
-    { id: "reel_1", title: "Solo Saxophone Live", artist: "Thierry Sax", views: "2.4K", category: "Saxophone", thumbnail: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&auto=format&fit=crop&q=80", url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4" },
-    { id: "reel_2", title: "Batterie Zaouli & Solo", artist: "Sékou Drummer", views: "1.8K", category: "Batterie", thumbnail: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=400&auto=format&fit=crop&q=80", url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4" },
-    { id: "reel_3", title: "Bassline Groovy Abidjan", artist: "Paco Bass", views: "3.1K", category: "Basse", thumbnail: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&auto=format&fit=crop&q=80", url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4" },
-    { id: "reel_4", title: "Vocal Improvisation Afro", artist: "Awa Voix d'Or", views: "4.2K", category: "Chant", thumbnail: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&auto=format&fit=crop&q=80", url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4" }
-  ], []);
+  // Section 8: Réels d'artistes (issus de social_posts)
+  const reelsData = React.useMemo(() => {
+    if (!posts || posts.length === 0) return [];
+    return posts
+      .filter(p => {
+        const isVideoType = p.type === "video" || p.type === "reel" || (p as any).mediaType === "video";
+        const hasVideoUrl = p.mediaUrl && (p.mediaUrl.includes(".mp4") || p.mediaUrl.includes(".webm") || p.mediaUrl.includes(".mov") || p.mediaUrl.includes("video"));
+        return (isVideoType || hasVideoUrl) && Boolean(p.mediaUrl);
+      })
+      .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime())
+      .slice(0, 8)
+      .map(p => ({
+        id: p.id,
+        title: p.content || p.authorArtisticName || "Réel Vibe",
+        artist: p.authorArtisticName || p.authorName || "Artiste",
+        authorName: p.authorArtisticName || p.authorName || "Artiste",
+        imageUrl: p.mediaUrl,
+        thumbnail: p.mediaUrl,
+        url: p.mediaUrl,
+        category: p.type || "Réel"
+      }));
+  }, [posts]);
 
   // Section 9: Nouveaux talents
   const talentsData = React.useMemo(() => {
@@ -1724,7 +1739,14 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   setActiveMenu("user_reels");
                 }
               }}
+              onSeeMore={() => setActiveMenu("user_reels")}
             />
+            {!isModuleComingSoon("reels") && reelsData.length === 0 && (
+              <div className="p-4 text-center border border-dashed border-afri-border bg-afri-bg-sec/20 rounded-2xl my-2 cursor-pointer hover:border-[#D4AF37]/40 transition-colors" onClick={() => setActiveMenu("user_reels")}>
+                <p className="text-xs text-afri-text font-bold mb-1">📹 Aucun Réel publié pour le moment</p>
+                <p className="text-[10px] text-afri-text-sec">Soyez le premier artiste à publier votre vidéo sur le Fil Réel d'AFRIGOMBO ELITE !</p>
+              </div>
+            )}
             {isModuleComingSoon("reels") && (
               <div className="p-6 text-center border border-dashed border-amber-500/20 bg-amber-500/5 rounded-2xl cursor-pointer animate-pulse" onClick={() => setLocalComingSoonKey("Studio Vidéo Réels 📹")}>
                 <span className="text-xs text-amber-300 font-bold">Parcourir les Réels d'Artistes (Bientôt Disponible)</span>
