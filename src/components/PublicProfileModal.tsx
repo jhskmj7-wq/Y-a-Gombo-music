@@ -79,7 +79,7 @@ export function PublicProfileModal({
     if (db) {
       const postsQuery = query(
         collection(db, "posts"),
-        where("authorId", "==", targetUserId),
+        where("userId", "==", targetUserId),
         orderBy("createdAt", "desc")
       );
       getDocs(postsQuery)
@@ -89,7 +89,7 @@ export function PublicProfileModal({
         })
         .catch((err) => {
           // Fallback if index missing or query fails
-          const fallbackQuery = query(collection(db, "posts"), where("authorId", "==", targetUserId));
+          const fallbackQuery = query(collection(db, "posts"), where("userId", "==", targetUserId));
           getDocs(fallbackQuery).then(snap => {
             const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Post));
             setUserPosts(list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
@@ -201,17 +201,20 @@ export function PublicProfileModal({
 
   // Add post attachments to portfolio if available
   userPosts.forEach(post => {
-    if (post.mediaType === "video" && post.mediaUrl) {
+    const isVideo = post.type === "video" || post.type === "reel" || post.mediaType === "video" || post.mediaUrl?.includes(".mp4") || post.mediaUrl?.includes(".webm") || post.mediaUrl?.includes(".mov");
+    const isAudio = post.type === "audio" || post.mediaType === "audio" || post.mediaUrl?.includes(".mp3") || post.mediaUrl?.includes(".wav");
+
+    if (isVideo && post.mediaUrl) {
       if (!reelsMedia.some(r => r.url === post.mediaUrl)) {
-        reelsMedia.push({ id: post.id, title: post.caption || "Vidéo de prestation", url: post.mediaUrl, type: "video" });
+        reelsMedia.push({ id: post.id, title: post.caption || (post as any).content || "Vidéo de prestation", url: post.mediaUrl, type: "video" });
       }
-    } else if (post.mediaType === "audio" && post.mediaUrl) {
+    } else if (isAudio && post.mediaUrl) {
       if (!audioMedia.some(a => a.url === post.mediaUrl)) {
-        audioMedia.push({ id: post.id, title: post.caption || "Morceau Audio", url: post.mediaUrl, type: "audio" });
+        audioMedia.push({ id: post.id, title: post.caption || (post as any).content || "Morceau Audio", url: post.mediaUrl, type: "audio" });
       }
     } else if (post.mediaUrl) {
       if (!photoMedia.some(p => p.url === post.mediaUrl)) {
-        photoMedia.push({ id: post.id, title: post.caption || "Photo Scène", url: post.mediaUrl, type: "photo" });
+        photoMedia.push({ id: post.id, title: post.caption || (post as any).content || "Photo Scène", url: post.mediaUrl, type: "photo" });
       }
     }
   });

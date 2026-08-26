@@ -107,7 +107,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   // Build unified list of reels from props + fallback
   const reelsList = React.useMemo(() => {
     const fromPosts: ReelItem[] = posts
-      .filter(p => p.mediaUrl && (p.mediaUrl.includes(".mp4") || p.mediaUrl.includes("video") || (p as any).type === "video"))
+      .filter(p => p.mediaUrl && (p.mediaUrl.includes(".mp4") || p.mediaUrl.includes(".webm") || p.mediaUrl.includes(".mov") || p.mediaUrl.includes("video") || (p as any).type === "video"))
       .map(p => ({
         id: p.id || `post_${Math.random()}`,
         title: p.title || "Vibration Artistique",

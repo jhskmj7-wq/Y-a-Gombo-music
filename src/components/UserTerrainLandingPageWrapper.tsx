@@ -68,6 +68,7 @@ export default function UserTerrainLandingPageWrapper() {
         timestamp: social.createdAt,
         likes: social.likesCount || 0,
         comments: social.comments ? social.comments.length : 0,
+        type: social.type,
         isFlagged: social.isFlagged,
         flagReason: social.flagReason,
       }));
