@@ -2841,7 +2841,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             }, customBadge: <span className="text-[7px] font-mono py-0.5 px-1.5 bg-afri-gold/10 text-afri-gold rounded border border-afri-gold/10 uppercase font-black">LIVE</span> },
                             { key: "menu_near_opports", label: "Opportunités proches", icon: "📍", action: () => {
                               setPerspective("user");
-                              setActiveMenu("user_opportunities");
+                              setActiveMenu("nearby");
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, customBadge: <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/10 uppercase font-black">DISPO</span> },
                             { key: "menu_msgs", label: "Messages", icon: "📩", action: () => {

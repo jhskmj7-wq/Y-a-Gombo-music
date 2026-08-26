@@ -345,7 +345,6 @@ export const supabaseStorage = {
               idToken: idToken,
               storagePath,
               fileBase64: base64Data,
-              fileData: base64Data,
               contentType: mimeType,
               bucket,
             }),

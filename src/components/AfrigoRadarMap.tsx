@@ -14,6 +14,45 @@ interface AfrigoRadarMapProps {
   onRequestLocation?: () => void;
 }
 
+// Fallback coordinates for Abidjan communes and Ivory Coast cities (from GomboItineraryModal)
+const ABIDJAN_COMMUNES_COORDS: Record<string, { latitude: number; longitude: number }> = {
+  "Cocody": { latitude: 5.3599, longitude: -3.9870 },
+  "Plateau": { latitude: 5.3261, longitude: -4.0211 },
+  "Marcory": { latitude: 5.3015, longitude: -3.9856 },
+  "Yopougon": { latitude: 5.3453, longitude: -4.0805 },
+  "Treichville": { latitude: 5.3082, longitude: -4.0089 },
+  "Abobo": { latitude: 5.4161, longitude: -4.0159 },
+  "Koumassi": { latitude: 5.2978, longitude: -3.9576 },
+  "Adjamé": { latitude: 5.3550, longitude: -4.0200 },
+  "Port-Bouët": { latitude: 5.2530, longitude: -3.9290 },
+  "Bingerville": { latitude: 5.3558, longitude: -3.8883 },
+  "Songon": { latitude: 5.3167, longitude: -4.2500 },
+  "Attécoubé": { latitude: 5.3370, longitude: -4.0410 },
+  "Grand-Bassam": { latitude: 5.2100, longitude: -3.7380 },
+  "Assinie": { latitude: 5.1200, longitude: -3.2800 },
+  "San-Pédro": { latitude: 4.7500, longitude: -6.6400 },
+  "Bouaké": { latitude: 7.6900, longitude: -5.0300 },
+  "Yamoussoukro": { latitude: 6.8200, longitude: -5.2800 },
+  "Korhogo": { latitude: 9.4500, longitude: -5.6300 }
+};
+
+export function resolveGomboCoordinates(g: Gombo): { latitude: number; longitude: number } {
+  if (typeof g.latitude === "number" && typeof g.longitude === "number" && !isNaN(g.latitude) && !isNaN(g.longitude)) {
+    return { latitude: g.latitude, longitude: g.longitude };
+  }
+  if (g.commune && ABIDJAN_COMMUNES_COORDS[g.commune]) {
+    return ABIDJAN_COMMUNES_COORDS[g.commune];
+  }
+  const locStr = `${g.commune || ""} ${typeof g.location === "string" ? g.location : ""} ${g.locationName || ""}`.toLowerCase();
+  for (const [commName, coords] of Object.entries(ABIDJAN_COMMUNES_COORDS)) {
+    if (locStr.includes(commName.toLowerCase())) {
+      return coords;
+    }
+  }
+  // Fallback to central Abidjan if completely unspecified
+  return { latitude: 5.3599, longitude: -3.9870 };
+}
+
 export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
   gombos,
   userLocation,
@@ -33,26 +72,35 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
   const [showHeatmapModal, setShowHeatmapModal] = useState<boolean>(false);
   const [dispoMode, setDispoMode] = useState<string>("off"); // "off" | "2h" | "4h" | "today" | "always"
 
-  // Filter gombos based on radius and category filter
-  const filteredGombos = gombos.filter((g) => {
-    if (g.latitude && g.longitude) {
-      const R = 6371; // Earth radius in km
-      const dLat = ((g.latitude - userLocation.latitude) * Math.PI) / 180;
-      const dLon = ((g.longitude - userLocation.longitude) * Math.PI) / 180;
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((userLocation.latitude * Math.PI) / 180) *
-          Math.cos((g.latitude * Math.PI) / 180) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const dist = R * c;
-      g.distance = dist;
-    } else {
-      g.distance = 2.5; // default fallback
-    }
+  // Filter gombos based on radius and category filter, resolving commune coordinates if GPS is missing
+  const filteredGombos = gombos.map((g) => {
+    const coords = resolveGomboCoordinates(g);
+    const resolvedLat = coords.latitude;
+    const resolvedLng = coords.longitude;
 
-    if (radiusKm < 100 && g.distance > radiusKm) {
+    const R = 6371; // Earth radius in km
+    const userLat = userLocation?.latitude || 5.3600;
+    const userLng = userLocation?.longitude || -4.0083;
+
+    const dLat = ((resolvedLat - userLat) * Math.PI) / 180;
+    const dLon = ((resolvedLng - userLng) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((userLat * Math.PI) / 180) *
+        Math.cos((resolvedLat * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const dist = R * c;
+
+    return {
+      ...g,
+      latitude: resolvedLat,
+      longitude: resolvedLng,
+      distance: dist
+    };
+  }).filter((g) => {
+    if (radiusKm < 100 && (g.distance ?? 0) > radiusKm) {
       return false;
     }
 
@@ -77,13 +125,13 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
       return g.category === "maquis" || g.title.toLowerCase().includes("maquis") || g.title.toLowerCase().includes("bar");
     }
     if (selectedFilter === "casting") {
-      return g.isCasting || g.category === "casting";
+      return (g as any).isCasting || g.category === "casting";
     }
     if (selectedFilter === "renfort") {
-      return g.isRenfort || (g as any).type === "renfort";
+      return (g as any).isRenfort || (g as any).type === "renfort";
     }
     if (selectedFilter === "distance") {
-      return g.distance <= 5;
+      return (g.distance ?? 0) <= 5;
     }
     if (selectedFilter === "cachet") {
       return (g.budget || 0) >= 100000;
@@ -191,10 +239,10 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
       const el = document.createElement("div");
       let bg = "bg-emerald-500";
       let symbol = "🟢";
-      if (g.isRenfort || (g as any).type === "renfort") {
+      if ((g as any).isRenfort || (g as any).type === "renfort") {
         bg = "bg-red-500";
         symbol = "🔴";
-      } else if (g.isCasting || g.category === "casting") {
+      } else if ((g as any).isCasting || g.category === "casting") {
         bg = "bg-purple-500";
         symbol = "🟣";
       } else if (g.category === "evenement" || g.category === "concert") {
@@ -423,7 +471,7 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
             <div className="flex justify-between items-center border-b border-afri-border pb-3 mb-4">
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl">
-                  {activeGombo.isRenfort ? "🔴" : activeGombo.isCasting ? "🟣" : activeGombo.isPremium ? "⭐" : "🟢"}
+                  {(activeGombo as any).isRenfort ? "🔴" : (activeGombo as any).isCasting ? "🟣" : activeGombo.isPremium ? "⭐" : "🟢"}
                 </span>
                 <div>
                   <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
