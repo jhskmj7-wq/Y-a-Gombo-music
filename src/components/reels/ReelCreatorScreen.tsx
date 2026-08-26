@@ -35,6 +35,9 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const [compressedResult, setCompressedResult] = useState<{ file: File } | null>(null);
   const [waitingToPublish, setWaitingToPublish] = useState(false);
 
+  const [compressionPhase, setCompressionPhase] = useState<string>("");
+  const [compressionError, setCompressionError] = useState<string | null>(null);
+
   const activeFilterCss =
     REEL_VIDEO_FILTERS.find((f) => f.id === selectedFilter)?.filterCss ?? "none";
 
@@ -46,19 +49,31 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     setRecordedBlob(file);
     setRecordedUrl(URL.createObjectURL(file));
     setCompressedResult(null);
+    setCompressionError(null);
     setIsCompressing(true);
     setCompressionProgress(0);
+    setCompressionPhase("Initialisation de l'optimisation...");
 
-    compressVideoFile(file, { onProgress: setCompressionProgress })
+    compressVideoFile(file, {
+      onProgress: (percent, phase) => {
+        setCompressionProgress(percent);
+        if (phase) setCompressionPhase(phase);
+      },
+    })
       .then((result) => {
         console.log(
-          `[REEL COMPRESSION] Taille avant: ${(result.originalSizeBytes / 1024 / 1024).toFixed(2)} Mo, Taille après: ${(result.compressedSizeBytes / 1024 / 1024).toFixed(2)} Mo`
+          `[REEL COMPRESSION] SUCCESS - Original: ${(result.originalSizeBytes / 1024 / 1024).toFixed(2)} Mo, Compressé: ${(result.compressedSizeBytes / 1024 / 1024).toFixed(2)} Mo (-${result.reductionPercentage}%)`
         );
         setCompressedResult({ file: result.file });
+        setCompressionPhase("Optimisation terminée");
       })
       .catch((err) => {
-        console.warn("[REEL COMPRESSION] Erreur de compression, fallback fichier original:", err);
-        setCompressedResult({ file });
+        console.error("[REEL COMPRESSION] FAILED:", err);
+        setCompressionError(
+          err?.message || "Échec de l'optimisation vidéo. Impossible de préparer la vidéo."
+        );
+        // STRICT: Do NOT fallback silently to huge original file
+        setCompressedResult(null);
       })
       .finally(() => {
         setIsCompressing(false);
@@ -70,6 +85,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     setRecordedBlob(null);
     setRecordedUrl(null);
     setCompressedResult(null);
+    setCompressionError(null);
     setWaitingToPublish(false);
     setSelectedFilter("naturel");
   };
@@ -102,19 +118,51 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
           </span>
           <button
             onClick={handleNext}
-            disabled={waitingToPublish}
-            className="flex items-center gap-1 bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-full text-sm disabled:opacity-70 cursor-pointer shadow-md hover:brightness-110 active:scale-95 transition-all"
+            disabled={waitingToPublish || Boolean(compressionError) || (isCompressing && waitingToPublish)}
+            className="flex items-center gap-1 bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-full text-sm disabled:opacity-50 cursor-pointer shadow-md hover:brightness-110 active:scale-95 transition-all"
           >
-            {waitingToPublish ? (
+            {isCompressing || waitingToPublish ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                Patiente...
+                {compressionProgress > 0 ? `${compressionProgress}%` : "Optimisation..."}
               </>
             ) : (
               <>Suivant <ChevronRight className="w-4 h-4" /></>
             )}
           </button>
         </div>
+
+        {/* Compression State / Error Banner */}
+        {isCompressing && (
+          <div className="px-4 py-2 bg-black/80 backdrop-blur border-b border-[#D4AF37]/20 z-10">
+            <div className="flex justify-between items-center text-[11px] font-mono text-zinc-300 mb-1">
+              <span className="flex items-center gap-1.5 text-[#D4AF37]">
+                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                {compressionPhase || "Optimisation adaptative..."}
+              </span>
+              <span>{compressionProgress}%</span>
+            </div>
+            <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-amber-500 to-[#D4AF37] transition-all duration-300"
+                style={{ width: `${compressionProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {compressionError && (
+          <div className="mx-4 my-2 p-3 bg-rose-500/20 border border-rose-500/40 rounded-xl text-rose-300 text-xs flex flex-col gap-2 z-10">
+            <span className="font-bold">⚠️ Erreur d'optimisation vidéo</span>
+            <span>{compressionError}</span>
+            <button
+              onClick={handleRetake}
+              className="self-start px-3 py-1 bg-rose-500 text-white rounded-lg text-xs font-bold"
+            >
+              Choisir une autre vidéo
+            </button>
+          </div>
+        )}
 
         <div className="flex-1 flex items-center justify-center overflow-hidden relative bg-black">
           <video

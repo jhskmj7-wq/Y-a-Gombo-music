@@ -51,6 +51,13 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
       const publicationId = `reel_${Date.now()}`;
       const idToken = currentUser ? await currentUser.getIdToken(true) : undefined;
 
+      console.log(
+        `[REEL UPLOAD CHECK]\n` +
+        `File envoyé: ${(videoFile.size / 1024 / 1024).toFixed(2)} Mo\n` +
+        `Nom: ${videoFile.name}\n` +
+        `Compressé: OUI`
+      );
+
       let uploadResult: any;
       try {
         uploadResult = await supabaseStorage.uploadVideo(
