@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Hash, MessageSquare, Loader2 } from "lucide-react";
 import { supabaseStorage } from "../../lib/storage/supabaseStorage";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, arrayUnion, setDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../AuthContext";
 
@@ -78,11 +78,15 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
 
       setUploadProgress(95);
 
+      const authorName = currentUserProfile?.nomArtistique || currentUserProfile?.displayName || currentUserProfile?.name || currentUser?.displayName || "Artiste";
+      const authorAvatar = currentUserProfile?.avatarUrl || currentUserProfile?.photoURL || currentUser?.photoURL || "";
+      const artisticName = currentUserProfile?.nomArtistique || currentUserProfile?.artistName || authorName;
+
       const payload = {
         userId: uid,
-        authorName: currentUserProfile?.nomArtistique || currentUserProfile?.displayName || currentUserProfile?.name || currentUser?.displayName || "Artiste",
-        authorArtisticName: currentUserProfile?.nomArtistique || "",
-        authorAvatar: currentUserProfile?.avatarUrl || currentUserProfile?.photoURL || currentUser?.photoURL || "",
+        authorName,
+        authorArtisticName: artisticName,
+        authorAvatar,
         commune: currentUserProfile?.commune || currentUserProfile?.location || "",
         content: caption.trim(),
         mediaUrl: uploadResult.url,
@@ -100,9 +104,77 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
         createdAt: new Date().toISOString()
       };
 
+      const socialPostPayload = {
+        authorId: uid,
+        userId: uid,
+        userName: authorName,
+        authorName,
+        authorArtisticName: artisticName,
+        userAvatar: authorAvatar,
+        authorAvatar,
+        title: artisticName || "Réel",
+        caption: caption.trim(),
+        content: caption.trim(),
+        videoUrl: uploadResult.url,
+        mediaUrl: uploadResult.url,
+        imageUrl: uploadResult.url,
+        type: "video",
+        status: "published",
+        visible: true,
+        adminValidated: true,
+        commune: currentUserProfile?.commune || currentUserProfile?.location || "Abidjan",
+        hashtags,
+        tags: hashtags,
+        appliedFilter: filterId,
+        allowComments,
+        likesCount: 0,
+        likes: 0,
+        sharesCount: 0,
+        savesCount: 0,
+        commentsCount: 0,
+        comments: [],
+        likedBy: [],
+        savedBy: [],
+        bookmarkedBy: [],
+        timestamp: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      const mediaGalleryItem = {
+        id: `reel_${Date.now()}`,
+        type: "video",
+        url: uploadResult.url,
+        title: caption.trim() || "Réel - Extrait vidéo",
+        description: caption.trim(),
+        appliedFilter: filterId,
+        createdAt: new Date().toISOString()
+      };
+
       try {
         if (db) {
+          // 1. Write to legacy "posts" collection
           await addDoc(collection(db, "posts"), payload);
+
+          // 2. Write to primary "social_posts" collection (Réels & Mes publications)
+          await addDoc(collection(db, "social_posts"), socialPostPayload);
+
+          // 3. Append to mediaGallery array in users/{uid} document (Portfolio)
+          if (uid && uid !== "anonymous") {
+            try {
+              const userRef = doc(db, "users", uid);
+              await updateDoc(userRef, {
+                mediaGallery: arrayUnion(mediaGalleryItem)
+              });
+            } catch (_uErr) {
+              try {
+                const userRef = doc(db, "users", uid);
+                await setDoc(userRef, { mediaGallery: [mediaGalleryItem] }, { merge: true });
+              } catch (setErr) {
+                console.warn("[REEL USER GALLERY UPDATE FAILED]", setErr);
+              }
+            }
+          }
         } else {
           throw new Error("Base de données non initialisée.");
         }
