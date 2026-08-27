@@ -132,6 +132,7 @@ import { supportConfig } from "../supportConfig";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 import { gomboDB } from "../firebase";
 import { getSupabaseClient } from "../lib/supabase";
+import { supabaseStorage } from "../lib/storage/supabaseStorage";
 import { usePerformance } from "../services/performanceService";
 import {
   AdminMenu,
@@ -1451,7 +1452,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [renforts, setRenforts] = useState<Renfort[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  // Le fil Réels utilisateur provient de la table Supabase `posts`.
+  // Le fil Réels utilisateur provient du dossier `bobines` de Supabase Storage.
   // La synchronisation Firestore réservée à l’administration reste séparée ci-dessous.
   useEffect(() => {
     if (perspective !== "user") return;
@@ -1468,7 +1469,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     }
 
     const loadUserReels = async () => {
-      const { data, error } = await client.from("posts").select("*");
+      const configuredBucket = String(import.meta.env.VITE_SUPABASE_BUCKET || "").trim();
+      const bucket = configuredBucket === "afrigombo-médias" ? configuredBucket : "afrigombo-médias";
+      const { data, error } = await client.storage.from(bucket).list("bobines", {
+        limit: 1000,
+        offset: 0,
+        sortBy: { column: "created_at", order: "desc" }
+      });
 
       if (!isActive) return;
 
@@ -1480,28 +1487,26 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       }
 
       const mappedReels: Post[] = (data || [])
-        .map((row: any) => {
-          const mediaUrl = row.mediaUrl || row.media_url || row.videoUrl || row.video_url || row.url || "";
-          const type = String(row.type || row.mediaType || row.media_type || "").toLowerCase();
-          const hasRecognizedVideoUrl = /\.(mp4|webm|mov)(\?|$)|video/i.test(mediaUrl);
-          const isVideo = type === "video" || type === "reel" || hasRecognizedVideoUrl;
-
-          if (!mediaUrl || !isVideo) return null;
+        .filter((file: any) => {
+          const mimeType = String(file.metadata?.mimetype || file.metadata?.mimeType || "").toLowerCase();
+          return Boolean(file.id) && (mimeType.startsWith("video/") || /\.(mp4|webm|mov|m4v|mkv)(\?|$)/i.test(file.name || ""));
+        })
+        .map((file: any) => {
+          const storagePath = `bobines/${file.name}`;
+          const mediaUrl = supabaseStorage.getPublicUrl(storagePath, bucket);
 
           return {
-            id: row.id ? String(row.id) : undefined,
-            userId: row.userId || row.user_id || row.authorId || row.author_id,
-            authorName: row.authorName || row.author_name || row.userName || row.user_name || row.artistName || row.artist_name,
-            authorArtisticName: row.authorArtisticName || row.author_artistic_name || row.artistName || row.artist_name || row.title,
-            authorAvatar: row.authorAvatar || row.author_avatar || row.userAvatar || row.user_avatar,
-            content: row.content || row.caption || row.text || "",
+            id: String(file.id || storagePath),
+            title: file.name || "Réel",
+            authorName: "Artiste Gombo",
+            authorArtisticName: "Artiste Gombo",
+            content: file.name || "",
             mediaUrl,
-            timestamp: row.timestamp || row.createdAt || row.created_at || row.publishedAt || row.published_at,
-            likes: Number(row.likesCount ?? row.likes ?? 0) || 0,
-            comments: Number(row.commentsCount ?? row.comments ?? 0) || 0,
-            type: type || "video",
-            commune: row.commune || row.location,
-            hashtags: row.hashtags || row.tags || []
+            timestamp: file.created_at || file.updated_at || undefined,
+            likes: 0,
+            comments: 0,
+            type: "video",
+            hashtags: []
           } as Post;
         })
         .filter((post): post is Post => post !== null)
