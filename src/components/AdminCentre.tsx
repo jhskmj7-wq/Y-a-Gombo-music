@@ -1446,6 +1446,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [gombos, setGombos] = useState<Gombo[]>([]);
   const [alerts, setAlerts] = useState<Alerte[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [postsDebugError, setPostsDebugError] = useState<string | null>(null);
   const [renforts, setRenforts] = useState<Renfort[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
@@ -1622,15 +1623,22 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         console.warn("ğŸ” Alerts sync restricted for current user role:", error.message);
       });
 
-      const qPosts = query(collection(db, "posts"), orderBy("timestamp", "desc"), limit(200));
+      const qPosts = query(collection(db, "posts"), limit(200));
       const unsubscribePosts = onSnapshot(qPosts, (snapshot) => {
         const fetchedPosts: Post[] = [];
         snapshot.forEach((docSnap) => {
           fetchedPosts.push({ id: docSnap.id, ...docSnap.data() } as Post);
         });
+        fetchedPosts.sort((a: any, b: any) => {
+          const timeA = new Date(a.timestamp || a.createdAt || a.date || 0).getTime() || 0;
+          const timeB = new Date(b.timestamp || b.createdAt || b.date || 0).getTime() || 0;
+          return timeB - timeA;
+        });
         setPosts(fetchedPosts);
+        setPostsDebugError(null);
       }, (error) => {
         console.warn("ğŸ” Posts sync limited or offline:", error.message);
+        setPostsDebugError(`${error.code || "?"} â€” ${error.message}`);
       });
 
       const qRenforts = query(collection(db, "renforts"), orderBy("createdAt", "desc"), limit(100));
@@ -3351,6 +3359,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               users={users}
               posts={posts}
               setPosts={setPosts}
+              postsDebugError={postsDebugError}
               globalSearchTerm={globalSearchTerm}
               setGlobalSearchTerm={setGlobalSearchTerm}
               universalSearchTerm={universalSearchTerm}
@@ -9122,917 +9131,40 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 py-3 bg-afri-gold hover:bg-amber-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
-                >
-                  Envoyer le rapport
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {isSuggestionModalOpen && (
-        <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-afri-bg border border-afri-gold/20 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
-            <button 
-              onClick={() => setIsSuggestionModalOpen(false)}
-              className="absolute top-4 right-4 p-2 text-afri-text-sec hover:text-afri-text rounded-lg transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                <Lightbulb className="w-5 h-5 text-amber-400" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black tracking-widest text-afri-gold uppercase">Faire une suggestion</h3>
-                <p className="text-[10px] text-afri-text-sec font-mono">Partagez vos idÃ©es d'amÃ©lioration</p>
-              </div>
-            </div>
-            
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const form = e.target as HTMLFormElement;
-              const desc = (form.elements.namedItem("suggestion") as HTMLTextAreaElement).value;
-              const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-              
-              if (!desc.trim()) return;
-              btn.disabled = true;
-              btn.innerHTML = '<span class="animate-pulse">Envoi...</span>';
-              
-              try {
-                await gomboDB.submitBetaFeedback({
-                  type: 'suggestion',
-                  description: desc,
-                  userId: profile?.uid || currentUser?.uid || "anonymous",
-                  userName: profile?.nomArtistique || profile?.displayName || "Anonyme",
-                  createdAt: new Date().toISOString()
-                });
-                
-                setIsSuggestionModalOpen(false);
-                addToTerminal("[SUGGESTION] Suggestion enregistrÃ©e avec succÃ¨s. Merci !");
-                try { audioSynth.playValidationSuccess(); } catch(e){}
-                form.reset();
-              } catch (err) {
-                console.error(err);
-                btn.disabled = false;
-                btn.innerText = "Erreur - RÃ©essayer";
-              }
-            }} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Quelle fonctionnalitÃ© ou amÃ©lioration aimeriez-vous voir dans l'application ?</label>
-                <textarea 
-                  name="suggestion" 
-                  rows={4} 
-                  required
-                  placeholder="Ex: J'aimerais voir un classement par commune..."
-                  className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
-                />
-              </div>
-
-              <div className="pt-4 flex gap-3">
-                <button 
-                  type="button" 
-                  onClick={() => setIsSuggestionModalOpen(false)}
-                  className="flex-1 py-3 border border-afri-border hover:bg-afri-bg-ter rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
-                >
-                  Annuler
-                </button>
-                <button 
-                  type="submit"
-                  className="flex-1 py-3 bg-afri-gold hover:bg-amber-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
-                >
-                  Envoyer la suggestion
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* UNIFIED AUTH MODAL GATES */}
-      <AuthModal
-        open={isAuthModalOpen}
-        onClose={() => {
-          setIsAuthModalOpen(false);
-          if (setShowAuthPopup) setShowAuthPopup(false);
-        }}
-        title="ACCÃˆS PRIVÃ‰"
-        subtitle="Touchez Continuer pour accÃ©der Ã  cette fonctionnalitÃ©"
-      />
-
-      <AuthModal
-        open={showHeritageLoginRequired}
-        onClose={() => setShowHeritageLoginRequired(false)}
-        title="HÃ‰RITAGE SOUVERAIN"
-        subtitle="Connectez-vous pour accÃ©der Ã  votre identitÃ© et hÃ©ritage AFRIGOMBO ELITE"
-      />
-
-      <AuthModal
-        open={showGoogleLoginRequiredModal}
-        onClose={() => setShowGoogleLoginRequiredModal(false)}
-        title="CONNEXION SÃ‰CURISÃ‰E"
-        subtitle="Authentifiez-vous pour accÃ©der Ã  votre contrat souverain AfriTrust"
-      />
-
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-afri-bg/95 backdrop-blur-md flex items-center justify-center p-4 z-[9999] animate-fadeIn text-left">
-          <div className="w-full max-w-sm bg-afri-bg border border-red-500/35 rounded-3xl p-6 space-y-5 shadow-2xl shadow-red-500/5">
-            <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mx-auto select-none">
-              <LogOut className="w-7 h-7" />
-            </div>
-            
-            <div className="text-center space-y-2">
-              <h3 className="text-afri-text text-base font-sans font-black uppercase tracking-wide">
-                Se dÃ©connecter ?
-              </h3>
-              <p className="text-afri-text-sec text-xs leading-relaxed font-sans">
-                Voulez-vous vraiment vous dÃ©connecter d'AFRIGOMBO ?
-              </p>
-            </div>
-
-            <div className="flex gap-2.5 pt-2">
-              <button
-                onClick={() => {
-                  setShowLogoutConfirm(false);
-                  try { audioSynth.playValidationSuccess(); } catch (_) {}
-                }}
-                disabled={isLoggingOut}
-                className="flex-1 py-3 rounded-xl bg-afri-bg border border-afri-border text-afri-text hover:text-afri-text font-bold text-xs transition-all cursor-pointer"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={async () => {
-                  setIsLoggingOut(true);
-                  try {
-                    await logout();
-                    try { audioSynth.playValidationSuccess(); } catch (_) {}
-                    // Close dialog and reset state
-                    setShowLogoutConfirm(false);
-                    // Redirect to login page
-                    navigate("/auth");
-                  } catch (err) {
-                    console.error("Logout error:", err);
-                  } finally {
-                    setIsLoggingOut(false);
-                  }
-                }}
-                disabled={isLoggingOut}
-                className="flex-1 py-3 rounded-xl bg-red-650 hover:bg-red-700 text-white font-black uppercase text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                {isLoggingOut ? (
-                  <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                ) : (
-                  "Se dÃ©connecter"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedGomboDetails && (() => {
-        const hasApplied = appliedGombos.includes(selectedGomboDetails.id);
-        return (
-          <div 
-            onClick={() => setSelectedGomboDetails(null)}
-            className="fixed inset-0 bg-afri-bg/80 backdrop-blur-md flex items-end justify-center z-[100] animate-fadeIn text-left"
-          >
-            <motion.div
-              initial={{ y: "100%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "100%", opacity: 0 }}
-              transition={{ type: "spring", stiffness: 350, damping: 32 }}
-              drag="y"
-              dragConstraints={{ top: 0 }}
-              dragElastic={0.25}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 100 || info.velocity.y > 250) {
-                  setSelectedGomboDetails(null);
-                }
-              }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-xl bg-afri-bg-sec border-t-2 border-[#D4AF37]/50 rounded-t-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[92vh] text-left relative"
-            >
-              {/* Top Drag Handle Indicator */}
-              <div className="w-full py-2.5 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing bg-afri-bg border-b border-afri-border/60 shrink-0 select-none">
-                <div className="w-12 h-1.5 bg-[#D4AF37]/60 rounded-full mb-1" />
-                <span className="text-[8px] font-mono font-bold text-afri-text-sec uppercase tracking-widest">Glisser vers le bas pour fermer</span>
-              </div>
-
-              {/* Header Image backdrop */}
-              <div className="h-44 w-full relative bg-afri-bg shrink-0">
-                <img
-                  src={
-                    selectedGomboDetails.imageUrl ||
-                    (selectedGomboDetails.id.includes("1") || selectedGomboDetails.id.includes("a")
-                      ? "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80&w=500"
-                      : selectedGomboDetails.id.includes("2") || selectedGomboDetails.id.includes("b")
-                      ? "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=500"
-                      : selectedGomboDetails.id.includes("3") || selectedGomboDetails.id.includes("c")
-                      ? "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=500"
-                      : "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=500")
-                  }
-                  alt={selectedGomboDetails.title}
-                  className="w-full h-full object-cover opacity-80"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F11] via-[#0F0F11]/40 to-transparent" />
-                
-                {/* Close Button */}
-                <button
-                  onClick={() => setSelectedGomboDetails(null)}
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-afri-bg/85 border border-afri-gold/40 flex items-center justify-center text-afri-text hover:text-red-400 text-lg transition-all cursor-pointer select-none active:scale-90 shadow-md"
-                  title="Fermer"
-                >
-                  &times;
-                </button>
-
-                <div className="absolute bottom-3 left-4 flex gap-2 items-center flex-wrap">
-                  <span className="text-[10px] font-mono font-black uppercase text-afri-gold bg-afri-bg/90 px-3 py-1 rounded-xl border border-afri-gold/40 shadow-sm">
-                    {selectedGomboDetails.type || "Live Direct Showcase"}
-                  </span>
-                  {selectedGomboDetails.urgent && (
-                    <span className="text-[10px] font-mono font-black uppercase text-afri-text bg-red-600 px-2.5 py-1 rounded-xl shadow-sm animate-pulse">
-                      âš¡ URGENT
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Body Content */}
-              <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 flex-wrap text-afri-text-sec font-mono text-[10px]">
-                    <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded font-bold uppercase select-none">
-                      â— Cachet Actif
-                    </span>
-                    <span>ğŸ“ {typeof selectedGomboDetails.location === "object" && selectedGomboDetails.location ? (selectedGomboDetails.location as any).name : (selectedGomboDetails.location || "Abidjan")}</span>
-                    <span>â€¢ {selectedGomboDetails.date || "ImmÃ©diat"}</span>
-                    {(selectedGomboDetails.location || (selectedGomboDetails as any).latitude || (selectedGomboDetails as any).commune) && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const lat = typeof (selectedGomboDetails as any).latitude === "number" ? (selectedGomboDetails as any).latitude : typeof (selectedGomboDetails.location as any)?.latitude === "number" ? (selectedGomboDetails.location as any).latitude : undefined;
-                          const lng = typeof (selectedGomboDetails as any).longitude === "number" ? (selectedGomboDetails as any).longitude : typeof (selectedGomboDetails.location as any)?.longitude === "number" ? (selectedGomboDetails.location as any).longitude : undefined;
-                          const commune = (selectedGomboDetails as any).commune || (typeof selectedGomboDetails.location === "string" ? selectedGomboDetails.location : (selectedGomboDetails.location as any)?.name) || "Abidjan";
-                          setItineraryTarget({
-                            title: selectedGomboDetails.title,
-                            commune: commune,
-                            latitude: lat,
-                            longitude: lng
-                          });
-                        }}
-                        className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-400 font-bold rounded-lg text-[9px] uppercase transition cursor-pointer active:scale-95"
-                      >
-                        <Navigation className="w-3 h-3" />
-                        <span>ğŸ§­ ItinÃ©raire</span>
-                      </button>
-                    )}
-                  </div>
-
-                  <h3 className="text-xl sm:text-2xl font-display font-black text-afri-text leading-tight uppercase">
-                    {selectedGomboDetails.title}
-                  </h3>
-                </div>
-
-                <div className="space-y-1.5 p-4 rounded-2xl bg-afri-bg/40 border border-afri-border">
-                  <span className="text-[9px] font-mono uppercase text-afri-text-sec block font-bold">CACHET FINANCIER GARANTI :</span>
-                  <strong className="text-3xl font-display font-black text-afri-gold tracking-tight block">
-                    {(selectedGomboDetails.budget || 250000).toLocaleString("fr-FR")} <span className="text-sm font-mono text-afri-text-sec font-normal">FCFA</span>
-                  </strong>
-                </div>
-
-                <div className="space-y-2 text-afri-text text-xs sm:text-sm leading-relaxed">
-                  <span className="text-[10px] font-mono uppercase text-afri-text-sec block font-bold">DESCRIPTION DU CONTRAT :</span>
-                  <p>{selectedGomboDetails.description}</p>
-                </div>
-
-                {/* SOVEREIGN CONTRACT TRACKING & ESCROW PANEL */}
-                {hasApplied && (
-                  <div className="p-5 rounded-2xl bg-afri-bg border border-afri-gold/35 space-y-4 text-xs animate-fadeIn">
-                    <div className="border-b border-afri-gold/20 pb-2 flex items-center justify-between">
-                      <span className="font-mono font-bold text-afri-gold uppercase tracking-wider text-[9px]">âš–ï¸ RECTO-VERSO CONTRACTUEL SOUVERAIN</span>
-                      <button
-                        type="button"
-                        onClick={() => setIsGomboSecureModalOpen(true)}
-                        className="text-[8px] bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 px-2 py-0.5 rounded uppercase font-mono font-bold transition cursor-pointer active:scale-95 flex items-center gap-1"
-                      >
-                        <span>ğŸ”’ Escrow SÃ©curisÃ© GomboCaisse</span>
-                      </button>
-                    </div>
-
-                    {/* Section System Renfort group if category === "Renfort groupe" */}
-                    {selectedGomboDetails.category === "Renfort groupe" && (
-                      <div className="space-y-3 bg-afri-bg/40 p-3 rounded-xl border border-afri-border text-left">
-                        <div className="flex justify-between items-center text-[10px] uppercase font-mono font-bold text-afri-text-sec">
-                          <span>ğŸ“‹ Suivi RÃ©pÃ©titions :</span>
-                          <span className="text-amber-400 font-mono">{contractRepsConfirmed[selectedGomboDetails.id] || 0} confirmÃ©es / {selectedGomboDetails.repetitionsCount || 3}</span>
-                        </div>
-
-                        {/* Rehearsals stats */}
-                        <div className="text-[10px] text-afri-text-sec space-y-1 bg-afri-bg w-full p-2.5 rounded-lg border border-afri-border font-mono">
-                          <div>ğŸ“… <span className="text-afri-text-sec">Dates :</span> <span className="text-afri-text">{selectedGomboDetails.repetitionsDates || "DÃ©fini par l'organisateur"}</span></div>
-                          <div>â° <span className="text-afri-text-sec">Horaires :</span> <span className="text-afri-text">{selectedGomboDetails.repetitionsSchedule || "ex: 18:00 - 21:00"}</span></div>
-                          <div>ğŸ’° <span className="text-afri-text-sec">Transport/rÃ©pÃ©tition :</span> <span className="text-afri-gold font-bold">{(selectedGomboDetails.transportFee || 3000).toLocaleString()} FCFA</span></div>
-                          <div>ğŸ’° <span className="text-afri-text-sec">Budget transport bloquÃ© :</span> <span className="text-emerald-400 font-bold">{((selectedGomboDetails.transportFee || 3000) * (selectedGomboDetails.repetitionsCount || 3)).toLocaleString()} FCFA</span></div>
-                        </div>
-
-                        <div className="flex gap-2.5">
-                          <button
-                            onClick={() => {
-                              const currentCount = contractRepsConfirmed[selectedGomboDetails.id] || 0;
-                              const limit = selectedGomboDetails.repetitionsCount || 3;
-                              if (currentCount >= limit) {
-                                alert("Toutes les prÃ©sences de rÃ©pÃ©tition ont dÃ©jÃ  Ã©tÃ© enregistrÃ©es !");
-                                return;
-                              }
-                              // Confirm presence
-                              const now = new Date().toLocaleTimeString();
-                              const selfieOrVideo = prompt("Veuillez entrer une preuve de prÃ©sence (Selfie photo URL ou courte vidÃ©o, ex: https://afrigombo.ci/presence_selfie.mp4) :");
-                              if (!selfieOrVideo) return;
-                              
-                              setContractRepsConfirmed(prev => ({
-                                ...prev,
-                                [selectedGomboDetails.id]: currentCount + 1
-                              }));
-                              addToTerminal(`[ğŸ›¡ï¸ PRÃ‰SENCE] RÃ©pÃ©tition #${currentCount + 1} confirmÃ©e Ã  ${now} ! Localisation GPS validÃ©e. En attente de validation organisateur (libÃ©ration sous 8h automatique).`);
-                              audioSynth.playValidationSuccess();
-                            }}
-                            className="flex-1 py-1.5 px-2 bg-afri-gold/10 hover:bg-afri-gold border border-afri-gold/35 text-afri-gold hover:text-black font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
-                          >
-                            PrÃ©sence (Selfie+GPS) ğŸ¤³
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              const currentConfirmed = contractRepsConfirmed[selectedGomboDetails.id] || 0;
-                              const currentValidated = contractRepsOrganizerValidated[selectedGomboDetails.id] || 0;
-                              if (currentValidated >= currentConfirmed) {
-                                alert("Aucune nouvelle rÃ©pÃ©tition signalÃ©e en attente de validation.");
-                                return;
-                              }
-                              setContractRepsOrganizerValidated(prev => ({
-                                ...prev,
-                                [selectedGomboDetails.id]: currentConfirmed
-                              }));
-                              addToTerminal(`[ğŸ›¡ï¸ VALIDATION] PrÃ©sence validÃ©e par l'organisateur ! IndemnitÃ© de transport libÃ©rÃ©e immÃ©diatement.`);
-                              audioSynth.playValidationSuccess();
-                            }}
-                            className="flex-1 py-1.5 px-2 bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/30 text-emerald-400 hover:text-black font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
-                          >
-                            Validation Organisateur âœ…
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Prestation Jour J Section */}
-                    <div className="space-y-3 bg-afri-bg/40 p-3 rounded-xl border border-afri-border text-left">
-                      <span className="text-[10px] uppercase font-mono font-bold text-afri-text-sec block">ğŸ¤ Prestation Jour J :</span>
-                      
-                      <div className="flex items-center justify-between text-[11px] font-mono py-1">
-                        <span className="text-afri-text-sec">Statut Prestation :</span>
-                        {contractDDayEnded[selectedGomboDetails.id] ? (
-                          <span className="text-emerald-400 font-bold">âœ“ TERMINÃ‰ & LIBÃ‰RÃ‰</span>
-                        ) : contractDDayStarted[selectedGomboDetails.id] ? (
-                          <span className="text-amber-400 animate-pulse font-bold">â— EN COURS DE PRESTATION</span>
-                        ) : (
-                          <span className="text-afri-text-sec font-bold">EN ATTENTE DU SIGNAL</span>
-                        )}
-                      </div>
-
-                      <div className="flex gap-2 flex-wrap">
-                        {/* Start prestation button */}
-                        {!contractDDayStarted[selectedGomboDetails.id] && !contractDDayEnded[selectedGomboDetails.id] && (
-                          <button
-                            onClick={() => {
-                              const confirmVideo = prompt("Veuillez enregistrer une courte vidÃ©o face ou entrer son URL pour certifier le dÃ©but sur scÃ¨ne :");
-                              if (!confirmVideo) return;
-                              setContractDDayStarted(prev => ({
-                                ...prev,
-                                [selectedGomboDetails.id]: true
-                              }));
-                              addToTerminal(`[âš¡ DJ-JOUR] DÃ©but de la prestation validÃ© avec vidÃ©o face & gÃ©olocalisation !`);
-                              audioSynth.playValidationSuccess();
-                            }}
-                            className="w-full py-1.5 px-2.5 bg-sky-500/10 hover:bg-sky-500 border border-sky-500/30 text-sky-400 hover:text-black font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
-                          >
-                            DÃ©marrer Prestation (VidÃ©o Face+GPS) ğŸ“¹
-                          </button>
-                        )}
-
-                        {/* End prestation button */}
-                        {contractDDayStarted[selectedGomboDetails.id] && !contractDDayEnded[selectedGomboDetails.id] && (
-                          <button
-                            onClick={() => {
-                              setContractDDayEnded(prev => ({
-                                ...prev,
-                                [selectedGomboDetails.id]: true
-                              }));
-                              addToTerminal(`[ğŸ¦ LIBÃ‰RATION ESCROW] Co-confirmation reÃ§ue ! Le cachet de ${(selectedGomboDetails.budget || 250000).toLocaleString()} FCFA est dÃ©bloquÃ© vers le portefeuille du musicien !`);
-                              audioSynth.playValidationSuccess();
-                            }}
-                            className="w-full py-1.5 px-2.5 bg-afri-gold/20 hover:bg-afri-gold border border-afri-gold/35 text-afri-gold hover:text-black font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
-                          >
-                            Co-Confirmer la Fin (LibÃ©rer) ğŸ”“
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Dispute cancel section */}
-                    <div className="pt-2 border-t border-afri-border space-y-2 text-left">
-                      <div className="flex justify-between items-center text-[10px] uppercase font-mono font-bold">
-                        <span className="text-red-500 uppercase block font-bold">âš¡ Litige & Annulations :</span>
-                        {contractDisputeOpened[selectedGomboDetails.id] && (
-                          <span className="text-[8px] font-mono bg-red-400/10 text-red-400 px-1.5 py-0.5 rounded font-bold uppercase animate-pulse">EN ANALYSE LITIGIEUSE</span>
-                        )}
-                      </div>
-
-                      {contractDisputeOpened[selectedGomboDetails.id] ? (
-                        <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/20 space-y-1.5 text-left font-mono text-[10px]">
-                          <p className="text-afri-text-sec italic font-sans">Un litige d'Escrow a Ã©tÃ© ouvert et est actuellement en cours d'analyse par l'Arbitrage final d'AFRIGOMBO ELITE.</p>
-                          <div className="text-afri-text-sec">
-                            <strong>Motif :</strong> {contractDisputeDetails[selectedGomboDetails.id]?.reason || "Non spÃ©cifiÃ©"}<br/>
-                            <strong>Preuves :</strong> {contractDisputeDetails[selectedGomboDetails.id]?.comment || "Aucun palabre supplÃ©mentaire"}
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            const reason = prompt("Indiquez la raison officielle de l'annulation (obligatoire) :");
-                            if (!reason) return;
-                            const comment = prompt("Palabres ou preuves (textes, liens, audios) :");
-                            setContractDisputeOpened(prev => ({
-                              ...prev,
-                              [selectedGomboDetails.id]: true
-                            }));
-                            setContractDisputeDetails(prev => ({
-                              ...prev,
-                              [selectedGomboDetails.id]: { reason, comment: comment || "", proofUrl: "" }
-                            }));
-                            addToTerminal(`[âš–ï¸ LITIGE OUVERT] Litige d'annulation engendrÃ© ! Le statut est actuellement : EN ANALYSE.`);
-                            audioSynth.playTamTam(false);
-                          }}
-                          className="w-full py-1.5 bg-red-500/10 hover:bg-red-500 border border-red-500/30 text-red-400 hover:text-afri-text font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
-                        >
-                          Ouvrir un Litige / Signaler Annulation âš–ï¸
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* INTERACTIVE ACTIONS BAR */}
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-b border-afri-border/60 py-3 text-afri-text-sec">
-                  {/* 1. ğŸ† Honneur reÃ§u */}
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        const isLiked = likedGombos.includes(selectedGomboDetails.id);
-                        setLikedGombos(prev =>
-                          isLiked ? prev.filter(id => id !== selectedGomboDetails.id) : [...prev, selectedGomboDetails.id]
-                        );
-                        try { audioSynth.playTamTam(true); } catch (_) {}
-                        addToTerminal(`[ğŸ† HONNEUR] ${isLiked ? "Retrait d'honneur" : "Honneur accordÃ©"} sur le Gombo "${selectedGomboDetails.title}".`);
-                      });
-                    }}
-                    className={`flex items-center gap-1.5 transition text-[11px] font-bold cursor-pointer ${likedGombos.includes(selectedGomboDetails.id) ? "text-afri-gold" : "hover:text-afri-gold"}`}
-                    title="Accorder un honneur prestigieux Ã  ce Gombo"
-                  >
-                    <Award className={`w-4 h-4 ${likedGombos.includes(selectedGomboDetails.id) ? "fill-afri-gold text-afri-gold" : ""}`} />
-                    <span>{likedGombos.includes(selectedGomboDetails.id) ? "HonourÃ©" : "ğŸ† Honneur reÃ§u"}</span>
-                  </button>
-
-                  {/* 2. ğŸ”– Enregistrer */}
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        const isSaved = savedGomboIds.includes(selectedGomboDetails.id);
-                        setSavedGomboIds(prev =>
-                          isSaved ? prev.filter(id => id !== selectedGomboDetails.id) : [...prev, selectedGomboDetails.id]
-                        );
-                        try { audioSynth.playValidationSuccess(); } catch (_) {}
-                        addToTerminal(`[ğŸ”– ENREGISTRER] Gombo "${selectedGomboDetails.title}" ${isSaved ? "retirÃ© de vos" : "enregistrÃ© dans vos"} favoris.`);
-                      });
-                    }}
-                    className={`flex items-center gap-1.5 transition text-[11px] font-bold cursor-pointer ${savedGomboIds.includes(selectedGomboDetails.id) ? "text-afri-gold" : "hover:text-afri-gold"}`}
-                    title="Enregistrer ce Gombo dans votre espace personnel"
-                  >
-                    <Bookmark className={`w-4 h-4 ${savedGomboIds.includes(selectedGomboDetails.id) ? "fill-afri-gold text-afri-gold" : ""}`} />
-                    <span>{savedGomboIds.includes(selectedGomboDetails.id) ? "EnregistrÃ©" : "ğŸ”– Enregistrer"}</span>
-                  </button>
-
-                  {/* 3. ğŸ‘¥ Suivre artiste */}
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        const orgId = selectedGomboDetails.organizerId || "admin";
-                        const isFollowing = followedArtists.includes(orgId);
-                        const newList = isFollowing ? followedArtists.filter(id => id !== orgId) : [...followedArtists, orgId];
-                        setFollowedArtists(newList);
-                        localStorage.setItem("gombo_followed_artists", safeStringify(newList));
-                        try { audioSynth.playValidationSuccess(); } catch (_) {}
-                        addToTerminal(`[ğŸ‘¥ SUIVRE] ${isFollowing ? "DÃ©sabonnement" : "Abonnement"} Ã  l'organisateur "${selectedGomboDetails.organizerName || "Admin"}".`);
-                      });
-                    }}
-                    className={`flex items-center gap-1.5 transition text-[11px] font-bold cursor-pointer ${followedArtists.includes(selectedGomboDetails.organizerId || "admin") ? "text-afri-gold" : "hover:text-afri-gold"}`}
-                    title="Suivre l'activitÃ© de cet artiste / organisateur"
-                  >
-                    <Users className={`w-4 h-4 ${followedArtists.includes(selectedGomboDetails.organizerId || "admin") ? "fill-afri-gold text-afri-gold" : ""}`} />
-                    <span>{followedArtists.includes(selectedGomboDetails.organizerId || "admin") ? "AbonnÃ©" : "ğŸ‘¥ Suivre artiste"}</span>
-                  </button>
-
-                  {/* 4. ğŸš¨ Signaler */}
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        const reason = prompt("Indiquez la raison du signalement (obligatoire) :");
-                        if (!reason) return;
-                        addToTerminal(`[SIGNALEMENT] Alerte transmise avec succÃ¨s pour examen de "${selectedGomboDetails.title}". Motif: ${reason}`);
-                        try { audioSynth.playTamTam(false); } catch (_) {}
-                      });
-                    }}
-                    className="flex items-center gap-1.5 hover:text-red-500 transition text-[11px] font-bold cursor-pointer"
-                    title="Signaler ce Gombo en cas de fraude ou comportement inappropriÃ©"
-                  >
-                    <AlertTriangle className="w-4 h-4 text-red-500" />
-                    <span>ğŸš¨ Signaler</span>
-                  </button>
-
-                  {/* 5. â†—ï¸ Transmettre */}
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        try {
-                          navigator.clipboard.writeText(`AFRIGOMBO ELITE - ${selectedGomboDetails.title} (Cachet: ${selectedGomboDetails.budget} FCFA)`);
-                          addToTerminal(`[â†—ï¸ PARTAGE] Informations du Gombo copiÃ©es dans le presse-papiers.`);
-                          audioSynth.playValidationSuccess();
-                        } catch (_) {}
-                      });
-                    }}
-                    className="flex items-center gap-1.5 hover:text-afri-gold transition text-[11px] font-bold cursor-pointer"
-                    title="Transmettre ce Gombo"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    <span>â†—ï¸ Transmettre</span>
-                  </button>
-                </div>
-
-                {/* AUTHOR PROFILE ROW */}
-                <div className="flex items-center justify-between border-b border-afri-border/60 pb-4 text-[11px] font-mono text-afri-text-sec gap-4 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full border border-afri-gold/35 flex items-center justify-center bg-afri-bg font-bold text-afri-gold text-[10px] uppercase">
-                      {selectedGomboDetails.organizerName?.charAt(0) || "O"}
-                    </div>
-                    <div>
-                      <span className="block text-[8px] text-zinc-650 uppercase font-bold leading-none">ORGANISATEUR :</span>
-                      <span className="text-afri-text font-bold mt-0.5 block">{selectedGomboDetails.organizerName}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="block text-[8px] text-zinc-650 uppercase font-bold text-right leading-none">CANDIDATS :</span>
-                    <span className="text-afri-gold font-bold mt-0.5 block text-right">{selectedGomboDetails.applicantsCount + (hasApplied ? 1 : 0)} postulants</span>
-                  </div>
-                </div>
-
-                {/* DISCUSSIONS AND REAL-TIME COMMENTS */}
-                <div className="space-y-4 pt-2">
-                  <span className="text-[10px] font-mono uppercase text-afri-text-sec block font-bold">ESPACE DISCUSSIONS :</span>
-                  
-                  {/* Comments list scroll */}
-                  <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
-                    {(() => {
-                      const commentsList = gomboComments[selectedGomboDetails.id] || [];
-                      if (commentsList.length === 0) {
-                        return (
-                          <p className="text-zinc-650 text-[10px] font-mono italic">
-                            Aucune discussion pour le moment. Exprimez-vous ci-dessous !
-                          </p>
-                        );
-                      }
-                      return commentsList.map((c, i) => (
-                        <div key={i} className="bg-afri-bg/40 border border-afri-border/60 rounded-2xl p-3 flex gap-2.5 w-full text-left">
-                          <div className="w-7 h-7 rounded-xl bg-afri-bg-sec/70 border border-afri-gold/20 flex items-center justify-center shrink-0">
-                            <span className="text-[9px] font-bold text-afri-gold uppercase">{c.author.substring(0, 2)}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-baseline gap-1">
-                              <span className="text-[11px] font-black text-afri-text leading-none truncate">{c.author}</span>
-                              <span className="text-[8px] text-zinc-650 font-mono leading-none">{c.date}</span>
-                            </div>
-                            <p className="text-[11px] text-afri-text mt-1 font-sans break-words leading-relaxed">{c.text}</p>
-                          </div>
-                        </div>
-                      ));
-                    })()}
-                  </div>
-
-                  {/* Comment Input */}
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Tapez votre question ou message d'artiste..."
-                      id="combo-comment-input-real"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          const val = (e.target as HTMLInputElement).value.trim();
-                          if (!val) return;
-                          
-                          requireAuthThen(() => {
-                            const id = selectedGomboDetails.id;
-                            const author = profile?.artisticName || currentUser?.displayName || "Artiste Anonyme";
-                            const newC = { author, text: val, date: "Ã€ l'instant" };
-                            
-                            setGomboComments(prev => ({
-                              ...prev,
-                              [id]: [...(prev[id] || []), newC]
-                            }));
-                            
-                            (e.target as HTMLInputElement).value = "";
-                            try { audioSynth.playValidationSuccess(); } catch (_) {}
-                          });
-                        }
-                      }}
-                      className="flex-1 bg-afri-bg border border-afri-border focus:border-afri-gold/50 focus:bg-afri-bg rounded-2xl px-4 py-3 text-xs text-afri-text placeholder-zinc-700 focus:outline-none"
-                    />
-                    <button
-                      onClick={() => {
-                        const inputEl = document.getElementById("combo-comment-input-real") as HTMLInputElement;
-                        const val = inputEl?.value?.trim();
-                        if (!val) return;
-                        
-                        requireAuthThen(() => {
-                          const id = selectedGomboDetails.id;
-                          const author = profile?.artisticName || currentUser?.displayName || "Artiste Anonyme";
-                          const newC = { author, text: val, date: "Ã€ l'instant" };
-                          
-                          setGomboComments(prev => ({
-                            ...prev,
-                            [id]: [...(prev[id] || []), newC]
-                          }));
-                          
-                          if (inputEl) inputEl.value = "";
-                          try { audioSynth.playValidationSuccess(); } catch (_) {}
-                        });
-                      }}
-                      className="bg-afri-gold hover:bg-afri-bg-sec text-black font-black text-[9px] uppercase tracking-widest px-4 rounded-2xl transition-all active:scale-95"
-                    >
-                      Envoyer
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Footer */}
-              <div className="p-6 bg-afri-bg border-t border-afri-border shrink-0 flex gap-3">
-                <button
-                  onClick={() => setSelectedGomboDetails(null)}
-                  className="flex-1 py-3.5 rounded-2xl bg-afri-bg border border-afri-border hover:border-afri-border text-afri-text text-xs font-mono font-black uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer"
-                >
-                  Fermer
-                </button>
-
-                {selectedGomboDetails.organizerId === (profile?.uid || currentUser?.uid) ? (
-                  <button
-                    onClick={() => {
-                      setSelectedGomboDetails(null);
-                      window.dispatchEvent(new CustomEvent("navigate_to_gombo_ads_with_target", { detail: { targetGomboId: selectedGomboDetails.id } }));
-                    }}
-                    className="flex-[2] py-3.5 rounded-2xl font-mono font-black text-xs uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer text-center bg-afri-gold hover:bg-afri-bg-sec text-[#050505] shadow-[0_4px_15px_rgba(212,175,55,0.25)] flex items-center justify-center gap-1.5"
-                  >
-                    <span>ğŸš€ PROMOUVOIR AVEC GOMBO ADS</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      if (hasApplied) return;
-                      requireAuthThen(() => {
-                        setApplyingGombo(selectedGomboDetails);
-                      });
-                    }}
-                    className={`flex-[2] py-3.5 rounded-2xl font-mono font-black text-xs uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer text-center ${
-                      hasApplied
-                        ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 cursor-not-allowed"
-                        : "bg-afri-gold hover:bg-afri-bg-sec text-[#050505] shadow-[0_4px_15px_rgba(212,175,55,0.25)]"
-                    }`}
-                  >
-                    {hasApplied ? "âœ“ CANDIDATURE ENREGISTRÃ‰E" : "DÃ‰CROCHER LE CACHET ! ğŸ¯"}
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        );
-      })()}
-
-      {/* Gombo Apply Modal */}
-      {applyingGombo && (
-        <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin"></div></div>}>
-          <GomboApply
-            gombo={applyingGombo}
-            currentUserProfile={(profile || currentUser || { uid: "anon", artisticName: "Artiste" }) as UserProfile}
-            onCancel={() => setApplyingGombo(null)}
-            onSuccess={() => {
-              const appliedId = applyingGombo.id;
-              setAppliedGombos(prev => appliedId ? [...prev, appliedId] : prev);
-              addToTerminal(`[ğŸ¼ CONTRAT] Candidature enregistrÃ©e ! Dossier de souverainetÃ© transmis pour : ${applyingGombo.title}`);
-              try { audioSynth.playValidationSuccess(); } catch (err) {}
-              setApplyingGombo(null);
-            }}
-          />
-        </Suspense>
-      )}
-
-      {/* Gombo Itinerary Modal */}
-      {itineraryTarget && (
-        <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin"></div></div>}>
-          <GomboItineraryModal
-            isOpen={Boolean(itineraryTarget)}
-            onClose={() => setItineraryTarget(null)}
-            targetTitle={itineraryTarget.title}
-            targetCommune={itineraryTarget.commune}
-            targetLat={itineraryTarget.latitude}
-            targetLng={itineraryTarget.longitude}
-          />
-        </Suspense>
-      )}
-
-      {/* Gombo Secure Escrow Modal */}
-      <Suspense fallback={null}>
-        <GomboSecureModal
-          isOpen={isGomboSecureModalOpen}
-          onClose={() => setIsGomboSecureModalOpen(false)}
-        />
-      </Suspense>
-
-      {/* =========================================================================
-                                     REELS VIDEO LIGHTBOX PORTALS
-         ========================================================================= */}
-      {/* 4. Reels Video YouTube Lightbox player */}
-      {reelsVideoId && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-afri-bg/93 backdrop-blur-md">
-          <div className="w-full max-w-3xl aspect-video bg-afri-bg rounded-3xl overflow-hidden relative border border-afri-border">
-            <button
-              onClick={() => setReelsVideoId(null)}
-              className="absolute top-3.5 right-3.5 z-10 p-2.5 bg-afri-bg/70 hover:bg-afri-bg/95 text-afri-text rounded-full text-xs font-bold border border-afri-border hover:scale-105 cursor-pointer leading-none"
-            >
-              Fermer âœ–
-            </button>
-            <iframe
-              src={`https://www.youtube.com/embed/${reelsVideoId}?autoplay=1`}
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              className="w-full h-full"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* 5. Reels Raw Video Lightbox player */}
-      {reelsVideoUrl && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-afri-bg/93 backdrop-blur-md">
-          <div className="w-full max-w-3xl aspect-video bg-afri-bg rounded-3xl overflow-hidden relative border border-afri-border flex items-center justify-center">
-            <button
-              onClick={() => setReelsVideoUrl(null)}
-              className="absolute top-3.5 right-3.5 z-10 p-2.5 bg-afri-bg/70 hover:bg-afri-bg/95 text-afri-text rounded-full text-xs font-bold border border-afri-border hover:scale-105 cursor-pointer leading-none"
-            >
-              Fermer âœ–
-            </button>
-            <video 
-              src={reelsVideoUrl} 
-              controls 
-              autoPlay 
-              className="w-full h-full object-contain"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Gombo Boost Manager Modal */}
-      <GomboBoostManager
-        isOpen={Boolean(activeBoostItem)}
-        onClose={() => setActiveBoostItem(null)}
-        activeItem={activeBoostItem}
-        currentUserProfile={profile || currentUser || {}}
-        addToTerminal={(msg) => addToTerminal(msg)}
-        onSuccess={() => {
-          // Boost successfully activated
-        }}
-      />
-
-      {/* Avatar Modals */}
-      {isAvatarEditorOpen && (
-        <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin"></div></div>}>
-          {!isFeatureEnabled("avatar") ? (
-            <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-              <div className="bg-afri-bg border border-afri-border rounded-2xl p-6 max-w-md w-full">
-                <FeatureUnavailable featureName="Avatar" onBack={() => setIsAvatarEditorOpen(false)} />
-              </div>
-            </div>
-          ) : (
-            <AvatarEditor onClose={() => setIsAvatarEditorOpen(false)} />
-          )}
-        </Suspense>
-      )}
-      {isAvatarStoreOpen && (
-        <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin"></div></div>}>
-          {!isFeatureEnabled("avatar") ? (
-            <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-              <div className="bg-afri-bg border border-afri-border rounded-2xl p-6 max-w-md w-full">
-                <FeatureUnavailable featureName="Avatar" onBack={() => setIsAvatarStoreOpen(false)} />
-              </div>
-            </div>
-          ) : (
-            <AvatarStore onClose={() => setIsAvatarStoreOpen(false)} inventory={[]} />
-          )}
-        </Suspense>
-      )}
-
-      {/* 6. Firebase Diagnostic Modal (Super Fondateur uniquement) */}
-      {isAuthorizedSuperFounder && (
-        <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin"></div></div>}>
-          <FirebaseDiagnostic 
-            isOpen={isDiagnosticOpen} 
-            onClose={() => setIsDiagnosticOpen(false)} 
-          />
-        </Suspense>
-      )}
-
-      {/* 7. Public Profile / CV Musical Modal */}
-      <PublicProfileModal
-        isOpen={Boolean(publicProfileTargetUserId)}
-        onClose={() => setPublicProfileTargetUserId(null)}
-        targetUserId={publicProfileTargetUserId}
-        currentUser={currentUser}
-        onOpenDirectMessage={(targetUserId, targetName) => {
-          setOpenConvoWithUserId(targetUserId);
-          setActiveMenu("user_messages");
-        }}
-      />
-
-      {/* 8. Pending Payment Modal */}
-      <PendingPaymentModal
-        isOpen={showPendingPaymentModal}
-        onClose={() => setShowPendingPaymentModal(false)}
-        post={pendingPaymentItem}
-        currentUserProfile={(currentUser as any) || { uid: "anon", id: "anon" }}
-        onSuccess={() => {
-          setShowPendingPaymentModal(false);
-          alert("ğŸ‰ Publication activÃ©e avec succÃ¨s !");
-        }}
-      />
-
-      {/* 8b. Integrated AFRIGOMBO ELITE Support Modal */}
-      <AfrigomboSupportModal
-        isOpen={isSupportModalOpen}
-        onClose={() => setIsSupportModalOpen(false)}
-        currentUser={currentUser}
-        profile={profile}
-        initialReason={supportModalReason}
-      />
-
-      {/* 9. Global Arbre Ã  Palabres Floating Bubble */}
-      {!(
-        activeMenu === "user_reels" || 
-        activeMenu === "user_camera" || 
-        activeMenu === "user_login" || 
-        activeMenu === "user_messages" || 
-        activeMenu.startsWith("admin") ||
-        activeMenu.startsWith("founder") ||
-        activeMenu.includes("dashboard") ||
-        activeMenu.includes("wallet") ||
-        activeMenu.includes("settings") ||
-        activeMenu.includes("radar") ||
-        activeMenu.includes("map") ||
-        activeMenu.includes("plus") ||
-        activeMenu.includes("premium") ||
-        activeMenu.includes("control") ||
-        activeMenu === "super_admin" ||
-        Boolean(reelsVideoUrl) || 
-        Boolean(reelsVideoId)
-      ) && (
-        <ArbreAPalabresBubble
-          unreadCount={totalUnreadMessages}
-          onOpen={() => requireAuthThen(() => setActiveMenu("user_messages"))}
-        />
-      )}
-
-      {/* DISCRETE DEVELOPER VERSION OVERLAY */}
-      {supportConfig.isDeveloper(profile) && (
-        <div className="fixed bottom-2 right-2 z-[200] opacity-20 hover:opacity-100 transition-opacity pointer-events-none">
-          <div className="bg-afri-bg/80 backdrop-blur-md border border-afri-border rounded-lg p-2 text-[8px] font-mono text-afri-text-sec uppercase leading-tight text-right">
-            <div>AFRIGOMBO ELITE v{supportConfig.APP_VERSION}</div>
-            <div>BUILD: {supportConfig.BUILD_DATE}</div>
-            <div className="text-[#D4AF37] font-black">MODE DÃ‰VELOPPEUR ACTIF</div>
-          </div>
-        </div>
-      )}
-
-    </div>
-  );
-}
+                  className="flex-1 py-3 bg-afri-gold hover:bg-amber-400 text-black rounded-xl text-xs font-black uppercase trackingxœì}ÛnÜH–à{E8»ÖNõ8S©›e«,i)%g,i3Sn‚‹™ŒL±Ì$Y¼HJ«ôËÖXlvºÑô6P=‹ÙöÃbØ—]`ßô'õSŸ°çDğ$#H¦$×eºÙ3e%dDœsâÜãDãÜĞ©K|W³<Ã7l«1²MÛõÈ(p=Ûm8¶aùÔ­ı„d®g¹;„t¬3{_3)q5Ç±]?×èéâ0ğ}ÛÊ¾ştQ7ÎÒ7Ÿ.mw*ŞË4Jı\¸úIø×¥áõƒÉ„z8—¶®™‡µÈıû¤¼
+o’‘©yŞ6¥›µ±qAubXõ-2œ4´±k4†“ÅÇkd¨Şê®í4†fà6¼)›ô‚>zEè/èl<‹~:Uò®±Ö"šeL5Ÿ6ÆšN»V-5—Ì’>ÉĞv'ü~wb›úâr‹¸v`éTo,_˜ĞË#rŞ¦I¦ÚEã¼1Õ‰wªéö9{ìRSó3ZË@•ÃŸdào[Û¦1z»yY_ ›ÏÀ¡+ƒb}¬™X§ßæ¡=Û|J|Áà“SşuËÄ§>ŸûË£#rjŸQw#ı ¤9™“.sDõsqdç5rÚX«‘Å,ÉH2G!9¤O4§±B¦ÃÆ£Z®ãÌËç¥ô½” ¡q>×Z­ExXJXÊˆß]nå† ƒØGØs(Bˆö…ÕV+éŠä“ôtº"vÁ±ëÄ¶|X4°|£·†5i »ñ|²Ià8Ôië®f¸”%^L~OOW$½:¹N_/µœ‹¡±±LmË®=;Ò\_›ĞwäÌöˆ¡_ ÑhÓë¦a»ïĞ©Ä r·ÒÏ‘ÁÊêÃ©áo^jŞÌ‘:e+ì2ó}Út\zhŞ¡c-0ıúÂ§ÙEf[ 9öÍMhîkî„úDóÈ‹ÁËı]¸İ1é> À>‚÷êø~“ò–^ÓØé] ¸z-wm!úê À×v©~y¡y¦™•w0ô-ø>ûü—ug}èdäÛnı_^¯ı™xò0j'âN³ÇŠÁg~cR¿‡Siú®1­/, ›ó×Ê¾ƒiê†§M`ë›@~ùQcÃ²¨‹c€6zfq’6rn'0‘*Q²Ífóé"6zö d˜¾;Ë!˜í\3|2±§C{çy“â9õµ]Ju2õü+ğ)€Úy`çÁCI+‰k8ø|ƒı5
+<êvõâ¸öØ0éV30tòË_"KuôÇğ8¾ °­ÙÔ¼šêS¸î„Yö´íúŒĞŸˆŸ "S›a{öé6û4•~xÔæS½ío‹“øQ_húv·Ø”[“úBî­«ÜRÉ!„”I´ü4]ØêNK3ëµ×ıã½½NĞ=<8!Éwµ\:Y»ÀGˆv¬ÆF£ë?{MòxšAîÕ$gB´@7ìşÌòO› WšièŒÿôáÔó€+2ÒüÑ)pË¬Ô%|µ¹æ–gá‹Ào\wAB¸jm“6á1,Rl”ff1PÉ[±•„ìšÕ:@OK¤‡ÌÕÓ@'¬å†—ú}u%òrXc#Ú˜5V¥‚U"	LmHÍ”6eÚ(u™À…
+‰tˆåŠóåÚ³P”Xxg„è 0üëÄHJLÍ˜R× ïg°P@.ÑAa!æPAŸâ­¶.²J#Ğ€äóôJˆÅa‘°eY#×>÷6/W¯¤Ïè—S]òÈmDOÔİ¬u.6ÈgØ\4#œFrBÆ”‰£¹@/Ó)ˆe`‚yc€¤5ŒX¹Q+´á-AÕCeŠ!äÂË ğ0
+¼œ>
+6b¾iX´|…ŠSkL\mÖxÔµ‹zÆ;Ş ?z•êS¢Ô9¨×2•i‚2L®kãÅ…!.EìíòJp”%âÌ Æjdpe<Á[Ã0E„Â¥t7–dÛ²“º•ÍÇ
+°9 54Ô6‘ÊÌ'ÏÕ[%ØÓ„»¤Ôà;·º5Aeş^ïÅŸ‘ãƒîn·³CÚÇƒäåáN{Ÿìµ>ùÙbD£OÛÊ8ş ”¼	v{üI;¡i\¶G£µ Ê2¶.R¯I:jĞ°jŸcÓ#Û	œ’½“{ñ*oø&G{{ûú?ôÉQ¯ûêú}‚ ­°ÁÀF§`Zlö+@_€’PàbüúOdD}?'Z¢o-Æ\G	%Æü¤Ú0ûöÄ°z!›WÂ+œ¨ô¥ÿ'òâú}¯;hïuHÿğøU§×îÈæó´@Ë$`n²g¶Ö;€%(,§×ø8H{·×İ;|ùütö»ƒÎœ0Ø³í‰™kZÕ{*Hlt~jé_¿ß>îuáŸ8XœçØ(h^°ò}âÙÁŠ\‹´Ï\°õó0`s…Ñ‚Œ`°şnæÉz’õdMõª¬×Oà:Éx³8§3éØ/ôk¥<TŞT­ ˜/ce-f§+¡—+Ò×DÿVøgôÚZÖÏ•wÁ¬¢fG½”uÈ”ÂƒÍ9|›L/ZàÛ@Xhérå"Ç^u‡ŸÉ:d]â‡*q'dfÄÆ+‚Ğr~ ßL¢Yq†¢‰É+•×rÉ%Quú”è×F!;pÉVNÌä]8NF—e©I5ûF—&Rw<VÉ@^Ù 8D
+¹‹J-è¯ìWj|úƒ„ûäÇêH1SîDEp¹¹F@5”`‚àÜˆ3šÌ	²®P®7°.Iı˜ˆy%ò*+2Q\Ãx€‹"}çÛ)”*ASªd dèUê/Îè£h?$Š•ËºX«ÊÓ\ûTjPexı~EØí
+°¬£·JWÉıÈµd2úÈ»„·ï‚*ğZ\$L¸=hĞ-È0Gñ|Òwæ¤bÖIê ¡GÀ©lœÈJTikK;3&è/ª-[>•¹]Ê½"x¥=#5>^Â~mÔ¹«?=FW‘©ÂQÍê™÷EÚ#°§c3o¬GFÎù©áS…\¨²âÊå*2Î¥æZùÒLM–l	ŠPr	ÜHâ¢è_Í_8³Yşà“ø6!GCÇh¬øxaI"%`‘éHj±˜7èr–»"•Õ*Zd\5¡ús:S_3LéYnÄ}ø§š×FÇóöiü/öª×4¬‘èÔ«Ë>Ù4t¹K>&-S3Êû7ú’×›U
+Û¶
+•]
+Ü*CïĞQØ*Pr…1dp3µ‘î›0Å.V„fn^^’Ù©Á÷ÿğt5Ã‡­ü²{ßh	—òéF•*;Y¢ø+Ô<êğ&cl Ø +kĞ±®MÚ'ğk9ÿ)İÕ&›µY–œñö65¾Çº±é`°ié£ÍËVsy-ÛÀ¶v°‰ü­şæ!€rl+(Z÷ø¸iÇ@ÍyF j`·Ï¨i#PØƒåµ–œí`Ig‡››`Bß<ŞG›ÀâR›0y[/Š¢§¬¦”®Äã˜KÅÜëõOwVÛ»+ë'èøœßxÚ¨K§'ùúØ{éÔĞÁ)¶.˜hÙ¼ËS°ø–ÏNOêO²	RcÎrBô l‡ êÈĞ	LJº–pÛ\@Ñ¥0A@¡X‘øÅÍÄÕ†`oã87„[C ã¼¶ÙJôÍÅG- ,‰·ÀOŠì:©¹Œ&úJğñ(ccN‡%©É‰-¾xG/0|]5‘	¸×í™†ç¨€Ğ öú'ÆÔR7lVr„#–_€I_ëNÑ‘±Ú
+1¼e­D4%â&¾àÆt"[¸.p…Â%“T8âc×ö }I%ßX[ª- s)o¨ÕòÁJ~m‘Ú©ï;ŞÆâ"×,’z§Í‘=]tNmßn,­-=Z]k­<j­®-7¬,-×èãGãÑúú6ÑK«ù÷Ç F ıû_n>nİ?ß\kµd^n¼6*z¹êì†·œİêzkyyíÑrkıq«¡µÇCmåÑp}uícÎn¥êìF·ÆİÒ£õ¥õÇËëëO£'ëúŠ¾¼®-é«7Ÿ]µnVà+K–ëÚê#}éÉH¼ô¤´[Ùte¶Ÿf‚Ò!…óƒ–D¢Â¥Êÿ±‡_ ‡¡tŠt—Æc	dì2ÃYâÄ3Aî¯ " ŸŒ]{
+Œ¹µÛÚ]Z:!g†–üZ\[Çµ~)ÎÛ#À¹!ÌÓX$,Pí!¸œƒl*ñn%L¼[^û ı8Ÿx&$8*òW+d¤©ı3hAÆa²t*ŸÄBdm$Á½‘fÒÆ“V¤«LuÙÒï»LŠU˜İ÷)õò:]bzU'¶¡oLÎ¨%‰ñàå4Ø˜sîjD°)E¿¹ È~™*E‹804P§–Rö¾ß!¨½©t˜
+ƒ²‰¶ËìÙGi¾Ã6èêa)}2º•«êw‚†x*òq÷ d$yCZzÌ››_$’ÉSpîoşğOä¸·×9ÈÇ®„…dÉË³2•jÚs[Ÿ±`$B¯\;cÁ–é†ü"Š(<JL‡wp/RX”µ–'Ø.'+§0­SÌõQ "G#†Å²Fä/!!PL‰1ãXQzáˆWB>İ[©i§ÕŒ#Z‚öĞ_±™Á¯o~ÿÙÖF§Ô'màã9	)œü³o¿şÍ"—¸\í±\S™'-mnn’—Ï5\wÅ­·zsÜ ¬Íš-°„St–·fY‚CCÿB³jWåóúæWÿUÁ8tXìsİéôúƒnh~­ğ{—å#“¶ˆ'ˆ&*dyË0¡jAÍÕŠ4~¥Òˆ”­*D˜¢‹ûa˜5Ëé¤â|ÁX¦ÇÔTôk£°—ılÍ×_ş„qEèòàC
+Ö¤2<lkr€Ä¯Í‘¹z”€Dèz˜„ä‹9åUÈœ­‡êœÇcÉ¾8‹âÆ¥¬$r…g)š#k| „«¹³Ë´—fg'ÓC({&ËvaÊ ´ıQÜ:¢âü«¤i„İ¤â‚¦²,êø™<ÈÈÓ©É„¹*jUY»–D ÄûËY#%%{×ò²7‘³âf"¦"<A•0å(Í’¬I’6Cr±©èR‰l`Ş<"É¾-šÀ+`‘­HíËøÕP\ÿËÿ H†×\ÜS$¸Šr#ñ’šrÅ‘=‘¤ ê;åÆó#ŒÃÜşÔ^Ÿ´>%oøhŠ;}æ10TÅÎ Å´T
+*úl!>¸œò¸£]¤LP˜Çœ{’6FT÷ğ³ö˜ŒkÏ¶ÛÛ/:²Û=hlw;=²×îµ]²¡¦Š§ÀEaùçF²R	{ÌœŒıÈ}lX*ÔÉ9ñ0ĞqŸ0ŞeX­­îæØ·qQ…:jc·±Û=O·h'Y¢æKl [fíÙîön»  ‹"·'™ìnÆ8­u&mé6–ÿ|´²Óéo÷ºG¸W…ì“íÃƒA¯=(¤ç™BN6]IvÅ©‡ÖgÿğU§×éî„CØüïßvöÈ}‚ƒ<ü;rÔ>èìKİf—B8Z¡#çØ5Å*Vz=@|ÄûMb,lÜUw.+E;wahËÊİiCêŸSªêIB'Å¡ô®Ê\ŞyÌjÏ¾ùÃïşõÿ|EzíÁaĞÕ?Œ‘ux‰³KdÏÇ°SXÂ£Æ>ÙL“o–!UI'bhéİ¶kÙ”~©‘<Š,ü$ÿ_fß' —â§ª®!!¦;İ@	‰ßş#éÀJ¶ÏIÿútnx×ƒí¶†ÁÛ¨j-"d”¥º“şÌƒ‘µÆ¶ë“	 ÍÁè=hêtb»3®ù§Óš”3°/KùUñ·Š,m£_ÉhN&wª8s1—]Ü)C{†%¤É@%Ä–Dÿ‘ôãÌÀ½{ÎõŸ‘«W$;R_ÈgôÆëEØ‚}ÉSàG~:^˜	Hõ×Š¨Ü	*­+´;±!Û°½¨À¿Ky°Äô•Bzã…TÜ£§Ts=L[Lqô”„)ClÉîôXV”Á¬%ÁŒQ“œ á"<á\Ñ¯ÂXšfpn‚ÿ²wj
+=BÀÿ â;×Æ†e°í…æÛ€ØõàiàÆN:©¿;7›o¾ú_Õ&óÂf†ÔÎ§?:¥z`r7#½Ø K7€Üdy	şs&ß~ı§2`¡Jàn‹®°R+MŒi‚¾¨ĞÜı¨‡]Ê&·"ÓŞAmtî»äsn<Ä#A]÷Ë DWÉ4¥¾ œè3%?Sø–¤<fáv)ã@EÛŠW{‰f†×şa¼Bÿ¯À!°InÀÑ‹üoI?¦15°ƒê¨(û.&¦Fÿl“÷¢J/À¯ë×q£r1şßõçQk„eD(I-F€	æÿ~qı'÷pÿ›P-À“—È^òÙK-Šø…ùúáö1óôa¸• oÆ¸™.ÅÀ‰|`LcB¯†H@àØ ‡î+°Alø¨ãÚS@ùŠ†iÒw ß¥.«ıcÎ(Â3†.©÷ÙËt!Ç½}Ü?²×§äë¸Ø	²ß(KY	+¶Ñ‹Ñ¤ßğQ4§ÎêÙ(‡?+8’¹ªäHö*yÆÍ¶lÉÔ±®Â3^Í&+Sì ÆK¹7ÒËøoÈR-”‚,]8ãó×ß~ı_ş	MÌ£Şõû~ç`»s’Ò-ÉO?¹ÌBÔõpßä'—@‡Wäa´‡:¾¸wÔ'g¸Z5IÇ"šqnF6gñ¾"ê¤nCô¦²'n{|JĞkæ>.Yh~^>Áò-4…_(ğ¦ã%İ°Á\”hpŠ»Ò1&Ş´ÏS@ÔŒ ¤ëpï_v`lHpçeº2—b+»$»'ã¾â¶ŒÚPdĞâu”å	¤°@¾ıúŸÿw‘$T§÷>º¸×ùÇ™a_!aæú:dâuã·ëT§I— S³SC¼¶ƒŠwHc%–”TõŒ	pdT±æ›ß`Íğñ<l¿7†Bıã1ôWíıîN›WDJ–dÄ‘%V0ğ.ğ©ÅjèTĞë9[Æ×Œ(Qƒ•ù°ãL’,€9gæĞ”-''‡"Ö¿ùãßWbËê¦SÁÃd\úBoÎèƒ>ëg¸â³ØK©rë|ÂÂàĞ¼Ş¿(v÷í×¿şgÉôK|½¦¥È¹”oá’*ò“VñôaB/N­Ôiû!wv´YQ¦–„ò½¦Å#T¸!¾ùãoÈ Ó{Ù=¸~Oî“ıîóë÷ —w™Š†	»…Âû&CNüµ©äÖÔğÿé`Lï¸×';Pì;ı“Ufpƒ!åÃ½| 0ˆö`Ğ9t0ÌÙïî´÷K‡ âöÅµÿ¥$µ›_,‚èbÖwHCõø½{s!üş}ro’.‡°94]˜ë&€ĞKzRF>ßEÓ?tx Bt°Íl#Ğ± «A­aÄƒûŞèúÏğ¡ª¿8Àªö¾ 
+¸ú®µ?ŒŒŞ½Æ‡ì;Ÿ5>ƒBv8XA}35‘œCÅÁquŸLàoS4İïıÔºd×i¤Öñ=œŞÛYN©ïeÄzÔ2Ræğ÷X‘O5— Lë¯8Jw¥‘½ı›ÿ{+ÅN¥ á…Ø×¼üòß»Ìğ6¾åÛ¯¿úï¡âÃ4‡0è„lÛûr¤»ôú_Š®?|pOnšle!Gù†“¢]Ñh‹Ò1—CDÈ4ğŒ‘A$+•pô—èâ‰ü¬æ®|kŸ¹¨‹ë·¿¹-ÃR½ª´BË²cvÏÁ„#ÍQ–ü|f¨#ğeff&c±Øàüxù(s[wQ•½ä«¹<GTKö¶&¨c°¢]ZÅl•DNpècVÙmX¥ÒáÎÂU®R¤6ÉÂ^â9ñe»Å²…éÁ«çıpÓAw¯Û9îw>’4/ĞŠÌÏ|âæJ*Ç%©Ñ˜MÉ‹î‹ó·“R%óì	SVˆĞğ™ÄºƒÇ19åéÂÄ:-Œñ²ª>–:E!àbÅÄYBX=hË°ó&@Î¼ÈKÚv‡€>Çjˆ¥Ê²â¨Miò­sfÅ¹âÏ^Ú°ØÙâ¿sX1¬DûVÓ¥šnâ;@w½sıaFÙõ‡ÚÕÓ¡[°ëAÇ‹ {·	n¦¡<+€‡ Ü¦6tñpÇ1AÍ…§˜$İ¤©Rê†üa±Ç£\eœKaäÖuşÄ®Æ
+<_`WƒDÄ
+ïQ¯aZÅrõ1ó$u{hâ®ÀR!DÎìeŞe5K9Ù=FYâH4Ê#M{'D~‰—za­Qşa*–WaT¢â,2«êÊsEÕù6Šs©ÚœŸETâ;œÆeHP#œmqYÕ"íñ±knÀ¯’xYé”ó–Îd[‡°dôÁI$ôu‘n©5¡–îf¶‚Ç½Á9¼A‘Y\Ê¨ôm
+ÿWX²2œf”Š|º0qªcŞå—KÎhê
+©ß»ö^Äøƒ3—;âv‘ôY˜ºI4;ÂÉ¡€kğ
+ÅGÉÁd~Tå»ƒnœè¾êüçğ O·{òš02U;©uPCá~ç¬Ò¯ªgÆÊ}VÔpKM0”¾úò«V.·ÀöH‘ «(ºÂSJ°zúà”Z¹Ê”Ù‹ËÃÛ7Ş²Ìÿ¿Heö^»Ÿ|)b°`¥ÕYsl˜€ªº¡ãèá¿÷6)‹0
+`B¯#Æ¬jt¢ÖŞÕ“–ø¹¯*\¥¶/^P–ÂGğ'—Éìk=Šõ}àÆ§œbjX«*¢m4JDİ9âAá`%µOŠ¶zÖ
+X³j£²‚é&kìòsÅ¶4’­9¹%c—Ö÷Éå\t‡pJ»X²Ìš=¸ú\>‘è˜P!!À¹“Ô˜4¸àGLp ËX±ÂIÑ>×\=«¨hîf
+kÁ÷æ'“Tíæ;Qæï(l+ 4ì ÏÁŠê~¦†!O\FøÛß‘™úÁqÄ¾vÆ8¢‡ÿ2uõÛòÄ¾ø­J\‘âÏoZø¯<sDÒ8èuöºıA¯²cl4Wl'ÃåiQg¶ÇˆXÈççŠáƒ+2ÖÎl×ğ~ø,rNB¼C&)®ÓˆF Ä#X(sP_=äæœò¹m¿jî[³¼Áœï„]Ş ßNB^!ÏLs¸[qÌä˜ÿù¿±Í„ pIhLÓv']]µ¹Är9»á‘˜:,ø‚ª1ŞµMÓ>7XÍ 1û›êühL1¬ç¦n¿ çûğ|HüìVî³2>Ë{¹jæ…‡üéI!ïßM¿SS0hãïû6z2›¬„,Ë6a¼‰Fğ†“‚‡5Çµq—ë&şü÷ËÉ‘d»¯z®åŠ@ÇıŠ6D†1eB7°–Püó
+U¯LÂ«JÄ¤•ŠÊˆëÇ ø*IzEt—¼>ä0æ¶‰>J-áÙÈ!ÓYLí™ƒ×ã‘¸‚Ñßî„ıßÙhAÇ!ÇÀo%VQ&üáÏ‰gç&ªxÎõ ÜÀİ‰sxËçò”gOnì¼ìNH7I„ÙóSÃKŸ;ÌáèĞ«…¡ÌĞ&,â³ÍÇvUä-r0„nÑj¬÷Æ¼LQ'YY¦ø0úLçänrßeÄg"ªJçil×çØÕ°€Û8eI$Œ: yĞ’ãÉâ¥2Æ¿×Ğ¬‰IeÙˆsTÖ‹*:îkw­I¾ù‡ß£/m<ŸRõèÌVÅ¯ğp(ÛmLÃÚš«7Ï] £€²şy&ÚJ¤pÕ:/Æº¡jÆóx®ÑBq”!ñàP>j÷ğøÍÒµxÑv–Ø Ü‡“ŞÈv¶‡˜Ÿ7ÍvÌzm8šc€Ì*‰lÜ&Ué‡°¼SõÉîl‹„}ZÿTsé²d¹–¬Ğü²ª²LóOÔu¸ğ0ŞÃ9êîv÷;«nUI"Ê"ÃˆWå6|H’,Ï«e…Ò«®X°K^_$WZ_¨Ş¢¬Ê%Í˜R&gT0¶š# ¼¶_oñò¦‡Šd†¢µ¢VÙÜ&†%d8±?ßÆÉËd1D•ğxëÃŞ^û Ûo:Ç½²T­’!BSŸåN…»œ*À­¸®ôœ!Á"Ş¹Äg5ÓÀÜnìà.Ì~1$+WƒIÁQèVRvJÜH³|/Ú½_Êöm‘%0$ZW •z~`b»"î&…akÛéö·û}jH^§½ßt_vÈöáKÔ–û•X]RPzt«‚·¬ÔØéµ·;©Y Q¡šmótPĞU„ÉhÀÆš™ªœ%`œŸüµú8Wğßq•›ó.K³T²º²˜?(táÖó×JÛs.|¶iRkâŸ²²oŠŞø%9œ0¤|:`¼6åHçù%vávİğFç¡ÆÂ,5Ğİ¦6ÛêL:`)L£Ó‹GFxV£â^Ñh‹Õ¾$¥ŞÍÀ“íTsêõÑCb0T—ät¾¥³ÍKã*Åîª•ÒOJ[f'¯±ÌQT­Ja=™¬g§nË ÆÅ¹¸.[”N_*ûN.K«¬6pa%O,×ÄÓmÁñ‚!¯’^o=$ËÅÇ$„}W©Î%Ùğ¦Iã¼|fÕ“ÇñÄq¬Vµ,ş®šõ
+ª~Qåiv¨ï‡ Xb½KwÂÒ2zÄR•ú+Å‘”?…°È  Dù’û5t©ö¶qÄ;Rß‘ù­<¼â\X•Q¸?SøX±ÔûØ	dgÛ°/(wíª,¿¦?/bËª*Z€1=¢§°b©æ¤æĞwa¼ñË 40ñ6 S`êÏ^ä>Õf³©ú ¡oÖF(!Gn°Ú4iÌ/Ûú[:Û±Ï­øìQµ4D1J›À³y½Ô³‘‹ë´p‘~¦™xòmúìp<fáÅàå>CF‡ûFšĞ(€ ÓŠ÷>1Ï(4®’@\ğh^ŸQ2C4
+OÂˆŞçü„;Ç†	&G­1Šâ;aU(l5Ã²ëIì'ŒS´]Ì¦´ğ`
+!2¸^†}?dkñ‚g÷úx¶ïõ¯ˆùÀ€Æ«®Š¿ZøĞ£ş¨´İ}ş1K5Æ@%ûôëXÿ[xÈfªÎûÀ«4«¸ğa"H×JĞrç±É’#9TŠêA^¬GkÊ‚¶º‘Óˆ˜´cO’¤”·´¥âÌS<!>-›VÉèz+ú¤øì &<¥³QùÓ
+·STŞJòN€yFÅt ‘,Ïºz]Í™d¤Tëç,5ìv‹ÓİV)÷¬Î;L¢yùæí¸æwÎ3?Ç,xtSnY‰WŞ†S–ğÉ	RæBD¢9ãóE5W¬ÂûR¢Ó{¤ÃÃÕ³»ÛBrxxÊ6çz"ÌìŸ¨t¤J}îXgöŒº
+w¥zãC±WMz3s—Åø¶ä]Ûö¥{ÙQ’ù3×å;”£×cõ|EvºäwqˆnRám¥9ÏI"á­µ¾ò‡Å”LZ¸G}dîZiÔKF'ü]	(#Ã%NvÌ¬«¢3øÀĞs|=àÉˆÒÃ]nF.¤97,İ>gùQç‹Ùid;ğ|{Ê×Âˆ2}ãÛox†›¦{oÎÿôW'kïé¬CÜEÇo†šÊ£Ê	*¹tµàiãõò‰Œ€¥´âİÓœ¸%ŒTdº¯ÚZÃÿDGì¾n½Yu.Ş,­ÁÜÉP«//-?\Z_{¸¶ö°Õ\^[8)÷Ë…áã9¹QŞÄ¯0búòğøÕa·GÚ¯:Û„§´wú7‰Ğª¶ß™£xN¢.eªà¼ú,"üò¨‚Q«4§ìce-şÉù¬(¹Ej·=X8™eû8	ÌúSï¹Ü U5,>y·òtMEü(+¬aaÄ( yÜë${*®ßwXFâÎõûíŞáö‹NìwHx&Ş=òí×¿şŸŠsÆ•«1§Àäõ¡§‹S›•Î<É4	œ;2Ã¨4ñ\¶x;½JPœ.5qM¥+Œ<íC-Œ †‡r€œ/Ó¸  ±B}P “l	,>®ªxŠ,\'µgªŒˆ—s¡X‘kğÚ½JòtET¡Äs«{Áÿ{•"›7ƒM
+èL–n¦¡“Æ• ?qÕøc¨ddôüyI@Ç ÚÑ`™ƒL­ÌØkíÂGÓ'fz-3Í%êelİ¨øwh	óÀ6"¤¦-±£ÃnìFUá#[Â6ªøî	¬¼•cÆùø_ÿ¿èÄÀsÖÑPpÏŒpv¬¹Ûó°Ğ¢N±>pÍ°(&_Gi©<¼‰)réIñº|‚ÚEêºSQštw)é#¸“.FK/º'[ÑñÑÀùUm¤OşK]×1„€R 7<¬Å±yùÜ¶MªYõÄrkhÛ´=*	˜9—Y²ğ¸®=`i}YŒÈ“åí·ùÑËù7Â3™eïìk~¾}t<³ôk"y!:¤ùVTÉOIŒÎùËR¦Œötòf[FaÍÈ([‚1ù)<a<y5°8]a–›wu•#Â«×éì÷É«îNçìw÷^şœöíı~ò…;”ÈDø^‰¥¦Gx•Ü_ØÁ R²¹XCûıç³”#æÒÅæ¬u7s^j1‹y‡ù,pU°¥0ASÈæx²Bt×v€Kncš.ó–çBŒ‘`¢Ñ9;„X,ƒş}Æ¦(‰$`›8éÔĞuŠ!qyÑÊg2Ëí«¼Ó¨'ÀOî,¦¢=ÛÄ²}>ÌÙ&ˆö×»ÆR+<µO€Õz¶"#Âo-ëJ1Ü”—h¨(à˜ò<qãe©•³^Rù©Ye5cî"ßüñwUX¦H?5Æ.€#+İoÑ1LçççÍ™ø@½ÈHétHõÅORäzµ…‰fHÒ›K9ë!ÌÎV 'NşY„æ9ƒÈf­•}ÊŒ%@è&uí)È|J¢?%ñÎ€Ûğ)h<#wæ€¡Û˜RİĞ>%“™k{#Ûg1B­¨aXğÏOÉ96<Ì—ö¼8í`ÚYRÌ¯SöOú+‹HêgZ4¬E|¤§‡¼¤9vÍ¿h&R:[s€ğ_ÙL56Ãq+c3)‚½Ê6am şìz„5„ßW\‰Ä~4†ß3çN&×Ù@	ğ¥fi GNgcX›°Iüå¬ÍİW¬)îºˆ*¯µÓm³TÈ?…OÀO7MÉŒğ\°·R'ŒjêMØÀÒ–(ŞçP`I/.†`ôxÄØŒÏ`Š[ÆcXL©•mh¥…°÷R¦œÇutÃ·]÷wlÍ­µ¾WKîòáíRfüw,mhR½^ÓDjùMõ‰ã¼*I‰\0ÛG¥˜\:¥øQ(8¦z˜N,‹4†“>¶`¶†‰3'c~‹÷ËÉ¢Tù\ËWŸ¥˜ÈÈÉ§¬Hı™[ùÁS±©©UmÂÚ’—™%€5è_WÀ_W@ÕÌGZ ìûôŸïß°0nk»³ÍË×'s®AZ<j’]Ã¥˜ÁNvmbÙèL%w½8 ğ]ÛÒyıÀÂú,‘0#YX’ñêì•]†"÷/ku= )ÀQê)4¼¤ó6¥›É¨ ıBL7s¯­7ÉQ0Ä
+à¡ªCÉö+ò‡ ¬ç´6Ş8l›v¤eÕ6GlÊ½¨3uõBîHõVV•ó…g Ÿ©^“ªu›—Âq48ƒ@İÈÉSÙadbGÃn‘ rÊŒßß¶­3ûïÿ4·ø~ÊU««/©Ôk´xfĞ{bµ…r÷PG-4JÈ‘6còèâÂçr|y§ö¹¤]’úòWrnOÜ	¸Iµ,×µë¢†­y°æf’hWò·ò(T§K‡.¢'<¯õÛ¯ı>\#¼P/Ó¾1P”*Mr¯
+Æ†MÒ5qÙ9²ÙÊÀ.Ù¡9,¶£ã¾Ãr<ø8íº–ñ‘lëöÊŒ“1’'†eø†föXİ 1¡/~O¡'M²gÚC˜~ÛÅZö×"qñô]Ó µ?†(µ¡s/‘,Z¼¢ø¾¶ª˜)]C*n7Ò0¡BCÓ ÿ/o/gEÓ¦‡9yÈ-êq©¢_ş²¬å˜ËTeÛ¸DRM×¼Sæø«ĞöD1õ+4òADxšºš®UçTs*´rÌ J§K§F0­Ğ2ô¢¨ZrLz¨Æ¼áØÛE‚.å¨YHa:ßd@$ˆ3*£øvDîœÈvX.Õt¶}óÒ·}Í<fwBAå¥ãTœ%ğÕ.OŠ*–>²ØUZsÀİ½OÙyÕÙ?<êôÈ«N7z“Cøc¿ıq…†€a4i‚ÖCÏ¨i\£ì†,4¤ÊàĞö}{
+š÷.£ov=³¶£Öˆ‡Šn,¥*%5ÂÛ$ôê5(*Î^¸—±À3+¸AÿÌ:u+(æšba„Â‚!I–WäwôY±hAÎB{–(g°·Ş„8º’™(xçùqwg#‹0v÷ÍN{ĞQ½˜ß·ùÓÕöîÊº¸µöìåáPÌõ{F2GX%«Éïæ>ZÅÙßÉ{õ“ÿ  ÿÿ ñpr¬

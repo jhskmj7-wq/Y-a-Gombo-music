@@ -136,11 +136,16 @@ export default function FounderThronePage() {
       console.warn("Alerts sync restricted:", err);
     });
 
-    const qPosts = query(collection(db, "posts"), orderBy("timestamp", "desc"), limit(200));
+    const qPosts = query(collection(db, "posts"), limit(200));
     const unsubPosts = onSnapshot(qPosts, (snap) => {
       const fetched: Post[] = [];
       snap.forEach((docSnap) => {
         fetched.push({ id: docSnap.id, ...docSnap.data() } as Post);
+      });
+      fetched.sort((a: any, b: any) => {
+        const timeA = new Date(a.timestamp || a.createdAt || a.date || 0).getTime() || 0;
+        const timeB = new Date(b.timestamp || b.createdAt || b.date || 0).getTime() || 0;
+        return timeB - timeA;
       });
       setPosts(fetched);
     }, (err) => {

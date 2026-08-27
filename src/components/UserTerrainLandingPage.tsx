@@ -57,6 +57,7 @@ interface UserTerrainLandingPageProps {
   users: User[];
   posts: Post[];
   setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
+  postsDebugError?: string | null;
   globalSearchTerm: string;
   setGlobalSearchTerm: (val: string) => void;
   universalSearchTerm: string;
@@ -115,6 +116,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   users,
   posts,
   setPosts,
+  postsDebugError = null,
   globalSearchTerm,
   setGlobalSearchTerm,
   universalSearchTerm,
@@ -1723,6 +1725,14 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         {/* 8. RÉELS D'ARTISTES (Redirige vers l'écran dédié Fil Réel) */}
         <div id="reels-debug-banner" style={{ background: "red", color: "white", padding: "8px", fontSize: "10px", fontWeight: "bold", zIndex: 9999, position: "relative", borderRadius: "8px", margin: "4px 0" }}>
           DEBUG: visible={String(isModuleVisible("reels"))} comingSoon={String(isModuleComingSoon("reels"))} length={reelsData.length}
+        </div>
+        {postsDebugError && (
+          <div style={{ background: "darkred", color: "white", padding: "8px", fontSize: "10px", fontWeight: "bold", zIndex: 9999, position: "relative", borderRadius: "8px", margin: "4px 0" }}>
+            FIRESTORE ERROR: {postsDebugError}
+          </div>
+        )}
+        <div style={{ background: "blue", color: "white", padding: "8px", fontSize: "10px", fontWeight: "bold", zIndex: 9999, position: "relative", borderRadius: "8px", margin: "4px 0" }}>
+          FIREBASE PROJECT ID (compilé): {import.meta.env.VITE_FIREBASE_PROJECT_ID || "MANQUANT/UNDEFINED"}
         </div>
         {(() => {
           console.log("[REELS DEBUG]", {
