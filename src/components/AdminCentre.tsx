@@ -9114,7 +9114,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               
               try {
                 await gomboDB.submitBetaFeedback({
-                  type: 'bug',
+                  type: "bug",
                   category: issueType,
                   description: desc,
                   userId: profile?.uid || currentUser?.uid || "anonymous",
@@ -9123,21 +9123,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 });
                 
                 setIsBugModalOpen(false);
-                addToTerminal("[BUG] Rapport de bug enregistrÃ© et transmis avec succÃ¨s.");
+                addToTerminal("[BUG] Rapport de bug enregistre et transmis avec succes.");
                 try { audioSynth.playValidationSuccess(); } catch(e){}
                 form.reset();
               } catch (err) {
                 console.error(err);
                 btn.disabled = false;
-                btn.innerText = "Erreur - RÃ©essayer";
+                btn.innerText = "Erreur - Reessayer";
               }
             }} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Type de ProblÃ¨me</label>
+                <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Type de Probleme</label>
                 <select name="issueType" className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none">
                   <option value="Affichage">Affichage et Interface</option>
                   <option value="Validation">Validation et Paiement</option>
-                  <option value="Audio">Audio et Musixœœ”MnÛ0…÷>¡lâ-§q[ ‘¸utÑö A$5RS$ÃÇNàå¹X)ÉU™JÑjCaf4|üŞˆ÷²TiÇ•\ŒĞÉ“µ)´!ÂÃ<Yzg Y4Êw¶P’Õy	H7Ü(K-`®ŸÉÒœoúÁ~M¤$D¡ ÄÚ¤
-Ú¨Pll¾¹˜êí-
-ê¦Jäm”†ãæÍC^k0ŒX@Åï’Å
-,3¼=mîõe–6{Dö®›¤/µ~d#&?vKbUF=ØùÓlÍÁ½çòHJÂà.œÌ<Y½<‡=6ğˆ´	¯Ü¾<×. µúĞF²  ¤&“IiÖa÷€/¢e‰–ˆ*69,‡h2ÊËr,J¤ñe‹vk{ˆ{æíU÷ó2ÈNßOåà°TºÇÂ¥!;üa:ú-lNÕ§“™î9µÃ3TØ¢’ñIÄ[ê#áåvº³&5UÉÏ‚³õüé|ŒædÁ}³Ÿ|ù]åDüÔ Ï",Œ÷o{QËÃHïÜaîÔÌÕÑ°@ıhÍV¼Úòæ?à‘–×CŠ™ÊXÄ¼±Ê`­¸O¹Çî„–Rz&v¤-¯èİ2Œú7lëiÅ]lx‡‘•øæl5[~½üxÛ¡TÑ pVÕ_Ñ0ëÿ`3Dç‹Ü¨]p'ü—†h­Œû'PÑ;2Keª?£'…½ÀëàuâãëÑ~ô  ÿÿ uĞŸp
+                  <option value="Audio">Audio et Musique<xœ¬”ÏÚ0Æï<…•^–ƒ	Û¥­´$ZZ©‡¶°ÚƒíL²ímvÅ»×IĞÀûGUsI2ãŒ¿ù}ãäÆziô|@Î®i—"k¦Ì²EğÙ¼½‘bëJ£E“×PƒöÓü¹BÓÜáO3Ó¼ëùà4ÚÏj(ÆA¡˜s¿XÕpeÄŠxØxzs9¶›[õxÊ*º(+QÒöÉ ÁZ@ÁšÓ÷Ù|	N ìú+á¡šæí‰½›"‘#İŠ)Õ²Ô*4÷nö8Ù%sğ'H„"‘²Š	¸‹Î²%Ä-Öğ@,‚®…N4Òc-b÷£Ñ(Kêq»§ePŠğªÄ+ÂÆö·}´¡	º€‚ªŠXzÕaİ¸¼‘»îºÿy%çÆûŒ	^ITı–h…lK?ÇQ¾“İ‚sõùÛç¦ß§õtBJR±(>KøÊƒ÷Ñş/¿µÍˆµù¤¡FUR¬fC2›ş‡ûªŸ¦`ê·}Q2å`¸{Ù‹F½$vá>ïÂY^‹ÔÖlÔ“-/Î¿G¦l”
+£:":ƒÔ©cÁsî©?ÂBë  G¼cõ]àµô¯í¨ŠŞ¼[Nß¯>İöØÔ<b›4Ãô*gpõŸˆ|Ók³~ÄƒˆÌZƒşÍpös|*ÖıØÉ¢£×ıx=Å†Ÿ»Á_   ÿÿ K”M
