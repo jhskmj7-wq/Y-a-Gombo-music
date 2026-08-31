@@ -1559,7 +1559,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   // --- FIRESTORE ACTIVE SYNC ROUTINE ---
   useEffect(() => {
-    if (!currentUser || !db || perspective !== "admin") return;
+    if (!currentUser || !db) return;
     // Attempt Firestore subscription & binding
     try {
       gomboDB.getSystemCommissionRate().then((rate) => {
@@ -1720,7 +1720,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     } catch (e) {
       addToTerminal(`[Alerte locale] Lancement offline synchronisÃ©.`);
     }
-  }, [currentUser, perspective]);
+  }, [currentUser]);
 
   // --- DASHBOARD INTRO MOUNT SEQUENCE ---
   useEffect(() => {
@@ -9137,5 +9137,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 <select name="issueType" className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none">
                   <option value="Affichage">Affichage et Interface</option>
                   <option value="Validation">Validation et Paiement</option>
-                  <option value="Audio">Audio et Musique<xœ¬”ÏÚ0Æï<…•^–ƒ	Û¥­´$ZZ©‡¶°ÚƒíL²ímvÅ»×IĞÀûGUsI2ãŒ¿ù}ãäÆziô|@Î®i—"k¦Ì²EğÙ¼½‘bëJ£E“×PƒöÓü¹BÓÜáO3Ó¼ëùà4ÚÏj(ÆA¡˜s¿XÕpeÄŠxØxzs9¶›[õxÊ*º(+QÒöÉ ÁZ@ÁšÓ÷Ù|	N ìú+á¡šæí‰½›"‘#İŠ)Õ²Ô*4÷nö8Ù%sğ'H„"‘²Š	¸‹Î²%Ä-Öğ@,‚®…N4Òc-b÷£Ñ(Kêq»§ePŠğªÄ+ÂÆö·}´¡	º€‚ªŠXzÕaİ¸¼‘»îºÿy%çÆûŒ	^ITı–h…lK?ÇQ¾“İ‚sõùÛç¦ß§õtBJR±(>KøÊƒ÷Ñş/¿µÍˆµù¤¡FUR¬fC2›ş‡ûªŸ¦`ê·}Q2å`¸{Ù‹F½$vá>ïÂY^‹ÔÖlÔ“-/Î¿G¦l”
-£:":ƒÔ©cÁsî©?ÂBë  G¼cõ]àµô¯í¨ŠŞ¼[Nß¯>İöØÔ<b›4Ãô*gpõŸˆ|Ók³~ÄƒˆÌZƒşÍpös|*ÖıØÉ¢£×ıx=Å†Ÿ»Á_   ÿÿ K”M
+                  <option value="Audio">Audio et Musique</option>
+                  <option valuexœ¬“ËnÛ0E÷şŠº‰´œÆmÔ2àÖ-ĞE›² ©‘B˜"Y>;ÿ½Ô±l«IPTI3ÔğòÜ«,Yo1Y47Èw®ĞŠ{¡•Â
+•Ÿ§ÚÔo‹œ\óÔ¡DîO;ó4›Åè´ÚÏfHÊP—Ô¹_´Â,aRó5xÜzr{95Û;ˆz<aZæm•VæÉ!‡`ZNBÅÈûd±BÇ­hC€…r6{ì]¡)œµ T#&?LK†VYıà²§Ù~°‡¿ƒ°˜´Œ¤ïã‰ĞfÉ
+ã|c‘×@‰µô8Cñxz‹“É$Ôãö@Š %°²ÄJ`ÚÆº[WmKV•cNd	†\µX·îoäÎƒ»î^FÉé‡i×ÑÁK¡(­°$RZº#§Ó(ß‰ÇvÁ¹úôí¹éŸÓx2ƒBâJÅ'¾²à}´€—ß™:bMĞP­¾JÁ×ÙÓÅ²8ô?Ü—PşÔ9•7ÕEA¥Ãñşe/jyäÌ.Âı»÷zƒöú`X¤~°f+Ÿmy1ÿŞRåDPÂµÔÖÖiKŒ*<ç~`©Th~ñ–Õ?@vUÂ¿Ú#P%¹}·š-¿_}ºë±©XÄ6«Ãô*3¸şOD¾©ŞE?âh©1Úú7Ãér|\*´­úµ“EG¯]¼kãÏ£ıè   ÿÿ Èš‰ë
