@@ -9135,6 +9135,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               <div>
                 <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Type de ProblÃ¨me</label>
                 <select name="issueType" className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none">
-                  <option value="Affichage">ğŸ“± Affichage & Interface</option>
-                  <option value="Validation">âš–ï¸ Validation & Paiement</option>
-                  <option value="Audio">ğŸxœœ”_nÓ@ÆßsŠ‘‘Pó°qJH%‰H<Põa½»«lv·û'MZå<—ô H¼÷&\€+°Cc’uøÅöÌxöÛß|Şo0ñ9WğÎ¼åW‡©Ò+9îÀÁ5¬S° Âã(™xg0ÿøz÷óûØ¼A¾²…’¬*“8GéÚûS‹™ÛÏÓœ/öƒû5‘’4CLPk?Ñy˜	ÅfàpéÈùq_// ¨s$S"¯£´0œl,2ğZ£aÔ"Ì3ò"OÑ2ÃëMç2_ÓÍ‘µ«&Ô İ—Z]r#&ßuKbUF]ÛÑí`Íá•çóHJÊğ2ìÍ(™>Ü‡5xÚ„Gnî«)€ÀJ}h#Y R½^/‰4k°»&…²²†”•)ÙŞ¶Ñ:d”—9æD” ÉIvi÷öÌÛÓæçe¾ìo3Ê;Á%©$6·EJCWäU¿ô[~SªO[œñNsŸÚ‘—PÒ >‰Ì6óÎDx¹•®l¶ÉG‡ªä;ÁÙlt{Ô…Ñ,ºö­/ÏTNÅgò¨ Âbwıô,*yäô*ÀmŸÂ¥Z 9İ,Pßf)Çòä?à•–W&%L	e,0o¬2D+.CÃCî±£`"¥hbÇHZóŠ1í¨Ã¶>›s3o;²’œ?›&N^_4(Í³ pPÙê¯Œ²àÆÙ°i£ó^.Ô*L'ü—†j­Œû'PÑ3r˜ÊÌÿŒî×ˆwßtÖ_   ÿÿ ¸Ô¨¦
+                  <option value="Affichage">Affichage et Interface</option>
+                  <option value="Validation">Validation et Paiement</option>
+                  <option value="Audio">Audio et Musixœœ”MnÛ0…÷>¡lâ-§q[ ‘¸utÑö A$5RS$ÃÇNàå¹X)ÉU™JÑjCaf4|üŞˆ÷²TiÇ•\ŒĞÉ“µ)´!ÂÃ<Yzg Y4Êw¶P’Õy	H7Ü(K-`®ŸÉÒœoúÁ~M¤$D¡ ÄÚ¤
+Ú¨Pll¾¹˜êí-
+ê¦Jäm”†ãæÍC^k0ŒX@Åï’Å
+,3¼=mîõe–6{Dö®›¤/µ~d#&?vKbUF=ØùÓlÍÁ½çòHJÂà.œÌ<Y½<‡=6ğˆ´	¯Ü¾<×. µúĞF²  ¤&“IiÖa÷€/¢e‰–ˆ*69,‡h2ÊËr,J¤ñe‹vk{ˆ{æíU÷ó2ÈNßOåà°TºÇÂ¥!;üa:ú-lNÕ§“™î9µÃ3TØ¢’ñIÄ[ê#áåvº³&5UÉÏ‚³õüé|ŒædÁ}³Ÿ|ù]åDüÔ Ï",Œ÷o{QËÃHïÜaîÔÌÕÑ°@ıhÍV¼Úòæ?à‘–×CŠ™ÊXÄ¼±Ê`­¸O¹Çî„–Rz&v¤-¯èİ2Œú7lëiÅ]lx‡‘•øæl5[~½üxÛ¡TÑ pVÕ_Ñ0ëÿ`3Dç‹Ü¨]p'ü—†h­Œû'PÑ;2Keª?£'…½ÀëàuâãëÑ~ô  ÿÿ uĞŸp
