@@ -225,23 +225,47 @@ export const CANONICAL_FEATURE_IDS: Record<string, string> = {
   menu_msgs: "chat",
   menu_comms: "chat",
 
-  // Wallet
+  // 1. Wallet (Module Financier)
   wallet: "wallet",
   afripay: "wallet",
   user_wallet: "wallet",
+  withdraw: "wallet",
+  deposit: "wallet",
+  payout: "wallet",
+  payouts: "wallet",
+
+  // 2. Transactions (Module Financier dépendant du Wallet)
+  transactions: "transactions",
+  transaction: "transactions",
+  user_transactions: "transactions",
+  wallet_transactions: "transactions",
+  historique_transactions: "transactions",
+  mes_transactions: "transactions",
+
+  // 3. Subscriptions / Abonnements (Indépendant du Wallet)
+  subscriptions: "subscriptions",
+  subscription: "subscriptions",
+  premium: "subscriptions",
+  abonnement: "subscriptions",
+  user_subscription_management: "subscriptions",
+  user_gombo_plus: "subscriptions",
+  gombo_plus: "subscriptions",
+  user_subscription: "subscriptions",
+  mon_abonnement: "subscriptions",
+
+  // 4. Manual Payments / Paiements Manuels (Dépendant des Abonnements)
+  manual_payments: "manual_payments",
+  manualpayments: "manual_payments",
+  manual_payment: "manual_payments",
+  manualpayment: "manual_payments",
+  paiement_manuel: "manual_payments",
+  paiements_manuels: "manual_payments",
+  user_manual_payments: "manual_payments",
 
   // Escrow / Contrats
   escrow: "escrow",
   user_contracts: "escrow",
   contracts: "escrow",
-
-  // Premium / Abonnement
-  premium: "premium",
-  subscription: "premium",
-  abonnement: "premium",
-  user_subscription_management: "premium",
-  user_gombo_plus: "premium",
-  gombo_plus: "premium",
 
   // Radar & Nearby
   radar: "radar",
@@ -359,6 +383,12 @@ const DEFAULT_SENSITIVE_HIDDEN_MODULES = new Set([
   "deposit",
   "payout",
   "payouts",
+  "transactions",
+  "transaction",
+  "user_transactions",
+  "wallet_transactions",
+  "historique_transactions",
+  "mes_transactions",
   "escrow",
   "contracts",
   "user_contracts",
@@ -405,6 +435,10 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
   const activeMap = flagsMap && Object.keys(flagsMap).length > 0 ? flagsMap : globalCachedFlagsMap;
   const hasRealFlagsLoaded = (flagsMap && Object.keys(flagsMap).length > 0) || firestoreHasResponded || Object.keys(globalCachedFlagsMap).length > 0;
 
+  const cleanId = (featureId || "").toLowerCase().trim();
+  const canonical = CANONICAL_FEATURE_IDS[cleanId] || CANONICAL_FEATURE_IDS[featureId] || cleanId;
+  const canonicalClean = canonical.toLowerCase().trim();
+
   if (!activeMap || Object.keys(activeMap).length === 0) {
     if (!hasRealFlagsLoaded) {
       return isDefaultPublicModule(featureId) ? "ACTIVE" : "HIDDEN";
@@ -412,7 +446,30 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
     return isDefaultPublicModule(featureId) ? "ACTIVE" : "HIDDEN";
   }
 
-  // 0. Parent Check: If this feature has a parent module, check if parent is HIDDEN
+  // 0. CENTRALIZED MONETIZATION DEPENDENCY RULES:
+  // Rule 1: WALLET -> TRANSACTIONS
+  // If Wallet is HIDDEN, Transactions is automatically and effectively HIDDEN for regular users.
+  // The configured state of transactions remains untouched in activeMap for when wallet is reactivated.
+  if (canonicalClean === "transactions") {
+    const walletVal = activeMap["wallet"] ?? activeMap["user_wallet"] ?? activeMap["afripay"];
+    const walletStatus = walletVal !== undefined ? parseStatusValue(walletVal) : "HIDDEN";
+    if (walletStatus === "HIDDEN") {
+      return "HIDDEN";
+    }
+  }
+
+  // Rule 2: SUBSCRIPTIONS -> MANUAL PAYMENTS
+  // If Subscriptions is HIDDEN, Manual Payments is automatically and effectively HIDDEN for regular users.
+  // Manual payments remains independent of Wallet.
+  if (canonicalClean === "manual_payments") {
+    const subVal = activeMap["subscriptions"] ?? activeMap["premium"] ?? activeMap["subscription"] ?? activeMap["abonnement"];
+    const subStatus = subVal !== undefined ? parseStatusValue(subVal) : "ACTIVE";
+    if (subStatus === "HIDDEN") {
+      return "HIDDEN";
+    }
+  }
+
+  // 0b. Parent Check: If this feature has a parent module, check if parent is HIDDEN
   const parentId = FEATURE_PARENT_MAP[featureId] || (typeof activeMap[featureId] === "object" && activeMap[featureId]?.parentId);
   if (parentId && parentId !== featureId) {
     const parentVal = activeMap[parentId];
@@ -430,7 +487,6 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
 
   // 2. Check canonical alias and lowercase normalized matches
   if (value === undefined && featureId) {
-    const cleanId = featureId.toLowerCase().trim();
     if (activeMap[cleanId] !== undefined) {
       value = activeMap[cleanId];
     } else {
@@ -439,6 +495,10 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
         value = activeMap[mapped];
       } else if (mapped && activeMap[mapped.toLowerCase()] !== undefined) {
         value = activeMap[mapped.toLowerCase()];
+      } else if (canonicalClean === "subscriptions" && (activeMap["premium"] !== undefined || activeMap["subscription"] !== undefined)) {
+        value = activeMap["premium"] ?? activeMap["subscription"];
+      } else if (canonicalClean === "wallet" && (activeMap["user_wallet"] !== undefined || activeMap["afripay"] !== undefined)) {
+        value = activeMap["user_wallet"] ?? activeMap["afripay"];
       } else {
         // Search for case-insensitive match in activeMap
         const foundKey = Object.keys(activeMap).find(k => k.toLowerCase().trim() === cleanId || (mapped && k.toLowerCase().trim() === mapped.toLowerCase().trim()));
@@ -460,10 +520,6 @@ export function getRawModuleStatus(featureId: string, flagsMap?: FeatureFlagsMap
   }
 
   // 5. If value is still undefined in activeMap:
-  const cleanId = (featureId || "").toLowerCase().trim();
-  const canonical = CANONICAL_FEATURE_IDS[cleanId] || CANONICAL_FEATURE_IDS[featureId] || cleanId;
-  const canonicalClean = canonical.toLowerCase().trim();
-
   if (DEFAULT_COMING_SOON_MODULES.has(cleanId) || DEFAULT_COMING_SOON_MODULES.has(canonicalClean)) {
     return "COMING_SOON";
   }

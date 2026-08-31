@@ -149,9 +149,9 @@ export default function AdminDeploymentCenter({
     },
     {
       id: "finance",
-      title: "💳 FINANCE",
-      description: "Wallet Souverain AFRIPAY, séquestre de contrats, abonnements et fonds créateurs",
-      moduleIds: ["wallet", "escrow", "premium", "monetisation"],
+      title: "💳 FINANCIAL / MONETIZATION",
+      description: "Wallet Souverain AFRIPAY, Transactions, Abonnements Gombo Plus et Paiements Manuels",
+      moduleIds: ["wallet", "transactions", "subscriptions", "manual_payments", "escrow"],
       color: "from-emerald-500/10 to-teal-500/10 border-emerald-500/30 text-emerald-400"
     },
     {
@@ -247,11 +247,14 @@ export default function AdminDeploymentCenter({
     { id: "wheel_3", name: "🎡 Roue 3 — Premium", category: "Monétisation", enabled: true, status: "validated", description: "Accès à la Roue Premium Souveraine 100 GAWA", parentId: "wheel" },
     { id: "lots_management", name: "🎁 Gestion des lots (Module)", category: "Monétisation", enabled: true, status: "validated", description: "Configuration et administration des lots du système" },
 
-    // FINANCES
-    { id: "wallet", name: "💳 Wallet Souverain AFRIPAY", category: "Finance", enabled: true, status: "validated", description: "Solde rechargeable et virements sécurisés" },
-    { id: "escrow", name: "🔐 Séquestre & Contrats Dépôt", category: "Finance", enabled: true, status: "validated", description: "Système de séquestre de cachets et contrats" },
-    { id: "premium", name: "💎 AFRIGOMBO ELITE PREMIUM", category: "Finance", enabled: true, status: "validated", description: "Gestion de la visibilité et de la disponibilité du véritable abonnement Premium AFRIGOMBO ELITE." },
-    { id: "monetisation", name: "📈 Programme de Monétisation", category: "Finance", enabled: true, status: "validated", description: "Fonds créateurs et revenus partagés" },
+    // FINANCIAL / MONETIZATION (4 CONTRÔLES FONDAMENTAUX)
+    { id: "wallet", name: "💳 Wallet Souverain AFRIPAY", category: "Finance", enabled: false, visibilityStatus: "HIDDEN", status: "disabled", description: "Solde rechargeable, alimentation, retraits et transferts." },
+    { id: "transactions", name: "📜 Transactions Financières", category: "Finance", enabled: false, visibilityStatus: "HIDDEN", status: "disabled", description: "Historique et flux des transactions financières (dépend du Wallet)." },
+    { id: "subscriptions", name: "👑 Abonnements (Gombo Plus)", category: "Monétisation", enabled: true, visibilityStatus: "ACTIVE", status: "validated", description: "Gestion des offres d'abonnement Gombo Pro et Gombo Élite." },
+    { id: "manual_payments", name: "📱 Paiements Manuels", category: "Monétisation", enabled: true, visibilityStatus: "ACTIVE", status: "validated", description: "Paiement manuel par Mobile Money (Wave, Orange, MTN, Moov) pour les adhésions (dépend des Abonnements)." },
+    { id: "escrow", name: "🔐 Séquestre & Contrats Dépôt", category: "Finance", enabled: false, visibilityStatus: "HIDDEN", status: "disabled", description: "Système de séquestre de cachets et contrats", parentId: "wallet" },
+    { id: "premium", name: "💎 AFRIGOMBO ELITE PREMIUM (Legacy)", category: "Monétisation", enabled: true, visibilityStatus: "ACTIVE", status: "validated", description: "Alias legacy de l'abonnement Premium (synchronisé avec Abonnements)." },
+    { id: "monetisation", name: "📈 Programme de Monétisation", category: "Monétisation", enabled: true, visibilityStatus: "ACTIVE", status: "validated", description: "Fonds créateurs et revenus partagés" },
 
     // UNIVERS
     { id: "grandMarket", name: "🛒 Grand Marché AFRIGOMBO", category: "Économie", enabled: true, status: "validated", description: "Plateforme de transactions et petites annonces" },
@@ -469,7 +472,7 @@ export default function AdminDeploymentCenter({
 
     try {
       const sysConfigRef = doc(db, "systemConfig", "features");
-      await setDoc(sysConfigRef, {
+      const updates: Record<string, any> = {
         [flagId]: {
           status: targetVisibility,
           enabled: targetVisibility === "ACTIVE",
@@ -477,10 +480,31 @@ export default function AdminDeploymentCenter({
           updatedAt: serverTimestamp(),
           updatedBy: founderEmail || "Super Fondateur"
         }
-      }, { merge: true });
+      };
+
+      // Ensure legacy "premium" and modern "subscriptions" are synced
+      if (flagId === "subscriptions") {
+        updates["premium"] = {
+          status: targetVisibility,
+          enabled: targetVisibility === "ACTIVE",
+          isPremium: targetPremium,
+          updatedAt: serverTimestamp(),
+          updatedBy: founderEmail || "Super Fondateur"
+        };
+      } else if (flagId === "premium") {
+        updates["subscriptions"] = {
+          status: targetVisibility,
+          enabled: targetVisibility === "ACTIVE",
+          isPremium: targetPremium,
+          updatedAt: serverTimestamp(),
+          updatedBy: founderEmail || "Super Fondateur"
+        };
+      }
+
+      await setDoc(sysConfigRef, updates, { merge: true });
 
       const updatedFlags = featureFlags.map((f) => {
-        if (f.id === flagId) {
+        if (f.id === flagId || (flagId === "subscriptions" && f.id === "premium") || (flagId === "premium" && f.id === "subscriptions")) {
           return {
             ...f,
             visibilityStatus: targetVisibility,

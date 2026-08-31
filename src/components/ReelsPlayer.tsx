@@ -24,6 +24,8 @@ export interface ReelItem {
   commune?: string;
   content: string;
   mediaUrl: string;
+  videoUrl?: string;
+  url?: string;
   musicTrack?: string;
   hashtags?: string[];
   likesCount: number;
@@ -95,7 +97,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const { network } = useAppSettings();
   const { requireAuth } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [followedUsers, setFollowedUsers] = useState<string[]>([]);
   const [showCommentsFor, setShowCommentsFor] = useState<ReelItem | null>(null);
   const [showMoreFor, setShowMoreFor] = useState<ReelItem | null>(null);
@@ -120,19 +122,27 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   // Build unified list of reels from props + fallback
   const reelsList = React.useMemo(() => {
     const fromPosts: ReelItem[] = posts
-      .filter(p => p.mediaUrl && (p.mediaUrl.includes(".mp4") || p.mediaUrl.includes(".webm") || p.mediaUrl.includes(".mov") || p.mediaUrl.includes("video") || (p as any).type === "video"))
+      .filter(p => {
+        const videoUrl = p.videoUrl || p.mediaUrl || (p as any).url;
+        if (!videoUrl || typeof videoUrl !== "string") return false;
+        const typeStr = String(p.type || (p as any).mediaType || "").toLowerCase();
+        return typeStr === "video" || typeStr === "reel" || Boolean(p.videoUrl) || videoUrl.includes("/reels/") || videoUrl.includes("/video/") || true;
+      })
       .map(p => {
+        const videoUrl = p.videoUrl || p.mediaUrl || (p as any).url!;
         const likedBy = (p as any).likedBy || [];
         const isLiked = currentUser?.uid ? (likedBy.includes(currentUser.uid) || p.isLiked) : (p.isLiked || false);
         return {
           id: p.id || `post_${Math.random()}`,
-          title: p.title || "Vibration Artistique",
+          title: p.title || p.authorArtisticName || "Vibration Artistique",
           authorName: p.authorName || "Artiste Gombo",
           authorArtisticName: p.authorArtisticName || p.authorName || "Artiste Gombo",
           authorAvatar: p.authorAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
           commune: (p as any).commune || (p as any).location || "Abidjan",
-          content: p.content || "Publication vidéo sur le Fil Réel d'AFRIGOMBO ELITE.",
-          mediaUrl: p.mediaUrl!,
+          content: p.content || (p as any).caption || "Publication vidéo sur le Fil Réel d'AFRIGOMBO ELITE.",
+          mediaUrl: videoUrl,
+          videoUrl: videoUrl,
+          url: videoUrl,
           musicTrack: p.title || "Son original AFRIGOMBO ELITE",
           hashtags: (p as any).hashtags || ["#Afrigombo", "#MusiqueIvoirienne", "#TalentsDuTrone"],
           likesCount: p.likes || 0,
@@ -144,22 +154,27 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
     const fromUsers: ReelItem[] = users.flatMap(u => 
       (u.mediaGallery || [])
-        .filter((m: any) => m.type === "video" && m.url)
-        .map((m: any) => ({
-          id: m.id || `user_media_${Math.random()}`,
-          title: m.title || "Démo Artiste",
-          authorName: u.name || "Artiste Accrédité",
-          authorArtisticName: u.artisticName || u.name || "Artiste Accrédité",
-          authorAvatar: u.photoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
-          commune: u.commune || u.city || "Abidjan",
-          content: m.description || `Extrait musical et démonstration officielle de ${u.artisticName || u.name}.`,
-          mediaUrl: m.url,
-          musicTrack: m.title || `Démo Live — ${u.artisticName || u.name}`,
-          hashtags: ["#Afrigombo", "#Accredite", "#DirectDuStudio"],
-          likesCount: 88,
-          commentsCount: 14,
-          userId: u.id || u.uid
-        }))
+        .filter((m: any) => (m.type === "video" || m.type === "reel") && (m.url || m.mediaUrl || m.videoUrl))
+        .map((m: any) => {
+          const videoUrl = m.url || m.mediaUrl || m.videoUrl;
+          return {
+            id: m.id || `user_media_${Math.random()}`,
+            title: m.title || "Démo Artiste",
+            authorName: u.name || "Artiste Accrédité",
+            authorArtisticName: u.artisticName || u.name || "Artiste Accrédité",
+            authorAvatar: u.photoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+            commune: u.commune || u.city || "Abidjan",
+            content: m.description || `Extrait musical et démonstration officielle de ${u.artisticName || u.name}.`,
+            mediaUrl: videoUrl,
+            videoUrl: videoUrl,
+            url: videoUrl,
+            musicTrack: m.title || `Démo Live — ${u.artisticName || u.name}`,
+            hashtags: ["#Afrigombo", "#Accredite", "#DirectDuStudio"],
+            likesCount: 88,
+            commentsCount: 14,
+            userId: u.id || u.uid
+          };
+        })
     );
 
     const merged = [...fromPosts, ...fromUsers];
@@ -568,13 +583,26 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                 <div className="relative w-full h-full">
                   <video
                     ref={isActive ? activeVideoRef : null}
-                    src={reel.mediaUrl}
+                    src={reel.videoUrl || reel.mediaUrl || reel.url}
+                    autoPlay={isActive}
                     preload={isActive ? "auto" : "metadata"}
                     className="w-full h-full object-cover"
                     loop
                     muted={isMuted}
                     playsInline
                     onClick={() => setIsMuted(!isMuted)}
+                    onLoadStart={() => console.log("[REEL VIDEO] LoadStart:", reel.videoUrl || reel.mediaUrl)}
+                    onLoadedMetadata={() => console.log("[REEL VIDEO] LoadedMetadata:", reel.videoUrl || reel.mediaUrl)}
+                    onCanPlay={() => console.log("[REEL VIDEO] CanPlay:", reel.videoUrl || reel.mediaUrl)}
+                    onError={(e) => {
+                      const v = e.currentTarget;
+                      console.error("[REEL VIDEO ERROR]", {
+                        code: v.error?.code,
+                        message: v.error?.message,
+                        currentSrc: v.currentSrc || reel.videoUrl || reel.mediaUrl,
+                        reelId: reel.id
+                      });
+                    }}
                   />
                   {/* Dynamic bandwidth and video quality indicator badge */}
                   {isActive && (
