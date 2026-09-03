@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   ChevronLeft, Heart, MessageCircle, Share2, Bookmark, MoreVertical, 
   Plus, Music, MapPin, Volume2, VolumeX, Sparkles, Flag, X, Check,
-  Send, UserCheck, UserPlus, ChevronDown, ChevronUp
+  Send, UserCheck, UserPlus, ChevronDown, ChevronUp, AlertTriangle, Film, RefreshCw
 } from "lucide-react";
 import { Post } from "../types";
 import { db } from "../lib/firebase";
 import { 
   doc, updateDoc, arrayUnion, arrayRemove, increment, 
-  collection, addDoc, setDoc, deleteDoc, onSnapshot, query, orderBy 
+  collection, addDoc, setDoc, deleteDoc, onSnapshot, query, limit, orderBy 
 } from "firebase/firestore";
 import { gomboDB } from "../firebase";
 import { useAppSettings } from "../context/AppSettingsContext";
@@ -31,6 +31,7 @@ export interface ReelItem {
   isLiked?: boolean;
   isBookmarked?: boolean;
   userId?: string;
+  source?: "portfolio" | "post" | "social";
 }
 
 interface ReelsPlayerProps {
@@ -42,58 +43,54 @@ interface ReelsPlayerProps {
   initialReelId?: string;
 }
 
-// Curated high-performance African video clips for demonstration and instant fallback
-const FALLBACK_REELS: ReelItem[] = [
-  {
-    id: "reel-demo-1",
-    title: "Solo Saxophone Prestigieux Live",
-    authorName: "Thierry Sax",
-    authorArtisticName: "Thierry Sax d'Abidjan",
-    authorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
-    commune: "Cocody, Abidjan",
-    content: "Test de sonorité en coulisse avant le grand live du Trône à Cocody. Vibration souveraine ! 🎷✨",
-    mediaUrl: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
-    musicTrack: "Improvisation Saxophone Live — Thierry Sax",
-    hashtags: ["#Afrigombo", "#Saxophone", "#LiveAbidjan", "#TroneMusique"],
-    likesCount: 342,
-    commentsCount: 58,
-    userId: "u_thierry_sax"
-  },
-  {
-    id: "reel-demo-2",
-    title: "Fusion Zaouli & Batterie Modern Jazz",
-    authorName: "Sékou Drummer",
-    authorArtisticName: "Sékou Drummer & Trio",
-    authorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
-    commune: "Marcory, Abidjan",
-    content: "Enregistrement direct de notre session de répétition à Marcory pour le Gombo de l'ambassade. 🔥🥁",
-    mediaUrl: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4",
-    musicTrack: "Rythmes Zaouli Fusion — Sékou Drummer",
-    hashtags: ["#Afrigombo", "#Batterie", "#MarcoryVibes", "#ArtisteIvoirien"],
-    likesCount: 512,
-    commentsCount: 94,
-    userId: "u_sekou_drums"
-  },
-  {
-    id: "reel-demo-3",
-    title: "Bassline Groovy Abidjan",
-    authorName: "Paco Bass",
-    authorArtisticName: "Paco Bass Virtuose",
-    authorAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200",
-    commune: "Yopougon, Abidjan",
-    content: "Groove imparable pour le concert de ce week-end à Yopougon Niangon. Qui est chaud ? 🎸💥",
-    mediaUrl: "https://assets.mixkit.co/videos/preview/mixkit-dancing-woman-in-a-field-of-yellow-flowers-42767-large.mp4",
-    musicTrack: "Groove Yopougon Night — Paco Bass",
-    hashtags: ["#Afrigombo", "#BasseSolo", "#Yopougon", "#GomboIvoirien"],
-    likesCount: 289,
-    commentsCount: 41,
-    userId: "u_paco_bass"
+// Portfolio & Reels unified video URL resolution (accepts videoUrl, mediaUrl, url, src)
+function resolveVideoUrl(item: any): string | null {
+  if (!item) return null;
+  const candidate = item.videoUrl || item.mediaUrl || item.url || item.media_url || item.src;
+  if (typeof candidate === "string" && candidate.trim().length > 0) {
+    return candidate.trim();
   }
-];
+  return null;
+}
+
+// Validate if item is video/reel without rejecting URLs that do not contain ".mp4"
+function isVideoItem(item: any, resolvedUrl: string): boolean {
+  if (!resolvedUrl) return false;
+
+  const type = String(item.type || item.mediaType || "").toLowerCase();
+
+  // Explicit video/reel/youtube types
+  if (type === "video" || type === "reel" || type === "youtube") {
+    return true;
+  }
+  if (item.videoUrl && typeof item.videoUrl === "string") {
+    return true;
+  }
+
+  // Reject explicit non-video media
+  if (type === "audio" || type === "photo" || type === "image") {
+    return false;
+  }
+
+  const cleanUrl = resolvedUrl.toLowerCase().split("?")[0];
+  // Filter out audio file extensions
+  if (cleanUrl.endsWith(".mp3") || cleanUrl.endsWith(".wav") || cleanUrl.endsWith(".ogg") || cleanUrl.endsWith(".m4a") || cleanUrl.endsWith(".aac")) {
+    return false;
+  }
+  // Filter out image file extensions
+  if (cleanUrl.endsWith(".jpg") || cleanUrl.endsWith(".jpeg") || cleanUrl.endsWith(".png") || cleanUrl.endsWith(".webp") || cleanUrl.endsWith(".gif") || cleanUrl.endsWith(".svg")) {
+    return false;
+  }
+
+  // Any other URL (Firebase Storage, Supabase, CDN, blob, webm, mov, etc.) is accepted
+  return true;
+}
 
 export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, currentUser, initialReelId }: ReelsPlayerProps) {
   const { network } = useAppSettings();
-  const { requireAuth } = useAuth();
+  const { requireAuth, profile, currentUser: authUser } = useAuth();
+  const effectiveUser = currentUser || authUser;
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const [followedUsers, setFollowedUsers] = useState<string[]>([]);
@@ -106,66 +103,196 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   ]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
+  const [videoErrors, setVideoErrors] = useState<Record<string, boolean>>({});
+
+  // Real-time Firestore sync identical to Portfolio & Feed
+  const [firestorePosts, setFirestorePosts] = useState<any[]>([]);
+  const [firestoreUsers, setFirestoreUsers] = useState<any[]>([]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const activeVideoRef = useRef<HTMLVideoElement | null>(null);
 
+  // Synchronize Firestore collections (posts, social_posts, users) in real-time
+  useEffect(() => {
+    if (!db) return;
+    let unsubPosts = () => {};
+    let unsubSocial = () => {};
+    let unsubUsers = () => {};
+
+    try {
+      const postsRef = query(collection(db, "posts"), limit(100));
+      unsubPosts = onSnapshot(postsRef, (snapshot) => {
+        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setFirestorePosts(prev => {
+          const map = new Map<string, any>();
+          prev.forEach(p => { if (p?.id) map.set(p.id, p); });
+          list.forEach(p => { if (p?.id) map.set(p.id, { ...map.get(p.id), ...p }); });
+          return Array.from(map.values());
+        });
+      }, (err) => {
+        console.warn("[ReelsPlayer] Posts listener warning:", err);
+      });
+    } catch (e) {
+      console.warn("[ReelsPlayer] Error attaching posts listener:", e);
+    }
+
+    try {
+      const socialRef = query(collection(db, "social_posts"), limit(100));
+      unsubSocial = onSnapshot(socialRef, (snapshot) => {
+        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setFirestorePosts(prev => {
+          const map = new Map<string, any>();
+          prev.forEach(p => { if (p?.id) map.set(p.id, p); });
+          list.forEach(p => { if (p?.id) map.set(p.id, { ...map.get(p.id), ...p }); });
+          return Array.from(map.values());
+        });
+      }, (err) => {
+        console.warn("[ReelsPlayer] Social posts listener warning:", err);
+      });
+    } catch (e) {
+      console.warn("[ReelsPlayer] Error attaching social listener:", e);
+    }
+
+    try {
+      const usersRef = query(collection(db, "users"), limit(100));
+      unsubUsers = onSnapshot(usersRef, (snapshot) => {
+        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setFirestoreUsers(list);
+      }, (err) => {
+        console.warn("[ReelsPlayer] Users listener warning:", err);
+      });
+    } catch (e) {
+      console.warn("[ReelsPlayer] Error attaching users listener:", e);
+    }
+
+    return () => {
+      unsubPosts();
+      unsubSocial();
+      unsubUsers();
+    };
+  }, []);
+
   // Initialize followed users from currentUser following array
   useEffect(() => {
-    if (currentUser?.following && Array.isArray(currentUser.following)) {
-      setFollowedUsers(currentUser.following);
+    if (effectiveUser?.following && Array.isArray(effectiveUser.following)) {
+      setFollowedUsers(effectiveUser.following);
     }
-  }, [currentUser]);
+  }, [effectiveUser]);
 
-  // Build unified list of reels from props + fallback
+  // Build unified list of reels using identical sources and URL resolution as Portfolio
   const reelsList = React.useMemo(() => {
-    const fromPosts: ReelItem[] = posts
-      .filter(p => p.mediaUrl && (p.mediaUrl.includes(".mp4") || p.mediaUrl.includes(".webm") || p.mediaUrl.includes(".mov") || p.mediaUrl.includes("video") || (p as any).type === "video"))
-      .map(p => {
-        const likedBy = (p as any).likedBy || [];
-        const isLiked = currentUser?.uid ? (likedBy.includes(currentUser.uid) || p.isLiked) : (p.isLiked || false);
-        return {
-          id: p.id || `post_${Math.random()}`,
-          title: p.title || "Vibration Artistique",
-          authorName: p.authorName || "Artiste Gombo",
-          authorArtisticName: p.authorArtisticName || p.authorName || "Artiste Gombo",
-          authorAvatar: p.authorAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
-          commune: (p as any).commune || (p as any).location || "Abidjan",
-          content: p.content || "Publication vidéo sur le Fil Réel d'AFRIGOMBO ELITE.",
-          mediaUrl: p.mediaUrl!,
-          musicTrack: p.title || "Son original AFRIGOMBO ELITE",
-          hashtags: (p as any).hashtags || ["#Afrigombo", "#MusiqueIvoirienne", "#TalentsDuTrone"],
-          likesCount: p.likes || 0,
-          commentsCount: p.comments || 0,
-          isLiked: Boolean(isLiked),
-          userId: p.userId
-        };
-      });
+    const list: ReelItem[] = [];
+    const seenUrls = new Set<string>();
 
-    const fromUsers: ReelItem[] = users.flatMap(u => 
-      (u.mediaGallery || [])
-        .filter((m: any) => m.type === "video" && m.url)
-        .map((m: any) => ({
-          id: m.id || `user_media_${Math.random()}`,
-          title: m.title || "Démo Artiste",
-          authorName: u.name || "Artiste Accrédité",
-          authorArtisticName: u.artisticName || u.name || "Artiste Accrédité",
-          authorAvatar: u.photoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+    // 1. Gather all users (props.users, Firestore users, useAuth().profile, effectiveUser, local storage session)
+    const allUsersMap = new Map<string, any>();
+
+    (users || []).forEach(u => {
+      if (u && (u.id || u.uid)) allUsersMap.set(u.id || u.uid, u);
+    });
+
+    firestoreUsers.forEach(u => {
+      if (u && (u.id || u.uid)) {
+        const uid = u.id || u.uid;
+        allUsersMap.set(uid, { ...allUsersMap.get(uid), ...u });
+      }
+    });
+
+    if (profile && (profile.id || profile.uid || effectiveUser?.uid)) {
+      const uid = profile.id || profile.uid || effectiveUser?.uid;
+      allUsersMap.set(uid, { ...allUsersMap.get(uid), ...profile });
+    }
+
+    if (effectiveUser && (effectiveUser.id || effectiveUser.uid)) {
+      const uid = effectiveUser.id || effectiveUser.uid;
+      allUsersMap.set(uid, { ...allUsersMap.get(uid), ...effectiveUser });
+    }
+
+    try {
+      const savedSession = localStorage.getItem("afrigombo_user_session");
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        if (parsed && (parsed.id || parsed.uid)) {
+          const uid = parsed.id || parsed.uid;
+          allUsersMap.set(uid, { ...allUsersMap.get(uid), ...parsed });
+        }
+      }
+    } catch (_) {}
+
+    const consolidatedUsers = Array.from(allUsersMap.values());
+
+    // 2. Extract videos from consolidated users' mediaGallery (Portfolio source)
+    consolidatedUsers.forEach(u => {
+      const gallery = Array.isArray(u.mediaGallery) ? u.mediaGallery : [];
+      gallery.forEach((m: any, idx: number) => {
+        const url = resolveVideoUrl(m);
+        if (!url || seenUrls.has(url)) return;
+        if (!isVideoItem(m, url)) return;
+
+        seenUrls.add(url);
+        list.push({
+          id: m.id || `portfolio_${u.id || u.uid}_${idx}`,
+          title: m.title || m.caption || "Démo Portfolio",
+          authorName: u.name || u.displayName || "Artiste Accrédité",
+          authorArtisticName: u.artisticName || u.name || u.displayName || "Artiste Accrédité",
+          authorAvatar: u.photoURL || u.photoUrl || u.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
           commune: u.commune || u.city || "Abidjan",
-          content: m.description || `Extrait musical et démonstration officielle de ${u.artisticName || u.name}.`,
-          mediaUrl: m.url,
-          musicTrack: m.title || `Démo Live — ${u.artisticName || u.name}`,
-          hashtags: ["#Afrigombo", "#Accredite", "#DirectDuStudio"],
-          likesCount: 88,
-          commentsCount: 14,
-          userId: u.id || u.uid
-        }))
-    );
+          content: m.description || m.caption || `Démonstration officielle et prestation de ${u.artisticName || u.name || "l'artiste"}.`,
+          mediaUrl: url,
+          musicTrack: m.musicTrack || m.title || `Prestation Live — ${u.artisticName || u.name || "Artiste"}`,
+          hashtags: Array.isArray(m.hashtags) ? m.hashtags : ["#Afrigombo", "#Portfolio", "#Live"],
+          likesCount: typeof m.likes === "number" ? m.likes : (m.likesCount || 12),
+          commentsCount: typeof m.commentsCount === "number" ? m.commentsCount : (Array.isArray(m.comments) ? m.comments.length : 0),
+          isLiked: false,
+          userId: u.id || u.uid,
+          source: "portfolio"
+        });
+      });
+    });
 
-    const merged = [...fromPosts, ...fromUsers];
-    if (merged.length > 0) return merged;
-    return FALLBACK_REELS;
-  }, [posts, users, currentUser?.uid]);
+    // 3. Extract videos from all posts (props.posts + Firestore posts + social_posts)
+    const allPostsMap = new Map<string, any>();
+    (posts || []).forEach(p => {
+      if (p && p.id) allPostsMap.set(p.id, p);
+    });
+    firestorePosts.forEach(p => {
+      if (p && p.id) {
+        allPostsMap.set(p.id, { ...allPostsMap.get(p.id), ...p });
+      }
+    });
+
+    const consolidatedPosts = Array.from(allPostsMap.values());
+    consolidatedPosts.forEach((p: any, idx: number) => {
+      const url = resolveVideoUrl(p);
+      if (!url || seenUrls.has(url)) return;
+      if (!isVideoItem(p, url)) return;
+
+      seenUrls.add(url);
+      const likedBy = Array.isArray(p.likedBy) ? p.likedBy : [];
+      const isLiked = effectiveUser?.uid ? (likedBy.includes(effectiveUser.uid) || Boolean(p.isLiked)) : Boolean(p.isLiked);
+
+      list.push({
+        id: p.id || `post_${idx}`,
+        title: p.title || p.caption || "Vibration Artistique",
+        authorName: p.authorName || p.userName || p.artistName || "Artiste Gombo",
+        authorArtisticName: p.authorArtisticName || p.authorName || p.artistName || "Artiste Gombo",
+        authorAvatar: p.authorAvatar || p.userAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+        commune: p.commune || p.location || "Abidjan",
+        content: p.content || p.caption || p.text || "Publication vidéo sur le Fil Réel d'AFRIGOMBO ELITE.",
+        mediaUrl: url,
+        musicTrack: p.title || p.musicTrack || "Son original AFRIGOMBO ELITE",
+        hashtags: Array.isArray(p.hashtags) ? p.hashtags : ["#Afrigombo", "#FilReel", "#ArtisteIvoirien"],
+        likesCount: p.likes || p.likesCount || 0,
+        commentsCount: typeof p.comments === "number" ? p.comments : (Array.isArray(p.comments) ? p.comments.length : (p.commentsCount || 0)),
+        isLiked: Boolean(isLiked),
+        userId: p.userId || p.authorId,
+        source: "post"
+      });
+    });
+
+    // If real videos exist, ONLY return real project videos! Mixkit 403 fallbacks removed.
+    return list;
+  }, [posts, users, firestorePosts, firestoreUsers, profile, effectiveUser]);
 
   const [localReels, setLocalReels] = useState<ReelItem[]>(reelsList);
 
@@ -198,11 +325,21 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     }
   };
 
-  // Play active video & pause others when index changes
+  // Play active video & pause others when index changes (robust autoplay with muted fallback)
   useEffect(() => {
     if (activeVideoRef.current) {
       activeVideoRef.current.currentTime = 0;
-      activeVideoRef.current.play().catch(() => {});
+      const playPromise = activeVideoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn("[ReelsPlayer] Autoplay prevented by browser, falling back to muted autoplay:", err);
+          if (activeVideoRef.current && !activeVideoRef.current.muted) {
+            activeVideoRef.current.muted = true;
+            setIsMuted(true);
+            activeVideoRef.current.play().catch(() => {});
+          }
+        });
+      }
     }
   }, [currentIndex, isMuted]);
 
@@ -552,59 +689,163 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         style={{ touchAction: "pan-y" }}
         onScroll={handleScroll}
       >
-        {localReels.map((reel, index) => {
-          const isActive = index === currentIndex;
-          const isNext = index === currentIndex + 1;
-          const isFollowing = reel.userId ? followedUsers.includes(reel.userId) : false;
-          const isExpanded = Boolean(expandedDescriptions[reel.id]);
-
-          return (
-            <div 
-              key={reel.id} 
-              className="relative w-full h-[100dvh] snap-start bg-afri-bg flex justify-center items-center overflow-hidden shrink-0"
-            >
-              {/* VIDEO PLAYER LAYER */}
-              {isActive || isNext ? (
-                <div className="relative w-full h-full">
-                  <video
-                    ref={isActive ? activeVideoRef : null}
-                    src={reel.mediaUrl}
-                    autoPlay={isActive}
-                    preload={isActive ? "auto" : "metadata"}
-                    className="w-full h-full object-cover"
-                    loop
-                    muted={isMuted}
-                    playsInline
-                    onClick={() => setIsMuted(!isMuted)}
-                  />
-                  {/* Dynamic bandwidth and video quality indicator badge */}
-                  {isActive && (
-                    <div className="absolute top-4 left-4 z-40 bg-black/60 border border-zinc-700/40 backdrop-blur-md text-[8.5px] font-mono font-bold text-white px-2 py-1 rounded-md flex items-center gap-1.5 shadow-md select-none">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                      <span>{network?.videoQuality || "720p HD"}</span>
-                      {network?.autoCompression && (
-                        <>
-                          <span className="text-zinc-500">|</span>
-                          <span className="text-amber-400 font-extrabold text-[8px] uppercase">⚡ COMPRESSÉ AUTO</span>
-                        </>
-                      )}
-                      {network?.slowConnectionMode && (
-                        <>
-                          <span className="text-zinc-500">|</span>
-                          <span className="text-red-400 font-extrabold text-[8px] uppercase">📶 MODE LENT 2G/3G</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="w-full h-full bg-afri-bg-sec flex items-center justify-center relative">
-                  <img src={reel.authorAvatar} alt="" className="w-full h-full object-cover opacity-30 blur-lg" />
-                  <div className="absolute inset-0 bg-afri-bg/60 flex items-center justify-center">
-                    <Music className="w-12 h-12 text-[#D4AF37]/40 animate-pulse" />
-                  </div>
-                </div>
+        {localReels.length === 0 ? (
+          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-afri-bg">
+            <div className="w-20 h-20 rounded-3xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center mb-4 shadow-2xl">
+              <Film className="w-10 h-10 text-[#D4AF37]" />
+            </div>
+            <span className="text-[10px] font-mono tracking-widest text-[#D4AF37] font-black uppercase bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/20 mb-3">
+              FIL RÉEL AFRIGOMBO
+            </span>
+            <h3 className="text-lg font-black text-afri-text uppercase tracking-wide">
+              Aucun Réel vidéo disponible
+            </h3>
+            <p className="text-xs text-afri-text-sec mt-2 max-w-sm leading-relaxed">
+              Les vidéos enregistrées dans votre Portfolio ou publiées sur le terrain apparaîtront automatiquement ici.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+              {onOpenCreate && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    requireAuth(() => {
+                      onOpenCreate();
+                    });
+                  }}
+                  className="px-5 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-xl transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                  <span>Publier une vidéo</span>
+                </button>
               )}
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2.5 bg-afri-bg-sec border border-afri-border hover:bg-white/10 text-afri-text font-bold text-xs uppercase tracking-wider rounded-2xl transition cursor-pointer"
+              >
+                Retour au Terrain
+              </button>
+            </div>
+          </div>
+        ) : (
+          localReels.map((reel, index) => {
+            const isActive = index === currentIndex;
+            const isNext = index === currentIndex + 1;
+            const isFollowing = reel.userId ? followedUsers.includes(reel.userId) : false;
+            const isExpanded = Boolean(expandedDescriptions[reel.id]);
+
+            return (
+              <div 
+                key={reel.id} 
+                className="relative w-full h-[100dvh] snap-start bg-afri-bg flex justify-center items-center overflow-hidden shrink-0"
+              >
+                {/* VIDEO PLAYER LAYER */}
+                {isActive || isNext ? (
+                  <div className="relative w-full h-full">
+                    <video
+                      ref={isActive ? activeVideoRef : null}
+                      src={reel.mediaUrl}
+                      autoPlay={isActive}
+                      preload={isActive ? "auto" : "metadata"}
+                      className="w-full h-full object-cover"
+                      loop
+                      muted={isMuted}
+                      playsInline
+                      onClick={() => setIsMuted(!isMuted)}
+                      onError={(e) => {
+                        console.warn(`[ReelsPlayer] Erreur chargement vidéo (id: ${reel.id}):`, e);
+                        setVideoErrors(prev => ({ ...prev, [reel.id]: true }));
+                      }}
+                      onLoadedData={() => {
+                        setVideoErrors(prev => {
+                          if (!prev[reel.id]) return prev;
+                          const next = { ...prev };
+                          delete next[reel.id];
+                          return next;
+                        });
+                      }}
+                    />
+
+                    {/* Video Error Overlay with Retry & Next */}
+                    {videoErrors[reel.id] && (
+                      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/85 backdrop-blur-md text-white p-6 text-center">
+                        <div className="w-14 h-14 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mb-3">
+                          <AlertTriangle className="w-7 h-7 text-amber-400" />
+                        </div>
+                        <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-1">
+                          Lecture indisponible
+                        </h4>
+                        <p className="text-xs text-zinc-400 max-w-xs mb-4 leading-relaxed">
+                          Cette vidéo ne peut pas être lue actuellement ou le format nécessite un traitement.
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setVideoErrors(prev => {
+                                const next = { ...prev };
+                                delete next[reel.id];
+                                return next;
+                              });
+                              if (activeVideoRef.current) {
+                                activeVideoRef.current.load();
+                                activeVideoRef.current.play().catch(() => {});
+                              }
+                            }}
+                            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-full border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            <span>Réessayer</span>
+                          </button>
+                          {localReels.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const nextIdx = (currentIndex + 1) % localReels.length;
+                                setCurrentIndex(nextIdx);
+                                if (containerRef.current) {
+                                  containerRef.current.scrollTop = nextIdx * containerRef.current.clientHeight;
+                                }
+                              }}
+                              className="px-4 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black text-xs font-bold rounded-full transition cursor-pointer"
+                            >
+                              Suivant
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Dynamic bandwidth and video quality indicator badge */}
+                    {isActive && (
+                      <div className="absolute top-4 left-4 z-40 bg-black/60 border border-zinc-700/40 backdrop-blur-md text-[8.5px] font-mono font-bold text-white px-2 py-1 rounded-md flex items-center gap-1.5 shadow-md select-none">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>{network?.videoQuality || "720p HD"}</span>
+                        {network?.autoCompression && (
+                          <>
+                            <span className="text-zinc-500">|</span>
+                            <span className="text-amber-400 font-extrabold text-[8px] uppercase">⚡ COMPRESSÉ AUTO</span>
+                          </>
+                        )}
+                        {network?.slowConnectionMode && (
+                          <>
+                            <span className="text-zinc-500">|</span>
+                            <span className="text-red-400 font-extrabold text-[8px] uppercase">📶 MODE LENT 2G/3G</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-full h-full bg-afri-bg-sec flex items-center justify-center relative">
+                    <img src={reel.authorAvatar} alt="" className="w-full h-full object-cover opacity-30 blur-lg" />
+                    <div className="absolute inset-0 bg-afri-bg/60 flex items-center justify-center">
+                      <Music className="w-12 h-12 text-[#D4AF37]/40 animate-pulse" />
+                    </div>
+                  </div>
+                )}
 
               {/* GRADIENT OVERLAYS FOR CONTRAST */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/40 pointer-events-none" />
@@ -768,7 +1009,8 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
               </div>
             </div>
           );
-        })}
+        })
+      )}
       </div>
 
       {/* PALABRES / COMMENTS DRAWER MODAL */}

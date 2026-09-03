@@ -734,6 +734,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           status: profile?.status || "active",
           specialties: profile?.specialties || [],
           groups: profile?.groups || [],
+          mediaGallery: profile?.mediaGallery || (currentUser as any)?.mediaGallery || [],
           performance: { 
             level: profile?.level || 1, 
             score: profile?.score || 0, 
