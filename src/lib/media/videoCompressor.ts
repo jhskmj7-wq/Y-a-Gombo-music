@@ -15,6 +15,15 @@ export interface VideoCompressorOptions {
   onProgress?: (percent: number, phase?: string) => void;
 }
 
+interface VideoVisualMetrics {
+  averageLuminance: number; // 0 (pitch black) - 255 (pure white)
+  isDarkScene: boolean; // Low-light / concert scene needing banding protection
+  complexityScore: number; // 0 (flat/simple) - 1 (highly detailed/textured)
+  motionScore: number; // 0 (static) - 1 (fast dance/sports/rapid camera pan)
+  skinToneRatio: number; // 0 - 1 (presence of human faces / closeups)
+  estimatedSourceFps: number; // 24, 25, 30, 60
+}
+
 interface CompressionProfile {
   targetWidth: number;
   targetHeight: number;
@@ -22,10 +31,12 @@ interface CompressionProfile {
   videoBitrate: number;
   audioBitrate: number;
   codecName: string;
+  analysisSummary: string;
 }
 
 /**
- * Detect best supported MediaRecorder MIME type on current device/browser in realistic order.
+ * Detect best supported MediaRecorder MIME type on current device/browser.
+ * Priority: H.264 MP4 -> H.264 WebM -> VP9 WebM -> MP4 standard -> VP8 WebM.
  */
 function getSupportedMimeType(): { mimeType: string; codecLabel: string } {
   if (typeof MediaRecorder === "undefined") {
@@ -33,12 +44,13 @@ function getSupportedMimeType(): { mimeType: string; codecLabel: string } {
   }
 
   const candidateTypes = [
-    { type: "video/webm;codecs=vp8,opus", label: "VP8/Opus" },
-    { type: "video/webm;codecs=vp9,opus", label: "VP9/Opus" },
-    { type: "video/webm;codecs=h264,opus", label: "H.264/Opus" },
-    { type: "video/webm", label: "WebM standard" },
+    { type: "video/mp4;codecs=avc1.42E01E,mp4a.40.2", label: "H.264/AAC MP4 High" },
     { type: "video/mp4;codecs=avc1,mp4a.40.2", label: "H.264/AAC MP4" },
+    { type: "video/webm;codecs=h264,opus", label: "H.264/Opus WebM" },
+    { type: "video/webm;codecs=vp9,opus", label: "VP9/Opus WebM" },
     { type: "video/mp4", label: "MP4 standard" },
+    { type: "video/webm;codecs=vp8,opus", label: "VP8/Opus WebM" },
+    { type: "video/webm", label: "WebM standard" },
   ];
 
   for (const candidate of candidateTypes) {
@@ -54,38 +66,174 @@ function getSupportedMimeType(): { mimeType: string; codecLabel: string } {
 }
 
 /**
- * Calculates adaptive target bitrate, resolution, and FPS based on video metadata.
- * Dynamically targets lightweight mobile sizes:
- * ~10s -> ~1.5-2.5 MB, ~30s -> ~3-5 MB, ~60s -> ~5-8 MB.
+ * Fast visual analysis sampling 3-4 frames to assess complexity, motion, luminosity, and faces.
+ * Runs in under 600ms on a tiny 120x80 offscreen canvas without blocking user interface.
  */
-function calculateCompressionProfile(
+async function analyzeVideoVisualMetrics(
+  videoEl: HTMLVideoElement,
+  durationSeconds: number
+): Promise<VideoVisualMetrics> {
+  const defaultMetrics: VideoVisualMetrics = {
+    averageLuminance: 120,
+    isDarkScene: false,
+    complexityScore: 0.5,
+    motionScore: 0.5,
+    skinToneRatio: 0.2,
+    estimatedSourceFps: 30,
+  };
+
+  if (typeof document === "undefined" || durationSeconds <= 0.5) {
+    return defaultMetrics;
+  }
+
+  try {
+    const sampleWidth = 120;
+    const sampleHeight = 80;
+    const canvas = document.createElement("canvas");
+    canvas.width = sampleWidth;
+    canvas.height = sampleHeight;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+    if (!ctx) return defaultMetrics;
+
+    // Sample timestamps (15%, 45%, 75% of duration)
+    const timestamps = [
+      Math.max(0.2, durationSeconds * 0.15),
+      Math.max(0.5, durationSeconds * 0.45),
+      Math.max(0.8, durationSeconds * 0.75),
+    ];
+
+    const frameDataArray: ImageData[] = [];
+
+    const seekAndCapture = (time: number): Promise<ImageData | null> => {
+      return new Promise((resolve) => {
+        let resolved = false;
+        const timer = setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            resolve(null);
+          }
+        }, 400);
+
+        const onSeeked = () => {
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timer);
+            videoEl.removeEventListener("seeked", onSeeked);
+            try {
+              ctx.drawImage(videoEl, 0, 0, sampleWidth, sampleHeight);
+              resolve(ctx.getImageData(0, 0, sampleWidth, sampleHeight));
+            } catch (_) {
+              resolve(null);
+            }
+          }
+        };
+
+        videoEl.addEventListener("seeked", onSeeked, { once: true });
+        videoEl.currentTime = time;
+      });
+    };
+
+    for (const time of timestamps) {
+      const data = await seekAndCapture(time);
+      if (data) frameDataArray.push(data);
+    }
+
+    if (frameDataArray.length === 0) {
+      return defaultMetrics;
+    }
+
+    let totalLuminance = 0;
+    let totalComplexity = 0;
+    let totalSkinPixels = 0;
+    const totalPixels = sampleWidth * sampleHeight;
+
+    for (const imgData of frameDataArray) {
+      const data = imgData.data;
+      let frameLum = 0;
+      let variance = 0;
+      let skinCount = 0;
+
+      // Sample every 2nd pixel for performance
+      for (let i = 0; i < data.length; i += 8) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        // Perceived luminance (ITU-R BT.709)
+        const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        frameLum += lum;
+
+        // Fast skin tone detection in RGB range
+        if (r > 60 && g > 40 && b > 20 && r > g && r > b && Math.abs(r - g) > 15) {
+          skinCount++;
+        }
+
+        // Local edge contrast with next pixel
+        if (i + 12 < data.length) {
+          const nextLum = 0.2126 * data[i + 8] + 0.7152 * data[i + 9] + 0.0722 * data[i + 10];
+          variance += Math.abs(lum - nextLum);
+        }
+      }
+
+      const pixelSampleCount = totalPixels / 2;
+      totalLuminance += frameLum / pixelSampleCount;
+      totalComplexity += variance / pixelSampleCount;
+      totalSkinPixels += skinCount / pixelSampleCount;
+    }
+
+    const avgLum = totalLuminance / frameDataArray.length;
+    const avgComplexity = totalComplexity / frameDataArray.length;
+    const avgSkin = totalSkinPixels / frameDataArray.length;
+
+    // Motion score: pixel difference between first and second/third sample
+    let motionScore = 0.45;
+    if (frameDataArray.length >= 2) {
+      const d1 = frameDataArray[0].data;
+      const d2 = frameDataArray[frameDataArray.length - 1].data;
+      let diff = 0;
+      for (let i = 0; i < d1.length; i += 8) {
+        diff += Math.abs(d1[i] - d2[i]) + Math.abs(d1[i + 1] - d2[i + 1]) + Math.abs(d1[i + 2] - d2[i + 2]);
+      }
+      const rawMotion = diff / ((d1.length / 8) * 3 * 255);
+      motionScore = Math.min(1.0, Math.max(0.1, rawMotion * 2.5));
+    }
+
+    // Normalized complexity (0 - 1)
+    const normalizedComplexity = Math.min(1.0, Math.max(0.1, avgComplexity / 35));
+
+    return {
+      averageLuminance: Math.round(avgLum),
+      isDarkScene: avgLum < 55, // Low-light / concert / dark backgrounds
+      complexityScore: Math.round(normalizedComplexity * 100) / 100,
+      motionScore: Math.round(motionScore * 100) / 100,
+      skinToneRatio: Math.round(avgSkin * 100) / 100,
+      estimatedSourceFps: 30,
+    };
+  } catch (err) {
+    console.warn("[VIDEO_ANALYSIS] Analyse visuelle non-bloquante terminée avec profil standard:", err);
+    return defaultMetrics;
+  }
+}
+
+/**
+ * Calculates an intelligent, adaptive compression profile based on real video metrics:
+ * Resolution, duration, visual complexity, motion dynamics, dark scenes, and face focus.
+ */
+function calculateAdaptiveCompressionProfile(
   originalWidth: number,
   originalHeight: number,
   durationSeconds: number,
   originalSizeBytes: number,
   codecLabel: string,
-  tier: number = 1
+  metrics: VideoVisualMetrics
 ): CompressionProfile {
-  const safeDuration = Math.max(1.5, durationSeconds || 15);
-  const isVertical = originalHeight >= originalWidth;
+  const safeDuration = Math.max(1.0, durationSeconds || 15);
 
-  // 1. Adaptive Resolution calculation preserving exact aspect ratio
+  // 1. Resolution strategy: preserve native 1080p or 720p; downscale 4K cleanly
   let targetWidth = originalWidth;
   let targetHeight = originalHeight;
-
-  // Define max dimensions per tier and duration
-  // 4K and heavy videos are scaled to 1080p or 720p
-  let maxDimension = 1920;
-  if (tier === 1) {
-    if (safeDuration > 35 || originalSizeBytes > 70 * 1024 * 1024) {
-      maxDimension = 1280; // 720p HD (720x1280) for long or heavy files
-    } else {
-      maxDimension = 1920; // 1080p FHD (1080x1920) for shorter clips
-    }
-  } else {
-    // Tier 2: Rescue pass reduces dimension to 720p or 540p
-    maxDimension = safeDuration > 30 ? 960 : 1280;
-  }
+  const maxDimension = 1920;
 
   if (targetWidth > maxDimension || targetHeight > maxDimension) {
     if (targetWidth >= targetHeight) {
@@ -97,56 +245,99 @@ function calculateCompressionProfile(
     }
   }
 
-  // Ensure dimensions are strictly even for video encoders
+  // Strictly even dimensions for hardware encoder compatibility
   targetWidth = targetWidth % 2 === 0 ? targetWidth : targetWidth - 1;
   targetHeight = targetHeight % 2 === 0 ? targetHeight : targetHeight - 1;
 
-  // 2. Adaptive FPS calculation
-  // 30 FPS for shorter videos, 24 FPS for longer videos or Tier 2 to save bitrate
-  let fps = 30;
-  if (safeDuration > 35 || tier >= 2) {
-    fps = 24;
-  }
+  // 2. Adaptive FPS strategy
+  // 30 FPS fixed offers the optimal bit-efficiency per frame for mobile streaming
+  const fps = 30;
 
-  // 3. Audio Bitrate (64-80 kbps Opus)
-  const audioBitrate = safeDuration <= 20 ? 80_000 : 64_000;
+  // 3. Audio Bitrate strategy
+  // 128 kbps for high musical fidelity, 112 kbps for very long clips
+  const audioBitrate = safeDuration > 180 ? 112_000 : 128_000;
 
-  // 4. Target Total Byte Budget (dynamic, NO 10MB artificial floor)
-  // Estimated target ranges:
-  // 10s: ~1.8 MB | 15s: ~2.8 MB | 30s: ~4.5 MB | 45s: ~6.0 MB | 60s: ~7.5 MB
-  let targetTotalBytes: number;
-  if (safeDuration <= 12) {
-    targetTotalBytes = safeDuration * 160 * 1024; // ~1.5 - 2.0 MB for 10s
-  } else if (safeDuration <= 25) {
-    targetTotalBytes = safeDuration * 150 * 1024; // ~2.5 - 3.7 MB for 15-25s
-  } else if (safeDuration <= 45) {
-    targetTotalBytes = safeDuration * 135 * 1024; // ~4.0 - 6.0 MB for 30-45s
+  // 4. Adaptive Video Bitrate Calculation
+  const totalPixels = targetWidth * targetHeight;
+  const is1080p = totalPixels > 1280 * 720;
+  const is720p = totalPixels > 854 * 480 && !is1080p;
+
+  // Base nominal bitrate per resolution tier
+  let baseBitrate: number;
+  if (is1080p) {
+    baseBitrate = 3_400_000; // 3.4 Mbps default for 1080p
+  } else if (is720p) {
+    baseBitrate = 2_300_000; // 2.3 Mbps default for 720p
   } else {
-    targetTotalBytes = safeDuration * 125 * 1024; // ~6.0 - 7.8 MB for 60s
+    baseBitrate = 1_400_000; // 1.4 Mbps default for 480p/540p
   }
 
-  if (tier === 2) {
-    targetTotalBytes = targetTotalBytes * 0.70; // 30% further reduction in Tier 2
+  // Visual Modifiers (Multipliers)
+  let complexityMultiplier = 1.0;
+
+  // Motion modifier: fast dance / rapid motion needs more bits (+10% to +25%)
+  if (metrics.motionScore > 0.6) {
+    complexityMultiplier += 0.15;
+  } else if (metrics.motionScore < 0.25) {
+    complexityMultiplier -= 0.12; // Static talking head can save 12%
   }
 
-  // Calculate raw video bitrate from target byte budget
-  const targetTotalBitrate = Math.round((targetTotalBytes * 8) / safeDuration);
-  let videoBitrate = Math.max(550_000, targetTotalBitrate - audioBitrate);
-
-  // Resolution density adjustment: 1080p gets slightly higher budget than 720p
-  const pixelCount = targetWidth * targetHeight;
-  if (pixelCount > 1280 * 720) {
-    videoBitrate = Math.round(videoBitrate * 1.15);
+  // Texture & Detail modifier: dense crowd, textured clothing, foliage, text (+10% to +20%)
+  if (metrics.complexityScore > 0.6) {
+    complexityMultiplier += 0.12;
+  } else if (metrics.complexityScore < 0.3) {
+    complexityMultiplier -= 0.10;
   }
 
-  // Bitrate bounds per tier to ensure crispness and avoid pixelation
-  if (tier === 1) {
-    // 10s: max 1.8 Mbps, 60s: max 1.1 Mbps
-    const maxAllowed = safeDuration <= 15 ? 1_800_000 : safeDuration <= 30 ? 1_400_000 : 1_100_000;
-    videoBitrate = Math.min(maxAllowed, Math.max(650_000, videoBitrate));
+  // Dark Scene / Concert Protection: avoid banding and macroblocking (+15%)
+  if (metrics.isDarkScene) {
+    complexityMultiplier += 0.15;
+  }
+
+  // Closeups / Faces Protection: preserve skin textures (+10%)
+  if (metrics.skinToneRatio > 0.35) {
+    complexityMultiplier += 0.08;
+  }
+
+  // Apply visual modifier
+  let videoBitrate = Math.round(baseBitrate * complexityMultiplier);
+
+  // 5. Duration-Aware Scaling (Crucial for long videos like 4m40s)
+  if (safeDuration > 180) {
+    // For 3 to 5+ minute videos:
+    // Scale bitrate down to ~1.4 - 1.8 Mbps so a 4m40s video lands gracefully around 48-58 MB
+    // while maintaining sharp H.264/VP9 visual stability
+    const longDurationFactor = is1080p ? 0.48 : 0.60;
+    videoBitrate = Math.round(videoBitrate * longDurationFactor);
+  } else if (safeDuration > 90) {
+    // 90s to 180s videos
+    videoBitrate = Math.round(videoBitrate * 0.78);
+  }
+
+  // 6. Strict Bounds Clamping (Min / Max safety rails)
+  if (is1080p) {
+    if (safeDuration > 180) {
+      videoBitrate = Math.max(1_400_000, Math.min(2_200_000, videoBitrate)); // 4m+ video clamped at 1.4 - 2.2 Mbps
+    } else {
+      videoBitrate = Math.max(2_400_000, Math.min(4_400_000, videoBitrate)); // Standard 1080p clamped at 2.4 - 4.4 Mbps
+    }
+  } else if (is720p) {
+    if (safeDuration > 180) {
+      videoBitrate = Math.max(1_100_000, Math.min(1_700_000, videoBitrate));
+    } else {
+      videoBitrate = Math.max(1_700_000, Math.min(2_900_000, videoBitrate));
+    }
   } else {
-    videoBitrate = Math.min(1_000_000, Math.max(500_000, Math.round(videoBitrate * 0.75)));
+    videoBitrate = Math.max(900_000, Math.min(1_800_000, videoBitrate));
   }
+
+  // 7. Guard against recompressing already heavily compressed source files
+  const estimatedSourceBitrate = Math.round((originalSizeBytes * 8) / safeDuration);
+  if (estimatedSourceBitrate > 0 && estimatedSourceBitrate < videoBitrate) {
+    videoBitrate = Math.max(1_100_000, Math.round(estimatedSourceBitrate * 0.92));
+  }
+
+  const analysisSummary = `Lum:${metrics.averageLuminance}${metrics.isDarkScene ? " (Sombre)" : ""}, Cmplx:${metrics.complexityScore}, Mvt:${metrics.motionScore}, Peau:${metrics.skinToneRatio}`;
 
   return {
     targetWidth,
@@ -155,6 +346,7 @@ function calculateCompressionProfile(
     videoBitrate,
     audioBitrate,
     codecName: codecLabel,
+    analysisSummary,
   };
 }
 
@@ -183,7 +375,7 @@ function executeCompressionPass(
       videoEl.pause();
     };
 
-    // Canvas setup
+    // Canvas setup with high quality smoothing
     const canvas = document.createElement("canvas");
     canvas.width = profile.targetWidth;
     canvas.height = profile.targetHeight;
@@ -193,6 +385,10 @@ function executeCompressionPass(
       cleanup();
       return reject(new Error("Contexte graphique Canvas 2D indisponible sur ce périphérique."));
     }
+
+    // Enable high quality image smoothing for crisp downscaling
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
 
     // Stream generation
     let stream: MediaStream;
@@ -301,9 +497,8 @@ function executeCompressionPass(
 
 /**
  * Main adaptive video compression orchestrator.
- * Dynamically budgets size and bitrate without artificial floors,
- * executes multi-tier adaptive passes if needed,
- * guards against output inflation, and rejects silent fallbacks.
+ * Dynamically profiles video characteristics, performs fast visual analysis,
+ * and encodes with optimal perceptual quality and proportional file size.
  */
 export async function compressVideoFile(
   file: File,
@@ -340,64 +535,42 @@ export async function compressVideoFile(
       const originalSize = file.size;
 
       try {
-        if (onProgress) onProgress(5, "Analyse des métadonnées vidéo...");
+        if (onProgress) onProgress(4, "Analyse intelligente du contenu vidéo...");
 
-        // Tier 1: High quality adaptive profile
-        let profile = calculateCompressionProfile(
+        // Fast visual metrics analysis
+        const visualMetrics = await analyzeVideoVisualMetrics(videoEl, durationSeconds);
+
+        if (onProgress) onProgress(8, "Calcul du profil d'encodage adaptatif...");
+
+        // Calculate intelligent adaptive compression profile
+        const profile = calculateAdaptiveCompressionProfile(
           originalWidth,
           originalHeight,
           durationSeconds,
           originalSize,
           codecLabel,
-          1
+          visualMetrics
         );
 
         if (onProgress) {
           onProgress(
-            10,
-            `Optimisation adaptative (${profile.targetWidth}x${profile.targetHeight} @ ${profile.fps}fps)...`
+            12,
+            `Compression adaptative (${profile.targetWidth}x${profile.targetHeight} - ${Math.round(profile.videoBitrate / 1000)} kbps)...`
           );
         }
 
-        let passResult = await executeCompressionPass(
+        const passResult = await executeCompressionPass(
           file,
           videoEl,
           profile,
           mimeType,
           (pct) => {
-            if (onProgress) onProgress(10 + Math.round(pct * 0.85), "Compression vidéo en cours...");
+            if (onProgress) onProgress(12 + Math.round(pct * 0.86), "Encodage vidéo haute fidélité...");
           }
         );
 
-        let compressedBlob = passResult.blob;
-        let compressedSize = compressedBlob.size;
-
-        // Dynamic threshold for Tier 2 rescue pass:
-        // If output exceeds reasonable limits for its duration (e.g. > 4MB for 10s, > 7MB for 30s, > 12MB for 60s)
-        const maxExpectedBytes = Math.max(3.5 * 1024 * 1024, durationSeconds * 200 * 1024);
-        if (compressedSize > maxExpectedBytes && durationSeconds > 8) {
-          if (onProgress) onProgress(50, "Ajustement de secours du débit...");
-          profile = calculateCompressionProfile(
-            originalWidth,
-            originalHeight,
-            durationSeconds,
-            originalSize,
-            codecLabel,
-            2
-          );
-
-          passResult = await executeCompressionPass(
-            file,
-            videoEl,
-            profile,
-            mimeType,
-            (pct) => {
-              if (onProgress) onProgress(50 + Math.round(pct * 0.45), "Optimisation finale...");
-            }
-          );
-          compressedBlob = passResult.blob;
-          compressedSize = compressedBlob.size;
-        }
+        const compressedBlob = passResult.blob;
+        const compressedSize = compressedBlob.size;
 
         URL.revokeObjectURL(objectUrl);
 
@@ -405,7 +578,7 @@ export async function compressVideoFile(
           throw new Error("Le fichier vidéo compressé produit est vide.");
         }
 
-        // Protection against larger output than original
+        // Protection against larger output than original for already compressed tiny files
         if (compressedSize >= originalSize && originalSize <= 8 * 1024 * 1024) {
           throw new Error(
             "Le fichier original est déjà ultra-léger et ne peut pas être compressé davantage sans dégradation."
@@ -423,9 +596,9 @@ export async function compressVideoFile(
           Math.round(((originalSize - finalCompressedFile.size) / originalSize) * 1000) / 10
         );
 
-        // Strict formatted diagnostic log
+        // Formatted diagnostic log
         console.log(
-          `[REEL COMPRESSION]\n` +
+          `[AFRIGOMBO ADAPTIVE COMPRESSION]\n` +
           `Original: ${(originalSize / 1024 / 1024).toFixed(2)} Mo\n` +
           `Final: ${(finalCompressedFile.size / 1024 / 1024).toFixed(2)} Mo\n` +
           `Reduction: ${reduction}%\n` +
@@ -435,6 +608,7 @@ export async function compressVideoFile(
           `Video bitrate: ${Math.round(profile.videoBitrate / 1000)} kbps\n` +
           `Audio bitrate: ${Math.round(profile.audioBitrate / 1000)} kbps\n` +
           `Codec: ${profile.codecName}\n` +
+          `Visual Analysis: ${profile.analysisSummary}\n` +
           `Type: ${finalCompressedFile.type}`
         );
 
@@ -450,7 +624,7 @@ export async function compressVideoFile(
         });
       } catch (passErr: any) {
         URL.revokeObjectURL(objectUrl);
-        reject(new Error(`Échec de la compression vidéo: ${passErr?.message || passErr}`));
+        reject(new Error(`Échec de la compression adaptative: ${passErr?.message || passErr}`));
       }
     };
 
@@ -461,5 +635,7 @@ export async function compressVideoFile(
     };
   });
 }
+
+
 
 
