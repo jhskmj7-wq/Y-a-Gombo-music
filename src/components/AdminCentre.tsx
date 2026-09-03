@@ -1560,7 +1560,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   // --- FIRESTORE ACTIVE SYNC ROUTINE ---
   useEffect(() => {
-    if (!currentUser || !db || perspective !== "admin") return;
+    if (!currentUser || !db) return;
     // Attempt Firestore subscription & binding
     try {
       gomboDB.getSystemCommissionRate().then((rate) => {
@@ -5594,39 +5594,95 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 const myUid = profile?.uid || currentUser?.uid || currentArtist?.id;
                 if (!currentArtist && !myUid) return <p className="text-afri-text-sec">Aucun artiste disponible.</p>;
 
-                const myGombos = gombos.filter(g => 
-                  (myUid && (g.organizerId === myUid || g.clientId === myUid)) ||
-                  (currentArtist && (g.organizerId === currentArtist.id || g.clientId === currentArtist.id)) ||
-                  (myUid && g.applicantIds?.includes(myUid)) ||
-                  (currentArtist && g.applicantIds?.includes(currentArtist.id)) ||
-                  (myUid && g.selectedTalentId === myUid) ||
-                  (currentArtist && g.selectedTalentId === currentArtist.id)
-                );
+                // Identification robuste des IDs associés à l'utilisateur connecté
+                const myUserIds = new Set<string>();
+                if (currentUser?.uid) myUserIds.add(currentUser.uid);
+                if (currentUser?.id) myUserIds.add(currentUser.id);
+                if (profile?.uid) myUserIds.add(profile.uid);
+                if (profile?.id) myUserIds.add(profile.id);
+                if (currentArtist?.id) myUserIds.add(currentArtist.id);
+                if (currentArtist?.uid) myUserIds.add(currentArtist.uid);
 
-                const myUserPosts = posts.filter(p =>
-                  Boolean((myUid && (p.userId === myUid || (p as any).authorId === myUid)) ||
-                  (currentArtist && (p.userId === currentArtist.id || (p as any).authorId === currentArtist.id)))
-                );
+                const isOwnerOrParticipant = (g: any) => {
+                  const checkIds = [
+                    g.userId,
+                    g.createdBy,
+                    g.authorId,
+                    g.clientId,
+                    g.organizerId,
+                    g.uid,
+                    (g as any).creatorId
+                  ].filter(Boolean);
+
+                  const isCreator = checkIds.some(id => myUserIds.has(id));
+                  const isSelected = g.selectedTalentId && myUserIds.has(g.selectedTalentId);
+                  const isApplicant = Array.isArray(g.applicantIds) && g.applicantIds.some((id: string) => myUserIds.has(id));
+                  return isCreator || isSelected || isApplicant;
+                };
+
+                const myGombos = gombos.filter(isOwnerOrParticipant);
+
+                // Récupération des posts réels de l'utilisateur (posts Firestore + Portfolio mediaGallery)
+                const postsFromCollection = posts.filter(p => {
+                  const author = p.userId || (p as any).authorId || (p as any).createdBy || (p as any).uid;
+                  return author ? myUserIds.has(author) : false;
+                });
+
+                // Extraction des vidéos depuis le Portfolio / mediaGallery du profil connecté
+                const myPortfolioItems: any[] = [];
+                const targetUserProfile = users.find(u => myUserIds.has(u.id || u.uid)) || profile || currentUser;
+                if (targetUserProfile && Array.isArray(targetUserProfile.mediaGallery)) {
+                  targetUserProfile.mediaGallery.forEach((media: any, idx: number) => {
+                    const videoSrc = media.videoUrl || media.mediaUrl || media.url || media.src;
+                    if (videoSrc) {
+                      myPortfolioItems.push({
+                        id: media.id || `portfolio_reel_${idx}`,
+                        mediaUrl: videoSrc,
+                        type: media.type || "video",
+                        content: media.title || media.caption || media.description || "Vidéo Portfolio",
+                        timestamp: media.createdAt || targetUserProfile.createdAt || new Date().toISOString(),
+                        likes: typeof media.likes === "number" ? media.likes : (media.likesCount || 0),
+                        comments: Array.isArray(media.comments) ? media.comments : (media.commentsCount || 0),
+                        source: "portfolio"
+                      });
+                    }
+                  });
+                }
+
+                // Fusion sans doublons d'URL
+                const seenMediaUrls = new Set<string>();
+                const myUserPosts: any[] = [];
+                [...postsFromCollection, ...myPortfolioItems].forEach(item => {
+                  const url = item.mediaUrl || item.videoUrl || (item as any).imageUrl;
+                  if (url && !seenMediaUrls.has(url)) {
+                    seenMediaUrls.add(url);
+                    myUserPosts.push(item);
+                  } else if (!url && item.id) {
+                    myUserPosts.push(item);
+                  }
+                });
 
                 const filteredGombos = myGombos.filter(g => {
                   if (pubFilter === "all") return true;
+                  const st = (g.status || g.statut || "").toLowerCase();
                   if (pubFilter === "en_cours") {
-                    return ["publie", "candidatures_ouvertes", "artiste_selectionne", "en_cours", "pending", "pending_deposit"].includes(g.status || "");
+                    return ["active", "publie", "candidatures_ouvertes", "artiste_selectionne", "en_cours", "pending", "pending_deposit"].includes(st);
                   }
                   if (pubFilter === "valide") {
-                    return ["contrat_accepte", "contrat_confirme", "paiement_recu"].includes(g.status || "");
+                    return ["contrat_accepte", "contrat_confirme", "paiement_recu"].includes(st);
                   }
                   if (pubFilter === "termine") {
-                    return ["mission_terminee", "termine", "paiement_effectue"].includes(g.status || "");
+                    return ["mission_terminee", "termine", "paiement_effectue"].includes(st);
                   }
                   if (pubFilter === "annule") {
-                    return ["contrat_refuse", "mission_annulee"].includes(g.status || "");
+                    return ["contrat_refuse", "mission_annulee"].includes(st);
                   }
                   return true;
                 });
 
                 const getStatusLabel = (status: string | undefined) => {
                   switch(status) {
+                    case "active": return "🟢 En cours / Actif";
                     case "pending_deposit": return "🟡 En attente de dépôt";
                     case "publie": return "🟡 Publié (En attente)";
                     case "candidatures_ouvertes": return "🔵 Candidatures ouvertes";
@@ -5725,8 +5781,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           const isExpanded = expandedGomboId === gombo.id;
                           const gomboAdCampaign = userCampaigns.find(c => c.targetId === gombo.id);
                           const hasAdCampaign = !!gomboAdCampaign;
-                          const isMyGombo = Boolean((myUid && (gombo.organizerId === myUid || gombo.clientId === myUid)) || (currentArtist && (gombo.organizerId === currentArtist.id || gombo.clientId === currentArtist.id)));
-                          const isMyTalent = Boolean((myUid && gombo.selectedTalentId === myUid) || (currentArtist && gombo.selectedTalentId === currentArtist.id));
+                          const isMyGombo = Boolean(
+                            (gombo.organizerId && myUserIds.has(gombo.organizerId)) ||
+                            (gombo.clientId && myUserIds.has(gombo.clientId)) ||
+                            (gombo.userId && myUserIds.has(gombo.userId)) ||
+                            (gombo.createdBy && myUserIds.has(gombo.createdBy)) ||
+                            (gombo.authorId && myUserIds.has(gombo.authorId)) ||
+                            (gombo.uid && myUserIds.has(gombo.uid))
+                          );
+                          const isMyTalent = Boolean(gombo.selectedTalentId && myUserIds.has(gombo.selectedTalentId));
 
                           return (
                             <div 

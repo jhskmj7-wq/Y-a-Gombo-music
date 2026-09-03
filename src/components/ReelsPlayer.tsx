@@ -28,6 +28,7 @@ export interface ReelItem {
   hashtags?: string[];
   likesCount: number;
   commentsCount: number;
+  comments?: any[];
   isLiked?: boolean;
   isBookmarked?: boolean;
   userId?: string;
@@ -114,13 +115,12 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const [showCommentsFor, setShowCommentsFor] = useState<ReelItem | null>(null);
   const [showMoreFor, setShowMoreFor] = useState<ReelItem | null>(null);
   const [commentInput, setCommentInput] = useState("");
-  const [commentsList, setCommentsList] = useState<{ id: string; author: string; avatar: string; text: string; time: string }[]>([
-    { id: "c1", author: "Kassi Kouadio", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", text: "Respect l'artiste ! Quel groove magnifique 🔥", time: "2 min" },
-    { id: "c2", author: "Awa Voix d'Or", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100", text: "On a besoin de ce niveau de sonorité dans les gombos de Cocody !", time: "10 min" }
-  ]);
+  const [commentsList, setCommentsList] = useState<{ id: string; author: string; avatar: string; text: string; time: string }[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
   const [videoErrors, setVideoErrors] = useState<Record<string, boolean>>({});
+  const [doubleTapHeart, setDoubleTapHeart] = useState<{ reelId: string; x: number; y: number } | null>(null);
+  const lastTapRef = useRef<{ time: number; reelId: string }>({ time: 0, reelId: "" });
 
   // Real-time Firestore sync identical to Portfolio & Feed
   const [firestorePosts, setFirestorePosts] = useState<any[]>([]);
@@ -260,6 +260,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
           hashtags: Array.isArray(m.hashtags) ? m.hashtags : ["#Afrigombo", "#Portfolio", "#Live"],
           likesCount: typeof m.likes === "number" ? m.likes : (m.likesCount || 12),
           commentsCount: typeof m.commentsCount === "number" ? m.commentsCount : (Array.isArray(m.comments) ? m.comments.length : 0),
+          comments: Array.isArray(m.comments) ? m.comments : [],
           isLiked: false,
           userId: u.id || u.uid,
           source: "portfolio"
@@ -301,6 +302,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         hashtags: Array.isArray(p.hashtags) ? p.hashtags : ["#Afrigombo", "#FilReel", "#ArtisteIvoirien"],
         likesCount: p.likes || p.likesCount || 0,
         commentsCount: typeof p.comments === "number" ? p.comments : (Array.isArray(p.comments) ? p.comments.length : (p.commentsCount || 0)),
+        comments: Array.isArray(p.comments) ? p.comments : [],
         isLiked: Boolean(isLiked),
         userId: p.userId || p.authorId,
         source: "post"
@@ -373,8 +375,23 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
   // Listen to Firestore comments in real time when drawer opens
   useEffect(() => {
-    if (!showCommentsFor || !db) return;
+    if (!showCommentsFor) {
+      setCommentsList([]);
+      return;
+    }
     const reelId = showCommentsFor.id;
+
+    // Load initial comments from the post object itself if present
+    const existingPostComments = Array.isArray(showCommentsFor.comments) ? showCommentsFor.comments.map((c: any, idx: number) => ({
+      id: c.id || `c_init_${idx}`,
+      author: c.author || c.authorName || c.userName || "Mélomane",
+      avatar: c.avatar || c.userAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
+      text: c.text || c.content || "",
+      time: c.createdAt ? new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Récemment"
+    })) : [];
+    setCommentsList(existingPostComments);
+
+    if (!db) return;
 
     // Listen to subcollection /posts/{reelId}/comments
     try {
@@ -392,6 +409,8 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
             };
           });
           setCommentsList(list);
+        } else if (existingPostComments.length === 0) {
+          setCommentsList([]);
         }
       }, (err) => {
         console.warn("Could not listen to real-time comments subcollection:", err);
@@ -417,11 +436,20 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   };
 
   // Like / Honor action with Firestore Persistence
-  const handleLike = (reelId: string) => {
+  const handleLike = (reelId: string, forceLike?: boolean) => {
     requireAuth(async () => {
       let nextIsLiked = false;
       setLocalReels(prev => prev.map(r => {
         if (r.id === reelId) {
+          if (forceLike === true) {
+            if (r.isLiked) return r; // already liked
+            nextIsLiked = true;
+            return {
+              ...r,
+              isLiked: true,
+              likesCount: r.likesCount + 1
+            };
+          }
           nextIsLiked = !r.isLiked;
           return {
             ...r,
@@ -455,6 +483,30 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         }
       }
     });
+  };
+
+  // Double-tap handler on video area to like and trigger floating heart animation
+  const handleVideoTouchOrClick = (e: React.MouseEvent | React.TouchEvent, reelId: string) => {
+    const now = Date.now();
+    const lastTap = lastTapRef.current;
+    if (lastTap.reelId === reelId && now - lastTap.time < 350) {
+      // Double tap detected!
+      lastTapRef.current = { time: 0, reelId: "" };
+      let clientX = 0;
+      let clientY = 0;
+      if ("clientX" in e) {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      } else if ("changedTouches" in e && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+      }
+      setDoubleTapHeart({ reelId, x: clientX, y: clientY });
+      setTimeout(() => setDoubleTapHeart(null), 900);
+      handleLike(reelId, true);
+    } else {
+      lastTapRef.current = { time: now, reelId };
+    }
   };
 
   // Bookmark action
@@ -758,7 +810,11 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
               >
                 {/* VIDEO PLAYER LAYER */}
                 {isActive || isNext ? (
-                  <div className="relative w-full h-full">
+                  <div 
+                    className="relative w-full h-full"
+                    onClick={(e) => handleVideoTouchOrClick(e, reel.id)}
+                    onTouchEnd={(e) => handleVideoTouchOrClick(e, reel.id)}
+                  >
                     {getYoutubeId(reel.mediaUrl) ? (
                       <iframe
                         src={`https://www.youtube.com/embed/${getYoutubeId(reel.mediaUrl)}?autoplay=${isActive ? 1 : 0}&mute=${isMuted ? 1 : 0}&loop=1&playlist=${getYoutubeId(reel.mediaUrl)}&playsinline=1&controls=0&rel=0&modestbranding=1`}
@@ -773,11 +829,10 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                         src={reel.mediaUrl}
                         autoPlay={isActive}
                         preload={isActive ? "auto" : "metadata"}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover cursor-pointer"
                         loop
                         muted={isMuted}
                         playsInline
-                        onClick={() => setIsMuted(!isMuted)}
                         onCanPlay={() => {
                           setVideoErrors(prev => {
                             if (!prev[reel.id]) return prev;
@@ -799,6 +854,13 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                           });
                         }}
                       />
+                    )}
+
+                    {/* Double-tap animated heart overlay */}
+                    {doubleTapHeart && doubleTapHeart.reelId === reel.id && (
+                      <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-50 animate-ping">
+                        <Heart className="w-24 h-24 text-red-500 fill-red-500 drop-shadow-[0_0_25px_rgba(239,68,68,0.8)]" />
+                      </div>
                     )}
 
                     {/* Video Error Overlay with Retry & Next */}
@@ -1069,18 +1131,26 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
             {/* Comments List */}
             <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[45vh] overscroll-contain [-webkit-overflow-scrolling:touch]" style={{ touchAction: "pan-y" }}>
-              {commentsList.map(c => (
-                <div key={c.id} className="flex gap-3 items-start bg-zinc-900/60 p-2.5 rounded-2xl border border-afri-border">
-                  <img src={c.avatar} alt="" className="w-8 h-8 rounded-full object-cover border border-[#D4AF37]/30 shrink-0" />
-                  <div className="flex-1 text-left space-y-0.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#D4AF37] uppercase">{c.author}</span>
-                      <span className="text-[9px] font-mono text-afri-text-muted">{c.time}</span>
-                    </div>
-                    <p className="text-xs text-afri-text">{c.text}</p>
-                  </div>
+              {commentsList.length === 0 ? (
+                <div className="py-8 text-center text-zinc-400 space-y-1">
+                  <MessageCircle className="w-8 h-8 text-zinc-600 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs font-bold text-zinc-300">Aucun palabre pour l'instant</p>
+                  <p className="text-[10px] text-zinc-500">Soyez le premier à commenter ce Réel !</p>
                 </div>
-              ))}
+              ) : (
+                commentsList.map(c => (
+                  <div key={c.id} className="flex gap-3 items-start bg-zinc-900/60 p-2.5 rounded-2xl border border-afri-border">
+                    <img src={c.avatar} alt="" className="w-8 h-8 rounded-full object-cover border border-[#D4AF37]/30 shrink-0" />
+                    <div className="flex-1 text-left space-y-0.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-[#D4AF37] uppercase">{c.author}</span>
+                        <span className="text-[9px] font-mono text-afri-text-muted">{c.time}</span>
+                      </div>
+                      <p className="text-xs text-afri-text">{c.text}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Comment Form */}
