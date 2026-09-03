@@ -43,6 +43,23 @@ interface ReelsPlayerProps {
   initialReelId?: string;
 }
 
+// Unified YouTube ID extractor
+function getYoutubeId(rawUrl: string): string | null {
+  if (!rawUrl || typeof rawUrl !== "string") return null;
+  const url = rawUrl.trim();
+  if (url.includes("youtube.com/watch")) {
+    const parts = url.split("v=");
+    if (parts[1]) return parts[1].split("&")[0];
+  } else if (url.includes("youtu.be/")) {
+    const parts = url.split("youtu.be/");
+    if (parts[1]) return parts[1].split("?")[0];
+  } else if (url.includes("youtube.com/embed/")) {
+    const parts = url.split("youtube.com/embed/");
+    if (parts[1]) return parts[1].split("?")[0];
+  }
+  return null;
+}
+
 // Portfolio & Reels unified video URL resolution (accepts videoUrl, mediaUrl, url, src)
 function resolveVideoUrl(item: any): string | null {
   if (!item) return null;
@@ -742,29 +759,47 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                 {/* VIDEO PLAYER LAYER */}
                 {isActive || isNext ? (
                   <div className="relative w-full h-full">
-                    <video
-                      ref={isActive ? activeVideoRef : null}
-                      src={reel.mediaUrl}
-                      autoPlay={isActive}
-                      preload={isActive ? "auto" : "metadata"}
-                      className="w-full h-full object-cover"
-                      loop
-                      muted={isMuted}
-                      playsInline
-                      onClick={() => setIsMuted(!isMuted)}
-                      onError={(e) => {
-                        console.warn(`[ReelsPlayer] Erreur chargement vidéo (id: ${reel.id}):`, e);
-                        setVideoErrors(prev => ({ ...prev, [reel.id]: true }));
-                      }}
-                      onLoadedData={() => {
-                        setVideoErrors(prev => {
-                          if (!prev[reel.id]) return prev;
-                          const next = { ...prev };
-                          delete next[reel.id];
-                          return next;
-                        });
-                      }}
-                    />
+                    {getYoutubeId(reel.mediaUrl) ? (
+                      <iframe
+                        src={`https://www.youtube.com/embed/${getYoutubeId(reel.mediaUrl)}?autoplay=${isActive ? 1 : 0}&mute=${isMuted ? 1 : 0}&loop=1&playlist=${getYoutubeId(reel.mediaUrl)}&playsinline=1&controls=0&rel=0&modestbranding=1`}
+                        title={reel.title || "Vidéo Réel"}
+                        className="w-full h-full object-cover pointer-events-auto"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        ref={isActive ? activeVideoRef : null}
+                        src={reel.mediaUrl}
+                        autoPlay={isActive}
+                        preload={isActive ? "auto" : "metadata"}
+                        className="w-full h-full object-cover"
+                        loop
+                        muted={isMuted}
+                        playsInline
+                        onClick={() => setIsMuted(!isMuted)}
+                        onCanPlay={() => {
+                          setVideoErrors(prev => {
+                            if (!prev[reel.id]) return prev;
+                            const next = { ...prev };
+                            delete next[reel.id];
+                            return next;
+                          });
+                        }}
+                        onError={(e) => {
+                          console.warn(`[ReelsPlayer] Erreur chargement vidéo (id: ${reel.id}):`, e);
+                          setVideoErrors(prev => ({ ...prev, [reel.id]: true }));
+                        }}
+                        onLoadedData={() => {
+                          setVideoErrors(prev => {
+                            if (!prev[reel.id]) return prev;
+                            const next = { ...prev };
+                            delete next[reel.id];
+                            return next;
+                          });
+                        }}
+                      />
+                    )}
 
                     {/* Video Error Overlay with Retry & Next */}
                     {videoErrors[reel.id] && (
@@ -790,7 +825,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                               });
                               if (activeVideoRef.current) {
                                 activeVideoRef.current.load();
-                                activeVideoRef.current.play().catch(() => {});
+                                activeVideoRef.current.play().catch((playErr) => console.warn("[ReelsPlayer] Retry error:", playErr));
                               }
                             }}
                             className="px-4 py-2 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-full border border-white/20 transition flex items-center gap-1.5 cursor-pointer"

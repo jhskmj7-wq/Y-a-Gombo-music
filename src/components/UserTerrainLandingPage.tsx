@@ -22,7 +22,7 @@ import { useFeatureFlags } from "../lib/featureFlags";
 import { db } from "../lib/firebase";
 import { formatGomboIdDisplay, getEffectiveGomboId } from "../lib/gomboIdHelper";
 import { gomboDB } from "../firebase";
-import { collection, onSnapshot, addDoc, doc, updateDoc, increment } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, updateDoc, increment, query, limit } from "firebase/firestore";
 import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
 import { AndroidPageLayout } from "./layout/AndroidPageLayout";
 import { ReelsPlayer } from "./ReelsPlayer";
@@ -329,6 +329,68 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       console.warn("History save error:", e);
     }
   };
+
+  const [firestoreUsers, setFirestoreUsers] = useState<any[]>([]);
+  const [firestorePosts, setFirestorePosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!db) return;
+    let unsubUsers = () => {};
+    let unsubPosts = () => {};
+    let unsubSocial = () => {};
+
+    try {
+      const usersRef = query(collection(db, "users"), limit(100));
+      unsubUsers = onSnapshot(usersRef, (snapshot) => {
+        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setFirestoreUsers(list);
+      }, (err) => {
+        console.warn("[UserTerrainLandingPage] users listener warning:", err);
+      });
+    } catch (e) {
+      console.warn("[UserTerrainLandingPage] users listener setup error:", e);
+    }
+
+    try {
+      const postsRef = query(collection(db, "posts"), limit(100));
+      unsubPosts = onSnapshot(postsRef, (snapshot) => {
+        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setFirestorePosts(prev => {
+          const map = new Map<string, any>();
+          prev.forEach(p => { if (p?.id) map.set(p.id, p); });
+          list.forEach(p => { if (p?.id) map.set(p.id, { ...map.get(p.id), ...p }); });
+          return Array.from(map.values());
+        });
+      }, (err) => {
+        console.warn("[UserTerrainLandingPage] posts listener warning:", err);
+      });
+    } catch (e) {
+      console.warn("[UserTerrainLandingPage] posts listener setup error:", e);
+    }
+
+    try {
+      const socialRef = query(collection(db, "social_posts"), limit(100));
+      unsubSocial = onSnapshot(socialRef, (snapshot) => {
+        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setFirestorePosts(prev => {
+          const map = new Map<string, any>();
+          prev.forEach(p => { if (p?.id) map.set(p.id, p); });
+          list.forEach(p => { if (p?.id) map.set(p.id, { ...map.get(p.id), ...p }); });
+          return Array.from(map.values());
+        });
+      }, (err) => {
+        console.warn("[UserTerrainLandingPage] social_posts listener warning:", err);
+      });
+    } catch (e) {
+      console.warn("[UserTerrainLandingPage] social_posts listener setup error:", e);
+    }
+
+    return () => {
+      unsubUsers();
+      unsubPosts();
+      unsubSocial();
+    };
+  }, []);
 
   useEffect(() => {
     if (!currentUser?.uid) return;
@@ -779,28 +841,142 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     return GombosToRender.slice(0, 8);
   }, [GombosToRender]);
 
-  // Section 8: Réels d'artistes (issus de social_posts)
+  // Section 8: Réels d'artistes (issus des Portfolios d'artistes & Posts Réels)
   const reelsData = React.useMemo(() => {
-    if (!posts || posts.length === 0) return [];
-    return posts
-      .filter(p => {
-        const isVideoType = p.type === "video" || p.type === "reel" || (p as any).mediaType === "video";
-        const hasVideoUrl = p.mediaUrl && (p.mediaUrl.includes(".mp4") || p.mediaUrl.includes(".webm") || p.mediaUrl.includes(".mov") || p.mediaUrl.includes("video"));
-        return (isVideoType || hasVideoUrl) && Boolean(p.mediaUrl);
-      })
-      .sort((a, b) => new Date(b.timestamp || b.createdAt || 0).getTime() - new Date(a.timestamp || a.createdAt || 0).getTime())
-      .slice(0, 8)
-      .map(p => ({
-        id: p.id,
-        title: p.content || p.authorArtisticName || "Réel Vibe",
+    const list: any[] = [];
+    const seenUrls = new Set<string>();
+
+    const getYoutubeId = (rawUrl: string): string | null => {
+      if (!rawUrl || typeof rawUrl !== "string") return null;
+      const url = rawUrl.trim();
+      if (url.includes("youtube.com/watch")) {
+        const parts = url.split("v=");
+        if (parts[1]) return parts[1].split("&")[0];
+      } else if (url.includes("youtu.be/")) {
+        const parts = url.split("youtu.be/");
+        if (parts[1]) return parts[1].split("?")[0];
+      } else if (url.includes("youtube.com/embed/")) {
+        const parts = url.split("youtube.com/embed/");
+        if (parts[1]) return parts[1].split("?")[0];
+      }
+      return null;
+    };
+
+    const resolveVideoUrl = (item: any): string | null => {
+      if (!item) return null;
+      const candidate = item.videoUrl || item.mediaUrl || item.url || item.media_url || item.src;
+      if (typeof candidate === "string" && candidate.trim().length > 0) {
+        return candidate.trim();
+      }
+      return null;
+    };
+
+    const isVideoItem = (item: any, url: string): boolean => {
+      if (!url) return false;
+      const type = String(item.type || item.mediaType || item.category || "").toLowerCase();
+      if (type === "video" || type === "reel" || type === "youtube") return true;
+      if (item.videoUrl && typeof item.videoUrl === "string") return true;
+      if (type === "audio" || type === "photo" || type === "image") return false;
+      const cleanUrl = url.toLowerCase().split("?")[0];
+      if (cleanUrl.endsWith(".mp3") || cleanUrl.endsWith(".wav") || cleanUrl.endsWith(".ogg") || cleanUrl.endsWith(".m4a") || cleanUrl.endsWith(".aac")) return false;
+      if (cleanUrl.endsWith(".jpg") || cleanUrl.endsWith(".jpeg") || cleanUrl.endsWith(".png") || cleanUrl.endsWith(".webp") || cleanUrl.endsWith(".gif") || cleanUrl.endsWith(".svg")) return false;
+      return true;
+    };
+
+    // 1. Rassembler tous les profils utilisateurs (props users, firestoreUsers, profil connecté, session locale)
+    const allUsersMap = new Map<string, any>();
+    (users || []).forEach(u => {
+      if (u && (u.id || u.uid)) allUsersMap.set(u.id || u.uid, u);
+    });
+    firestoreUsers.forEach(u => {
+      if (u && (u.id || u.uid)) {
+        const uid = u.id || u.uid;
+        allUsersMap.set(uid, { ...allUsersMap.get(uid), ...u });
+      }
+    });
+    if (profile && (profile.id || profile.uid || currentUser?.uid)) {
+      const uid = profile.id || profile.uid || currentUser?.uid;
+      allUsersMap.set(uid, { ...allUsersMap.get(uid), ...profile });
+    }
+    if (currentUser && (currentUser.id || currentUser.uid)) {
+      const uid = currentUser.id || currentUser.uid;
+      allUsersMap.set(uid, { ...allUsersMap.get(uid), ...currentUser });
+    }
+    try {
+      const savedSession = localStorage.getItem("afrigombo_user_session");
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        if (parsed && (parsed.id || parsed.uid)) {
+          const uid = parsed.id || parsed.uid;
+          allUsersMap.set(uid, { ...allUsersMap.get(uid), ...parsed });
+        }
+      }
+    } catch (_) {}
+
+    // 2. Extraire les vidéos des portfolios (mediaGallery)
+    Array.from(allUsersMap.values()).forEach(u => {
+      const gallery = Array.isArray(u.mediaGallery) ? u.mediaGallery : [];
+      gallery.forEach((m: any, idx: number) => {
+        const url = resolveVideoUrl(m);
+        if (!url || seenUrls.has(url)) return;
+        if (!isVideoItem(m, url)) return;
+        seenUrls.add(url);
+
+        const ytId = getYoutubeId(url);
+        const autoThumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : (m.thumbnail || m.imageUrl || url);
+
+        list.push({
+          id: m.id || `${u.id || u.uid}-reel-${idx}`,
+          title: m.title || `Démo Live — ${u.artisticName || u.name || "Artiste"}`,
+          artist: u.artisticName || u.name || "Artiste Gombo",
+          authorName: u.artisticName || u.name || "Artiste Gombo",
+          imageUrl: autoThumb,
+          thumbnail: autoThumb,
+          url: url,
+          mediaUrl: url,
+          category: "Portfolio Réel",
+          authorPhoto: u.photoURL || u.photoUrl || u.avatarUrl || u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
+        });
+      });
+    });
+
+    // 3. Extraire les vidéos des posts sociaux et publications terrain
+    const allPostsMap = new Map<string, any>();
+    (posts || []).forEach(p => {
+      if (p && p.id) allPostsMap.set(p.id, p);
+    });
+    firestorePosts.forEach(p => {
+      if (p && p.id) {
+        allPostsMap.set(p.id, { ...allPostsMap.get(p.id), ...p });
+      }
+    });
+
+    Array.from(allPostsMap.values()).forEach((p: any, idx: number) => {
+      const url = resolveVideoUrl(p);
+      if (!url || seenUrls.has(url)) return;
+      if (!isVideoItem(p, url)) return;
+      seenUrls.add(url);
+
+      const ytId = getYoutubeId(url);
+      const autoThumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : (p.mediaUrl || p.imageUrl || url);
+
+      list.push({
+        id: p.id || `post-reel-${idx}`,
+        title: p.content || p.title || p.authorArtisticName || "Réel Vibe",
         artist: p.authorArtisticName || p.authorName || "Artiste",
         authorName: p.authorArtisticName || p.authorName || "Artiste",
-        imageUrl: p.mediaUrl,
-        thumbnail: p.mediaUrl,
-        url: p.mediaUrl,
-        category: p.type || "Réel"
-      }));
-  }, [posts]);
+        imageUrl: autoThumb,
+        thumbnail: autoThumb,
+        url: url,
+        mediaUrl: url,
+        category: p.type || "Réel",
+        authorPhoto: p.authorPhoto || p.authorAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
+      });
+    });
+
+    // Données réelles du projet uniquement (pas de vidéos démo Mixkit factices)
+    return list;
+  }, [posts, users, profile, currentUser, firestoreUsers, firestorePosts]);
 
   // Section 9: Nouveaux talents
   const talentsData = React.useMemo(() => {
@@ -1723,26 +1899,6 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         )}
 
         {/* 8. RÉELS D'ARTISTES (Redirige vers l'écran dédié Fil Réel) */}
-        <div id="reels-debug-banner" style={{ background: "red", color: "white", padding: "8px", fontSize: "10px", fontWeight: "bold", zIndex: 9999, position: "relative", borderRadius: "8px", margin: "4px 0" }}>
-          DEBUG: visible={String(isModuleVisible("reels"))} comingSoon={String(isModuleComingSoon("reels"))} length={reelsData.length}
-        </div>
-        {postsDebugError && (
-          <div style={{ background: "darkred", color: "white", padding: "8px", fontSize: "10px", fontWeight: "bold", zIndex: 9999, position: "relative", borderRadius: "8px", margin: "4px 0" }}>
-            FIRESTORE ERROR: {postsDebugError}
-          </div>
-        )}
-        <div style={{ background: "blue", color: "white", padding: "8px", fontSize: "10px", fontWeight: "bold", zIndex: 9999, position: "relative", borderRadius: "8px", margin: "4px 0" }}>
-          FIREBASE PROJECT ID (compilé): {import.meta.env.VITE_FIREBASE_PROJECT_ID || "MANQUANT/UNDEFINED"}
-        </div>
-        {(() => {
-          console.log("[REELS DEBUG]", {
-            isModuleVisible: isModuleVisible("reels"),
-            isModuleComingSoon: isModuleComingSoon("reels"),
-            reelsDataLength: reelsData.length,
-            reelsData: reelsData
-          });
-          return null;
-        })()}
         {isModuleVisible("reels") && (
           <div className="relative">
             {isModuleComingSoon("reels") && (
@@ -1758,6 +1914,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 if (isModuleComingSoon("reels")) {
                   setLocalComingSoonKey("Studio Vidéo Réels 📹");
                 } else {
+                  if (item?.id && setReelsVideoId) {
+                    setReelsVideoId(item.id);
+                  }
+                  if ((item?.url || item?.mediaUrl) && setReelsVideoUrl) {
+                    setReelsVideoUrl(item.url || item.mediaUrl);
+                  }
                   setActiveMenu("user_reels");
                 }
               }}

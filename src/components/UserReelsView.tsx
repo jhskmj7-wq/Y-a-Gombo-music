@@ -10,39 +10,27 @@ interface UserReelsViewProps {
 export function UserReelsView({ users, setReelsVideoId, setReelsVideoUrl }: UserReelsViewProps) {
   const [selectedReelFilter, setSelectedReelFilter] = useState("all");
   
-  // Aggregate real videos uploaded by artists + falling back to premium clips
-  const allReels = [
-    {
-      id: "local-reel-1",
-      title: "Intro Improvisation - Saxophone Prestigieux Live",
-      type: "video",
-      url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
-      artisticName: "Thierry Sax d'Abidjan",
-      category: "sax",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-      description: "Test de sonorité en coulisse avant le live de ce soir à Cocody. Un pur régal instrumental."
-    },
-    {
-      id: "local-reel-2",
-      title: "Fusion Kora Traditionnelle & Batterie Jazz",
-      type: "video",
-      url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4",
-      artisticName: "Sékou Kora Excellence",
-      category: "kora",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
-      description: "Enregistrement direct de notre répétition en trio à Marcory pour le Gombo de l'ambassade."
-    },
-    ...users.flatMap(u => (u.mediaGallery || []).filter((m: any) => m.type === "video" || m.type === "youtube").map((media: any) => ({
-      id: media.id,
-      title: media.title || "Démo Artiste",
-      type: media.type,
-      url: media.url,
-      artisticName: u.artisticName || u.name || "Artiste Gombo",
-      category: media.type === "video" ? "raw" : "youtube",
-      avatar: u.photoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
-      description: "Démonstration authentique et accréditée téléchargée directement par l'artiste."
-    })))
-  ];
+  // Aggregate real videos uploaded by artists in their Portfolio (mediaGallery)
+  const allReels = users.flatMap(u => (u.mediaGallery || []).filter((m: any) => {
+    const candidate = m.videoUrl || m.mediaUrl || m.url || m.media_url || m.src;
+    if (!candidate || typeof candidate !== "string") return false;
+    const type = String(m.type || m.mediaType || "").toLowerCase();
+    if (type === "video" || type === "reel" || type === "youtube") return true;
+    if (m.videoUrl) return true;
+    if (type === "audio" || type === "photo" || type === "image") return false;
+    const cleanUrl = candidate.toLowerCase().split("?")[0];
+    if (cleanUrl.endsWith(".mp3") || cleanUrl.endsWith(".wav") || cleanUrl.endsWith(".jpg") || cleanUrl.endsWith(".png")) return false;
+    return true;
+  }).map((media: any) => ({
+    id: media.id,
+    title: media.title || "Démo Artiste",
+    type: media.type || "video",
+    url: media.videoUrl || media.mediaUrl || media.url || media.media_url || media.src,
+    artisticName: u.artisticName || u.name || "Artiste Gombo",
+    category: media.type === "video" ? "raw" : "youtube",
+    avatar: u.photoURL || u.photoUrl || u.avatarUrl || u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+    description: media.description || "Démonstration authentique et accréditée téléchargée directement par l'artiste."
+  })));
 
   const filteredReels = selectedReelFilter === "all" 
     ? allReels 

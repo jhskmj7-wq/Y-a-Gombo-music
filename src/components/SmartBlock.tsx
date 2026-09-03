@@ -60,14 +60,17 @@ const getIconForType = (type: BlockType) => {
   }
 };
 
-const isVideoMedia = (url?: string) => {
+const isPlayableVideoFile = (url?: string) => {
   if (!url || typeof url !== "string") return false;
+  const lower = url.toLowerCase().split("?")[0];
+  if (lower.includes("youtube.com") || lower.includes("youtu.be")) return false;
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".webp") || lower.endsWith(".gif") || lower.endsWith(".svg")) return false;
   return (
-    url.includes(".webm") ||
-    url.includes(".mp4") ||
-    url.includes(".mov") ||
-    url.includes(".m4v") ||
-    url.includes("video") ||
+    lower.endsWith(".webm") ||
+    lower.endsWith(".mp4") ||
+    lower.endsWith(".mov") ||
+    lower.endsWith(".m4v") ||
+    lower.includes("video") ||
     url.startsWith("blob:")
   );
 };
@@ -77,7 +80,7 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
   title, 
   icon, 
   data, 
-  onAction,
+  onAction, 
   onSeeMore
 }) => {
   if (!data || data.length === 0) return null;
@@ -109,8 +112,9 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
 
       <div className="flex overflow-x-auto pb-4 gap-3 no-scrollbar scroll-smooth snap-x touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch]">
         {data.map((item, idx) => {
-          const mediaSrc = item.imageUrl || item.thumbnail || item.url;
-          const isVideo = type === "POPULAR_REELS" || isVideoMedia(mediaSrc);
+          const mediaSrc = item.imageUrl || item.thumbnail || item.url || item.mediaUrl;
+          const directVideoSrc = isPlayableVideoFile(item.url || item.mediaUrl) ? (item.url || item.mediaUrl) : null;
+          const isDirectPlayableVideo = Boolean(directVideoSrc);
 
           return (
             <motion.div
@@ -122,9 +126,9 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
             >
               {/* Card Content based on type */}
               <div className="relative aspect-video bg-zinc-900 overflow-hidden flex items-center justify-center">
-                {isVideo && mediaSrc ? (
+                {isDirectPlayableVideo && directVideoSrc ? (
                   <video 
-                    src={mediaSrc} 
+                    src={directVideoSrc} 
                     muted 
                     playsInline 
                     preload="metadata"
