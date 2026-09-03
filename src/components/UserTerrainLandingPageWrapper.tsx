@@ -86,26 +86,21 @@ export default function UserTerrainLandingPageWrapper() {
             social.status !== "rejected"
           );
 
-          const mappedPosts: Post[] = publicList.map((social) => {
-            const rawUrl = social.videoUrl || social.mediaUrl || social.url || social.imageUrl;
-            return {
-              id: social.id,
-              userId: social.userId || social.authorId,
-              authorName: social.authorName || social.userName || social.artistName || "Artiste Gombo",
-              authorArtisticName: social.authorArtisticName || social.title || social.artistName || "Titre",
-              authorAvatar: social.authorAvatar || social.userAvatar,
-              content: social.content || social.caption || social.text,
-              mediaUrl: rawUrl,
-              videoUrl: rawUrl,
-              url: rawUrl,
-              timestamp: social.createdAt || social.timestamp || social.publishedAt,
-              likes: social.likesCount || social.likes || 0,
-              comments: Array.isArray(social.comments) ? social.comments.length : (typeof social.comments === "number" ? social.comments : (social.commentsCount || 0)),
-              type: social.type || (rawUrl ? "video" : "post"),
-              isFlagged: social.isFlagged,
-              flagReason: social.flagReason,
-            };
-          });
+          const mappedPosts: Post[] = publicList.map((social) => ({
+            id: social.id,
+            userId: social.userId || social.authorId,
+            authorName: social.authorName || social.userName || social.artistName || "Artiste Gombo",
+            authorArtisticName: social.authorArtisticName || social.title || social.artistName || "Titre",
+            authorAvatar: social.authorAvatar || social.userAvatar,
+            content: social.content || social.caption || social.text,
+            mediaUrl: social.mediaUrl || social.videoUrl || social.imageUrl,
+            timestamp: social.createdAt || social.timestamp || social.publishedAt,
+            likes: social.likesCount || social.likes || 0,
+            comments: Array.isArray(social.comments) ? social.comments.length : (typeof social.comments === "number" ? social.comments : (social.commentsCount || 0)),
+            type: social.type || (social.videoUrl ? "video" : "post"),
+            isFlagged: social.isFlagged,
+            flagReason: social.flagReason,
+          }));
 
           mappedPosts.sort((a, b) =>
             new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()

@@ -1559,7 +1559,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   // --- FIRESTORE ACTIVE SYNC ROUTINE ---
   useEffect(() => {
-    if (!currentUser || !db) return;
+    if (!currentUser || !db || perspective !== "admin") return;
     // Attempt Firestore subscription & binding
     try {
       gomboDB.getSystemCommissionRate().then((rate) => {
@@ -1623,55 +1623,25 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         console.warn("ğŸ” Alerts sync restricted for current user role:", error.message);
       });
 
-      let mainPostsList: Post[] = [];
-      let socialPostsList: Post[] = [];
-
-      const syncCombinedPostsInAdmin = () => {
-        const map = new Map<string, any>();
-        [...mainPostsList, ...socialPostsList].forEach(item => {
-          if (item && item.id) {
-            const existing = map.get(item.id) || {};
-            const rawUrl = item.videoUrl || item.mediaUrl || item.url || item.imageUrl || existing.videoUrl || existing.mediaUrl;
-            map.set(item.id, {
-              ...existing,
-              ...item,
-              mediaUrl: rawUrl || item.mediaUrl || existing.mediaUrl,
-              videoUrl: rawUrl || item.videoUrl || existing.videoUrl,
-              url: rawUrl || item.url || existing.url,
-            });
-          }
+      const qPosts = query(collection(db, "posts"), limit(200));
+      const unsubscribePosts = onSnapshot(qPosts, (snapshot) => {
+        const fetchedPosts: Post[] = [];
+        snapshot.forEach((docSnap) => {
+          fetchedPosts.push({ id: docSnap.id, ...docSnap.data() } as Post);
         });
-        const combined = Array.from(map.values());
-        combined.sort((a: any, b: any) => {
+        fetchedPosts.sort((a: any, b: any) => {
           const timeA = new Date(a.timestamp || a.createdAt || a.date || 0).getTime() || 0;
           const timeB = new Date(b.timestamp || b.createdAt || b.date || 0).getTime() || 0;
           return timeB - timeA;
         });
-        setPosts(combined);
+        setPosts(fetchedPosts);
         setPostsDebugError(null);
-      };
-
-      const qPosts = query(collection(db, "posts"), limit(200));
-      const unsubscribeMainPosts = onSnapshot(qPosts, (snapshot) => {
-        mainPostsList = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Post));
-        syncCombinedPostsInAdmin();
       }, (error) => {
-        console.warn("ğŸ” Posts sync limited or offline:", error.code, error.message);
+        console.warn("ğŸ” Posts sync limited or offline (donnÃ©es existantes conservÃ©es):", error.code, error.message);
         setPostsDebugError(`${error.code || "?"} â€” ${error.message}`);
+        // Les posts existants dans le state sont prÃ©servÃ©s intacts (aucun appel setPosts([])).
+        // Le listener onSnapshot reconnecte automatiquement le stream dÃ¨s retour du rÃ©seau.
       });
-
-      const qSocialPosts = query(collection(db, "social_posts"), limit(200));
-      const unsubscribeSocialPosts = onSnapshot(qSocialPosts, (snapshot) => {
-        socialPostsList = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Post));
-        syncCombinedPostsInAdmin();
-      }, (error) => {
-        console.warn("ğŸ” Social posts sync limited:", error.code, error.message);
-      });
-
-      const unsubscribePosts = () => {
-        unsubscribeMainPosts();
-        unsubscribeSocialPosts();
-      };
 
       const qRenforts = query(collection(db, "renforts"), orderBy("createdAt", "desc"), limit(100));
       const unsubscribeRenforts = onSnapshot(qRenforts, (snapshot) => {
@@ -1720,7 +1690,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     } catch (e) {
       addToTerminal(`[Alerte locale] Lancement offline synchronisÃ©.`);
     }
-  }, [currentUser]);
+  }, [currentUser, perspective]);
 
   // --- DASHBOARD INTRO MOUNT SEQUENCE ---
   useEffect(() => {
@@ -9114,7 +9084,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               
               try {
                 await gomboDB.submitBetaFeedback({
-                  type: "bug",
+                  type: 'bug',
                   category: issueType,
                   description: desc,
                   userId: profile?.uid || currentUser?.uid || "anonymous",
@@ -9123,21 +9093,55 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 });
                 
                 setIsBugModalOpen(false);
-                addToTerminal("[BUG] Rapport de bug enregistre et transmis avec succes.");
+                addToTerminal("[BUG] Rapport de bug enregistrÃ© et transmis avec succÃ¨s.");
                 try { audioSynth.playValidationSuccess(); } catch(e){}
                 form.reset();
               } catch (err) {
                 console.error(err);
                 btn.disabled = false;
-                btn.innerText = "Erreur - Reessayer";
+                btn.innerText = "Erreur - RÃ©essayer";
               }
             }} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Type de Probleme</label>
+                <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Type de ProblÃ¨me</label>
                 <select name="issueType" className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none">
-                  <option value="Affichage">Affichage et Interface</option>
-                  <option value="Validation">Validation et Paiement</option>
+                  <option value="Affichage">Affichage</option>
+                  <option value="Validation">Validation</option>
                   <option value="Audio">Audio et Musique</option>
-                  <option valuexœ¬“ËnÛ0E÷şŠº‰´œÆmÔ2àÖ-ĞE›² ©‘B˜"Y>;ÿ½Ô±l«IPTI3ÔğòÜ«,Yo1Y47Èw®ĞŠ{¡•Â
-•Ÿ§ÚÔo‹œ\óÔ¡DîO;ó4›Åè´ÚÏfHÊP—Ô¹_´Â,aRó5xÜzr{95Û;ˆz<aZæm•VæÉ!‡`ZNBÅÈûd±BÇ­hC€…r6{ì]¡)œµ T#&?LK†VYıà²§Ù~°‡¿ƒ°˜´Œ¤ïã‰ĞfÉ
-ã|c‘×@‰µô8Cñxz‹“É$Ôãö@Š %°²ÄJ`ÚÆº[WmKV•cNd	†\µX·îoäÎƒ»î^FÉé‡i×ÑÁK¡(­°$RZº#§Ó(ß‰ÇvÁ¹úôí¹éŸÓx2ƒBâJÅ'¾²à}´€—ß™:bMĞP­¾JÁ×ÙÓÅ²8ô?Ü—PşÔ9•7ÕEA¥Ãñşe/jyäÌ.Âı»÷zƒöú`X¤~°f+Ÿmy1ÿŞRåDPÂµÔÖÖiKŒ*<ç~`©Th~ñ–Õ?@vUÂ¿Ú#P%¹}·š-¿_}ºë±©XÄ6«Ãô*3¸şOD¾©ŞE?âh©1Úú7Ãér|\*´­úµ“EG¯]¼kãÏ£ıè   ÿÿ Èš‰ë
+                  <option value="Autre">Autre dysfonctionnement</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Description du bug</label>
+                <textarea 
+                  name="description" 
+                  rows={4} 
+                  required
+                  placeholder="DÃ©crivez prÃ©cisÃ©ment le bug rencontrÃ©..."
+                  className="w-full bg-afri-bg border border-afri-border rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsBugModalOpen(false)}
+                  className="flex-1 py-3 border border-afri-border hover:bg-afri-bg-ter rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  Envoyer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

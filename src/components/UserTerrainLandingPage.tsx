@@ -779,34 +779,27 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     return GombosToRender.slice(0, 8);
   }, [GombosToRender]);
 
-  // Section 8: Réels d'artistes (issus de social_posts / posts)
+  // Section 8: Réels d'artistes (issus de social_posts)
   const reelsData = React.useMemo(() => {
     if (!posts || posts.length === 0) return [];
     return posts
       .filter(p => {
-        const url = (p as any).videoUrl || p.mediaUrl || (p as any).url || (p as any).imageUrl;
-        if (!url || typeof url !== "string") return false;
-        const typeStr = String(p.type || (p as any).mediaType || "").toLowerCase();
-        const isVideoType = typeStr === "video" || typeStr === "reel" || typeStr === "media" || Boolean((p as any).videoUrl);
-        return isVideoType || Boolean(url);
+        const isVideoType = p.type === "video" || p.type === "reel" || (p as any).mediaType === "video";
+        const hasVideoUrl = p.mediaUrl && (p.mediaUrl.includes(".mp4") || p.mediaUrl.includes(".webm") || p.mediaUrl.includes(".mov") || p.mediaUrl.includes("video"));
+        return (isVideoType || hasVideoUrl) && Boolean(p.mediaUrl);
       })
       .sort((a, b) => new Date(b.timestamp || b.createdAt || 0).getTime() - new Date(a.timestamp || a.createdAt || 0).getTime())
-      .slice(0, 12)
-      .map(p => {
-        const url = (p as any).videoUrl || p.mediaUrl || (p as any).url || (p as any).imageUrl || "";
-        return {
-          id: p.id,
-          title: p.content || (p as any).caption || p.authorArtisticName || "Réel Vibe",
-          artist: p.authorArtisticName || p.authorName || "Artiste",
-          authorName: p.authorArtisticName || p.authorName || "Artiste",
-          imageUrl: url,
-          thumbnail: url,
-          url: url,
-          videoUrl: url,
-          mediaUrl: url,
-          category: p.type || "Réel"
-        };
-      });
+      .slice(0, 8)
+      .map(p => ({
+        id: p.id,
+        title: p.content || p.authorArtisticName || "Réel Vibe",
+        artist: p.authorArtisticName || p.authorName || "Artiste",
+        authorName: p.authorArtisticName || p.authorName || "Artiste",
+        imageUrl: p.mediaUrl,
+        thumbnail: p.mediaUrl,
+        url: p.mediaUrl,
+        category: p.type || "Réel"
+      }));
   }, [posts]);
 
   // Section 9: Nouveaux talents
