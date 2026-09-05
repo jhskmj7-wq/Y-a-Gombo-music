@@ -128,6 +128,56 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
   const containerRef = useRef<HTMLDivElement>(null);
   const activeVideoRef = useRef<HTMLVideoElement | null>(null);
+  const videoElementsRef = useRef<Map<string, HTMLVideoElement>>(new Map());
+
+  // Bulletproof cleanup of all media (videos, audios, youtube iframes)
+  const stopAllMedia = () => {
+    videoElementsRef.current.forEach((videoEl) => {
+      try {
+        videoEl.pause();
+        videoEl.currentTime = 0;
+        videoEl.removeAttribute("src");
+        videoEl.load();
+      } catch (_) {}
+    });
+    videoElementsRef.current.clear();
+
+    if (containerRef.current) {
+      const vids = containerRef.current.querySelectorAll("video");
+      vids.forEach((v) => {
+        try {
+          v.pause();
+          v.currentTime = 0;
+          v.removeAttribute("src");
+          v.load();
+        } catch (_) {}
+      });
+
+      const auds = containerRef.current.querySelectorAll("audio");
+      auds.forEach((a) => {
+        try {
+          a.pause();
+          a.currentTime = 0;
+          a.removeAttribute("src");
+          a.load();
+        } catch (_) {}
+      });
+
+      const iframes = containerRef.current.querySelectorAll("iframe");
+      iframes.forEach((f) => {
+        try {
+          if (f.src && (f.src.includes("youtube") || f.src.includes("vimeo"))) {
+            f.src = "about:blank";
+          }
+        } catch (_) {}
+      });
+    }
+  };
+
+  const handleClose = () => {
+    stopAllMedia();
+    onClose();
+  };
 
   // Synchronize Firestore collections (posts, social_posts, users) in real-time
   useEffect(() => {
@@ -344,8 +394,20 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     }
   };
 
-  // Play active video & pause others when index changes (robust autoplay with muted fallback)
+  // Play active video & pause all non-active videos when index changes
   useEffect(() => {
+    const currentReel = localReels[currentIndex];
+
+    // Pause all non-active videos immediately
+    videoElementsRef.current.forEach((videoEl, reelId) => {
+      if (!currentReel || reelId !== currentReel.id) {
+        try {
+          videoEl.pause();
+          videoEl.currentTime = 0;
+        } catch (_) {}
+      }
+    });
+
     if (activeVideoRef.current) {
       activeVideoRef.current.currentTime = 0;
       const playPromise = activeVideoRef.current.play();
@@ -360,16 +422,33 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         });
       }
     }
-  }, [currentIndex, isMuted]);
+  }, [currentIndex, isMuted, localReels]);
 
   // COMPLETE UNMOUNT CLEANUP
   useEffect(() => {
     return () => {
-      if (activeVideoRef.current) {
-        activeVideoRef.current.pause();
-        activeVideoRef.current.src = "";
-        activeVideoRef.current.load();
+      stopAllMedia();
+    };
+  }, []);
+
+  // PAUSE WHEN TAB / WINDOW BECOMES INACTIVE OR HIDDEN
+  useEffect(() => {
+    const handleInvisibility = () => {
+      if (document.hidden) {
+        videoElementsRef.current.forEach((videoEl) => {
+          try { videoEl.pause(); } catch (_) {}
+        });
       }
+    };
+
+    document.addEventListener("visibilitychange", handleInvisibility);
+    window.addEventListener("pagehide", handleInvisibility);
+    window.addEventListener("blur", handleInvisibility);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleInvisibility);
+      window.removeEventListener("pagehide", handleInvisibility);
+      window.removeEventListener("blur", handleInvisibility);
     };
   }, []);
 
@@ -711,7 +790,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       {/* TOP FLOATING NAVIGATION BAR */}
       <div className="absolute top-0 left-0 right-0 z-50 p-4 pt-4 flex items-center justify-between bg-gradient-to-b from-black/90 via-black/40 to-transparent">
         <button 
-          onClick={onClose}
+          onClick={handleClose}
           className="p-2.5 rounded-full bg-afri-bg/50 backdrop-blur-md border border-afri-border text-afri-text hover:bg-white/20 active:scale-95 transition cursor-pointer"
           title="Fermer le Fil Réel"
         >
@@ -789,7 +868,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
               )}
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 className="px-5 py-2.5 bg-afri-bg-sec border border-afri-border hover:bg-white/10 text-afri-text font-bold text-xs uppercase tracking-wider rounded-2xl transition cursor-pointer"
               >
                 Retour au Terrain
@@ -825,7 +904,19 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                       />
                     ) : (
                       <video
-                        ref={isActive ? activeVideoRef : null}
+                        ref={(el) => {
+                          if (el) {
+                            videoElementsRef.current.set(reel.id, el);
+                            if (isActive) {
+                              activeVideoRef.current = el;
+                            }
+                          } else {
+                            videoElementsRef.current.delete(reel.id);
+                            if (isActive && activeVideoRef.current === el) {
+                              activeVideoRef.current = null;
+                            }
+                          }
+                        }}
                         src={reel.mediaUrl}
                         autoPlay={isActive}
                         preload={isActive ? "auto" : "metadata"}

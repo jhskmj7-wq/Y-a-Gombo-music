@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { X, Hash, MessageSquare, Loader2 } from "lucide-react";
 import { supabaseStorage } from "../../lib/storage/supabaseStorage";
 import { collection, addDoc, doc, updateDoc, arrayUnion, setDoc } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db, auth } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
 
 interface ReelPublishScreenProps {
@@ -14,7 +14,7 @@ interface ReelPublishScreenProps {
 }
 
 export default function ReelPublishScreen({ videoFile, filterId, onClose, onPublished }: ReelPublishScreenProps) {
-  const { currentUser, profile } = useAuth();
+  const { currentUser, profile, requireAuth } = useAuth();
   const currentUserProfile = profile;
   const [caption, setCaption] = useState("");
   const [hashtagInput, setHashtagInput] = useState("");
@@ -25,10 +25,29 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
   const [uploadStatusText, setUploadStatusText] = useState("Préparation...");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const publishVideoNodeRef = React.useRef<HTMLVideoElement | null>(null);
+
+  const stopPublishPreviewVideo = () => {
+    if (publishVideoNodeRef.current) {
+      try {
+        publishVideoNodeRef.current.pause();
+        publishVideoNodeRef.current.currentTime = 0;
+        publishVideoNodeRef.current.removeAttribute("src");
+        publishVideoNodeRef.current.load();
+      } catch (_) {}
+    }
+  };
+
+  const handleClosePublish = () => {
+    stopPublishPreviewVideo();
+    onClose();
+  };
+
   const videoPreviewUrl = React.useMemo(() => URL.createObjectURL(videoFile), [videoFile]);
 
   useEffect(() => {
     return () => {
+      stopPublishPreviewVideo();
       if (videoPreviewUrl) {
         URL.revokeObjectURL(videoPreviewUrl);
       }
@@ -52,14 +71,67 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
   const handlePublish = async () => {
     if (loading) return;
     setErrorMsg("");
+
+    // 1. Résolution et contrôle d'authentification robuste
+    const activeFirebaseUser = auth.currentUser || (currentUser && typeof currentUser.getIdToken === "function" ? currentUser : null);
+    const resolvedUid = activeFirebaseUser?.uid || currentUserProfile?.uid || currentUser?.uid;
+
+    if (!resolvedUid) {
+      setErrorMsg("Vous devez être connecté pour publier un Réel.");
+      if (typeof requireAuth === "function") {
+        requireAuth(() => {});
+      }
+      return;
+    }
+
+    // 2. Contrôle préventif de la taille de fichier (75 Mo max)
+    const MAX_SIZE_BYTES = 75 * 1024 * 1024;
+    if (videoFile.size > MAX_SIZE_BYTES) {
+      setErrorMsg(
+        `La vidéo dépasse la taille maximale autorisée de 75 Mo (taille actuelle : ${(videoFile.size / 1024 / 1024).toFixed(1)} Mo).`
+      );
+      return;
+    }
+
     setLoading(true);
     setUploadProgress(0);
-    setUploadStatusText("Vérification du format vidéo...");
+    setUploadStatusText("Vérification de la session...");
 
     try {
-      const uid = currentUserProfile?.uid || currentUser?.uid || "anonymous";
+      const uid = resolvedUid;
       const publicationId = `reel_${Date.now()}`;
-      const idToken = currentUser ? await currentUser.getIdToken(true) : undefined;
+      
+      // 3. Rafraîchissement sécurisé du jeton d'authentification Firebase
+      let idToken: string | undefined;
+      if (activeFirebaseUser) {
+        try {
+          idToken = await activeFirebaseUser.getIdToken(true);
+        } catch (tokErr) {
+          console.warn("[REEL] Échec du rafraîchissement forcé du token, tentative normale:", tokErr);
+          try {
+            idToken = await activeFirebaseUser.getIdToken();
+          } catch (tokErr2) {
+            console.error("[REEL] Échec total de récupération du token Firebase:", tokErr2);
+          }
+        }
+      } else if (currentUser && typeof currentUser.getIdToken === "function") {
+        try {
+          idToken = await currentUser.getIdToken(true);
+        } catch (tokErr) {
+          console.warn("[REEL] Échec du token sur currentUser:", tokErr);
+        }
+      }
+
+      if (!idToken) {
+        setLoading(false);
+        setErrorMsg("Session expirée. Veuillez vous reconnecter pour publier votre Réel.");
+        if (typeof requireAuth === "function") {
+          requireAuth(() => {});
+        }
+        return;
+      }
+
+      setUploadStatusText("Vérification du format vidéo...");
 
       console.log(
         `[REEL SAFARI PIPELINE]\n` +
@@ -209,6 +281,7 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
       }
 
       setUploadProgress(100);
+      stopPublishPreviewVideo();
       onPublished();
     } catch (err: any) {
       console.error("[REEL PUBLISH ERROR]", err);
@@ -220,7 +293,7 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
   return createPortal(
     <div className="fixed inset-0 bg-black z-[9999] flex flex-col">
       <div className="flex items-center justify-between p-4 border-b border-white/10">
-        <button onClick={onClose} disabled={loading} className="text-white p-2 rounded-full bg-black/40 disabled:opacity-40">
+        <button onClick={handleClosePublish} disabled={loading} className="text-white p-2 rounded-full bg-black/40 disabled:opacity-40">
           <X className="w-6 h-6" />
         </button>
         <span className="text-white text-sm font-mono">Nouveau Réel</span>
@@ -229,7 +302,15 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
 
       <div className="flex-1 overflow-y-auto p-4 space-y-5">
         <div className="flex gap-3">
-          <video src={videoPreviewUrl} muted loop autoPlay playsInline className="w-24 h-40 object-cover rounded-xl border border-white/10" />
+          <video
+            ref={(el) => { if (el) publishVideoNodeRef.current = el; }}
+            src={videoPreviewUrl}
+            muted
+            loop
+            autoPlay
+            playsInline
+            className="w-24 h-40 object-cover rounded-xl border border-white/10"
+          />
           <div className="flex-1 space-y-3">
             <textarea
               value={caption}

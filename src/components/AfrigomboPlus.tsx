@@ -12,6 +12,11 @@ import { AndroidCenteredDialog } from "./common/GlobalPortalModal";
 import { db } from "../lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { SubscriptionPaymentMethod } from "../types";
+import { 
+  ManualPaymentOperatorKey, 
+  DEFAULT_MANUAL_PAYMENT_OPERATORS, 
+  subscribeToManualPaymentConfig 
+} from "../lib/manualPaymentConfig";
 
 interface AfrigomboPlusProps {
   onBack: () => void;
@@ -57,6 +62,16 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
   const [activationError, setActivationError] = useState("");
   const [activationSuccessMsg, setActivationSuccessMsg] = useState("");
   const [isActivatingCode, setIsActivatingCode] = useState(false);
+
+  // Dynamic Manual Payment Operators Config
+  const [manualOperators, setManualOperators] = useState(DEFAULT_MANUAL_PAYMENT_OPERATORS);
+
+  useEffect(() => {
+    const unsub = subscribeToManualPaymentConfig((data) => {
+      setManualOperators(data.operators);
+    });
+    return () => unsub();
+  }, []);
 
   // Auto-fill phone if available from profile
   useEffect(() => {
@@ -131,12 +146,12 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
     }
   ];
 
-  // Mobile Money Support Numbers for Ivory Coast & Sub-region
-  const paymentNumbers = {
-    WAVE: "+225 0503222712",
-    ORANGE_MONEY: "+225 0707000000",
-    MOOV_MONEY: "+225 0101000000",
-    MTN_MOMO: "+225 0503222712",
+  // Mobile Money Support Numbers for Ivory Coast & Sub-region (Dynamic from Founder Admin)
+  const paymentNumbers: Record<string, string> = {
+    WAVE: manualOperators.WAVE?.phoneNumber || "+225 0503222712",
+    ORANGE_MONEY: manualOperators.ORANGE_MONEY?.phoneNumber || "+225 0707000000",
+    MOOV_MONEY: manualOperators.MOOV_MONEY?.phoneNumber || "+225 0101000000",
+    MTN_MOMO: manualOperators.MTN_MOMO?.phoneNumber || "+225 0503222712",
     MANUAL_BETA: "+225 0503222712",
     AUTRE: "+225 0503222712"
   };
@@ -533,20 +548,32 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                   1. Choisissez votre moyen de paiement Mobile Money :
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {(["WAVE", "ORANGE_MONEY", "MOOV_MONEY", "MTN_MOMO"] as SubscriptionPaymentMethod[]).map((method) => (
-                    <button
-                      key={method}
-                      type="button"
-                      onClick={() => setPaymentMethod(method)}
-                      className={`p-2.5 rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
-                        paymentMethod === method
-                          ? "bg-afri-gold/20 border-afri-gold text-afri-gold shadow-sm"
-                          : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text"
-                      }`}
-                    >
-                      {method.replace("_", " ")}
-                    </button>
-                  ))}
+                  {(["WAVE", "ORANGE_MONEY", "MOOV_MONEY", "MTN_MOMO"] as SubscriptionPaymentMethod[]).map((method) => {
+                    const opConfig = manualOperators[method as ManualPaymentOperatorKey];
+                    const isEnabled = opConfig ? opConfig.enabled : true;
+                    return (
+                      <button
+                        key={method}
+                        type="button"
+                        onClick={() => {
+                          if (isEnabled) setPaymentMethod(method);
+                        }}
+                        disabled={!isEnabled}
+                        className={`p-2.5 rounded-xl border text-center font-bold text-xs transition-all relative ${
+                          !isEnabled 
+                            ? "bg-afri-bg/40 border-afri-border/40 text-afri-text-muted/40 opacity-50 cursor-not-allowed"
+                            : paymentMethod === method
+                              ? "bg-afri-gold/20 border-afri-gold text-afri-gold shadow-sm cursor-pointer"
+                              : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text cursor-pointer"
+                        }`}
+                      >
+                        <div>{method.replace("_", " ")}</div>
+                        {!isEnabled && (
+                          <div className="text-[9px] font-normal text-red-400 mt-0.5">Indisponible</div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

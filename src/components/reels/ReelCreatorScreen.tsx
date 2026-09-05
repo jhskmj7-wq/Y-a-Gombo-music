@@ -24,6 +24,7 @@ interface ReelCreatorScreenProps {
 
 export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreatorScreenProps) {
   const previewRef = useRef<HTMLVideoElement>(null);
+  const previewNodeRef = useRef<HTMLVideoElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -33,14 +34,26 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const recordedUrlRef = useRef<string | null>(null);
   recordedUrlRef.current = recordedUrl;
 
+  const stopPreviewVideo = () => {
+    if (previewNodeRef.current) {
+      try {
+        previewNodeRef.current.pause();
+        previewNodeRef.current.currentTime = 0;
+        previewNodeRef.current.removeAttribute("src");
+        previewNodeRef.current.load();
+      } catch (_) {}
+    }
+  };
+
+  const handleCloseCreator = () => {
+    stopPreviewVideo();
+    onClose();
+  };
+
   // Nettoyage complet lors du démontage du composant
   useEffect(() => {
     return () => {
-      if (previewRef.current) {
-        previewRef.current.pause();
-        previewRef.current.src = "";
-        previewRef.current.load();
-      }
+      stopPreviewVideo();
       if (recordedUrlRef.current) {
         URL.revokeObjectURL(recordedUrlRef.current);
         recordedUrlRef.current = null;
@@ -57,11 +70,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     if (!file.type.startsWith("video/")) return;
 
     // Arrêt et révocation de l'ancienne ressource vidéo si présente
-    if (previewRef.current) {
-      previewRef.current.pause();
-      previewRef.current.src = "";
-      previewRef.current.load();
-    }
+    stopPreviewVideo();
     if (recordedUrl) {
       URL.revokeObjectURL(recordedUrl);
     }
@@ -74,11 +83,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   };
 
   const handleRetake = () => {
-    if (previewRef.current) {
-      previewRef.current.pause();
-      previewRef.current.src = "";
-      previewRef.current.load();
-    }
+    stopPreviewVideo();
     if (recordedUrl) {
       URL.revokeObjectURL(recordedUrl);
     }
@@ -90,11 +95,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const handleNext = () => {
     if (selectedFile) {
       // Pause propre du lecteur local avant passage à l'étape suivante
-      if (previewRef.current) {
-        previewRef.current.pause();
-        previewRef.current.src = "";
-        previewRef.current.load();
-      }
+      stopPreviewVideo();
       onVideoReady(selectedFile, selectedFilter);
     }
   };
@@ -121,7 +122,11 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
 
         <div className="flex-1 flex items-center justify-center overflow-hidden relative bg-black">
           <video
-            ref={previewRef}
+            ref={(el) => {
+              // @ts-ignore
+              previewRef.current = el;
+              if (el) previewNodeRef.current = el;
+            }}
             src={recordedUrl}
             controls={true}
             autoPlay

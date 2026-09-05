@@ -223,7 +223,7 @@ export default function AnnuaireTalents({
   // Back button from profile detail page
   const handleBackToAnnuaire = () => {
     onSelectTalent(null);
-    window.history.pushState(null, "", "/");
+    window.history.pushState(null, "", "/home");
   };
 
   // Submit dynamic direct message

@@ -4,7 +4,8 @@ import {
   User, Phone, Mail, FileText, ExternalLink, ShieldCheck, Key, 
   Copy, Check, AlertTriangle, ChevronRight, Eye, MessageSquare,
   Sparkles, Calendar, ArrowUpRight, Smartphone, AlertCircle,
-  PlusCircle, RefreshCcw, DollarSign, History, ShieldAlert, ArrowLeftRight
+  PlusCircle, RefreshCcw, DollarSign, History, ShieldAlert, ArrowLeftRight,
+  Power, Edit3, Save, CheckCheck, Loader2
 } from "lucide-react";
 import { collection, onSnapshot, query, orderBy, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -18,6 +19,16 @@ import {
   changeSubscriptionPlan,
   recordManualRefund
 } from "../../lib/premiumSubscriptionEngine";
+import { 
+  ManualPaymentOperatorKey, 
+  ManualPaymentOperatorConfig, 
+  ManualPaymentAuditEntry,
+  DEFAULT_MANUAL_PAYMENT_OPERATORS,
+  subscribeToManualPaymentConfig,
+  updateManualPaymentOperator,
+  isValidIvorianPhoneNumber,
+  formatIvorianPhoneNumber
+} from "../../lib/manualPaymentConfig";
 import { NotificationService } from "../../lib/NotificationService";
 
 interface AdminSubscriptionManagementProps {
@@ -25,7 +36,7 @@ interface AdminSubscriptionManagementProps {
   audioSynth?: any;
 }
 
-type TabType = "pending" | "approved" | "rejected" | "active_users" | "codes";
+type TabType = "pending" | "approved" | "rejected" | "active_users" | "codes" | "payment_methods";
 
 export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementProps> = ({
   currentUser,
@@ -37,6 +48,17 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
   const [allUsers, setAllUsers] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Manual Payment Methods State
+  const [paymentOperators, setPaymentOperators] = useState<Record<ManualPaymentOperatorKey, ManualPaymentOperatorConfig>>(DEFAULT_MANUAL_PAYMENT_OPERATORS);
+  const [paymentAuditLog, setPaymentAuditLog] = useState<ManualPaymentAuditEntry[]>([]);
+  const [editingOperator, setEditingOperator] = useState<ManualPaymentOperatorConfig | null>(null);
+  const [editPhoneInput, setEditPhoneInput] = useState("");
+  const [editEnabledInput, setEditEnabledInput] = useState(true);
+  const [editPhoneError, setEditPhoneError] = useState("");
+  const [isConfirmingReplace, setIsConfirmingReplace] = useState(false);
+  const [isSavingPaymentMethod, setIsSavingPaymentMethod] = useState(false);
+  const [copiedOperatorPhone, setCopiedOperatorPhone] = useState<string | null>(null);
 
   // Modals state
   const [selectedProofUrl, setSelectedProofUrl] = useState<string | null>(null);
@@ -126,10 +148,17 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
       console.warn("Sync users notice:", err);
     });
 
+    // 4. Synchronisation des moyens de paiement manuels
+    const unsubPayments = subscribeToManualPaymentConfig((data) => {
+      setPaymentOperators(data.operators);
+      setPaymentAuditLog(data.auditLog);
+    });
+
     return () => {
       unsubReq();
       unsubCodes();
       unsubUsers();
+      unsubPayments();
     };
   }, []);
 
@@ -366,6 +395,80 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
     setTimeout(() => setCopiedCode(null), 3000);
   };
 
+  const copyOperatorPhone = (phone: string) => {
+    navigator.clipboard.writeText(phone);
+    setCopiedOperatorPhone(phone);
+    setTimeout(() => setCopiedOperatorPhone(null), 2500);
+  };
+
+  const handleToggleOperator = async (op: ManualPaymentOperatorConfig) => {
+    const nextEnabled = !op.enabled;
+    if (nextEnabled && (!op.phoneNumber || !isValidIvorianPhoneNumber(op.phoneNumber))) {
+      showFeedback("error", `Impossible d'activer ${op.displayName} sans un numéro ivoirien valide.`);
+      return;
+    }
+
+    try {
+      const res = await updateManualPaymentOperator(
+        op.id,
+        { enabled: nextEnabled },
+        currentUser || { email: "jhs.kmj7@gmail.com", displayName: "Fondateur" }
+      );
+      if (res.success) {
+        showFeedback("success", `${op.displayName} est maintenant ${nextEnabled ? "DISPONIBLE" : "INDISPONIBLE"}.`);
+        try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
+      } else {
+        showFeedback("error", res.message);
+      }
+    } catch (e: any) {
+      showFeedback("error", e.message || "Erreur lors de la mise à jour");
+    }
+  };
+
+  const handleOpenEditOperator = (op: ManualPaymentOperatorConfig) => {
+    setEditingOperator(op);
+    setEditPhoneInput(op.phoneNumber || "");
+    setEditEnabledInput(op.enabled);
+    setEditPhoneError("");
+    setIsConfirmingReplace(false);
+  };
+
+  const handleSaveEditOperator = async () => {
+    if (!editingOperator) return;
+
+    const trimmed = editPhoneInput.trim();
+    if (!isValidIvorianPhoneNumber(trimmed)) {
+      setEditPhoneError("Format invalide. Numéro ivoirien requis (10 chiffres, ex: 07 00 00 00 00 ou +225...)");
+      return;
+    }
+
+    setIsSavingPaymentMethod(true);
+    setEditPhoneError("");
+
+    try {
+      const res = await updateManualPaymentOperator(
+        editingOperator.id,
+        {
+          phoneNumber: trimmed,
+          enabled: editEnabledInput
+        },
+        currentUser || { email: "jhs.kmj7@gmail.com", displayName: "Fondateur" }
+      );
+
+      if (res.success) {
+        showFeedback("success", `Numéro officiel ${editingOperator.displayName} mis à jour : ${formatIvorianPhoneNumber(trimmed)}`);
+        try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
+        setEditingOperator(null);
+      } else {
+        setEditPhoneError(res.message);
+      }
+    } catch (err: any) {
+      setEditPhoneError(err?.message || "Erreur lors de l'enregistrement");
+    } finally {
+      setIsSavingPaymentMethod(false);
+    }
+  };
+
   return (
     <div className="space-y-5">
       {/* Toast Feedback */}
@@ -495,10 +598,22 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
             <Key className="w-3.5 h-3.5" />
             <span>Pass & Codes ({codes.length})</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab("payment_methods")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === "payment_methods"
+                ? "bg-cyan-500 text-black shadow-md"
+                : "bg-afri-bg-sec text-afri-text-muted hover:text-white border border-afri-border"
+            }`}
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span>Moyens de Paiement</span>
+          </button>
         </div>
 
         {/* Search */}
-        {activeTab !== "codes" && (
+        {activeTab !== "codes" && activeTab !== "payment_methods" && (
           <div className="relative w-full sm:w-64">
             <Search className="w-3.5 h-3.5 text-afri-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -942,6 +1057,279 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: MOYENS DE PAIEMENT MANUELS */}
+      {activeTab === "payment_methods" && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-cyan-950/60 via-afri-bg-sec to-emerald-950/40 p-5 rounded-2xl border border-cyan-500/30 space-y-2">
+            <div className="flex items-center gap-2 text-cyan-400 font-black text-sm uppercase tracking-wider">
+              <Smartphone className="w-5 h-5 text-cyan-400" />
+              <span>Configuration des Numéros Officiels de Réception (Mobile Money)</span>
+            </div>
+            <p className="text-xs text-afri-text-muted leading-relaxed">
+              Gérez en temps réel les numéros officiels transmis aux utilisateurs lors de leurs abonnements Premium. Toute modification effectuée ici est <strong className="text-cyan-300 font-bold">instantanément répercutée sur l'application mobile et Web</strong>.
+            </p>
+          </div>
+
+          {/* Grid Operateurs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(["WAVE", "ORANGE_MONEY", "MTN_MOMO", "MOOV_MONEY"] as ManualPaymentOperatorKey[]).map((opKey) => {
+              const op = paymentOperators[opKey] || DEFAULT_MANUAL_PAYMENT_OPERATORS[opKey];
+              return (
+                <div 
+                  key={opKey}
+                  className={`p-4 rounded-2xl border transition-all space-y-4 ${
+                    op.enabled 
+                      ? "bg-afri-bg-sec/90 border-cyan-500/40 shadow-lg shadow-cyan-950/20" 
+                      : "bg-afri-bg-sec/40 border-afri-border/60 opacity-80"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white text-xs shadow-md"
+                        style={{ backgroundColor: op.color || "#0ea5e9" }}
+                      >
+                        {op.displayName.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                          {op.displayName}
+                        </h4>
+                        <div className="text-[11px] text-afri-text-muted flex items-center gap-1.5 mt-0.5">
+                          <span>
+                            {op.enabled ? (
+                              <span className="text-emerald-400 font-bold flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                ACTIF & DISPONIBLE
+                              </span>
+                            ) : (
+                              <span className="text-afri-text-muted font-medium">
+                                DÉSACTIVÉ (Masqué aux clients)
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleToggleOperator(op)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                        op.enabled
+                          ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-900"
+                          : "bg-red-950/60 text-red-300 border border-red-500/40 hover:bg-red-900"
+                      }`}
+                      title={op.enabled ? "Désactiver cet opérateur" : "Activer cet opérateur"}
+                    >
+                      <Power className="w-3.5 h-3.5" />
+                      <span>{op.enabled ? "ON" : "OFF"}</span>
+                    </button>
+                  </div>
+
+                  {/* Numéro de réception */}
+                  <div className="bg-afri-bg/80 p-3 rounded-xl border border-afri-border flex items-center justify-between gap-2">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-afri-text-muted">
+                        Numéro officiel de paiement
+                      </div>
+                      <div className="font-mono font-black text-base text-cyan-300 tracking-wide mt-0.5">
+                        {op.phoneNumber || "Non renseigné"}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {op.phoneNumber && (
+                        <button
+                          onClick={() => copyOperatorPhone(op.phoneNumber)}
+                          className="p-2 rounded-lg bg-afri-bg-sec hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition cursor-pointer"
+                          title="Copier le numéro"
+                        >
+                          {copiedOperatorPhone === op.phoneNumber ? (
+                            <CheckCheck className="w-4 h-4 text-emerald-400" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleOpenEditOperator(op)}
+                        className="px-3 py-1.5 rounded-lg bg-cyan-500 text-black font-bold text-xs hover:bg-cyan-400 transition flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Modifier</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Métadonnées de màj */}
+                  <div className="text-[10px] text-afri-text-muted flex items-center justify-between pt-1 border-t border-afri-border/40">
+                    <span>Mis à jour par : <strong className="text-white">{op.updatedBy || "Système"}</strong></span>
+                    <span>
+                      {op.updatedAt ? new Date(op.updatedAt).toLocaleDateString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "-"}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Audit Log Section */}
+          <div className="bg-afri-bg-sec/80 rounded-2xl border border-afri-border p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-afri-border/60 pb-3">
+              <h4 className="font-bold text-xs uppercase tracking-wider text-afri-text flex items-center gap-2">
+                <History className="w-4 h-4 text-cyan-400" />
+                Journal d'audit des modifications de numéros
+              </h4>
+              <span className="text-[10px] text-afri-text-muted">Dernières opérations</span>
+            </div>
+
+            {paymentAuditLog.length === 0 ? (
+              <p className="text-xs text-afri-text-muted italic py-2">
+                Aucune modification récente enregistrée.
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {paymentAuditLog.map((log) => (
+                  <div key={log.id} className="p-2.5 rounded-xl bg-afri-bg/60 border border-afri-border/50 text-xs flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <div className="font-bold text-white flex items-center gap-2">
+                        <span className="text-cyan-400 font-mono">[{log.operatorName}]</span>
+                        {log.action === "enabled" && <span className="text-emerald-400">Activé</span>}
+                        {log.action === "disabled" && <span className="text-red-400">Désactivé</span>}
+                        {log.action === "number_updated" && <span className="text-amber-300">Nouveau numéro</span>}
+                        {log.previousPhone && log.newPhone && log.previousPhone !== log.newPhone && (
+                          <span className="text-afri-text-muted font-normal">
+                            ({log.previousPhone} ➔ <strong className="text-cyan-300">{log.newPhone}</strong>)
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-afri-text-muted">
+                        Par {log.performedBy} ({log.performedByEmail})
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-afri-text-muted font-mono whitespace-nowrap">
+                      {new Date(log.timestamp).toLocaleDateString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Edit Operator Phone & Status */}
+      {editingOperator && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-afri-bg-sec border border-cyan-500/50 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-afri-border pb-3">
+              <div className="flex items-center gap-2.5">
+                <div 
+                  className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-white text-xs"
+                  style={{ backgroundColor: editingOperator.color || "#0ea5e9" }}
+                >
+                  {editingOperator.displayName.substring(0, 2).toUpperCase()}
+                </div>
+                <h3 className="font-bold text-sm text-white">
+                  Modifier le numéro {editingOperator.displayName}
+                </h3>
+              </div>
+              <button
+                onClick={() => setEditingOperator(null)}
+                className="p-1 rounded-lg text-afri-text-muted hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Phone Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-afri-text flex items-center justify-between">
+                  <span>Numéro officiel (Côte d'Ivoire)</span>
+                  <span className="text-[10px] text-afri-text-muted">Format: 10 chiffres (ex: 0503222712)</span>
+                </label>
+                <input
+                  type="text"
+                  value={editPhoneInput}
+                  onChange={(e) => {
+                    setEditPhoneInput(e.target.value);
+                    setEditPhoneError("");
+                  }}
+                  placeholder="Ex: +225 05 03 22 27 12"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-afri-bg border border-afri-border focus:border-cyan-400 text-white font-mono text-sm outline-none"
+                />
+                {editPhoneError && (
+                  <p className="text-[11px] text-red-400 font-semibold flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{editPhoneError}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Status toggle inside modal */}
+              <div className="p-3 bg-afri-bg/60 rounded-xl border border-afri-border flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-bold text-white">Statut de disponibilité</div>
+                  <div className="text-[11px] text-afri-text-muted">
+                    {editEnabledInput ? "Rendre ce mode sélectionnable par les clients" : "Masquer ce mode aux clients"}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditEnabledInput(!editEnabledInput)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold cursor-pointer transition ${
+                    editEnabledInput
+                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                      : "bg-red-500/20 text-red-400 border border-red-500/40"
+                  }`}
+                >
+                  {editEnabledInput ? "ACTIF (ON)" : "INACTIF (OFF)"}
+                </button>
+              </div>
+
+              {/* Notice Banner */}
+              <div className="p-3 bg-amber-950/40 border border-amber-500/30 rounded-xl text-amber-200 text-xs space-y-1">
+                <div className="font-bold flex items-center gap-1 text-amber-300">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>Avertissement important</span>
+                </div>
+                <p className="text-[11px] text-amber-200/90 leading-normal">
+                  Assurez-vous que la puce correspondant à ce numéro est bien active. Toute transaction envoyée vers un mauvais numéro par un client ne pourra pas être récupérée automatiquement.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-afri-border">
+              <button
+                onClick={() => setEditingOperator(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-afri-text-muted hover:text-white transition cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSaveEditOperator}
+                disabled={isSavingPaymentMethod}
+                className="px-4 py-2 rounded-xl bg-cyan-500 text-black font-bold text-xs hover:bg-cyan-400 transition flex items-center gap-2 cursor-pointer shadow-lg disabled:opacity-50"
+              >
+                {isSavingPaymentMethod ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Enregistrement...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Enregistrer le numéro</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

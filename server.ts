@@ -177,8 +177,8 @@ function getAI(): GoogleGenAI | null {
 
 const app = express();
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 // --- WALLET SECURITY BACKEND ENGINE ---
 
@@ -615,9 +615,12 @@ app.post("/api/wallet/request-reset", async (req, res) => {
   // 1. ENDPOINT POUR OBTENIR UNE URL D'UPLOAD SIGNÉE (UPLOAD BINAIRE DIRECT SANS BASE64)
   app.post("/api/admin/media/signed-upload-url", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
-    const { idToken, storagePath, bucket = "afrigombo-media" } = req.body || {};
+    const authHeader = req.headers.authorization || "";
+    const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : undefined;
+    const { idToken = bearerToken, storagePath, bucket = "afrigombo-media" } = req.body || {};
+    const tokenToVerify = idToken || bearerToken;
 
-    if (!idToken) {
+    if (!tokenToVerify) {
       return res.status(401).json({ success: false, error: "Non authentifié (token manquant)." });
     }
 
@@ -634,7 +637,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       // Vérification systématique du jeton d'authentification Firebase
       let decodedToken;
       try {
-        decodedToken = await adminAuth.verifyIdToken(idToken);
+        decodedToken = await adminAuth.verifyIdToken(tokenToVerify);
       } catch (authErr: any) {
         console.error("[SIGNED URL AUTH ERROR]", authErr?.message || authErr);
         return res.status(401).json({ success: false, error: "Session invalide ou expirée. Veuillez vous reconnecter." });
@@ -697,14 +700,26 @@ app.post("/api/wallet/request-reset", async (req, res) => {
   // 1.5 ENDPOINT DE TRANSCODAGE SERVEUR MP4 H.264/AAC FASTSTART (COMPATIBILITÉ ABSOLUE iPHONE / SAFARI)
   const handleTranscodeAndUpload = async (req: express.Request, res: express.Response) => {
     res.setHeader("Content-Type", "application/json");
-    const { idToken, storagePath, fileBase64, bucket = "afrigombo-media" } = req.body || {};
+    const authHeader = req.headers.authorization || "";
+    const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : undefined;
+    const { idToken = bearerToken, storagePath, fileBase64, bucket = "afrigombo-media" } = req.body || {};
+    const tokenToVerify = idToken || bearerToken;
 
-    if (!idToken) {
+    if (!tokenToVerify) {
       return res.status(401).json({ success: false, error: "Non authentifié (token manquant)." });
     }
 
     if (!storagePath || !fileBase64) {
       return res.status(400).json({ success: false, error: "Paramètres 'storagePath' et 'fileBase64' requis." });
+    }
+
+    // Validation explicite de taille (~75 Mo max en binaire équivaut à ~100 Mo en base64)
+    const MAX_BASE64_BYTES = 105 * 1024 * 1024;
+    if (typeof fileBase64 === "string" && fileBase64.length > MAX_BASE64_BYTES) {
+      return res.status(413).json({
+        success: false,
+        error: "Le fichier vidéo dépasse la limite autorisée de 75 Mo pour le transcodage.",
+      });
     }
 
     let tempInPath = "";
@@ -718,7 +733,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 
       let decodedToken;
       try {
-        decodedToken = await adminAuth.verifyIdToken(idToken);
+        decodedToken = await adminAuth.verifyIdToken(tokenToVerify);
       } catch (authErr: any) {
         console.error("[TRANSCODE AUTH ERROR]", authErr?.message || authErr);
         return res.status(401).json({ success: false, error: "Session invalide ou expirée." });

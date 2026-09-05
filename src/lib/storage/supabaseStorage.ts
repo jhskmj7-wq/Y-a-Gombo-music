@@ -561,7 +561,10 @@ export const supabaseStorage = {
     // 1. Demande d'URL signée au serveur Express
     const urlResp = await fetch("/api/admin/media/signed-upload-url", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        ...(idToken ? { "Authorization": `Bearer ${idToken}` } : {})
+      },
       body: JSON.stringify({
         idToken,
         storagePath,
@@ -709,7 +712,7 @@ export const supabaseStorage = {
           const base64 = res.includes(",") ? res.split(",")[1] : res;
           resolve(base64);
         };
-        reader.onerror = reject;
+        reader.onerror = () => reject(new Error("Impossible de lire le fichier vidéo sélectionné."));
         reader.readAsDataURL(file);
       });
 
@@ -721,25 +724,55 @@ export const supabaseStorage = {
       const cleanBaseName = isFile ? sanitizeFileName(file.name.replace(/\.[^.]+$/, "")) : `reel_${timestamp}`;
       const storagePath = `reels/${userId}/${timestamp}_${cleanBaseName}.mp4`;
 
-      const resp = await fetch("/api/admin/media/transcode-and-upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idToken,
-          storagePath,
-          fileBase64: base64Data,
-          bucket: SUPABASE_BUCKET_NAME,
-        }),
-      });
+      // Contrôleur d'annulation et timeout 120 secondes
+      const controller = new AbortController();
+      const TRANSCODE_TIMEOUT_MS = 120000;
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, TRANSCODE_TIMEOUT_MS);
+
+      let resp: Response;
+      try {
+        resp = await fetch("/api/admin/media/transcode-and-upload", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            ...(idToken ? { "Authorization": `Bearer ${idToken}` } : {})
+          },
+          body: JSON.stringify({
+            idToken,
+            storagePath,
+            fileBase64: base64Data,
+            bucket: SUPABASE_BUCKET_NAME,
+          }),
+          signal: controller.signal,
+        });
+      } catch (fetchErr: any) {
+        if (fetchErr?.name === "AbortError" || controller.signal.aborted) {
+          throw new Error("Le transcodage de la vidéo a expiré après 120 secondes. Veuillez utiliser une vidéo plus courte ou plus légère.");
+        }
+        throw new Error(`Erreur réseau lors de l'envoi de la vidéo au transcodeur : ${fetchErr?.message || "Connexion interrompue."}`);
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       let json: any = {};
       try {
         json = await resp.json();
-      } catch (jsonErr) {
-        throw new Error("Réponse serveur invalide lors du transcodage vidéo.");
+      } catch (_jsonErr) {
+        if (resp.status === 413) {
+          throw new Error("Le fichier vidéo est trop volumineux pour être traité par le serveur (limite 75 Mo).");
+        }
+        throw new Error(`Réponse serveur invalide (Code HTTP ${resp.status}).`);
       }
 
       if (!resp.ok || !json.success) {
+        if (resp.status === 401) {
+          throw new Error("Session expirée. Veuillez vous reconnecter.");
+        }
+        if (resp.status === 413) {
+          throw new Error("Le fichier vidéo dépasse la taille maximale de 75 Mo.");
+        }
         throw new Error(json.error || "Échec du transcodage vidéo en MP4 compatible Safari.");
       }
 
