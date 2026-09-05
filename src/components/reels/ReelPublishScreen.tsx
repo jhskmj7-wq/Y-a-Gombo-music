@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Hash, MessageSquare, Loader2 } from "lucide-react";
 import { supabaseStorage } from "../../lib/storage/supabaseStorage";
@@ -22,9 +22,18 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
   const [allowComments, setAllowComments] = useState(true);
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatusText, setUploadStatusText] = useState("Préparation...");
   const [errorMsg, setErrorMsg] = useState("");
 
   const videoPreviewUrl = React.useMemo(() => URL.createObjectURL(videoFile), [videoFile]);
+
+  useEffect(() => {
+    return () => {
+      if (videoPreviewUrl) {
+        URL.revokeObjectURL(videoPreviewUrl);
+      }
+    };
+  }, [videoPreviewUrl]);
 
   const addHashtag = () => {
     const clean = hashtagInput.trim().replace(/^#/, "").replace(/\s+/g, "");
@@ -45,6 +54,7 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
     setErrorMsg("");
     setLoading(true);
     setUploadProgress(0);
+    setUploadStatusText("Vérification du format vidéo...");
 
     try {
       const uid = currentUserProfile?.uid || currentUser?.uid || "anonymous";
@@ -52,31 +62,38 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
       const idToken = currentUser ? await currentUser.getIdToken(true) : undefined;
 
       console.log(
-        `[REEL UPLOAD CHECK]\n` +
-        `File envoyé: ${(videoFile.size / 1024 / 1024).toFixed(2)} Mo\n` +
+        `[REEL SAFARI PIPELINE]\n` +
+        `Fichier sélectionné: ${(videoFile.size / 1024 / 1024).toFixed(2)} Mo\n` +
         `Nom: ${videoFile.name}\n` +
-        `Compressé: OUI`
+        `Type source: ${videoFile.type || "inconnu"}\n` +
+        `Pipeline Safari H.264: ACTIF`
       );
 
       let uploadResult: any;
       try {
-        uploadResult = await supabaseStorage.uploadVideoDirectSigned(
+        uploadResult = await supabaseStorage.uploadReelSafariCompatible(
           videoFile,
           uid,
           publicationId,
-          (progress) => setUploadProgress(progress.percentage),
+          (progress) => {
+            setUploadProgress(progress.percentage);
+            if (progress.log) {
+              setUploadStatusText(progress.log);
+            }
+          },
           idToken
         );
 
         if (!uploadResult?.success || !uploadResult?.url) {
-          throw new Error(uploadResult?.error || "Échec du téléversement direct de la vidéo.");
+          throw new Error(uploadResult?.error || "Échec du téléversement de la vidéo.");
         }
       } catch (uploadErr: any) {
         console.error("[REEL UPLOAD ERROR]", uploadErr);
-        throw new Error(uploadErr?.message || "Échec de l'upload de la vidéo.");
+        throw new Error(uploadErr?.message || "Échec du traitement ou du téléversement de la vidéo.");
       }
 
       setUploadProgress(95);
+      setUploadStatusText("Enregistrement de la publication...");
 
       const authorName = currentUserProfile?.nomArtistique || currentUserProfile?.displayName || currentUserProfile?.name || currentUser?.displayName || "Artiste";
       const authorAvatar = currentUserProfile?.avatarUrl || currentUserProfile?.photoURL || currentUser?.photoURL || "";
@@ -277,7 +294,7 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
         {loading && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-zinc-400 font-mono">
-              <span>Publication en cours...</span>
+              <span className="truncate max-w-[200px]">{uploadStatusText}</span>
               <span>{uploadProgress}%</span>
             </div>
             <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">

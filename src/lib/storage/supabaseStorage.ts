@@ -539,7 +539,13 @@ export const supabaseStorage = {
   ): Promise<StorageUploadResult> {
     const timestamp = Date.now();
     const isFile = file instanceof File;
-    const originalName = isFile ? file.name : `reel_${timestamp}.webm`;
+    let originalName = isFile ? file.name : `reel_${timestamp}.mp4`;
+    
+    // Normaliser l'extension si MOV -> MP4
+    if (originalName.toLowerCase().endsWith(".mov")) {
+      originalName = originalName.replace(/\.mov$/i, ".mp4");
+    }
+    
     const fileName = sanitizeFileName(originalName);
     const storagePath = `reels/${userId}/${timestamp}_${fileName}`;
     const bucket = SUPABASE_BUCKET_NAME;
@@ -584,8 +590,19 @@ export const supabaseStorage = {
     }
 
     const { signedUrl, publicUrl } = urlJson;
-    const blob = isFile ? file : new Blob([file], { type: "video/webm" });
-    const mimeType = blob.type || "video/webm";
+    
+    // Déterminer le MIME type exact pour Safari (MP4 H.264 prioritaire)
+    let rawMime = (file as Blob).type || "";
+    let mimeType = "video/mp4";
+    if (rawMime === "video/quicktime" || originalName.toLowerCase().endsWith(".mp4") || originalName.toLowerCase().endsWith(".mov")) {
+      mimeType = "video/mp4";
+    } else if (rawMime === "video/webm" || originalName.toLowerCase().endsWith(".webm")) {
+      mimeType = "video/webm";
+    } else if (rawMime) {
+      mimeType = rawMime;
+    }
+
+    const blob = isFile ? file : new Blob([file], { type: mimeType });
 
     if (onProgress) {
       onProgress({ percentage: 10, state: "uploading", log: "Démarrage du transfert binaire..." });
@@ -655,6 +672,104 @@ export const supabaseStorage = {
       storagePath,
       metadata,
     };
+  },
+
+  /**
+   * 2.1 PIPELINE SPÉCIALISÉ RÉELS : COMPATIBILITÉ ABSOLUE iPHONE / SAFARI
+   * Si la vidéo est WebM -> Transcodage serveur FFmpeg (H.264 yuv420p + AAC stereo + faststart)
+   * Si la vidéo est déjà MP4 / MOV -> Envoi binaire direct signé (H.264 natif préservé)
+   */
+  async uploadReelSafariCompatible(
+    file: File | Blob,
+    userId: string,
+    publicationId = "general",
+    onProgress?: (progress: ProgressInfo) => void,
+    idToken?: string
+  ): Promise<StorageUploadResult> {
+    const isFile = file instanceof File;
+    const fileType = ((file as Blob).type || "").toLowerCase();
+    const fileName = isFile ? file.name.toLowerCase() : "";
+    const isWebM = fileType.includes("webm") || fileName.endsWith(".webm");
+
+    // Si la vidéo est au format WebM, la convertir côté serveur en MP4 H.264 compatible Safari
+    if (isWebM) {
+      if (onProgress) {
+        onProgress({ percentage: 10, state: "uploading", log: "Optimisation de compatibilité Safari/iOS..." });
+      }
+
+      if (!idToken) {
+        throw new Error("Jeton d'authentification requis pour le transcodage de la vidéo.");
+      }
+
+      // Lecture en Base64
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const res = reader.result as string;
+          const base64 = res.includes(",") ? res.split(",")[1] : res;
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      if (onProgress) {
+        onProgress({ percentage: 25, state: "uploading", log: "Transcodage MP4 H.264 Safari en cours..." });
+      }
+
+      const timestamp = Date.now();
+      const cleanBaseName = isFile ? sanitizeFileName(file.name.replace(/\.[^.]+$/, "")) : `reel_${timestamp}`;
+      const storagePath = `reels/${userId}/${timestamp}_${cleanBaseName}.mp4`;
+
+      const resp = await fetch("/api/admin/media/transcode-and-upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idToken,
+          storagePath,
+          fileBase64: base64Data,
+          bucket: SUPABASE_BUCKET_NAME,
+        }),
+      });
+
+      let json: any = {};
+      try {
+        json = await resp.json();
+      } catch (jsonErr) {
+        throw new Error("Réponse serveur invalide lors du transcodage vidéo.");
+      }
+
+      if (!resp.ok || !json.success) {
+        throw new Error(json.error || "Échec du transcodage vidéo en MP4 compatible Safari.");
+      }
+
+      if (onProgress) {
+        onProgress({ percentage: 100, state: "success", log: "Vidéo MP4 Safari publiée avec succès !" });
+      }
+
+      const metadata: FirestoreMediaMetadata = {
+        provider: "supabase",
+        bucket: SUPABASE_BUCKET_NAME,
+        storagePath: json.storagePath || storagePath,
+        mediaUrl: json.url,
+        mediaType: "video",
+        size: json.size || (file as Blob).size,
+        mimeType: "video/mp4",
+        createdAt: new Date().toISOString(),
+        userId,
+        isPrivate: false,
+      };
+
+      return {
+        success: true,
+        url: json.url,
+        storagePath: json.storagePath || storagePath,
+        metadata,
+      };
+    }
+
+    // Si la vidéo est déjà au format MP4 ou MOV natif (ex: iPhone, Android MP4), procéder par upload direct signé
+    return this.uploadVideoDirectSigned(file, userId, publicationId, onProgress, idToken);
   },
 
   /**

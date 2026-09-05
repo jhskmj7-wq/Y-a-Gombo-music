@@ -46,9 +46,9 @@ function getSupportedMimeType(): { mimeType: string; codecLabel: string } {
   const candidateTypes = [
     { type: "video/mp4;codecs=avc1.42E01E,mp4a.40.2", label: "H.264/AAC MP4 High" },
     { type: "video/mp4;codecs=avc1,mp4a.40.2", label: "H.264/AAC MP4" },
+    { type: "video/mp4", label: "MP4 standard" },
     { type: "video/webm;codecs=h264,opus", label: "H.264/Opus WebM" },
     { type: "video/webm;codecs=vp9,opus", label: "VP9/Opus WebM" },
-    { type: "video/mp4", label: "MP4 standard" },
     { type: "video/webm;codecs=vp8,opus", label: "VP8/Opus WebM" },
     { type: "video/webm", label: "WebM standard" },
   ];

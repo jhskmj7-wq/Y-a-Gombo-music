@@ -833,6 +833,9 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                         loop
                         muted={isMuted}
                         playsInline
+                        // @ts-ignore
+                        webkit-playsinline="true"
+                        x-webkit-airplay="allow"
                         onCanPlay={() => {
                           setVideoErrors(prev => {
                             if (!prev[reel.id]) return prev;

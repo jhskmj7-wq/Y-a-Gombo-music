@@ -39,6 +39,7 @@ const AdminDeploymentCenter = lazyWithRetry(() => import("./AdminDeploymentCente
 const AdminRevenueFeatures = lazyWithRetry(() => import("./AdminRevenueFeatures"));
 import { GomboAdsAdminSection } from "../ads/GomboAdsAdminSection";
 import AdminSubscriptionManagement from "./AdminSubscriptionManagement";
+import FounderSubscriptionBubble from "../FounderSubscriptionBubble";
 
 export type AdminModuleType = 
   | "throne"
@@ -91,6 +92,13 @@ export default function AdminSuperFounderHub({
 }: AdminSuperFounderHubProps) {
   const [activeModule, setActiveModule] = useState<AdminModuleType>(initialModule);
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState<boolean>(false);
+  const [isBubbleEnabled, setIsBubbleEnabled] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("afrigombo_founder_dash_bubble_enabled") !== "false";
+    } catch (_) {
+      return true;
+    }
+  });
   const { maintenance, isScheduledWindowActive } = useMaintenance();
   const { pendingProposalsCount } = useAdminLocations();
 
@@ -194,6 +202,28 @@ export default function AdminSuperFounderHub({
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
+          {/* Toggle Bubble for Subscriptions */}
+          <button
+            type="button"
+            onClick={() => {
+              const nextState = !isBubbleEnabled;
+              setIsBubbleEnabled(nextState);
+              try {
+                localStorage.setItem("afrigombo_founder_dash_bubble_enabled", String(nextState));
+                audioSynth?.playTamTam?.(false);
+              } catch (_) {}
+            }}
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase transition border flex items-center gap-1 cursor-pointer ${
+              isBubbleEnabled
+                ? "bg-amber-500/15 text-amber-300 border-amber-500/40"
+                : "bg-zinc-900 text-zinc-500 border-zinc-800 hover:text-zinc-300"
+            }`}
+            title={isBubbleEnabled ? "Masquer la Bulle Abonnements" : "Afficher la Bulle Abonnements"}
+          >
+            <Crown className="w-3 h-3 text-[#D4AF37]" />
+            <span className="hidden sm:inline">Bulle</span>
+          </button>
+
           {/* Discreet Maintenance icon button */}
           <button
             type="button"
@@ -414,6 +444,21 @@ export default function AdminSuperFounderHub({
         isOpen={isMaintenanceModalOpen}
         onClose={() => setIsMaintenanceModalOpen(false)}
       />
+
+      {/* Floating Subscription Management Bubble (Founder Dashboard Exclusive) */}
+      {isBubbleEnabled && (
+        <FounderSubscriptionBubble
+          onOpenSubscriptions={() => handleSelectModule("subscriptions")}
+          isActiveModule={activeModule === "subscriptions"}
+          onClose={() => {
+            setIsBubbleEnabled(false);
+            try {
+              localStorage.setItem("afrigombo_founder_dash_bubble_enabled", "false");
+            } catch (_) {}
+          }}
+          audioSynth={audioSynth}
+        />
+      )}
     </div>
   );
 }

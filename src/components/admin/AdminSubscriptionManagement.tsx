@@ -3,7 +3,8 @@ import {
   Crown, CheckCircle, XCircle, Clock, Search, Filter, RefreshCw, 
   User, Phone, Mail, FileText, ExternalLink, ShieldCheck, Key, 
   Copy, Check, AlertTriangle, ChevronRight, Eye, MessageSquare,
-  Sparkles, Calendar, ArrowUpRight, Smartphone, AlertCircle
+  Sparkles, Calendar, ArrowUpRight, Smartphone, AlertCircle,
+  PlusCircle, RefreshCcw, DollarSign, History, ShieldAlert, ArrowLeftRight
 } from "lucide-react";
 import { collection, onSnapshot, query, orderBy, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -11,7 +12,11 @@ import { SubscriptionRequest, PremiumCodeItem, User as UserType } from "../../ty
 import { 
   approveSubscriptionRequest, 
   rejectSubscriptionRequest, 
-  generateAdminPremiumCode 
+  generateAdminPremiumCode,
+  prolongSubscription,
+  revokeSubscription,
+  changeSubscriptionPlan,
+  recordManualRefund
 } from "../../lib/premiumSubscriptionEngine";
 import { NotificationService } from "../../lib/NotificationService";
 
@@ -43,6 +48,15 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
 
   // Validation modal
   const [approvingRequest, setApprovingRequest] = useState<SubscriptionRequest | null>(null);
+
+  // User Actions Modal
+  const [managingUser, setManagingUser] = useState<any | null>(null);
+  const [userActionType, setUserActionType] = useState<"prolong" | "change_plan" | "revoke" | "refund" | "history" | null>(null);
+  const [prolongDays, setProlongDays] = useState<number>(30);
+  const [targetPlan, setTargetPlan] = useState<"pro" | "elite">("elite");
+  const [actionReason, setActionReason] = useState<string>("");
+  const [refundAmount, setRefundAmount] = useState<number>(1000);
+  const [refundMethod, setRefundMethod] = useState<string>("Wave");
 
   // New Code Generation state
   const [newCodePlan, setNewCodePlan] = useState<"pro" | "elite">("pro");
@@ -136,6 +150,18 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
     return allUsers.filter(u => u.isPremium || (u as any).premium || (u as any).premiumStatus === "active");
   }, [allUsers]);
 
+  const activeEliteUsersCount = useMemo(() => {
+    return activePremiumUsers.filter(u => (u.premiumPlan || "").includes("elite") || (u.subscriptionPlan || "").includes("ELITE")).length;
+  }, [activePremiumUsers]);
+
+  const activeProUsersCount = useMemo(() => {
+    return activePremiumUsers.length - activeEliteUsersCount;
+  }, [activePremiumUsers, activeEliteUsersCount]);
+
+  const totalCollectedBetaAmount = useMemo(() => {
+    return approvedRequests.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  }, [approvedRequests]);
+
   // Apply search query
   const displayedRequests = useMemo(() => {
     let list: SubscriptionRequest[] = [];
@@ -155,6 +181,19 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
     );
   }, [activeTab, pendingRequests, approvedRequests, rejectedRequests, searchQuery]);
 
+  const displayedActiveUsers = useMemo(() => {
+    if (!searchQuery.trim()) return activePremiumUsers;
+    const q = searchQuery.toLowerCase();
+    return activePremiumUsers.filter(u =>
+      (u.name && u.name.toLowerCase().includes(q)) ||
+      (u.displayName && u.displayName.toLowerCase().includes(q)) ||
+      (u.artisticName && u.artisticName.toLowerCase().includes(q)) ||
+      (u.phoneNumber && u.phoneNumber.includes(q)) ||
+      (u.email && u.email.toLowerCase().includes(q)) ||
+      (u.subscriptionPlan && u.subscriptionPlan.toLowerCase().includes(q))
+    );
+  }, [activePremiumUsers, searchQuery]);
+
   // Handle Approve
   const handleApprove = async () => {
     if (!approvingRequest || !approvingRequest.id) return;
@@ -164,7 +203,7 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
       const res = await approveSubscriptionRequest(approvingRequest.id, currentUser);
       if (res.success) {
         showFeedback("success", res.message);
-        try { audioSynth?.playSuccess?.(); } catch (_) {}
+        try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
       } else {
         showFeedback("error", res.message);
       }
@@ -196,6 +235,108 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
     }
   };
 
+  // Handle Prolong Subscription
+  const handleExecuteProlong = async () => {
+    if (!managingUser) return;
+    setActionLoading(managingUser.id || managingUser.uid);
+    try {
+      const res = await prolongSubscription(
+        managingUser.id || managingUser.uid,
+        prolongDays,
+        currentUser,
+        actionReason || "Prolongation administrative Bêta"
+      );
+      if (res.success) {
+        showFeedback("success", res.message);
+        try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
+      } else {
+        showFeedback("error", res.message);
+      }
+    } catch (e: any) {
+      showFeedback("error", e.message || "Erreur lors de la prolongation");
+    } finally {
+      setActionLoading(null);
+      setManagingUser(null);
+      setUserActionType(null);
+    }
+  };
+
+  // Handle Revoke Subscription
+  const handleExecuteRevoke = async () => {
+    if (!managingUser) return;
+    setActionLoading(managingUser.id || managingUser.uid);
+    try {
+      const res = await revokeSubscription(
+        managingUser.id || managingUser.uid,
+        currentUser,
+        actionReason || "Résiliation par le Fondateur"
+      );
+      if (res.success) {
+        showFeedback("success", res.message);
+      } else {
+        showFeedback("error", res.message);
+      }
+    } catch (e: any) {
+      showFeedback("error", e.message || "Erreur de révocation");
+    } finally {
+      setActionLoading(null);
+      setManagingUser(null);
+      setUserActionType(null);
+    }
+  };
+
+  // Handle Plan Change
+  const handleExecutePlanChange = async () => {
+    if (!managingUser) return;
+    setActionLoading(managingUser.id || managingUser.uid);
+    try {
+      const res = await changeSubscriptionPlan(
+        managingUser.id || managingUser.uid,
+        targetPlan,
+        currentUser,
+        actionReason || "Ajustement de formule"
+      );
+      if (res.success) {
+        showFeedback("success", res.message);
+        try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
+      } else {
+        showFeedback("error", res.message);
+      }
+    } catch (e: any) {
+      showFeedback("error", e.message || "Erreur de modification de formule");
+    } finally {
+      setActionLoading(null);
+      setManagingUser(null);
+      setUserActionType(null);
+    }
+  };
+
+  // Handle Manual Refund
+  const handleExecuteRefund = async () => {
+    if (!managingUser) return;
+    setActionLoading(managingUser.id || managingUser.uid);
+    try {
+      const res = await recordManualRefund(
+        managingUser.id || managingUser.uid,
+        refundAmount,
+        refundMethod,
+        actionReason || "Remboursement manuel Bêta",
+        currentUser
+      );
+      if (res.success) {
+        showFeedback("success", res.message);
+      } else {
+        showFeedback("error", res.message);
+      }
+    } catch (e: any) {
+      showFeedback("error", e.message || "Erreur de consigne du remboursement");
+    } finally {
+      setActionLoading(null);
+      setManagingUser(null);
+      setUserActionType(null);
+    }
+  };
+
   // Handle Generate Code
   const handleGenerateCode = async () => {
     try {
@@ -203,200 +344,195 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
         plan: newCodePlan,
         billingCycle: newCodeCycle,
         createdBy: currentUser?.email || "Fondateur",
-        notes: newCodeNotes
+        notes: newCodeNotes.trim()
       });
 
       if (res.success && res.code) {
         setGeneratedCodeResult(res.code);
         setNewCodeNotes("");
-        showFeedback("success", `Code ${res.code} généré avec succès !`);
-        try { audioSynth?.playTamTam?.(); } catch (_) {}
+        showFeedback("success", `Pass ${res.code} généré avec succès !`);
+        try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
       } else {
         showFeedback("error", res.message || "Erreur de génération");
       }
     } catch (e: any) {
-      showFeedback("error", e.message || "Erreur");
+      showFeedback("error", e.message || "Erreur de génération du code");
     }
   };
 
   const copyToClipboard = (text: string) => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text);
-      setCopiedCode(text);
-      setTimeout(() => setCopiedCode(null), 2500);
-    }
+    navigator.clipboard.writeText(text);
+    setCopiedCode(text);
+    setTimeout(() => setCopiedCode(null), 3000);
   };
 
   return (
-    <div className="w-full flex flex-col space-y-5 pb-12 font-sans text-afri-text">
+    <div className="space-y-5">
       {/* Toast Feedback */}
       {feedback && (
-        <div className={`p-4 rounded-xl flex items-center gap-3 border shadow-lg transition-all animate-in fade-in ${
+        <div className={`p-4 rounded-xl border flex items-center justify-between gap-3 text-xs font-bold transition-all shadow-lg animate-in fade-in slide-in-from-top-2 ${
           feedback.type === "success" 
-            ? "bg-emerald-950/80 border-emerald-500/50 text-emerald-300" 
-            : "bg-red-950/80 border-red-500/50 text-red-300"
+            ? "bg-emerald-950/90 border-emerald-500 text-emerald-300" 
+            : "bg-red-950/90 border-red-500 text-red-300"
         }`}>
-          {feedback.type === "success" ? <CheckCircle className="w-5 h-5 flex-shrink-0 text-emerald-400" /> : <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-400" />}
-          <p className="text-xs sm:text-sm font-medium">{feedback.message}</p>
-        </div>
-      )}
-
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg-sec border border-afri-gold/30 rounded-2xl p-4 sm:p-6 shadow-md relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-afri-gold/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-afri-gold/15 border border-afri-gold/40 flex items-center justify-center text-afri-gold flex-shrink-0 shadow-inner">
-              <Crown className="w-6 h-6 animate-pulse" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-black text-afri-gold flex items-center gap-2">
-                Gestion des Abonnements Bêta
-                <span className="text-[10px] bg-afri-gold/20 text-afri-gold border border-afri-gold/30 px-2 py-0.5 rounded-full font-mono uppercase">
-                  Contrôle Fondateur
-                </span>
-              </h1>
-              <p className="text-xs text-afri-text-muted mt-0.5">
-                Validation manuelle des souscriptions Mobile Money (Wave, OM, Moov, MTN) & Pass Bêta
-              </p>
-            </div>
-          </div>
-
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab("codes")}
-              className="px-3.5 py-2 rounded-xl bg-afri-gold/15 hover:bg-afri-gold/25 border border-afri-gold/40 text-afri-gold text-xs font-bold flex items-center gap-2 transition-all cursor-pointer min-h-[44px]"
-            >
-              <Key className="w-4 h-4" />
-              Générer un Pass
-            </button>
+            {feedback.type === "success" ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+            <span>{feedback.message}</span>
           </div>
-        </div>
-
-        {/* Quick Stats Banner */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t border-afri-gold/15">
-          <div className="bg-afri-bg/60 border border-afri-gold/20 rounded-xl p-3 text-center">
-            <div className="text-[10px] uppercase font-bold text-amber-400">En attente</div>
-            <div className="text-xl font-black text-amber-300 mt-0.5">{pendingRequests.length}</div>
-          </div>
-          <div className="bg-afri-bg/60 border border-afri-gold/20 rounded-xl p-3 text-center">
-            <div className="text-[10px] uppercase font-bold text-emerald-400">Validées</div>
-            <div className="text-xl font-black text-emerald-300 mt-0.5">{approvedRequests.length}</div>
-          </div>
-          <div className="bg-afri-bg/60 border border-afri-gold/20 rounded-xl p-3 text-center">
-            <div className="text-[10px] uppercase font-bold text-afri-gold">Abonnés Actifs</div>
-            <div className="text-xl font-black text-afri-gold mt-0.5">{activePremiumUsers.length}</div>
-          </div>
-          <div className="bg-afri-bg/60 border border-afri-gold/20 rounded-xl p-3 text-center">
-            <div className="text-[10px] uppercase font-bold text-blue-400">Codes Créés</div>
-            <div className="text-xl font-black text-blue-300 mt-0.5">{codes.length}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs Navigation */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar border-b border-afri-border">
-        <button
-          onClick={() => setActiveTab("pending")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all cursor-pointer min-h-[44px] ${
-            activeTab === "pending"
-              ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-sm"
-              : "bg-afri-bg-sec/50 text-afri-text-muted hover:text-afri-text border border-transparent"
-          }`}
-        >
-          <Clock className="w-4 h-4 text-amber-400" />
-          En attente
-          {pendingRequests.length > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-black">
-              {pendingRequests.length}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab("approved")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all cursor-pointer min-h-[44px] ${
-            activeTab === "approved"
-              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm"
-              : "bg-afri-bg-sec/50 text-afri-text-muted hover:text-afri-text border border-transparent"
-          }`}
-        >
-          <CheckCircle className="w-4 h-4 text-emerald-400" />
-          Validées ({approvedRequests.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab("rejected")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all cursor-pointer min-h-[44px] ${
-            activeTab === "rejected"
-              ? "bg-red-500/20 text-red-300 border border-red-500/50 shadow-sm"
-              : "bg-afri-bg-sec/50 text-afri-text-muted hover:text-afri-text border border-transparent"
-          }`}
-        >
-          <XCircle className="w-4 h-4 text-red-400" />
-          Refusées ({rejectedRequests.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab("active_users")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all cursor-pointer min-h-[44px] ${
-            activeTab === "active_users"
-              ? "bg-afri-gold/20 text-afri-gold border border-afri-gold/50 shadow-sm"
-              : "bg-afri-bg-sec/50 text-afri-text-muted hover:text-afri-text border border-transparent"
-          }`}
-        >
-          <Crown className="w-4 h-4 text-afri-gold" />
-          Abonnés Actifs ({activePremiumUsers.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab("codes")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all cursor-pointer min-h-[44px] ${
-            activeTab === "codes"
-              ? "bg-blue-500/20 text-blue-300 border border-blue-500/50 shadow-sm"
-              : "bg-afri-bg-sec/50 text-afri-text-muted hover:text-afri-text border border-transparent"
-          }`}
-        >
-          <Key className="w-4 h-4 text-blue-400" />
-          Pass & Codes ({codes.length})
-        </button>
-      </div>
-
-      {/* Search bar (for request and active users tabs) */}
-      {activeTab !== "codes" && (
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-afri-text-muted" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Rechercher par nom, téléphone, référence..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-afri-bg-sec border border-afri-border focus:border-afri-gold text-xs text-afri-text focus:outline-none transition-all placeholder:text-afri-text-muted"
-          />
+          <button onClick={() => setFeedback(null)} className="opacity-70 hover:opacity-100">✕</button>
         </div>
       )}
 
-      {/* TAB 1, 2, 3: Requests (Pending, Approved, Rejected) */}
+      {/* Header Banner & Stats */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-zinc-950 via-black to-zinc-900 border border-afri-gold/40 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+          <div>
+            <div className="flex items-center gap-2">
+              <Crown className="w-5 h-5 text-afri-gold animate-pulse" />
+              <h1 className="text-base sm:text-lg font-black text-afri-gold uppercase tracking-wider">
+                GESTION MANUELLE DES ABONNEMENTS BÊTA
+              </h1>
+            </div>
+            <p className="text-xs text-afri-text-muted mt-1 max-w-xl">
+              Validation souveraine des preuves de paiement (Wave, Orange Money, Moov, MTN), gestion des abonnés actifs et émission de codes d'accès uniques.
+            </p>
+          </div>
+
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+            <div className="p-2.5 rounded-xl bg-afri-bg/80 border border-amber-500/30">
+              <div className="text-[10px] uppercase font-bold text-amber-400">En Attente</div>
+              <div className="text-base font-black font-mono text-white mt-0.5">{pendingRequests.length}</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-afri-bg/80 border border-emerald-500/30">
+              <div className="text-[10px] uppercase font-bold text-emerald-400">Abonnés Actifs</div>
+              <div className="text-base font-black font-mono text-white mt-0.5">{activePremiumUsers.length}</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-afri-bg/80 border border-purple-500/30">
+              <div className="text-[10px] uppercase font-bold text-purple-400">Elite / Pro</div>
+              <div className="text-xs font-black font-mono text-white mt-1">{activeEliteUsersCount} / {activeProUsersCount}</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-afri-bg/80 border border-afri-gold/30">
+              <div className="text-[10px] uppercase font-bold text-afri-gold">Cotisations Bêta</div>
+              <div className="text-xs font-black font-mono text-afri-gold mt-1">{totalCollectedBetaAmount.toLocaleString("fr-FR")} F</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs Navigation & Search Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          <button
+            onClick={() => setActiveTab("pending")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === "pending"
+                ? "bg-amber-500 text-black shadow-md"
+                : "bg-afri-bg-sec text-afri-text-muted hover:text-white border border-afri-border"
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>En Attente</span>
+            {pendingRequests.length > 0 && (
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                activeTab === "pending" ? "bg-black text-amber-400" : "bg-amber-500/20 text-amber-400"
+              }`}>
+                {pendingRequests.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab("active_users")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === "active_users"
+                ? "bg-afri-gold text-black shadow-md"
+                : "bg-afri-bg-sec text-afri-text-muted hover:text-white border border-afri-border"
+            }`}
+          >
+            <Crown className="w-3.5 h-3.5" />
+            <span>Abonnés Actifs</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              activeTab === "active_users" ? "bg-black text-afri-gold" : "bg-afri-gold/20 text-afri-gold"
+            }`}>
+              {activePremiumUsers.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("approved")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === "approved"
+                ? "bg-emerald-600 text-black shadow-md"
+                : "bg-afri-bg-sec text-afri-text-muted hover:text-white border border-afri-border"
+            }`}
+          >
+            <CheckCircle className="w-3.5 h-3.5" />
+            <span>Validées ({approvedRequests.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("rejected")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === "rejected"
+                ? "bg-red-600 text-white shadow-md"
+                : "bg-afri-bg-sec text-afri-text-muted hover:text-white border border-afri-border"
+            }`}
+          >
+            <XCircle className="w-3.5 h-3.5" />
+            <span>Refusées ({rejectedRequests.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("codes")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === "codes"
+                ? "bg-afri-gold text-black shadow-md"
+                : "bg-afri-bg-sec text-afri-text-muted hover:text-white border border-afri-border"
+            }`}
+          >
+            <Key className="w-3.5 h-3.5" />
+            <span>Pass & Codes ({codes.length})</span>
+          </button>
+        </div>
+
+        {/* Search */}
+        {activeTab !== "codes" && (
+          <div className="relative w-full sm:w-64">
+            <Search className="w-3.5 h-3.5 text-afri-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Rechercher par nom, tél, réf..."
+              className="w-full pl-8 pr-3 py-2 rounded-xl bg-afri-bg border border-afri-border text-xs text-afri-text placeholder:text-afri-text-muted/60 focus:border-afri-gold focus:outline-none"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* TAB CONTENT: Requests List (Pending / Approved / Rejected) */}
       {(activeTab === "pending" || activeTab === "approved" || activeTab === "rejected") && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {displayedRequests.length === 0 ? (
-            <div className="p-8 text-center bg-afri-bg-sec/30 border border-afri-border/50 rounded-2xl flex flex-col items-center justify-center">
-              <Clock className="w-10 h-10 text-afri-text-muted mb-2 opacity-50" />
-              <p className="text-sm font-bold text-afri-text-muted">
-                Aucune demande dans cette catégorie.
+            <div className="p-8 text-center bg-afri-bg-sec/30 border border-afri-border/50 rounded-2xl">
+              <Clock className="w-8 h-8 text-afri-text-muted/40 mx-auto mb-2" />
+              <p className="text-xs text-afri-text-muted">
+                {searchQuery ? "Aucune demande correspondant à votre recherche." : "Aucune demande dans cet état."}
               </p>
             </div>
           ) : (
             displayedRequests.map((req) => {
-              const isElite = (req.plan || "").toLowerCase().includes("elite");
               const isPending = req.status === "pending" || !req.status;
               const isApproved = req.status === "approved";
               const isRejected = req.status === "rejected";
+              const isElite = (req.plan || "").toLowerCase().includes("elite");
 
               return (
                 <div
                   key={req.id}
-                  className={`p-4 sm:p-5 rounded-2xl border transition-all ${
+                  className={`p-4 rounded-2xl border transition-all ${
                     isPending
                       ? "bg-afri-bg-sec/80 border-amber-500/40 shadow-sm"
                       : isApproved
@@ -537,35 +673,38 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
         </div>
       )}
 
-      {/* TAB 4: Active Premium Users */}
+      {/* TAB 4: Active Premium Users (Full Management Suite) */}
       {activeTab === "active_users" && (
         <div className="space-y-3">
-          {activePremiumUsers.length === 0 ? (
+          {displayedActiveUsers.length === 0 ? (
             <div className="p-8 text-center bg-afri-bg-sec/30 border border-afri-border/50 rounded-2xl">
               <Crown className="w-10 h-10 text-afri-gold/50 mx-auto mb-2" />
-              <p className="text-sm font-bold text-afri-text-muted">Aucun abonné actif actuellement.</p>
+              <p className="text-sm font-bold text-afri-text-muted">
+                {searchQuery ? "Aucun abonné actif correspondant." : "Aucun abonné actif actuellement."}
+              </p>
             </div>
           ) : (
-            activePremiumUsers.map((u) => {
+            displayedActiveUsers.map((u) => {
               const plan = u.subscriptionPlan || (u.premiumPlan === "elite" ? "GOMBO ELITE" : "GOMBO PRO");
-              const isElite = (u.premiumPlan || "").includes("elite");
+              const isElite = (u.premiumPlan || "").includes("elite") || (u.subscriptionPlan || "").includes("ELITE");
+              const expiryFormatted = u.subscriptionExpiryDate || (u.premiumExpiresAt ? new Date(u.premiumExpiresAt).toLocaleDateString("fr-FR") : "Indéterminé");
 
               return (
                 <div
                   key={u.id || u.uid}
-                  className="p-4 rounded-2xl bg-afri-bg-sec/60 border border-afri-gold/30 flex items-center justify-between gap-3 flex-wrap"
+                  className="p-4 rounded-2xl bg-afri-bg-sec/70 border border-afri-gold/30 flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-afri-bg border border-afri-gold/30 flex items-center justify-center text-afri-gold overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-afri-bg border border-afri-gold/30 flex items-center justify-center text-afri-gold overflow-hidden flex-shrink-0">
                       {u.photoURL || u.avatarUrl ? (
                         <img src={u.photoURL || u.avatarUrl} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <User className="w-5 h-5" />
+                        <User className="w-6 h-6" />
                       )}
                     </div>
                     <div>
-                      <div className="font-bold text-sm text-afri-text flex items-center gap-2">
-                        {u.name || u.displayName || u.artisticName || "Membre"}
+                      <div className="font-bold text-sm text-afri-text flex items-center gap-2 flex-wrap">
+                        <span>{u.name || u.displayName || u.artisticName || "Membre"}</span>
                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
                           isElite
                             ? "bg-purple-950/60 text-purple-300 border-purple-500/50"
@@ -573,18 +712,78 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
                         }`}>
                           {plan}
                         </span>
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-500/40">
+                          Actif
+                        </span>
                       </div>
-                      <div className="text-xs text-afri-text-muted flex items-center gap-2 mt-0.5">
-                        <span>Expire le : <strong>{u.subscriptionExpiryDate || (u.premiumExpiresAt ? new Date(u.premiumExpiresAt).toLocaleDateString("fr-FR") : "Indéterminé")}</strong></span>
-                        {u.phoneNumber && <span>• {u.phoneNumber}</span>}
+                      <div className="text-xs text-afri-text-muted flex items-center gap-3 mt-1 flex-wrap">
+                        <span>Expire le : <strong className="text-white">{expiryFormatted}</strong></span>
+                        {u.phoneNumber && <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-afri-gold" /> {u.phoneNumber}</span>}
+                        {u.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-blue-400" /> {u.email}</span>}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-500/40">
-                      Actif
-                    </span>
+                  {/* Actions Dropdown / Direct Buttons */}
+                  <div className="flex items-center gap-2 flex-wrap justify-end pt-2 md:pt-0 border-t md:border-t-0 border-afri-border">
+                    {/* Prolong Button */}
+                    <button
+                      onClick={() => {
+                        setManagingUser(u);
+                        setUserActionType("prolong");
+                        setProlongDays(30);
+                        setActionReason("Prolongation manuelle Bêta");
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-afri-bg hover:bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer min-h-[38px]"
+                      title="Prolonger la durée"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>+ Prolonger</span>
+                    </button>
+
+                    {/* Change Plan Button */}
+                    <button
+                      onClick={() => {
+                        setManagingUser(u);
+                        setUserActionType("change_plan");
+                        setTargetPlan(isElite ? "pro" : "elite");
+                        setActionReason("Basculement de formule");
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-afri-bg hover:bg-purple-950/40 border border-purple-500/40 text-purple-300 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer min-h-[38px]"
+                      title="Changer de formule"
+                    >
+                      <ArrowLeftRight className="w-3.5 h-3.5" />
+                      <span>{isElite ? "Passer PRO" : "Passer ELITE"}</span>
+                    </button>
+
+                    {/* Manual Refund */}
+                    <button
+                      onClick={() => {
+                        setManagingUser(u);
+                        setUserActionType("refund");
+                        setRefundAmount(isElite ? 1000 : 500);
+                        setActionReason("Remboursement manuel exceptionnel");
+                      }}
+                      className="px-2.5 py-1.5 rounded-xl bg-afri-bg hover:bg-zinc-800 border border-zinc-700 text-afri-text-muted hover:text-white text-xs font-bold flex items-center gap-1 transition cursor-pointer min-h-[38px]"
+                      title="Enregistrer un remboursement manuel"
+                    >
+                      <DollarSign className="w-3.5 h-3.5 text-afri-gold" />
+                      <span>Rembourser</span>
+                    </button>
+
+                    {/* Revoke */}
+                    <button
+                      onClick={() => {
+                        setManagingUser(u);
+                        setUserActionType("revoke");
+                        setActionReason("Résiliation demandée par l'utilisateur ou motif disciplinaire");
+                      }}
+                      className="px-2.5 py-1.5 rounded-xl bg-red-950/30 hover:bg-red-900/60 border border-red-500/40 text-red-400 hover:text-red-200 text-xs font-bold flex items-center gap-1 transition cursor-pointer min-h-[38px]"
+                      title="Résilier immédiatement"
+                    >
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      <span>Résilier</span>
+                    </button>
                   </div>
                 </div>
               );
@@ -822,13 +1021,13 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
             <div className="flex items-center gap-2 pt-2">
               <button
                 onClick={() => setApprovingRequest(null)}
-                className="flex-1 py-2.5 rounded-xl bg-afri-bg border border-afri-border text-afri-text-muted text-xs font-bold hover:text-white"
+                className="flex-1 py-2.5 rounded-xl bg-afri-bg border border-afri-border text-afri-text-muted text-xs font-bold hover:text-white cursor-pointer"
               >
                 Annuler
               </button>
               <button
                 onClick={handleApprove}
-                className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black shadow"
+                className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black shadow cursor-pointer"
               >
                 Confirmer l'Activation
               </button>
@@ -878,15 +1077,266 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
             <div className="flex items-center gap-2 pt-2">
               <button
                 onClick={() => setRejectingRequestId(null)}
-                className="flex-1 py-2.5 rounded-xl bg-afri-bg border border-afri-border text-afri-text-muted text-xs font-bold hover:text-white"
+                className="flex-1 py-2.5 rounded-xl bg-afri-bg border border-afri-border text-afri-text-muted text-xs font-bold hover:text-white cursor-pointer"
               >
                 Annuler
               </button>
               <button
                 onClick={handleReject}
-                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black shadow"
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black shadow cursor-pointer"
               >
                 Confirmer le Refus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Prolong Subscription */}
+      {managingUser && userActionType === "prolong" && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-afri-bg-sec border border-emerald-500/50 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <PlusCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-emerald-300">Prolonger l'Abonnement</h3>
+                <p className="text-xs text-afri-text-muted">Membre : {managingUser.name || managingUser.displayName}</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-afri-text-muted uppercase block mb-1">Durée supplémentaire</label>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {[
+                  { label: "+30 jours", days: 30 },
+                  { label: "+90 jours", days: 90 },
+                  { label: "+365 jours", days: 365 }
+                ].map((opt) => (
+                  <button
+                    key={opt.days}
+                    type="button"
+                    onClick={() => setProlongDays(opt.days)}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold border cursor-pointer transition ${
+                      prolongDays === opt.days 
+                        ? "bg-emerald-500 text-black border-emerald-400" 
+                        : "bg-afri-bg text-afri-text-muted border-afri-border"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              <label className="text-[11px] font-bold text-afri-text-muted uppercase block mb-1">Motif / Justification</label>
+              <input
+                type="text"
+                value={actionReason}
+                onChange={(e) => setActionReason(e.target.value)}
+                placeholder="Ex: Geste commercial, régularisation Wave..."
+                className="w-full px-3 py-2 rounded-xl bg-afri-bg border border-afri-border text-xs text-afri-text focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                onClick={() => { setManagingUser(null); setUserActionType(null); }}
+                className="flex-1 py-2.5 rounded-xl bg-afri-bg border border-afri-border text-afri-text-muted text-xs font-bold hover:text-white cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleExecuteProlong}
+                className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black shadow cursor-pointer"
+              >
+                Prolonger
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Change Plan */}
+      {managingUser && userActionType === "change_plan" && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-afri-bg-sec border border-purple-500/50 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
+                <ArrowLeftRight className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-purple-300">Modifier la Formule</h3>
+                <p className="text-xs text-afri-text-muted">Membre : {managingUser.name || managingUser.displayName}</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-afri-text-muted uppercase block mb-1">Nouvelle formule</label>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setTargetPlan("pro")}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold border cursor-pointer transition ${
+                    targetPlan === "pro" 
+                      ? "bg-amber-500 text-black border-amber-400" 
+                      : "bg-afri-bg text-afri-text-muted border-afri-border"
+                  }`}
+                >
+                  GOMBO PRO (500 F)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTargetPlan("elite")}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold border cursor-pointer transition ${
+                    targetPlan === "elite" 
+                      ? "bg-purple-500 text-black border-purple-400" 
+                      : "bg-afri-bg text-afri-text-muted border-afri-border"
+                  }`}
+                >
+                  GOMBO ELITE (1 000 F)
+                </button>
+              </div>
+
+              <label className="text-[11px] font-bold text-afri-text-muted uppercase block mb-1">Motif</label>
+              <input
+                type="text"
+                value={actionReason}
+                onChange={(e) => setActionReason(e.target.value)}
+                placeholder="Ex: Upgrade suite paiement complémentaire..."
+                className="w-full px-3 py-2 rounded-xl bg-afri-bg border border-afri-border text-xs text-afri-text focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                onClick={() => { setManagingUser(null); setUserActionType(null); }}
+                className="flex-1 py-2.5 rounded-xl bg-afri-bg border border-afri-border text-afri-text-muted text-xs font-bold hover:text-white cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleExecutePlanChange}
+                className="flex-1 py-2.5 rounded-xl bg-purple-500 hover:bg-purple-400 text-black text-xs font-black shadow cursor-pointer"
+              >
+                Appliquer la Formule
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Revoke Subscription */}
+      {managingUser && userActionType === "revoke" && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-afri-bg-sec border border-red-500/50 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-red-300">Résilier l'Abonnement</h3>
+                <p className="text-xs text-afri-text-muted">Membre : {managingUser.name || managingUser.displayName}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-red-300/90 leading-relaxed">
+              Attention : Cette action repasse immédiatement le compte en <strong>GOMBO FREE</strong> et retire les badges Premium.
+            </p>
+
+            <div>
+              <label className="text-[11px] font-bold text-afri-text-muted uppercase block mb-1">Motif de la résiliation</label>
+              <input
+                type="text"
+                value={actionReason}
+                onChange={(e) => setActionReason(e.target.value)}
+                placeholder="Ex: Demande de désinscription, motif disciplinaire..."
+                className="w-full px-3 py-2 rounded-xl bg-afri-bg border border-afri-border text-xs text-afri-text focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                onClick={() => { setManagingUser(null); setUserActionType(null); }}
+                className="flex-1 py-2.5 rounded-xl bg-afri-bg border border-afri-border text-afri-text-muted text-xs font-bold hover:text-white cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleExecuteRevoke}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black shadow cursor-pointer"
+              >
+                Confirmer la Résiliation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Record Manual Refund */}
+      {managingUser && userActionType === "refund" && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-afri-bg-sec border border-afri-gold/50 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-afri-gold flex items-center justify-center">
+                <DollarSign className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-afri-gold">Enregistrer un Remboursement Manuel</h3>
+                <p className="text-xs text-afri-text-muted">Membre : {managingUser.name || managingUser.displayName}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[11px] font-bold text-afri-text-muted uppercase block mb-1">Montant (FCFA)</label>
+                <input
+                  type="number"
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl bg-afri-bg border border-afri-border text-xs text-afri-text focus:outline-none font-mono font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-afri-text-muted uppercase block mb-1">Moyen utilisé</label>
+                <select
+                  value={refundMethod}
+                  onChange={(e) => setRefundMethod(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-afri-bg border border-afri-border text-xs text-afri-text focus:outline-none"
+                >
+                  <option value="Wave">Wave</option>
+                  <option value="Orange Money">Orange Money</option>
+                  <option value="Moov Money">Moov Money</option>
+                  <option value="MTN MoMo">MTN MoMo</option>
+                  <option value="Espèces">Espèces</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-afri-text-muted uppercase block mb-1">Motif</label>
+              <input
+                type="text"
+                value={actionReason}
+                onChange={(e) => setActionReason(e.target.value)}
+                placeholder="Ex: Double paiement par erreur..."
+                className="w-full px-3 py-2 rounded-xl bg-afri-bg border border-afri-border text-xs text-afri-text focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                onClick={() => { setManagingUser(null); setUserActionType(null); }}
+                className="flex-1 py-2.5 rounded-xl bg-afri-bg border border-afri-border text-afri-text-muted text-xs font-bold hover:text-white cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleExecuteRefund}
+                className="flex-1 py-2.5 rounded-xl bg-afri-gold hover:bg-amber-400 text-black text-xs font-black shadow cursor-pointer"
+              >
+                Consigner le Remboursement
               </button>
             </div>
           </div>

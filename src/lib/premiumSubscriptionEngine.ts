@@ -644,3 +644,241 @@ export async function checkAndProcessPremiumAutoRenewal(
     return { processed: false, status: "no_profile" };
   }
 }
+
+/**
+ * Prolongation manuelle d'un abonnement par le Fondateur.
+ */
+export async function prolongSubscription(
+  userId: string,
+  additionalDays: number,
+  adminUser: any,
+  reason: string = "Geste commercial du Fondateur"
+): Promise<{ success: boolean; message: string }> {
+  if (!db || !userId) return { success: false, message: "Utilisateur introuvable." };
+
+  try {
+    const userRef = doc(db, "users", userId);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) return { success: false, message: "Profil introuvable." };
+
+    const u = snap.data();
+    const currentExpiry = u.subscriptionExpiresAt || u.premiumExpiresAt || new Date().toISOString();
+    const baseDate = new Date(currentExpiry) > new Date() ? new Date(currentExpiry) : new Date();
+    
+    baseDate.setDate(baseDate.getDate() + additionalDays);
+    const newExpiryIso = baseDate.toISOString();
+    const options: Intl.DateTimeFormatOptions = { day: "numeric", month: "long", year: "numeric" };
+    const newExpiryFormatted = baseDate.toLocaleDateString("fr-FR", options);
+
+    const historyEntry = {
+      action: "prolongation",
+      additionalDays,
+      previousExpiry: currentExpiry,
+      newExpiry: newExpiryIso,
+      reason,
+      performedBy: adminUser?.email || "Fondateur",
+      timestamp: new Date().toISOString()
+    };
+
+    const currentHistory = u.subscriptionHistory || [];
+
+    await updateDoc(userRef, {
+      isPremium: true,
+      premium: true,
+      premiumStatus: "active",
+      subscriptionExpiresAt: newExpiryIso,
+      premiumExpiresAt: newExpiryIso,
+      premiumUntil: newExpiryIso,
+      subscriptionExpiryDate: newExpiryFormatted,
+      subscriptionHistory: [historyEntry, ...currentHistory],
+      updatedAt: new Date().toISOString()
+    });
+
+    await NotificationService.sendNotification({
+      userId,
+      title: "🎁 Prolongation de votre Abonnement !",
+      message: `Votre abonnement a été prolongé de ${additionalDays} jours par l'administration AFRIGOMBO. Nouvelle date d'échéance : ${newExpiryFormatted}.`,
+      type: "premium_activated",
+      priority: "HIGH",
+      targetRoute: "/abonnement"
+    }).catch(() => {});
+
+    return { success: true, message: `Abonnement prolongé de ${additionalDays} jours jusqu'au ${newExpiryFormatted}.` };
+  } catch (err: any) {
+    return { success: false, message: err?.message || "Erreur de prolongation." };
+  }
+}
+
+/**
+ * Révocation / résiliation manuelle immédiate d'un abonnement.
+ */
+export async function revokeSubscription(
+  userId: string,
+  adminUser: any,
+  reason: string = "Révocation administrative"
+): Promise<{ success: boolean; message: string }> {
+  if (!db || !userId) return { success: false, message: "Utilisateur introuvable." };
+
+  try {
+    const userRef = doc(db, "users", userId);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) return { success: false, message: "Profil introuvable." };
+
+    const u = snap.data();
+    const currentBadges: string[] = u.badges || [];
+    const updatedBadges = currentBadges.filter(
+      b => b !== "💎 Adhérent Premium" && b !== "💎 Adhérent Elite" && b !== "👑 Adhérent Pro"
+    );
+
+    const historyEntry = {
+      action: "revocation",
+      reason,
+      revokedAt: new Date().toISOString(),
+      performedBy: adminUser?.email || "Fondateur"
+    };
+
+    await updateDoc(userRef, {
+      isPremium: false,
+      premium: false,
+      premiumStatus: "revoked",
+      subscriptionPlan: "GOMBO FREE",
+      premiumPlan: "free",
+      badges: updatedBadges,
+      subscriptionHistory: [historyEntry, ...(u.subscriptionHistory || [])],
+      updatedAt: new Date().toISOString()
+    });
+
+    await NotificationService.sendNotification({
+      userId,
+      title: "⚠️ Abonnement Résilié",
+      message: `Votre abonnement premium a été résilié par l'administration. Motif : ${reason}.`,
+      type: "warning",
+      priority: "HIGH",
+      targetRoute: "/abonnement"
+    }).catch(() => {});
+
+    return { success: true, message: "Abonnement révoqué avec succès." };
+  } catch (err: any) {
+    return { success: false, message: err?.message || "Erreur de révocation." };
+  }
+}
+
+/**
+ * Changement manuel de formule (PRO <-> ELITE).
+ */
+export async function changeSubscriptionPlan(
+  userId: string,
+  newPlan: "pro" | "elite",
+  adminUser: any,
+  reason: string = "Mise à niveau administrative"
+): Promise<{ success: boolean; message: string }> {
+  if (!db || !userId) return { success: false, message: "Utilisateur introuvable." };
+
+  try {
+    const isElite = newPlan === "elite";
+    const normalizedPlan = isElite ? "GOMBO ELITE" : "GOMBO PRO";
+    const planBadge = isElite ? "💎 Adhérent Elite" : "👑 Adhérent Pro";
+    const oldBadgeToRemove = isElite ? "👑 Adhérent Pro" : "💎 Adhérent Elite";
+
+    const userRef = doc(db, "users", userId);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) return { success: false, message: "Profil introuvable." };
+
+    const u = snap.data();
+    const currentBadges: string[] = (u.badges || []).filter((b: string) => b !== oldBadgeToRemove);
+    const updatedBadges = Array.from(new Set([...currentBadges, "💎 Adhérent Premium", planBadge]));
+
+    const historyEntry = {
+      action: "plan_change",
+      oldPlan: u.subscriptionPlan || u.premiumPlan,
+      newPlan: normalizedPlan,
+      reason,
+      performedBy: adminUser?.email || "Fondateur",
+      timestamp: new Date().toISOString()
+    };
+
+    await updateDoc(userRef, {
+      isPremium: true,
+      premium: true,
+      premiumStatus: "active",
+      subscriptionPlan: normalizedPlan,
+      premiumPlan: newPlan,
+      badges: updatedBadges,
+      subscriptionHistory: [historyEntry, ...(u.subscriptionHistory || [])],
+      updatedAt: new Date().toISOString()
+    });
+
+    await NotificationService.sendNotification({
+      userId,
+      title: `👑 Formule Modifiée : ${normalizedPlan}`,
+      message: `Votre abonnement a été basculé vers la formule ${normalizedPlan}. Profitez de vos nouveaux avantages !`,
+      type: "premium_activated",
+      priority: "HIGH",
+      targetRoute: "/abonnement"
+    }).catch(() => {});
+
+    return { success: true, message: `Formule changée vers ${normalizedPlan} avec succès.` };
+  } catch (err: any) {
+    return { success: false, message: err?.message || "Erreur lors du changement de plan." };
+  }
+}
+
+/**
+ * Enregistrement manuel d'un remboursement (sans incidence bancaire ni débit Wallet).
+ */
+export async function recordManualRefund(
+  userId: string,
+  amount: number,
+  method: string,
+  reason: string,
+  adminUser: any
+): Promise<{ success: boolean; message: string }> {
+  if (!db || !userId) return { success: false, message: "Paramètres manquants." };
+
+  try {
+    const nowIso = new Date().toISOString();
+    const userRef = doc(db, "users", userId);
+    const snap = await getDoc(userRef);
+
+    const historyEntry = {
+      action: "manual_refund_recorded",
+      amount,
+      paymentMethod: method,
+      reason,
+      refundedAt: nowIso,
+      performedBy: adminUser?.email || "Fondateur"
+    };
+
+    if (snap.exists()) {
+      const u = snap.data();
+      await updateDoc(userRef, {
+        subscriptionHistory: [historyEntry, ...(u.subscriptionHistory || [])],
+        updatedAt: nowIso
+      });
+    }
+
+    // Journaliser dans une collection dédiée 'subscription_refunds'
+    await addDoc(collection(db, "subscription_refunds"), {
+      userId,
+      amount,
+      paymentMethod: method,
+      reason,
+      recordedBy: adminUser?.email || "Fondateur",
+      recordedAt: nowIso
+    });
+
+    await NotificationService.sendNotification({
+      userId,
+      title: "💵 Remboursement Enregistré",
+      message: `Un remboursement manuel de ${amount.toLocaleString("fr-FR")} FCFA (via ${method}) a été consigné dans votre dossier d'abonnement. Motif : ${reason}.`,
+      type: "subscription_pending",
+      priority: "NORMAL",
+      targetRoute: "/abonnement"
+    }).catch(() => {});
+
+    return { success: true, message: `Remboursement de ${amount.toLocaleString("fr-FR")} FCFA consigné avec succès.` };
+  } catch (err: any) {
+    return { success: false, message: err?.message || "Erreur d'enregistrement du remboursement." };
+  }
+}
+

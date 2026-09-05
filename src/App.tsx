@@ -29,7 +29,6 @@ const GlobalNotificationBanner = lazyWithRetry(() => import("./components/Global
 const BackgroundMusic = lazyWithRetry(() => import("./components/BackgroundMusic").then(m => ({ default: m.BackgroundMusic })));
 const FloatingAudioPlayer = lazyWithRetry(() => import("./components/FloatingAudioPlayer").then(m => ({ default: m.FloatingAudioPlayer })));
 import { LivingInteractions } from "./components/LivingInteractions";
-const FounderSubscriptionBubble = lazyWithRetry(() => import("./components/FounderSubscriptionBubble"));
 const PWADiagnosticPage = lazyWithRetry(() => import("./components/PWADiagnosticPage"));
 const TheThroneOfTheFounder = lazyWithRetry(() => import("./components/TheThroneOfTheFounder"));
 const FounderThronePage = lazyWithRetry(() => import("./components/FounderThronePage"));
@@ -68,9 +67,6 @@ const MainAppLayout = React.memo(function MainAppLayout() {
       </div>
       <Suspense fallback={null}>
         <LivingInteractions />
-      </Suspense>
-      <Suspense fallback={null}>
-        <FounderSubscriptionBubble />
       </Suspense>
       <AdminCentre theme={theme} toggleTheme={toggleTheme} />
     </Suspense>

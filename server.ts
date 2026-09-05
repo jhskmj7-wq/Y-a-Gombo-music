@@ -643,7 +643,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const uid = decodedToken.uid;
 
       // Verrouillage strict du chemin pour empêcher un utilisateur d'écrire ailleurs
-      const isAllowedReelsPath = storagePath.startsWith(`reels/${uid}/`) || storagePath.startsWith(`video/${uid}/`);
+      const isAllowedReelsPath = storagePath.startsWith(`reels/${uid}/`) || storagePath.startsWith(`video/${uid}/`) || storagePath.startsWith(`publications/${uid}/`);
       if (!isAllowedReelsPath) {
         console.warn(`[SIGNED URL FORBIDDEN] Tentative d'écriture non autorisée par ${uid} sur le chemin: ${storagePath}`);
         return res.status(403).json({
@@ -693,6 +693,149 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       return res.status(500).json({ success: false, error: err?.message || "Erreur interne du serveur." });
     }
   });
+
+  // 1.5 ENDPOINT DE TRANSCODAGE SERVEUR MP4 H.264/AAC FASTSTART (COMPATIBILITÉ ABSOLUE iPHONE / SAFARI)
+  const handleTranscodeAndUpload = async (req: express.Request, res: express.Response) => {
+    res.setHeader("Content-Type", "application/json");
+    const { idToken, storagePath, fileBase64, bucket = "afrigombo-media" } = req.body || {};
+
+    if (!idToken) {
+      return res.status(401).json({ success: false, error: "Non authentifié (token manquant)." });
+    }
+
+    if (!storagePath || !fileBase64) {
+      return res.status(400).json({ success: false, error: "Paramètres 'storagePath' et 'fileBase64' requis." });
+    }
+
+    let tempInPath = "";
+    let tempOutPath = "";
+
+    try {
+      const adminAuth = getAdminAuthClient();
+      if (!adminAuth) {
+        return res.status(503).json({ success: false, error: "Service Firebase Admin temporairement indisponible." });
+      }
+
+      let decodedToken;
+      try {
+        decodedToken = await adminAuth.verifyIdToken(idToken);
+      } catch (authErr: any) {
+        console.error("[TRANSCODE AUTH ERROR]", authErr?.message || authErr);
+        return res.status(401).json({ success: false, error: "Session invalide ou expirée." });
+      }
+
+      const uid = decodedToken.uid;
+      const isAllowedReelsPath = storagePath.startsWith(`reels/${uid}/`) || storagePath.startsWith(`video/${uid}/`) || storagePath.startsWith(`publications/${uid}/`);
+      if (!isAllowedReelsPath) {
+        return res.status(403).json({ success: false, error: "Accès refusé. Téléversement réservé à votre propre dossier." });
+      }
+
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!supabaseKey) {
+        return res.status(503).json({ success: false, error: "SUPABASE_SERVICE_ROLE_KEY manquante sur le serveur." });
+      }
+
+      const { createClient } = await import("@supabase/supabase-js");
+      const serverSupabase = createClient(supabaseUrl, supabaseKey);
+
+      // Écriture du flux vidéo brut dans un fichier temporaire
+      const fs = await import("fs");
+      const pathModule = await import("path");
+      const os = await import("os");
+      const { execFile } = await import("child_process");
+      const { promisify } = await import("util");
+      const execFileAsync = promisify(execFile);
+
+      const uniqueId = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      tempInPath = pathModule.join(os.tmpdir(), `input_${uniqueId}`);
+      tempOutPath = pathModule.join(os.tmpdir(), `output_${uniqueId}.mp4`);
+
+      const inBuffer = Buffer.from(fileBase64, "base64");
+      fs.writeFileSync(tempInPath, inBuffer);
+
+      console.log(`[TRANSCODER] Début transcodage MP4 Safari (H.264 + AAC + faststart) pour ${storagePath} (${(inBuffer.length / 1024 / 1024).toFixed(2)} Mo)...`);
+
+      // Exécution de FFmpeg : H.264 yuv420p + AAC stereo + moov atom faststart
+      try {
+        await execFileAsync("ffmpeg", [
+          "-y",
+          "-i", tempInPath,
+          "-c:v", "libx264",
+          "-preset", "veryfast",
+          "-crf", "23",
+          "-pix_fmt", "yuv420p",
+          "-movflags", "+faststart",
+          "-map", "0:v:0",
+          "-map", "0:a?",
+          "-c:a", "aac",
+          "-b:a", "128k",
+          "-ar", "44100",
+          "-ac", "2",
+          tempOutPath
+        ]);
+      } catch (ffmpegErr: any) {
+        console.error("[TRANSCODER FFMPEG ERROR]", ffmpegErr?.stderr || ffmpegErr);
+        throw new Error(`Échec du transcodage vidéo en MP4 H.264 : ${ffmpegErr?.message || "Erreur ffmpeg"}`);
+      }
+
+      if (!fs.existsSync(tempOutPath)) {
+        throw new Error("Le fichier vidéo transcodé n'a pas pu être généré.");
+      }
+
+      const outBuffer = fs.readFileSync(tempOutPath);
+      console.log(`[TRANSCODER] Transcodage terminé avec succès ! Taille finale: ${(outBuffer.length / 1024 / 1024).toFixed(2)} Mo`);
+
+      // Assurer que le chemin de destination a l'extension .mp4
+      let finalStoragePath = storagePath;
+      if (!finalStoragePath.toLowerCase().endsWith(".mp4")) {
+        finalStoragePath = finalStoragePath.replace(/\.[^.]+$/, "") + ".mp4";
+      }
+
+      // Téléversement direct dans Supabase Storage avec Content-Type: video/mp4
+      const { data: uploadData, error: uploadError } = await serverSupabase.storage
+        .from(bucket)
+        .upload(finalStoragePath, outBuffer, {
+          contentType: "video/mp4",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: publicUrlData } = serverSupabase.storage.from(bucket).getPublicUrl(finalStoragePath);
+      const publicUrl = publicUrlData?.publicUrl || `${supabaseUrl}/storage/v1/object/public/${bucket}/${finalStoragePath}`;
+
+      console.log(`[TRANSCODER SUCCESS] MP4 compatible Safari publié -> ${publicUrl}`);
+
+      return res.json({
+        success: true,
+        url: publicUrl,
+        publicUrl,
+        storagePath: uploadData?.path || finalStoragePath,
+        size: outBuffer.length,
+        mimeType: "video/mp4",
+        transcoded: true,
+        message: "Vidéo convertie en MP4 H.264 Safari et publiée avec succès"
+      });
+    } catch (err: any) {
+      console.error("[TRANSCODER FATAL ERROR]", err);
+      return res.status(500).json({ success: false, error: err?.message || "Erreur interne lors du transcodage vidéo." });
+    } finally {
+      // Nettoyage impératif des fichiers temporaires
+      try {
+        const fs = await import("fs");
+        if (tempInPath && fs.existsSync(tempInPath)) fs.unlinkSync(tempInPath);
+        if (tempOutPath && fs.existsSync(tempOutPath)) fs.unlinkSync(tempOutPath);
+      } catch (cleanErr) {
+        console.warn("[TRANSCODER CLEANUP WARNING]", cleanErr);
+      }
+    }
+  };
+
+  app.post("/api/admin/media/transcode-and-upload", handleTranscodeAndUpload);
+  app.post("/api/media/transcode-and-upload", handleTranscodeAndUpload);
 
   // 2. ENDPOINT CLASSIQUE BASE64 EXISTANT INTACT
   app.post("/api/admin/media/upload", async (req, res) => {
