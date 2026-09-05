@@ -1287,6 +1287,22 @@ async function startServer() {
         appType: "spa",
       });
       app.use(vite.middlewares);
+
+      // Explicit SPA fallback for dev server (guarantees direct refresh on /home and other frontend routes never 404s)
+      app.get('*all', async (req, res, next) => {
+        if (req.path.startsWith('/api/')) {
+          return next();
+        }
+        try {
+          const fs = await import('fs');
+          const indexHtmlPath = path.resolve(process.cwd(), 'index.html');
+          let template = fs.readFileSync(indexHtmlPath, 'utf-8');
+          template = await vite.transformIndexHtml(req.originalUrl, template);
+          res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+        } catch (e) {
+          next(e);
+        }
+      });
     } catch (vErr) {
       console.warn("⚠️ Vite dev server middleware initialization bypassed:", vErr);
     }
@@ -1302,7 +1318,10 @@ async function startServer() {
         }
       }
     }));
-    app.get('*all', (req, res) => {
+    app.get('*all', (req, res, next) => {
+      if (req.path.startsWith('/api/')) {
+        return next();
+      }
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');

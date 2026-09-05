@@ -24,6 +24,10 @@
     "noEmit": true
   },
   "exclude": [
-    "nextjs-mvp"
+    "nextjs-mvp",
+    "dist",
+    "node_modules",
+    "vite.config.ts.timestamp-*.mjs",
+    "*.mjs"
   ]
 }

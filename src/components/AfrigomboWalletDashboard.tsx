@@ -69,6 +69,8 @@ interface AfrigomboWalletDashboardProps {
   onBack?: () => void;
   onNavigateToMessages?: (userId?: string) => void;
   onNavigateToGomboAds?: () => void;
+  isComingSoon?: boolean;
+  onShowComingSoonView?: () => void;
 }
 
 export default function AfrigomboWalletDashboard({ 
@@ -76,7 +78,9 @@ export default function AfrigomboWalletDashboard({
   addToTerminal,
   onBack,
   onNavigateToMessages,
-  onNavigateToGomboAds
+  onNavigateToGomboAds,
+  isComingSoon = false,
+  onShowComingSoonView
 }: AfrigomboWalletDashboardProps) {
   const { isModuleUnderMaintenance, maintenance } = useMaintenance();
   const { 
@@ -93,6 +97,8 @@ export default function AfrigomboWalletDashboard({
     formatWalletBalance
   } = useWalletSecurity();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [showComingSoonModal, setShowComingSoonModal] = useState(false);
+  const [comingSoonActionTitle, setComingSoonActionTitle] = useState("");
   const uid = currentUserProfile?.uid || currentUserProfile?.id;
   const historyRef = useRef<HTMLDivElement>(null);
   
@@ -517,6 +523,13 @@ export default function AfrigomboWalletDashboard({
 
   // MOBILE MONEY DEPOSIT HANDLER (UPDATED FOR BÊTA)
   const handleDepositRequest = async () => {
+    if (isComingSoon) {
+      alert("⚠️ Le Wallet est actuellement configuré sur « Bientôt disponible » par l'administration. Les dépôts en argent réel sont inactifs.");
+      addToTerminal("🔒 Opération impossible : Le Wallet est en état 'Bientôt disponible'.");
+      setShowDepositModal(false);
+      return;
+    }
+
     // 0. Security Maintenance Check
     const maintCheck = await SecurityService.checkMaintenanceMode("wallet");
     if (maintCheck.isMaintenance) {
@@ -667,6 +680,13 @@ export default function AfrigomboWalletDashboard({
   // MOBILE MONEY WITHDRAWAL HANDLER (UPDATED FOR BÊTA)
   const handleWithdrawRequest = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isComingSoon) {
+      alert("⚠️ Le Wallet est actuellement configuré sur « Bientôt disponible » par l'administration. Les retraits en argent réel sont inactifs.");
+      addToTerminal("🔒 Opération impossible : Le Wallet est en état 'Bientôt disponible'.");
+      setShowWithdrawModal(false);
+      return;
+    }
+
     const withdrawAmount = Number(amount);
     if (!withdrawAmount || withdrawAmount <= 0) {
       alert("Veuillez saisir un montant valide.");
@@ -784,6 +804,13 @@ export default function AfrigomboWalletDashboard({
     const sendAmt = Number(scanAmount);
     if (!sendAmt || sendAmt <= 0 || sendAmt > wallet.soldeDisponible || !scanRecipient || processing) return;
 
+    if (isComingSoon) {
+      alert("⚠️ Le Wallet est actuellement configuré sur « Bientôt disponible » par l'administration. Les transferts sont inactifs.");
+      addToTerminal("🔒 Opération impossible : Le Wallet est en état 'Bientôt disponible'.");
+      setShowScannerModal(false);
+      return;
+    }
+
     const executeFn = async () => {
       setProcessing(true);
       playSound("click");
@@ -829,6 +856,11 @@ export default function AfrigomboWalletDashboard({
   };
 
   const openDeposit = () => {
+    if (isComingSoon) {
+      setComingSoonActionTitle("Recharger (Dépôt Mobile Money & Cartes)");
+      setShowComingSoonModal(true);
+      return;
+    }
     setAmount("");
     setStep("form");
     setShowDepositModal(true);
@@ -836,6 +868,11 @@ export default function AfrigomboWalletDashboard({
   };
 
   const openWithdraw = () => {
+    if (isComingSoon) {
+      setComingSoonActionTitle("Retirer des Fonds vers Mobile Money");
+      setShowComingSoonModal(true);
+      return;
+    }
     setAmount("");
     setWithdrawSubmitted(false);
     setShowWithdrawModal(true);
@@ -843,6 +880,11 @@ export default function AfrigomboWalletDashboard({
   };
 
   const openScanner = () => {
+    if (isComingSoon) {
+      setComingSoonActionTitle("Scanner (Paiement QR & Transfert P2P)");
+      setShowComingSoonModal(true);
+      return;
+    }
     setScanRecipient("");
     setScanAmount("");
     setScanSuccess(false);
@@ -1421,9 +1463,40 @@ export default function AfrigomboWalletDashboard({
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           2. ACTIONS RAPIDES (RECHARGER / RETIRER / HISTORIQUE / SCANNER)
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="w-full space-y-1.5">
+      <div className="w-full space-y-2">
+        {/* • Bannière mode bientôt disponible */}
+        {isComingSoon && (
+          <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-zinc-950 to-zinc-950 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
+                <Lock className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-black text-white">Mode Déploiement : Wallet « Bientôt disponible »</span>
+                  <span className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.2 rounded uppercase">
+                    Admin Toggle
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-400 font-sans">
+                  Toutes les opérations réelles (dépôts, retraits, transferts) sont temporairement verrouillées.
+                </p>
+              </div>
+            </div>
+            {onShowComingSoonView && (
+              <button
+                type="button"
+                onClick={onShowComingSoonView}
+                className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-mono font-bold transition shrink-0 cursor-pointer border border-amber-500/30"
+              >
+                Voir la présentation complète →
+              </button>
+            )}
+          </div>
+        )}
+
         <span className="text-[10px] font-mono text-afri-text-muted uppercase tracking-widest font-black px-1 block">
-          ⚡ Actions Rapides
+          ⚡ Actions Rapides {isComingSoon && <span className="text-amber-400 font-bold ml-1">(Mode Aperçu)</span>}
         </span>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           
@@ -1431,14 +1504,16 @@ export default function AfrigomboWalletDashboard({
           <button
             id="btn-wallet-recharger"
             onClick={openDeposit}
-            className="w-full p-4 min-h-[100px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-[18px] flex flex-col items-center justify-center text-center gap-2 hover:bg-[#D4AF37]/10 transition-all group cursor-pointer shadow-md active:scale-98"
+            className="w-full p-4 min-h-[100px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-[18px] flex flex-col items-center justify-center text-center gap-2 hover:bg-[#D4AF37]/10 transition-all group cursor-pointer shadow-md active:scale-98 relative"
           >
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
               <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div className="space-y-0.5">
               <span className="text-xs font-black font-sans text-afri-text uppercase block">Recharger</span>
-              <span className="text-[8.5px] font-mono text-emerald-400 uppercase tracking-wider block font-bold">Dépôt Mobile</span>
+              <span className="text-[8.5px] font-mono uppercase tracking-wider block font-bold text-emerald-400">
+                {isComingSoon ? "Bientôt disponible" : "Dépôt Mobile"}
+              </span>
             </div>
           </button>
 
@@ -1446,15 +1521,17 @@ export default function AfrigomboWalletDashboard({
           <button
             id="btn-wallet-retirer"
             onClick={openWithdraw}
-            disabled={wallet.soldeDisponible <= 0}
-            className="w-full p-4 min-h-[100px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-[18px] flex flex-col items-center justify-center text-center gap-2 hover:bg-amber-500/10 transition-all group cursor-pointer shadow-md disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
+            disabled={!isComingSoon && wallet.soldeDisponible <= 0}
+            className="w-full p-4 min-h-[100px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-[18px] flex flex-col items-center justify-center text-center gap-2 hover:bg-amber-500/10 transition-all group cursor-pointer shadow-md disabled:opacity-40 disabled:cursor-not-allowed active:scale-98 relative"
           >
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
               <ArrowDownLeft className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div className="space-y-0.5">
               <span className="text-xs font-black font-sans text-afri-text uppercase block">Retirer</span>
-              <span className="text-[8.5px] font-mono text-amber-400 uppercase tracking-wider block font-bold">Vers Mobile</span>
+              <span className="text-[8.5px] font-mono uppercase tracking-wider block font-bold text-amber-400">
+                {isComingSoon ? "Bientôt disponible" : "Vers Mobile"}
+              </span>
             </div>
           </button>
 
@@ -1477,14 +1554,16 @@ export default function AfrigomboWalletDashboard({
           <button
             id="btn-wallet-scanner"
             onClick={openScanner}
-            className="w-full p-4 min-h-[100px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-[18px] flex flex-col items-center justify-center text-center gap-2 hover:bg-purple-500/10 transition-all group cursor-pointer shadow-md active:scale-98"
+            className="w-full p-4 min-h-[100px] bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/60 rounded-[18px] flex flex-col items-center justify-center text-center gap-2 hover:bg-purple-500/10 transition-all group cursor-pointer shadow-md active:scale-98 relative"
           >
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
               <QrCode className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div className="space-y-0.5">
               <span className="text-xs font-black font-sans text-afri-text uppercase block">Scanner</span>
-              <span className="text-[8.5px] font-mono text-purple-400 uppercase tracking-wider block font-bold">Paiement QR</span>
+              <span className="text-[8.5px] font-mono uppercase tracking-wider block font-bold text-purple-400">
+                {isComingSoon ? "Bientôt disponible" : "Paiement QR"}
+              </span>
             </div>
           </button>
 
@@ -2151,6 +2230,62 @@ export default function AfrigomboWalletDashboard({
           </form>
         )}
       </AndroidBottomSheet>
+
+      {/* MODAL INFORMATIF BIENTÔT DISPONIBLE */}
+      {showComingSoonModal && (
+        <AndroidBottomSheet
+          isOpen={showComingSoonModal}
+          onClose={() => setShowComingSoonModal(false)}
+          title={comingSoonActionTitle || "Opération temporairement inactive"}
+        >
+          <div className="space-y-4 py-2 text-left">
+            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                <Lock className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-wide block">
+                  Action indisponible en mode Déploiement
+                </span>
+                <p className="text-xs text-zinc-300 font-sans">
+                  Le Wallet AFRIGOMBO est actuellement configuré sur « Bientôt disponible » par l'administration.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-400 leading-relaxed font-sans">
+              Pour assurer la sécurité et la conformité bancaire de la plateforme, les flux financiers réels 
+              sont temporairement inactifs. Cette action sera automatiquement fonctionnelle dès l'activation officielle du Wallet par l'administration.
+            </p>
+
+            <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-400 font-mono">
+              Statut actuel : 🔒 Inactif • Aucune transaction financière ne peut être déclenchée.
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              {onShowComingSoonView && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowComingSoonModal(false);
+                    onShowComingSoonView();
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 border border-[#D4AF37]/40 font-bold text-xs text-[#D4AF37] uppercase tracking-wider transition cursor-pointer"
+                >
+                  Présentation Wallet & Séquestre
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowComingSoonModal(false)}
+                className="flex-1 py-3 rounded-xl bg-afri-bg-sec hover:bg-zinc-800 border border-afri-border font-bold text-xs text-white uppercase tracking-wider transition cursor-pointer"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </AndroidBottomSheet>
+      )}
 
     </div>
   </AndroidPageLayout>

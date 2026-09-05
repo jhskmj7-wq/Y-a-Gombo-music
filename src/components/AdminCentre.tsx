@@ -71,6 +71,7 @@ import RenfortExpress from "./RenfortExpress";
 import AcademieView from "./AcademieView";
 import MessagesView from "./MessagesView";
 import AfrigomboWalletDashboard from "./AfrigomboWalletDashboard";
+import AfrigomboWalletComingSoon from "./wallet/AfrigomboWalletComingSoon";
 import GomboContractsDashboard from "./GomboContractsDashboard";
 import CreatorActivityDashboard from "./CreatorActivityDashboard";
 const FirebaseDiagnostic = lazyWithRetry(() => import("./FirebaseDiagnostic"));
@@ -536,6 +537,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   useEffect(() => {
     if (activeMenu !== "user_heritage") {
       setIsHeritageSubPanelActive(false);
+    }
+  }, [activeMenu]);
+
+  // Wallet preview state for authorized users / admins
+  const [showForceWalletPreview, setShowForceWalletPreview] = useState(false);
+
+  useEffect(() => {
+    if (activeMenu !== "user_wallet") {
+      setShowForceWalletPreview(false);
     }
   }, [activeMenu]);
 
@@ -3434,14 +3444,22 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 }`}
                 style={{ overscrollBehaviorY: "contain" }}
               >
-                {getFlagForMenu(activeMenu) && !isModuleAccessible(getFlagForMenu(activeMenu)!) ? (
-                  <FeatureUnavailable 
-                    featureName={getFeatureNameForMenu(activeMenu)}
-                    variant={isModuleComingSoon(getFlagForMenu(activeMenu)!) ? "coming_soon" : "temporary_disabled"}
-                    title={isModuleComingSoon(getFlagForMenu(activeMenu)!) ? "🔒 Bientôt disponible" : "🔒 Module indisponible"}
-                    description={isModuleComingSoon(getFlagForMenu(activeMenu)!) ? "Cette fonctionnalité arrive prochainement sur AFRIGOMBO." : `Le module "${getFeatureNameForMenu(activeMenu)}" n'est pas accessible actuellement.`}
-                    onBack={() => setActiveMenu("user_terrain")} 
-                  />
+                {getFlagForMenu(activeMenu) && !isModuleAccessible(getFlagForMenu(activeMenu)!) && !(activeMenu === "user_wallet" && showForceWalletPreview) ? (
+                  activeMenu === "user_wallet" && isModuleComingSoon("wallet") ? (
+                    <AfrigomboWalletComingSoon 
+                      onBack={goBackMenu}
+                      isSuperFounderUser={isSuperFounderUser}
+                      onPreviewActiveWallet={() => setShowForceWalletPreview(true)}
+                    />
+                  ) : (
+                    <FeatureUnavailable 
+                      featureName={getFeatureNameForMenu(activeMenu)}
+                      variant={isModuleComingSoon(getFlagForMenu(activeMenu)!) ? "coming_soon" : "temporary_disabled"}
+                      title={isModuleComingSoon(getFlagForMenu(activeMenu)!) ? "🔒 Bientôt disponible" : "🔒 Module indisponible"}
+                      description={isModuleComingSoon(getFlagForMenu(activeMenu)!) ? "Cette fonctionnalité arrive prochainement sur AFRIGOMBO." : `Le module "${getFeatureNameForMenu(activeMenu)}" n'est pas accessible actuellement.`}
+                      onBack={() => setActiveMenu("user_terrain")} 
+                    />
+                  )
                 ) : (
                   <>
                 
@@ -5435,6 +5453,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         setActiveMenu("user_messages");
                       }}
                       onNavigateToGomboAds={() => setActiveMenu("user_gombo_ads")}
+                      isComingSoon={isModuleComingSoon("wallet")}
+                      onShowComingSoonView={() => setShowForceWalletPreview(false)}
                     />
                   </Suspense>
                 </div>
