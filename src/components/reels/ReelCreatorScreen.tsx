@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Image as ImageIcon, X, ChevronRight, Sparkles } from "lucide-react";
-import { compressVideoFile } from "../../lib/media/videoCompressor";
 
 export interface VideoFilter {
   id: string;
@@ -27,16 +26,27 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const previewRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>("naturel");
-  const [isCompressing, setIsCompressing] = useState(false);
-  const [compressionProgress, setCompressionProgress] = useState(0);
-  const [compressedResult, setCompressedResult] = useState<{ file: File } | null>(null);
-  const [waitingToPublish, setWaitingToPublish] = useState(false);
 
-  const [compressionPhase, setCompressionPhase] = useState<string>("");
-  const [compressionError, setCompressionError] = useState<string | null>(null);
+  const recordedUrlRef = useRef<string | null>(null);
+  recordedUrlRef.current = recordedUrl;
+
+  // Nettoyage complet lors du démontage du composant
+  useEffect(() => {
+    return () => {
+      if (previewRef.current) {
+        previewRef.current.pause();
+        previewRef.current.src = "";
+        previewRef.current.load();
+      }
+      if (recordedUrlRef.current) {
+        URL.revokeObjectURL(recordedUrlRef.current);
+        recordedUrlRef.current = null;
+      }
+    };
+  }, []);
 
   const activeFilterCss =
     REEL_VIDEO_FILTERS.find((f) => f.id === selectedFilter)?.filterCss ?? "none";
@@ -46,67 +56,51 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     if (!file) return;
     if (!file.type.startsWith("video/")) return;
 
-    setRecordedBlob(file);
-    setRecordedUrl(URL.createObjectURL(file));
-    setCompressedResult(null);
-    setCompressionError(null);
-    setIsCompressing(true);
-    setCompressionProgress(0);
-    setCompressionPhase("Initialisation de l'optimisation...");
+    // Arrêt et révocation de l'ancienne ressource vidéo si présente
+    if (previewRef.current) {
+      previewRef.current.pause();
+      previewRef.current.src = "";
+      previewRef.current.load();
+    }
+    if (recordedUrl) {
+      URL.revokeObjectURL(recordedUrl);
+    }
 
-    compressVideoFile(file, {
-      onProgress: (percent, phase) => {
-        setCompressionProgress(percent);
-        if (phase) setCompressionPhase(phase);
-      },
-    })
-      .then((result) => {
-        console.log(
-          `[REEL COMPRESSION] SUCCESS - Original: ${(result.originalSizeBytes / 1024 / 1024).toFixed(2)} Mo, Compressé: ${(result.compressedSizeBytes / 1024 / 1024).toFixed(2)} Mo (-${result.reductionPercentage}%)`
-        );
-        setCompressedResult({ file: result.file });
-        setCompressionPhase("Optimisation terminée");
-      })
-      .catch((err) => {
-        console.error("[REEL COMPRESSION] FAILED:", err);
-        setCompressionError(
-          err?.message || "Échec de l'optimisation vidéo. Impossible de préparer la vidéo."
-        );
-        // STRICT: Do NOT fallback silently to huge original file
-        setCompressedResult(null);
-      })
-      .finally(() => {
-        setIsCompressing(false);
-      });
+    // Conservation immédiate du fichier ORIGINAL et création de l'ObjectURL de prévisualisation pure
+    const newUrl = URL.createObjectURL(file);
+    setSelectedFile(file);
+    setRecordedUrl(newUrl);
+    setSelectedFilter("naturel");
   };
 
   const handleRetake = () => {
-    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
-    setRecordedBlob(null);
+    if (previewRef.current) {
+      previewRef.current.pause();
+      previewRef.current.src = "";
+      previewRef.current.load();
+    }
+    if (recordedUrl) {
+      URL.revokeObjectURL(recordedUrl);
+    }
+    setSelectedFile(null);
     setRecordedUrl(null);
-    setCompressedResult(null);
-    setCompressionError(null);
-    setWaitingToPublish(false);
     setSelectedFilter("naturel");
   };
 
   const handleNext = () => {
-    if (compressedResult) {
-      onVideoReady(compressedResult.file, selectedFilter);
-    } else {
-      setWaitingToPublish(true);
+    if (selectedFile) {
+      // Pause propre du lecteur local avant passage à l'étape suivante
+      if (previewRef.current) {
+        previewRef.current.pause();
+        previewRef.current.src = "";
+        previewRef.current.load();
+      }
+      onVideoReady(selectedFile, selectedFilter);
     }
   };
 
-  useEffect(() => {
-    if (waitingToPublish && compressedResult) {
-      onVideoReady(compressedResult.file, selectedFilter);
-      setWaitingToPublish(false);
-    }
-  }, [waitingToPublish, compressedResult, selectedFilter, onVideoReady]);
-
-  // PREVIEW MODE (after selecting a video)
-  if (recordedUrl) {
+  // PREVIEW MODE (après sélection de la vidéo originale)
+  if (recordedUrl && selectedFile) {
     return createPortal(
       <div className="fixed inset-0 bg-black z-[9999] flex flex-col">
         <div className="flex items-center justify-between p-4 z-10 bg-gradient-to-b from-black/80 to-transparent">
@@ -118,51 +112,12 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
           </span>
           <button
             onClick={handleNext}
-            disabled={waitingToPublish || Boolean(compressionError) || (isCompressing && waitingToPublish)}
-            className="flex items-center gap-1 bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-full text-sm disabled:opacity-50 cursor-pointer shadow-md hover:brightness-110 active:scale-95 transition-all"
+            disabled={!selectedFile}
+            className="flex items-center gap-1 bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-full text-sm cursor-pointer shadow-md hover:brightness-110 active:scale-95 transition-all"
           >
-            {isCompressing || waitingToPublish ? (
-              <>
-                <div className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                {compressionProgress > 0 ? `${compressionProgress}%` : "Optimisation..."}
-              </>
-            ) : (
-              <>Suivant <ChevronRight className="w-4 h-4" /></>
-            )}
+            Suivant <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-
-        {/* Compression State / Error Banner */}
-        {isCompressing && (
-          <div className="px-4 py-2 bg-black/80 backdrop-blur border-b border-[#D4AF37]/20 z-10">
-            <div className="flex justify-between items-center text-[11px] font-mono text-zinc-300 mb-1">
-              <span className="flex items-center gap-1.5 text-[#D4AF37]">
-                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                {compressionPhase || "Optimisation adaptative..."}
-              </span>
-              <span>{compressionProgress}%</span>
-            </div>
-            <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-amber-500 to-[#D4AF37] transition-all duration-300"
-                style={{ width: `${compressionProgress}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {compressionError && (
-          <div className="mx-4 my-2 p-3 bg-rose-500/20 border border-rose-500/40 rounded-xl text-rose-300 text-xs flex flex-col gap-2 z-10">
-            <span className="font-bold">⚠️ Erreur d'optimisation vidéo</span>
-            <span>{compressionError}</span>
-            <button
-              onClick={handleRetake}
-              className="self-start px-3 py-1 bg-rose-500 text-white rounded-lg text-xs font-bold"
-            >
-              Choisir une autre vidéo
-            </button>
-          </div>
-        )}
 
         <div className="flex-1 flex items-center justify-center overflow-hidden relative bg-black">
           <video

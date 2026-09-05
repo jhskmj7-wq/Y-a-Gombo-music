@@ -4862,23 +4862,22 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       onBack={() => goBackMenu()}
                     />
                   ) : activePublishType === "reel" ? (
-                    <>
+                    reelToPublish ? (
+                      <ReelPublishScreen
+                        videoFile={reelToPublish.file}
+                        filterId={reelToPublish.filterId}
+                        onClose={() => setReelToPublish(null)}
+                        onPublished={() => {
+                          setReelToPublish(null);
+                          goBackMenu();
+                        }}
+                      />
+                    ) : (
                       <ReelCreatorScreen
                         onClose={() => goBackMenu()}
                         onVideoReady={(file, filterId) => setReelToPublish({ file, filterId })}
                       />
-                      {reelToPublish && (
-                        <ReelPublishScreen
-                          videoFile={reelToPublish.file}
-                          filterId={reelToPublish.filterId}
-                          onClose={() => setReelToPublish(null)}
-                          onPublished={() => {
-                            setReelToPublish(null);
-                            goBackMenu();
-                          }}
-                        />
-                      )}
-                    </>
+                    )
                   ) : (
                     <GomboPublish
                       currentUserProfile={
