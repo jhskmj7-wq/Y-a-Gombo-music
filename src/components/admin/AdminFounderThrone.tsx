@@ -10,7 +10,7 @@ import {
   RefreshCw, CheckCircle, XCircle, Search, HelpCircle, Save, BookOpen, Scroll, Target, Award, Gift,
   Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square,
   Clock, MapPin, Cloud, Zap, Sun, ChevronDown, ChevronUp, Flame, ToggleLeft, ToggleRight, UserCheck, Radio, Eye, Bot,
-  MessageSquare, Scale, Archive
+  MessageSquare, Scale, Archive, ArrowUpRight, X
 } from "lucide-react";
 import BetaTransactionsAdminPanel from "./BetaTransactionsAdminPanel";
 import { PendingPublicationsAdminPanel } from "./PendingPublicationsAdminPanel";
@@ -185,6 +185,7 @@ export default function AdminFounderThrone({
   const [kycRequests, setKycRequests] = useState<any[]>([]);
   const [kycStatusTab, setKycStatusTab] = useState<"TOUTES" | "A_TRAITER" | "VALIDEES" | "REFUSEES" | "ARCHIVEES">("TOUTES");
   const [kycToDelete, setKycToDelete] = useState<any | null>(null);
+  const [kycPreviewUrl, setKycPreviewUrl] = useState<string | null>(null);
   const [userCommuneFilter, setUserCommuneFilter] = useState<string>("ALL");
   const [userLevelFilter, setUserLevelFilter] = useState<string>("ALL");
   const [userVerifiedFilter, setUserVerifiedFilter] = useState<string>("ALL");
@@ -4023,6 +4024,50 @@ export default function AdminFounderThrone({
                               {kyc.details || "Dossier d'identité soumis pour audit artistique."}
                             </p>
 
+                            {/* DOCUMENT PREVIEWS FOR FOUNDER */}
+                            {(() => {
+                              const matchingUser = displayUsers.find((u: any) => (u.id || u.uid) === kyc.userId);
+                              const docs = [
+                                { label: "1. Carte d'identité (Recto)", url: kyc.kycDocs?.identityCardUrl || matchingUser?.kycDocs?.identityCardUrl },
+                                { label: "2. Carte d'identité (Verso)", url: kyc.kycDocs?.identityCardBackUrl || matchingUser?.kycDocs?.identityCardBackUrl },
+                                { label: "3. Selfie de contrôle", url: kyc.kycDocs?.selfieUrl || matchingUser?.kycDocs?.selfieUrl },
+                                { label: "4. Preuve d'activité", url: kyc.kycDocs?.activityUrl || kyc.kycDocUrl || matchingUser?.kycDocs?.activityUrl || matchingUser?.kycDocUrl }
+                              ].filter(d => Boolean(d.url));
+
+                              if (docs.length === 0) {
+                                return (
+                                  <div className="my-3 p-2.5 bg-zinc-950/60 rounded-xl border border-zinc-900 text-[11px] font-mono text-zinc-500">
+                                    ⚠️ Aucune pièce jointe directement attachée. (Consulter le profil utilisateur si déjà téléchargé)
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <div className="my-3 p-3 bg-zinc-950/90 rounded-2xl border border-zinc-800 space-y-2">
+                                  <span className="text-[10px] font-mono font-bold uppercase text-[#D4AF37] block">
+                                    📁 Pièces Justificatives KYC ({docs.length})
+                                  </span>
+                                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    {docs.map((docItem, dIdx) => (
+                                      <div key={dIdx} className="space-y-1 bg-black/60 p-2 rounded-xl border border-zinc-900">
+                                        <span className="text-[9px] font-mono text-zinc-300 block truncate">{docItem.label}</span>
+                                        <div className="relative group cursor-pointer" onClick={() => setKycPreviewUrl(docItem.url)}>
+                                          <img
+                                            src={docItem.url}
+                                            alt={docItem.label}
+                                            className="w-full h-16 object-cover rounded-lg border border-zinc-800 group-hover:border-[#D4AF37] transition-all shadow-md"
+                                          />
+                                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-all text-[10px] font-bold text-[#D4AF37]">
+                                            Voir ↗
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
                             <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-mono text-afri-text-sec pt-2 border-t border-afri-border/50">
                               <span>Soumis le: {kyc.createdAt && !isNaN(new Date(kyc.createdAt).getTime()) ? new Date(kyc.createdAt).toLocaleString("fr-FR") : "Date inconnue"}</span>
                               <div className="flex flex-wrap items-center gap-2">
@@ -6106,6 +6151,50 @@ export default function AdminFounderThrone({
                 <Trash2 className="w-4 h-4" />
                 Supprimer définitivement
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LIGHTBOX APERÇU DOCUMENT KYC SÉCURISÉ */}
+      {kycPreviewUrl && (
+        <div 
+          className="fixed inset-0 bg-black/90 backdrop-blur-md z-[10000] flex items-center justify-center p-4 select-none"
+          onClick={() => setKycPreviewUrl(null)}
+        >
+          <div
+            className="bg-zinc-950 border border-[#D4AF37] max-w-2xl w-full rounded-2xl p-4 space-y-3 text-left shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 text-[#D4AF37]">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 shrink-0" />
+                <h4 className="text-xs font-mono font-extrabold uppercase tracking-wide">Document KYC Sécurisé</h4>
+              </div>
+              <div className="flex items-center gap-3">
+                <a
+                  href={kycPreviewUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] font-mono text-[#D4AF37] hover:underline flex items-center gap-1"
+                >
+                  Ouvrir en grand <ArrowUpRight className="w-3.5 h-3.5" />
+                </a>
+                <button
+                  onClick={() => setKycPreviewUrl(null)}
+                  className="text-zinc-400 hover:text-white p-1 rounded cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center p-2 bg-black/60 rounded-xl min-h-[250px] max-h-[70vh] overflow-hidden">
+              <img
+                src={kycPreviewUrl}
+                alt="Aperçu Document KYC"
+                className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-xl"
+              />
             </div>
           </div>
         </div>

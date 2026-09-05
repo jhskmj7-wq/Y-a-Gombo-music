@@ -9225,6 +9225,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           </div>
         </div>
       )}
+
+      {/* PUBLIC PROFILE / PORTFOLIO MODAL */}
+      <PublicProfileModal
+        isOpen={Boolean(publicProfileTargetUserId)}
+        onClose={() => setPublicProfileTargetUserId(null)}
+        targetUserId={publicProfileTargetUserId}
+        currentUser={currentUser}
+        onOpenDirectMessage={(targetUserId) => {
+          setPublicProfileTargetUserId(null);
+          setOpenConvoWithUserId(targetUserId);
+          setActiveMenu("user_messages");
+        }}
+      />
     </div>
   );
 }

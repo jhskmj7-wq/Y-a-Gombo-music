@@ -962,17 +962,24 @@ export default function AdminUsers({
 
                                   const userMap = user.id ? kycSignedUrls[user.id] : undefined;
                                   const signedUrl = userMap ? userMap[docItem.path] : undefined;
+                                  const isDirectUrl = typeof docItem.path === "string" && (
+                                    docItem.path.startsWith("http://") || 
+                                    docItem.path.startsWith("https://") || 
+                                    docItem.path.startsWith("data:") || 
+                                    docItem.path.startsWith("blob:")
+                                  );
+                                  const displayUrl = signedUrl || (isDirectUrl ? docItem.path : undefined);
                                   const isLoading = user.id ? kycLoading[user.id] : false;
 
                                   return (
                                     <div key={idx} className="flex items-center justify-between py-1.5 border-b border-zinc-900/40 last:border-0">
                                       <div className="space-y-1">
                                         <span className="text-zinc-300 font-medium block">{docItem.label}</span>
-                                        {signedUrl ? (
+                                        {displayUrl ? (
                                           <button
                                             type="button"
-                                            onClick={() => setKycPreviewUrl(signedUrl)}
-                                            className="text-[#D4AF37] hover:underline text-[10px] flex items-center gap-1"
+                                            onClick={() => setKycPreviewUrl(displayUrl)}
+                                            className="text-[#D4AF37] hover:underline text-[10px] flex items-center gap-1 cursor-pointer font-bold"
                                           >
                                             Agrandir <ArrowUpRight className="w-3 h-3" />
                                           </button>
@@ -981,7 +988,7 @@ export default function AdminUsers({
                                             type="button"
                                             onClick={() => fetchKycSignedUrls(user)}
                                             disabled={isLoading}
-                                            className="text-[#D4AF37] underline text-[10px]"
+                                            className="text-[#D4AF37] underline text-[10px] cursor-pointer"
                                           >
                                             {isLoading ? "Chargement..." : "Consulter ↗"}
                                           </button>
@@ -993,11 +1000,11 @@ export default function AdminUsers({
                                           <div className="w-16 h-16 rounded bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[9px] text-zinc-500 animate-pulse">
                                             ...
                                           </div>
-                                        ) : signedUrl ? (
+                                        ) : displayUrl ? (
                                           <img
-                                            src={signedUrl}
+                                            src={displayUrl}
                                             alt={docItem.label}
-                                            onClick={() => setKycPreviewUrl(signedUrl)}
+                                            onClick={() => setKycPreviewUrl(displayUrl)}
                                             className="w-16 h-16 object-cover rounded cursor-pointer border border-zinc-700 hover:border-[#D4AF37] transition-all shadow-md"
                                             title="Cliquer pour voir en grand"
                                           />
@@ -1005,7 +1012,7 @@ export default function AdminUsers({
                                           <button
                                             type="button"
                                             onClick={() => fetchKycSignedUrls(user)}
-                                            className="w-16 h-16 rounded bg-zinc-900/80 border border-zinc-800 hover:border-[#D4AF37]/50 flex flex-col items-center justify-center text-zinc-400 hover:text-[#D4AF37] text-[9px] transition-all"
+                                            className="w-16 h-16 rounded bg-zinc-900/80 border border-zinc-800 hover:border-[#D4AF37]/50 flex flex-col items-center justify-center text-zinc-400 hover:text-[#D4AF37] text-[9px] transition-all cursor-pointer"
                                           >
                                             <Eye className="w-4 h-4 mb-0.5" />
                                             <span>Consulter</span>
