@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -176,6 +176,8 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
   const [showCommuneDropdown, setShowCommuneDropdown] = useState(false);
   const [isAvatarSheetOpen, setIsAvatarSheetOpen] = useState(false);
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
+  const [customUrlInput, setCustomUrlInput] = useState(avatarUrl || "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { communeNames } = useLocations();
 
@@ -321,22 +323,28 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     </div>
 
                     <div className="space-y-3 pt-2">
-                      <label className="min-h-[52px] w-full bg-afri-bg border border-afri-border hover:border-[#D4AF37] rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-afri-text active:scale-[0.98] cursor-pointer shadow-sm transition-transform">
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleFileUpload(file);
+                            setIsAvatarSheetOpen(false);
+                          }
+                        }} 
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="min-h-[52px] w-full bg-afri-bg border border-afri-border hover:border-[#D4AF37] rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-afri-text active:scale-[0.98] cursor-pointer shadow-sm transition-transform"
+                      >
                         <ImageIcon className="w-5 h-5 text-[#D4AF37]" />
                         <span>Choisir une photo (Album)</span>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden" 
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              handleFileUpload(file);
-                              setIsAvatarSheetOpen(false);
-                            }
-                          }} 
-                        />
-                      </label>
+                      </button>
 
                       <button
                         type="button"
@@ -350,24 +358,73 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                         <span>Prendre une photo (Appareil photo)</span>
                       </button>
 
+                      <div className="p-3 bg-afri-bg border border-afri-border rounded-2xl space-y-2">
+                        <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Ou saisir une URL d'image</label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="url"
+                            value={customUrlInput}
+                            onChange={(e) => setCustomUrlInput(e.target.value)}
+                            placeholder="https://images.unsplash.com/..."
+                            className="flex-1 bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text outline-none focus:border-[#D4AF37]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (customUrlInput.trim()) {
+                                setAvatarUrl(customUrlInput.trim());
+                                setIsAvatarSheetOpen(false);
+                              }
+                            }}
+                            className="px-4 py-2 bg-[#D4AF37] text-black rounded-xl text-xs font-bold hover:opacity-90 cursor-pointer"
+                          >
+                            OK
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Ou choisir un avatar prédéfini</label>
+                        <div className="grid grid-cols-4 gap-2">
+                          {[
+                            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200",
+                            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
+                            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
+                            "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200"
+                          ].map((url, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                setAvatarUrl(url);
+                                setIsAvatarSheetOpen(false);
+                              }}
+                              className="w-full aspect-square rounded-xl overflow-hidden border-2 border-afri-border hover:border-[#D4AF37] cursor-pointer transition-all active:scale-95"
+                            >
+                              <img src={url} alt={`Preset ${idx}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       <button
                         type="button"
                         onClick={() => {
                           setAvatarUrl("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200");
                           setIsAvatarSheetOpen(false);
                         }}
-                        className="min-h-[52px] w-full bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-rose-400 active:scale-[0.98] cursor-pointer transition-transform"
+                        className="min-h-[48px] w-full bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-rose-400 active:scale-[0.98] cursor-pointer transition-transform"
                       >
-                        <Trash2 className="w-5 h-5 text-rose-400" />
-                        <span>Supprimer la photo</span>
+                        <Trash2 className="w-4 h-4 text-rose-400" />
+                        <span>Réinitialiser / Supprimer</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setIsAvatarSheetOpen(false)}
-                        className="min-h-[52px] w-full bg-afri-bg-ter border border-afri-border rounded-2xl flex items-center justify-center gap-2 text-xs font-bold text-afri-text-sec active:scale-[0.98] cursor-pointer transition-transform mt-2"
+                        className="min-h-[48px] w-full bg-afri-bg-ter border border-afri-border rounded-2xl flex items-center justify-center gap-2 text-xs font-bold text-afri-text-sec active:scale-[0.98] cursor-pointer transition-transform mt-2"
                       >
-                        <X className="w-5 h-5" />
+                        <X className="w-4 h-4" />
                         <span>Annuler</span>
                       </button>
                     </div>

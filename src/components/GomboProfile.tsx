@@ -26,6 +26,8 @@ import SettingsModal from "./SettingsModal";
 import { supportConfig } from "../supportConfig";
 import { uploadOptimizedImage, safeFetchJson } from "../lib/media/imageOptimizer";
 import { AvatarCropModal } from "./ui/AvatarCropModal";
+import AvatarEditor from "./avatar/AvatarEditor";
+import AvatarStore from "./avatar/AvatarStore";
 
 interface GomboProfileProps {
   currentUserProfile: UserProfile;
@@ -91,7 +93,20 @@ export default function GomboProfile({
 
   // Current Panel view: "main" | "edit" | "settings" | "support" | "certification"
   const [panelView, setPanelView] = useState<"main" | "edit" | "settings" | "support" | "certification">(initialPanelView);
+  const [isAvatarEditorOpen, setIsAvatarEditorOpen] = useState(false);
+  const [isAvatarStoreOpen, setIsAvatarStoreOpen] = useState(false);
   const profileContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOpenEditor = () => setIsAvatarEditorOpen(true);
+    const handleOpenStore = () => setIsAvatarStoreOpen(true);
+    window.addEventListener("gombo_open_avatar_editor", handleOpenEditor);
+    window.addEventListener("gombo_open_avatar_store", handleOpenStore);
+    return () => {
+      window.removeEventListener("gombo_open_avatar_editor", handleOpenEditor);
+      window.removeEventListener("gombo_open_avatar_store", handleOpenStore);
+    };
+  }, []);
 
   useEffect(() => {
     if (onSubPanelChange) {
@@ -1387,6 +1402,13 @@ export default function GomboProfile({
           handleFileUpload(croppedFile);
         }}
       />
+
+      {isAvatarEditorOpen && (
+        <AvatarEditor onClose={() => setIsAvatarEditorOpen(false)} />
+      )}
+      {isAvatarStoreOpen && (
+        <AvatarStore onClose={() => setIsAvatarStoreOpen(false)} />
+      )}
     </AndroidPageLayout>
     </div>
   );

@@ -154,11 +154,22 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
       setPaymentAuditLog(data.auditLog);
     });
 
+    const handleManualPaymentUpdate = (e: any) => {
+      if (e.detail?.operators) {
+        setPaymentOperators(e.detail.operators);
+      }
+      if (e.detail?.auditLog) {
+        setPaymentAuditLog(e.detail.auditLog);
+      }
+    };
+    window.addEventListener("manual_payment_methods_updated", handleManualPaymentUpdate);
+
     return () => {
       unsubReq();
       unsubCodes();
       unsubUsers();
       unsubPayments();
+      window.removeEventListener("manual_payment_methods_updated", handleManualPaymentUpdate);
     };
   }, []);
 

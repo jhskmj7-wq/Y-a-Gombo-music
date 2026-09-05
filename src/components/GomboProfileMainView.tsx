@@ -538,10 +538,6 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           <div className="flex flex-col sm:flex-row gap-3">
             <button 
               onClick={() => {
-                if (isModuleComingSoon("avatar")) {
-                  setLocalComingSoon("Mon Avatar & Accessoires");
-                  return;
-                }
                 if (window.dispatchEvent) {
                   window.dispatchEvent(new CustomEvent("gombo_open_avatar_editor"));
                 }
@@ -552,10 +548,6 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </button>
             <button 
               onClick={() => {
-                if (isModuleComingSoon("avatar")) {
-                  setLocalComingSoon("Boutique d'Accessoires Virtuels");
-                  return;
-                }
                 if (window.dispatchEvent) {
                   window.dispatchEvent(new CustomEvent("gombo_open_avatar_store"));
                 }

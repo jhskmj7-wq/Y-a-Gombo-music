@@ -100,7 +100,7 @@ export function formatIvorianPhoneNumber(phone: string): string {
 }
 
 /**
- * Écoute en temps réel la configuration des moyens de paiement manuels
+ * Écoute en temps réel la configuration des moyens de paiement manuels (avec fallback localStorage)
  */
 export function subscribeToManualPaymentConfig(
   callback: (data: { 
@@ -109,11 +109,27 @@ export function subscribeToManualPaymentConfig(
     updatedAt?: string;
   }) => void
 ): () => void {
+  const localSaved = localStorage.getItem("manual_payment_operators_v1");
+  let baseOperators = DEFAULT_MANUAL_PAYMENT_OPERATORS;
+  let baseAudit: ManualPaymentAuditEntry[] = [];
+  if (localSaved) {
+    try {
+      const parsed = JSON.parse(localSaved);
+      if (parsed.operators) {
+        baseOperators = { ...DEFAULT_MANUAL_PAYMENT_OPERATORS, ...parsed.operators };
+      }
+      if (parsed.auditLog) {
+        baseAudit = parsed.auditLog;
+      }
+    } catch (e) {}
+  }
+
+  callback({
+    operators: baseOperators,
+    auditLog: baseAudit
+  });
+
   if (!db) {
-    callback({
-      operators: DEFAULT_MANUAL_PAYMENT_OPERATORS,
-      auditLog: []
-    });
     return () => {};
   }
 
@@ -123,24 +139,26 @@ export function subscribeToManualPaymentConfig(
       const data = snap.data() as Partial<ManualPaymentSettingsDoc>;
       const mergedOperators = {
         ...DEFAULT_MANUAL_PAYMENT_OPERATORS,
+        ...baseOperators,
         ...(data.operators || {})
       };
+      const mergedAudit = [...(data.auditLog || []), ...baseAudit].slice(0, 50);
       callback({
         operators: mergedOperators,
-        auditLog: data.auditLog || [],
+        auditLog: mergedAudit,
         updatedAt: data.updatedAt
       });
     } else {
       callback({
-        operators: DEFAULT_MANUAL_PAYMENT_OPERATORS,
-        auditLog: []
+        operators: baseOperators,
+        auditLog: baseAudit
       });
     }
   }, (err) => {
     console.warn("[MANUAL_PAYMENT_CONFIG] Sync notice:", err);
     callback({
-      operators: DEFAULT_MANUAL_PAYMENT_OPERATORS,
-      auditLog: []
+      operators: baseOperators,
+      auditLog: baseAudit
     });
   });
 
@@ -148,7 +166,7 @@ export function subscribeToManualPaymentConfig(
 }
 
 /**
- * Met à jour un opérateur (activation/désactivation ou modification du numéro)
+ * Met à jour un opérateur (activation/désactivation ou modification du numéro) avec sauvegarde localStorage garantie
  */
 export async function updateManualPaymentOperator(
   operatorId: ManualPaymentOperatorKey,
@@ -162,31 +180,19 @@ export async function updateManualPaymentOperator(
     email?: string;
   }
 ): Promise<{ success: boolean; message: string }> {
-  if (!db) {
-    return { success: false, message: "Base de données non disponible." };
-  }
-
   try {
-    const docRef = doc(db, "system_settings", "manual_payment_methods");
-    const snap = await getDoc(docRef);
-
-    let currentData: ManualPaymentSettingsDoc = {
-      operators: { ...DEFAULT_MANUAL_PAYMENT_OPERATORS },
-      auditLog: []
-    };
-
-    if (snap.exists()) {
-      currentData = {
-        ...currentData,
-        ...snap.data(),
-        operators: {
-          ...DEFAULT_MANUAL_PAYMENT_OPERATORS,
-          ...(snap.data()?.operators || {})
-        }
-      };
+    let currentOperators = { ...DEFAULT_MANUAL_PAYMENT_OPERATORS };
+    let currentAudit: ManualPaymentAuditEntry[] = [];
+    const localSaved = localStorage.getItem("manual_payment_operators_v1");
+    if (localSaved) {
+      try {
+        const parsed = JSON.parse(localSaved);
+        if (parsed.operators) currentOperators = { ...currentOperators, ...parsed.operators };
+        if (parsed.auditLog) currentAudit = parsed.auditLog;
+      } catch (e) {}
     }
 
-    const currentOp = currentData.operators[operatorId] || DEFAULT_MANUAL_PAYMENT_OPERATORS[operatorId];
+    const currentOp = currentOperators[operatorId] || DEFAULT_MANUAL_PAYMENT_OPERATORS[operatorId];
     const prevPhone = currentOp.phoneNumber;
     const prevEnabled = currentOp.enabled;
 
@@ -245,17 +251,31 @@ export async function updateManualPaymentOperator(
       updatedByEmail: adminEmail
     };
 
+    currentOperators[operatorId] = updatedOp;
+    currentAudit = [auditEntry, ...currentAudit].slice(0, 50);
+
     const nextDocPayload: ManualPaymentSettingsDoc = {
-      operators: {
-        ...currentData.operators,
-        [operatorId]: updatedOp
-      },
-      auditLog: [auditEntry, ...(currentData.auditLog || [])].slice(0, 50),
+      operators: currentOperators,
+      auditLog: currentAudit,
       updatedAt: nowIso,
       updatedBy: adminName
     };
 
-    await setDoc(docRef, nextDocPayload, { merge: true });
+    // Save to localStorage immediately
+    localStorage.setItem("manual_payment_operators_v1", JSON.stringify(nextDocPayload));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("manual_payment_methods_updated", { detail: nextDocPayload }));
+    }
+
+    // Try Firestore sync if available
+    if (db) {
+      try {
+        const docRef = doc(db, "system_settings", "manual_payment_methods");
+        await setDoc(docRef, nextDocPayload, { merge: true });
+      } catch (fbErr) {
+        console.warn("[MANUAL_PAYMENT_CONFIG] Firestore sync warning (saved locally):", fbErr);
+      }
+    }
 
     return {
       success: true,
