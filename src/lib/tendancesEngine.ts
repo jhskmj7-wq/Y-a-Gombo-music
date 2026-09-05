@@ -45,6 +45,7 @@ export interface TendancesItem {
   authorAvatar?: string;
   isGomboIdVerified?: boolean;
   isPremium?: boolean;
+  subscriptionPlan?: "free" | "pro" | "elite" | string;
   budget?: number;
   imageUrl?: string;
   audioUrl?: string;
@@ -134,7 +135,21 @@ export function calculateBaseScore(
   if (item.isPremium) bonus += 10;
   const penalty = (item.reportsCount || 0) * 30;
 
-  return Math.max(0, score + bonus - penalty);
+  const rawEngagement = Math.max(0, score + bonus - penalty);
+
+  // Boost mathématique réel selon l'abonnement AFRIGOMBO :
+  // FREE : 1.0x (standard)
+  // PRO : 1.4x (+40% de visibilité)
+  // ELITE : 2.5x (+150% priorité maximale)
+  let boostMultiplier = 1.0;
+  const plan = String(item.subscriptionPlan || (item.rawItem as any)?.subscriptionPlan || "").toLowerCase();
+  if (plan.includes("elite")) {
+    boostMultiplier = 2.5; // +150%
+  } else if (plan.includes("pro") || item.isPremium || (item.rawItem as any)?.isPremium) {
+    boostMultiplier = 1.4; // +40%
+  }
+
+  return Math.round(rawEngagement * boostMultiplier);
 }
 
 /**

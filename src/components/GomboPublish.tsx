@@ -88,9 +88,10 @@ interface GomboPublishProps {
   currentUserProfile: UserProfile;
   onSuccess: () => void;
   onCancel: () => void;
+  onNavigateView?: (view: string) => void;
 }
 
-export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }: GomboPublishProps) {
+export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, onNavigateView }: GomboPublishProps) {
   const { locations: officialLocationsList, communeNames, submitProposal: submitLocationProposal } = useLocations();
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
@@ -210,6 +211,19 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     userProfile: currentUserProfile
   });
   const financials = calculatePublicationFinancials(cachetVal, currentUserProfile);
+
+  // Real Subscription Daily Publication Quota (FREE: 1/j, PRO: 5/j, ELITE: Illimité)
+  const currentPlan = PremiumEngine.getSubscriptionPlan(currentUserProfile);
+  const dailyLimit = PremiumEngine.getDailyPublicationLimit(currentUserProfile);
+  const todayKey = new Date().toISOString().split("T")[0];
+  const [todaysPubCount, setTodaysPubCount] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem(`gombo_pub_count_${currentUserProfile?.uid || "anon"}_${todayKey}`);
+      return stored ? parseInt(stored, 10) : 0;
+    } catch {
+      return 0;
+    }
+  });
 
   // 1. AUTO-RESTORE DRAFT ON MOUNT
   useEffect(() => {
@@ -428,6 +442,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
     if (!currentUserProfile?.uid) {
       setErrorMsg("Vous devez être connecté pour publier un Gombo.");
+      return;
+    }
+
+    // 0. VÉRIFICATION DU QUOTA JOURNALIER D'ABONNEMENT (FREE: 1, PRO: 5, ELITE: ∞)
+    if (todaysPubCount >= dailyLimit) {
+      setErrorMsg(`Quota quotidien atteint : votre compte ${currentPlan.toUpperCase()} autorise ${dailyLimit} publication(s) par jour (${todaysPubCount}/${dailyLimit} publiées aujourd'hui). Passez à GOMBO PRO (5/jour) ou GOMBO ELITE (illimité) pour publier davantage.`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     
@@ -829,6 +850,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         localStorage.removeItem("gombo_publish_draft");
       } catch (_) {}
 
+      // Update daily subscription quota counter
+      try {
+        const newCount = todaysPubCount + 1;
+        setTodaysPubCount(newCount);
+        localStorage.setItem(`gombo_pub_count_${currentUserProfile?.uid || "anon"}_${todayKey}`, String(newCount));
+      } catch (_) {}
+
       // Dispatch UI events
       window.dispatchEvent(new CustomEvent("wallet_balance_updated", { detail: { newBalance: finalNewSolde } }));
       window.dispatchEvent(new CustomEvent("gombo_published", { detail: { gomboId: publishedPostId } }));
@@ -951,6 +979,76 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Quota Journalier d'Abonnement Actif */}
+        <div className={`mt-3 p-3.5 rounded-2xl border transition-all ${
+          todaysPubCount >= dailyLimit
+            ? "bg-red-500/10 border-red-500/30"
+            : "bg-afri-bg-sec border-afri-border"
+        }`}>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl shrink-0">
+                {currentPlan === "elite" ? "💎" : currentPlan === "pro" ? "👑" : "📄"}
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase text-afri-text tracking-wide">
+                    Quota du jour : {todaysPubCount} / {dailyLimit >= 50 ? "Illimité" : dailyLimit}
+                  </span>
+                  <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase ${
+                    currentPlan === "elite"
+                      ? "bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40"
+                      : currentPlan === "pro"
+                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                      : "bg-gray-500/20 text-afri-text-sec border border-gray-500/30"
+                  }`}>
+                    {currentPlan.toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-afri-text-sec mt-0.5">
+                  {todaysPubCount >= dailyLimit ? (
+                    <span className="text-red-400 font-bold">
+                      ⚠️ Quota quotidien atteint pour aujourd'hui ({dailyLimit}/{dailyLimit}).
+                    </span>
+                  ) : dailyLimit >= 50 ? (
+                    "Publications illimitées actives sur votre compte Élite."
+                  ) : (
+                    `Il vous reste ${Math.max(0, dailyLimit - todaysPubCount)} publication(s) autorisée(s) aujourd'hui.`
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {currentPlan !== "elite" && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onNavigateView) {
+                    onNavigateView("afrigombo_plus");
+                  } else {
+                    window.dispatchEvent(new CustomEvent("navigate_view", { detail: "afrigombo_plus" }));
+                  }
+                }}
+                className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/35 rounded-xl transition cursor-pointer"
+              >
+                Passer à {currentPlan === "free" ? "PRO (5/j)" : "ÉLITE (∞)"}
+              </button>
+            )}
+          </div>
+
+          {/* Progress bar */}
+          {dailyLimit < 50 && (
+            <div className="mt-2.5 w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 rounded-full ${
+                  todaysPubCount >= dailyLimit ? "bg-red-500" : "bg-[#D4AF37]"
+                }`}
+                style={{ width: `${Math.min(100, (todaysPubCount / dailyLimit) * 100)}%` }}
+              />
+            </div>
+          )}
+        </div>
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-5 text-left">
           {/* 1. TYPE DE PUBLICATION */}

@@ -3,6 +3,7 @@ import { Plus, Trash2, Play, Pause, ExternalLink, Video, FileText, Camera } from
 import { UserProfile } from "../types";
 import { gomboDB } from "../firebase";
 import { useAudio } from "../context/AudioContext";
+import { PremiumEngine } from "../lib/premiumEngine";
 
 interface MediaGalleryManagerProps {
   currentUserProfile: UserProfile;
@@ -17,6 +18,10 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
   onRefresh,
   onSetGallery
 }) => {
+  const currentPlan = PremiumEngine.getSubscriptionPlan(currentUserProfile);
+  const mediaLimit = PremiumEngine.getPortfolioMediaLimit(currentUserProfile);
+  const isLimitReached = mediaGallery.length >= mediaLimit;
+
   const [activeTab, setActiveTab] = useState<"photo" | "audio" | "youtube">("youtube");
   const [isOpen, setIsOpen] = useState(false);
   
@@ -66,6 +71,12 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
 
   const handleAddMedia = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isLimitReached) {
+      alert(`Limite atteinte : votre formule ${currentPlan.toUpperCase()} autorise un maximum de ${mediaLimit} médias dans votre portfolio (${mediaGallery.length}/${mediaLimit} utilisés). Passez à GOMBO PRO (10 médias) ou GOMBO ELITE (illimité) pour ajouter d'autres médias.`);
+      return;
+    }
+
     if (mediaType !== "youtube" && mediaFile) {
       setUploading(true);
       setProgress(0);
@@ -148,19 +159,46 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
 
   return (
     <div id="section-medias" className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-afri-border rounded-3xl p-6 shadow-sm space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-3 flex-wrap">
         <div>
-          <h3 className="text-sm font-black uppercase text-afri-text-sec tracking-wider">🌟 Section Médias / Galerie Artiste</h3>
-          <p className="text-[10px] font-bold text-afri-text-sec mt-0.5">Photos, démos audios, vidéos et liens YouTube.</p>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-black uppercase text-afri-text-sec tracking-wider">🌟 Section Médias / Galerie Artiste</h3>
+            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase ${
+              currentPlan === "elite"
+                ? "bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40"
+                : currentPlan === "pro"
+                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                : "bg-gray-500/20 text-afri-text-sec border border-gray-500/30"
+            }`}>
+              {mediaGallery.length} / {mediaLimit >= 50 ? "Illimité" : mediaLimit} ({currentPlan.toUpperCase()})
+            </span>
+          </div>
+          <p className="text-[10px] font-bold text-afri-text-sec mt-0.5">
+            Photos, démos audios, vidéos et liens YouTube. {isLimitReached && <span className="text-amber-500 font-black">• Limite de formule atteinte</span>}
+          </p>
         </div>
-        <button
-          id="btn-add-media-portfolio"
-          onClick={() => setIsOpen(true)}
-          className="px-3.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-afri-text rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Ajouter
-        </button>
+
+        <div className="flex items-center gap-2">
+          {isLimitReached ? (
+            <button
+              id="btn-add-media-portfolio"
+              onClick={() => alert(`Votre portfolio a atteint la limite de ${mediaLimit} médias de l'offre ${currentPlan.toUpperCase()}. Passez à une offre supérieure dans Afrigombo Plus pour débloquer plus de capacité.`)}
+              className="px-3.5 py-1.5 bg-gray-500/20 text-afri-text-sec rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border border-gray-500/30"
+              title="Plafond de médias atteint"
+            >
+              <span>🔒 Plafond atteint ({mediaLimit})</span>
+            </button>
+          ) : (
+            <button
+              id="btn-add-media-portfolio"
+              onClick={() => setIsOpen(true)}
+              className="px-3.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-afri-text rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Ajouter
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}

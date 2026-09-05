@@ -1,17 +1,17 @@
-import { NotificationService } from "../lib/NotificationService";
 import React, { useState, useEffect } from "react";
-import { Sparkles, Check, Coins, ChevronLeft, CreditCard, Award, Shield, Music, BarChart3, Radio, X, Zap, Calculator, KeyRound, MessageCircle, Eye, EyeOff } from "lucide-react";
+import { 
+  Sparkles, Check, ChevronLeft, CreditCard, Award, Shield, Music, 
+  BarChart3, Radio, X, Zap, Calculator, KeyRound, MessageCircle, 
+  Phone, Copy, Clock, AlertCircle, FileText, CheckCircle, ExternalLink,
+  Smartphone, ArrowRight
+} from "lucide-react";
 import { useLanguage } from "../LanguageContext";
 import { supportConfig } from "../supportConfig";
-import { createPendingSubscriptionRequest, validateAndActivatePremiumCode } from "../lib/premiumSubscriptionEngine";
+import { submitSubscriptionRequest, validateAndActivatePremiumCode } from "../lib/premiumSubscriptionEngine";
 import { AndroidCenteredDialog } from "./common/GlobalPortalModal";
 import { db } from "../lib/firebase";
-import { doc, getDoc, setDoc, addDoc, collection } from "firebase/firestore";
-import { recordWalletTransaction } from "../lib/financial";
-import { safeStringify } from "../lib/jsonUtils";
-import { subscribeToFeatureFlags, getModuleVisibility } from "../lib/featureFlags";
-import { useWalletSecurity } from "../context/WalletSecurityContext";
-
+import { doc, getDoc } from "firebase/firestore";
+import { SubscriptionPaymentMethod } from "../types";
 
 interface AfrigomboPlusProps {
   onBack: () => void;
@@ -22,28 +22,26 @@ interface AfrigomboPlusProps {
 
 export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshProfile }: AfrigomboPlusProps) {
   const { t } = useLanguage();
-  const { formatWalletBalance, isBalanceHidden, toggleBalanceWithPin } = useWalletSecurity();
-  const [flagsMap, setFlagsMap] = useState<any>({});
-  useEffect(() => {
-    const unsub = subscribeToFeatureFlags((map) => setFlagsMap(map));
-    return () => unsub();
-  }, []);
-
-  const userEmail = (currentUserProfile?.email || "").toLowerCase();
-  const isFounder = userEmail === "jhs.kmj7@gmail.com" || currentUserProfile?.isFounder === true || currentUserProfile?.role === "admin" || currentUserProfile?.role === "founder";
-  const vis = getModuleVisibility("premium", currentUserProfile, currentUserProfile, flagsMap);
 
   const [selectedPlan, setSelectedPlan] = useState<"free" | "pro" | "elite">("elite");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [paymentOption, setPaymentOption] = useState<string>("wallet");
-  const [phonePayment, setPhonePayment] = useState("");
-  const [paymentStep, setPaymentStep] = useState<"idle" | "processing" | "pending_validation" | "success">("idle");
-  const [walletError, setWalletError] = useState<string | null>(null);
-  const [insufficientDetails, setInsufficientDetails] = useState<{ current: number; required: number; missing: number } | null>(null);
-  const [simAmount, setSimAmount] = useState<number>(100000);
+  
+  // Manual Beta Payment Modal State
+  const [paymentMethod, setPaymentMethod] = useState<SubscriptionPaymentMethod>("WAVE");
+  const [senderPhone, setSenderPhone] = useState("");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentProofUrl, setPaymentProofUrl] = useState("");
+  const [userNote, setUserNote] = useState("");
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [requestSubmittedSuccess, setRequestSubmittedSuccess] = useState(false);
+  const [requestErrorMessage, setRequestErrorMessage] = useState("");
+
+  const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
+
+  // Active subscribed plan
   const [subscribedPlan, setSubscribedPlan] = useState<string | null>(() => {
     if (currentUserProfile?.isPremium) {
-      return currentUserProfile.subscriptionPlan || "GOMBO ELITE";
+      return currentUserProfile.subscriptionPlan || (currentUserProfile.premiumPlan === "elite" ? "GOMBO ELITE" : "GOMBO PRO");
     }
     if (typeof window !== "undefined" && window.localStorage) {
       return localStorage.getItem("gombo_subscription") || "GOMBO FREE";
@@ -51,38 +49,8 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
     return "GOMBO FREE";
   });
 
-  // Modal manager: "compare" | "why" | "savings" | "payment" | "activation" | null
-  const [activeModal, setActiveModal] = useState<"compare" | "why" | "savings" | "payment" | "activation" | null>(null);
-
-  useEffect(() => {
-    if (activeModal !== null) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-          setActiveModal(null);
-        }
-      };
-      window.addEventListener("keydown", handleKeyDown);
-      const handlePopState = () => setActiveModal(null);
-      window.addEventListener("popstate", handlePopState);
-      window.history.pushState({ modalOpen: true }, "");
-
-      return () => {
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        document.body.style.overflow = '';
-        window.scrollTo(0, scrollY);
-        window.removeEventListener("keydown", handleKeyDown);
-        window.removeEventListener("popstate", handlePopState);
-      };
-    }
-  }, [activeModal]);
+  // Modals manager: "compare" | "why" | "boosts" | "payment" | "activation" | null
+  const [activeModal, setActiveModal] = useState<"compare" | "why" | "boosts" | "payment" | "activation" | null>(null);
 
   // Activation code state
   const [inputActivationCode, setInputActivationCode] = useState("");
@@ -90,41 +58,16 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
   const [activationSuccessMsg, setActivationSuccessMsg] = useState("");
   const [isActivatingCode, setIsActivatingCode] = useState(false);
 
-  if (vis === "HIDDEN" && !isFounder) {
-    return (
-      <div className="p-8 text-center text-afri-text space-y-4">
-        <p className="text-sm font-mono text-gray-400">Ce module est actuellement indisponible.</p>
-        {onBack && (
-          <button onClick={onBack} className="px-4 py-2 bg-[#D4AF37] text-black rounded-xl font-bold text-xs cursor-pointer">
-            Retour
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  if (vis === "COMING_SOON" && !isFounder) {
-    return (
-      <div className="p-8 text-center bg-black/40 border border-[#D4AF37]/30 rounded-2xl my-6 space-y-3">
-        <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/15 flex items-center justify-center text-[#D4AF37] mx-auto font-bold text-xl">
-          💎
-        </div>
-        <h3 className="text-lg font-black text-white">Adhésion Premium ELITE — Bientôt disponible</h3>
-        <p className="text-xs text-afri-text-sec max-w-md mx-auto">
-          Le programme d'adhésion Premium arrive très prochainement sur AFRIGOMBO.
-        </p>
-        {onBack && (
-          <button onClick={onBack} className="mt-4 px-4 py-2 bg-[#D4AF37] text-black rounded-xl font-bold text-xs cursor-pointer">
-            Retour
-          </button>
-        )}
-      </div>
-    );
-  }
+  // Auto-fill phone if available from profile
+  useEffect(() => {
+    if (currentUserProfile?.phoneNumber && !senderPhone) {
+      setSenderPhone(currentUserProfile.phoneNumber);
+    }
+  }, [currentUserProfile]);
 
   const plans = [
     {
-      id: "free",
+      id: "free" as const,
       name: "GOMBO FREE",
       monthlyPrice: 0,
       yearlyPrice: 0,
@@ -134,17 +77,17 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       accentColor: "text-afri-text-sec",
       badge: "Inclus par défaut",
       description: "Compte standard sans engagement.",
+      savings: null,
       features: [
         "Profil artiste standard",
-        "Visibilité standard",
-        "Priorité normale",
-        "Classement normal",
-        "Commission de 2,5%",
-      ],
-      commission: "2,5%"
+        "Visibilité standard (1.0x)",
+        "1 publication par jour",
+        "Portfolio standard (3 médias)",
+        "Accès aux opportunités"
+      ]
     },
     {
-      id: "pro",
+      id: "pro" as const,
       name: "GOMBO PRO",
       monthlyPrice: 500,
       yearlyPrice: 5000,
@@ -152,20 +95,20 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       period: billingCycle === "monthly" ? "/ mois" : "/ an",
       color: "border-afri-border bg-afri-bg-sec/60 hover:border-[#D4AF37]/50",
       accentColor: "text-emerald-400",
-      badge: "Mieux Vendu",
-      description: "Le meilleur rapport qualité/prix.",
+      badge: "Recommandé",
+      description: "Boost de visibilité & candidatures.",
+      savings: "Économisez 1 000 FCFA sur l'année",
       features: [
-        "👑 Badge Premium Silver",
-        "⚡ Commission de 1,5%",
-        "⭐ Boost de recherche moyen (+40%)",
-        "📈 Plus de visibilité",
-        "3 publications par jour",
-        "Accès aux opportunités",
-      ],
-      commission: "1,5%"
+        "👑 Badge Adhérent Pro (Silver)",
+        "⭐ Boost de visibilité réel (+40%)",
+        "🚀 5 publications par jour",
+        "🎨 Portfolio étendu (10 médias)",
+        "📈 Profil prioritaire dans l'annuaire",
+        "💼 Candidatures prioritaires"
+      ]
     },
     {
-      id: "elite",
+      id: "elite" as const,
       name: "GOMBO ELITE",
       monthlyPrice: 1000,
       yearlyPrice: 10000,
@@ -174,22 +117,39 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       color: "border-[#D4AF37]/40 bg-afri-bg-sec shadow-[0_10px_40px_rgba(212,175,55,0.08)]",
       accentColor: "text-[#D4AF37]",
       badge: "Prestige",
-      description: "La meilleure expérience AFRIGOMBO ELITE.",
+      description: "Priorité absolue & portfolio illimité.",
+      savings: "Économisez 2 000 FCFA sur l'année",
       features: [
-        "💎 Badge Premium Gold",
-        "⚡ Commission de 1,5%",
-        "⭐ Mise en avant maximale",
-        "🚀 Priorité absolue (Renforts)",
-        "📈 Visibilité boostée à 150%",
-        "🎖️ Profil recommandé d'office",
-        "📊 Statistiques Avancées",
-        "💬 Priorité de relation"
-      ],
-      commission: "1,5%"
+        "💎 Badge Gold Prestige",
+        "🔥 Priorité Maximale (+150% de visibilité)",
+        "🚀 Publications illimitées",
+        "🎨 Portfolio & Médias Illimités",
+        "🥇 En tête d'annuaire et des recherches",
+        "🎧 Démo audio en vedette d'office",
+        "⚡ Candidatures Ultra-Prioritaires"
+      ]
     }
   ];
 
-  const handleSubscribeClick = async (planId: "free" | "pro" | "elite") => {
+  // Mobile Money Support Numbers for Ivory Coast & Sub-region
+  const paymentNumbers = {
+    WAVE: "+225 0503222712",
+    ORANGE_MONEY: "+225 0707000000",
+    MOOV_MONEY: "+225 0101000000",
+    MTN_MOMO: "+225 0503222712",
+    MANUAL_BETA: "+225 0503222712",
+    AUTRE: "+225 0503222712"
+  };
+
+  const copyToClipboard = (text: string) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedNumber(text);
+      setTimeout(() => setCopiedNumber(null), 2500);
+    }
+  };
+
+  const handleSubscribeClick = (planId: "free" | "pro" | "elite") => {
     if (planId === "free") {
       localStorage.setItem("gombo_subscription", "GOMBO FREE");
       setSubscribedPlan("GOMBO FREE");
@@ -197,136 +157,57 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
     }
 
     if (!currentUserProfile?.uid) {
-      alert("Veuillez vous connecter pour vous abonner.");
+      alert("Veuillez vous connecter pour soumettre votre demande d'abonnement.");
       return;
     }
 
     setSelectedPlan(planId);
-    setPaymentOption("wallet");
-    setPaymentStep("processing");
-    setWalletError(null);
-    setInsufficientDetails(null);
+    setRequestSubmittedSuccess(false);
+    setRequestErrorMessage("");
     setActiveModal("payment");
+  };
+
+  // Submit manual subscription request
+  const handleSubmitManualRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUserProfile?.uid) return;
+
+    setIsSubmittingRequest(true);
+    setRequestErrorMessage("");
+
+    const matchedPlan = plans.find(p => p.id === selectedPlan) || plans[2];
+    const amount = billingCycle === "monthly" ? matchedPlan.monthlyPrice : matchedPlan.yearlyPrice;
 
     try {
-      if (window.dispatchEvent) {
-        window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'tambour' } }));
-      }
-    } catch (_) {}
+      const res = await submitSubscriptionRequest({
+        userId: currentUserProfile.uid,
+        userName: currentUserProfile.displayName || currentUserProfile.artisticName || currentUserProfile.name || "Artiste",
+        userPhone: senderPhone || currentUserProfile.phoneNumber || "",
+        userEmail: currentUserProfile.email || "",
+        userAvatar: currentUserProfile.photoURL || currentUserProfile.avatarUrl || "",
+        userRole: currentUserProfile.role || "musicien",
+        plan: selectedPlan,
+        planName: matchedPlan.name,
+        billingCycle: billingCycle,
+        amount: amount,
+        paymentMethod: paymentMethod,
+        paymentReference: paymentReference.trim(),
+        paymentProofUrl: paymentProofUrl.trim(),
+        userNote: userNote.trim()
+      });
 
-    try {
-      const matchedPlan = plans.find(p => p.id === planId);
-      const subName = matchedPlan ? matchedPlan.name : "GOMBO ELITE";
-      const amount = matchedPlan ? (billingCycle === "monthly" ? matchedPlan.monthlyPrice : matchedPlan.yearlyPrice) : 1000;
-      
-      const userRef = doc(db, "users", currentUserProfile.uid);
-      const userSnap = await getDoc(userRef);
-      let balance = 0;
-      let uData: any = null;
-      if (userSnap.exists()) {
-        uData = userSnap.data();
-        balance = uData?.walletBalance ?? uData?.wallet?.soldeDisponible ?? 0;
+      if (res.success) {
+        setRequestSubmittedSuccess(true);
       } else {
-        balance = currentUserProfile?.walletBalance ?? currentUserProfile?.wallet?.soldeDisponible ?? 0;
+        setRequestErrorMessage(res.message || "Erreur lors de la transmission de la demande.");
       }
-
-      if (balance >= amount) {
-        // Suffisant ! Débiter immédiatement
-        const newSolde = balance - amount;
-        const nowIso = new Date().toISOString();
-        const expirationDate = billingCycle === "monthly" 
-          ? new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString()
-          : new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString();
-
-        const isElite = planId === "elite";
-        const planBadge = isElite ? "💎 Adhérent Elite" : "👑 Adhérent Pro";
-        
-        const currentBadges = uData?.badges || [];
-        const updatedBadges = Array.from(
-          new Set([...currentBadges, "💎 Adhérent Premium", planBadge])
-        );
-
-        await setDoc(userRef, {
-          premium: true,
-          isPremium: true,
-          status: "premium",
-          premiumStatus: "active",
-          premiumPlan: planId,
-          billingCycle: billingCycle,
-          subscriptionType: billingCycle,
-          subscriptionPlan: subName,
-          premiumStartedAt: nowIso,
-          premiumActivatedAt: nowIso,
-          premiumUntil: expirationDate,
-          premiumExpiresAt: expirationDate,
-          isPremiumAutoRenew: true,
-          commissionRate: 0.015,
-          badges: updatedBadges,
-          walletBalance: newSolde,
-          balance: newSolde,
-          wallet: {
-            ...(uData?.wallet || {}),
-            soldeDisponible: newSolde
-          }
-        }, { merge: true });
-
-        // Enregistrer la transaction
-        await recordWalletTransaction({
-          userId: currentUserProfile.uid,
-          userName: currentUserProfile.artistName || currentUserProfile.firstName || "Membre Gombo",
-          type: "premium",
-          amount: amount,
-          status: "success",
-          description: `Abonnement Premium ${subName} (${billingCycle === "monthly" ? "Mensuel" : "Annuel"})`
-        });
-
-        // Ajouter une notification
-        await NotificationService.sendNotification({
-          userId: currentUserProfile.uid,
-          title: "👑 Abonnement Activé !",
-          message: `Félicitations, vous êtes désormais membre ${subName}. Profitez de vos avantages exclusifs !`,
-          type: "payment_received",
-          createdAt: new Date().toISOString(),
-          isRead: false
-        });
-
-        // Fire custom event for balance updates
-        window.dispatchEvent(new CustomEvent("wallet_balance_updated"));
-
-        localStorage.setItem("gombo_subscription", subName);
-        setSubscribedPlan(subName);
-
-        if (onRefreshProfile) {
-          onRefreshProfile();
-        }
-
-        if (window.dispatchEvent) {
-          window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } }));
-        }
-
-        setPaymentStep("success");
-      } else {
-        // Insuffisant !
-        setInsufficientDetails({
-          current: balance,
-          required: amount,
-          missing: amount - balance
-        });
-        setWalletError("Solde insuffisant.");
-        setPaymentStep("idle");
-      }
-    } catch (err) {
-      console.error("Error processing subscription payment:", err);
-      setPaymentStep("idle");
-      alert("Une erreur s'est produite lors de la vérification. Veuillez réessayer.");
+    } catch (err: any) {
+      console.error("Error submitting manual request:", err);
+      setRequestErrorMessage(err?.message || "Erreur de connexion.");
+    } finally {
+      setIsSubmittingRequest(false);
     }
   };
-
-  const processPayment = async () => {
-    // legacy function kept for fallback if needed, but not used as main anymore
-    alert("Veuillez utiliser la recharge de Wallet.");
-  };
-
 
   // Submit activation code handler
   const handleValidateActivationCode = async (e: React.FormEvent) => {
@@ -350,19 +231,15 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
 
       if (res.success) {
         setActivationSuccessMsg(res.message);
-        localStorage.setItem("gombo_subscription", res.plan === "elite" ? "GOMBO ELITE" : "GOMBO PRO");
-        setSubscribedPlan(res.plan === "elite" ? "GOMBO ELITE" : "GOMBO PRO");
+        const newPlan = res.plan === "elite" ? "GOMBO ELITE" : "GOMBO PRO";
+        localStorage.setItem("gombo_subscription", newPlan);
+        setSubscribedPlan(newPlan);
 
         if (onRefreshProfile) {
           onRefreshProfile();
         }
-
-        if (window.dispatchEvent) {
-          window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } }));
-        }
       } else {
-        // Requirement 7: STRICTLY "Code invalide."
-        setActivationError("Code invalide.");
+        setActivationError("Code invalide ou déjà utilisé.");
       }
     } catch (err) {
       setActivationError("Code invalide.");
@@ -372,28 +249,30 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
   };
 
   const currentSelectedPlanObj = plans.find(p => p.id === selectedPlan) || plans[2];
+  const targetAmount = billingCycle === "monthly" ? currentSelectedPlanObj.monthlyPrice : currentSelectedPlanObj.yearlyPrice;
+  const currentReceivingNumber = paymentNumbers[paymentMethod] || paymentNumbers.WAVE;
 
   return (
-    <div className="w-full bg-afri-bg text-afri-text font-sans transition-colors duration-300">
+    <div className="w-full bg-afri-bg text-afri-text font-sans transition-colors duration-300 pb-16">
       {/* HEADER SECTION - COMPACT & EXPRESSIVE */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-afri-bg-ter to-afri-bg border-b border-afri-border px-4 py-6 sm:py-8 text-center">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-[#D4AF37]/5 rounded-full blur-[90px] pointer-events-none"></div>
+      <div className="relative overflow-hidden bg-gradient-to-b from-afri-bg-sec via-afri-bg to-afri-bg border-b border-afri-border px-4 py-6 sm:py-8 text-center">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-afri-gold/5 rounded-full blur-[90px] pointer-events-none" />
 
         <div className="max-w-3xl mx-auto space-y-2.5 relative z-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-afri-gold/10 border border-afri-gold/30 text-afri-gold text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
             👑 AFRIGOMBO ELITE PREMIUM
           </div>
           
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-afri-text uppercase leading-tight">
-            Développez votre <span className="text-[#D4AF37]">carrière</span>
+            Développez votre <span className="text-afri-gold">carrière</span>
           </h1>
           
-          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-afri-text-sec text-[10px] sm:text-xs font-bold uppercase tracking-wider">
-            <span>✨ Soyez davantage visible</span>
+          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-afri-text-muted text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+            <span>✨ Visibilité Prioritaire</span>
             <span>•</span>
-            <span>🚀 Obtenez plus de Gombos</span>
+            <span>🚀 Plus de Gombos & Contrats</span>
             <span>•</span>
-            <span>💰 Économisez sur vos contrats</span>
+            <span>⭐ Multiplicateur de Classement Réel</span>
           </div>
 
           {/* Quick trigger for Activation Code */}
@@ -406,9 +285,9 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                 setInputActivationCode("");
                 setActiveModal("activation");
               }}
-              className="px-4 py-2 bg-[#D4AF37]/15 border border-[#D4AF37]/40 hover:bg-[#D4AF37]/25 text-[#D4AF37] font-black text-[11px] uppercase tracking-wider rounded-xl inline-flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+              className="px-4 py-2 bg-afri-gold/15 border border-afri-gold/40 hover:bg-afri-gold/25 text-afri-gold font-black text-[11px] uppercase tracking-wider rounded-xl inline-flex items-center gap-2 transition-all shadow-sm cursor-pointer min-h-[44px]"
             >
-              <KeyRound className="w-3.5 h-3.5 text-[#D4AF37]" />
+              <KeyRound className="w-4 h-4 text-afri-gold" />
               <span>Activer mon abonnement (Saisir un code)</span>
             </button>
           </div>
@@ -419,18 +298,26 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         
         {/* BILLING TOGGLE */}
         <div className="flex justify-center">
-          <div className="bg-afri-bg-sec p-1 rounded-xl border border-afri-border flex items-center gap-1 shadow-md">
+          <div className="bg-afri-bg-sec p-1 rounded-2xl border border-afri-border flex items-center gap-1 shadow-md">
             <button 
               onClick={() => setBillingCycle("monthly")}
-              className={`px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "monthly" ? "bg-[#D4AF37] text-black shadow-md" : "text-afri-text-sec hover:text-afri-text"}`}
+              className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer min-h-[44px] ${
+                billingCycle === "monthly" 
+                  ? "bg-afri-gold text-black shadow-md" 
+                  : "text-afri-text-muted hover:text-afri-text"
+              }`}
             >
               Mensuel
             </button>
             <button 
               onClick={() => setBillingCycle("yearly")}
-              className={`px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "yearly" ? "bg-[#D4AF37] text-black shadow-md" : "text-afri-text-sec hover:text-afri-text"}`}
+              className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer min-h-[44px] ${
+                billingCycle === "yearly" 
+                  ? "bg-afri-gold text-black shadow-md" 
+                  : "text-afri-text-muted hover:text-afri-text"
+              }`}
             >
-              Annuel <span className="text-[9px] opacity-80 ml-1 font-extrabold">-20%</span>
+              Annuel <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded ml-1 font-extrabold">Économie</span>
             </button>
           </div>
         </div>
@@ -438,34 +325,37 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         {/* CARDS LIST - 3 MAIN PLANS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {plans.map((p) => {
-            const isActive = subscribedPlan === p.name;
-            const isSelected = selectedPlan === p.id;
+            const isElite = p.id === "elite";
+            const isPro = p.id === "pro";
+            const isCurrent = subscribedPlan === p.name;
             
-            let cardBg = "bg-afri-bg-sec border-afri-border";
-            if (p.id === "elite") {
-              cardBg = "bg-afri-bg-sec border-[#D4AF37]/60 shadow-[0_4px_20px_rgba(212,175,55,0.12)]";
-            } else if (p.id === "pro") {
-              cardBg = "bg-afri-bg-sec border-afri-border hover:border-[#D4AF37]/40";
+            let cardBorder = "border-afri-border";
+            let cardBg = "bg-afri-bg-sec/50";
+            if (isElite) {
+              cardBorder = "border-afri-gold/50 shadow-[0_4px_25px_rgba(212,175,55,0.12)]";
+              cardBg = "bg-afri-bg-sec";
+            } else if (isPro) {
+              cardBorder = "border-emerald-500/40";
             }
 
             return (
               <div
                 key={p.id}
-                className={`flex flex-col p-5 rounded-2xl border transition-all duration-200 group relative ${cardBg}`}
+                className={`flex flex-col p-5 rounded-2xl border transition-all duration-200 group relative ${cardBg} ${cardBorder}`}
               >
                 <div className="space-y-3 flex-1 text-left">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="text-base font-black tracking-tight text-afri-text uppercase">{p.name}</h3>
-                      <p className="text-[10px] text-afri-text-sec uppercase tracking-widest mt-0.5 font-bold">
+                      <p className="text-[10px] text-afri-text-muted uppercase tracking-wider mt-0.5 font-bold">
                         {p.id === "free" ? "Compte de base" : p.description}
                       </p>
                     </div>
                     {p.badge && (
-                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
-                        p.id === 'elite' ? 'bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30' : 
-                        p.id === 'pro' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
-                        'bg-afri-bg text-afri-text-sec border-afri-border'
+                      <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-full border ${
+                        p.id === 'elite' ? 'bg-afri-gold/15 text-afri-gold border-afri-gold/40' : 
+                        p.id === 'pro' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40' :
+                        'bg-afri-bg text-afri-text-muted border-afri-border'
                       }`}>
                         {p.badge}
                       </span>
@@ -475,39 +365,54 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                   <div className="py-1">
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-2xl font-black text-afri-text tracking-tight">{p.priceLabel}</span>
-                      <span className="text-[10px] text-afri-text-sec font-bold uppercase">{p.period}</span>
+                      <span className="text-[10px] text-afri-text-muted font-bold uppercase">{p.period}</span>
                     </div>
+                    {billingCycle === "yearly" && p.savings && (
+                      <div className="mt-1">
+                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border inline-block ${
+                          p.id === 'elite'
+                            ? 'bg-afri-gold/15 text-afri-gold border-afri-gold/40'
+                            : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                        }`}>
+                          💰 {p.savings}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="space-y-1.5 pt-2 border-t border-afri-border/50">
+                  <div className="space-y-2 pt-2 border-t border-afri-border/50">
                     {p.features.map((feat, i) => (
                       <div key={i} className="flex items-start gap-2">
-                        <div className="w-3.5 h-3.5 rounded-full bg-[#D4AF37]/10 flex items-center justify-center shrink-0 mt-0.5">
-                          <Check className="w-2.5 h-2.5 text-[#D4AF37] stroke-[3]" />
+                        <div className="w-4 h-4 rounded-full bg-afri-gold/15 flex items-center justify-center shrink-0 mt-0.5">
+                          <Check className="w-2.5 h-2.5 text-afri-gold stroke-[3]" />
                         </div>
-                        <span className="text-xs font-semibold text-afri-text-sec leading-snug">{feat}</span>
+                        <span className="text-xs font-medium text-afri-text-muted leading-snug">{feat}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="mt-4 pt-2">
-                  {isActive ? (
-                    <div className="w-full text-center py-2.5 px-3 rounded-xl bg-afri-bg text-afri-text-sec font-black text-[10px] uppercase tracking-widest border border-afri-border">
-                      Formule Actuelle
+                <div className="pt-5 mt-auto">
+                  {isCurrent ? (
+                    <div className="w-full py-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 text-center text-xs font-bold uppercase">
+                      ✓ Formule Actuelle
+                    </div>
+                  ) : p.id === "free" ? (
+                    <div className="w-full py-2.5 rounded-xl bg-afri-bg border border-afri-border text-afri-text-muted text-center text-xs font-bold uppercase">
+                      Inclus par défaut
                     </div>
                   ) : (
                     <button
-                      onClick={() => handleSubscribeClick(p.id as any)}
-                      className={`w-full py-2.5 px-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-md active:scale-98 cursor-pointer ${
-                        p.id === "free" 
-                          ? "bg-afri-bg border border-afri-border text-afri-text hover:bg-afri-bg-ter" 
-                          : p.id === "elite"
-                          ? "bg-[#D4AF37] text-black hover:bg-amber-400 shadow-[#D4AF37]/20"
-                          : "bg-emerald-500 text-black hover:bg-emerald-400"
+                      type="button"
+                      onClick={() => handleSubscribeClick(p.id)}
+                      className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md min-h-[46px] ${
+                        isElite
+                          ? "bg-afri-gold hover:bg-amber-400 text-black"
+                          : "bg-emerald-500 hover:bg-emerald-400 text-black"
                       }`}
                     >
-                      {p.id === "free" ? "Continuer" : `Devenir ${p.id.toUpperCase()}`}
+                      <Sparkles className="w-4 h-4" />
+                      Choisir {p.name}
                     </button>
                   )}
                 </div>
@@ -516,581 +421,342 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
           })}
         </div>
 
-        {/* 3 COMPACT ACTION BUTTONS (MODAL TRIGGERS) */}
-        <div className="pt-2">
-          <div className="text-center mb-3">
-            <span className="text-[10px] font-black uppercase text-afri-text-sec tracking-widest">
-              En savoir plus sur les services Premium
-            </span>
-          </div>
+        {/* HELP & COMPARISON CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
+          <button
+            type="button"
+            onClick={() => setActiveModal("boosts")}
+            className="p-4 rounded-2xl bg-afri-bg-sec/40 border border-afri-border hover:border-afri-gold/40 text-left transition-all flex items-center justify-between cursor-pointer min-h-[52px]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-afri-gold/15 text-afri-gold flex items-center justify-center">
+                🚀
+              </div>
+              <div>
+                <div className="text-xs font-bold text-afri-text">Comprendre les Boosts de Visibilité</div>
+                <div className="text-[10px] text-afri-text-muted">+40% et +150% de puissance d'affichage</div>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-afri-gold" />
+          </button>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            
-            {/* Button 1: Comparer les avantages */}
-            <button
-              type="button"
-              onClick={() => setActiveModal("compare")}
-              className="p-4 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/50 rounded-2xl flex items-center gap-3 text-left transition-all active:scale-98 group cursor-pointer shadow-sm"
-            >
-              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-lg">
-                📊
+          <a
+            href="https://wa.me/2250503222712?text=Bonjour%20AFRIGOMBO%20ELITE,%20je%20souhaite%20des%20informations%20sur%20les%20abonnements%20Premium"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-4 rounded-2xl bg-afri-bg-sec/40 border border-emerald-500/30 hover:border-emerald-500/60 text-left transition-all flex items-center justify-between cursor-pointer min-h-[52px]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+                <MessageCircle className="w-4 h-4" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-black uppercase text-afri-text tracking-wide truncate">Comparer les avantages</h4>
-                <p className="text-[10px] text-afri-text-sec truncate">Tableau comparatif détaillé</p>
+              <div>
+                <div className="text-xs font-bold text-afri-text">Assistance & SAV WhatsApp</div>
+                <div className="text-[10px] text-emerald-400">Échange direct avec l'équipe Fondateur</div>
               </div>
-            </button>
-
-            {/* Button 2: Pourquoi devenir Premium ? */}
-            <button
-              type="button"
-              onClick={() => setActiveModal("why")}
-              className="p-4 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/50 rounded-2xl flex items-center gap-3 text-left transition-all active:scale-98 group cursor-pointer shadow-sm"
-            >
-              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-lg">
-                ⭐
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-black uppercase text-afri-text tracking-wide truncate">Pourquoi devenir Premium ?</h4>
-                <p className="text-[10px] text-afri-text-sec truncate">Badges, visibilité & priorité</p>
-              </div>
-            </button>
-
-            {/* Button 3: Économiser sur vos contrats */}
-            <button
-              type="button"
-              onClick={() => setActiveModal("savings")}
-              className="p-4 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/50 rounded-2xl flex items-center gap-3 text-left transition-all active:scale-98 group cursor-pointer shadow-sm"
-            >
-              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-lg">
-                💰
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-black uppercase text-afri-text tracking-wide truncate">Économiser sur vos contrats</h4>
-                <p className="text-[10px] text-afri-text-sec truncate">Simulateur de commissions (1,5%)</p>
-              </div>
-            </button>
-
-          </div>
+            </div>
+            <ExternalLink className="w-4 h-4 text-emerald-400" />
+          </a>
         </div>
-
-
       </div>
 
       {/* ========================================================= */}
-      {/* MODAL 1: COMPARATIF DES OFFRES */}
-      {/* ========================================================= */}
-      <AndroidCenteredDialog
-        isOpen={activeModal === "compare"}
-        onClose={() => setActiveModal(null)}
-        title={
-          <div className="flex items-center gap-2">
-            <span className="text-xl">📊</span>
-            <span>Comparatif des offres</span>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
-            <table className="w-full text-left border-collapse min-w-[450px]">
-              <thead>
-                <tr className="border-b border-afri-border">
-                  <th className="py-2.5 text-afri-text-sec font-bold uppercase text-[10px] tracking-widest">Avantages</th>
-                  <th className="py-2.5 text-center text-afri-text font-black uppercase text-xs">Free</th>
-                  <th className="py-2.5 text-center text-emerald-400 font-black uppercase text-xs">Pro</th>
-                  <th className="py-2.5 text-center text-[#D4AF37] font-black uppercase text-xs">Elite</th>
-                </tr>
-              </thead>
-              <tbody className="text-xs">
-                {[
-                  { label: "Commission sur contrat", free: "2,5%", pro: "1,5%", elite: "1,5%" },
-                  { label: "Badge de profil", free: "Standard", pro: "Silver", elite: "Gold Prestige" },
-                  { label: "Publications / jour", free: "Illimité (Std)", pro: "3 / jour (Boost)", elite: "Illimité (Priorité)" },
-                  { label: "Visibilité annuaire", free: "Standard", pro: "+40%", elite: "Priorité Maximale" },
-                  { label: "Statistiques", free: "Basique", pro: "Standards", elite: "Avancées" },
-                  { label: "Candidatures", free: "Standard", pro: "Prioritaires", elite: "Ultra-Prioritaires" },
-                ].map((row, i) => (
-                  <tr key={i} className="border-b border-afri-border/50 hover:bg-afri-bg-ter/40 transition-colors">
-                    <td className="py-2.5 font-bold text-afri-text-sec">{row.label}</td>
-                    <td className="py-2.5 text-center text-afri-text-sec font-mono">{row.free}</td>
-                    <td className="py-2.5 text-center text-emerald-400 font-mono font-bold">{row.pro}</td>
-                    <td className="py-2.5 text-center text-[#D4AF37] font-mono font-bold">{row.elite}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="pt-2 border-t border-afri-border/60 text-right">
-            <button
-              type="button"
-              onClick={() => setActiveModal(null)}
-              className="px-5 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
-            >
-              Fermer
-            </button>
-          </div>
-        </div>
-      </AndroidCenteredDialog>
-
-      {/* ========================================================= */}
-      {/* MODAL 2: POURQUOI DEVENIR PREMIUM ? */}
-      {/* ========================================================= */}
-      <AndroidCenteredDialog
-        isOpen={activeModal === "why"}
-        onClose={() => setActiveModal(null)}
-        title={
-          <div className="flex items-center gap-2">
-            <span className="text-xl">⭐</span>
-            <span>Pourquoi devenir Premium ?</span>
-          </div>
-        }
-        subtitle="Des outils conçus pour propulser votre carrière musicale"
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
-            {[
-              { 
-                title: "Badge Premium", 
-                desc: "Soyez immédiatement reconnu comme un professionnel certifié.", 
-                icon: Award,
-                highlight: "Confiance & Prestige"
-              },
-              { 
-                title: "Plus de visibilité", 
-                desc: "Votre profil apparaît avant les autres dans toutes les recherches.", 
-                icon: Sparkles,
-                highlight: "Top 1% de l'annuaire"
-              },
-              { 
-                title: "Plus d'opportunités", 
-                desc: "Accédez aux meilleurs Gombos et aux contrats exclusifs.", 
-                icon: Music,
-                highlight: "Contrats Premium"
-              },
-              { 
-                title: "Réduction des commissions", 
-                desc: "Payez seulement 1,5% au lieu de 2,5% sur vos revenus.", 
-                icon: Shield,
-                highlight: "Économies directes"
-              },
-              { 
-                title: "Statistiques avancées", 
-                desc: "Comprenez l'évolution de votre carrière avec des rapports précis.", 
-                icon: BarChart3,
-                highlight: "Données analytiques"
-              },
-              { 
-                title: "Priorité absolue", 
-                desc: "Vos publications et candidatures passent avant les comptes standards.", 
-                icon: Radio,
-                highlight: "Vitesse & Efficacité"
-              },
-            ].map((adv, idx) => (
-              <div key={idx} className="p-3.5 bg-afri-bg border border-afri-border rounded-xl space-y-1.5 hover:border-[#D4AF37]/40 transition-all text-left">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] flex items-center justify-center shrink-0">
-                    <adv.icon className="w-4 h-4" />
-                  </div>
-                  <div className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest">{adv.highlight}</div>
-                </div>
-                <h4 className="text-xs font-black text-afri-text uppercase tracking-tight">{adv.title}</h4>
-                <p className="text-[11px] text-afri-text-sec leading-relaxed">{adv.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="pt-2 border-t border-afri-border/60 text-right">
-            <button
-              type="button"
-              onClick={() => setActiveModal(null)}
-              className="px-5 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
-            >
-              Fermer
-            </button>
-          </div>
-        </div>
-      </AndroidCenteredDialog>
-
-      {/* ========================================================= */}
-      {/* MODAL 3: ÉCONOMISER SUR VOS CONTRATS */}
-      {/* ========================================================= */}
-      <AndroidCenteredDialog
-        isOpen={activeModal === "savings"}
-        onClose={() => setActiveModal(null)}
-        title={
-          <div className="flex items-center gap-2">
-            <span className="text-xl">💰</span>
-            <span>Économiser sur vos contrats</span>
-          </div>
-        }
-        subtitle="Taux de commission réduit à 1,5% au lieu de 2,5%"
-      >
-        <div className="space-y-4 text-left">
-          <p className="text-xs text-afri-text-sec leading-relaxed">
-            Le Premium réduit vos propres commissions sur les contrats (<strong className="text-[#D4AF37]">1,5% au lieu de 2,5%</strong>).
-          </p>
-
-          <div className="flex flex-wrap gap-2">
-            {[50000, 100000, 250000, 500000].map((presetAmt) => (
-              <button
-                key={presetAmt}
-                type="button"
-                onClick={() => setSimAmount(presetAmt)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border ${
-                  simAmount === presetAmt 
-                    ? "bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]" 
-                    : "bg-afri-bg border-afri-border text-afri-text-sec hover:border-[#D4AF37]/40 hover:text-afri-text"
-                }`}
-              >
-                {presetAmt.toLocaleString()} FCFA
-              </button>
-            ))}
-          </div>
-
-          <div className="space-y-2 bg-afri-bg p-3.5 rounded-xl border border-afri-border">
-            <div className="flex justify-between text-xs">
-              <span className="text-afri-text-sec">Montant du contrat :</span>
-              <span className="text-[#D4AF37] font-bold font-mono text-sm">{simAmount.toLocaleString()} FCFA</span>
-            </div>
-            <input 
-              type="range" 
-              min="50000" 
-              max="1000000" 
-              step="50000"
-              value={simAmount}
-              onChange={(e) => setSimAmount(Number(e.target.value))}
-              className="w-full h-1.5 bg-afri-bg-sec rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-2">
-              <div className="text-xs font-bold text-afri-text-sec">Compte Standard (2.5%)</div>
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-afri-text-sec">Commission :</span>
-                <span className="text-afri-text font-bold">{(simAmount * 0.025).toLocaleString()} FCFA</span>
-              </div>
-            </div>
-
-            <div className="p-4 bg-afri-bg border border-[#D4AF37]/40 rounded-xl space-y-2">
-              <div className="text-xs font-bold text-[#D4AF37]">Compte Premium (1.5%)</div>
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-afri-text-sec">Commission :</span>
-                <span className="text-afri-text font-bold">{(simAmount * 0.015).toLocaleString()} FCFA</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl flex items-center justify-between">
-            <div>
-              <h4 className="text-xs font-bold text-emerald-400">Gain net immédiat</h4>
-              <p className="text-[10px] text-afri-text-sec">Économie sur ce seul contrat</p>
-            </div>
-            <span className="text-emerald-400 text-base font-black font-mono">+{(simAmount * 0.01).toLocaleString()} FCFA</span>
-          </div>
-
-          <div className="pt-2 border-t border-afri-border/60 text-right">
-            <button
-              type="button"
-              onClick={() => setActiveModal(null)}
-              className="px-5 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
-            >
-              Fermer
-            </button>
-          </div>
-        </div>
-      </AndroidCenteredDialog>
-
-      {/* ========================================================= */}
-      {/* MODAL 4: INTERACTIVE PAYMENT POPUP (BÊTA MODE) */}
+      {/* MODAL: MANUAL BETA PAYMENT & SUBSCRIPTION REQUEST */}
       {/* ========================================================= */}
       <AndroidCenteredDialog
         isOpen={activeModal === "payment"}
         onClose={() => {
-          if (paymentStep !== "processing") setActiveModal(null);
+          if (!isSubmittingRequest) setActiveModal(null);
         }}
-        showCloseButton={paymentStep !== "processing"}
+        showCloseButton={!isSubmittingRequest}
         title={
           <div className="flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-[#D4AF37]" />
-            <span className="text-[#D4AF37]">Abonnement {currentSelectedPlanObj.name}</span>
+            <CreditCard className="w-5 h-5 text-afri-gold" />
+            <span className="text-afri-gold">Demande d'Abonnement Bêta</span>
           </div>
         }
       >
         <div className="space-y-4 text-left">
-          {paymentStep === "idle" && (
-            <div className="space-y-4">
-              <div className="bg-afri-bg border border-afri-border rounded-xl p-3.5 space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-afri-text-sec font-medium">Montant :</span>
-                  <span className="font-mono font-bold text-base text-[#D4AF37]">{currentSelectedPlanObj.priceLabel}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-afri-text-sec font-medium">Durée :</span>
-                  <span className="font-bold text-afri-text">{billingCycle === "monthly" ? "1 mois (Mensuel)" : "12 mois (Annuel -20%)"}</span>
-                </div>
-                <div className="pt-2 border-t border-afri-border/50">
-                  <span className="text-[10px] font-bold text-afri-text-sec uppercase tracking-wider block mb-1">Avantages inclus :</span>
-                  <ul className="space-y-1">
-                    {currentSelectedPlanObj.features.slice(0, 4).map((f, i) => (
-                      <li key={i} className="text-[11px] text-afri-text flex items-center gap-1.5">
-                        <Check className="w-3 h-3 text-[#D4AF37] shrink-0" />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="p-3.5 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-xl space-y-2">
-                  <div className="flex justify-between items-center text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-afri-text-sec font-medium">Votre solde :</span>
-                      <button
-                        type="button"
-                        onClick={toggleBalanceWithPin}
-                        title={isBalanceHidden ? "Révéler le solde (Code PIN requis)" : "Masquer le solde"}
-                        className="p-1 rounded text-zinc-400 hover:text-[#D4AF37] hover:bg-zinc-800/60 transition cursor-pointer"
-                      >
-                        {isBalanceHidden ? <EyeOff className="w-3 h-3 text-[#D4AF37]" /> : <Eye className="w-3 h-3" />}
-                      </button>
-                    </div>
-                    <span className="font-mono font-bold text-white">
-                      {formatWalletBalance(currentUserProfile?.wallet?.soldeDisponible ?? 0, "FCFA")}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-afri-text-sec font-medium">Prix de l'abonnement :</span>
-                    <span className="font-mono font-bold text-white">
-                      {plans.find(p => p.id === selectedPlan)?.[billingCycle === "monthly" ? "monthlyPrice" : "yearlyPrice"]?.toLocaleString('fr-FR')} FCFA
-                    </span>
-                  </div>
-
-                  {walletError && insufficientDetails && (
-                    <div className="mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded-lg text-[11px] text-red-400 space-y-1">
-                      <div className="font-bold uppercase tracking-wide">⚠️ Solde Wallet insuffisant</div>
-                      <div className="flex justify-between text-[10px]"><span>Solde actuel :</span> <span className="font-mono font-bold">{insufficientDetails.current.toLocaleString()} FCFA</span></div>
-                      <div className="flex justify-between text-[10px]"><span>Requis :</span> <span className="font-mono font-bold text-white">{insufficientDetails.required.toLocaleString()} FCFA</span></div>
-                      <div className="flex justify-between text-[10px] pt-1 mt-1 border-t border-red-500/20"><span>Manquant :</span> <span className="font-mono font-bold">{insufficientDetails.missing.toLocaleString()} FCFA</span></div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2 pt-2">
-                  {walletError && insufficientDetails ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        localStorage.setItem("afrigombo_suggested_deposit_amount", String(insufficientDetails.missing));
-                        localStorage.setItem(
-                          "afrigombo_pending_purchase",
-                          safeStringify({
-                            type: "subscription_payment",
-                            amount: insufficientDetails.required,
-                            title: `Abonnement ${currentSelectedPlanObj.name}`
-                          })
-                        );
-                        setActiveModal(null);
-                        window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
-                      }}
-                      className="w-full bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
-                    >
-                      <Coins className="w-4 h-4" />
-                      Recharger mon Wallet
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={processPayment}
-                      className="w-full bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg"
-                    >
-                      Confirmer le paiement ({currentSelectedPlanObj.priceLabel})
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal(null)}
-                    className="w-full py-2 text-center text-xs font-bold text-afri-text-sec hover:text-white cursor-pointer"
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {paymentStep === "processing" && (
-            <div className="py-8 text-center space-y-4">
-              <div className="w-10 h-10 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="text-xs font-bold text-[#D4AF37] animate-pulse">
-                Enregistrement de votre demande Bêta...
+          {requestSubmittedSuccess ? (
+            <div className="p-4 bg-emerald-950/40 border border-emerald-500/40 rounded-2xl text-center space-y-3">
+              <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
+              <h3 className="font-bold text-sm text-emerald-300 uppercase">Demande Transmise avec Succès !</h3>
+              <p className="text-xs text-afri-text-muted leading-relaxed">
+                Votre demande pour <strong className="text-afri-gold">{currentSelectedPlanObj.name} ({targetAmount.toLocaleString("fr-FR")} FCFA)</strong> a été transmise au Fondateur AFRIGOMBO.
               </p>
-            </div>
-          )}
-
-          {paymentStep === "pending_validation" && (
-            <div className="py-4 text-center space-y-4">
-              <div className="w-12 h-12 bg-[#D4AF37]/10 border border-[#D4AF37]/40 text-[#D4AF37] rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-                📝
+              <div className="p-3 bg-afri-bg rounded-xl border border-afri-border text-[11px] text-afri-text-muted">
+                ⏳ Votre adhésion sera vérifiée et activée dans les plus brefs délais. Vous recevrez une notification instantanée dès la validation.
               </div>
-
-              <div className="space-y-2">
-                <h4 className="text-base font-black text-afri-text uppercase tracking-tight">
-                  Votre demande d'abonnement a été enregistrée.
-                </h4>
-                <p className="text-xs text-afri-text-sec leading-relaxed">
-                  Contactez le support AFRIGOMBO ELITE afin d'obtenir votre code d'activation.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  supportConfig.openSupport(`Bonjour Support AFRIGOMBO ELITE 👋\nJe souhaite obtenir mon code d'activation pour mon abonnement ${currentSelectedPlanObj.name} (Tél: ${phonePayment}).`);
-                }}
-                className="w-full bg-emerald-500 hover:bg-emerald-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
-              >
-                <MessageCircle className="w-4 h-4 fill-black" />
-                <span>Contacter le support</span>
-              </button>
-
-              <div className="pt-2 border-t border-afri-border/40 flex justify-between items-center text-xs">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActivationError("");
-                    setActivationSuccessMsg("");
-                    setInputActivationCode("");
-                    setActiveModal("activation");
-                  }}
-                  className="text-[#D4AF37] hover:underline font-bold text-[11px]"
+              <div className="pt-2 flex flex-col gap-2">
+                <a
+                  href={`https://wa.me/2250503222712?text=${encodeURIComponent(`Bonjour, j'ai soumis une demande d'abonnement ${currentSelectedPlanObj.name} pour le compte ${currentUserProfile?.displayName || currentUserProfile?.email}. Réf : ${paymentReference || "Mobile Money"}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-black font-black text-xs flex items-center justify-center gap-2"
                 >
-                  J'ai déjà un code d'activation
-                </button>
-
+                  <MessageCircle className="w-4 h-4" />
+                  Envoyer mon reçu sur WhatsApp
+                </a>
                 <button
-                  type="button"
                   onClick={() => setActiveModal(null)}
-                  className="text-afri-text-sec hover:text-white font-medium text-[11px]"
+                  className="w-full py-2 rounded-xl bg-afri-bg border border-afri-border text-afri-text text-xs font-bold"
                 >
                   Fermer
                 </button>
               </div>
             </div>
-          )}
-
-          {paymentStep === "success" && (
-            <div className="py-6 text-center space-y-4">
-              <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-2xl font-black shadow-lg">
-                ✨
+          ) : (
+            <form onSubmit={handleSubmitManualRequest} className="space-y-4">
+              {/* Order Summary Box */}
+              <div className="bg-afri-bg border border-afri-gold/30 rounded-xl p-3.5 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-afri-text-muted">Formule choisie :</span>
+                  <span className="font-black text-afri-gold">{currentSelectedPlanObj.name}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-afri-text-muted">Montant à régler :</span>
+                  <span className="font-mono font-black text-emerald-400 text-base">
+                    {targetAmount.toLocaleString("fr-FR")} FCFA
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-afri-text-muted">Durée :</span>
+                  <span className="font-bold text-afri-text">
+                    {billingCycle === "yearly" ? "1 an (Annuel)" : "1 mois (Mensuel)"}
+                  </span>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <h4 className="text-base font-black text-emerald-400 uppercase tracking-tight">
-                  👑 Félicitations !
-                </h4>
-                <p className="text-xs text-afri-text font-bold">
-                  Votre abonnement {currentSelectedPlanObj.name} est activé avec succès !
-                </p>
-                <p className="text-[11px] text-afri-text-sec leading-relaxed max-w-xs mx-auto">
-                  Le montant de <span className="font-mono text-[#D4AF37] font-bold">{currentSelectedPlanObj.priceLabel}</span> a été déduit de votre Wallet. Vous avez désormais accès à tous vos avantages premium !
-                </p>
+              {/* Payment Method Selector */}
+              <div>
+                <label className="text-[11px] font-bold text-afri-text-muted uppercase block mb-1.5">
+                  1. Choisissez votre moyen de paiement Mobile Money :
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {(["WAVE", "ORANGE_MONEY", "MOOV_MONEY", "MTN_MOMO"] as SubscriptionPaymentMethod[]).map((method) => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => setPaymentMethod(method)}
+                      className={`p-2.5 rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
+                        paymentMethod === method
+                          ? "bg-afri-gold/20 border-afri-gold text-afri-gold shadow-sm"
+                          : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text"
+                      }`}
+                    >
+                      {method.replace("_", " ")}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="pt-2 border-t border-afri-border/40">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveModal(null);
-                  }}
-                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-xs py-3 tracking-widest rounded-xl transition-all shadow-lg"
-                >
-                  Super, Merci !
-                </button>
+              {/* Transfer Instructions Box */}
+              <div className="p-3.5 bg-afri-gold/10 border border-afri-gold/30 rounded-xl space-y-2 text-xs">
+                <div className="text-[11px] font-bold text-afri-gold uppercase flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4" />
+                  2. Effectuez le transfert du montant exact ({targetAmount.toLocaleString("fr-FR")} FCFA) :
+                </div>
+                <div className="p-2 bg-afri-bg rounded-lg border border-afri-border flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] text-afri-text-muted uppercase">Numéro de réception :</div>
+                    <div className="font-mono font-black text-sm text-white">{currentReceivingNumber}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(currentReceivingNumber)}
+                    className="px-2.5 py-1.5 rounded-lg bg-afri-gold/20 text-afri-gold font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    {copiedNumber === currentReceivingNumber ? "Copié !" : "Copier"}
+                  </button>
+                </div>
+                <div className="text-[10px] text-afri-text-muted italic">
+                  Destinataire : Support Officiel AFRIGOMBO
+                </div>
               </div>
-            </div>
+
+              {/* Form inputs */}
+              <div className="space-y-3">
+                <div className="text-[11px] font-bold text-afri-text-muted uppercase">
+                  3. Renseignez les informations de votre paiement :
+                </div>
+
+                <div>
+                  <label className="text-[11px] text-afri-text-muted block mb-1">
+                    Numéro de téléphone expéditeur (qui a payé) *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={senderPhone}
+                    onChange={(e) => setSenderPhone(e.target.value)}
+                    placeholder="Ex: +225 0503222712"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-afri-bg border border-afri-border focus:border-afri-gold text-xs text-afri-text focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] text-afri-text-muted block mb-1">
+                    ID / Référence de transaction (reçue par SMS)
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentReference}
+                    onChange={(e) => setPaymentReference(e.target.value)}
+                    placeholder="Ex: TX-98472918 ou ID Wave"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-afri-bg border border-afri-border focus:border-afri-gold text-xs text-afri-text focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] text-afri-text-muted block mb-1">
+                    Note ou précision (optionnel)
+                  </label>
+                  <input
+                    type="text"
+                    value={userNote}
+                    onChange={(e) => setUserNote(e.target.value)}
+                    placeholder="Ex: Paiement effectué via Wave à 14h30"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-afri-bg border border-afri-border focus:border-afri-gold text-xs text-afri-text focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {requestErrorMessage && (
+                <div className="p-3 bg-red-950/50 border border-red-500/50 text-red-300 rounded-xl text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{requestErrorMessage}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmittingRequest || !senderPhone}
+                className="w-full py-3.5 rounded-xl bg-afri-gold hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer disabled:opacity-50 min-h-[48px]"
+              >
+                {isSubmittingRequest ? (
+                  <span>Transmission en cours...</span>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Envoyer ma demande d'abonnement</span>
+                  </>
+                )}
+              </button>
+            </form>
           )}
         </div>
       </AndroidCenteredDialog>
 
       {/* ========================================================= */}
-      {/* MODAL 5: CODE ACTIVATION INPUT POPUP ("Activer mon abonnement") */}
+      {/* MODAL: CODE ACTIVATION */}
       {/* ========================================================= */}
       <AndroidCenteredDialog
         isOpen={activeModal === "activation"}
-        onClose={() => setActiveModal(null)}
+        onClose={() => {
+          if (!isActivatingCode) setActiveModal(null);
+        }}
+        showCloseButton={!isActivatingCode}
         title={
           <div className="flex items-center gap-2">
-            <KeyRound className="w-5 h-5 text-[#D4AF37]" />
-            <span className="text-[#D4AF37]">Activer mon abonnement</span>
+            <KeyRound className="w-5 h-5 text-afri-gold" />
+            <span className="text-afri-gold">Activation par Code Pass</span>
           </div>
         }
       >
-        <form onSubmit={handleValidateActivationCode} className="space-y-4 text-left">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">
-              Code d'activation
-            </label>
-            <input
-              type="text"
-              value={inputActivationCode}
-              onChange={(e) => {
-                setInputActivationCode(e.target.value.toUpperCase());
-                setActivationError("");
-              }}
-              placeholder="Ex: AG-PRO-9842"
-              className="w-full bg-afri-bg p-3.5 text-sm rounded-xl border border-afri-border text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono tracking-widest font-black uppercase text-center"
-              autoFocus
-            />
-          </div>
+        <div className="space-y-4 text-left">
+          <p className="text-xs text-afri-text-muted leading-relaxed">
+            Si vous avez reçu un code Pass Bêta officiel délivré par le Fondateur ou le Support, saisissez-le ci-dessous pour activer immédiatement votre formule.
+          </p>
 
-          {activationError && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold text-center">
-              {activationError}
+          <form onSubmit={handleValidateActivationCode} className="space-y-3">
+            <div>
+              <label className="text-[11px] font-bold text-afri-text-muted uppercase block mb-1">
+                Code d'activation (Usage Unique)
+              </label>
+              <input
+                type="text"
+                value={inputActivationCode}
+                onChange={(e) => setInputActivationCode(e.target.value.toUpperCase())}
+                placeholder="Ex: AG-PRO-XXXXXX ou AG-ELITE-XXXXXX"
+                className="w-full px-3.5 py-3 rounded-xl bg-afri-bg border border-afri-border focus:border-afri-gold font-mono font-bold text-sm text-afri-text uppercase tracking-widest focus:outline-none"
+              />
             </div>
-          )}
 
-          {activationSuccessMsg && (
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold text-center space-y-2">
-              <p>{activationSuccessMsg}</p>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="w-full bg-[#D4AF37] text-black font-black uppercase text-[10px] py-2 rounded-lg mt-1 cursor-pointer"
-              >
-                Accéder à mon espace
-              </button>
-            </div>
-          )}
+            {activationError && (
+              <div className="p-3 rounded-xl bg-red-950/50 border border-red-500/50 text-red-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{activationError}</span>
+              </div>
+            )}
 
-          {!activationSuccessMsg && (
-            <div className="space-y-2 pt-1">
-              <button
-                type="submit"
-                disabled={isActivatingCode || !inputActivationCode.trim()}
-                className="w-full bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
-              >
-                {isActivatingCode ? "Vérification..." : "Valider"}
-              </button>
+            {activationSuccessMsg && (
+              <div className="p-3 rounded-xl bg-emerald-950/50 border border-emerald-500/50 text-emerald-300 text-xs flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{activationSuccessMsg}</span>
+              </div>
+            )}
 
-              <button
-                type="button"
-                onClick={() => {
-                  supportConfig.openSupport("Bonjour Support AFRIGOMBO ELITE 👋\nJe n'ai pas encore reçu mon code d'activation d'abonnement.");
-                }}
-                className="w-full py-2 text-center text-[11px] font-bold text-afri-text-sec hover:text-[#D4AF37] cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span>Obtenir un code via le Support</span>
-              </button>
-            </div>
-          )}
-        </form>
+            <button
+              type="submit"
+              disabled={isActivatingCode || !inputActivationCode}
+              className="w-full py-3.5 rounded-xl bg-afri-gold hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer disabled:opacity-50 min-h-[48px]"
+            >
+              {isActivatingCode ? "Validation du code..." : "Valider et Activer mon Compte"}
+            </button>
+          </form>
+        </div>
       </AndroidCenteredDialog>
 
+      {/* ========================================================= */}
+      {/* MODAL: BOOSTS INFO */}
+      {/* ========================================================= */}
+      <AndroidCenteredDialog
+        isOpen={activeModal === "boosts"}
+        onClose={() => setActiveModal(null)}
+        title={
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🚀</span>
+            <span>Boosts de Visibilité Réels</span>
+          </div>
+        }
+      >
+        <div className="space-y-4 text-left">
+          <p className="text-xs text-afri-text-muted leading-relaxed">
+            Chaque niveau d'adhésion applique un multiplicateur direct sur le classement de vos prestations et de votre profil artiste :
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-3.5 bg-afri-bg border border-afri-border rounded-xl space-y-1">
+              <div className="text-[10px] font-black uppercase text-afri-text-muted tracking-wider">GOMBO FREE</div>
+              <div className="text-lg font-black font-mono text-afri-text">1.0x</div>
+              <p className="text-[10px] text-afri-text-muted">Classement standard sans priorité.</p>
+            </div>
+
+            <div className="p-3.5 bg-afri-bg border border-emerald-500/40 rounded-xl space-y-1">
+              <div className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">GOMBO PRO</div>
+              <div className="text-lg font-black font-mono text-emerald-400">+40% (1.4x)</div>
+              <p className="text-[10px] text-afri-text-muted">Priorité accélérée sur l'annuaire et les recherches.</p>
+            </div>
+
+            <div className="p-3.5 bg-afri-bg border border-afri-gold/40 rounded-xl space-y-1">
+              <div className="text-[10px] font-black uppercase text-afri-gold tracking-wider">GOMBO ELITE</div>
+              <div className="text-lg font-black font-mono text-afri-gold">+150% (2.5x)</div>
+              <p className="text-[10px] text-afri-text-muted">Priorité absolue au sommet de toutes les recherches.</p>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-afri-border text-right">
+            <button
+              type="button"
+              onClick={() => setActiveModal(null)}
+              className="px-5 py-2.5 bg-afri-bg border border-afri-border text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      </AndroidCenteredDialog>
     </div>
   );
 }

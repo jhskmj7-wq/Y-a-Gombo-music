@@ -89,6 +89,49 @@ export interface GomboAdsCampaign {
 export type UserRole = "client" | "musicien" | "admin" | string;
 export type PaymentProvider = "MANUAL_BETA" | "CINETPAY" | "WAVE" | "MTN" | "MOOV";
 
+export type SubscriptionRequestStatus = "pending" | "approved" | "rejected";
+export type SubscriptionPaymentMethod = "WAVE" | "ORANGE_MONEY" | "MOOV_MONEY" | "MTN_MOMO" | "MANUAL_BETA" | "AUTRE";
+
+export interface SubscriptionRequest {
+  id?: string;
+  userId: string;
+  userName: string;
+  userPhone?: string;
+  userEmail?: string;
+  userAvatar?: string;
+  userRole?: string;
+  plan: "pro" | "elite" | string;
+  planName: string; // "GOMBO PRO" | "GOMBO ELITE"
+  billingCycle: "monthly" | "yearly";
+  amount: number; // 500, 5000, 1000, 10000
+  paymentMethod: SubscriptionPaymentMethod;
+  paymentProofUrl?: string;
+  paymentReference?: string;
+  userNote?: string;
+  status: SubscriptionRequestStatus;
+  requestedAt: string;
+  processedAt?: string;
+  processedBy?: string;
+  rejectionReason?: string;
+  activationCodeUsed?: string;
+}
+
+export interface PremiumCodeItem {
+  id?: string;
+  code: string;
+  plan: "pro" | "elite" | string;
+  planName: string;
+  billingCycle: "monthly" | "yearly";
+  durationDays: number;
+  isUsed: boolean;
+  createdAt: string;
+  createdBy?: string;
+  usedAt?: string;
+  usedBy?: string;
+  usedByUserName?: string;
+  notes?: string;
+}
+
 export interface PaymentVerification {
   id?: string;
   contractId: string;

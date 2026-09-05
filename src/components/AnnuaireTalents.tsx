@@ -24,6 +24,7 @@ import { UserProfile } from "../types";
 import { gomboDB } from "../firebase";
 import { motion, AnimatePresence } from "motion/react";
 import { useAudio } from "../context/AudioContext";
+import { PremiumEngine } from "../lib/premiumEngine";
 
 interface AnnuaireTalentsProps {
   currentUserProfile: UserProfile | null;
@@ -337,6 +338,18 @@ export default function AnnuaireTalents({
     }
 
     return true;
+  });
+
+  // Sort with Priority to GOMBO ELITE (2.5x / +150%) and GOMBO PRO (1.4x / +40%)
+  const sortedFilteredTalents = [...filteredTalents].sort((a, b) => {
+    const boostA = PremiumEngine.getSearchBoostMultiplier(a);
+    const boostB = PremiumEngine.getSearchBoostMultiplier(b);
+    if (boostB !== boostA) {
+      return boostB - boostA; // Priorité absolue aux profils abonnés
+    }
+    const viewsA = viewsCount[a.uid] || 0;
+    const viewsB = viewsCount[b.uid] || 0;
+    return viewsB - viewsA;
   });
 
   // Identify "Talents en vue" / Popular talents (Top 3 by views or activity status)
@@ -964,16 +977,23 @@ export default function AnnuaireTalents({
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredTalents.map(talent => {
+                {sortedFilteredTalents.map(talent => {
                   const isFavorited = favorites.includes(talent.uid);
                   const status = talent.availabilityStatus || ((talent.isAvailableNow ?? true) ? "disponible" : "indisponible");
                   const views = viewsCount[talent.uid] || 12;
+                  const plan = PremiumEngine.getSubscriptionPlan(talent);
                   
                   return (
                     <div 
                       key={talent.uid}
                       onClick={() => handleViewProfileDetail(talent.uid)}
-                      className="bg-white dark:bg-afri-bg-sec border border-afri-border dark:border-gray-850/80 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] cursor-pointer flex flex-col justify-between space-y-4"
+                      className={`bg-white dark:bg-afri-bg-sec border rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] cursor-pointer flex flex-col justify-between space-y-4 ${
+                        plan === "elite"
+                          ? "border-[#D4AF37]/60 ring-1 ring-[#D4AF37]/30 shadow-[#D4AF37]/5"
+                          : plan === "pro"
+                          ? "border-emerald-500/40 ring-1 ring-emerald-500/20"
+                          : "border-afri-border dark:border-gray-850/80"
+                      }`}
                     >
                       <div className="space-y-3">
                         {/* Upper card header : name and ratings */}
@@ -983,7 +1003,9 @@ export default function AnnuaireTalents({
                             <img 
                               src={talent.avatarUrl || talent.photoURL || AVATARS[0]} 
                               alt={talent.firstName} 
-                              className="w-14 h-14 rounded-xl object-cover border border-afri-border" 
+                              className={`w-14 h-14 rounded-xl object-cover border ${
+                                plan === "elite" ? "border-2 border-[#D4AF37]" : plan === "pro" ? "border-2 border-emerald-500" : "border-afri-border"
+                              }`} 
                             />
                             <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-[#121214] ${
                               status === "disponible" ? "bg-emerald-500" : status === "occupe" ? "bg-amber-500" : "bg-red-500"
@@ -992,6 +1014,18 @@ export default function AnnuaireTalents({
 
                           <div className="space-y-1 min-w-0 flex-grow">
                             <div className="flex flex-wrap gap-1 items-center">
+                              {/* Official Subscription Badges */}
+                              {plan === "elite" && (
+                                <span className="px-2 py-0.5 text-[8.5px] font-black uppercase tracking-wider rounded-full border border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/15 flex items-center gap-1 shadow-xs">
+                                  <span>💎</span> Gold Prestige (+150%)
+                                </span>
+                              )}
+                              {plan === "pro" && (
+                                <span className="px-2 py-0.5 text-[8.5px] font-black uppercase tracking-wider rounded-full border border-emerald-500/40 text-emerald-400 bg-emerald-500/10 flex items-center gap-1">
+                                  <span>👑</span> Silver Pro (+40%)
+                                </span>
+                              )}
+
                               {/* Live Status Badge */}
                               {status === "disponible" ? (
                                 <span className="px-2 py-0.5 text-[8.5px] font-black uppercase rounded-full border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 flex items-center gap-1">

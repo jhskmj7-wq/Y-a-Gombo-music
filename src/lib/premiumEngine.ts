@@ -106,10 +106,10 @@ export const PremiumEngine = {
           const isElite = planId === "elite" || userData.subscriptionPlan?.toLowerCase().includes("elite");
           const planName = isElite ? "GOMBO ELITE" : "GOMBO PRO";
           
-          // Simple prices: Yearly = 5000 FCFA, Monthly = 500 FCFA (or Elite Monthly = 1000 FCFA)
+          // Updated prices: PRO = 500/mois ou 5000/an | ELITE = 1000/mois ou 10000/an
           let renewalAmount = 500;
           if (billingCycle === "yearly") {
-            renewalAmount = 5000;
+            renewalAmount = isElite ? 10000 : 5000;
           } else if (isElite) {
             renewalAmount = 1000;
           }
@@ -224,5 +224,68 @@ export const PremiumEngine = {
       console.error("Error syncing premium status in PremiumEngine:", e);
       return currentProfile;
     }
+  },
+
+  /**
+   * Resolves the exact active tier for a user ("free", "pro", or "elite").
+   */
+  getSubscriptionPlan(userData: any): "free" | "pro" | "elite" {
+    if (!this.isPremium(userData)) return "free";
+    
+    const plan = (
+      userData?.premiumPlan ||
+      userData?.subscriptionPlan ||
+      userData?.subscriptionType ||
+      ""
+    ).toLowerCase();
+
+    if (plan.includes("elite")) return "elite";
+    if (plan.includes("pro")) return "pro";
+
+    const badges = Array.isArray(userData?.badges) ? userData.badges : [];
+    if (badges.some((b: string) => (b || "").toLowerCase().includes("elite"))) return "elite";
+    if (badges.some((b: string) => (b || "").toLowerCase().includes("pro"))) return "pro";
+
+    // Default premium fallback is pro if not specified
+    return "pro";
+  },
+
+  /**
+   * Real Search & Ranking Boost Multiplier:
+   * - FREE: 1.0x (Standard)
+   * - PRO: 1.40x (+40% real ranking boost)
+   * - ELITE: 2.50x (+150% real priority boost)
+   */
+  getSearchBoostMultiplier(userData: any): number {
+    const plan = this.getSubscriptionPlan(userData);
+    if (plan === "elite") return 2.50; // +150%
+    if (plan === "pro") return 1.40;   // +40%
+    return 1.0;
+  },
+
+  /**
+   * Real Daily Publication Limits:
+   * - FREE: 1 publication / jour
+   * - PRO: 5 publications / jour
+   * - ELITE: Illimité (50 / jour)
+   */
+  getDailyPublicationLimit(userData: any): number {
+    const plan = this.getSubscriptionPlan(userData);
+    if (plan === "elite") return 50;
+    if (plan === "pro") return 5;
+    return 1;
+  },
+
+  /**
+   * Real Portfolio Media Limits:
+   * - FREE: 3 médias (photos, vidéos, démos audio)
+   * - PRO: 10 médias
+   * - ELITE: Illimité (100 médias)
+   */
+  getPortfolioMediaLimit(userData: any): number {
+    const plan = this.getSubscriptionPlan(userData);
+    if (plan === "elite") return 100;
+    if (plan === "pro") return 10;
+    return 3;
   }
 };

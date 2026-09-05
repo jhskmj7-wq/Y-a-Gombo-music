@@ -721,11 +721,28 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
     return matchesSearch && matchesCommune && matchesType && matchesBudget && matchesDate && matchesCategory && matchesPremium && matchesExpress && matchesVerified && matchesPhoto && matchesAudio && matchesDistance && matchesAvailability;
   }).sort((a: any, b: any) => {
-    // Requirement 7: Smart search prioritization
+    // 1. Priorité aux comptes GOMBO ELITE (+150% / 2.5x) et GOMBO PRO (+40% / 1.4x)
+    const getBoostScore = (item: any) => {
+      const plan = String(item.subscriptionPlan || item.creatorStatus || item.plan || "").toLowerCase();
+      if (plan.includes("elite") || item.isElite) return 2.5;
+      if (plan.includes("pro") || item.isPremium || item.isBoosted) return 1.4;
+      return 1.0;
+    };
+    const boostA = getBoostScore(a);
+    const boostB = getBoostScore(b);
+    if (boostB !== boostA) {
+      return boostB - boostA;
+    }
+
+    // 2. Distance prioritization when searching
     if (globalSearchTerm && a.distance !== undefined && b.distance !== undefined) {
       return a.distance - b.distance;
     }
-    return 0;
+
+    // 3. Fallback to newest first
+    const dateA = new Date(a.date || a.timestamp || 0).getTime();
+    const dateB = new Date(b.date || b.timestamp || 0).getTime();
+    return dateB - dateA;
   });
 
   const UsersToRender = users.filter(u => {
@@ -744,6 +761,15 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       ? calculateDistance(geo.latitude, geo.longitude, u.latitude, u.longitude)
       : undefined
   })).sort((a: any, b: any) => {
+    const getBoost = (u: any) => {
+      const plan = String(u.subscriptionPlan || "").toLowerCase();
+      if (plan.includes("elite")) return 2.5;
+      if (plan.includes("pro") || u.isPremium) return 1.4;
+      return 1.0;
+    };
+    const bA = getBoost(a);
+    const bB = getBoost(b);
+    if (bB !== bA) return bB - bA;
     if (a.distance !== undefined && b.distance !== undefined) {
       return a.distance - b.distance;
     }

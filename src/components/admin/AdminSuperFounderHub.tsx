@@ -38,9 +38,11 @@ const AdminContracts = lazyWithRetry(() => import("./AdminContracts"));
 const AdminDeploymentCenter = lazyWithRetry(() => import("./AdminDeploymentCenter"));
 const AdminRevenueFeatures = lazyWithRetry(() => import("./AdminRevenueFeatures"));
 import { GomboAdsAdminSection } from "../ads/GomboAdsAdminSection";
+import AdminSubscriptionManagement from "./AdminSubscriptionManagement";
 
 export type AdminModuleType = 
   | "throne"
+  | "subscriptions"
   | "contracts"
   | "wallet_management"
   | "transactions"
@@ -140,6 +142,7 @@ export default function AdminSuperFounderHub({
 
   const modulesNav = [
     { key: "throne" as AdminModuleType, label: "✨ TABLEAU FONDATEUR", icon: Crown, badge: "Fondateur" },
+    { key: "subscriptions" as AdminModuleType, label: "💎 Abonnements Bêta", icon: Crown, badge: "Manuel" },
     { key: "security" as AdminModuleType, label: "🛡 Sécurité", icon: ShieldCheck, badge: "Pro" },
     { key: "strategic_decisions" as AdminModuleType, label: "📋 Décisions Stratégiques", icon: ShieldCheck, badge: "Gouvernance" },
     { key: "wallet_management" as AdminModuleType, label: "💰 Gestion Wallet", icon: ShieldCheck, badge: "Souverain" },
@@ -271,6 +274,15 @@ export default function AdminSuperFounderHub({
                 transactions={transactions}
                 alerts={alerts}
                 onExit={onExit}
+              />
+            )}
+          </ErrorBoundary>
+
+          <ErrorBoundary moduleName="Subscriptions">
+            {activeModule === "subscriptions" && (
+              <AdminSubscriptionManagement
+                currentUser={currentUser}
+                audioSynth={audioSynth}
               />
             )}
           </ErrorBoundary>
