@@ -31,6 +31,7 @@ interface AnnuaireTalentsProps {
   onNavigateView: (view: string) => void;
   selectedTalentUid?: string;
   onSelectTalent: (uid: string | null) => void;
+  onShowAuth?: () => void;
 }
 
 // Communes Abidjan
@@ -91,7 +92,8 @@ export default function AnnuaireTalents({
   currentUserProfile, 
   onNavigateView, 
   selectedTalentUid, 
-  onSelectTalent 
+  onSelectTalent,
+  onShowAuth
 }: AnnuaireTalentsProps) {
   const [talents, setTalents] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -618,7 +620,11 @@ export default function AnnuaireTalents({
               <button 
                 onClick={() => {
                   if (!currentUserProfile) {
-                    alert("Veuillez vous connecter pour contacter l'artiste.");
+                    if (onShowAuth) {
+                      onShowAuth();
+                    } else {
+                      alert("Veuillez vous connecter pour contacter l'artiste.");
+                    }
                     return;
                   }
                   setContactingTalent(selectedTalent);
@@ -634,7 +640,11 @@ export default function AnnuaireTalents({
               <button 
                 onClick={() => {
                   if (!currentUserProfile) {
-                    alert("Veuillez vous connecter pour formuler une proposition de cachet.");
+                    if (onShowAuth) {
+                      onShowAuth();
+                    } else {
+                      alert("Veuillez vous connecter pour formuler une proposition de cachet.");
+                    }
                     return;
                   }
                   setContactingTalent(selectedTalent);
@@ -901,7 +911,11 @@ export default function AnnuaireTalents({
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (!currentUserProfile) {
-                                  alert("Veuillez vous connecter pour proposer une alliance.");
+                                  if (onShowAuth) {
+                                    onShowAuth();
+                                  } else {
+                                    alert("Veuillez vous connecter pour proposer une alliance.");
+                                  }
                                   return;
                                 }
                                 setContactingTalent(talent);
@@ -1149,12 +1163,16 @@ export default function AnnuaireTalents({
                               )}
                             </button>
 
-                            {/* Proposer Alliance Button */}
+                             {/* Proposer Alliance Button */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (!currentUserProfile) {
-                                  alert("Veuillez vous connecter pour proposer une alliance.");
+                                  if (onShowAuth) {
+                                    onShowAuth();
+                                  } else {
+                                    alert("Veuillez vous connecter pour proposer une alliance.");
+                                  }
                                   return;
                                 }
                                 setContactingTalent(talent);
@@ -1186,7 +1204,11 @@ export default function AnnuaireTalents({
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (!currentUserProfile) {
-                                  alert("Veuillez vous connecter pour envoyer un message.");
+                                  if (onShowAuth) {
+                                    onShowAuth();
+                                  } else {
+                                    alert("Veuillez vous connecter pour envoyer un message.");
+                                  }
                                   return;
                                 }
                                 setContactingTalent(talent);

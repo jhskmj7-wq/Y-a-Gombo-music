@@ -2307,6 +2307,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     onSelectTalent={(uid) => {
                       // Handled within directory view
                     }}
+                    onShowAuth={() => requireAuthThen(() => {})}
                   />
                 </div>
               </div>

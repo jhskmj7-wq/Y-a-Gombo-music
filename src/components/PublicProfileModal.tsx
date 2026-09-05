@@ -12,6 +12,7 @@ import { gomboDB } from "../firebase";
 import { UserProfile, Post, Gombo, GomboSafeContract } from "../types";
 import { getEffectiveGomboId } from "../lib/gomboIdHelper";
 import { useAudio } from "../context/AudioContext";
+import { useAuth } from "../AuthContext";
 import { AndroidBottomSheet, AfriModal } from "./common/AfriModal";
 
 interface PublicProfileModalProps {
@@ -21,6 +22,7 @@ interface PublicProfileModalProps {
   currentUser: any;
   onOpenDirectMessage?: (targetUserId: string, targetName: string) => void;
   onNavigateToGombo?: (gomboId: string) => void;
+  onShowAuth?: () => void;
 }
 
 export function PublicProfileModal({
@@ -29,8 +31,11 @@ export function PublicProfileModal({
   targetUserId,
   currentUser,
   onOpenDirectMessage,
-  onNavigateToGombo
+  onNavigateToGombo,
+  onShowAuth
 }: PublicProfileModalProps) {
+  const auth = useAuth();
+  const activeUser = currentUser || auth?.currentUser;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<"reels" | "audios" | "photos" | "collaborations" | "reviews" | "posts" | "gombos">("reels");
@@ -66,10 +71,10 @@ export function PublicProfileModal({
     const unsubProfile = gomboDB.listenUserProfile(targetUserId, (p) => {
       if (p) {
         setProfile(p);
-        // Check follow and saved status relative to currentUser
-        if (currentUser?.uid) {
-          setIsFollowing((p.followers || []).includes(currentUser.uid));
-          setIsSaved((currentUser.savedTalents || []).includes(targetUserId));
+        // Check follow and saved status relative to activeUser
+        if (activeUser?.uid) {
+          setIsFollowing((p.followers || []).includes(activeUser.uid));
+          setIsSaved((activeUser.savedTalents || []).includes(targetUserId));
         }
       }
       setLoading(false);
@@ -122,22 +127,40 @@ export function PublicProfileModal({
     return () => {
       unsubProfile();
     };
-  }, [isOpen, targetUserId, currentUser?.uid]);
+  }, [isOpen, targetUserId, activeUser?.uid]);
 
   // Toggle follow action
   const handleToggleFollow = async () => {
-    if (!currentUser?.uid || !targetUserId) return;
+    if (!activeUser?.uid || !targetUserId) {
+      if (onShowAuth) {
+        onShowAuth();
+      } else if (auth?.setShowAuthPopup) {
+        auth.setShowAuthPopup(true);
+      } else if (auth?.requireAuth) {
+        auth.requireAuth(() => {});
+      }
+      return;
+    }
     const nextState = !isFollowing;
     setIsFollowing(nextState);
-    await gomboDB.toggleFollowUser(targetUserId, currentUser.uid);
+    await gomboDB.toggleFollowUser(targetUserId, activeUser.uid);
   };
 
   // Toggle bookmark action
   const handleToggleSave = async () => {
-    if (!currentUser?.uid || !targetUserId) return;
+    if (!activeUser?.uid || !targetUserId) {
+      if (onShowAuth) {
+        onShowAuth();
+      } else if (auth?.setShowAuthPopup) {
+        auth.setShowAuthPopup(true);
+      } else if (auth?.requireAuth) {
+        auth.requireAuth(() => {});
+      }
+      return;
+    }
     const nextState = !isSaved;
     setIsSaved(nextState);
-    await gomboDB.toggleBookmarkUser(targetUserId, currentUser.uid);
+    await gomboDB.toggleBookmarkUser(targetUserId, activeUser.uid);
   };
 
   // Copy share link
@@ -151,10 +174,19 @@ export function PublicProfileModal({
 
   // Handle report submission
   const handleSendReport = async () => {
-    if (!currentUser?.uid || !targetUserId) return;
+    if (!activeUser?.uid || !targetUserId) {
+      if (onShowAuth) {
+        onShowAuth();
+      } else if (auth?.setShowAuthPopup) {
+        auth.setShowAuthPopup(true);
+      } else if (auth?.requireAuth) {
+        auth.requireAuth(() => {});
+      }
+      return;
+    }
     await gomboDB.reportUser({
       targetUserId,
-      reporterUserId: currentUser.uid,
+      reporterUserId: activeUser.uid,
       reason: reportReason,
       details: reportDetails
     });
@@ -413,6 +445,16 @@ export function PublicProfileModal({
                     {onOpenDirectMessage && (
                       <button
                         onClick={() => {
+                          if (!activeUser?.uid) {
+                            if (onShowAuth) {
+                              onShowAuth();
+                            } else if (auth?.setShowAuthPopup) {
+                              auth.setShowAuthPopup(true);
+                            } else if (auth?.requireAuth) {
+                              auth.requireAuth(() => {});
+                            }
+                            return;
+                          }
                           onClose();
                           onOpenDirectMessage(targetUserId || "", displayName);
                         }}

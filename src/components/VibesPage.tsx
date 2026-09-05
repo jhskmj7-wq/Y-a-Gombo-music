@@ -4,7 +4,7 @@ import { AfrigomboVibeWaves } from "./AfrigomboVibeWaves";
 import { useAuth } from "../AuthContext";
 
 export default function VibesPage() {
-  const { profile } = useAuth();
+  const { profile, requireAuth } = useAuth();
   const [selectedTalentUid, setSelectedTalentUid] = useState<string | null>(null);
 
   return (
@@ -23,6 +23,7 @@ export default function VibesPage() {
           onSelectTalent={(uid) => {
             setSelectedTalentUid(uid);
           }}
+          onShowAuth={() => requireAuth(() => {})}
         />
       </div>
     </div>
