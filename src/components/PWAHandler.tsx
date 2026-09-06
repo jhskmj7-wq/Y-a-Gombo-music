@@ -1,12 +1,15 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { registerSW } from 'virtual:pwa-register';
-import { RefreshCw, X, Smartphone, Sparkles, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, X, Smartphone, Sparkles } from 'lucide-react';
 import { BUILD_ID } from '../buildInfo';
+
+const APPLIED_BUILD_KEY = 'afrigombo_applied_build_id';
+const DISMISSED_BUILD_KEY = 'afrigombo_dismissed_build_id';
 
 /**
  * AFRIGOMBO PWA ENGINE & SERVICE WORKER HANDLER
  * Manages background updates, periodic server sync detection, offline caching, and PWA installation prompts.
- * Uses a single service worker instance to prevent double service worker conflicts.
+ * Enforces strict single-notification per Git commit/buildId.
  */
 export default function PWAHandler() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -18,51 +21,9 @@ export default function PWAHandler() {
 
   const updateServiceWorkerRef = useRef<((reloadPage?: boolean) => Promise<void>) | null>(null);
   const swRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
+  const remoteBuildIdRef = useRef<string | null>(null);
 
-  // 1. REGISTER SINGLE SERVICE WORKER & HANDLE WORKBOX UPDATES
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
-    if ((window as any)._afrigombo_sw_registered) return;
-    (window as any)._afrigombo_sw_registered = true;
-
-    try {
-      const updateSW = registerSW({
-        immediate: true,
-        onNeedRefresh() {
-          console.log('🔄 [PWA Engine] Workbox a détecté un nouveau Service Worker !');
-          setNeedRefresh(true);
-        },
-        onOfflineReady() {
-          console.log('⚡ [PWA Engine] Application prête pour une utilisation hors-ligne.');
-        },
-        onRegistered(r) {
-          if (r) {
-            swRegistrationRef.current = r;
-            console.log('📡 [PWA Engine] Service Worker unique inscrit avec succès:', r.scope);
-
-            // Periodic Service Worker byte check every 60 seconds (1 minute)
-            const intervalId = setInterval(() => {
-              if (navigator.onLine && r) {
-                r.update().catch(err => {
-                  console.debug('[PWA Engine] Vérification automatique SW ignorée:', err);
-                });
-              }
-            }, 60 * 1000);
-
-            return () => clearInterval(intervalId);
-          }
-        },
-        onRegisterError(error) {
-          console.error('⚠️ [PWA Engine] Erreur lors de l\'inscription du Service Worker:', error);
-        },
-      });
-      updateServiceWorkerRef.current = updateSW;
-    } catch (err) {
-      console.warn('[PWA Engine] Service worker registration notice:', err);
-    }
-  }, []);
-
-  // 2. PERIODIC VERSION.JSON POLLING (60 SECONDS INTERVAL FOR VERCEL DEPLOYMENTS)
+  // 1. PERIODIC & TRIGGERED VERSION.JSON CHECK WITH PERSISTENCE & DEDUPLICATION
   const checkRemoteVersion = useCallback(async () => {
     if (typeof window === 'undefined' || !navigator.onLine) return;
 
@@ -78,31 +39,104 @@ export default function PWAHandler() {
       if (!res.ok) return;
       const data = await res.json();
 
-      if (data && data.buildId) {
-        // Compare remote buildId with local compiled BUILD_ID
-        if (BUILD_ID && !BUILD_ID.startsWith('DEV-') && data.buildId !== BUILD_ID) {
-          console.log(`🚀 [PWA Update System] Déploiement Vercel détecté ! Remote: ${data.buildId} | Actuel: ${BUILD_ID}`);
-          setNeedRefresh(true);
-          setNewVersionTag(data.commitShortSha ? `Git ${data.commitShortSha}` : 'Vercel Sync');
+      if (!data || !data.buildId) return;
 
-          // Trigger Service Worker update check immediately
-          if (swRegistrationRef.current) {
-            swRegistrationRef.current.update().catch(() => {});
-          }
-        }
+      const remoteBuildId = data.buildId;
+      remoteBuildIdRef.current = remoteBuildId;
+
+      // Ignore if in development mode or invalid build IDs
+      if (!BUILD_ID || BUILD_ID.startsWith('DEV-')) return;
+
+      // Case A: Local running version is ALREADY matching the remote build
+      if (remoteBuildId === BUILD_ID) {
+        // App is up-to-date! Clear applied marker as it's now current
+        localStorage.removeItem(APPLIED_BUILD_KEY);
+        setNeedRefresh(false);
+        return;
+      }
+
+      // Case B: Remote build is DIFFERENT from currently running local BUILD_ID
+      // Check 1: Has this remote build ALREADY been applied by the user clicking "Actualiser"?
+      const appliedBuildId = localStorage.getItem(APPLIED_BUILD_KEY);
+      if (appliedBuildId === remoteBuildId) {
+        console.log(`ℹ️ [PWA Update System] Remote build ${remoteBuildId} déjà appliqué. Notification ignorée.`);
+        setNeedRefresh(false);
+        return;
+      }
+
+      // Check 2: Has this remote build been dismissed ("Plus tard" / "X") in the current session?
+      const dismissedBuildId = sessionStorage.getItem(DISMISSED_BUILD_KEY);
+      if (dismissedBuildId === remoteBuildId) {
+        console.log(`ℹ️ [PWA Update System] Remote build ${remoteBuildId} masqué pour cette session ("Plus tard").`);
+        setNeedRefresh(false);
+        return;
+      }
+
+      // Case C: Truly new, unapplied, undismissed version detected!
+      console.log(`🚀 [PWA Update System] Nouveau déploiement Vercel détecté ! Remote: ${remoteBuildId} | Actuel: ${BUILD_ID}`);
+      setNewVersionTag(data.commitShortSha ? `Git ${data.commitShortSha}` : 'Vercel Sync');
+      setNeedRefresh(true);
+
+      // Trigger Service Worker byte check
+      if (swRegistrationRef.current) {
+        swRegistrationRef.current.update().catch(() => {});
       }
     } catch (_) {
-      // Silently ignore network failures (e.g. temporary offline state)
+      // Silently ignore network errors (e.g., brief offline periods)
     }
   }, []);
 
+  // 2. REGISTER SINGLE SERVICE WORKER & HANDLE WORKBOX UPDATES
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+    if ((window as any)._afrigombo_sw_registered) return;
+    (window as any)._afrigombo_sw_registered = true;
+
+    try {
+      const updateSW = registerSW({
+        immediate: true,
+        onNeedRefresh() {
+          console.log('🔄 [PWA Engine] Workbox a détecté un nouveau Service Worker !');
+          checkRemoteVersion();
+        },
+        onOfflineReady() {
+          console.log('⚡ [PWA Engine] Application prête pour une utilisation hors-ligne.');
+        },
+        onRegistered(r) {
+          if (r) {
+            swRegistrationRef.current = r;
+            console.log('📡 [PWA Engine] Service Worker unique inscrit avec succès:', r.scope);
+
+            // Periodic Service Worker byte check every 120 seconds
+            const intervalId = setInterval(() => {
+              if (navigator.onLine && r) {
+                r.update().catch(err => {
+                  console.debug('[PWA Engine] Vérification automatique SW ignorée:', err);
+                });
+              }
+            }, 120 * 1000);
+
+            return () => clearInterval(intervalId);
+          }
+        },
+        onRegisterError(error) {
+          console.error('⚠️ [PWA Engine] Erreur lors de l\'inscription du Service Worker:', error);
+        },
+      });
+      updateServiceWorkerRef.current = updateSW;
+    } catch (err) {
+      console.warn('[PWA Engine] Service worker registration notice:', err);
+    }
+  }, [checkRemoteVersion]);
+
+  // 3. POLLING & FOCUS/ONLINE LISTENERS
   useEffect(() => {
     // Initial server check after 8 seconds
     const initialTimer = setTimeout(() => {
       checkRemoteVersion();
     }, 8000);
 
-    // Regular interval every 60 seconds (1 minute max delay)
+    // Regular interval every 60 seconds
     const pollInterval = setInterval(() => {
       checkRemoteVersion();
     }, 60 * 1000);
@@ -111,9 +145,6 @@ export default function PWAHandler() {
     const handleFocusOrOnline = () => {
       if (document.visibilityState === 'visible') {
         checkRemoteVersion();
-        if (swRegistrationRef.current) {
-          swRegistrationRef.current.update().catch(() => {});
-        }
       }
     };
 
@@ -128,9 +159,26 @@ export default function PWAHandler() {
     };
   }, [checkRemoteVersion]);
 
-  // 3. APPLY UPDATE & CLEAR STALE CACHES
+  // 4. HANDLERS FOR DISMISS ("PLUS TARD" / "X") AND APPLY ("ACTUALISER")
+  const handleDismiss = () => {
+    const targetBuild = remoteBuildIdRef.current;
+    if (targetBuild) {
+      sessionStorage.setItem(DISMISSED_BUILD_KEY, targetBuild);
+      console.log(`🙈 [PWA Engine] Version ${targetBuild} masquée ("Plus tard") pour cette session.`);
+    }
+    setNeedRefresh(false);
+  };
+
   const handleApplyUpdate = async () => {
+    if (isUpdating) return;
     setIsUpdating(true);
+
+    const targetBuild = remoteBuildIdRef.current;
+    if (targetBuild) {
+      localStorage.setItem(APPLIED_BUILD_KEY, targetBuild);
+      console.log(`✅ [PWA Engine] Enregistrement de la version appliquée: ${targetBuild}`);
+    }
+
     try {
       if (updateServiceWorkerRef.current) {
         await updateServiceWorkerRef.current(true);
@@ -138,6 +186,7 @@ export default function PWAHandler() {
     } catch (err) {
       console.warn('[PWA Engine] Update warning:', err);
     }
+
     window.location.reload();
   };
 
@@ -217,7 +266,7 @@ export default function PWAHandler() {
               )}
             </div>
             <button 
-              onClick={() => setNeedRefresh(false)} 
+              onClick={handleDismiss} 
               className="text-gray-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
               title="Masquer"
             >
@@ -231,7 +280,7 @@ export default function PWAHandler() {
 
           <div className="flex items-center justify-end gap-2 pt-1">
             <button
-              onClick={() => setNeedRefresh(false)}
+              onClick={handleDismiss}
               className="px-3 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors cursor-pointer"
             >
               Plus tard

@@ -169,14 +169,17 @@ export default function GomboBoostManager({
 
     try {
       const uid = currentUserProfile.uid;
+      const boostOpt = activeItem.type === "profile" ? "profile" : selectedPubOption;
+      const opId = `boost_${uid}_${activeItem.id}_${boostOpt}_${Date.now()}`;
 
       const res = await PaymentEngine.processBoostPayment({
         userId: uid,
         userName: currentUserProfile.artistName || currentUserProfile.firstName || "Membre Gombo",
         itemType: activeItem.type,
         itemId: activeItem.id,
-        boostOptionId: activeItem.type === "profile" ? "profile" : selectedPubOption,
+        boostOptionId: boostOpt,
         profileDurationHours: activeItem.type === "profile" ? selectedProfileDuration : undefined,
+        operationId: opId,
         currentUserProfile: {
           ...currentUserProfile,
           title: activeItem.title || ""

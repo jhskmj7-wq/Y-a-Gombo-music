@@ -12,6 +12,7 @@ import GriotIA from "./GriotIA";
 import MobileMoneyPayment from "./MobileMoneyPayment";
 import AdminMaintenancePanel from "./admin/AdminMaintenancePanel";
 import { audioSynth } from "../lib/audio";
+import { isGomboExpired } from "../lib/gomboDateUtils";
 
 interface DashboardsProps {
   currentUserProfile: UserProfile;
@@ -1004,7 +1005,12 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
 
           {/* 2. MES OPPORTUNITES OPPORTUNITES (Gombos posted) */}
           {activeTab === "gombos" && (() => {
-            const getGomboStatusHelper = (status: string | undefined) => {
+            const getGomboStatusHelper = (gombo: Gombo) => {
+              const expired = isGomboExpired(gombo);
+              if (expired) {
+                return { label: "Archivé / Expiré", color: "bg-gray-200 text-gray-700 border border-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700", emoji: "📦" };
+              }
+              const status = gombo.status;
               switch (status) {
                 case "draft":
                   return { label: "Brouillon", color: "bg-zinc-500/10 text-zinc-400 border border-zinc-500/30", emoji: "📝" };
@@ -1034,43 +1040,81 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
               }
             };
 
+            const activeMyGombos = myGombos.filter(g => !isGomboExpired(g));
+            const archivedMyGombos = myGombos.filter(g => isGomboExpired(g));
+
             return (
-              <div className="space-y-4">
-                <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center gap-1.5 border-b border-afri-border dark:border-afri-border pb-2.5">
-                  <span>🔥</span> Mes publications de plans scéniques ({myGombos.length})
-                </h3>
+              <div className="space-y-6">
+                {/* Active Gombos */}
+                <div className="space-y-4">
+                  <h3 className="text-base font-black text-gray-950 dark:text-afri-text flex items-center justify-between border-b border-afri-border dark:border-afri-border pb-2.5">
+                    <span className="flex items-center gap-1.5">🔥 Mes opportunités actives ({activeMyGombos.length})</span>
+                  </h3>
 
-                {myGombos.length === 0 ? (
-                  <div className="text-center py-12 bg-white dark:bg-afri-bg-sec rounded-3xl border border-afri-border dark:border-afri-border shadow-sm">
-                    <Briefcase className="w-12 h-12 text-afri-text-sec dark:text-afri-text-sec mx-auto mb-3" />
-                    <p className="text-sm font-bold text-afri-text-sec">Vous n'avez publié aucun contrat live de musique.</p>
-                    <p className="text-xs text-afri-text-sec mt-1">Utilisez l'option ➕ Publier pour poster un gombo et recruter le meilleur orchestre d'Abidjan.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {myGombos.map((gombo) => {
-                      const badge = getGomboStatusHelper(gombo.status);
-                      return (
-                        <div key={gombo.id} className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-gray-150 dark:border-afri-border shadow-sm relative flex flex-col justify-between">
-                          <div>
-                            <div className="flex justify-between items-start gap-4 mb-2.5">
-                              <span className={`text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded-full border ${badge.color}`}>
-                                {badge.emoji} {badge.label}
-                              </span>
-                              <span className="font-mono text-sm font-black text-[#D4AF37]">{gombo.budget.toLocaleString()} FCFA</span>
-                            </div>
+                  {activeMyGombos.length === 0 ? (
+                    <div className="text-center py-8 bg-white dark:bg-afri-bg-sec rounded-3xl border border-afri-border dark:border-afri-border shadow-sm">
+                      <Briefcase className="w-10 h-10 text-afri-text-sec dark:text-afri-text-sec mx-auto mb-2" />
+                      <p className="text-sm font-bold text-afri-text-sec">Vous n'avez aucune opportunité active en ce moment.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {activeMyGombos.map((gombo) => {
+                        const badge = getGomboStatusHelper(gombo);
+                        return (
+                          <div key={gombo.id} className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-gray-150 dark:border-afri-border shadow-sm relative flex flex-col justify-between">
+                            <div>
+                              <div className="flex justify-between items-start gap-4 mb-2.5">
+                                <span className={`text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded-full border ${badge.color}`}>
+                                  {badge.emoji} {badge.label}
+                                </span>
+                                <span className="font-mono text-sm font-black text-[#D4AF37]">{gombo.budget?.toLocaleString() || 0} FCFA</span>
+                              </div>
 
-                            <h4 className="font-black text-gray-900 dark:text-afri-text leading-tight text-base mb-1.5">{gombo.title}</h4>
-                            <p className="text-xs text-gray-450 dark:text-afri-text-sec line-clamp-3 leading-relaxed mb-4">{gombo.description}</p>
-                            
-                            <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-450 border-t border-gray-50 dark:border-gray-800/60 pt-3">
-                              <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#D4AF37]" /> {gombo.commune}</div>
-                              <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-[#D4AF37]" /> {gombo.date}</div>
+                              <h4 className="font-black text-gray-900 dark:text-afri-text leading-tight text-base mb-1.5">{gombo.title}</h4>
+                              <p className="text-xs text-gray-450 dark:text-afri-text-sec line-clamp-3 leading-relaxed mb-4">{gombo.description}</p>
+                              
+                              <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-450 border-t border-gray-50 dark:border-gray-800/60 pt-3">
+                                <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#D4AF37]" /> {gombo.commune || gombo.location}</div>
+                                <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-[#D4AF37]" /> {gombo.date} {gombo.time ? `à ${gombo.time}` : ""}</div>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Archived / Expired Gombos */}
+                {archivedMyGombos.length > 0 && (
+                  <div className="space-y-4 pt-4 border-t border-afri-border">
+                    <h3 className="text-sm font-black text-afri-text-sec flex items-center gap-1.5">
+                      <span>📦</span> Historique & Archives des gombos expirés ({archivedMyGombos.length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-75">
+                      {archivedMyGombos.map((gombo) => {
+                        const badge = getGomboStatusHelper(gombo);
+                        return (
+                          <div key={gombo.id} className="bg-afri-bg-ter p-4 rounded-3xl border border-afri-border relative flex flex-col justify-between">
+                            <div>
+                              <div className="flex justify-between items-start gap-4 mb-2">
+                                <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full border ${badge.color}`}>
+                                  {badge.emoji} {badge.label}
+                                </span>
+                                <span className="font-mono text-xs font-bold text-gray-400">{gombo.budget?.toLocaleString() || 0} FCFA</span>
+                              </div>
+
+                              <h4 className="font-bold text-afri-text text-sm mb-1">{gombo.title}</h4>
+                              
+                              <div className="flex items-center gap-3 text-[10px] text-afri-text-sec mt-2 pt-2 border-t border-afri-border/50">
+                                <div className="flex items-center gap-1"><MapPin className="w-3 h-3 text-gray-500" /> {gombo.commune || gombo.location}</div>
+                                <div className="flex items-center gap-1"><Calendar className="w-3 h-3 text-gray-500" /> {gombo.date} {gombo.time ? `à ${gombo.time}` : ""}</div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>

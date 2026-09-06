@@ -89,9 +89,10 @@ interface GomboPublishProps {
   onSuccess: () => void;
   onCancel: () => void;
   onNavigateView?: (view: string) => void;
+  initialDraft?: any;
 }
 
-export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, onNavigateView }: GomboPublishProps) {
+export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, onNavigateView, initialDraft }: GomboPublishProps) {
   const { locations: officialLocationsList, communeNames, submitProposal: submitLocationProposal } = useLocations();
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
@@ -226,43 +227,40 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
     }
   });
 
-  // 1. AUTO-RESTORE DRAFT ON MOUNT
+  // 1. AUTO-RESTORE DRAFT ON MOUNT OR INITIAL DRAFT PROP
   useEffect(() => {
     try {
-      const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY) || localStorage.getItem("gombo_publish_draft");
-      if (savedDraft) {
-        const parsed = JSON.parse(savedDraft);
-        if (parsed.title || parsed.description || parsed.budget) {
-          if (parsed.title) setTitle(parsed.title);
-          if (parsed.description) setDescription(parsed.description);
-          if (parsed.selectedType) setSelectedType(parsed.selectedType);
-          if (parsed.specialty) setSpecialty(parsed.specialty);
-          if (parsed.customSpecialty) setCustomSpecialty(parsed.customSpecialty);
-          if (Array.isArray(parsed.hashtags)) setHashtags(parsed.hashtags);
-          if (parsed.musicStyle) setMusicStyle(parsed.musicStyle);
-          if (parsed.experienceLevel) setExperienceLevel(parsed.experienceLevel);
-          if (parsed.gomboCategory) setGomboCategory(parsed.gomboCategory);
-          if (parsed.locationOption) setLocationOption(parsed.locationOption);
-          if (parsed.commune) setCommune(parsed.commune);
-          if (parsed.customCommune) setCustomCommune(parsed.customCommune);
-          if (parsed.quartier) setQuartier(parsed.quartier);
-          if (parsed.customPlaceInput) setCustomPlaceInput(parsed.customPlaceInput);
-          if (parsed.itineraryNotes) setItineraryNotes(parsed.itineraryNotes);
-          if (parsed.locationDetail) setLocationDetail(parsed.locationDetail);
-          if (parsed.date) setDate(parsed.date);
-          if (parsed.time) setTime(parsed.time);
-          if (parsed.budget) setBudget(parsed.budget);
-          if (typeof parsed.latitude === "number") setLatitude(parsed.latitude);
-          if (typeof parsed.longitude === "number") setLongitude(parsed.longitude);
-          if (parsed.duration) setDuration(parsed.duration);
-          if (parsed.customDurationDays) setCustomDurationDays(parsed.customDurationDays);
-          setHasRestoredDraft(true);
-        }
+      const source = initialDraft || JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || localStorage.getItem("gombo_publish_draft") || "{}");
+      if (source && (source.title || source.description || source.budget)) {
+        if (source.title) setTitle(source.title);
+        if (source.description) setDescription(source.description);
+        if (source.selectedType || source.type) setSelectedType(source.selectedType || source.type);
+        if (source.specialty) setSpecialty(source.specialty);
+        if (source.customSpecialty) setCustomSpecialty(source.customSpecialty);
+        if (Array.isArray(source.hashtags)) setHashtags(source.hashtags);
+        if (source.musicStyle) setMusicStyle(source.musicStyle);
+        if (source.experienceLevel) setExperienceLevel(source.experienceLevel);
+        if (source.gomboCategory) setGomboCategory(source.gomboCategory);
+        if (source.locationOption) setLocationOption(source.locationOption);
+        if (source.commune) setCommune(source.commune);
+        if (source.customCommune) setCustomCommune(source.customCommune);
+        if (source.quartier) setQuartier(source.quartier);
+        if (source.customPlaceInput) setCustomPlaceInput(source.customPlaceInput);
+        if (source.itineraryNotes) setItineraryNotes(source.itineraryNotes);
+        if (source.locationDetail) setLocationDetail(source.locationDetail);
+        if (source.date) setDate(source.date);
+        if (source.time) setTime(source.time);
+        if (source.budget) setBudget(String(source.budget));
+        if (typeof source.latitude === "number") setLatitude(source.latitude);
+        if (typeof source.longitude === "number") setLongitude(source.longitude);
+        if (source.duration) setDuration(source.duration);
+        if (source.customDurationDays) setCustomDurationDays(source.customDurationDays);
+        setHasRestoredDraft(true);
       }
     } catch (e) {
       console.warn("Could not parse draft:", e);
     }
-  }, []);
+  }, [initialDraft]);
 
   const clearDraft = () => {
     try {
@@ -1111,19 +1109,22 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
 
               <button
                 type="button"
-                onClick={() => setGomboCategory("securise")}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
-                  gomboCategory === "securise"
-                    ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text shadow-[0_0_15px_rgba(212,175,55,0.2)] font-bold"
-                    : "bg-afri-bg/60 border-afri-border/70 text-afri-text-sec hover:border-[#D4AF37]/40"
-                }`}
+                disabled={true}
+                onClick={() => {}}
+                className="p-3.5 rounded-2xl border text-left transition-all opacity-60 cursor-not-allowed bg-afri-bg/40 border-afri-border/40 text-afri-text-sec"
+                title="Bientôt disponible - Nécessite le Wallet"
               >
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
-                  <span className="text-xs font-black uppercase text-[#D4AF37]">Gombo Sécurisé</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-gray-400" />
+                    <span className="text-xs font-black uppercase text-gray-400">Gombo Sécurisé</span>
+                  </div>
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                    Bientôt disponible
+                  </span>
                 </div>
-                <p className="text-[9.5px] text-afri-text-sec mt-1 leading-tight">
-                  Cachet bloqué en coffre escrow souverain. Protection 100%.
+                <p className="text-[9.5px] text-gray-400 mt-1 leading-tight">
+                  Sera lié au Wallet (coffre escrow). Non actif pour l'instant.
                 </p>
               </button>
             </div>
@@ -1492,39 +1493,16 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
 
             {/* REAL-TIME DYNAMIC FINANCIAL BREAKDOWN */}
             {cachetVal >= MIN_GOMBO_AMOUNT && (
-              <div className="mt-3 p-4 bg-afri-bg border border-[#D4AF37]/35 rounded-2xl space-y-2.5 text-xs shadow-sm">
-                <div className="flex items-center justify-between font-black text-[#D4AF37] uppercase text-[11px]">
-                  <span className="flex items-center gap-1.5">
-                    <span>📄</span>
-                    <span>Moteur Financier & Commission</span>
-                  </span>
-                  <span className="text-[9.5px] bg-[#D4AF37]/15 px-2.5 py-0.5 rounded-full border border-[#D4AF37]/30 text-[#D4AF37]">
-                    {financials.isPremium 
-                      ? `👑 ${financials.statusName} (${financials.ratePercent}%)` 
-                      : `👤 ${financials.statusName} (${financials.ratePercent}%)`}
+              <div className="mt-3 p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-2 text-xs shadow-sm">
+                <div className="flex items-center justify-between font-black text-afri-text uppercase text-[11px]">
+                  <span>Cachet Gombo Direct</span>
+                  <span className="font-mono text-[#D4AF37] font-black text-xs">
+                    {cachetVal.toLocaleString('fr-FR')} FCFA
                   </span>
                 </div>
-
-                <div className="space-y-1.5 text-afri-text-sec pt-1 border-t border-afri-border/50">
-                  <div className="flex justify-between items-center">
-                    <span>Cachet convenu :</span>
-                    <span className="font-mono font-bold text-afri-text">{financials.cachet.toLocaleString('fr-FR')} FCFA</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>Commission de plateforme ({financials.ratePercent} %) :</span>
-                    <span className="font-mono font-bold text-[#D4AF37]">{financials.fee.toLocaleString('fr-FR')} FCFA</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-1.5 border-t border-afri-border/50">
-                    <span className="font-bold text-emerald-400">Montant net pour l'artiste :</span>
-                    <span className="font-mono font-black text-emerald-400">{financials.netAmount.toLocaleString('fr-FR')} FCFA</span>
-                  </div>
-                  {gomboCategory === "securise" && (
-                    <div className="flex justify-between items-center pt-1.5 text-[11px] text-amber-300 font-bold border-t border-dashed border-afri-border/40">
-                      <span>Total à débiter (Cachet + Commission) :</span>
-                      <span className="font-mono font-black text-amber-300 text-xs">{financials.total.toLocaleString('fr-FR')} FCFA</span>
-                    </div>
-                  )}
-                </div>
+                <p className="text-[10px] text-afri-text-sec">
+                  Paiement 100% direct sur scène avec l'artiste. Zéro frais de plateforme en mode Direct.
+                </p>
               </div>
             )}
           </div>

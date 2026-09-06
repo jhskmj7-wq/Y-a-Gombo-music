@@ -39,6 +39,8 @@ import { ArbreAPalabresBubble } from "./ArbreAPalabresBubble";
 import { AfrigomboFooter } from "./AfrigomboFooter";
 import { AfriGomboLogo } from "./AfriGomboLogo";
 
+import { isGomboExpired } from "../lib/gomboDateUtils";
+
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
   "Port-Bouët", "Koumassi", "Adjamé", "Abobo", "Bingerville"
@@ -587,6 +589,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   }));
 
   const GombosToRender = GombosWithDistance.filter(g => {
+    // 0. Exclude expired gombos
+    if (isGomboExpired(g)) return false;
+
     // 1. Global Search Term
     const matchesSearch = !globalSearchTerm || 
       (g.title || "").toLowerCase().includes(searchStr) ||

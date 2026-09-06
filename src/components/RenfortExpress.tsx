@@ -18,6 +18,8 @@ import { useLocations } from "../hooks/useLocations";
 import UserLocationProposalModal from "./common/UserLocationProposalModal";
 import { useWalletSecurity } from "../context/WalletSecurityContext";
 
+import { isGomboExpired } from "../lib/gomboDateUtils";
+
 // Static Options
 const REQUEST_TYPES = [
   "Répétition",
@@ -556,6 +558,9 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth, onClose
 
   // Filter application algorithms
   const filteredRenforts = renforts.filter(renfort => {
+    // 0. Exclude expired renforts
+    if (isGomboExpired(renfort)) return false;
+
     // 1. Text Search query
     const textStr = `${renfort.title} ${renfort.description} ${renfort.userName}`.toLowerCase();
     if (searchFilter && !textStr.includes(searchFilter.toLowerCase())) return false;

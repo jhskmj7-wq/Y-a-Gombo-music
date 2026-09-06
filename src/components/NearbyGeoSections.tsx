@@ -4,6 +4,7 @@ import { MapPin, Music, Zap, Clock, Star, Phone, Map as MapIcon, List, ShieldChe
 import { Gombo, User, UserProfile } from "../types";
 import { getDistanceLabel, estimateTravelTimes } from "../lib/geoUtils";
 import { AfrigoRadarMap } from "./AfrigoRadarMap";
+import { filterActiveGombos } from "../lib/gomboDateUtils";
 
 interface NearbyGombosSectionProps {
   gombos: Gombo[];
@@ -22,7 +23,9 @@ export const NearbyGombosSection: React.FC<NearbyGombosSectionProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
 
-  if (gombos.length === 0) return null;
+  const activeGombos = filterActiveGombos(gombos);
+
+  if (activeGombos.length === 0) return null;
 
   return (
     <div className="space-y-4">
@@ -59,14 +62,14 @@ export const NearbyGombosSection: React.FC<NearbyGombosSectionProps> = ({
 
       {viewMode === "map" ? (
         <AfrigoRadarMap 
-          gombos={gombos}
+          gombos={activeGombos}
           userLocation={userLocation}
           onSelectGombo={onSelect}
           onApplyGombo={onApply}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-1">
-          {gombos.map((gombo: any) => (
+          {activeGombos.map((gombo: any) => (
             <div 
               key={gombo.id}
               onClick={() => onSelect(gombo)}

@@ -459,7 +459,16 @@ service cloud.firestore {
     }
     match /boosts/{id} {
       allow read: if true;
-      allow create: if isEmailVerified() && incoming().userId == request.auth.uid && incoming().amount is int && incoming().amount >= 200 && incoming().status == 'active';
+      allow create: if isEmailVerified() && 
+        incoming().userId == request.auth.uid && 
+        incoming().amount is int && 
+        incoming().amount >= 200 && 
+        incoming().status == 'active' &&
+        incoming().get('transactionId', '') != '' &&
+        exists(/databases/$(database)/documents/transactions/$(incoming().transactionId)) &&
+        get(/databases/$(database)/documents/transactions/$(incoming().transactionId)).data.userId == request.auth.uid &&
+        get(/databases/$(database)/documents/transactions/$(incoming().transactionId)).data.amount == incoming().amount &&
+        get(/databases/$(database)/documents/transactions/$(incoming().transactionId)).data.type == 'purchase';
       allow update, delete: if isAdmin();
     }
     match /featuredPosts/{id} {

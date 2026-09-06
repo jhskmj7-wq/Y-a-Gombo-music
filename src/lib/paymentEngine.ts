@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { doc, getDoc, updateDoc, setDoc, collection } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc, collection, runTransaction } from "firebase/firestore";
 import { getCanonicalWalletBalance } from "./financial";
 
 export interface BoostTariffSpec {
@@ -261,10 +261,15 @@ export class PaymentEngineClass {
     boostOptionId: string; // "booster" | "tendance" | "locale" | "pres_de_moi" or duration for profile
     profileDurationHours?: number;
     currentUserProfile?: any;
+    operationId?: string;
   }): Promise<PaymentResult & { officialPrice?: number; expiresAtIso?: string; boostId?: string }> {
     const { userId, userName, itemType, itemId, boostOptionId, profileDurationHours } = options;
 
-    const lockKey = `boost_${userId}_${itemId}_${boostOptionId}`;
+    if (!userId || !itemId) {
+      return { success: false, error: "Identifiants invalides." };
+    }
+
+    const lockKey = options.operationId || `boost_${userId}_${itemId}_${boostOptionId}`;
     if (activeBoostLocks.has(lockKey)) {
       return { success: false, error: "Traitement de boost déjà en cours pour cet élément. Veuillez patienter." };
     }
@@ -281,123 +286,193 @@ export class PaymentEngineClass {
         ? `Boost Profil (${calc.durationHours}h)`
         : `Boost ${spec?.title || boostOptionId} (${calc.durationHours}h)`;
 
-      // 2. Process debit
-      const payRes = await this.processPayment({
-        userId,
-        userName: userName || options.currentUserProfile?.artistName || options.currentUserProfile?.name || "Membre Gombo",
-        amount,
-        module: itemType === "profile" ? "Boost Profil" : "Boost Publication",
-        reason: boostDescription,
-        metadata: {
-          itemId,
-          itemType,
-          boostOptionId,
-          tariffKey: calc.tariffKey,
-          durationHours: calc.durationHours,
-          isPremium: calc.isPremium
-        }
-      });
-
-      if (!payRes.success) {
-        return payRes;
-      }
-
+      const userRef = doc(db, "users", userId);
       const now = new Date();
-      const expiresAt = new Date(now.getTime() + calc.durationHours * 3600 * 1000);
+      const timestamp = now.getTime();
+      const expiresAt = new Date(timestamp + calc.durationHours * 3600 * 1000);
       const expiresAtIso = expiresAt.toISOString();
 
-      // 3. Record in `boosts/` collection
-      const boostRef = doc(collection(db, "boosts"));
-      const boostId = boostRef.id;
-      await setDoc(boostRef, {
-        id: boostId,
-        userId,
-        itemId,
-        itemType,
-        boostType: itemType === "profile" ? "profile" : boostOptionId,
-        durationHours: calc.durationHours,
-        amount,
-        createdAt: now.toISOString(),
-        expiresAt: expiresAtIso,
-        status: "active"
-      });
+      // Deterministic & unique IDs linked together
+      const randSuffix = Math.random().toString(36).substring(2, 7);
+      const txId = `tx_boost_${timestamp}_${randSuffix}`;
+      const boostId = `boost_${timestamp}_${randSuffix}`;
 
-      // 4. Activate boost on item / profile
-      if (itemType === "profile") {
-        const userRef = doc(db, "users", userId);
-        await updateDoc(userRef, {
-          profileBoosted: true,
-          profileBoostedUntil: expiresAtIso,
-          profileBoostPriority: 10,
-          profileBoostType: "premium_spotlight",
-          lastBoostId: boostId,
-          updatedAt: now.toISOString()
-        });
-
-        // Store inside `featuredProfiles/`
-        await setDoc(doc(db, "featuredProfiles", userId), {
-          boostId,
-          userId,
-          artistName: options.currentUserProfile?.artistName || options.currentUserProfile?.name || userName || "",
-          commune: options.currentUserProfile?.commune || "",
-          role: options.currentUserProfile?.role || "musicien",
-          avatarUrl: options.currentUserProfile?.avatarUrl || options.currentUserProfile?.photoURL || "",
-          featuredUntil: expiresAtIso,
-          priority: 10,
-          createdAt: now.toISOString()
-        });
-      } else {
-        const collectionName = itemType === "candidature" ? "applications" : "gombos";
-        const docRef = doc(db, collectionName, itemId);
-
-        let updateFields: any = {
-          boosted: true,
-          boostedUntil: expiresAtIso,
-          boostType: boostOptionId,
-          lastBoostId: boostId,
-          updatedAt: now.toISOString()
-        };
-
-        if (boostOptionId === "booster") {
-          updateFields.isUrgent = true;
-          updateFields.urgentUntil = expiresAtIso;
-          updateFields.priority = 10;
-        } else if (boostOptionId === "tendance") {
-          updateFields.featured = true;
-          updateFields.featuredUntil = expiresAtIso;
-          updateFields.priority = 10;
-
-          await setDoc(doc(db, "featuredPosts", itemId), {
-            boostId,
-            postId: itemId,
-            title: options.currentUserProfile?.title || "",
-            featuredUntil: expiresAtIso,
-            priority: 10,
-            type: itemType,
-            createdAt: now.toISOString()
-          });
-        } else if (boostOptionId === "locale") {
-          updateFields.localFeatured = true;
-          updateFields.localFeaturedUntil = expiresAtIso;
-          updateFields.priority = 8;
-        } else if (boostOptionId === "pres_de_moi") {
-          updateFields.nearMePriority = true;
-          updateFields.nearMePriorityUntil = expiresAtIso;
-          updateFields.priority = 9;
+      // 2. ATOMIC FIRESTORE TRANSACTION (Debit + Transaction Doc + Boost Doc + Item Activation)
+      const result = await runTransaction(db, async (transaction) => {
+        const userSnap = await transaction.get(userRef);
+        if (!userSnap.exists()) {
+          throw new Error("Utilisateur introuvable.");
         }
 
-        await updateDoc(docRef, updateFields);
-      }
+        const userData = userSnap.data();
+        if (userData?.walletBlocked) {
+          throw new Error("Votre Wallet est actuellement bloqué. Veuillez contacter le support.");
+        }
+
+        const currentBalance = await this.getCanonicalBalanceAndSync(userId, userData, userRef);
+
+        if (currentBalance < amount) {
+          const err: any = new Error("INSUFFICIENT_BALANCE");
+          err.currentBalance = currentBalance;
+          err.missingAmount = amount - currentBalance;
+          throw err;
+        }
+
+        const balanceAfter = currentBalance - amount;
+
+        // a) Debit user wallet balance
+        transaction.update(userRef, {
+          walletBalance: balanceAfter,
+          balance: balanceAfter,
+          "wallet.soldeDisponible": balanceAfter,
+          updatedAt: now.toISOString()
+        });
+
+        // b) Record financial transaction record
+        const txRecord = {
+          id: txId,
+          reference: txId,
+          userId,
+          uid: userId,
+          userName: userName || userData?.artistName || userData?.name || userData?.firstName || "Membre Gombo",
+          amount,
+          type: "purchase",
+          module: itemType === "profile" ? "Boost Profil" : "Boost Publication",
+          reason: boostDescription,
+          description: boostDescription,
+          balanceBefore: currentBalance,
+          balanceAfter,
+          status: "success",
+          createdAt: now.toISOString(),
+          date: now.toLocaleDateString("fr-FR"),
+          heure: now.toLocaleTimeString("fr-FR"),
+          timestamp,
+          metadata: {
+            itemId,
+            itemType,
+            boostOptionId,
+            tariffKey: calc.tariffKey,
+            durationHours: calc.durationHours,
+            isPremium: calc.isPremium,
+            boostId
+          }
+        };
+
+        const txRef = doc(db, "transactions", txId);
+        const walletTxRef = doc(db, "walletTransactions", txId);
+        transaction.set(txRef, txRecord);
+        transaction.set(walletTxRef, txRecord);
+
+        // c) Record in `boosts/` collection with verified transactionId
+        const boostRef = doc(db, "boosts", boostId);
+        transaction.set(boostRef, {
+          id: boostId,
+          userId,
+          itemId,
+          itemType,
+          boostType: itemType === "profile" ? "profile" : boostOptionId,
+          durationHours: calc.durationHours,
+          amount,
+          transactionId: txId,
+          createdAt: now.toISOString(),
+          expiresAt: expiresAtIso,
+          status: "active"
+        });
+
+        // d) Activate boost on item / profile
+        if (itemType === "profile") {
+          transaction.update(userRef, {
+            profileBoosted: true,
+            profileBoostedUntil: expiresAtIso,
+            profileBoostPriority: 10,
+            profileBoostType: "premium_spotlight",
+            lastBoostId: boostId,
+            updatedAt: now.toISOString()
+          });
+
+          const featProfileRef = doc(db, "featuredProfiles", userId);
+          transaction.set(featProfileRef, {
+            boostId,
+            userId,
+            artistName: options.currentUserProfile?.artistName || options.currentUserProfile?.name || userName || "",
+            commune: options.currentUserProfile?.commune || "",
+            role: options.currentUserProfile?.role || "musicien",
+            avatarUrl: options.currentUserProfile?.avatarUrl || options.currentUserProfile?.photoURL || "",
+            featuredUntil: expiresAtIso,
+            priority: 10,
+            createdAt: now.toISOString()
+          });
+        } else {
+          const collectionName = itemType === "candidature" ? "applications" : "gombos";
+          const docRef = doc(db, collectionName, itemId);
+
+          let updateFields: any = {
+            boosted: true,
+            boostedUntil: expiresAtIso,
+            boostType: boostOptionId,
+            lastBoostId: boostId,
+            updatedAt: now.toISOString()
+          };
+
+          if (boostOptionId === "booster") {
+            updateFields.isUrgent = true;
+            updateFields.urgentUntil = expiresAtIso;
+            updateFields.priority = 10;
+          } else if (boostOptionId === "tendance") {
+            updateFields.featured = true;
+            updateFields.featuredUntil = expiresAtIso;
+            updateFields.priority = 10;
+
+            const featPostRef = doc(db, "featuredPosts", itemId);
+            transaction.set(featPostRef, {
+              boostId,
+              postId: itemId,
+              title: options.currentUserProfile?.title || "",
+              featuredUntil: expiresAtIso,
+              priority: 10,
+              type: itemType,
+              createdAt: now.toISOString()
+            });
+          } else if (boostOptionId === "locale") {
+            updateFields.localFeatured = true;
+            updateFields.localFeaturedUntil = expiresAtIso;
+            updateFields.priority = 8;
+          } else if (boostOptionId === "pres_de_moi") {
+            updateFields.nearMePriority = true;
+            updateFields.nearMePriorityUntil = expiresAtIso;
+            updateFields.priority = 9;
+          }
+
+          transaction.update(docRef, updateFields);
+        }
+
+        return {
+          txId,
+          boostId,
+          balanceAfter,
+          officialPrice: amount,
+          expiresAtIso
+        };
+      });
 
       return {
         success: true,
-        txId: payRes.txId,
-        balanceAfter: payRes.balanceAfter,
-        officialPrice: amount,
-        expiresAtIso,
-        boostId
+        txId: result.txId,
+        boostId: result.boostId,
+        balanceAfter: result.balanceAfter,
+        officialPrice: result.officialPrice,
+        expiresAtIso: result.expiresAtIso
       };
     } catch (err: any) {
+      if (err?.message === "INSUFFICIENT_BALANCE") {
+        return {
+          success: false,
+          insufficientBalance: true,
+          currentBalance: err.currentBalance,
+          missingAmount: err.missingAmount,
+          error: "Solde insuffisant dans votre Wallet."
+        };
+      }
       console.error("PaymentEngine.processBoostPayment error:", err);
       return {
         success: false,

@@ -4,6 +4,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { Gombo } from "../types";
 import { MapPin, Filter, Navigation, Compass, Calendar, Zap, Star, ShieldCheck, X, Eye, Send, Share2, Flame, UserCheck } from "lucide-react";
 import { getDistanceLabel, estimateTravelTimes } from "../lib/geoUtils";
+import { filterActiveGombos } from "../lib/gomboDateUtils";
 
 interface AfrigoRadarMapProps {
   gombos: Gombo[];
@@ -72,8 +73,10 @@ export const AfrigoRadarMap: React.FC<AfrigoRadarMapProps> = ({
   const [showHeatmapModal, setShowHeatmapModal] = useState<boolean>(false);
   const [dispoMode, setDispoMode] = useState<string>("off"); // "off" | "2h" | "4h" | "today" | "always"
 
-  // Filter gombos based on radius and category filter, resolving commune coordinates if GPS is missing
-  const filteredGombos = gombos.map((g) => {
+  // Filter gombos based on expiry, radius and category filter, resolving commune coordinates if GPS is missing
+  const activeGombosList = filterActiveGombos(gombos);
+
+  const filteredGombos = activeGombosList.map((g) => {
     const coords = resolveGomboCoordinates(g);
     const resolvedLat = coords.latitude;
     const resolvedLng = coords.longitude;
