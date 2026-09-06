@@ -645,18 +645,84 @@ export const gomboDB = {
         gomboId = typeof arg5 === "string" ? arg5 : undefined;
       }
 
+      // Build structured participantDetails and participantNames
+      const participantDetails: Record<string, any> = {
+        ...(extraData.participantDetails || {})
+      };
+      const participantNames: Record<string, string> = {
+        ...(extraData.participantNames || {})
+      };
+      const participantAvatars: Record<string, string> = {
+        ...(extraData.participantAvatars || {})
+      };
+
+      if (arg3 && typeof arg3 === "object") {
+        const myName = arg3.name || arg3.displayName || arg3.artisticName || arg3.artistName || "Utilisateur";
+        const myAvatar = arg3.avatarUrl || arg3.photoURL || arg3.userPhoto || "";
+        participantDetails[currentUserId] = {
+          uid: currentUserId,
+          name: myName,
+          avatarUrl: myAvatar,
+          role: arg3.role || "utilisateur",
+          ...arg3
+        };
+        participantNames[currentUserId] = myName;
+        if (myAvatar) participantAvatars[currentUserId] = myAvatar;
+      }
+
+      if (arg4 && typeof arg4 === "object") {
+        const targetName = arg4.name || arg4.displayName || arg4.artisticName || arg4.artistName || "Partenaire Gombo";
+        const targetAvatar = arg4.avatarUrl || arg4.photoURL || arg4.userPhoto || "";
+        participantDetails[targetUserId] = {
+          uid: targetUserId,
+          name: targetName,
+          avatarUrl: targetAvatar,
+          role: arg4.role || "partenaire",
+          ...arg4
+        };
+        participantNames[targetUserId] = targetName;
+        if (targetAvatar) participantAvatars[targetUserId] = targetAvatar;
+      }
+
       // Find existing
       const q = query(
         collection(db, "conversations"),
         where("participants", "array-contains", currentUserId)
       );
       const snap = await getDocs(q);
-      const existing = snap.docs.find(d => {
+      const existingDoc = snap.docs.find(d => {
         const data = d.data();
         return data.participants.includes(targetUserId) && (!gomboId || data.gomboId === gomboId);
       });
       
-      if (existing) return { id: existing.id, ...existing.data() } as Conversation;
+      if (existingDoc) {
+        const existingData = existingDoc.data();
+        // If existing conversation lacks participant details, update it silently
+        const existingDetails = existingData.participantDetails || {};
+        const needsUpdate = 
+          (!existingDetails[currentUserId] && participantDetails[currentUserId]) ||
+          (!existingDetails[targetUserId] && participantDetails[targetUserId]);
+
+        if (needsUpdate) {
+          try {
+            await updateDoc(doc(db, "conversations", existingDoc.id), {
+              participantDetails: { ...existingDetails, ...participantDetails },
+              participantNames: { ...(existingData.participantNames || {}), ...participantNames },
+              participantAvatars: { ...(existingData.participantAvatars || {}), ...participantAvatars }
+            });
+          } catch (updateErr) {
+            console.warn("Could not update conversation metadata:", updateErr);
+          }
+        }
+
+        return { 
+          id: existingDoc.id, 
+          ...existingData,
+          participantDetails: { ...existingDetails, ...participantDetails },
+          participantNames: { ...(existingData.participantNames || {}), ...participantNames },
+          participantAvatars: { ...(existingData.participantAvatars || {}), ...participantAvatars }
+        } as unknown as Conversation;
+      }
       
       // Create new
       const newConvo: Partial<Conversation> = {
@@ -665,6 +731,11 @@ export const gomboDB = {
         lastMessageAt: new Date().toISOString(),
         unreadCount: { [currentUserId]: 0, [targetUserId]: 0 },
         gomboId,
+        participantDetails,
+        participantNames,
+        participantAvatars,
+        myDetails: arg3,
+        targetDetails: arg4,
         ...extraData
       };
       const ref = await addDoc(collection(db, "conversations"), newConvo);
@@ -682,7 +753,37 @@ export const gomboDB = {
       return onSnapshot(
         q, 
         (snapshot) => {
-          const convos = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Conversation));
+          const convos = snapshot.docs.map(d => {
+            const data = d.data();
+            const participantDetails = data.participantDetails ? { ...data.participantDetails } : {};
+            const participantNames = data.participantNames ? { ...data.participantNames } : {};
+            const participantAvatars = data.participantAvatars ? { ...data.participantAvatars } : {};
+
+            // Fallback for legacy conversations using myDetails/targetDetails
+            if (data.myDetails && data.participants?.[0] && !participantDetails[data.participants[0]]) {
+              const name = data.myDetails.name || data.myDetails.displayName || data.myDetails.artistName || "Utilisateur";
+              const avatar = data.myDetails.avatarUrl || data.myDetails.photoURL || "";
+              participantDetails[data.participants[0]] = { uid: data.participants[0], name, avatarUrl: avatar, ...data.myDetails };
+              if (!participantNames[data.participants[0]]) participantNames[data.participants[0]] = name;
+              if (avatar && !participantAvatars[data.participants[0]]) participantAvatars[data.participants[0]] = avatar;
+            }
+            if (data.targetDetails && data.participants?.[1] && !participantDetails[data.participants[1]]) {
+              const name = data.targetDetails.name || data.targetDetails.displayName || data.targetDetails.artistName || "Partenaire Gombo";
+              const avatar = data.targetDetails.avatarUrl || data.targetDetails.photoURL || "";
+              participantDetails[data.participants[1]] = { uid: data.participants[1], name, avatarUrl: avatar, ...data.targetDetails };
+              if (!participantNames[data.participants[1]]) participantNames[data.participants[1]] = name;
+              if (avatar && !participantAvatars[data.participants[1]]) participantAvatars[data.participants[1]] = avatar;
+            }
+
+            return {
+              id: d.id,
+              ...data,
+              participantDetails,
+              participantNames,
+              participantAvatars
+            } as unknown as Conversation;
+          });
+
           convos.sort((a, b) => {
             const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
             const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;

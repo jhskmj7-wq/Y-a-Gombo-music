@@ -120,7 +120,7 @@ export default function AdminUsers({
   const [kycLoading, setKycLoading] = useState<Record<string, boolean>>({});
   const [kycPreviewUrl, setKycPreviewUrl] = useState<string | null>(null);
 
-  const fetchKycSignedUrls = async (targetUser: User) => {
+  const fetchKycSignedUrls = async (targetUser: User, autoPreviewDocPath?: string) => {
     const uid = targetUser.id || targetUser.uid;
     if (!uid) return;
 
@@ -132,7 +132,13 @@ export default function AdminUsers({
     ].filter(Boolean) as string[];
 
     if (rawPaths.length === 0) return;
-    if (kycSignedUrls[uid] && Object.keys(kycSignedUrls[uid]).length > 0) return;
+
+    if (kycSignedUrls[uid] && Object.keys(kycSignedUrls[uid]).length > 0) {
+      if (autoPreviewDocPath && kycSignedUrls[uid][autoPreviewDocPath]) {
+        setKycPreviewUrl(kycSignedUrls[uid][autoPreviewDocPath]);
+      }
+      return;
+    }
 
     setKycLoading(prev => ({ ...prev, [uid]: true }));
 
@@ -167,6 +173,9 @@ export default function AdminUsers({
             ...prev,
             [uid]: urlMap
           }));
+          if (autoPreviewDocPath && urlMap[autoPreviewDocPath]) {
+            setKycPreviewUrl(urlMap[autoPreviewDocPath]);
+          }
         }
       }
     } catch (err) {
@@ -986,7 +995,7 @@ export default function AdminUsers({
                                         ) : (
                                           <button
                                             type="button"
-                                            onClick={() => fetchKycSignedUrls(user)}
+                                            onClick={() => fetchKycSignedUrls(user, docItem.path)}
                                             disabled={isLoading}
                                             className="text-[#D4AF37] underline text-[10px] cursor-pointer"
                                           >
@@ -1011,7 +1020,7 @@ export default function AdminUsers({
                                         ) : (
                                           <button
                                             type="button"
-                                            onClick={() => fetchKycSignedUrls(user)}
+                                            onClick={() => fetchKycSignedUrls(user, docItem.path)}
                                             className="w-16 h-16 rounded bg-zinc-900/80 border border-zinc-800 hover:border-[#D4AF37]/50 flex flex-col items-center justify-center text-zinc-400 hover:text-[#D4AF37] text-[9px] transition-all cursor-pointer"
                                           >
                                             <Eye className="w-4 h-4 mb-0.5" />

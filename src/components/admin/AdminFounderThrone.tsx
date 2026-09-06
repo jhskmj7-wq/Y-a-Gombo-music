@@ -186,6 +186,58 @@ export default function AdminFounderThrone({
   const [kycStatusTab, setKycStatusTab] = useState<"TOUTES" | "A_TRAITER" | "VALIDEES" | "REFUSEES" | "ARCHIVEES">("TOUTES");
   const [kycToDelete, setKycToDelete] = useState<any | null>(null);
   const [kycPreviewUrl, setKycPreviewUrl] = useState<string | null>(null);
+  const [kycSignedUrls, setKycSignedUrls] = useState<Record<string, string>>({});
+  const [kycLoadingUrls, setKycLoadingUrls] = useState<Record<string, boolean>>({});
+
+  const handlePreviewKycDoc = async (rawUrl: string) => {
+    if (!rawUrl) return;
+    if (
+      rawUrl.startsWith("http://") ||
+      rawUrl.startsWith("https://") ||
+      rawUrl.startsWith("data:") ||
+      rawUrl.startsWith("blob:")
+    ) {
+      setKycPreviewUrl(rawUrl);
+      return;
+    }
+    if (kycSignedUrls[rawUrl]) {
+      setKycPreviewUrl(kycSignedUrls[rawUrl]);
+      return;
+    }
+
+    setKycLoadingUrls(prev => ({ ...prev, [rawUrl]: true }));
+    try {
+      const idToken = await currentUser?.getIdToken?.();
+      if (!idToken) {
+        setKycPreviewUrl(rawUrl);
+        return;
+      }
+      const response = await fetch("/api/admin/kyc/view", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idToken,
+          storagePaths: [rawUrl],
+          bucket: "afrigombo-private"
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const signed = data?.results?.[0]?.signedUrl;
+        if (signed) {
+          setKycSignedUrls(prev => ({ ...prev, [rawUrl]: signed }));
+          setKycPreviewUrl(signed);
+          return;
+        }
+      }
+      setKycPreviewUrl(rawUrl);
+    } catch (e) {
+      console.error("Erreur preview KYC:", e);
+      setKycPreviewUrl(rawUrl);
+    } finally {
+      setKycLoadingUrls(prev => ({ ...prev, [rawUrl]: false }));
+    }
+  };
   const [userCommuneFilter, setUserCommuneFilter] = useState<string>("ALL");
   const [userLevelFilter, setUserLevelFilter] = useState<string>("ALL");
   const [userVerifiedFilter, setUserVerifiedFilter] = useState<string>("ALL");
@@ -4048,21 +4100,25 @@ export default function AdminFounderThrone({
                                     📁 Pièces Justificatives KYC ({docs.length})
                                   </span>
                                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                    {docs.map((docItem, dIdx) => (
-                                      <div key={dIdx} className="space-y-1 bg-black/60 p-2 rounded-xl border border-zinc-900">
-                                        <span className="text-[9px] font-mono text-zinc-300 block truncate">{docItem.label}</span>
-                                        <div className="relative group cursor-pointer" onClick={() => setKycPreviewUrl(docItem.url)}>
-                                          <img
-                                            src={docItem.url}
-                                            alt={docItem.label}
-                                            className="w-full h-16 object-cover rounded-lg border border-zinc-800 group-hover:border-[#D4AF37] transition-all shadow-md"
-                                          />
-                                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-all text-[10px] font-bold text-[#D4AF37]">
-                                            Voir ↗
+                                    {docs.map((docItem, dIdx) => {
+                                      const displaySrc = (docItem.url && kycSignedUrls[docItem.url]) || docItem.url;
+                                      const isLoading = docItem.url ? kycLoadingUrls[docItem.url] : false;
+                                      return (
+                                        <div key={dIdx} className="space-y-1 bg-black/60 p-2 rounded-xl border border-zinc-900">
+                                          <span className="text-[9px] font-mono text-zinc-300 block truncate">{docItem.label}</span>
+                                          <div className="relative group cursor-pointer" onClick={() => handlePreviewKycDoc(docItem.url)}>
+                                            <img
+                                              src={displaySrc}
+                                              alt={docItem.label}
+                                              className="w-full h-16 object-cover rounded-lg border border-zinc-800 group-hover:border-[#D4AF37] transition-all shadow-md"
+                                            />
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-all text-[10px] font-bold text-[#D4AF37]">
+                                              {isLoading ? "Chargement..." : "Voir ↗"}
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
-                                    ))}
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               );

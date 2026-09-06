@@ -153,6 +153,29 @@ export default function DiscussionTab({
     return "recruteurs";
   };
 
+  const getPartnerInfo = (convo: any) => {
+    const partnerUid = convo.participants?.find((p: string) => p !== currentUser?.uid);
+    const partnerDetail = partnerUid ? convo.participantDetails?.[partnerUid] : null;
+    const isTargetMe = convo.targetDetails?.uid === currentUser?.uid;
+    const legacyPartner = isTargetMe ? convo.myDetails : convo.targetDetails;
+    const partnerName = 
+      (partnerUid && convo.participantNames?.[partnerUid]) ||
+      partnerDetail?.name ||
+      legacyPartner?.name ||
+      convo.userName ||
+      convo.recipientName ||
+      "Partenaire Gombo";
+
+    const partnerPhoto = 
+      partnerDetail?.avatarUrl ||
+      legacyPartner?.avatarUrl ||
+      convo.userPhoto ||
+      convo.recipientPhoto ||
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
+
+    return { partnerUid, partnerName, partnerPhoto, partnerDetail };
+  };
+
   // Build the list of conversations including support as a listable item if applicable
   const allList = [...conversations];
   
@@ -173,7 +196,7 @@ export default function DiscussionTab({
   // Apply Search + Category + Archive Filters
   const filteredConvos = sortedConvos.filter(convo => {
     // Search check
-    const partnerName = convo.userName || convo.recipientName || "Partenaire Gombo";
+    const { partnerName } = getPartnerInfo(convo);
     const matchesSearch = partnerName.toLowerCase().includes(filterQuery.toLowerCase()) || 
                           (convo.lastMessage || "").toLowerCase().includes(filterQuery.toLowerCase());
     if (!matchesSearch) return false;
@@ -314,8 +337,7 @@ export default function DiscussionTab({
           </div>
         ) : (
           filteredConvos.map((convo) => {
-            const partnerName = convo.userName || convo.recipientName || "Partenaire Gombo";
-            const partnerPhoto = convo.userPhoto || convo.recipientPhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${convo.id}`;
+            const { partnerName, partnerPhoto } = getPartnerInfo(convo);
             const unread = convo.unreadCount?.[currentUser?.uid] || 0;
             const isPinned = pinnedIds.includes(convo.id);
             const isMuted = mutedIds.includes(convo.id);

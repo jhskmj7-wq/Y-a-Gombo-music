@@ -7,6 +7,7 @@ import * as admin from "firebase-admin";
 import { initializeApp as initializeAdminApp, getApps as getAdminApps, cert } from "firebase-admin/app";
 import { getFirestore as getAdminFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth as getAdminAuth } from "firebase-admin/auth";
+import { getStorage as getAdminStorage } from "firebase-admin/storage";
 
 dotenv.config();
 
@@ -1233,6 +1234,181 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     } catch (err: any) {
       console.error("[SERVER MEDIA DELETE FATAL ERROR]", err);
       return res.status(500).json({ success: false, error: err.message || "Erreur interne lors de la suppression." });
+    }
+  });
+
+  // 3. ENDPOINT SÉCURISÉ POUR LA CONSULTATION KYC - SUPER FONDATEUR & ADMIN
+  app.post("/api/admin/kyc/view", async (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    const authHeader = req.headers.authorization || "";
+    const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : undefined;
+    const { idToken = bearerToken, storagePaths, storagePath, bucket = "afrigombo-private" } = req.body || {};
+    const tokenToVerify = idToken || bearerToken;
+
+    if (!tokenToVerify) {
+      return res.status(401).json({ success: false, error: "Non authentifié (token manquant). L'accès anonyme est strictement interdit." });
+    }
+
+    const pathsToProcess: string[] = Array.isArray(storagePaths)
+      ? storagePaths.filter(Boolean)
+      : typeof storagePath === "string" && storagePath
+      ? [storagePath]
+      : [];
+
+    if (pathsToProcess.length === 0) {
+      return res.status(400).json({ success: false, error: "Paramètre 'storagePaths' ou 'storagePath' requis." });
+    }
+
+    try {
+      const adminAuth = getAdminAuthClient();
+      const adminDb = getAdminDb();
+      if (!adminAuth || !adminDb) {
+        return res.status(503).json({ success: false, error: "Service Firebase Admin temporairement indisponible." });
+      }
+
+      // 1. Vérification sécurisée du jeton d'authentification Firebase (ID Token)
+      let decodedToken;
+      try {
+        decodedToken = await adminAuth.verifyIdToken(tokenToVerify);
+      } catch (authErr: any) {
+        return res.status(401).json({ success: false, error: "Session invalide ou expirée. Veuillez vous reconnecter." });
+      }
+
+      const uid = decodedToken.uid;
+      let userData: any = null;
+      try {
+        const userDoc = await adminDb.collection("users").doc(uid).get();
+        userData = userDoc.exists ? userDoc.data() : null;
+      } catch (firestoreErr: any) {
+        console.warn("[KYC VIEW FIRESTORE ERROR]", firestoreErr?.message || firestoreErr);
+      }
+
+      // 2. Contrôle de rôle strict : Seul le Fondateur / Super Fondateur / Admin est autorisé
+      const isAuthorized =
+        PROTECTED_FOUNDER_EMAILS.includes(decodedToken.email || "") ||
+        userData?.isFounder === true ||
+        userData?.superFounder === true ||
+        userData?.role === "super_founder" ||
+        userData?.role === "admin" ||
+        userData?.role === "founder";
+
+      if (!isAuthorized) {
+        return res.status(403).json({
+          success: false,
+          error: "Accès refusé. Seul le Fondateur souverain ou un Administrateur autorisé peut consulter les documents KYC."
+        });
+      }
+
+      // 3. Traitement et génération des URLs sécurisées
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+      let serverSupabase: any = null;
+      if (supabaseKey) {
+        try {
+          const { createClient } = await import("@supabase/supabase-js");
+          serverSupabase = createClient(supabaseUrl, supabaseKey);
+        } catch (supErr) {
+          console.warn("[SUPABASE INIT IN KYC VIEW]", supErr);
+        }
+      }
+
+      const results = await Promise.all(
+        pathsToProcess.map(async (p) => {
+          if (!p || typeof p !== "string") {
+            return { path: p, signedUrl: "" };
+          }
+
+          // Si c'est déjà une URL HTTP(S) complète ou data URI, la retourner directement
+          if (
+            p.startsWith("http://") ||
+            p.startsWith("https://") ||
+            p.startsWith("data:") ||
+            p.startsWith("blob:")
+          ) {
+            return { path: p, signedUrl: p };
+          }
+
+          const cleanPath = p.replace(
+            /^(?:https?:\/\/[^/]+\/storage\/v1\/object\/public\/[^/]+\/)/,
+            ""
+          );
+
+          let signedUrl = "";
+
+          // Tentative via Supabase Storage
+          if (serverSupabase) {
+            try {
+              // 1. Essai sur le bucket demandé (ex: afrigombo-private)
+              const { data: signData, error: signError } = await serverSupabase.storage
+                .from(bucket)
+                .createSignedUrl(cleanPath, 3600);
+
+              if (signData?.signedUrl && !signError) {
+                signedUrl = signData.signedUrl;
+              } else {
+                // 2. Essai de repli sur afrigombo-media ou autres buckets
+                const fallbackBuckets = ["afrigombo-media", "afrigombo-private", "documents"].filter((b: string) => b !== bucket);
+                for (const fb of fallbackBuckets) {
+                  const { data: fbData } = await serverSupabase.storage
+                    .from(fb)
+                    .createSignedUrl(cleanPath, 3600);
+                  if (fbData?.signedUrl) {
+                    signedUrl = fbData.signedUrl;
+                    break;
+                  }
+                }
+              }
+            } catch (supSignErr) {
+              console.warn("[SUPABASE KYC SIGN WARN]", cleanPath, supSignErr);
+            }
+          }
+
+          // Tentative via Firebase Storage si Firebase Admin Storage est disponible et pas encore signé
+          if (!signedUrl) {
+            try {
+              if (getAdminApps().length > 0) {
+                const storageBucket = getAdminStorage().bucket();
+                const file = storageBucket.file(cleanPath);
+                const [exists] = await file.exists();
+                if (exists) {
+                  const [fbSignedUrl] = await file.getSignedUrl({
+                    action: "read",
+                    expires: Date.now() + 3600 * 1000
+                  });
+                  if (fbSignedUrl) {
+                    signedUrl = fbSignedUrl;
+                  }
+                }
+              }
+            } catch (fbStorageErr) {
+              console.warn("[FIREBASE STORAGE KYC SIGN WARN]", fbStorageErr);
+            }
+          }
+
+          // Fallback : Si aucune signature n'a pu être complétée, générer une URL publique Supabase si possible
+          if (!signedUrl && serverSupabase) {
+            try {
+              const { data: publicData } = serverSupabase.storage.from(bucket).getPublicUrl(cleanPath);
+              if (publicData?.publicUrl) {
+                signedUrl = publicData.publicUrl;
+              }
+            } catch (_) {}
+          }
+
+          return {
+            path: p,
+            signedUrl: signedUrl || p
+          };
+        })
+      );
+
+      return res.json({
+        success: true,
+        results
+      });
+    } catch (err: any) {
+      console.error("[ADMIN KYC VIEW FATAL ERROR]", err);
+      return res.status(500).json({ success: false, error: err.message || "Erreur interne lors de la consultation KYC." });
     }
   });
 

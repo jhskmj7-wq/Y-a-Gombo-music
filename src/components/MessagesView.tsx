@@ -768,6 +768,21 @@ export default function MessagesView({
 
   const partnerUid = activeConvo?.participants.find((p) => p !== currentUser?.uid);
   const partnerDetails = partnerUid ? activeConvo?.participantDetails?.[partnerUid] : null;
+  const isTargetMe = activeConvo?.targetDetails?.uid === currentUser?.uid;
+  const legacyPartner = isTargetMe ? activeConvo?.myDetails : activeConvo?.targetDetails;
+  const partnerName = 
+    (partnerUid && activeConvo?.participantNames?.[partnerUid]) ||
+    partnerDetails?.name ||
+    legacyPartner?.name ||
+    activeConvo?.userName ||
+    activeConvo?.recipientName ||
+    "Partenaire Gombo";
+  const partnerAvatar = 
+    partnerDetails?.avatarUrl ||
+    legacyPartner?.avatarUrl ||
+    activeConvo?.userPhoto ||
+    activeConvo?.recipientPhoto ||
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
 
   return (
     
@@ -867,7 +882,7 @@ export default function MessagesView({
 
                         <div className="relative shrink-0">
                           <img
-                            src={activeConvo.type === "support" ? "/logo.svg" : partnerDetails?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"}
+                            src={activeConvo.type === "support" ? "/logo.svg" : partnerAvatar}
                             onError={(e) => { if (activeConvo.type === "support") (e.currentTarget as HTMLImageElement).src = "/logo.svg"; }}
                             alt=""
                             className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]/40"
@@ -883,7 +898,7 @@ export default function MessagesView({
                         <div className="min-w-0">
                           <div className="flex items-center gap-1">
                             <h3 className="text-xs font-bold text-afri-text truncate">
-                              {activeConvo.type === "support" ? "Équipe AFRIGOMBO ELITE" : partnerUid ? activeConvo.participantNames?.[partnerUid] : "Partenaire Gombo"}
+                              {activeConvo.type === "support" ? "Équipe AFRIGOMBO ELITE" : partnerName}
                             </h3>
                             {activeConvo.type === "support" && (
                               <span className="text-[#D4AF37] text-[10px] font-black" title="Support officiel">✔</span>

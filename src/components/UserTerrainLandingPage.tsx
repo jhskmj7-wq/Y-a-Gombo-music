@@ -2302,6 +2302,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     onNavigateView={(view) => {
                       if (view === "home") {
                         setActiveQuickActionModal(null);
+                      } else if (view === "messages" || view === "user_messages" || view === "messages_utilisateur") {
+                        setActiveQuickActionModal(null);
+                        setActiveMenu("user_messages");
+                      } else {
+                        setActiveQuickActionModal(null);
+                        setActiveMenu(view);
                       }
                     }}
                     onSelectTalent={(uid) => {
