@@ -483,7 +483,12 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth, onClose
         userId: renfort.userId,
         title: "🔥 Nouveau Renfort Express !",
         message: `${currentUserProfile.artistName || currentUserProfile.firstName || "Un musicien"} s’est déclaré Disponible pour : "${renfort.title}".`,
-        type: "general"
+        type: "renfort_application",
+        targetRoute: "/my-gombos",
+        gomboId: renfort.id,
+        renfortId: renfort.id,
+        applicantId: currentUserProfile.uid,
+        organizerId: renfort.userId
       });
 
       triggerToast("success", "Disponibilité envoyée directement à l'organisateur ! 🔥");
@@ -507,7 +512,11 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth, onClose
         userId: app.musicianId,
         title: notificationTitle,
         message: notificationMsgText,
-        type: newStatus === "accepte" ? "application_accepted" : "general"
+        type: newStatus === "accepte" ? "renfort_accepted" : "application_refused",
+        targetRoute: newStatus === "accepte" ? "/messages" : "/my-gombos",
+        gomboId: app.renfortId,
+        renfortId: app.renfortId,
+        applicantId: app.musicianId
       });
 
       triggerToast("success", `Statut mis à jour avec succès (${newStatus === "accepte" ? "Accepté" : "Refusé"}) !`);

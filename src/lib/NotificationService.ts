@@ -298,14 +298,21 @@ export class NotificationService {
 
       // 7. Standardized Destination & Route Mapping
       let targetRoute = notif.targetRoute || notif.route || "";
+      if (targetRoute === "/terrain") targetRoute = "/my-gombos";
       if (!targetRoute) {
-        if (typeLower.includes("message")) targetRoute = "/messages";
-        else if (typeLower.includes("wallet") || typeLower.includes("payment") || typeLower.includes("paiement") || typeLower.includes("retrait")) targetRoute = "/wallet";
-        else if (typeLower.includes("contract") || typeLower.includes("contrat") || typeLower.includes("application")) targetRoute = "/contracts";
-        else if (typeLower.includes("gawa")) targetRoute = "/gawa";
-        else if (typeLower.includes("lot")) targetRoute = "/lots";
-        else if (typeLower.includes("security") || typeLower.includes("sécurité")) targetRoute = "/security";
-        else if (typeLower.includes("gombo") || typeLower.includes("terrain")) targetRoute = "/terrain";
+        if (typeLower.includes("message") || typeLower.includes("chat")) targetRoute = "/messages";
+        else if (typeLower.includes("wallet") || typeLower.includes("payment") || typeLower.includes("paiement") || typeLower.includes("retrait") || typeLower.includes("withdrawal")) targetRoute = "/wallet";
+        else if (typeLower.includes("contract") || typeLower.includes("contrat")) targetRoute = "/contracts";
+        else if (typeLower.includes("application_accepted") || typeLower.includes("renfort_accepted")) targetRoute = "/messages";
+        else if (typeLower.includes("renfort")) targetRoute = "/my-gombos";
+        else if (typeLower.includes("application") || typeLower.includes("candidature")) targetRoute = "/my-gombos";
+        else if (typeLower.includes("kyc") || typeLower.includes("gombo_id")) targetRoute = "/gombo-id";
+        else if (typeLower.includes("heritage") || typeLower.includes("profile") || typeLower.includes("profil")) targetRoute = "/heritage";
+        else if (typeLower.includes("grand_marche") || typeLower.includes("market")) targetRoute = "/grand-marche";
+        else if (typeLower.includes("academie") || typeLower.includes("academy")) targetRoute = "/academie";
+        else if (typeLower.includes("event")) targetRoute = "/events";
+        else if (typeLower.includes("security") || typeLower.includes("sécurité")) targetRoute = "/settings";
+        else if (typeLower.includes("gombo") || typeLower.includes("terrain")) targetRoute = "/my-gombos";
         else targetRoute = "/notifications";
       }
 

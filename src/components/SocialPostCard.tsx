@@ -8,6 +8,7 @@ import {
 import { SocialPost, PostComment, UserProfile } from "../types";
 import { gomboDB } from "../firebase";
 import { safeStringify } from "../lib/jsonUtils";
+import { isGpsActive } from "../lib/featureFlags";
 import GomboMapViewModal from "./common/GomboMapViewModal";
 
 const calculateDistanceKm = (lat1?: number, lon1?: number, lat2?: number, lon2?: number) => {
@@ -43,6 +44,8 @@ export default function SocialPostCard({
   onTriggerLogin,
   onApplyGombo
 }: SocialPostCardProps) {
+  const gpsActive = isGpsActive(null, currentUserProfile);
+
   // Local reactive states
   const [honours, setHonours] = useState(post.honoursCount || 0);
   const [hasHonoured, setHasHonoured] = useState(() => {
@@ -654,8 +657,8 @@ export default function SocialPostCard({
                <span className="font-extrabold">{post.locationName || post.commune || authorProfile?.commune || ""}</span>
              </div>
 
-             {/* GPS Actions if coordinates are present (Requirement 6 & 8) */}
-             {typeof post.latitude === "number" && typeof post.longitude === "number" && !isNaN(post.latitude) && !isNaN(post.longitude) && (
+             {/* GPS Actions if coordinates are present AND GPS is active */}
+             {gpsActive && typeof post.latitude === "number" && typeof post.longitude === "number" && !isNaN(post.latitude) && !isNaN(post.longitude) && (
                <div className="col-span-2 flex items-center gap-2 pt-2 border-t border-[#D4AF37]/20 mt-1">
                  <button
                    type="button"
@@ -974,7 +977,7 @@ export default function SocialPostCard({
       </AnimatePresence>
 
       {/* Gombo Venue Map Modal */}
-      {typeof post.latitude === "number" && typeof post.longitude === "number" && (
+      {gpsActive && typeof post.latitude === "number" && typeof post.longitude === "number" && (
         <GomboMapViewModal
           isOpen={isMapViewOpen}
           onClose={() => setIsMapViewOpen(false)}

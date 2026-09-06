@@ -3,6 +3,7 @@ import { User, Gombo, Renfort, UserProfile } from "../types";
 import { gomboDB } from "../firebase";
 import { calculateDistance, obfuscateCoordinates } from "../lib/geoUtils";
 import { resolveGomboCoordinates } from "../components/AfrigoRadarMap";
+import { isGpsActive } from "../lib/featureFlags";
 
 interface GeoLocationState {
   latitude: number | null;
@@ -15,21 +16,28 @@ interface GeoLocationState {
 }
 
 export function useGeoEngine(profile: UserProfile | null) {
+  const gpsActive = isGpsActive(null, profile);
+
   const [geoState, setGeoState] = useState<GeoLocationState>({
-    latitude: profile?.latitude || null,
-    longitude: profile?.longitude || null,
+    latitude: gpsActive ? (profile?.latitude || null) : null,
+    longitude: gpsActive ? (profile?.longitude || null) : null,
     commune: profile?.commune || null,
     city: profile?.city || null,
     country: profile?.country || null,
-    permissionStatus: "loading",
+    permissionStatus: gpsActive ? "loading" : "denied",
     isTracking: false,
   });
 
   const [nearbyGombos, setNearbyGombos] = useState<Gombo[]>([]);
   const [nearbyArtists, setNearbyArtists] = useState<User[]>([]);
 
-  // 1. Check Permission Status safely
+  // 1. Check Permission Status safely only if GPS is active
   useEffect(() => {
+    if (!gpsActive) {
+      setGeoState(prev => ({ ...prev, permissionStatus: "denied" }));
+      return;
+    }
+
     if ("permissions" in navigator && navigator.permissions?.query) {
       try {
         navigator.permissions.query({ name: "geolocation" as any }).then((result) => {
@@ -44,10 +52,11 @@ export function useGeoEngine(profile: UserProfile | null) {
         setGeoState(prev => ({ ...prev, permissionStatus: "prompt" }));
       }
     }
-  }, []);
+  }, [gpsActive]);
 
-  // 2. Reverse Geocoding using Nominatim
+  // 2. Reverse Geocoding using Nominatim (only if GPS is active)
   const reverseGeocode = async (lat: number, lon: number) => {
+    if (!gpsActive) return null;
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`,
@@ -72,9 +81,9 @@ export function useGeoEngine(profile: UserProfile | null) {
     return null;
   };
 
-  // 3. Update User Position in Firestore
+  // 3. Update User Position in Firestore (only if GPS is active)
   const updatePosition = useCallback(async (lat: number, lon: number, forceGeocode = false) => {
-    if (!profile?.uid) return;
+    if (!profile?.uid || !gpsActive) return;
 
     let locationData = { commune: geoState.commune, city: geoState.city, country: geoState.country };
 
@@ -107,10 +116,15 @@ export function useGeoEngine(profile: UserProfile | null) {
       country: locationData.country || profile.country || "",
       lastGeoUpdate: new Date().toISOString()
     });
-  }, [profile?.uid, geoState.commune, geoState.city, geoState.country, geoState.latitude, geoState.longitude]);
+  }, [profile?.uid, gpsActive, geoState.commune, geoState.city, geoState.country, geoState.latitude, geoState.longitude]);
 
-  // 4. Start Tracking
+  // 4. Start Tracking (only if GPS is active)
   const requestLocation = () => {
+    if (!gpsActive) {
+      console.info("[GeoEngine] GPS feature is disabled in Beta.");
+      return;
+    }
+
     if (!("geolocation" in navigator)) {
       alert("La géolocalisation n'est pas supportée par votre navigateur.");
       return;
@@ -134,6 +148,10 @@ export function useGeoEngine(profile: UserProfile | null) {
 
   // 5. Sort functions for Nearby sections
   const getNearbyItems = useCallback(<T extends Record<string, any>>(items: T[], maxDistance = 50): T[] => {
+    if (!gpsActive) {
+      return items;
+    }
+
     const userLat = geoState.latitude || 5.3600;
     const userLng = geoState.longitude || -4.0083;
 
@@ -157,7 +175,7 @@ export function useGeoEngine(profile: UserProfile | null) {
       })
       .filter((item: any) => item.distance <= maxDistance)
       .sort((a: any, b: any) => a.distance - b.distance);
-  }, [geoState.latitude, geoState.longitude]);
+  }, [gpsActive, geoState.latitude, geoState.longitude]);
 
   // 6. Availability Mode (Musicians)
   const setAvailability = async (durationHours: number | "today") => {

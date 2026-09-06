@@ -1094,7 +1094,8 @@ export const gomboDB = {
                 gomboTitle: gData.title || "",
                 candidateName: application.applicantName || application.musicianName || "",
                 candidatePhoto: application.applicantPhoto || application.musicianAvatar || "",
-                candidateId: application.musicianId || application.userId || ""
+                candidateId: application.musicianId || application.userId || "",
+                targetRoute: "/my-gombos"
               });
             } catch (notifErr) {
               console.warn("Could not send application notification to creator:", notifErr);
@@ -1163,7 +1164,21 @@ export const gomboDB = {
               isRead: false,
               createdAt: new Date().toISOString(),
               gomboId: appData.gomboId || "",
-              gomboTitle: gomboTitle
+              gomboTitle: gomboTitle,
+              targetRoute: "/messages"
+            });
+          } else if (finalStatus === "refuse" && candidateId) {
+            await NotificationService.sendNotification({
+              userId: candidateId,
+              title: "Candidature Non Retenue 📢",
+              message: `Votre candidature pour le gombo "${gomboTitle}" n'a pas été retenue. D'autres opportunités vous attendent !`,
+              type: "application_refused",
+              read: false,
+              isRead: false,
+              createdAt: new Date().toISOString(),
+              gomboId: appData.gomboId || "",
+              gomboTitle: gomboTitle,
+              targetRoute: "/my-gombos"
             });
           }
         }

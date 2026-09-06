@@ -21,7 +21,7 @@ import {
   resolveUserStatusAndRate 
 } from "../lib/financial";
 import { PremiumEngine } from "../lib/premiumEngine";
-import { subscribeToFeatureFlags, getModuleVisibility } from "../lib/featureFlags";
+import { subscribeToFeatureFlags, getModuleVisibility, isGpsActive } from "../lib/featureFlags";
 import { useLocations } from "../hooks/useLocations";
 import UserLocationProposalModal from "./common/UserLocationProposalModal";
 import { AndroidBottomSheet } from "./common/GlobalPortalModal";
@@ -107,6 +107,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
   const userEmail = currentUserProfile?.email || "";
   const isFounder = userEmail.toLowerCase() === "jhs.kmj7@gmail.com";
   const geoVis = getModuleVisibility("nearby", currentUserProfile, currentUserProfile, flagsMap);
+  const gpsActive = isGpsActive(null, currentUserProfile, flagsMap);
 
   // Form core fields
   const [title, setTitle] = useState("");
@@ -140,8 +141,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
   const [itineraryNotes, setItineraryNotes] = useState("");
   const [proposePlaceToCommunity, setProposePlaceToCommunity] = useState(false);
   const [locationDetail, setLocationDetail] = useState("");
-  const [latitude, setLatitude] = useState<number | null>(currentUserProfile?.latitude || null);
-  const [longitude, setLongitude] = useState<number | null>(currentUserProfile?.longitude || null);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [searchRadius, setSearchRadius] = useState<number>(10);
   const [locationPrivacy, setLocationPrivacy] = useState<"exact" | "approximate">("exact");
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -394,6 +395,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
   };
 
   const handleUseCurrentGps = () => {
+    if (!gpsActive) {
+      setGpsNotice("La capture GPS est désactivée pendant la phase Bêta. Vous pouvez sélectionner votre commune.");
+      return;
+    }
     if (navigator.geolocation) {
       setGpsLoading(true);
       setGpsNotice(null);
@@ -601,11 +606,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
         locationOption === "commune" ? (commune === "Autre" ? customCommune.trim() : commune) :
         locationOption === "manual" ? `${customPlaceInput.trim()} (${commune || ""})` :
         locationOption === "autre" ? customPlaceInput.trim() :
-        locationOption === "gps" ? "Position GPS détectée" :
-        locationOption === "map" ? "Position Carte" :
+        (gpsActive && locationOption === "gps") ? "Position GPS détectée" :
+        (gpsActive && locationOption === "map") ? "Position Carte" :
         "";
 
-      const hasLoc = locationOption !== "none" && Boolean(effectiveLocationName || (latitude && longitude));
+      const hasLoc = locationOption !== "none" && Boolean(effectiveLocationName || (gpsActive && latitude && longitude));
+      const finalLat = (gpsActive && hasLoc && typeof latitude === "number") ? latitude : null;
+      const finalLng = (gpsActive && hasLoc && typeof longitude === "number") ? longitude : null;
 
       const nowIso = new Date().toISOString();
       const currentTimestamp = Date.now();
@@ -733,15 +740,15 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
           // Location & Itinerary
           location: hasLoc ? {
             name: effectiveLocationName || "Emplacement Gombo",
-            latitude: latitude || null,
-            longitude: longitude || null
+            latitude: finalLat,
+            longitude: finalLng
           } : null,
           locationName: hasLoc ? effectiveLocationName : "",
-          locationCoordinates: (hasLoc && typeof latitude === "number" && typeof longitude === "number") ? {
-            latitude,
-            longitude
+          locationCoordinates: (hasLoc && finalLat !== null && finalLng !== null) ? {
+            latitude: finalLat,
+            longitude: finalLng
           } : null,
-          commune: hasLoc ? (locationOption === "commune" ? (commune === "Autre" ? customCommune : commune) : "") : "",
+          commune: hasLoc ? (locationOption === "commune" ? (commune === "Autre" ? customCommune : commune) : (commune || "")) : "",
           quartier: quartier ? quartier.trim() : "",
           locationDetail: locationDetail.trim(),
           itineraryNotes: itineraryNotes.trim(),
@@ -750,8 +757,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
           heure: time.trim() || "18:30",
           city: currentUserProfile.city || "Abidjan",
           country: currentUserProfile.country || "Côte d'Ivoire",
-          latitude: (hasLoc && typeof latitude === "number") ? latitude : null,
-          longitude: (hasLoc && typeof longitude === "number") ? longitude : null,
+          latitude: finalLat,
+          longitude: finalLng,
           searchRadius: searchRadius,
           locationPrivacy: locationPrivacy,
 
@@ -1779,8 +1786,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
             Choisissez l'emplacement de l'événement. La localisation est <strong className="text-afri-text">facultative</strong>.
           </p>
 
-          {/* 5 visual choices (A to E) */}
-          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-1.5 p-1.5 bg-afri-bg border border-afri-border rounded-2xl">
+          {/* Visual choices */}
+          <div className={`grid gap-1.5 p-1.5 bg-afri-bg border border-afri-border rounded-2xl ${
+            gpsActive ? "grid-cols-2 xs:grid-cols-3 sm:grid-cols-5" : "grid-cols-3"
+          }`}>
             <button
               type="button"
               onClick={() => {
@@ -1796,36 +1805,40 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
               <span className="leading-none text-[8.5px]">A. Commune</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setLocationOption("gps");
-              }}
-              className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
-                locationOption === "gps"
-                  ? "bg-[#D4AF37] text-black shadow"
-                  : "text-afri-text-sec hover:text-afri-text"
-              }`}
-            >
-              <span className="text-sm">📍</span>
-              <span className="leading-none text-[8.5px]">B. GPS</span>
-            </button>
+            {gpsActive && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLocationOption("gps");
+                  }}
+                  className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
+                    locationOption === "gps"
+                      ? "bg-[#D4AF37] text-black shadow"
+                      : "text-afri-text-sec hover:text-afri-text"
+                  }`}
+                >
+                  <span className="text-sm">📍</span>
+                  <span className="leading-none text-[8.5px]">B. GPS</span>
+                </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setLocationOption("map");
-                setIsMapPickerOpen(true);
-              }}
-              className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
-                locationOption === "map"
-                  ? "bg-[#D4AF37] text-black shadow"
-                  : "text-afri-text-sec hover:text-afri-text"
-              }`}
-            >
-              <span className="text-sm">🗺️</span>
-              <span className="leading-none text-[8.5px]">C. Carte</span>
-            </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLocationOption("map");
+                    setIsMapPickerOpen(true);
+                  }}
+                  className={`py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase transition cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[50px] ${
+                    locationOption === "map"
+                      ? "bg-[#D4AF37] text-black shadow"
+                      : "text-afri-text-sec hover:text-afri-text"
+                  }`}
+                >
+                  <span className="text-sm">🗺️</span>
+                  <span className="leading-none text-[8.5px]">C. Carte</span>
+                </button>
+              </>
+            )}
 
             <button
               type="button"
@@ -1839,7 +1852,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
               }`}
             >
               <span className="text-sm">✏️</span>
-              <span className="leading-none text-[8.5px]">D. Saisir</span>
+              <span className="leading-none text-[8.5px]">{gpsActive ? "D. Saisir" : "B. Lieu / Salle"}</span>
             </button>
 
             <button
@@ -1854,7 +1867,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
               }`}
             >
               <span className="text-sm">➕</span>
-              <span className="leading-none text-[8.5px]">E. Autre</span>
+              <span className="leading-none text-[8.5px]">{gpsActive ? "E. Autre" : "C. Autre"}</span>
             </button>
           </div>
 
@@ -2326,18 +2339,20 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
         )}
       </AnimatePresence>
 
-      <MapPickerModal
-        isOpen={isMapPickerOpen}
-        onClose={() => setIsMapPickerOpen(false)}
-        initialLat={latitude || 5.3600}
-        initialLng={longitude || -4.0083}
-        title={`Emplacement du Gombo : ${title || commune}`}
-        onConfirm={(coords) => {
-          setLatitude(coords.latitude);
-          setLongitude(coords.longitude);
-          setGpsNotice(`📍 Emplacement GPS défini (Lat ${coords.latitude.toFixed(4)}, Lng ${coords.longitude.toFixed(4)})`);
-        }}
-      />
+      {gpsActive && (
+        <MapPickerModal
+          isOpen={isMapPickerOpen}
+          onClose={() => setIsMapPickerOpen(false)}
+          initialLat={latitude || 5.3600}
+          initialLng={longitude || -4.0083}
+          title={`Emplacement du Gombo : ${title || commune}`}
+          onConfirm={(coords) => {
+            setLatitude(coords.latitude);
+            setLongitude(coords.longitude);
+            setGpsNotice(`📍 Emplacement GPS défini (Lat ${coords.latitude.toFixed(4)}, Lng ${coords.longitude.toFixed(4)})`);
+          }}
+        />
+      )}
 
       {/* RÈGLES DU GOMBO MODAL (ANDROID BOTTOM SHEET) */}
       <AndroidBottomSheet

@@ -267,7 +267,10 @@ export const CANONICAL_FEATURE_IDS: Record<string, string> = {
   user_contracts: "escrow",
   contracts: "escrow",
 
-  // Radar & Nearby
+  // Radar, Nearby & GPS
+  gps: "gps",
+  geolocation: "gps",
+  geolocalisation: "gps",
   radar: "radar",
   user_radar: "radar",
   nearby: "nearby",
@@ -404,7 +407,14 @@ const DEFAULT_SENSITIVE_HIDDEN_MODULES = new Set([
   "admin_deploy",
   "kyc_strict",
   "kyc_approval",
-  "bank_transfers"
+  "bank_transfers",
+  // Beta Geolocation & GPS Deactivation (OFF by default for Beta)
+  "gps",
+  "geolocation",
+  "radar",
+  "nearby",
+  "nearbyopportunities",
+  "nearbyOpportunities"
 ]);
 
 // Set of modules that are by default in COMING_SOON status until ready
@@ -644,6 +654,23 @@ export function isFeatureEnabled(
   arg4?: FeatureFlagsMap
 ): boolean {
   return isModuleAccessible(featureId, arg2, arg3, arg4);
+}
+
+/**
+ * Single source of truth helper for GPS / precise geolocation status.
+ * FOR BETA: Returns false (GPS deactivated).
+ * Can only be active if explicitly enabled as "ACTIVE" in systemConfig/features.
+ */
+export function isGpsActive(
+  user?: any,
+  profile?: any,
+  flagsMap?: FeatureFlagsMap
+): boolean {
+  const { isFounder, flagsMap: resolvedFlags } = parseModuleVisibilityArgs("gps", user, profile, flagsMap);
+  // In Beta, check if gps is explicitly set to ACTIVE
+  const gpsRaw = getRawModuleStatus("gps", resolvedFlags);
+  const nearbyRaw = getRawModuleStatus("nearby", resolvedFlags);
+  return gpsRaw === "ACTIVE" || nearbyRaw === "ACTIVE";
 }
 
 /**

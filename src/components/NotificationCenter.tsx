@@ -155,8 +155,13 @@ export default function NotificationCenter({
       case "PAYMENT_RECEIVED": return <Wallet className="w-5 h-5 text-emerald-400" />;
       case "PAYMENT_HELD": return <Wallet className="w-5 h-5 text-yellow-500 animate-pulse" />;
       case "CONTRACT_SIGNED": return <BadgeCheck className="w-5 h-5 text-blue-400" />;
-      case "APPLICATION_ACCEPTED": return <UserCheck className="w-5 h-5 text-purple-400" />;
+      case "NEW_APPLICATION":
+      case "RENFORT_APPLICATION": return <UserCheck className="w-5 h-5 text-amber-400" />;
+      case "APPLICATION_ACCEPTED":
+      case "RENFORT_ACCEPTED": return <UserCheck className="w-5 h-5 text-purple-400" />;
       case "APPLICATION_REFUSED": return <AlertTriangle className="w-5 h-5 text-red-400" />;
+      case "GOMBO_UPDATED":
+      case "GOMBO_REMINDER": return <Briefcase className="w-5 h-5 text-amber-500" />;
       case "KYC_VALIDATED": return <ShieldCheck className="w-5 h-5 text-green-400" />;
       case "GOMBO_ID_VALIDATED": return <Music className="w-5 h-5 text-[#D4AF37]" />;
       case "KYC_INFO_REQUIRED": return <Info className="w-5 h-5 text-orange-400" />;
@@ -192,7 +197,8 @@ export default function NotificationCenter({
     const type = notif.type || "";
     const t = type.toLowerCase();
     const relatedId = (notif as any).relatedId || (notif as any).targetId || "";
-    const route = (notif as any).targetRoute || (notif as any).route || "";
+    let route = (notif as any).targetRoute || (notif as any).route || "";
+    if (route === "/terrain") route = "/my-gombos";
 
     if (route) {
         // If specific route exists, use it
