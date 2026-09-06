@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   User, Phone, MapPin, Music, Award, Wallet, Send, FileText, Check, Users, Clipboard, 
@@ -1251,6 +1252,8 @@ export default function GomboProfile({
           kycProgress={kycProgress}
           handleIdentityVerifyUpload={handleIdentityVerifyUpload}
           onViewPublicPortfolio={onViewPublicPortfolio}
+          onOpenAvatarEditor={() => setIsAvatarEditorOpen(true)}
+          onOpenAvatarStore={() => setIsAvatarStoreOpen(true)}
         />
       )}
 
@@ -1403,11 +1406,13 @@ export default function GomboProfile({
         }}
       />
 
-      {isAvatarEditorOpen && (
-        <AvatarEditor onClose={() => setIsAvatarEditorOpen(false)} />
+      {isAvatarEditorOpen && typeof document !== "undefined" && createPortal(
+        <AvatarEditor onClose={() => setIsAvatarEditorOpen(false)} />,
+        document.body
       )}
-      {isAvatarStoreOpen && (
-        <AvatarStore onClose={() => setIsAvatarStoreOpen(false)} />
+      {isAvatarStoreOpen && typeof document !== "undefined" && createPortal(
+        <AvatarStore onClose={() => setIsAvatarStoreOpen(false)} />,
+        document.body
       )}
     </AndroidPageLayout>
     </div>

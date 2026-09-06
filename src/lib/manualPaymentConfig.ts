@@ -109,24 +109,31 @@ export function subscribeToManualPaymentConfig(
     updatedAt?: string;
   }) => void
 ): () => void {
-  const localSaved = localStorage.getItem("manual_payment_operators_v1");
-  let baseOperators = DEFAULT_MANUAL_PAYMENT_OPERATORS;
-  let baseAudit: ManualPaymentAuditEntry[] = [];
-  if (localSaved) {
-    try {
-      const parsed = JSON.parse(localSaved);
-      if (parsed.operators) {
-        baseOperators = { ...DEFAULT_MANUAL_PAYMENT_OPERATORS, ...parsed.operators };
-      }
-      if (parsed.auditLog) {
-        baseAudit = parsed.auditLog;
-      }
-    } catch (e) {}
-  }
+  const readLocalState = () => {
+    const localSaved = localStorage.getItem("manual_payment_operators_v1");
+    let baseOperators = { ...DEFAULT_MANUAL_PAYMENT_OPERATORS };
+    let baseAudit: ManualPaymentAuditEntry[] = [];
+    let localUpdatedAt: string | undefined = undefined;
+    if (localSaved) {
+      try {
+        const parsed = JSON.parse(localSaved);
+        if (parsed.operators) {
+          baseOperators = { ...DEFAULT_MANUAL_PAYMENT_OPERATORS, ...parsed.operators };
+        }
+        if (parsed.auditLog) {
+          baseAudit = parsed.auditLog;
+        }
+        localUpdatedAt = parsed.updatedAt;
+      } catch (e) {}
+    }
+    return { baseOperators, baseAudit, localUpdatedAt };
+  };
 
+  const initial = readLocalState();
   callback({
-    operators: baseOperators,
-    auditLog: baseAudit
+    operators: initial.baseOperators,
+    auditLog: initial.baseAudit,
+    updatedAt: initial.localUpdatedAt
   });
 
   if (!db) {
@@ -135,30 +142,62 @@ export function subscribeToManualPaymentConfig(
 
   const docRef = doc(db, "system_settings", "manual_payment_methods");
   const unsubscribe = onSnapshot(docRef, (snap) => {
+    const currentLocal = readLocalState();
     if (snap.exists()) {
       const data = snap.data() as Partial<ManualPaymentSettingsDoc>;
-      const mergedOperators = {
-        ...DEFAULT_MANUAL_PAYMENT_OPERATORS,
-        ...baseOperators,
-        ...(data.operators || {})
-      };
-      const mergedAudit = [...(data.auditLog || []), ...baseAudit].slice(0, 50);
+      
+      // If local changes were made more recently than Firestore's doc, preserve local edits
+      const isLocalNewer = !!(
+        currentLocal.localUpdatedAt && 
+        data.updatedAt && 
+        new Date(currentLocal.localUpdatedAt).getTime() > new Date(data.updatedAt).getTime()
+      );
+
+      const mergedOperators: Record<ManualPaymentOperatorKey, ManualPaymentOperatorConfig> = isLocalNewer
+        ? {
+            ...DEFAULT_MANUAL_PAYMENT_OPERATORS,
+            ...(data.operators || {}),
+            ...currentLocal.baseOperators
+          }
+        : {
+            ...DEFAULT_MANUAL_PAYMENT_OPERATORS,
+            ...currentLocal.baseOperators,
+            ...(data.operators || {})
+          };
+
+      const mergedAudit: ManualPaymentAuditEntry[] = isLocalNewer
+        ? [...currentLocal.baseAudit, ...(data.auditLog || [])].slice(0, 50)
+        : [...(data.auditLog || []), ...currentLocal.baseAudit].slice(0, 50);
+
+      const effectiveUpdatedAt = isLocalNewer ? currentLocal.localUpdatedAt : (data.updatedAt || currentLocal.localUpdatedAt);
+
+      try {
+        localStorage.setItem("manual_payment_operators_v1", JSON.stringify({
+          operators: mergedOperators,
+          auditLog: mergedAudit,
+          updatedAt: effectiveUpdatedAt
+        }));
+      } catch (_) {}
+
       callback({
         operators: mergedOperators,
         auditLog: mergedAudit,
-        updatedAt: data.updatedAt
+        updatedAt: effectiveUpdatedAt
       });
     } else {
       callback({
-        operators: baseOperators,
-        auditLog: baseAudit
+        operators: currentLocal.baseOperators,
+        auditLog: currentLocal.baseAudit,
+        updatedAt: currentLocal.localUpdatedAt
       });
     }
   }, (err) => {
     console.warn("[MANUAL_PAYMENT_CONFIG] Sync notice:", err);
+    const fallback = readLocalState();
     callback({
-      operators: baseOperators,
-      auditLog: baseAudit
+      operators: fallback.baseOperators,
+      auditLog: fallback.baseAudit,
+      updatedAt: fallback.localUpdatedAt
     });
   });
 

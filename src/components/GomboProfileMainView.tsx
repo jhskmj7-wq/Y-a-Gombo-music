@@ -32,6 +32,8 @@ interface GomboProfileMainViewProps {
   kycProgress?: number;
   handleIdentityVerifyUpload?: (file: File) => Promise<void>;
   onViewPublicPortfolio?: (userId: string) => void;
+  onOpenAvatarEditor?: () => void;
+  onOpenAvatarStore?: () => void;
 }
 
 export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
@@ -46,6 +48,8 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
   kycProgress = 0,
   handleIdentityVerifyUpload,
   onViewPublicPortfolio,
+  onOpenAvatarEditor,
+  onOpenAvatarStore,
 }) => {
   const { theme } = useTheme();
   const isLight = theme === "light";
@@ -320,11 +324,20 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       }`}>
         <div className="flex flex-row items-start gap-3 xs:gap-4 sm:gap-5">
           {/* LEFT: Premium double-ring avatar frame */}
-          <div className="relative shrink-0 select-none">
+          <div 
+            onClick={() => {
+              if (onOpenAvatarEditor) onOpenAvatarEditor();
+              else if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("gombo_open_avatar_editor"));
+              }
+            }}
+            title="Modifier l'avatar"
+            className="relative shrink-0 select-none cursor-pointer group active:scale-95 transition-transform"
+          >
             <div className={`w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 rounded-full border-2 p-0.5 overflow-hidden aspect-square ${
               isLight ? "border-[#D4AF37] bg-[#FDFBF7]" : "border-amber-400 bg-afri-bg-sec"
             }`} style={{ borderRadius: "50%", overflow: "hidden" }}>
-              <div className={`w-full h-full rounded-full border overflow-hidden aspect-square flex items-center justify-center ${
+              <div className={`w-full h-full rounded-full border overflow-hidden aspect-square flex items-center justify-center relative ${
                 isLight ? "border-[#D4AF37]/35 bg-stone-100" : "border-amber-400/45 bg-afri-bg-ter"
               }`} style={{ borderRadius: "50%", overflow: "hidden" }}>
                 <img 
@@ -337,6 +350,10 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                     (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
                   }}
                 />
+                {/* Hover overlay hint */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                  <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 text-afri-gold" />
+                </div>
               </div>
             </div>
             {/* Crown Badge */}
@@ -518,41 +535,52 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
       {/* 4b. AVATAR AFRIGOMBO ELITE SECTION */}
       {isModuleVisible("avatar") && (
-        <div className={`relative  rounded-[24px] p-5 border shadow-sm ${
+        <div className={`relative rounded-[24px] p-5 border shadow-sm ${
           isLight ? "bg-[#FDFBF7] border-[#D4AF37]/40" : "bg-afri-bg-sec border-afri-border"
         }`}>
-          {isModuleComingSoon("avatar") && (
-            <span className="absolute top-3 right-3 text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded">
-              Bientôt disponible 🔒
-            </span>
-          )}
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-full bg-afri-gold/10 flex items-center justify-center border border-afri-gold/30">
+          <div 
+            onClick={() => {
+              if (onOpenAvatarEditor) onOpenAvatarEditor();
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("gombo_open_avatar_editor"));
+              }
+            }}
+            className="flex items-center gap-4 mb-4 cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-full bg-afri-gold/10 flex items-center justify-center border border-afri-gold/30 group-hover:scale-105 transition-transform">
               <User className="w-6 h-6 text-afri-gold" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-afri-text uppercase tracking-widest">Mon Avatar</h3>
+              <h3 className="text-sm font-black text-afri-text uppercase tracking-widest group-hover:text-afri-gold transition-colors">Mon Avatar</h3>
               <p className="text-[10px] text-afri-text-sec font-sans">Identité virtuelle & Accessoires</p>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <button 
-              onClick={() => {
-                if (window.dispatchEvent) {
+              type="button"
+              id="btn-customize-avatar"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onOpenAvatarEditor) onOpenAvatarEditor();
+                if (typeof window !== "undefined") {
                   window.dispatchEvent(new CustomEvent("gombo_open_avatar_editor"));
                 }
               }}
-              className="flex-1 py-2.5 bg-afri-bg border border-afri-border hover:border-afri-gold/50 text-afri-text font-black text-[10px] uppercase tracking-widest rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 bg-afri-bg border border-afri-border hover:border-afri-gold/50 text-afri-text font-black text-[10px] uppercase tracking-widest rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
             >
               <User className="w-4 h-4" /> Personnaliser
             </button>
             <button 
-              onClick={() => {
-                if (window.dispatchEvent) {
+              type="button"
+              id="btn-avatar-store"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onOpenAvatarStore) onOpenAvatarStore();
+                if (typeof window !== "undefined") {
                   window.dispatchEvent(new CustomEvent("gombo_open_avatar_store"));
                 }
               }}
-              className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black font-black text-[10px] uppercase tracking-widest rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black font-black text-[10px] uppercase tracking-widest rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
             >
               <ShoppingBag className="w-4 h-4" /> Boutique
             </button>

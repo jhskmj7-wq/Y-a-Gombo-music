@@ -275,7 +275,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     "Chercher un beatmaker...",
     "Trouver un studio..."
   ]);
-  const { currentUser, profile, logout, refreshProfile, setProfile, loginWithGoogle, showAuthPopup, setShowAuthPopup } = useAuth();
+  const { currentUser, profile, logout, refreshProfile, setProfile, loginWithGoogle, showAuthPopup, setShowAuthPopup, pendingIntent, setPendingIntent, clearPendingIntent, requireAuth } = useAuth();
   const { network, showToast: appShowToast } = useAppSettings();
   const { formatWalletBalance } = useWalletSecurity();
   const geo = useGeoEngine(profile);
@@ -352,8 +352,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     };
   }, [profile, currentUser]);
 
-  const requireGoogleAuthThen = (action: () => void) => {
+  const requireGoogleAuthThen = (action: () => void, intent?: any) => {
     if (!currentUser) {
+      if (intent && setPendingIntent) {
+        setPendingIntent(intent);
+      }
       setIsAuthModalOpen(true);
     } else {
       const hasGoogle = currentUser.providerData?.some(
@@ -367,8 +370,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     }
   };
 
-  const requireAuthThen = (action: () => void) => {
+  const requireAuthThen = (action: () => void, intent?: any) => {
     if (!currentUser) {
+      if (intent && setPendingIntent) {
+        setPendingIntent(intent);
+      }
       setIsAuthModalOpen(true);
     } else {
       action();
@@ -9236,6 +9242,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           setPublicProfileTargetUserId(null);
           setOpenConvoWithUserId(targetUserId);
           setActiveMenu("user_messages");
+        }}
+        onShowAuth={(intent) => {
+          requireAuthThen(() => {}, intent);
         }}
       />
     </div>

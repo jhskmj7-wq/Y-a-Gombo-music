@@ -10,9 +10,15 @@ import { safeStringify } from "./lib/jsonUtils";
 import { AuthModal } from "./components/auth/AuthModal";
 import { isMenuPublic, isMenuProtected, getMenuAccessLevel } from "./auth/accessPolicy";
 import type { AccessLevel } from "./auth/accessPolicy";
+import { 
+  PendingAuthIntent, 
+  savePendingAuthIntent, 
+  getPendingAuthIntent, 
+  clearPendingAuthIntent 
+} from "./lib/authIntent";
 
-export { isMenuPublic, isMenuProtected, getMenuAccessLevel };
-export type { AccessLevel };
+export { isMenuPublic, isMenuProtected, getMenuAccessLevel, savePendingAuthIntent, getPendingAuthIntent, clearPendingAuthIntent };
+export type { AccessLevel, PendingAuthIntent };
 
 interface AuthContextType {
   currentUser: any | null;       
@@ -29,7 +35,10 @@ interface AuthContextType {
   setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
   showAuthPopup: boolean;
   setShowAuthPopup: (show: boolean) => void;
-  requireAuth: (action: () => void) => void;
+  requireAuth: (action: () => void, intent?: PendingAuthIntent) => void;
+  pendingIntent: PendingAuthIntent | null;
+  setPendingIntent: (intent: PendingAuthIntent | null) => void;
+  clearPendingIntent: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -79,6 +88,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   });
   const [showAuthPopup, setShowAuthPopup] = useState(false);
+  const [pendingIntent, setPendingIntentState] = useState<PendingAuthIntent | null>(() => getPendingAuthIntent());
+  const pendingCallbackRef = React.useRef<(() => void) | null>(null);
+
+  const setPendingIntent = React.useCallback((intent: PendingAuthIntent | null) => {
+    if (intent) {
+      savePendingAuthIntent(intent);
+      setPendingIntentState(intent);
+    } else {
+      clearPendingAuthIntent();
+      setPendingIntentState(null);
+    }
+  }, []);
+
+  const clearPendingIntent = React.useCallback(() => {
+    clearPendingAuthIntent();
+    setPendingIntentState(null);
+  }, []);
+
+  // Listen to cross-component intent changes
+  useEffect(() => {
+    const handleIntentEvent = (e: any) => {
+      setPendingIntentState(e.detail || null);
+    };
+    window.addEventListener("afrigombo_auth_intent_changed", handleIntentEvent);
+    return () => {
+      window.removeEventListener("afrigombo_auth_intent_changed", handleIntentEvent);
+    };
+  }, []);
 
   useEffect(() => {
     fetchPlatformPricing().catch(console.error);
@@ -105,6 +142,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (firebaseUser) {
         setCurrentUser(firebaseUser);
         setShowAuthPopup(false);
+
+        // Auto-resume in-memory pending action callback if present
+        if (pendingCallbackRef.current) {
+          const cb = pendingCallbackRef.current;
+          pendingCallbackRef.current = null;
+          try {
+            cb();
+          } catch (err) {
+            console.error("Error executing pending auth callback:", err);
+          }
+        }
         try {
           const uProfile = await authService.ensureUserDocument(firebaseUser, firebaseUser.providerData?.[0]?.providerId || "google.com");
           setProfile(uProfile);
@@ -171,6 +219,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await authService.signInWithApple();
       setShowAuthPopup(false);
+      if (pendingCallbackRef.current) {
+        const cb = pendingCallbackRef.current;
+        pendingCallbackRef.current = null;
+        try {
+          cb();
+        } catch (err) {
+          console.error("Error executing pending auth callback:", err);
+        }
+      }
       return res;
     } catch (error) {
       console.error("❌ Apple Login Error:", error);
@@ -182,6 +239,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await authService.signInWithGoogle();
       setShowAuthPopup(false);
+      if (pendingCallbackRef.current) {
+        const cb = pendingCallbackRef.current;
+        pendingCallbackRef.current = null;
+        try {
+          cb();
+        } catch (err) {
+          console.error("Error executing pending auth callback:", err);
+        }
+      }
       return res;
     } catch (error) {
       console.error("❌ Google Login Error:", error);
@@ -192,7 +258,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       localStorage.removeItem("afrigombo_user_session");
+      clearPendingAuthIntent();
     } catch (e) {}
+    setPendingIntentState(null);
+    pendingCallbackRef.current = null;
     setCurrentUser(null);
     setProfile(null);
     await authService.signOut();
@@ -205,13 +274,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const requireAuth = (action: () => void) => {
+  const requireAuth = React.useCallback((action: () => void, intent?: PendingAuthIntent) => {
     if (!currentUser) {
+      pendingCallbackRef.current = action;
+      if (intent) {
+        setPendingIntent(intent);
+      }
       setShowAuthPopup(true);
       return;
     }
     action();
-  };
+  }, [currentUser, setPendingIntent]);
 
   const authContextValue = React.useMemo(() => ({ 
     currentUser, 
@@ -228,8 +301,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile, 
     showAuthPopup, 
     setShowAuthPopup, 
-    requireAuth 
-  }), [currentUser, profile, authLoading, showAuthPopup]);
+    requireAuth,
+    pendingIntent,
+    setPendingIntent,
+    clearPendingIntent
+  }), [currentUser, profile, authLoading, showAuthPopup, requireAuth, pendingIntent, setPendingIntent, clearPendingIntent]);
 
   return (
     <AuthContext.Provider value={authContextValue}>

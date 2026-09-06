@@ -38,12 +38,12 @@ export default function UserTerrainLandingPageWrapper() {
   const addToTerminal = (msg: string) => {
   };
 
-  const requireAuthThen = (fn: () => void) => {
-    requireAuth(fn);
+  const requireAuthThen = (fn: () => void, intent?: any) => {
+    requireAuth(fn, intent);
   };
 
-  const requireGoogleAuthThen = (fn: () => void) => {
-    requireAuth(fn);
+  const requireGoogleAuthThen = (fn: () => void, intent?: any) => {
+    requireAuth(fn, intent);
   };
 
   // Real-time Firestore Sync

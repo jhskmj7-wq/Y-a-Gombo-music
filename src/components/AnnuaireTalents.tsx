@@ -25,13 +25,15 @@ import { gomboDB } from "../firebase";
 import { motion, AnimatePresence } from "motion/react";
 import { useAudio } from "../context/AudioContext";
 import { PremiumEngine } from "../lib/premiumEngine";
+import { useAuth } from "../AuthContext";
+import { PendingAuthIntent } from "../lib/authIntent";
 
 interface AnnuaireTalentsProps {
   currentUserProfile: UserProfile | null;
   onNavigateView: (view: string) => void;
   selectedTalentUid?: string;
   onSelectTalent: (uid: string | null) => void;
-  onShowAuth?: () => void;
+  onShowAuth?: (intent?: PendingAuthIntent) => void;
 }
 
 // Communes Abidjan
@@ -95,6 +97,12 @@ export default function AnnuaireTalents({
   onSelectTalent,
   onShowAuth
 }: AnnuaireTalentsProps) {
+  const auth = useAuth();
+  const effectiveProfile = currentUserProfile || auth?.profile || null;
+  const pendingIntent = auth?.pendingIntent;
+  const clearPendingIntent = auth?.clearPendingIntent;
+  const requireAuth = auth?.requireAuth;
+
   const [talents, setTalents] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -158,6 +166,48 @@ export default function AnnuaireTalents({
     fetchTalents();
   }, []);
 
+  // Resumption of pending intent after authentication
+  useEffect(() => {
+    if (!effectiveProfile || !pendingIntent) return;
+
+    if (
+      pendingIntent.action === "propose_cachet" ||
+      pendingIntent.action === "contact_talent" ||
+      pendingIntent.action === "propose_alliance"
+    ) {
+      const targetUid = pendingIntent.targetUserId || pendingIntent.targetTalent?.uid;
+      if (!targetUid) return;
+
+      const talent = talents.find(t => t.uid === targetUid) || (pendingIntent.targetTalent as UserProfile);
+      if (talent) {
+        if (onSelectTalent) onSelectTalent(talent.uid);
+        setContactingTalent(talent);
+
+        if (pendingIntent.action === "propose_cachet") {
+          setIsAllianceProposal(false);
+          setContactMessage(
+            pendingIntent.customMessage ||
+            `PROPOSITION DE CACHET : Salut ${talent.firstName || talent.artistName || "l'Artiste"}, j'ai examiné avec intérêt ton univers d'artiste et ton parcours sur l'Annuaire AfriGombo. Nous aimerions te proposer officiellement un cachet en toute sécurité pour une prestation à venir. Quels sont tes tarifs et disponibilités actuels ?`
+          );
+        } else if (pendingIntent.action === "propose_alliance") {
+          setIsAllianceProposal(true);
+          setContactMessage(
+            pendingIntent.customMessage ||
+            `PROPOSITION D'ALLIANCE 🤝 : Salut ${talent.firstName || talent.artistName || "l'Artiste"}, j'admire beaucoup ton talent et ta présence sur l'écosystème AfriGombo. J'aimerais te proposer une alliance exclusive pour collaborer sur mes productions musicales et futurs spectacles.`
+          );
+        } else {
+          setIsAllianceProposal(false);
+          setContactMessage(
+            pendingIntent.customMessage ||
+            `Salut ${talent.firstName || talent.artistName || "l'Artiste"}, j'ai vu ton profil sur l'Annuaire AFRIGOMBO ELITE. Nous aurions besoin de ton talent pour une prestation...`
+          );
+        }
+
+        if (clearPendingIntent) clearPendingIntent();
+      }
+    }
+  }, [effectiveProfile, pendingIntent, talents, onSelectTalent, clearPendingIntent]);
+
   // Sync favorites of talents to localStorage & Firestore
   useEffect(() => {
     try {
@@ -165,19 +215,19 @@ export default function AnnuaireTalents({
     } catch (e) {
       console.warn("Could not save favorite_talents_list to localStorage:", e);
     }
-    if (currentUserProfile?.uid) {
-      gomboDB.updateUserProfile(currentUserProfile.uid, {
+    if (effectiveProfile?.uid) {
+      gomboDB.updateUserProfile(effectiveProfile.uid, {
         favoritesList: favorites
       }).catch(err => console.error("Error syncing favorites to Firestore:", err));
     }
-  }, [favorites, currentUserProfile?.uid]);
+  }, [favorites, effectiveProfile?.uid]);
 
   // Load favorites from Firestore user profile on load
   useEffect(() => {
-    if (currentUserProfile?.favoritesList) {
-      setFavorites(currentUserProfile.favoritesList);
+    if (effectiveProfile?.favoritesList) {
+      setFavorites(effectiveProfile.favoritesList);
     }
-  }, [currentUserProfile?.favoritesList]);
+  }, [effectiveProfile?.favoritesList]);
 
   // Handle local persistence of simulated page views
   useEffect(() => {
@@ -197,14 +247,14 @@ export default function AnnuaireTalents({
       setFavorites(prev => [...prev, uid]);
 
       // Trigger notification to the talent: "⭐ Nouveau favori"
-      if (currentUserProfile?.uid) {
-        const userName = `${currentUserProfile.firstName || ""} ${currentUserProfile.lastName || ""}`.trim() || currentUserProfile.artistName || "Un promoteur";
+      if (effectiveProfile?.uid) {
+        const userName = `${effectiveProfile.firstName || ""} ${effectiveProfile.lastName || ""}`.trim() || effectiveProfile.artistName || "Un promoteur";
         await gomboDB.publishNotification({
           userId: uid,
           type: "new_favorite",
           title: "⭐ Nouveau favori !",
           message: `${userName} vous a ajouté à ses favoris d'élite.`,
-          relatedId: currentUserProfile.uid,
+          relatedId: effectiveProfile.uid,
           priority: "medium"
         });
       }
@@ -231,14 +281,14 @@ export default function AnnuaireTalents({
   // Submit dynamic direct message
   const handleSendMessageSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!contactMessage.trim() || !contactingTalent || !currentUserProfile) return;
+    if (!contactMessage.trim() || !contactingTalent || !effectiveProfile) return;
     
     setSendingMessage(true);
     try {
       const myDetails = {
-        name: currentUserProfile.artistName || `${currentUserProfile.firstName} ${currentUserProfile.lastName}` || "Moi",
-        avatarUrl: currentUserProfile.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
-        role: currentUserProfile.role || "organisateur"
+        name: effectiveProfile.artistName || `${effectiveProfile.firstName} ${effectiveProfile.lastName}` || "Moi",
+        avatarUrl: effectiveProfile.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+        role: effectiveProfile.role || "organisateur"
       };
       const recipientDetails = {
         name: contactingTalent.artistName || `${contactingTalent.firstName} ${contactingTalent.lastName}` || "Artiste Gombo",
@@ -247,7 +297,7 @@ export default function AnnuaireTalents({
       };
 
       const conversationObj = await gomboDB.getOrCreateConversation(
-        currentUserProfile.uid,
+        effectiveProfile.uid,
         contactingTalent.uid,
         myDetails,
         recipientDetails
@@ -255,7 +305,7 @@ export default function AnnuaireTalents({
 
       await gomboDB.sendMessage(
         conversationObj.id,
-        currentUserProfile.uid,
+        effectiveProfile.uid,
         myDetails.name,
         contactMessage
       );
@@ -619,9 +669,27 @@ export default function AnnuaireTalents({
               {/* Contacter Direct Button */}
               <button 
                 onClick={() => {
-                  if (!currentUserProfile) {
+                  if (!effectiveProfile) {
+                    const intent: PendingAuthIntent = {
+                      action: "contact_talent",
+                      targetUserId: selectedTalent.uid,
+                      targetTalent: {
+                        uid: selectedTalent.uid,
+                        firstName: selectedTalent.firstName,
+                        lastName: selectedTalent.lastName,
+                        artistName: selectedTalent.artistName,
+                        avatarUrl: selectedTalent.avatarUrl,
+                        photoURL: selectedTalent.photoURL,
+                        role: selectedTalent.role,
+                        commune: selectedTalent.commune,
+                        specialty: selectedTalent.specialty
+                      },
+                      timestamp: Date.now()
+                    };
                     if (onShowAuth) {
-                      onShowAuth();
+                      onShowAuth(intent);
+                    } else if (requireAuth) {
+                      requireAuth(() => {}, intent);
                     } else {
                       alert("Veuillez vous connecter pour contacter l'artiste.");
                     }
@@ -639,9 +707,27 @@ export default function AnnuaireTalents({
               {/* Proposition de Cachet (Requirement 3: internal safe communication and booking) */}
               <button 
                 onClick={() => {
-                  if (!currentUserProfile) {
+                  if (!effectiveProfile) {
+                    const intent: PendingAuthIntent = {
+                      action: "propose_cachet",
+                      targetUserId: selectedTalent.uid,
+                      targetTalent: {
+                        uid: selectedTalent.uid,
+                        firstName: selectedTalent.firstName,
+                        lastName: selectedTalent.lastName,
+                        artistName: selectedTalent.artistName,
+                        avatarUrl: selectedTalent.avatarUrl,
+                        photoURL: selectedTalent.photoURL,
+                        role: selectedTalent.role,
+                        commune: selectedTalent.commune,
+                        specialty: selectedTalent.specialty
+                      },
+                      timestamp: Date.now()
+                    };
                     if (onShowAuth) {
-                      onShowAuth();
+                      onShowAuth(intent);
+                    } else if (requireAuth) {
+                      requireAuth(() => {}, intent);
                     } else {
                       alert("Veuillez vous connecter pour formuler une proposition de cachet.");
                     }
@@ -910,9 +996,28 @@ export default function AnnuaireTalents({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (!currentUserProfile) {
+                                if (!effectiveProfile) {
+                                  const intent: PendingAuthIntent = {
+                                    action: "propose_alliance",
+                                    targetUserId: talent.uid,
+                                    targetTalent: {
+                                      uid: talent.uid,
+                                      firstName: talent.firstName,
+                                      lastName: talent.lastName,
+                                      artistName: talent.artistName,
+                                      avatarUrl: talent.avatarUrl,
+                                      photoURL: talent.photoURL,
+                                      role: talent.role,
+                                      commune: talent.commune,
+                                      specialty: talent.specialty
+                                    },
+                                    isAlliance: true,
+                                    timestamp: Date.now()
+                                  };
                                   if (onShowAuth) {
-                                    onShowAuth();
+                                    onShowAuth(intent);
+                                  } else if (requireAuth) {
+                                    requireAuth(() => {}, intent);
                                   } else {
                                     alert("Veuillez vous connecter pour proposer une alliance.");
                                   }
@@ -1167,9 +1272,28 @@ export default function AnnuaireTalents({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (!currentUserProfile) {
+                                if (!effectiveProfile) {
+                                  const intent: PendingAuthIntent = {
+                                    action: "propose_alliance",
+                                    targetUserId: talent.uid,
+                                    targetTalent: {
+                                      uid: talent.uid,
+                                      firstName: talent.firstName,
+                                      lastName: talent.lastName,
+                                      artistName: talent.artistName,
+                                      avatarUrl: talent.avatarUrl,
+                                      photoURL: talent.photoURL,
+                                      role: talent.role,
+                                      commune: talent.commune,
+                                      specialty: talent.specialty
+                                    },
+                                    isAlliance: true,
+                                    timestamp: Date.now()
+                                  };
                                   if (onShowAuth) {
-                                    onShowAuth();
+                                    onShowAuth(intent);
+                                  } else if (requireAuth) {
+                                    requireAuth(() => {}, intent);
                                   } else {
                                     alert("Veuillez vous connecter pour proposer une alliance.");
                                   }
@@ -1203,9 +1327,27 @@ export default function AnnuaireTalents({
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (!currentUserProfile) {
+                                if (!effectiveProfile) {
+                                  const intent: PendingAuthIntent = {
+                                    action: "contact_talent",
+                                    targetUserId: talent.uid,
+                                    targetTalent: {
+                                      uid: talent.uid,
+                                      firstName: talent.firstName,
+                                      lastName: talent.lastName,
+                                      artistName: talent.artistName,
+                                      avatarUrl: talent.avatarUrl,
+                                      photoURL: talent.photoURL,
+                                      role: talent.role,
+                                      commune: talent.commune,
+                                      specialty: talent.specialty
+                                    },
+                                    timestamp: Date.now()
+                                  };
                                   if (onShowAuth) {
-                                    onShowAuth();
+                                    onShowAuth(intent);
+                                  } else if (requireAuth) {
+                                    requireAuth(() => {}, intent);
                                   } else {
                                     alert("Veuillez vous connecter pour envoyer un message.");
                                   }

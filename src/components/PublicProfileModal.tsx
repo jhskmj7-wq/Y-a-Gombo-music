@@ -14,6 +14,7 @@ import { getEffectiveGomboId } from "../lib/gomboIdHelper";
 import { useAudio } from "../context/AudioContext";
 import { useAuth } from "../AuthContext";
 import { AndroidBottomSheet, AfriModal } from "./common/AfriModal";
+import { PendingAuthIntent } from "../lib/authIntent";
 
 interface PublicProfileModalProps {
   isOpen: boolean;
@@ -22,7 +23,7 @@ interface PublicProfileModalProps {
   currentUser: any;
   onOpenDirectMessage?: (targetUserId: string, targetName: string) => void;
   onNavigateToGombo?: (gomboId: string) => void;
-  onShowAuth?: () => void;
+  onShowAuth?: (intent?: PendingAuthIntent) => void;
 }
 
 export function PublicProfileModal({
@@ -129,15 +130,44 @@ export function PublicProfileModal({
     };
   }, [isOpen, targetUserId, activeUser?.uid]);
 
+  // Resumption of pending intent after authentication
+  useEffect(() => {
+    if (!activeUser?.uid || !targetUserId || !auth?.pendingIntent || !isOpen) return;
+    const intent = auth.pendingIntent;
+    if (intent.targetUserId !== targetUserId) return;
+
+    if (intent.action === "direct_message") {
+      auth.clearPendingIntent();
+      onClose();
+      if (onOpenDirectMessage) {
+        const targetName = (intent.metadata?.displayName as string) || profile?.artistName || profile?.firstName || "Artiste";
+        onOpenDirectMessage(targetUserId, targetName);
+      }
+    } else if (intent.action === "toggle_follow") {
+      auth.clearPendingIntent();
+      setIsFollowing(true);
+      gomboDB.toggleFollowUser(targetUserId, activeUser.uid);
+    } else if (intent.action === "toggle_save") {
+      auth.clearPendingIntent();
+      setIsSaved(true);
+      gomboDB.toggleBookmarkUser(targetUserId, activeUser.uid);
+    }
+  }, [activeUser?.uid, targetUserId, auth?.pendingIntent, isOpen, profile, onClose, onOpenDirectMessage, auth]);
+
   // Toggle follow action
   const handleToggleFollow = async () => {
     if (!activeUser?.uid || !targetUserId) {
+      const intent: PendingAuthIntent = {
+        action: "toggle_follow",
+        targetUserId,
+        timestamp: Date.now()
+      };
       if (onShowAuth) {
-        onShowAuth();
+        onShowAuth(intent);
+      } else if (auth?.requireAuth) {
+        auth.requireAuth(() => {}, intent);
       } else if (auth?.setShowAuthPopup) {
         auth.setShowAuthPopup(true);
-      } else if (auth?.requireAuth) {
-        auth.requireAuth(() => {});
       }
       return;
     }
@@ -149,12 +179,17 @@ export function PublicProfileModal({
   // Toggle bookmark action
   const handleToggleSave = async () => {
     if (!activeUser?.uid || !targetUserId) {
+      const intent: PendingAuthIntent = {
+        action: "toggle_save",
+        targetUserId,
+        timestamp: Date.now()
+      };
       if (onShowAuth) {
-        onShowAuth();
+        onShowAuth(intent);
+      } else if (auth?.requireAuth) {
+        auth.requireAuth(() => {}, intent);
       } else if (auth?.setShowAuthPopup) {
         auth.setShowAuthPopup(true);
-      } else if (auth?.requireAuth) {
-        auth.requireAuth(() => {});
       }
       return;
     }
@@ -446,12 +481,18 @@ export function PublicProfileModal({
                       <button
                         onClick={() => {
                           if (!activeUser?.uid) {
+                            const intent: PendingAuthIntent = {
+                              action: "direct_message",
+                              targetUserId: targetUserId || "",
+                              metadata: { displayName },
+                              timestamp: Date.now()
+                            };
                             if (onShowAuth) {
-                              onShowAuth();
+                              onShowAuth(intent);
+                            } else if (auth?.requireAuth) {
+                              auth.requireAuth(() => {}, intent);
                             } else if (auth?.setShowAuthPopup) {
                               auth.setShowAuthPopup(true);
-                            } else if (auth?.requireAuth) {
-                              auth.requireAuth(() => {});
                             }
                             return;
                           }

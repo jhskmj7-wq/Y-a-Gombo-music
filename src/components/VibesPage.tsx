@@ -23,7 +23,7 @@ export default function VibesPage() {
           onSelectTalent={(uid) => {
             setSelectedTalentUid(uid);
           }}
-          onShowAuth={() => requireAuth(() => {})}
+          onShowAuth={(intent) => requireAuth(() => {}, intent)}
         />
       </div>
     </div>

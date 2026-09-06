@@ -79,8 +79,8 @@ interface UserTerrainLandingPageProps {
   selectedDateFilter: string;
   setSelectedDateFilter: (val: string) => void;
   setSelectedGomboDetails: (gombo: Gombo | null) => void;
-  requireAuthThen: (fn: () => void) => void;
-  requireGoogleAuthThen?: (fn: () => void) => void;
+  requireAuthThen: (fn: () => void, intent?: any) => void;
+  requireGoogleAuthThen?: (fn: () => void, intent?: any) => void;
   audioSynth: any;
   activeQuickActionModal: string | null;
   setActiveQuickActionModal: (val: string | null) => void;
@@ -2298,7 +2298,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 </div>
                 <div className="bg-afri-bg-sec p-2 rounded-2xl border border-afri-border/60 transition-all">
                   <AnnuaireTalents
-                    currentUserProfile={users.find(u => u.uid === "logged_in_uid") as any || null}
+                    currentUserProfile={profile || (currentUser ? { uid: currentUser.uid } as any : null)}
                     onNavigateView={(view) => {
                       if (view === "home") {
                         setActiveQuickActionModal(null);
@@ -2307,7 +2307,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     onSelectTalent={(uid) => {
                       // Handled within directory view
                     }}
-                    onShowAuth={() => requireAuthThen(() => {})}
+                    onShowAuth={(intent) => requireAuthThen(() => {}, intent)}
                   />
                 </div>
               </div>
