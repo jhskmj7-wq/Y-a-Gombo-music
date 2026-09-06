@@ -1,6 +1,80 @@
 import { db } from "./firebase";
-import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc, collection } from "firebase/firestore";
 import { getCanonicalWalletBalance } from "./financial";
+
+export interface BoostTariffSpec {
+  priceStandard: number;
+  pricePremium: number;
+  durationHours: number;
+  title: string;
+}
+
+export const OFFICIAL_BOOST_TARIFFS: Record<string, BoostTariffSpec> = {
+  // Publication Boosts
+  "pub_booster": { priceStandard: 500, pricePremium: 300, durationHours: 48, title: "🚀 Booster la publication" },
+  "pub_tendance": { priceStandard: 500, pricePremium: 350, durationHours: 24, title: "🔥 Mettre en tendance" },
+  "pub_locale": { priceStandard: 400, pricePremium: 250, durationHours: 72, title: "⭐ Mise en avant locale" },
+  "pub_pres_de_moi": { priceStandard: 300, pricePremium: 200, durationHours: 48, title: "📍 Priorité \"Près de moi\"" },
+  // Profile Boosts (keyed by duration in hours)
+  "profile_24": { priceStandard: 500, pricePremium: 300, durationHours: 24, title: "⚡ Boost Profil 24H" },
+  "profile_72": { priceStandard: 1200, pricePremium: 750, durationHours: 72, title: "🔥 Boost Profil 3 Jours" },
+  "profile_168": { priceStandard: 2500, pricePremium: 1500, durationHours: 168, title: "👑 Boost Profil 7 Jours" }
+};
+
+/**
+ * Calculates the canonical official boost price for a given boost type and duration,
+ * verifying the user's actual Premium/Pro/Elite status in Firestore.
+ */
+export async function calculateOfficialBoostPrice(
+  userId: string,
+  itemType: "profile" | "gombo" | "candidature" | string,
+  boostOptionId: string,
+  profileDurationHours?: number
+): Promise<{ price: number; standardPrice: number; isPremium: boolean; durationHours: number; tariffKey: string }> {
+  const userRef = doc(db, "users", userId);
+  const userSnap = await getDoc(userRef);
+  const userData = userSnap.exists() ? userSnap.data() : null;
+
+  const role = (userData?.role || "").toLowerCase();
+  const subTier = (userData?.subscriptionTier || userData?.subscription?.plan || "").toLowerCase();
+  const isPremium = role === "premium" || role === "pro" || role === "elite" || role === "admin" || role === "founder" || subTier === "pro" || subTier === "elite";
+
+  let tariffKey = "";
+  if (itemType === "profile") {
+    const dur = profileDurationHours || 24;
+    tariffKey = `profile_${dur}`;
+  } else {
+    tariffKey = `pub_${boostOptionId}`;
+  }
+
+  const spec = OFFICIAL_BOOST_TARIFFS[tariffKey];
+  if (!spec) {
+    throw new Error(`Tarif de boost non reconnu: ${tariffKey}`);
+  }
+
+  const price = isPremium ? spec.pricePremium : spec.priceStandard;
+  return {
+    price,
+    standardPrice: spec.priceStandard,
+    isPremium,
+    durationHours: spec.durationHours,
+    tariffKey
+  };
+}
+
+/**
+ * Helper to check whether an item's boost is active based on timestamp expiration.
+ */
+export function isBoostActive(item: any): boolean {
+  if (!item) return false;
+  const now = new Date().getTime();
+  const until = item.boostedUntil || item.urgentUntil || item.featuredUntil || item.profileBoostedUntil || item.expiresAt;
+  if (!until) return false;
+  const untilTime = new Date(until).getTime();
+  return !isNaN(untilTime) && untilTime > now;
+}
+
+const activeBoostLocks = new Set<string>();
 
 export interface PaymentOptions {
   userId: string;
@@ -171,6 +245,168 @@ export class PaymentEngineClass {
         success: false,
         error: err?.message || "Erreur lors du traitement du paiement."
       };
+    }
+  }
+
+  /**
+   * Process a verified boost payment and activate the boost in Firestore atomically.
+   * Anti-double-debit lock protects against rapid double-clicks.
+   * Official price is calculated internally from OFFICIAL_BOOST_TARIFFS and user subscription status.
+   */
+  async processBoostPayment(options: {
+    userId: string;
+    userName?: string;
+    itemType: "profile" | "gombo" | "candidature" | string;
+    itemId: string;
+    boostOptionId: string; // "booster" | "tendance" | "locale" | "pres_de_moi" or duration for profile
+    profileDurationHours?: number;
+    currentUserProfile?: any;
+  }): Promise<PaymentResult & { officialPrice?: number; expiresAtIso?: string; boostId?: string }> {
+    const { userId, userName, itemType, itemId, boostOptionId, profileDurationHours } = options;
+
+    const lockKey = `boost_${userId}_${itemId}_${boostOptionId}`;
+    if (activeBoostLocks.has(lockKey)) {
+      return { success: false, error: "Traitement de boost déjà en cours pour cet élément. Veuillez patienter." };
+    }
+
+    activeBoostLocks.add(lockKey);
+
+    try {
+      // 1. Determine official price
+      const calc = await calculateOfficialBoostPrice(userId, itemType, boostOptionId, profileDurationHours);
+      const amount = calc.price;
+      const spec = OFFICIAL_BOOST_TARIFFS[calc.tariffKey];
+
+      const boostDescription = itemType === "profile"
+        ? `Boost Profil (${calc.durationHours}h)`
+        : `Boost ${spec?.title || boostOptionId} (${calc.durationHours}h)`;
+
+      // 2. Process debit
+      const payRes = await this.processPayment({
+        userId,
+        userName: userName || options.currentUserProfile?.artistName || options.currentUserProfile?.name || "Membre Gombo",
+        amount,
+        module: itemType === "profile" ? "Boost Profil" : "Boost Publication",
+        reason: boostDescription,
+        metadata: {
+          itemId,
+          itemType,
+          boostOptionId,
+          tariffKey: calc.tariffKey,
+          durationHours: calc.durationHours,
+          isPremium: calc.isPremium
+        }
+      });
+
+      if (!payRes.success) {
+        return payRes;
+      }
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + calc.durationHours * 3600 * 1000);
+      const expiresAtIso = expiresAt.toISOString();
+
+      // 3. Record in `boosts/` collection
+      const boostRef = doc(collection(db, "boosts"));
+      const boostId = boostRef.id;
+      await setDoc(boostRef, {
+        id: boostId,
+        userId,
+        itemId,
+        itemType,
+        boostType: itemType === "profile" ? "profile" : boostOptionId,
+        durationHours: calc.durationHours,
+        amount,
+        createdAt: now.toISOString(),
+        expiresAt: expiresAtIso,
+        status: "active"
+      });
+
+      // 4. Activate boost on item / profile
+      if (itemType === "profile") {
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, {
+          profileBoosted: true,
+          profileBoostedUntil: expiresAtIso,
+          profileBoostPriority: 10,
+          profileBoostType: "premium_spotlight",
+          lastBoostId: boostId,
+          updatedAt: now.toISOString()
+        });
+
+        // Store inside `featuredProfiles/`
+        await setDoc(doc(db, "featuredProfiles", userId), {
+          boostId,
+          userId,
+          artistName: options.currentUserProfile?.artistName || options.currentUserProfile?.name || userName || "",
+          commune: options.currentUserProfile?.commune || "",
+          role: options.currentUserProfile?.role || "musicien",
+          avatarUrl: options.currentUserProfile?.avatarUrl || options.currentUserProfile?.photoURL || "",
+          featuredUntil: expiresAtIso,
+          priority: 10,
+          createdAt: now.toISOString()
+        });
+      } else {
+        const collectionName = itemType === "candidature" ? "applications" : "gombos";
+        const docRef = doc(db, collectionName, itemId);
+
+        let updateFields: any = {
+          boosted: true,
+          boostedUntil: expiresAtIso,
+          boostType: boostOptionId,
+          lastBoostId: boostId,
+          updatedAt: now.toISOString()
+        };
+
+        if (boostOptionId === "booster") {
+          updateFields.isUrgent = true;
+          updateFields.urgentUntil = expiresAtIso;
+          updateFields.priority = 10;
+        } else if (boostOptionId === "tendance") {
+          updateFields.featured = true;
+          updateFields.featuredUntil = expiresAtIso;
+          updateFields.priority = 10;
+
+          await setDoc(doc(db, "featuredPosts", itemId), {
+            boostId,
+            postId: itemId,
+            title: options.currentUserProfile?.title || "",
+            featuredUntil: expiresAtIso,
+            priority: 10,
+            type: itemType,
+            createdAt: now.toISOString()
+          });
+        } else if (boostOptionId === "locale") {
+          updateFields.localFeatured = true;
+          updateFields.localFeaturedUntil = expiresAtIso;
+          updateFields.priority = 8;
+        } else if (boostOptionId === "pres_de_moi") {
+          updateFields.nearMePriority = true;
+          updateFields.nearMePriorityUntil = expiresAtIso;
+          updateFields.priority = 9;
+        }
+
+        await updateDoc(docRef, updateFields);
+      }
+
+      return {
+        success: true,
+        txId: payRes.txId,
+        balanceAfter: payRes.balanceAfter,
+        officialPrice: amount,
+        expiresAtIso,
+        boostId
+      };
+    } catch (err: any) {
+      console.error("PaymentEngine.processBoostPayment error:", err);
+      return {
+        success: false,
+        error: err?.message || "Erreur lors du traitement du boost."
+      };
+    } finally {
+      setTimeout(() => {
+        activeBoostLocks.delete(lockKey);
+      }, 3000);
     }
   }
 

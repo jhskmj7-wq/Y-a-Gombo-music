@@ -1,5 +1,5 @@
 import { NotificationService } from "../lib/NotificationService";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Zap, Flame, MapPin, Compass, Sparkles, Check, 
@@ -10,7 +10,7 @@ import { PremiumEngine } from "../lib/premiumEngine";
 import { PaymentEngine } from "../lib/paymentEngine";
 import { InsufficientBalanceModal } from "./wallet/InsufficientBalanceModal";
 import { db } from "../lib/firebase";
-import { doc, getDoc, updateDoc, setDoc, addDoc, collection, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 
 interface GomboBoostManagerProps {
   isOpen: boolean;
@@ -159,141 +159,50 @@ export default function GomboBoostManager({
     selectedDurationText = `${selectedOpt.durationHours} Heures`;
   }
 
+  const isSubmittingRef = useRef<boolean>(false);
+
   const handlePayAndBoost = async () => {
+    if (loading || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setLoading(true);
     setErrorMsg(null);
 
     try {
       const uid = currentUserProfile.uid;
-      const boostDescription = activeItem.type === "profile" 
-        ? `Boost Profil d'Artiste (${selectedDurationText})`
-        : `Boost Publication: ${selectedTitle} (${selectedDurationText})`;
 
-      const payRes = await PaymentEngine.processPayment({
+      const res = await PaymentEngine.processBoostPayment({
         userId: uid,
         userName: currentUserProfile.artistName || currentUserProfile.firstName || "Membre Gombo",
-        amount: finalPrice,
-        module: activeItem.type === "profile" ? "Boost Profil" : "Boost Publication",
-        reason: boostDescription,
-        metadata: {
-          itemId: activeItem.id,
-          itemType: activeItem.type,
-          boostType: selectedPubOption
+        itemType: activeItem.type,
+        itemId: activeItem.id,
+        boostOptionId: activeItem.type === "profile" ? "profile" : selectedPubOption,
+        profileDurationHours: activeItem.type === "profile" ? selectedProfileDuration : undefined,
+        currentUserProfile: {
+          ...currentUserProfile,
+          title: activeItem.title || ""
         }
       });
 
-      if (!payRes.success) {
-        if (payRes.insufficientBalance) {
+      if (!res.success) {
+        if (res.insufficientBalance) {
           setShowInsufficientModal(true);
         } else {
-          setErrorMsg(payRes.error || "Erreur lors du paiement par Wallet.");
+          setErrorMsg(res.error || "Erreur lors du traitement du boost.");
         }
-        setLoading(false);
         return;
       }
 
-      setWalletBalance(payRes.balanceAfter);
-
-      const now = new Date();
-      let expiresAt = new Date();
-
-      if (activeItem.type === "profile") {
-        expiresAt.setHours(expiresAt.getHours() + selectedProfileDuration);
-      } else {
-        const hours = pubOptions.find(o => o.id === selectedPubOption)!.durationHours;
-        expiresAt.setHours(expiresAt.getHours() + hours);
-      }
-
-      const expiresAtIso = expiresAt.toISOString();
-      const userRef = doc(db, "users", uid);
-
-      // 3. Write inside `boosts/` collection
-      const boostRef = doc(collection(db, "boosts"));
-      await setDoc(boostRef, {
-        id: boostRef.id,
-        userId: uid,
-        itemId: activeItem.id,
-        itemType: activeItem.type,
-        boostType: activeItem.type === "profile" ? "profile" : selectedPubOption,
-        durationHours: activeItem.type === "profile" ? selectedProfileDuration : pubOptions.find(o => o.id === selectedPubOption)!.durationHours,
-        amount: finalPrice,
-        createdAt: now.toISOString(),
-        expiresAt: expiresAtIso,
-        status: "active"
-      });
-
-      // 4. Update core content collections & specific feeds
-      if (activeItem.type === "profile") {
-        // Core user update
-        await updateDoc(userRef, {
-          profileBoosted: true,
-          profileBoostedUntil: expiresAtIso,
-          profileBoostPriority: 10,
-          profileBoostType: "premium_spotlight"
-        });
-
-        // Store inside `featuredProfiles/`
-        await setDoc(doc(db, "featuredProfiles", uid), {
-          userId: uid,
-          artistName: currentUserProfile.artistName || "",
-          commune: currentUserProfile.commune || "",
-          role: currentUserProfile.role || "musicien",
-          avatarUrl: currentUserProfile.avatarUrl || currentUserProfile.photoURL || "",
-          featuredUntil: expiresAtIso,
-          priority: 10,
-          createdAt: now.toISOString()
-        });
-
-      } else {
-        // It's a publication boost (gombo / candidature)
-        const collectionName = activeItem.type === "candidature" ? "applications" : "gombos";
-        const docRef = doc(db, collectionName, activeItem.id);
-
-        let updateFields: any = {
-          boosted: true,
-          boostedUntil: expiresAtIso,
-          boostType: selectedPubOption
-        };
-
-        if (selectedPubOption === "booster") {
-          updateFields.isUrgent = true;
-          updateFields.urgentUntil = expiresAtIso;
-          updateFields.priority = 10;
-        } else if (selectedPubOption === "tendance") {
-          updateFields.featured = true;
-          updateFields.featuredUntil = expiresAtIso;
-          updateFields.priority = 10;
-
-          // Add to featuredPosts collection
-          await setDoc(doc(db, "featuredPosts", activeItem.id), {
-            postId: activeItem.id,
-            title: activeItem.title || "",
-            featuredUntil: expiresAtIso,
-            priority: 10,
-            type: activeItem.type,
-            createdAt: now.toISOString()
-          });
-
-        } else if (selectedPubOption === "locale") {
-          updateFields.localFeatured = true;
-          updateFields.localFeaturedUntil = expiresAtIso;
-          updateFields.priority = 8;
-        } else if (selectedPubOption === "pres_de_moi") {
-          updateFields.nearMePriority = true;
-          updateFields.nearMePriorityUntil = expiresAtIso;
-          updateFields.priority = 9;
-        }
-
-        await updateDoc(docRef, updateFields);
+      if (res.balanceAfter !== undefined) {
+        setWalletBalance(res.balanceAfter);
       }
 
       // Add user notification in Firestore
       await NotificationService.sendNotification({
         userId: uid,
         title: "⚡ Boost Activé avec Succès !",
-        message: `Félicitations, le boost "${selectedTitle}" a été activé pour votre ${activeItem.type === "profile" ? "profil" : "publication"} pour une durée de ${selectedDurationText}.`,
+        message: `Félicitations, votre boost pour votre ${activeItem.type === "profile" ? "profil" : "publication"} a été activé au tarif officiel de ${res.officialPrice} FCFA.`,
         type: "payment_received",
-        createdAt: now.toISOString(),
+        createdAt: new Date().toISOString(),
         isRead: false
       });
 
@@ -312,6 +221,7 @@ export default function GomboBoostManager({
       console.error("Error applying boost:", e);
       setErrorMsg("Une erreur s'est produite lors de l'activation du boost. Veuillez réessayer.");
     } finally {
+      isSubmittingRef.current = false;
       setLoading(false);
     }
   };
