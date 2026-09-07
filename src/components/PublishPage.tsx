@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import GomboPublish from "./GomboPublish";
-import AudioPublishForm from "./AudioPublishForm";
 import { useAuth } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Briefcase, Music, FileText, Plus, Trash2, ArrowRight } from "lucide-react";
+import { FileText, Plus, Trash2, ArrowRight } from "lucide-react";
 import { db } from "../firebase";
 import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
 
@@ -18,7 +17,6 @@ export default function PublishPage({ currentUserProfile, onSuccess, onCancel, o
   const { profile: authProfile } = useAuth();
   const profile = currentUserProfile || authProfile;
   const navigate = useNavigate();
-  const [publishMode, setPublishMode] = useState<"gombo" | "audio">("gombo");
   const [step, setStep] = useState<"checking" | "choice" | "list" | "form">("checking");
   const [userDrafts, setUserDrafts] = useState<any[]>([]);
   const [selectedDraft, setSelectedDraft] = useState<any>(null);
@@ -118,51 +116,10 @@ export default function PublishPage({ currentUserProfile, onSuccess, onCancel, o
 
   return (
     <div className="min-h-[100dvh] bg-afri-bg-sec text-afri-text py-6 px-4">
-      <div className="max-w-2xl mx-auto mb-6 flex items-center justify-center gap-3">
-        <button
-          onClick={() => {
-            setPublishMode("gombo");
-            if (userDrafts.length > 0) {
-              setStep("choice");
-            } else {
-              setStep("form");
-            }
-          }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-black uppercase transition cursor-pointer border ${
-            publishMode === "gombo"
-              ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-lg"
-              : "bg-afri-bg text-afri-text-sec border-afri-border hover:text-afri-text"
-          }`}
-        >
-          <Briefcase className="w-4 h-4" />
-          Publier un Gombo
-        </button>
-        <button
-          onClick={() => {
-            setPublishMode("audio");
-            setStep("form");
-          }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-black uppercase transition cursor-pointer border ${
-            publishMode === "audio"
-              ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-lg"
-              : "bg-afri-bg text-afri-text-sec border-afri-border hover:text-afri-text"
-          }`}
-        >
-          <Music className="w-4 h-4" />
-          Publier un Audio
-        </button>
-      </div>
-
       {!profile ? (
         <div className="flex justify-center items-center h-[50vh] text-afri-text-sec">
           Chargement du profil...
         </div>
-      ) : publishMode === "audio" ? (
-        <AudioPublishForm
-          currentUserProfile={profile}
-          onSuccess={() => navigate("/home")}
-          onCancel={() => navigate(-1)}
-        />
       ) : step === "checking" ? (
         <div className="flex justify-center items-center h-[40vh] text-afri-text-sec text-xs font-mono">
           Vérification des brouillons en cours...

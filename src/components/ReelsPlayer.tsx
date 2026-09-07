@@ -14,6 +14,7 @@ import { gomboDB } from "../firebase";
 import { useAppSettings } from "../context/AppSettingsContext";
 import { useAuth } from "../AuthContext";
 import { openPublicProfile } from "../lib/publicProfile";
+import { getFilterCss } from "./reels/videoFilters";
 
 export interface ReelItem {
   id: string;
@@ -26,6 +27,7 @@ export interface ReelItem {
   mediaUrl: string;
   musicTrack?: string;
   hashtags?: string[];
+  appliedFilter?: string;
   likesCount: number;
   commentsCount: number;
   comments?: any[];
@@ -308,6 +310,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
           mediaUrl: url,
           musicTrack: m.musicTrack || m.title || `Prestation Live — ${u.artisticName || u.name || "Artiste"}`,
           hashtags: Array.isArray(m.hashtags) ? m.hashtags : ["#Afrigombo", "#Portfolio", "#Live"],
+          appliedFilter: m.appliedFilter || "naturel",
           likesCount: typeof m.likes === "number" ? m.likes : (m.likesCount || 12),
           commentsCount: typeof m.commentsCount === "number" ? m.commentsCount : (Array.isArray(m.comments) ? m.comments.length : 0),
           comments: Array.isArray(m.comments) ? m.comments : [],
@@ -350,6 +353,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         mediaUrl: url,
         musicTrack: p.title || p.musicTrack || "Son original AFRIGOMBO ELITE",
         hashtags: Array.isArray(p.hashtags) ? p.hashtags : ["#Afrigombo", "#FilReel", "#ArtisteIvoirien"],
+        appliedFilter: p.appliedFilter || "naturel",
         likesCount: p.likes || p.likesCount || 0,
         commentsCount: typeof p.comments === "number" ? p.comments : (Array.isArray(p.comments) ? p.comments.length : (p.commentsCount || 0)),
         comments: Array.isArray(p.comments) ? p.comments : [],
@@ -920,6 +924,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                         src={reel.mediaUrl}
                         autoPlay={isActive}
                         preload={isActive ? "auto" : "metadata"}
+                        style={{ filter: getFilterCss(reel.appliedFilter) }}
                         className="w-full h-full object-cover cursor-pointer"
                         loop
                         muted={isMuted}

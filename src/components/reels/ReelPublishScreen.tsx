@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Hash, MessageSquare, Loader2 } from "lucide-react";
+import { X, Hash, MessageSquare, Loader2, Sparkles } from "lucide-react";
 import { supabaseStorage } from "../../lib/storage/supabaseStorage";
 import { collection, addDoc, doc, updateDoc, arrayUnion, setDoc } from "firebase/firestore";
 import { db, auth } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
+import { getFilterCss, REEL_VIDEO_FILTERS } from "./videoFilters";
 
 interface ReelPublishScreenProps {
   videoFile: File;
@@ -24,6 +25,9 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatusText, setUploadStatusText] = useState("Préparation...");
   const [errorMsg, setErrorMsg] = useState("");
+
+  const activeFilterCss = getFilterCss(filterId);
+  const activeFilterObj = REEL_VIDEO_FILTERS.find((f) => f.id === filterId);
 
   const publishVideoNodeRef = React.useRef<HTMLVideoElement | null>(null);
 
@@ -73,7 +77,25 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
     setErrorMsg("");
 
     // 1. Résolution et contrôle d'authentification robuste
-    const activeFirebaseUser = auth.currentUser || (currentUser && typeof currentUser.getIdToken === "function" ? currentUser : null);
+    let activeFirebaseUser = auth.currentUser;
+    if (!activeFirebaseUser && typeof (auth as any)?.authStateReady === "function") {
+      try {
+        await (auth as any).authStateReady();
+        activeFirebaseUser = auth.currentUser;
+      } catch (_) {}
+    }
+
+    if (!activeFirebaseUser) {
+      activeFirebaseUser = await new Promise<any>((resolve) => {
+        const timeout = setTimeout(() => resolve(null), 1500);
+        const unsub = auth.onAuthStateChanged((u) => {
+          clearTimeout(timeout);
+          unsub();
+          resolve(u);
+        });
+      });
+    }
+
     const resolvedUid = activeFirebaseUser?.uid || currentUserProfile?.uid || currentUser?.uid;
 
     if (!resolvedUid) {
@@ -101,34 +123,25 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
       const uid = resolvedUid;
       const publicationId = `reel_${Date.now()}`;
       
-      // 3. Rafraîchissement sécurisé du jeton d'authentification Firebase
+      // 3. Récupération sécurisée du jeton d'authentification Firebase (sans forcer pour éviter un rejet réseau)
       let idToken: string | undefined;
       if (activeFirebaseUser) {
         try {
-          idToken = await activeFirebaseUser.getIdToken(true);
+          idToken = await activeFirebaseUser.getIdToken(false);
         } catch (tokErr) {
-          console.warn("[REEL] Échec du rafraîchissement forcé du token, tentative normale:", tokErr);
+          console.warn("[REEL] Tentative getIdToken normale échouée, essai avec refresh forcé:", tokErr);
           try {
-            idToken = await activeFirebaseUser.getIdToken();
+            idToken = await activeFirebaseUser.getIdToken(true);
           } catch (tokErr2) {
-            console.error("[REEL] Échec total de récupération du token Firebase:", tokErr2);
+            console.warn("[REEL] Échec de récupération du token Firebase:", tokErr2);
           }
         }
       } else if (currentUser && typeof currentUser.getIdToken === "function") {
         try {
-          idToken = await currentUser.getIdToken(true);
+          idToken = await currentUser.getIdToken(false);
         } catch (tokErr) {
           console.warn("[REEL] Échec du token sur currentUser:", tokErr);
         }
-      }
-
-      if (!idToken) {
-        setLoading(false);
-        setErrorMsg("Session expirée. Veuillez vous reconnecter pour publier votre Réel.");
-        if (typeof requireAuth === "function") {
-          requireAuth(() => {});
-        }
-        return;
       }
 
       setUploadStatusText("Vérification du format vidéo...");
@@ -137,6 +150,7 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
         `[REEL SAFARI PIPELINE]\n` +
         `Fichier sélectionné: ${(videoFile.size / 1024 / 1024).toFixed(2)} Mo\n` +
         `Nom: ${videoFile.name}\n` +
+        `Filtre appliqué: ${filterId || "naturel"}\n` +
         `Type source: ${videoFile.type || "inconnu"}\n` +
         `Pipeline Safari H.264: ACTIF`
       );
@@ -302,15 +316,24 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
 
       <div className="flex-1 overflow-y-auto p-4 space-y-5">
         <div className="flex gap-3">
-          <video
-            ref={(el) => { if (el) publishVideoNodeRef.current = el; }}
-            src={videoPreviewUrl}
-            muted
-            loop
-            autoPlay
-            playsInline
-            className="w-24 h-40 object-cover rounded-xl border border-white/10"
-          />
+          <div className="relative w-24 h-40 shrink-0">
+            <video
+              ref={(el) => { if (el) publishVideoNodeRef.current = el; }}
+              src={videoPreviewUrl}
+              muted
+              loop
+              autoPlay
+              playsInline
+              style={{ filter: activeFilterCss }}
+              className="w-full h-full object-cover rounded-xl border border-white/10"
+            />
+            {filterId && filterId !== "naturel" && (
+              <div className="absolute bottom-1 left-1 right-1 bg-black/80 backdrop-blur-xs rounded-md px-1 py-0.5 text-[9px] font-mono text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center gap-0.5 truncate">
+                <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                <span className="truncate">{activeFilterObj?.name || filterId}</span>
+              </div>
+            )}
+          </div>
           <div className="flex-1 space-y-3">
             <textarea
               value={caption}

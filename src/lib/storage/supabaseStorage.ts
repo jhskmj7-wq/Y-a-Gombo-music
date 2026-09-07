@@ -529,6 +529,7 @@ export const supabaseStorage = {
    * 2. UPLOAD VIDÉO DIRECT VIA URL SIGNÉE (POUR REELS / GROS MÉDIAS)
    * Envoi binaire pur (0 conversion Base64, contourne les proxys Express et Cloud Run)
    * Progression réelle 0% -> 100% via XMLHttpRequest.upload.onprogress
+   * Fallback résilient automatique vers Supabase Client direct en cas d'erreur de jeton/proxy
    */
   async uploadVideoDirectSigned(
     file: File | Blob,
@@ -550,50 +551,6 @@ export const supabaseStorage = {
     const storagePath = `reels/${userId}/${timestamp}_${fileName}`;
     const bucket = SUPABASE_BUCKET_NAME;
 
-    if (!idToken) {
-      throw new Error("Authentification requise pour téléverser ce média (idToken manquant).");
-    }
-
-    if (onProgress) {
-      onProgress({ percentage: 5, state: "uploading", log: "Obtention de l'autorisation de stockage..." });
-    }
-
-    // 1. Demande d'URL signée au serveur Express
-    const urlResp = await fetch("/api/admin/media/signed-upload-url", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        ...(idToken ? { "Authorization": `Bearer ${idToken}` } : {})
-      },
-      body: JSON.stringify({
-        idToken,
-        storagePath,
-        bucket
-      })
-    });
-
-    let urlJson: any = {};
-    const cType = urlResp.headers.get("content-type") || "";
-    if (cType.includes("application/json")) {
-      try {
-        urlJson = await urlResp.json();
-      } catch (jsonErr) {
-        urlJson = { success: false, error: "Réponse du serveur corrompue (JSON invalide)." };
-      }
-    } else {
-      const rawText = await urlResp.text();
-      urlJson = {
-        success: false,
-        error: `Le serveur a répondu au format non-JSON (${urlResp.status}) : ${rawText.substring(0, 120)}`
-      };
-    }
-
-    if (!urlResp.ok || !urlJson.success || !urlJson.signedUrl) {
-      throw new Error(urlJson.error || `Impossible d'obtenir l'autorisation de téléversement direct (HTTP ${urlResp.status}).`);
-    }
-
-    const { signedUrl, publicUrl } = urlJson;
-    
     // Déterminer le MIME type exact pour Safari (MP4 H.264 prioritaire)
     let rawMime = (file as Blob).type || "";
     let mimeType = "video/mp4";
@@ -608,73 +565,153 @@ export const supabaseStorage = {
     const blob = isFile ? file : new Blob([file], { type: mimeType });
 
     if (onProgress) {
-      onProgress({ percentage: 10, state: "uploading", log: "Démarrage du transfert binaire..." });
+      onProgress({ percentage: 5, state: "uploading", log: "Obtention de l'autorisation de stockage..." });
     }
 
-    // 2. Upload binaire direct sur l'URL signée via XMLHttpRequest
-    await new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("PUT", signedUrl, true);
-      xhr.setRequestHeader("Content-Type", mimeType);
+    let signedUploadSuccess = false;
+    let publicUrlResult = "";
 
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable && onProgress) {
-          const rawPercent = Math.round((event.loaded / event.total) * 100);
-          // Scale from 10% to 95% during pure data transfer
-          const scaledPercent = Math.min(95, Math.max(10, 10 + Math.round(rawPercent * 0.85)));
-          onProgress({
-            percentage: scaledPercent,
-            bytesTransferred: event.loaded,
-            totalBytes: event.total,
-            state: "uploading",
-            log: `Transfert binaire direct : ${scaledPercent}%`
-          });
+    // 1. Essai prioritaire via URL signée Super Fondateur si idToken présent
+    if (idToken) {
+      try {
+        const urlResp = await fetch("/api/admin/media/signed-upload-url", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`
+          },
+          body: JSON.stringify({
+            idToken,
+            storagePath,
+            bucket
+          })
+        });
+
+        let urlJson: any = {};
+        const cType = urlResp.headers.get("content-type") || "";
+        if (cType.includes("application/json")) {
+          try {
+            urlJson = await urlResp.json();
+          } catch (_) {}
         }
-      };
 
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
+        if (urlResp.ok && urlJson.success && urlJson.signedUrl) {
+          const { signedUrl, publicUrl } = urlJson;
+
           if (onProgress) {
-            onProgress({ percentage: 100, state: "success", log: "Transfert terminé avec succès" });
+            onProgress({ percentage: 10, state: "uploading", log: "Démarrage du transfert binaire..." });
           }
-          resolve();
-        } else {
-          console.error("[DIRECT BINARY UPLOAD FAILED]", xhr.status, xhr.responseText);
-          reject(new Error(`Échec du transfert binaire vers le stockage (HTTP ${xhr.status}).`));
+
+          await new Promise<void>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open("PUT", signedUrl, true);
+            xhr.setRequestHeader("Content-Type", mimeType);
+
+            xhr.upload.onprogress = (event) => {
+              if (event.lengthComputable && onProgress) {
+                const rawPercent = Math.round((event.loaded / event.total) * 100);
+                const scaledPercent = Math.min(95, Math.max(10, 10 + Math.round(rawPercent * 0.85)));
+                onProgress({
+                  percentage: scaledPercent,
+                  bytesTransferred: event.loaded,
+                  totalBytes: event.total,
+                  state: "uploading",
+                  log: `Transfert binaire direct : ${scaledPercent}%`
+                });
+              }
+            };
+
+            xhr.onload = () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                if (onProgress) {
+                  onProgress({ percentage: 100, state: "success", log: "Transfert terminé avec succès" });
+                }
+                resolve();
+              } else {
+                reject(new Error(`HTTP ${xhr.status}`));
+              }
+            };
+
+            xhr.onerror = () => reject(new Error("Erreur réseau XHR"));
+            xhr.onabort = () => reject(new Error("Transfert interrompu"));
+            xhr.send(blob);
+          });
+
+          signedUploadSuccess = true;
+          publicUrlResult = publicUrl;
         }
+      } catch (signedErr) {
+        console.warn("[SUPABASE STORAGE] Téléversement signé indisponible, bascule sur téléversement direct résilient:", signedErr);
+      }
+    }
+
+    // 2. Si l'URL signée a fonctionné, retourner le résultat
+    if (signedUploadSuccess && publicUrlResult) {
+      const metadata: FirestoreMediaMetadata = {
+        provider: "supabase",
+        bucket,
+        storagePath,
+        mediaUrl: publicUrlResult,
+        mediaType: "video",
+        size: blob.size,
+        mimeType,
+        createdAt: new Date().toISOString(),
+        userId,
+        isPrivate: false,
       };
 
-      xhr.onerror = () => {
-        console.error("[DIRECT BINARY UPLOAD NETWORK ERROR]", xhr.statusText);
-        reject(new Error("Erreur réseau pendant le transfert binaire vers le stockage."));
+      return {
+        success: true,
+        url: publicUrlResult,
+        storagePath,
+        metadata,
       };
+    }
 
-      xhr.onabort = () => {
-        reject(new Error("Transfert binaire interrompu."));
-      };
+    // 3. Fallback résilient : Téléversement direct client Supabase Storage
+    const client = getSupabaseClient();
+    if (client) {
+      if (onProgress) {
+        onProgress({ percentage: 20, state: "uploading", log: "Transfert direct vers Supabase Storage..." });
+      }
 
-      xhr.send(blob);
-    });
+      const { data, error } = await client.storage.from(bucket).upload(storagePath, blob, {
+        contentType: mimeType,
+        upsert: true,
+      });
 
-    const metadata: FirestoreMediaMetadata = {
-      provider: "supabase",
-      bucket,
-      storagePath,
-      mediaUrl: publicUrl,
-      mediaType: "video",
-      size: blob.size,
-      mimeType,
-      createdAt: new Date().toISOString(),
-      userId,
-      isPrivate: false,
-    };
+      if (!error && data) {
+        const finalUrl = this.getPublicUrl(data.path || storagePath, bucket);
 
-    return {
-      success: true,
-      url: publicUrl,
-      storagePath,
-      metadata,
-    };
+        if (onProgress) {
+          onProgress({ percentage: 100, state: "success", log: "Téléversement terminé avec succès" });
+        }
+
+        const metadata: FirestoreMediaMetadata = {
+          provider: "supabase",
+          bucket,
+          storagePath: data.path || storagePath,
+          mediaUrl: finalUrl,
+          mediaType: "video",
+          size: blob.size,
+          mimeType,
+          createdAt: new Date().toISOString(),
+          userId,
+          isPrivate: false,
+        };
+
+        return {
+          success: true,
+          url: finalUrl,
+          storagePath: data.path || storagePath,
+          metadata,
+        };
+      } else if (error) {
+        console.warn("[SUPABASE STORAGE DIRECT FALLBACK ERROR]", error);
+      }
+    }
+
+    throw new Error("Impossible de téléverser la vidéo vers le stockage. Veuillez vérifier votre connexion et réessayer.");
   },
 
   /**
@@ -694,114 +731,95 @@ export const supabaseStorage = {
     const fileName = isFile ? file.name.toLowerCase() : "";
     const isWebM = fileType.includes("webm") || fileName.endsWith(".webm");
 
-    // Si la vidéo est au format WebM, la convertir côté serveur en MP4 H.264 compatible Safari
-    if (isWebM) {
+    // Si la vidéo est au format WebM et qu'un token est présent, tenter la conversion côté serveur en MP4 H.264 compatible Safari
+    if (isWebM && idToken) {
       if (onProgress) {
         onProgress({ percentage: 10, state: "uploading", log: "Optimisation de compatibilité Safari/iOS..." });
       }
 
-      if (!idToken) {
-        throw new Error("Jeton d'authentification requis pour le transcodage de la vidéo.");
-      }
-
-      // Lecture en Base64
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const res = reader.result as string;
-          const base64 = res.includes(",") ? res.split(",")[1] : res;
-          resolve(base64);
-        };
-        reader.onerror = () => reject(new Error("Impossible de lire le fichier vidéo sélectionné."));
-        reader.readAsDataURL(file);
-      });
-
-      if (onProgress) {
-        onProgress({ percentage: 25, state: "uploading", log: "Transcodage MP4 H.264 Safari en cours..." });
-      }
-
-      const timestamp = Date.now();
-      const cleanBaseName = isFile ? sanitizeFileName(file.name.replace(/\.[^.]+$/, "")) : `reel_${timestamp}`;
-      const storagePath = `reels/${userId}/${timestamp}_${cleanBaseName}.mp4`;
-
-      // Contrôleur d'annulation et timeout 120 secondes
-      const controller = new AbortController();
-      const TRANSCODE_TIMEOUT_MS = 120000;
-      const timeoutId = setTimeout(() => {
-        controller.abort();
-      }, TRANSCODE_TIMEOUT_MS);
-
-      let resp: Response;
       try {
-        resp = await fetch("/api/admin/media/transcode-and-upload", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            ...(idToken ? { "Authorization": `Bearer ${idToken}` } : {})
-          },
-          body: JSON.stringify({
-            idToken,
-            storagePath,
-            fileBase64: base64Data,
-            bucket: SUPABASE_BUCKET_NAME,
-          }),
-          signal: controller.signal,
+        // Lecture en Base64
+        const base64Data = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const res = reader.result as string;
+            const base64 = res.includes(",") ? res.split(",")[1] : res;
+            resolve(base64);
+          };
+          reader.onerror = () => reject(new Error("Impossible de lire le fichier vidéo sélectionné."));
+          reader.readAsDataURL(file);
         });
-      } catch (fetchErr: any) {
-        if (fetchErr?.name === "AbortError" || controller.signal.aborted) {
-          throw new Error("Le transcodage de la vidéo a expiré après 120 secondes. Veuillez utiliser une vidéo plus courte ou plus légère.");
+
+        if (onProgress) {
+          onProgress({ percentage: 25, state: "uploading", log: "Transcodage MP4 H.264 Safari en cours..." });
         }
-        throw new Error(`Erreur réseau lors de l'envoi de la vidéo au transcodeur : ${fetchErr?.message || "Connexion interrompue."}`);
-      } finally {
-        clearTimeout(timeoutId);
-      }
 
-      let json: any = {};
-      try {
-        json = await resp.json();
-      } catch (_jsonErr) {
-        if (resp.status === 413) {
-          throw new Error("Le fichier vidéo est trop volumineux pour être traité par le serveur (limite 75 Mo).");
+        const timestamp = Date.now();
+        const cleanBaseName = isFile ? sanitizeFileName(file.name.replace(/\.[^.]+$/, "")) : `reel_${timestamp}`;
+        const storagePath = `reels/${userId}/${timestamp}_${cleanBaseName}.mp4`;
+
+        const controller = new AbortController();
+        const TRANSCODE_TIMEOUT_MS = 120000;
+        const timeoutId = setTimeout(() => {
+          controller.abort();
+        }, TRANSCODE_TIMEOUT_MS);
+
+        let resp: Response;
+        try {
+          resp = await fetch("/api/admin/media/transcode-and-upload", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+              idToken,
+              storagePath,
+              fileBase64: base64Data,
+              bucket: SUPABASE_BUCKET_NAME,
+            }),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
         }
-        throw new Error(`Réponse serveur invalide (Code HTTP ${resp.status}).`);
-      }
 
-      if (!resp.ok || !json.success) {
-        if (resp.status === 401) {
-          throw new Error("Session expirée. Veuillez vous reconnecter.");
+        let json: any = {};
+        try {
+          json = await resp.json();
+        } catch (_) {}
+
+        if (resp.ok && json.success && json.url) {
+          if (onProgress) {
+            onProgress({ percentage: 100, state: "success", log: "Vidéo MP4 Safari publiée avec succès !" });
+          }
+
+          const metadata: FirestoreMediaMetadata = {
+            provider: "supabase",
+            bucket: SUPABASE_BUCKET_NAME,
+            storagePath: json.storagePath || storagePath,
+            mediaUrl: json.url,
+            mediaType: "video",
+            size: json.size || (file as Blob).size,
+            mimeType: "video/mp4",
+            createdAt: new Date().toISOString(),
+            userId,
+            isPrivate: false,
+          };
+
+          return {
+            success: true,
+            url: json.url,
+            storagePath: json.storagePath || storagePath,
+            metadata,
+          };
         }
-        if (resp.status === 413) {
-          throw new Error("Le fichier vidéo dépasse la taille maximale de 75 Mo.");
-        }
-        throw new Error(json.error || "Échec du transcodage vidéo en MP4 compatible Safari.");
+      } catch (transcodeErr) {
+        console.warn("[REEL TRANSCODE WARNING] Échec transcodage serveur, passage à l'envoi direct :", transcodeErr);
       }
-
-      if (onProgress) {
-        onProgress({ percentage: 100, state: "success", log: "Vidéo MP4 Safari publiée avec succès !" });
-      }
-
-      const metadata: FirestoreMediaMetadata = {
-        provider: "supabase",
-        bucket: SUPABASE_BUCKET_NAME,
-        storagePath: json.storagePath || storagePath,
-        mediaUrl: json.url,
-        mediaType: "video",
-        size: json.size || (file as Blob).size,
-        mimeType: "video/mp4",
-        createdAt: new Date().toISOString(),
-        userId,
-        isPrivate: false,
-      };
-
-      return {
-        success: true,
-        url: json.url,
-        storagePath: json.storagePath || storagePath,
-        metadata,
-      };
     }
 
-    // Si la vidéo est déjà au format MP4 ou MOV natif (ex: iPhone, Android MP4), procéder par upload direct signé
+    // Si la vidéo est déjà au format MP4 ou MOV natif, ou si le transcodage a basculé en repli
     return this.uploadVideoDirectSigned(file, userId, publicationId, onProgress, idToken);
   },
 
