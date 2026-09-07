@@ -27,6 +27,7 @@ import { useAudio } from "../context/AudioContext";
 import { PremiumEngine } from "../lib/premiumEngine";
 import { useAuth } from "../AuthContext";
 import { PendingAuthIntent } from "../lib/authIntent";
+import { openPublicProfile } from "../lib/publicProfile";
 
 interface AnnuaireTalentsProps {
   currentUserProfile: UserProfile | null;
@@ -267,7 +268,10 @@ export default function AnnuaireTalents({
       ...prev,
       [uid]: (prev[uid] || 0) + 1
     }));
-    onSelectTalent(uid);
+    openPublicProfile(uid);
+    if (onSelectTalent) {
+      onSelectTalent(uid);
+    }
     // Push modern cleaner state history URL
     window.history.pushState(null, "", `/talent/${uid}`);
   };

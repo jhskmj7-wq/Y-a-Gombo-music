@@ -9,6 +9,7 @@ import { SocialPost, PostComment, UserProfile } from "../types";
 import { gomboDB } from "../firebase";
 import { safeStringify } from "../lib/jsonUtils";
 import { isGpsActive } from "../lib/featureFlags";
+import { openPublicProfile } from "../lib/publicProfile";
 import GomboMapViewModal from "./common/GomboMapViewModal";
 
 const calculateDistanceKm = (lat1?: number, lon1?: number, lat2?: number, lon2?: number) => {
@@ -514,9 +515,14 @@ export default function SocialPostCard({
       {/* 1. Header block: user info */}
       <div className="p-4 sm:p-5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="relative w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-[#D4AF37] to-amber-400 shrink-0">
+          <div 
+            onClick={() => post.userId && openPublicProfile(post.userId)}
+            className="relative w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-[#D4AF37] to-amber-400 shrink-0 cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+            title="Consulter le portfolio public"
+            role="button"
+          >
             <img 
-              
+              referrerPolicy="no-referrer"
               src={authorProfile?.avatarUrl || authorProfile?.photoURL || post.userAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
               alt={post.userName} 
               className="w-full h-full rounded-full object-cover border border-afri-bg" 
@@ -524,9 +530,14 @@ export default function SocialPostCard({
           </div>
           <div className="min-w-0 flex-1">
              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-extrabold text-sm text-gray-950 dark:text-afri-text leading-tight truncate max-w-[130px] xs:max-w-[170px] sm:max-w-none block">
+                <button
+                  type="button"
+                  onClick={() => post.userId && openPublicProfile(post.userId)}
+                  className="font-extrabold text-sm text-gray-950 dark:text-afri-text leading-tight truncate max-w-[130px] xs:max-w-[170px] sm:max-w-none block text-left hover:text-[#D4AF37] transition-colors cursor-pointer"
+                  title="Consulter le portfolio public"
+                >
                   {authorProfile?.artistName || authorProfile?.displayName || post.userName || "Artiste Gombo"}
-                </span>
+                </button>
                 {(() => {
                   const gigsCount = authorProfile?.gigsCompleted || 0;
                   const isCertified = authorProfile?.isCertified || authorProfile?.isVerified || false;
@@ -941,10 +952,15 @@ export default function SocialPostCard({
                           : (com.userAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150")
                       } 
                       alt={com.userName} 
-                      className="w-7 h-7 rounded-full object-cover shrink-0 mt-0.5 border border-[#D4AF37]/50" 
+                      onClick={() => com.userId && openPublicProfile(com.userId)}
+                      className="w-7 h-7 rounded-full object-cover shrink-0 mt-0.5 border border-[#D4AF37]/50 cursor-pointer hover:scale-105 active:scale-95 transition-transform" 
+                      title="Consulter le portfolio"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-extrabold text-gray-950 dark:text-afri-text leading-normal">
+                      <p 
+                        onClick={() => com.userId && openPublicProfile(com.userId)}
+                        className="font-extrabold text-gray-950 dark:text-afri-text leading-normal cursor-pointer hover:text-[#D4AF37] transition-colors"
+                      >
                         {com.userName}
                       </p>
                       <p className="text-gray-650 dark:text-afri-text-sec mt-1 leading-relaxed font-semibold">

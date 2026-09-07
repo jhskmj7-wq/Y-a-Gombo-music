@@ -91,14 +91,16 @@ export function PublicProfileModal({
       getDocs(postsQuery)
         .then((snap) => {
           const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Post));
-          setUserPosts(list);
+          const publicList = list.filter(p => !p.isDraft && (p as any).status !== "draft" && !(p as any).isPrivate && !(p as any).deleted);
+          setUserPosts(publicList.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
         })
         .catch((err) => {
           // Fallback if index missing or query fails
           const fallbackQuery = query(collection(db, "posts"), where("userId", "==", targetUserId));
           getDocs(fallbackQuery).then(snap => {
             const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Post));
-            setUserPosts(list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
+            const publicList = list.filter(p => !p.isDraft && (p as any).status !== "draft" && !(p as any).isPrivate && !(p as any).deleted);
+            setUserPosts(publicList.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
           }).catch(console.error);
         });
 
@@ -120,7 +122,9 @@ export function PublicProfileModal({
       );
       getDocs(gombosQuery)
         .then((snap) => {
-          setPublishedGombos(snap.docs.map(d => ({ id: d.id, ...d.data() } as Gombo)));
+          const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Gombo));
+          const publicGombos = list.filter(g => !g.isDraft && (g as any).status !== "draft" && !(g as any).deleted);
+          setPublishedGombos(publicGombos);
         })
         .catch(console.error);
     }
@@ -446,6 +450,32 @@ export function PublicProfileModal({
                       </div>
                     </div>
                   </div>
+
+                  {/* Instruments, Genres & Experience Tags */}
+                  {((profile.instruments && profile.instruments.length > 0) || (profile.genres && profile.genres.length > 0) || profile.experienceYears || (profile as any).experience) && (
+                    <div className="pt-2 border-t border-afri-border/50 flex flex-wrap items-center gap-1.5">
+                      {profile.experienceYears && (
+                        <span className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-[9px] font-mono font-black text-amber-400 uppercase">
+                          ⚡ {profile.experienceYears} Ans d&apos;expérience
+                        </span>
+                      )}
+                      {(profile as any).experience && !profile.experienceYears && (
+                        <span className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-[9px] font-mono font-black text-amber-400 uppercase">
+                          ⚡ Expérience : {(profile as any).experience}
+                        </span>
+                      )}
+                      {profile.instruments?.map((inst, i) => (
+                        <span key={i} className="px-2 py-0.5 rounded-md bg-afri-bg-ter border border-afri-border text-[9px] font-mono font-bold text-afri-text uppercase">
+                          🎸 {inst}
+                        </span>
+                      ))}
+                      {profile.genres?.map((genre, i) => (
+                        <span key={i} className="px-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/30 text-[9px] font-mono font-bold text-purple-300 uppercase">
+                          🎶 {genre}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Bio / Description */}
                   {profile.bio && (

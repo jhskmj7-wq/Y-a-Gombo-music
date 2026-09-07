@@ -595,6 +595,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     };
   }, []);
 
+  // Sync route /portfolio/:id, /profile/:id, /talent/:id with public profile modal
+  useEffect(() => {
+    const path = location.pathname;
+    const match = path.match(/^\/(?:portfolio|profile|talent)\/([^/]+)/);
+    if (match && match[1]) {
+      setPublicProfileTargetUserId(match[1]);
+    }
+  }, [location.pathname]);
+
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [supportModalReason, setSupportModalReason] = useState("");
 

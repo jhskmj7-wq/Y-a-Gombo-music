@@ -290,6 +290,9 @@ function App() {
           <Route path="/events" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
           <Route path="/contracts" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
           <Route path="/notifications" element={<ProfileGuard><MainAppLayout /></ProfileGuard>} />
+          <Route path="/portfolio/:id" element={<MainAppLayout />} />
+          <Route path="/profile/:id" element={<MainAppLayout />} />
+          <Route path="/talent/:id" element={<MainAppLayout />} />
           <Route 
             path="/complete-profile" 
             element={

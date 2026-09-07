@@ -1,6 +1,5 @@
 import { getSupabaseClient, SUPABASE_BUCKET_NAME, isSupabaseConfigured, sanitizeBucketName } from "../supabase";
-import { auth, storage as fbStorage } from "../../firebase";
-import { ref as fbStorageRef, uploadBytesResumable, getDownloadURL as fbGetDownloadURL } from "firebase/storage";
+import { auth } from "../../firebase";
 
 /**
  * Service centralisé pour le stockage de fichiers via Supabase Storage pour AfriGombo.
@@ -724,78 +723,8 @@ export const supabaseStorage = {
       }
     }
 
-    // 4. Fallback résilient 2 : Firebase Storage (Secours cloud robuste avec suivi temps réel)
-    if (fbStorage) {
-      try {
-        if (onProgress) {
-          onProgress({ percentage: 30, state: "uploading", log: "Transfert vers le stockage cloud sécurisé..." });
-        }
-
-        const fileRef = fbStorageRef(fbStorage, storagePath);
-        const uploadTask = uploadBytesResumable(fileRef, blob, { contentType: mimeType });
-
-        const downloadUrl = await new Promise<string>((resolve, reject) => {
-          uploadTask.on(
-            "state_changed",
-            (snapshot) => {
-              if (snapshot.totalBytes > 0 && onProgress) {
-                const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                const scaledPercent = Math.min(95, Math.max(30, 30 + Math.round(percent * 0.65)));
-                const loadedMb = (snapshot.bytesTransferred / 1024 / 1024).toFixed(1);
-                const totalMb = (snapshot.totalBytes / 1024 / 1024).toFixed(1);
-                onProgress({
-                  percentage: scaledPercent,
-                  bytesTransferred: snapshot.bytesTransferred,
-                  totalBytes: snapshot.totalBytes,
-                  state: "uploading",
-                  log: `Transfert cloud : ${loadedMb} Mo / ${totalMb} Mo (${scaledPercent}%)`
-                });
-              }
-            },
-            (error) => reject(error),
-            async () => {
-              try {
-                const url = await fbGetDownloadURL(uploadTask.snapshot.ref);
-                resolve(url);
-              } catch (urlErr) {
-                reject(urlErr);
-              }
-            }
-          );
-        });
-
-        if (downloadUrl) {
-          if (onProgress) {
-            onProgress({ percentage: 100, state: "success", log: "Téléversement terminé avec succès" });
-          }
-
-          const metadata: FirestoreMediaMetadata = {
-            provider: "firebase",
-            bucket: "firebase-storage",
-            storagePath,
-            mediaUrl: downloadUrl,
-            mediaType: "video",
-            size: blob.size,
-            mimeType,
-            createdAt: new Date().toISOString(),
-            userId,
-            isPrivate: false,
-          };
-
-          return {
-            success: true,
-            url: downloadUrl,
-            storagePath,
-            metadata,
-          };
-        }
-      } catch (fbErr: any) {
-        console.warn("[FIREBASE STORAGE FALLBACK ERROR]", fbErr);
-      }
-    }
-
-    const failureReason = supabaseErrorDetails || signedErrorDetails || "Vérifiez votre connexion internet ou la taille du fichier";
-    const userFacingError = `Impossible de téléverser la vidéo (${failureReason}). Veuillez réessayer.`;
+    const failureReason = supabaseErrorDetails || signedErrorDetails || "Erreur de stockage Supabase. Veuillez vérifier les permissions de votre bucket Supabase Storage.";
+    const userFacingError = `Impossible de téléverser la vidéo vers Supabase Storage (${failureReason}). Veuillez réessayer.`;
     
     if (onProgress) {
       onProgress({ percentage: 0, state: "error", log: userFacingError });

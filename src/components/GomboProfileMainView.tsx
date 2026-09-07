@@ -12,6 +12,7 @@ import { AndroidCenteredDialog } from "./common/GlobalPortalModal";
 import { AndroidBottomSheet } from "./ui/AndroidBottomSheet";
 import { useTheme } from "../context/ThemeContext";
 import { useFeatureFlags } from "../lib/featureFlags";
+import { openPublicProfile } from "../lib/publicProfile";
 
 interface GomboProfileMainViewProps {
   currentUserProfile: UserProfile;
@@ -462,7 +463,10 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 <span>👑 Mon Statut</span>
               </button>
               <button 
-                onClick={() => onViewPublicPortfolio?.(currentUserProfile.uid)}
+                onClick={() => {
+                  openPublicProfile(currentUserProfile.uid);
+                  onViewPublicPortfolio?.(currentUserProfile.uid);
+                }}
                 className={`px-3 py-1 rounded-full border text-[8.5px] xs:text-[9px] font-black uppercase tracking-wider shadow-sm hover:scale-102 active:scale-98 transition-all cursor-pointer inline-flex items-center gap-1 ${
                   isLight ? "bg-[#FDFBF7] border-[#D4AF37]/50 text-gray-800 hover:bg-[#D4AF37]/10" : "bg-afri-bg-ter border-amber-400/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
                 }`}

@@ -5,6 +5,7 @@ import { Gombo, User, UserProfile } from "../types";
 import { getDistanceLabel, estimateTravelTimes } from "../lib/geoUtils";
 import { AfrigoRadarMap } from "./AfrigoRadarMap";
 import { filterActiveGombos } from "../lib/gomboDateUtils";
+import { openPublicProfile } from "../lib/publicProfile";
 
 interface NearbyGombosSectionProps {
   gombos: Gombo[];
@@ -135,14 +136,21 @@ export const NearbyArtistsSection: React.FC<NearbyArtistsSectionProps> = ({ arti
               </div>
             )}
             
-            <div className="flex items-center gap-3">
+            <div 
+              onClick={() => openPublicProfile(artist.uid || artist.id)}
+              className="flex items-center gap-3 cursor-pointer group"
+              title="Voir le portfolio de l'artiste"
+            >
               <img 
+                referrerPolicy="no-referrer"
                 src={artist.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
                 alt={artist.artisticName}
-                className="w-10 h-10 rounded-xl object-cover border border-afri-border"
+                className="w-10 h-10 rounded-xl object-cover border border-afri-border group-hover:scale-105 transition-transform"
               />
               <div className="flex-1 overflow-hidden">
-                <h4 className="text-[10px] font-black text-afri-text uppercase truncate">{artist.artisticName || artist.displayName}</h4>
+                <h4 className="text-[10px] font-black text-afri-text uppercase truncate group-hover:text-[#D4AF37] transition-colors">
+                  {artist.artisticName || artist.displayName}
+                </h4>
                 <div className="flex items-center gap-1">
                   <Star className="w-2 h-2 text-amber-500 fill-amber-500" />
                   <span className="text-[8px] font-bold text-afri-text-sec uppercase">{artist.gomboId?.niveau || 1} • {artist.averageRating?.toFixed(1) || "5.0"}</span>
