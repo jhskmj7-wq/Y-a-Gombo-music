@@ -10,7 +10,7 @@ import {
 import MapPickerModal from "./common/MapPickerModal";
 import { gomboDB } from "../firebase";
 import { db } from "../lib/firebase";
-import { doc, getDoc, setDoc, addDoc, collection, runTransaction } from "firebase/firestore";
+import { doc, getDoc, setDoc, addDoc, collection, runTransaction, deleteDoc } from "firebase/firestore";
 import { UserProfile, SocialPost } from "../types";
 import { 
   MIN_GOMBO_AMOUNT, 
@@ -90,14 +90,16 @@ interface GomboPublishProps {
   onCancel: () => void;
   onNavigateView?: (view: string) => void;
   initialDraft?: any;
+  isNewBlank?: boolean;
 }
 
-export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, onNavigateView, initialDraft }: GomboPublishProps) {
+export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, onNavigateView, initialDraft, isNewBlank }: GomboPublishProps) {
   const { locations: officialLocationsList, communeNames, submitProposal: submitLocationProposal } = useLocations();
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [selectedType, setSelectedType] = useState("opportunite");
   const [gomboCategory, setGomboCategory] = useState<"libre" | "securise">("libre");
+  const [activeDraftId, setActiveDraftId] = useState<string | null>(initialDraft?.id || null);
 
   const [flagsMap, setFlagsMap] = useState<any>({});
   useEffect(() => {
@@ -230,18 +232,47 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
   // 1. AUTO-RESTORE DRAFT ON MOUNT OR INITIAL DRAFT PROP
   useEffect(() => {
     try {
-      const source = initialDraft || JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || localStorage.getItem("gombo_publish_draft") || "{}");
-      if (source && (source.title || source.description || source.budget)) {
+      if (isNewBlank) {
+        setTitle("");
+        setDescription("");
+        setBudget("");
+        setDate("");
+        setTime("18:30");
+        setSpecialty("Piano / Clavier");
+        setCustomSpecialty("");
+        setHashtags(["#GomboLive"]);
+        setMusicStyle("Afrobeats");
+        setExperienceLevel("Tous niveaux");
+        setGomboCategory("libre");
+        setLocationOption("none");
+        setCommune("Cocody");
+        setCustomCommune("");
+        setQuartier("");
+        setCustomPlaceInput("");
+        setItineraryNotes("");
+        setLocationDetail("");
+        setLatitude(null);
+        setLongitude(null);
+        setImageFile(null);
+        setAudioFile(null);
+        setActiveDraftId(null);
+        setHasRestoredDraft(false);
+        return;
+      }
+
+      const source = initialDraft;
+      if (source && (source.title || source.description || source.budget || source.commune || source.specialty)) {
         if (source.title) setTitle(source.title);
         if (source.description) setDescription(source.description);
-        if (source.selectedType || source.type) setSelectedType(source.selectedType || source.type);
+        if (source.selectedType || source.type || source.category) setSelectedType(source.selectedType || source.type || source.category);
         if (source.specialty) setSpecialty(source.specialty);
         if (source.customSpecialty) setCustomSpecialty(source.customSpecialty);
         if (Array.isArray(source.hashtags)) setHashtags(source.hashtags);
         if (source.musicStyle) setMusicStyle(source.musicStyle);
         if (source.experienceLevel) setExperienceLevel(source.experienceLevel);
-        if (source.gomboCategory) setGomboCategory(source.gomboCategory);
+        setGomboCategory("libre");
         if (source.locationOption) setLocationOption(source.locationOption);
+        else if (source.commune) setLocationOption("commune");
         if (source.commune) setCommune(source.commune);
         if (source.customCommune) setCustomCommune(source.customCommune);
         if (source.quartier) setQuartier(source.quartier);
@@ -255,12 +286,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
         if (typeof source.longitude === "number") setLongitude(source.longitude);
         if (source.duration) setDuration(source.duration);
         if (source.customDurationDays) setCustomDurationDays(source.customDurationDays);
+        if (source.id) setActiveDraftId(source.id);
         setHasRestoredDraft(true);
       }
     } catch (e) {
       console.warn("Could not parse draft:", e);
     }
-  }, [initialDraft]);
+  }, [initialDraft, isNewBlank]);
 
   const clearDraft = () => {
     try {
@@ -334,7 +366,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
 
       // 2. Save in Firestore if user is authenticated
       if (currentUserProfile?.uid) {
-        const draftId = `draft_${currentUserProfile.uid}_${Date.now()}`;
+        const draftId = (activeDraftId && !activeDraftId.startsWith("local")) ? activeDraftId : `draft_${currentUserProfile.uid}_${Date.now()}`;
+        if (!activeDraftId) setActiveDraftId(draftId);
         const draftRef = doc(db, "gombos", draftId);
         await setDoc(draftRef, {
           id: draftId,
@@ -854,6 +887,15 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
         localStorage.removeItem(DRAFT_STORAGE_KEY);
         localStorage.removeItem("gombo_publish_draft");
       } catch (_) {}
+
+      // Delete draft document in Firestore if it was a draft
+      if (activeDraftId && !activeDraftId.startsWith("local")) {
+        try {
+          await deleteDoc(doc(db, "gombos", activeDraftId));
+        } catch (err) {
+          console.warn("Could not delete Firestore draft upon publishing:", err);
+        }
+      }
 
       // Update daily subscription quota counter
       try {
@@ -1702,8 +1744,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
 
             {cachetVal >= MIN_GOMBO_AMOUNT && (
               <div className="pt-2 mt-1 border-t border-afri-border/50 flex justify-between items-center text-[10.5px]">
-                <span className="text-afri-text-sec">Frais ({financials.ratePercent} %) : <strong className="text-[#D4AF37]">{financials.fee.toLocaleString('fr-FR')} FCFA</strong></span>
-                <span className="text-afri-text-sec">Net artiste : <strong className="text-emerald-400">{financials.netAmount.toLocaleString('fr-FR')} FCFA</strong></span>
+                <span className="text-afri-text-sec">Modalité : <strong className="text-emerald-400">Paiement direct sur scène</strong></span>
+                <span className="text-afri-text-sec">Cachet convenu : <strong className="text-[#D4AF37]">{cachetVal.toLocaleString('fr-FR')} FCFA</strong></span>
               </div>
             )}
           </div>
@@ -2206,16 +2248,12 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
                   <span className="font-mono font-bold text-afri-text">{cachetVal.toLocaleString('fr-FR')} FCFA</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-afri-text-sec">Commission ({financials.ratePercent} %) :</span>
-                  <span className="font-mono font-bold text-[#D4AF37]">{financials.fee.toLocaleString('fr-FR')} FCFA</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-emerald-400 font-bold">Net artiste :</span>
-                  <span className="font-mono font-bold text-emerald-400">{financials.netAmount.toLocaleString('fr-FR')} FCFA</span>
+                  <span className="text-afri-text-sec">Frais de plateforme :</span>
+                  <span className="font-mono font-bold text-emerald-400">0 FCFA (Mode Direct)</span>
                 </div>
                 <div className="flex justify-between items-center pt-1.5 border-t border-dashed border-[#D4AF37]/50 text-[#D4AF37]">
-                  <span className="font-black uppercase text-[10.5px]">Total à payer (Cachet + Commission) :</span>
-                  <span className="font-mono font-black text-sm">{financials.total.toLocaleString('fr-FR')} FCFA</span>
+                  <span className="font-black uppercase text-[10.5px]">Montant convenu :</span>
+                  <span className="font-mono font-black text-sm">{cachetVal.toLocaleString('fr-FR')} FCFA</span>
                 </div>
               </>
             )}

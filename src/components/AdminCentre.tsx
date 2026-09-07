@@ -66,6 +66,8 @@ const GomboMusikEcosystem = lazyWithRetry(() => import("./GomboMusikEcosystem"))
 // Optimized Static Imports for instant opening without loading screens
 import GrandMarcheView from "./GrandMarcheView";
 import GomboPublish from "./GomboPublish";
+import PublishPage from "./PublishPage";
+import { isGomboExpired } from "../lib/gomboDateUtils";
 import AudioPublishForm from "./AudioPublishForm";
 import RenfortExpress from "./RenfortExpress";
 import AcademieView from "./AcademieView";
@@ -869,7 +871,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     }
   };
 
-  const [pubFilter, setPubFilter] = useState<"all" | "en_cours" | "valide" | "termine" | "annule">("all");
+  const [pubFilter, setPubFilter] = useState<"en_cours" | "valide" | "archive">("en_cours");
   const [historyFilter, setHistoryFilter] = useState<"all" | "connections" | "transactions" | "applications">("all");
   
   const isFirstLoadRef = useRef(true);
@@ -3238,7 +3240,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
             </header>
           ) : (
-            ["user_terrain", "user_wallet", "user_messages", "user_notifications", "user_settings", "user_heritage", "user_edit_profile", "nearby", "premium_wheel", "user_wheel", "wheel"].includes(activeMenu) ? null : (
+            (["user_terrain", "user_wallet", "user_messages", "user_notifications", "user_settings", "nearby", "premium_wheel", "user_wheel", "wheel"].includes(activeMenu) || (activeMenu === "user_heritage" && isHeritageSubPanelActive)) ? null : (
               <header className="flex items-center justify-between px-4 py-3 bg-afri-bg border-b border-afri-border/50 z-[40] relative shrink-0 shadow-md">
                 <div className="flex items-center gap-3">
           {!["user_terrain", "user_wallet", "user_vibes", "user_mes_gombos", "user_heritage", "user_publish", "dashboard", "users", "notifications", "contracts", "reports", "revenue"].includes(activeMenu) && (
@@ -4904,7 +4906,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       />
                     )
                   ) : (
-                    <GomboPublish
+                    <PublishPage
                       currentUserProfile={
                         profile || {
                           uid: currentUser?.uid || "user_guest",
@@ -4927,6 +4929,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       }}
                       onCancel={() => {
                         goBackMenu();
+                      }}
+                      onNavigateView={(view) => {
+                        setActiveMenu(view as any);
                       }}
                     />
                   )}
@@ -5639,7 +5644,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   return isCreator || isSelected || isApplicant;
                 };
 
-                const myGombos = gombos.filter(isOwnerOrParticipant);
+                const myGombos = gombos.filter(g => (g.status || g.statut || "").toLowerCase() !== "draft" && isOwnerOrParticipant(g));
 
                 // Récupération des posts réels de l'utilisateur (posts Firestore + Portfolio mediaGallery)
                 const postsFromCollection = posts.filter(p => {
@@ -5682,24 +5687,27 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 });
 
                 const filteredGombos = myGombos.filter(g => {
-                  if (pubFilter === "all") return true;
+                  const expired = isGomboExpired(g);
                   const st = (g.status || g.statut || "").toLowerCase();
+
+                  if (pubFilter === "archive") {
+                    return expired || ["mission_terminee", "termine", "paiement_effectue", "contrat_refuse", "mission_annulee", "archive", "archived", "expired", "expire"].includes(st);
+                  }
+
+                  // Items in non-archive tabs must not be expired
+                  if (expired) return false;
+
                   if (pubFilter === "en_cours") {
                     return ["active", "publie", "candidatures_ouvertes", "artiste_selectionne", "en_cours", "pending", "pending_deposit"].includes(st);
                   }
                   if (pubFilter === "valide") {
                     return ["contrat_accepte", "contrat_confirme", "paiement_recu"].includes(st);
                   }
-                  if (pubFilter === "termine") {
-                    return ["mission_terminee", "termine", "paiement_effectue"].includes(st);
-                  }
-                  if (pubFilter === "annule") {
-                    return ["contrat_refuse", "mission_annulee"].includes(st);
-                  }
                   return true;
                 });
 
-                const getStatusLabel = (status: string | undefined) => {
+                const getStatusLabel = (status: string | undefined, gomboItem?: any) => {
+                  if (gomboItem && isGomboExpired(gomboItem)) return "⌛ Expiré / Archivé";
                   switch(status) {
                     case "active": return "🟢 En cours / Actif";
                     case "pending_deposit": return "🟡 En attente de dépôt";
@@ -5715,6 +5723,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     case "paiement_effectue": return "✅ Gombo Terminé";
                     case "contrat_refuse":
                     case "mission_annulee": return "❌ Annulé";
+                    case "archive":
+                    case "archived":
+                    case "expire": return "⌛ Expiré / Archivé";
                     default: return status || "⏳ En attente";
                   }
                 };
@@ -5762,24 +5773,36 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       {/* Filter tabs */}
                       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-2 border-t border-afri-border">
                         {[
-                          { id: "all", label: "Toutes", count: myGombos.length },
-                          { id: "en_cours", label: "En cours", count: myGombos.filter(g => ["publie", "candidatures_ouvertes", "artiste_selectionne", "en_cours", "pending", "pending_deposit"].includes(g.status || "")).length },
-                          { id: "valide", label: "Validés", count: myGombos.filter(g => ["contrat_accepte", "contrat_confirme", "paiement_recu"].includes(g.status || "")).length },
-                          { id: "termine", label: "Terminés", count: myGombos.filter(g => ["mission_terminee", "termine", "paiement_effectue"].includes(g.status || "")).length },
-                          { id: "annule", label: "Annulés", count: myGombos.filter(g => ["contrat_refuse", "mission_annulee"].includes(g.status || "")).length }
+                          {
+                            id: "en_cours",
+                            label: "En cours",
+                            count: myGombos.filter(g => !isGomboExpired(g) && ["active", "publie", "candidatures_ouvertes", "artiste_selectionne", "en_cours", "pending", "pending_deposit"].includes((g.status || g.statut || "").toLowerCase())).length
+                          },
+                          {
+                            id: "valide",
+                            label: "Validés",
+                            count: myGombos.filter(g => !isGomboExpired(g) && ["contrat_accepte", "contrat_confirme", "paiement_recu"].includes((g.status || g.statut || "").toLowerCase())).length
+                          },
+                          {
+                            id: "archive",
+                            label: "Archivé",
+                            count: myGombos.filter(g => isGomboExpired(g) || ["mission_terminee", "termine", "paiement_effectue", "contrat_refuse", "mission_annulee", "archive", "archived", "expired", "expire"].includes((g.status || g.statut || "").toLowerCase())).length
+                          }
                         ].map((tab) => (
                           <button
                             key={tab.id}
                             type="button"
                             onClick={() => setPubFilter(tab.id as any)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap cursor-pointer transition-all flex items-center gap-1.5 border ${
+                            className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap cursor-pointer transition-all flex items-center gap-1.5 border ${
                               pubFilter === tab.id
                                 ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md font-black"
                                 : "bg-afri-bg-sec/70 border-afri-border text-afri-text-sec hover:text-afri-text"
                             }`}
                           >
                             <span>{tab.label}</span>
-                            <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${pubFilter === tab.id ? "bg-afri-bg text-[#D4AF37]" : "bg-afri-bg text-afri-text-sec"}`}>
+                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black ${
+                              pubFilter === tab.id ? "bg-black/20 text-black" : "bg-afri-bg border border-afri-border text-afri-text-sec"
+                            }`}>
                               {tab.count}
                             </span>
                           </button>
@@ -5843,7 +5866,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     </span>
                                   )}
                                   <span className="text-[9px] font-mono uppercase bg-afri-bg-sec text-afri-text px-2 py-0.5 rounded-lg border border-afri-border font-bold">
-                                    {getStatusLabel(gombo.status)}
+                                    {getStatusLabel(gombo.status, gombo)}
                                   </span>
                                 </div>
                               </div>

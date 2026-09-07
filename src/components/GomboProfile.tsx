@@ -1225,17 +1225,15 @@ export default function GomboProfile({
     }
   };
 
-  const customHeader = (
+  const customHeader = panelView === "main" ? null : (
     <header className="flex-none bg-afri-bg border-b border-afri-border/50 px-4 py-3 flex items-center justify-between gap-3 z-[40] relative shrink-0 shadow-md" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))', paddingLeft: 'max(16px, env(safe-area-inset-left))', paddingRight: 'max(16px, env(safe-area-inset-right))' }}>
       <div className="flex items-center gap-3 min-w-0">
-        {panelView !== "main" && (
-          <button 
-            onClick={handleBack} 
-            className="p-1.5 sm:p-2 bg-afri-bg-sec/40 rounded-xl text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-ter transition-colors border border-afri-border/80 active:scale-95 shrink-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        )}
+        <button 
+          onClick={handleBack} 
+          className="p-1.5 sm:p-2 bg-afri-bg-sec/40 rounded-xl text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-ter transition-colors border border-afri-border/80 active:scale-95 shrink-0"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
         <h1 className="text-lg font-black text-afri-text tracking-tight uppercase truncate">
           {getPageTitle()}
         </h1>

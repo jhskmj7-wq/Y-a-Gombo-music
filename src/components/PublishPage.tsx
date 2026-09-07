@@ -7,13 +7,38 @@ import { Briefcase, Music, FileText, Plus, Trash2, ArrowRight } from "lucide-rea
 import { db } from "../firebase";
 import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
 
-export default function PublishPage() {
-  const { profile } = useAuth();
+interface PublishPageProps {
+  currentUserProfile?: any;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  onNavigateView?: (view: string) => void;
+}
+
+export default function PublishPage({ currentUserProfile, onSuccess, onCancel, onNavigateView }: PublishPageProps = {}) {
+  const { profile: authProfile } = useAuth();
+  const profile = currentUserProfile || authProfile;
   const navigate = useNavigate();
   const [publishMode, setPublishMode] = useState<"gombo" | "audio">("gombo");
   const [step, setStep] = useState<"checking" | "choice" | "list" | "form">("checking");
   const [userDrafts, setUserDrafts] = useState<any[]>([]);
   const [selectedDraft, setSelectedDraft] = useState<any>(null);
+  const [isNewBlank, setIsNewBlank] = useState(false);
+
+  const handleSuccess = () => {
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      navigate("/home");
+    }
+  };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      navigate(-1);
+    }
+  };
 
   // Check for active drafts in LocalStorage and Firestore
   useEffect(() => {
@@ -54,13 +79,19 @@ export default function PublishPage() {
         if (foundDrafts.length > 0) {
           setStep("choice");
         } else {
+          setIsNewBlank(true);
           setStep("form");
         }
       })
       .catch((err) => {
         console.warn("Could not fetch Firestore drafts:", err);
         setUserDrafts(foundDrafts);
-        setStep(foundDrafts.length > 0 ? "choice" : "form");
+        if (foundDrafts.length > 0) {
+          setStep("choice");
+        } else {
+          setIsNewBlank(true);
+          setStep("form");
+        }
       });
   }, [profile?.uid]);
 
@@ -79,6 +110,8 @@ export default function PublishPage() {
     const updated = userDrafts.filter(d => d.id !== draftId);
     setUserDrafts(updated);
     if (updated.length === 0) {
+      setSelectedDraft(null);
+      setIsNewBlank(true);
       setStep("form");
     }
   };
@@ -149,24 +182,47 @@ export default function PublishPage() {
           </div>
 
           <div className="space-y-3 pt-2">
-            <button
-              onClick={() => setStep("list")}
-              className="w-full py-3.5 px-4 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition cursor-pointer"
-            >
-              <FileText className="w-4 h-4" />
-              Voir mes brouillons ({userDrafts.length})
-              <ArrowRight className="w-4 h-4 ml-auto" />
-            </button>
+            {userDrafts.length === 1 ? (
+              <button
+                onClick={() => {
+                  setSelectedDraft(userDrafts[0]);
+                  setIsNewBlank(false);
+                  setStep("form");
+                }}
+                className="w-full py-3.5 px-4 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition cursor-pointer"
+              >
+                <FileText className="w-4 h-4" />
+                Voir mon brouillon
+                <ArrowRight className="w-4 h-4 ml-auto" />
+              </button>
+            ) : (
+              <button
+                onClick={() => setStep("list")}
+                className="w-full py-3.5 px-4 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition cursor-pointer"
+              >
+                <FileText className="w-4 h-4" />
+                Voir mes brouillons ({userDrafts.length})
+                <ArrowRight className="w-4 h-4 ml-auto" />
+              </button>
+            )}
 
             <button
               onClick={() => {
                 setSelectedDraft(null);
+                setIsNewBlank(true);
                 setStep("form");
               }}
               className="w-full py-3.5 px-4 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text border border-afri-border rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition cursor-pointer"
             >
               <Plus className="w-4 h-4 text-[#D4AF37]" />
               Créer une nouvelle publication
+            </button>
+
+            <button
+              onClick={handleCancel}
+              className="text-xs text-afri-text-sec hover:text-afri-text pt-2 cursor-pointer transition block mx-auto"
+            >
+              Annuler et retourner
             </button>
           </div>
         </div>
@@ -188,6 +244,7 @@ export default function PublishPage() {
                 key={draft.id}
                 onClick={() => {
                   setSelectedDraft(draft);
+                  setIsNewBlank(false);
                   setStep("form");
                 }}
                 className="p-4 bg-afri-bg hover:bg-afri-bg-ter border border-afri-border/80 hover:border-[#D4AF37]/50 rounded-2xl transition cursor-pointer flex items-center justify-between group shadow-sm"
@@ -228,6 +285,7 @@ export default function PublishPage() {
           <button
             onClick={() => {
               setSelectedDraft(null);
+              setIsNewBlank(true);
               setStep("form");
             }}
             className="w-full py-3 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 rounded-2xl text-xs font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer mt-4"
@@ -240,14 +298,16 @@ export default function PublishPage() {
         <GomboPublish
           currentUserProfile={profile}
           initialDraft={selectedDraft}
-          onSuccess={() => navigate("/home")}
+          isNewBlank={isNewBlank}
+          onSuccess={handleSuccess}
           onCancel={() => {
             if (userDrafts.length > 0) {
               setStep("choice");
             } else {
-              navigate(-1);
+              handleCancel();
             }
           }}
+          onNavigateView={onNavigateView}
         />
       )}
     </div>
