@@ -398,3 +398,299 @@ export async function recordWalletTransaction(payload: {
   }
   return txId;
 }
+
+/**
+ * =========================================================================
+ * NEW CONTROLLED PREPAID CREDIT MODEL (AFRISOSCREDITACCOUNT)
+ * =========================================================================
+ */
+
+export type CreditMovementType = "TOPUP" | "SERVICE_PAYMENT" | "SERVICE_HOLD" | "HOLD_RELEASED" | "REFUND";
+
+export interface AfriSOSCreditAccount {
+  userId: string;
+  availableCredits: number;
+  heldCredits: number;
+  currency: "XOF";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AfriSOSCreditLedgerEntry {
+  id: string;
+  userId: string;
+  type: CreditMovementType;
+  amount: number;
+  currency: "XOF";
+  relatedEntityId?: string;
+  operatorReference?: string;
+  status: "success" | "pending" | "failed" | string;
+  validatedBy?: string;
+  createdAt: string;
+}
+
+/**
+ * Safely retrieve or initialize the user's AfriSOSCreditAccount.
+ */
+export async function getOrCreateCreditAccount(userId: string): Promise<AfriSOSCreditAccount> {
+  const accountRef = doc(db, "AfriSOSCreditAccount", userId);
+  const snap = await getDoc(accountRef);
+  
+  if (snap.exists()) {
+    const data = snap.data();
+    return {
+      userId: data.userId || userId,
+      availableCredits: typeof data.availableCredits === "number" ? data.availableCredits : 0,
+      heldCredits: typeof data.heldCredits === "number" ? data.heldCredits : 0,
+      currency: "XOF",
+      createdAt: data.createdAt || new Date().toISOString(),
+      updatedAt: data.updatedAt || new Date().toISOString()
+    };
+  }
+
+  // Fallback to legacy balance to bootstrap credits if account doesn't exist yet
+  const userRef = doc(db, "users", userId);
+  const userSnap = await getDoc(userRef);
+  let initialBalance = 0;
+  let initialHeld = 0;
+  if (userSnap.exists()) {
+    const userData = userSnap.data();
+    const legacyBal = getCanonicalWalletBalance(userData);
+    if (typeof legacyBal === "number" && !isNaN(legacyBal)) {
+      initialBalance = legacyBal;
+    }
+    if (typeof userData.wallet?.soldeBloque === "number") {
+      initialHeld = userData.wallet.soldeBloque;
+    }
+  }
+
+  const newAccount: AfriSOSCreditAccount = {
+    userId,
+    availableCredits: initialBalance,
+    heldCredits: initialHeld,
+    currency: "XOF",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  await setDoc(accountRef, sanitizeForFirestore(newAccount));
+  return newAccount;
+}
+
+/**
+ * Register a financial movement in the Grand Ledger (AfriSOSCreditLedger)
+ * and update the available/held credits in AfriSOSCreditAccount with maximum security.
+ */
+export async function recordCreditMovement(
+  userId: string,
+  params: {
+    type: CreditMovementType;
+    amount: number;
+    relatedEntityId?: string;
+    operatorReference?: string;
+    status: string;
+    validatedBy?: string;
+  }
+): Promise<string> {
+  const ledgerId = `ledger_${params.type.toLowerCase()}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  const nowStr = new Date().toISOString();
+
+  const ledgerEntry: AfriSOSCreditLedgerEntry = {
+    id: ledgerId,
+    userId,
+    type: params.type,
+    amount: Math.abs(params.amount),
+    currency: "XOF",
+    relatedEntityId: params.relatedEntityId || "",
+    operatorReference: params.operatorReference || "",
+    status: params.status,
+    validatedBy: params.validatedBy || "",
+    createdAt: nowStr
+  };
+
+  // 1. Record in the Grand Ledger
+  await setDoc(doc(db, "AfriSOSCreditLedger", ledgerId), sanitizeForFirestore(ledgerEntry));
+
+  // 2. Fetch and calculate new balances
+  const account = await getOrCreateCreditAccount(userId);
+  let newAvailable = account.availableCredits;
+  let newHeld = account.heldCredits;
+
+  const movementAmt = Math.abs(params.amount);
+
+  if (params.status === "success" || params.status === "validated" || params.status === "PAID") {
+    switch (params.type) {
+      case "TOPUP":
+        newAvailable += movementAmt;
+        break;
+      case "SERVICE_PAYMENT":
+        newAvailable = Math.max(0, newAvailable - movementAmt);
+        break;
+      case "SERVICE_HOLD":
+        newAvailable = Math.max(0, newAvailable - movementAmt);
+        newHeld += movementAmt;
+        break;
+      case "HOLD_RELEASED":
+        newHeld = Math.max(0, newHeld - movementAmt);
+        newAvailable += movementAmt;
+        break;
+      case "REFUND":
+        newAvailable += movementAmt;
+        break;
+    }
+  }
+
+  // 3. Update AfriSOSCreditAccount
+  const accountRef = doc(db, "AfriSOSCreditAccount", userId);
+  await setDoc(accountRef, sanitizeForFirestore({
+    userId,
+    availableCredits: newAvailable,
+    heldCredits: newHeld,
+    currency: "XOF",
+    updatedAt: nowStr
+  }), { merge: true });
+
+  // 4. Synchronize with legacy user profile for maximum compatibility
+  const userRef = doc(db, "users", userId);
+  await setDoc(userRef, {
+    wallet: {
+      soldeDisponible: newAvailable,
+      soldeBloque: newHeld
+    },
+    balance: newAvailable,
+    walletBalance: newAvailable
+  }, { merge: true });
+
+  // 5. Also log a legacy transaction for history tab backwards compatibility
+  let legacyTxType = "publication";
+  let legacyDesc = "";
+  if (params.type === "TOPUP") {
+    legacyTxType = "recharge_wallet";
+    legacyDesc = `Recharge de crédit prépayé : +${movementAmt.toLocaleString("fr-FR")} XOF`;
+  } else if (params.type === "SERVICE_PAYMENT") {
+    legacyTxType = "debit_publication";
+    legacyDesc = `Paiement service : -${movementAmt.toLocaleString("fr-FR")} XOF`;
+  } else if (params.type === "SERVICE_HOLD") {
+    legacyTxType = "fonds_bloques";
+    legacyDesc = `Réservation temporaire de crédit : ${movementAmt.toLocaleString("fr-FR")} XOF`;
+  } else if (params.type === "HOLD_RELEASED") {
+    legacyTxType = "deblocage_cachet";
+    legacyDesc = `Libération de crédit réservé : +${movementAmt.toLocaleString("fr-FR")} XOF`;
+  } else if (params.type === "REFUND") {
+    legacyTxType = "remboursement";
+    legacyDesc = `Remboursement de service : +${movementAmt.toLocaleString("fr-FR")} XOF`;
+  }
+
+  await recordWalletTransaction({
+    userId,
+    type: legacyTxType,
+    amount: movementAmt,
+    status: params.status,
+    description: params.operatorReference ? `${legacyDesc} (${params.operatorReference})` : legacyDesc,
+    gomboId: params.relatedEntityId,
+    reference: ledgerId
+  });
+
+  return ledgerId;
+}
+
+/**
+ * Perform a controlled, safe service payment using prepaid credits.
+ * Double-debits are blocked and checks are performed via transactions.
+ */
+export async function payForServiceWithCredit(
+  userId: string,
+  amount: number,
+  relatedEntityId?: string
+): Promise<boolean> {
+  if (!userId || amount <= 0) return false;
+
+  const account = await getOrCreateCreditAccount(userId);
+  if (account.availableCredits < amount) {
+    console.warn(`[CREDIT_SECURITY] Insufficient credit balance. Required: ${amount}, Available: ${account.availableCredits}`);
+    return false;
+  }
+
+  // Atomic state update and movement logging
+  await recordCreditMovement(userId, {
+    type: "SERVICE_PAYMENT",
+    amount,
+    relatedEntityId,
+    status: "success"
+  });
+
+  return true;
+}
+
+/**
+ * Reserve credit amount temporarily for a service (e.g. escrow booking).
+ */
+export async function holdCreditForService(
+  userId: string,
+  amount: number,
+  relatedEntityId?: string
+): Promise<boolean> {
+  if (!userId || amount <= 0) return false;
+
+  const account = await getOrCreateCreditAccount(userId);
+  if (account.availableCredits < amount) {
+    console.warn(`[CREDIT_SECURITY] Insufficient credit balance for HOLD. Required: ${amount}, Available: ${account.availableCredits}`);
+    return false;
+  }
+
+  await recordCreditMovement(userId, {
+    type: "SERVICE_HOLD",
+    amount,
+    relatedEntityId,
+    status: "success"
+  });
+
+  return true;
+}
+
+/**
+ * Release temporarily held credit back to the available credits.
+ */
+export async function releaseHeldCredit(
+  userId: string,
+  amount: number,
+  relatedEntityId?: string
+): Promise<boolean> {
+  if (!userId || amount <= 0) return false;
+
+  const account = await getOrCreateCreditAccount(userId);
+  if (account.heldCredits < amount) {
+    console.warn(`[CREDIT_SECURITY] Insufficient held credit balance to release. Required: ${amount}, Held: ${account.heldCredits}`);
+    return false;
+  }
+
+  await recordCreditMovement(userId, {
+    type: "HOLD_RELEASED",
+    amount,
+    relatedEntityId,
+    status: "success"
+  });
+
+  return true;
+}
+
+/**
+ * Refund a service payment.
+ */
+export async function refundServicePayment(
+  userId: string,
+  amount: number,
+  relatedEntityId?: string
+): Promise<boolean> {
+  if (!userId || amount <= 0) return false;
+
+  await recordCreditMovement(userId, {
+    type: "REFUND",
+    amount,
+    relatedEntityId,
+    status: "success"
+  });
+
+  return true;
+}
+

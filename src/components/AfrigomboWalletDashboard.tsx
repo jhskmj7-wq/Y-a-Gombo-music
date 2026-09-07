@@ -61,6 +61,7 @@ import { WalletSecurityService } from "../lib/WalletSecurityService";
 import { useWalletSecurity } from "../context/WalletSecurityContext";
 import { auth, googleProvider } from "../lib/firebase";
 import { GoogleAuthProvider, reauthenticateWithPopup } from "firebase/auth";
+import WalletView from "./Views/WalletView";
 
 
 interface AfrigomboWalletDashboardProps {
@@ -1399,6 +1400,14 @@ export default function AfrigomboWalletDashboard({
       </AndroidPageLayout>
     );
   }
+
+  return (
+    <WalletView 
+      currentUserProfile={currentUserProfile}
+      addToTerminal={addToTerminal}
+      onBack={onBack}
+    />
+  );
 
   return (
     <AndroidPageLayout header={customHeader} scrollable={true} className="pb-safe bg-afri-bg">

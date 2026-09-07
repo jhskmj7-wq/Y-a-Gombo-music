@@ -71,6 +71,7 @@ import RenfortExpress from "./RenfortExpress";
 import AcademieView from "./AcademieView";
 import MessagesView from "./MessagesView";
 import AfrigomboWalletDashboard from "./AfrigomboWalletDashboard";
+import WalletView from "./Views/WalletView";
 import AfrigomboWalletComingSoon from "./wallet/AfrigomboWalletComingSoon";
 import GomboContractsDashboard from "./GomboContractsDashboard";
 import CreatorActivityDashboard from "./CreatorActivityDashboard";
@@ -5450,17 +5451,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "user_wallet" && (
                 <div className="w-full h-full flex-1 flex flex-col min-h-0 bg-afri-bg animate-fadeIn text-left">
                   <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
-                    <AfrigomboWalletDashboard 
+                    <WalletView 
                       currentUserProfile={profile || (currentUser as any)} 
                       addToTerminal={addToTerminal}
                       onBack={goBackMenu}
-                      onNavigateToMessages={(targetId) => {
-                        if (setOpenConvoWithUserId) setOpenConvoWithUserId(targetId || "admin");
-                        setActiveMenu("user_messages");
-                      }}
-                      onNavigateToGomboAds={() => setActiveMenu("user_gombo_ads")}
-                      isComingSoon={isModuleComingSoon("wallet")}
-                      onShowComingSoonView={() => setShowForceWalletPreview(false)}
                     />
                   </Suspense>
                 </div>

@@ -450,6 +450,32 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
             });
             transaction.set(walletTxRef, txData, { merge: true });
 
+            // Atomic topup credit in AfriSOSCreditAccount
+            const creditAccountRef = doc(db, "AfriSOSCreditAccount", req.uid);
+            transaction.set(creditAccountRef, {
+              userId: req.uid,
+              availableCredits: newDispo,
+              heldCredits: uData.wallet?.soldeBloque ?? 0,
+              currency: "XOF",
+              updatedAt: nowIso
+            }, { merge: true });
+
+            // Record movement in Grand Ledger (AfriSOSCreditLedger) with TOPUP type
+            const ledgerId = `ledger_topup_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+            const ledgerRef = doc(db, "AfriSOSCreditLedger", ledgerId);
+            transaction.set(ledgerRef, sanitizeForFirestore({
+              id: ledgerId,
+              userId: req.uid,
+              type: "TOPUP",
+              amount: req.montant,
+              currency: "XOF",
+              relatedEntityId: req.id,
+              operatorReference: req.reference || "",
+              status: "success",
+              validatedBy: currentUser?.uid || "admin_souverain",
+              createdAt: nowIso
+            }));
+
             // Move to Archive / Validated Automatically
             const archiveRef = doc(db, "archivesValidated", req.id);
             transaction.set(archiveRef, sanitizeForFirestore({
