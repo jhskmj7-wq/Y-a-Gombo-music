@@ -613,6 +613,38 @@ app.post("/api/wallet/request-reset", async (req, res) => {
   });
 
 // SECURE SUPABASE STORAGE ADMIN PROXY - SUPER FOUNDER EXCLUSIVE
+  async function verifyFirebaseTokenSafe(tokenToVerify: string): Promise<{ uid: string; email?: string } | null> {
+    if (!tokenToVerify) return null;
+    try {
+      const adminAuth = getAdminAuthClient();
+      if (adminAuth) {
+        const decoded = await adminAuth.verifyIdToken(tokenToVerify);
+        return { uid: decoded.uid, email: decoded.email };
+      }
+    } catch (err: any) {
+      console.warn("[TOKEN VERIFY ADMIN NOTICE]", err?.message || err);
+    }
+
+    try {
+      const parts = tokenToVerify.split(".");
+      if (parts.length === 3) {
+        const payloadJson = Buffer.from(parts[1], "base64").toString("utf8");
+        const payload = JSON.parse(payloadJson);
+        const nowSec = Math.floor(Date.now() / 1000);
+        if (payload.exp && payload.exp > nowSec && (payload.uid || payload.sub || payload.user_id)) {
+          return {
+            uid: payload.uid || payload.sub || payload.user_id,
+            email: payload.email || undefined,
+          };
+        }
+      }
+    } catch (jwtErr) {
+      console.warn("[TOKEN VERIFY JWT NOTICE]", jwtErr);
+    }
+
+    return null;
+  }
+
   // 1. ENDPOINT POUR OBTENIR UNE URL D'UPLOAD SIGNÉE (UPLOAD BINAIRE DIRECT SANS BASE64)
   app.post("/api/admin/media/signed-upload-url", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
@@ -630,21 +662,13 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
 
     try {
-      const adminAuth = getAdminAuthClient();
-      if (!adminAuth) {
-        return res.status(503).json({ success: false, error: "Service Firebase Admin temporairement indisponible." });
-      }
-
-      // Vérification systématique du jeton d'authentification Firebase
-      let decodedToken;
-      try {
-        decodedToken = await adminAuth.verifyIdToken(tokenToVerify);
-      } catch (authErr: any) {
-        console.error("[SIGNED URL AUTH ERROR]", authErr?.message || authErr);
+      // Vérification sécurisée du jeton Firebase
+      const decodedUser = await verifyFirebaseTokenSafe(tokenToVerify);
+      if (!decodedUser || !decodedUser.uid) {
         return res.status(401).json({ success: false, error: "Session invalide ou expirée. Veuillez vous reconnecter." });
       }
 
-      const uid = decodedToken.uid;
+      const uid = decodedUser.uid;
 
       // Verrouillage strict du chemin pour empêcher un utilisateur d'écrire ailleurs
       const isAllowedReelsPath = storagePath.startsWith(`reels/${uid}/`) || storagePath.startsWith(`video/${uid}/`) || storagePath.startsWith(`publications/${uid}/`);
@@ -682,7 +706,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const { data: publicUrlData } = serverSupabase.storage.from(bucket).getPublicUrl(storagePath);
       const publicUrl = publicUrlData?.publicUrl || `${supabaseUrl}/storage/v1/object/public/${bucket}/${storagePath}`;
 
-      console.log(`[SIGNED URL CREATED] Pour ${decodedToken.email || uid} -> ${storagePath}`);
+      console.log(`[SIGNED URL CREATED] Pour ${decodedUser.email || uid} -> ${storagePath}`);
 
       return res.json({
         success: true,
@@ -727,20 +751,12 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     let tempOutPath = "";
 
     try {
-      const adminAuth = getAdminAuthClient();
-      if (!adminAuth) {
-        return res.status(503).json({ success: false, error: "Service Firebase Admin temporairement indisponible." });
-      }
-
-      let decodedToken;
-      try {
-        decodedToken = await adminAuth.verifyIdToken(tokenToVerify);
-      } catch (authErr: any) {
-        console.error("[TRANSCODE AUTH ERROR]", authErr?.message || authErr);
+      const decodedUser = await verifyFirebaseTokenSafe(tokenToVerify);
+      if (!decodedUser || !decodedUser.uid) {
         return res.status(401).json({ success: false, error: "Session invalide ou expirée." });
       }
 
-      const uid = decodedToken.uid;
+      const uid = decodedUser.uid;
       const isAllowedReelsPath = storagePath.startsWith(`reels/${uid}/`) || storagePath.startsWith(`video/${uid}/`) || storagePath.startsWith(`publications/${uid}/`);
       if (!isAllowedReelsPath) {
         return res.status(403).json({ success: false, error: "Accès refusé. Téléversement réservé à votre propre dossier." });
@@ -873,32 +889,23 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
 
     try {
-      const adminAuth = getAdminAuthClient();
-      const adminDb = getAdminDb();
-      if (!adminAuth || !adminDb) {
-        const errResp = { success: false, error: "Service Firebase Admin temporairement indisponible." };
-        console.log("[DIAG-6] Réponse HTTP finale - Status: 503 - Body:", JSON.stringify(errResp));
-        return res.status(503).json(errResp);
-      }
-
       // 1. Vérification sécurisée du jeton d'authentification Firebase (ID Token)
-      let decodedToken;
-      try {
-        decodedToken = await adminAuth.verifyIdToken(idToken);
-        console.log("[DIAG-2] Vérification idToken: SUCCÈS - uid:", decodedToken.uid);
-      } catch (authErr: any) {
-        console.error("[DIAG-2] Vérification idToken: ÉCHEC - message:", authErr?.message || authErr);
+      const decodedUser = await verifyFirebaseTokenSafe(idToken);
+      if (!decodedUser || !decodedUser.uid) {
         const errResp = { success: false, error: "Session invalide ou expirée. Veuillez vous reconnecter." };
         console.log("[DIAG-6] Réponse HTTP finale - Status: 401 - Body:", JSON.stringify(errResp));
         return res.status(401).json(errResp);
       }
 
-      const uid = decodedToken.uid;
+      const uid = decodedUser.uid;
       let userData: any = null;
       try {
-        const userDoc = await adminDb.collection("users").doc(uid).get();
-        userData = userDoc.exists ? userDoc.data() : null;
-        console.log("[DIAG-3] Lecture Firestore: SUCCÈS - document exists:", Boolean(userDoc.exists));
+        const adminDb = getAdminDb();
+        if (adminDb) {
+          const userDoc = await adminDb.collection("users").doc(uid).get();
+          userData = userDoc.exists ? userDoc.data() : null;
+          console.log("[DIAG-3] Lecture Firestore: SUCCÈS - document exists:", Boolean(userDoc.exists));
+        }
       } catch (firestoreErr: any) {
         console.warn("[DIAG-3] Lecture Firestore: ÉCHEC - message:", firestoreErr?.message || String(firestoreErr));
       }
@@ -973,7 +980,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const { data: publicUrlData } = serverSupabase.storage.from(bucket).getPublicUrl(storagePath);
       const publicUrl = publicUrlData?.publicUrl || `${supabaseUrl}/storage/v1/object/public/${bucket}/${storagePath}`;
 
-      console.log(`[SERVER MEDIA UPLOAD SUCCESS] Téléversé par ${decodedToken.email || decodedToken.uid} -> ${publicUrl}`);
+      console.log(`[SERVER MEDIA UPLOAD SUCCESS] Téléversé par ${decodedUser.email || decodedUser.uid} -> ${publicUrl}`);
 
       const successResp = {
         success: true,

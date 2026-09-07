@@ -1,5 +1,6 @@
 import { getSupabaseClient, SUPABASE_BUCKET_NAME, isSupabaseConfigured, sanitizeBucketName } from "../supabase";
-import { auth } from "../../firebase";
+import { auth, storage as fbStorage } from "../../firebase";
+import { ref as fbStorageRef, uploadBytesResumable, getDownloadURL as fbGetDownloadURL } from "firebase/storage";
 
 /**
  * Service centralisé pour le stockage de fichiers via Supabase Storage pour AfriGombo.
@@ -570,6 +571,8 @@ export const supabaseStorage = {
 
     let signedUploadSuccess = false;
     let publicUrlResult = "";
+    let signedErrorDetails = "";
+    let supabaseErrorDetails = "";
 
     // 1. Essai prioritaire via URL signée Super Fondateur si idToken présent
     if (idToken) {
@@ -599,7 +602,7 @@ export const supabaseStorage = {
           const { signedUrl, publicUrl } = urlJson;
 
           if (onProgress) {
-            onProgress({ percentage: 10, state: "uploading", log: "Démarrage du transfert binaire..." });
+            onProgress({ percentage: 10, state: "uploading", log: "Démarrage du transfert direct..." });
           }
 
           await new Promise<void>((resolve, reject) => {
@@ -611,12 +614,14 @@ export const supabaseStorage = {
               if (event.lengthComputable && onProgress) {
                 const rawPercent = Math.round((event.loaded / event.total) * 100);
                 const scaledPercent = Math.min(95, Math.max(10, 10 + Math.round(rawPercent * 0.85)));
+                const loadedMb = (event.loaded / 1024 / 1024).toFixed(1);
+                const totalMb = (event.total / 1024 / 1024).toFixed(1);
                 onProgress({
                   percentage: scaledPercent,
                   bytesTransferred: event.loaded,
                   totalBytes: event.total,
                   state: "uploading",
-                  log: `Transfert binaire direct : ${scaledPercent}%`
+                  log: `Téléversement en cours : ${loadedMb} Mo / ${totalMb} Mo (${scaledPercent}%)`
                 });
               }
             };
@@ -628,19 +633,22 @@ export const supabaseStorage = {
                 }
                 resolve();
               } else {
-                reject(new Error(`HTTP ${xhr.status}`));
+                reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
               }
             };
 
-            xhr.onerror = () => reject(new Error("Erreur réseau XHR"));
-            xhr.onabort = () => reject(new Error("Transfert interrompu"));
+            xhr.onerror = () => reject(new Error("Erreur réseau de connexion"));
+            xhr.onabort = () => reject(new Error("Transfert annulé"));
             xhr.send(blob);
           });
 
           signedUploadSuccess = true;
           publicUrlResult = publicUrl;
+        } else {
+          signedErrorDetails = urlJson.error || `Erreur HTTP ${urlResp.status}`;
         }
-      } catch (signedErr) {
+      } catch (signedErr: any) {
+        signedErrorDetails = signedErr?.message || String(signedErr);
         console.warn("[SUPABASE STORAGE] Téléversement signé indisponible, bascule sur téléversement direct résilient:", signedErr);
       }
     }
@@ -668,50 +676,132 @@ export const supabaseStorage = {
       };
     }
 
-    // 3. Fallback résilient : Téléversement direct client Supabase Storage
+    // 3. Fallback résilient 1 : Téléversement direct client Supabase Storage
     const client = getSupabaseClient();
     if (client) {
       if (onProgress) {
-        onProgress({ percentage: 20, state: "uploading", log: "Transfert direct vers Supabase Storage..." });
+        onProgress({ percentage: 20, state: "uploading", log: "Connexion au stockage Supabase..." });
       }
 
-      const { data, error } = await client.storage.from(bucket).upload(storagePath, blob, {
-        contentType: mimeType,
-        upsert: true,
-      });
+      try {
+        const { data, error } = await client.storage.from(bucket).upload(storagePath, blob, {
+          contentType: mimeType,
+          upsert: true,
+        });
 
-      if (!error && data) {
-        const finalUrl = this.getPublicUrl(data.path || storagePath, bucket);
+        if (!error && data) {
+          const finalUrl = this.getPublicUrl(data.path || storagePath, bucket);
 
-        if (onProgress) {
-          onProgress({ percentage: 100, state: "success", log: "Téléversement terminé avec succès" });
+          if (onProgress) {
+            onProgress({ percentage: 100, state: "success", log: "Téléversement terminé avec succès" });
+          }
+
+          const metadata: FirestoreMediaMetadata = {
+            provider: "supabase",
+            bucket,
+            storagePath: data.path || storagePath,
+            mediaUrl: finalUrl,
+            mediaType: "video",
+            size: blob.size,
+            mimeType,
+            createdAt: new Date().toISOString(),
+            userId,
+            isPrivate: false,
+          };
+
+          return {
+            success: true,
+            url: finalUrl,
+            storagePath: data.path || storagePath,
+            metadata,
+          };
+        } else if (error) {
+          supabaseErrorDetails = error.message || String(error);
+          console.warn("[SUPABASE STORAGE DIRECT FALLBACK ERROR]", error);
         }
-
-        const metadata: FirestoreMediaMetadata = {
-          provider: "supabase",
-          bucket,
-          storagePath: data.path || storagePath,
-          mediaUrl: finalUrl,
-          mediaType: "video",
-          size: blob.size,
-          mimeType,
-          createdAt: new Date().toISOString(),
-          userId,
-          isPrivate: false,
-        };
-
-        return {
-          success: true,
-          url: finalUrl,
-          storagePath: data.path || storagePath,
-          metadata,
-        };
-      } else if (error) {
-        console.warn("[SUPABASE STORAGE DIRECT FALLBACK ERROR]", error);
+      } catch (clientErr: any) {
+        supabaseErrorDetails = clientErr?.message || String(clientErr);
       }
     }
 
-    throw new Error("Impossible de téléverser la vidéo vers le stockage. Veuillez vérifier votre connexion et réessayer.");
+    // 4. Fallback résilient 2 : Firebase Storage (Secours cloud robuste avec suivi temps réel)
+    if (fbStorage) {
+      try {
+        if (onProgress) {
+          onProgress({ percentage: 30, state: "uploading", log: "Transfert vers le stockage cloud sécurisé..." });
+        }
+
+        const fileRef = fbStorageRef(fbStorage, storagePath);
+        const uploadTask = uploadBytesResumable(fileRef, blob, { contentType: mimeType });
+
+        const downloadUrl = await new Promise<string>((resolve, reject) => {
+          uploadTask.on(
+            "state_changed",
+            (snapshot) => {
+              if (snapshot.totalBytes > 0 && onProgress) {
+                const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                const scaledPercent = Math.min(95, Math.max(30, 30 + Math.round(percent * 0.65)));
+                const loadedMb = (snapshot.bytesTransferred / 1024 / 1024).toFixed(1);
+                const totalMb = (snapshot.totalBytes / 1024 / 1024).toFixed(1);
+                onProgress({
+                  percentage: scaledPercent,
+                  bytesTransferred: snapshot.bytesTransferred,
+                  totalBytes: snapshot.totalBytes,
+                  state: "uploading",
+                  log: `Transfert cloud : ${loadedMb} Mo / ${totalMb} Mo (${scaledPercent}%)`
+                });
+              }
+            },
+            (error) => reject(error),
+            async () => {
+              try {
+                const url = await fbGetDownloadURL(uploadTask.snapshot.ref);
+                resolve(url);
+              } catch (urlErr) {
+                reject(urlErr);
+              }
+            }
+          );
+        });
+
+        if (downloadUrl) {
+          if (onProgress) {
+            onProgress({ percentage: 100, state: "success", log: "Téléversement terminé avec succès" });
+          }
+
+          const metadata: FirestoreMediaMetadata = {
+            provider: "firebase",
+            bucket: "firebase-storage",
+            storagePath,
+            mediaUrl: downloadUrl,
+            mediaType: "video",
+            size: blob.size,
+            mimeType,
+            createdAt: new Date().toISOString(),
+            userId,
+            isPrivate: false,
+          };
+
+          return {
+            success: true,
+            url: downloadUrl,
+            storagePath,
+            metadata,
+          };
+        }
+      } catch (fbErr: any) {
+        console.warn("[FIREBASE STORAGE FALLBACK ERROR]", fbErr);
+      }
+    }
+
+    const failureReason = supabaseErrorDetails || signedErrorDetails || "Vérifiez votre connexion internet ou la taille du fichier";
+    const userFacingError = `Impossible de téléverser la vidéo (${failureReason}). Veuillez réessayer.`;
+    
+    if (onProgress) {
+      onProgress({ percentage: 0, state: "error", log: userFacingError });
+    }
+
+    throw new Error(userFacingError);
   },
 
   /**
