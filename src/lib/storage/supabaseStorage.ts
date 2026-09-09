@@ -574,11 +574,11 @@ export const supabaseStorage = {
     let signedErrorDetails = "";
     let supabaseErrorDetails = "";
 
-    // 0. Essai prioritaire absolu : Cloudflare R2
-    if (isFile && idToken) {
+    // 0. Envoi prioritaire et exclusif des vidéos vers Cloudflare R2
+    if (isFile) {
       try {
         if (onProgress) {
-          onProgress({ percentage: 10, state: "uploading", log: "Initialisation du stockage Cloudflare R2..." });
+          onProgress({ percentage: 10, state: "uploading", log: "Initialisation du téléversement Cloudflare R2..." });
         }
         const r2Result = await r2StorageService.uploadReelVideo(file as File, userId, publicationId, (p) => {
           if (onProgress) {
@@ -590,14 +590,15 @@ export const supabaseStorage = {
               log: p.log,
             });
           }
-        });
+        }, idToken);
 
-        if (r2Result && r2Result.success && r2Result.url) {
+        if (r2Result && r2Result.success) {
+          const mediaUrl = r2Result.url || "";
           const metadata: FirestoreMediaMetadata = {
             provider: "external",
             bucket: r2Result.bucket || "afrigombo-public",
             storagePath: r2Result.key,
-            mediaUrl: r2Result.url,
+            mediaUrl,
             mediaType: "video",
             size: r2Result.fileSize || file.size,
             mimeType: r2Result.contentType || mimeType,
@@ -607,13 +608,14 @@ export const supabaseStorage = {
           };
           return {
             success: true,
-            url: r2Result.url,
+            url: mediaUrl,
             storagePath: r2Result.key,
             metadata,
           };
         }
       } catch (r2Err: any) {
-        console.warn("[R2 STORAGE] Téléversement R2 non disponible, bascule vers le stockage de secours:", r2Err?.message);
+        console.error("[R2 STORAGE ERROR]", r2Err);
+        throw new Error(r2Err?.message || "Échec du téléversement de la vidéo vers Cloudflare R2.");
       }
     }
 
@@ -778,9 +780,7 @@ export const supabaseStorage = {
   },
 
   /**
-   * 2.1 PIPELINE SPÉCIALISÉ RÉELS : COMPATIBILITÉ ABSOLUE iPHONE / SAFARI
-   * Si la vidéo est WebM -> Transcodage serveur FFmpeg (H.264 yuv420p + AAC stereo + faststart)
-   * Si la vidéo est déjà MP4 / MOV -> Envoi binaire direct signé (H.264 natif préservé)
+   * 2.1 PIPELINE SPÉCIALISÉ RÉELS : STOCKAGE DIRECT CLOUDFLARE R2
    */
   async uploadReelSafariCompatible(
     file: File | Blob,
@@ -789,106 +789,12 @@ export const supabaseStorage = {
     onProgress?: (progress: ProgressInfo) => void,
     idToken?: string
   ): Promise<StorageUploadResult> {
-    const isFile = file instanceof File;
-    const fileType = ((file as Blob).type || "").toLowerCase();
-    const fileName = isFile ? file.name.toLowerCase() : "";
-    const isWebM = fileType.includes("webm") || fileName.endsWith(".webm");
-
-    // Si la vidéo est au format WebM et qu'un token est présent, tenter la conversion côté serveur en MP4 H.264 compatible Safari
-    if (isWebM && idToken) {
-      if (onProgress) {
-        onProgress({ percentage: 10, state: "uploading", log: "Optimisation de compatibilité Safari/iOS..." });
-      }
-
-      try {
-        // Lecture en Base64
-        const base64Data = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const res = reader.result as string;
-            const base64 = res.includes(",") ? res.split(",")[1] : res;
-            resolve(base64);
-          };
-          reader.onerror = () => reject(new Error("Impossible de lire le fichier vidéo sélectionné."));
-          reader.readAsDataURL(file);
-        });
-
-        if (onProgress) {
-          onProgress({ percentage: 25, state: "uploading", log: "Transcodage MP4 H.264 Safari en cours..." });
-        }
-
-        const timestamp = Date.now();
-        const cleanBaseName = isFile ? sanitizeFileName(file.name.replace(/\.[^.]+$/, "")) : `reel_${timestamp}`;
-        const storagePath = `reels/${userId}/${timestamp}_${cleanBaseName}.mp4`;
-
-        const controller = new AbortController();
-        const TRANSCODE_TIMEOUT_MS = 120000;
-        const timeoutId = setTimeout(() => {
-          controller.abort();
-        }, TRANSCODE_TIMEOUT_MS);
-
-        let resp: Response;
-        try {
-          resp = await fetch("/api/admin/media/transcode-and-upload", {
-            method: "POST",
-            headers: { 
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${idToken}`
-            },
-            body: JSON.stringify({
-              idToken,
-              storagePath,
-              fileBase64: base64Data,
-              bucket: SUPABASE_BUCKET_NAME,
-            }),
-            signal: controller.signal,
-          });
-        } finally {
-          clearTimeout(timeoutId);
-        }
-
-        let json: any = {};
-        try {
-          json = await resp.json();
-        } catch (_) {}
-
-        if (resp.ok && json.success && json.url) {
-          if (onProgress) {
-            onProgress({ percentage: 100, state: "success", log: "Vidéo MP4 Safari publiée avec succès !" });
-          }
-
-          const metadata: FirestoreMediaMetadata = {
-            provider: "supabase",
-            bucket: SUPABASE_BUCKET_NAME,
-            storagePath: json.storagePath || storagePath,
-            mediaUrl: json.url,
-            mediaType: "video",
-            size: json.size || (file as Blob).size,
-            mimeType: "video/mp4",
-            createdAt: new Date().toISOString(),
-            userId,
-            isPrivate: false,
-          };
-
-          return {
-            success: true,
-            url: json.url,
-            storagePath: json.storagePath || storagePath,
-            metadata,
-          };
-        }
-      } catch (transcodeErr) {
-        console.warn("[REEL TRANSCODE WARNING] Échec transcodage serveur, passage à l'envoi direct :", transcodeErr);
-      }
-    }
-
-    // Si la vidéo est déjà au format MP4 ou MOV natif, ou si le transcodage a basculé en repli
     return this.uploadVideoDirectSigned(file, userId, publicationId, onProgress, idToken);
   },
 
   /**
-   * 2. UPLOAD VIDÉO CLASSIQUE (COMPATIBILITÉ EXISTANTE)
-   * Chemin : video/{userId}/{publicationId}/...
+   * 2. UPLOAD VIDÉO CLASSIQUE -> ROUTAGE CLOUDFLARE R2
+   * Chemin : reels/{userId}/...
    */
   async uploadVideo(
     file: File | Blob | string,
@@ -896,22 +802,16 @@ export const supabaseStorage = {
     publicationId = "general",
     onProgress?: (progress: ProgressInfo) => void,
     idToken?: string,
-    useBackendProxy = true
+    _useBackendProxy = true
   ): Promise<StorageUploadResult> {
-    const timestamp = Date.now();
-    const fileName = sanitizeFileName(
-      file instanceof File ? file.name : `video_${timestamp}.mp4`
-    );
-    const storagePath = `video/${userId}/${publicationId}/${timestamp}_${fileName}`;
-
-    return this.uploadGenericFile(file, storagePath, {
-      userId,
-      mediaType: "video",
-      isPrivate: false,
-      onProgress,
-      idToken,
-      useBackendProxy: useBackendProxy ?? true,
-    });
+    if (typeof file === "string") {
+      return {
+        success: true,
+        url: file,
+        storagePath: file,
+      };
+    }
+    return this.uploadVideoDirectSigned(file, userId, publicationId, onProgress, idToken);
   },
 
   /**

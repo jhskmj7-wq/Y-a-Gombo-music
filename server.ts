@@ -1744,6 +1744,38 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
   });
 
+  // Accès et streaming direct aux médias publics Cloudflare R2
+  app.get("/api/r2/media/*", async (req, res) => {
+    try {
+      const rawKey = req.path.replace(/^\/api\/r2\/media\//, "");
+      const key = decodeURIComponent(rawKey);
+
+      if (!key) {
+        return res.status(400).json({ error: "Clé de média manquante" });
+      }
+
+      if (!isR2Configured()) {
+        return res.status(503).json({ error: "Stockage R2 non configuré" });
+      }
+
+      const publicBaseUrl = (process.env.R2_PUBLIC_BASE_URL || "").trim();
+      if (publicBaseUrl) {
+        return res.redirect(302, `${publicBaseUrl.replace(/\/$/, "")}/${key}`);
+      }
+
+      const signed = await generateR2PresignedReadUrl({
+        key,
+        bucketType: "public",
+        expiresInSeconds: 86400,
+      });
+
+      return res.redirect(302, signed.readUrl);
+    } catch (err: any) {
+      console.error("[R2 MEDIA ACCESS ERROR]", err);
+      return res.status(500).json({ error: "Impossible de lire le média Cloudflare R2" });
+    }
+  });
+
   // Guarantee JSON responses for all unhandled /api requests (never HTML)
   app.use("/api", (req: express.Request, res: express.Response) => {
     res.status(404).json({

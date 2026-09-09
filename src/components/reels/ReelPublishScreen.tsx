@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Hash, MessageSquare, Loader2, Sparkles } from "lucide-react";
-import { supabaseStorage } from "../../lib/storage/supabaseStorage";
+import { r2StorageService } from "../../lib/storage/r2Storage";
 import { collection, addDoc, doc, updateDoc, arrayUnion, setDoc } from "firebase/firestore";
 import { db, auth } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
@@ -147,17 +147,17 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
       setUploadStatusText("Vérification du format vidéo...");
 
       console.log(
-        `[REEL SAFARI PIPELINE]\n` +
+        `[REEL R2 PIPELINE]\n` +
         `Fichier sélectionné: ${(videoFile.size / 1024 / 1024).toFixed(2)} Mo\n` +
         `Nom: ${videoFile.name}\n` +
         `Filtre appliqué: ${filterId || "naturel"}\n` +
         `Type source: ${videoFile.type || "inconnu"}\n` +
-        `Pipeline Safari H.264: ACTIF`
+        `Stockage Cloudflare R2: ACTIF (afrigombo-public)`
       );
 
       let uploadResult: any;
       try {
-        uploadResult = await supabaseStorage.uploadReelSafariCompatible(
+        uploadResult = await r2StorageService.uploadReelVideo(
           videoFile,
           uid,
           publicationId,
@@ -170,17 +170,19 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
           idToken
         );
 
-        if (!uploadResult?.success || !uploadResult?.url) {
-          throw new Error(uploadResult?.error || "Échec du téléversement de la vidéo.");
+        const videoMediaRef = uploadResult?.url || uploadResult?.storagePath || "";
+        if (!uploadResult?.success || !videoMediaRef) {
+          throw new Error("Échec du téléversement de la vidéo vers Cloudflare R2.");
         }
       } catch (uploadErr: any) {
-        console.error("[REEL UPLOAD ERROR]", uploadErr);
-        throw new Error(uploadErr?.message || "Échec du traitement ou du téléversement de la vidéo.");
+        console.error("[REEL R2 UPLOAD ERROR]", uploadErr);
+        throw new Error(uploadErr?.message || "Échec du téléversement de la vidéo vers Cloudflare R2.");
       }
 
       setUploadProgress(95);
       setUploadStatusText("Enregistrement de la publication...");
 
+      const videoMediaRef = uploadResult.url || uploadResult.storagePath || "";
       const authorName = currentUserProfile?.nomArtistique || currentUserProfile?.displayName || currentUserProfile?.name || currentUser?.displayName || "Artiste";
       const authorAvatar = currentUserProfile?.avatarUrl || currentUserProfile?.photoURL || currentUser?.photoURL || "";
       const artisticName = currentUserProfile?.nomArtistique || currentUserProfile?.artistName || authorName;
@@ -192,8 +194,9 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
         authorAvatar,
         commune: currentUserProfile?.commune || currentUserProfile?.location || "",
         content: caption.trim(),
-        mediaUrl: uploadResult.url,
-        videoUrl: uploadResult.url,
+        mediaUrl: videoMediaRef,
+        videoUrl: videoMediaRef,
+        storagePath: uploadResult.storagePath,
         type: "video",
         status: "published",
         visible: true,
@@ -222,9 +225,10 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
         title: artisticName || "Réel",
         caption: caption.trim(),
         content: caption.trim(),
-        videoUrl: uploadResult.url,
-        mediaUrl: uploadResult.url,
-        imageUrl: uploadResult.url,
+        videoUrl: videoMediaRef,
+        mediaUrl: videoMediaRef,
+        imageUrl: videoMediaRef,
+        storagePath: uploadResult.storagePath,
         type: "video",
         status: "published",
         visible: true,

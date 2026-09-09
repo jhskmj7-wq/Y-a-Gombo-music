@@ -21,14 +21,23 @@ export class R2StorageService {
   async getPresignedUploadUrl(
     key: string,
     contentType: string,
-    bucketType: "public" | "private" = "public"
+    bucketType: "public" | "private" = "public",
+    explicitIdToken?: string
   ): Promise<{ uploadUrl: string; key: string; bucket: string; publicUrl?: string }> {
-    const user = firebaseAuth.currentUser;
-    if (!user) {
-      throw new Error("Utilisateur non authentifié pour l'opération de stockage");
+    let idToken = explicitIdToken;
+    if (!idToken) {
+      const user = firebaseAuth.currentUser;
+      if (user) {
+        try {
+          idToken = await user.getIdToken();
+        } catch (_) {}
+      }
     }
 
-    const idToken = await user.getIdToken();
+    if (!idToken) {
+      throw new Error("Authentification requise pour le téléversement Cloudflare R2 (jeton manquant)");
+    }
+
     const response = await fetch("/api/r2/presigned-upload-url", {
       method: "POST",
       headers: {
@@ -43,8 +52,8 @@ export class R2StorageService {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: "Erreur serveur" }));
-      throw new Error(errorData.error || `Erreur ${response.status} lors de l'obtention de l'URL signée R2`);
+      const errorData = await response.json().catch(() => ({ error: `Erreur HTTP ${response.status}` }));
+      throw new Error(errorData.error || `Erreur ${response.status} lors de l'obtention de l'URL signée Cloudflare R2`);
     }
 
     return await response.json();
@@ -65,10 +74,12 @@ export class R2StorageService {
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
             const percentage = Math.round((event.loaded / event.total) * 100);
+            const mbTransferred = (event.loaded / 1024 / 1024).toFixed(1);
+            const mbTotal = (event.total / 1024 / 1024).toFixed(1);
             onProgress({
               percentage: Math.min(percentage, 95),
               state: "uploading",
-              log: `Transfert R2 en cours: ${percentage}%`,
+              log: `Transfert Cloudflare R2 : ${mbTransferred} Mo / ${mbTotal} Mo (${percentage}%)`,
             });
           }
         };
@@ -76,9 +87,16 @@ export class R2StorageService {
 
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
+          if (onProgress) {
+            onProgress({
+              percentage: 100,
+              state: "success",
+              log: "Vidéo téléversée sur Cloudflare R2 avec succès !",
+            });
+          }
           resolve();
         } else {
-          reject(new Error(`Échec du transfert vers Cloudflare R2 (statut HTTP ${xhr.status}: ${xhr.statusText})`));
+          reject(new Error(`Échec du transfert vers Cloudflare R2 (statut HTTP ${xhr.status}: ${xhr.statusText || "Erreur"})`));
         }
       };
 
@@ -86,18 +104,25 @@ export class R2StorageService {
         reject(new Error("Erreur réseau lors du transfert direct vers Cloudflare R2."));
       };
 
+      xhr.onabort = () => {
+        reject(new Error("Téléversement Cloudflare R2 interrompu."));
+      };
+
       xhr.send(file);
     });
   }
 
   async uploadReelVideo(
-    file: File,
+    file: File | Blob,
     userId: string,
     publicationId: string,
-    onProgress?: (progress: StorageProgress) => void
+    onProgress?: (progress: StorageProgress) => void,
+    explicitIdToken?: string
   ): Promise<R2UploadResult> {
     const timestamp = Date.now();
-    const extension = file.name.split(".").pop() || "mp4";
+    const isFile = file instanceof File;
+    const originalName = isFile ? file.name : "reel.mp4";
+    const extension = originalName.split(".").pop() || "mp4";
     const mimeType = file.type || "video/mp4";
     const key = `reels/${userId}/${publicationId}_${timestamp}.${extension}`;
 
@@ -105,22 +130,22 @@ export class R2StorageService {
       onProgress({ percentage: 5, state: "uploading", log: "Demande d'autorisation Cloudflare R2..." });
     }
 
-    const { uploadUrl, bucket, publicUrl } = await this.getPresignedUploadUrl(key, mimeType, "public");
+    const { uploadUrl, bucket, publicUrl } = await this.getPresignedUploadUrl(key, mimeType, "public", explicitIdToken);
 
     if (onProgress) {
-      onProgress({ percentage: 15, state: "uploading", log: "Démarrage du téléversement R2..." });
+      onProgress({ percentage: 15, state: "uploading", log: "Démarrage du téléversement vers Cloudflare R2..." });
     }
 
     await this.uploadDirect(uploadUrl, file, mimeType, onProgress);
 
-    const finalUrl = publicUrl || undefined;
+    const finalUrl = publicUrl || `/api/r2/media/${encodeURIComponent(key)}`;
 
     return {
       success: true,
       url: finalUrl,
       key,
       storagePath: key,
-      bucket,
+      bucket: bucket || "afrigombo-public",
       contentType: mimeType,
       fileSize: file.size,
     };
@@ -129,18 +154,19 @@ export class R2StorageService {
   async uploadImage(
     file: File,
     userId: string,
-    publicationId: string
+    publicationId: string,
+    explicitIdToken?: string
   ): Promise<{ url?: string; key: string }> {
     const timestamp = Date.now();
     const extension = file.name.split(".").pop() || "jpg";
     const mimeType = file.type || "image/jpeg";
     const key = `covers/${userId}/${publicationId}_${timestamp}.${extension}`;
 
-    const { uploadUrl, publicUrl } = await this.getPresignedUploadUrl(key, mimeType, "public");
+    const { uploadUrl, publicUrl } = await this.getPresignedUploadUrl(key, mimeType, "public", explicitIdToken);
     await this.uploadDirect(uploadUrl, file, mimeType);
 
     return {
-      url: publicUrl || undefined,
+      url: publicUrl || `/api/r2/media/${encodeURIComponent(key)}`,
       key,
     };
   }
