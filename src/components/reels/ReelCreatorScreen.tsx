@@ -1,7 +1,46 @@
 import React, { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Image as ImageIcon, X, ChevronRight, Sparkles, Play, Pause, Volume2, VolumeX, Upload } from "lucide-react";
+import {
+  Image as ImageIcon,
+  X,
+  ChevronRight,
+  Sparkles,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Upload,
+  Sliders,
+  Scissors,
+  Gauge,
+  FlipHorizontal,
+  Type,
+  Smile,
+  Music,
+  ImageIcon as CoverIcon,
+  RotateCcw
+} from "lucide-react";
+
 import { VideoFilter, REEL_VIDEO_FILTERS, getFilterCss } from "./videoFilters";
+import {
+  VideoEditorState,
+  INITIAL_EDITOR_STATE,
+  buildCombinedCssFilter,
+  VideoTextOverlay,
+  VideoStickerOverlay
+} from "./editorState";
+import {
+  FiltersPanel,
+  AdjustmentsPanel,
+  TrimPanel,
+  SpeedPanel,
+  TransformPanel,
+  AudioPanel,
+  TextPanel,
+  StickersPanel,
+  EffectsPanel,
+  CoverPanel
+} from "./editorPanels";
 
 export type { VideoFilter };
 export { REEL_VIDEO_FILTERS, getFilterCss };
@@ -10,6 +49,18 @@ interface ReelCreatorScreenProps {
   onVideoReady: (file: File, filterId: string) => void;
   onClose: () => void;
 }
+
+type TabCategory =
+  | "filtres"
+  | "ajuster"
+  | "couper"
+  | "vitesse"
+  | "transformer"
+  | "audio"
+  | "texte"
+  | "stickers"
+  | "effets"
+  | "couverture";
 
 function formatTime(seconds: number): string {
   if (isNaN(seconds) || seconds < 0) return "0:00";
@@ -25,23 +76,27 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
-  const [selectedFilter, setSelectedFilter] = useState<string>("naturel");
 
-  // Custom Player States
+  // Core Structured Editor State
+  const [editorState, setEditorState] = useState<VideoEditorState>(INITIAL_EDITOR_STATE);
+  const [activeTab, setActiveTab] = useState<TabCategory>("filtres");
+
+  // Player States
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [centerIconState, setCenterIconState] = useState<"play" | "pause" | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
+
+  // Dragging overlays in canvas
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   const recordedUrlRef = useRef<string | null>(null);
   recordedUrlRef.current = recordedUrl;
 
   const stopPreviewVideo = () => {
     if (previewRef.current) {
-      try {
-        previewRef.current.pause();
+      try {        previewRef.current.pause();
         previewRef.current.currentTime = 0;
         previewRef.current.removeAttribute("src");
         previewRef.current.load();
@@ -54,7 +109,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     onClose();
   };
 
-  // Nettoyage complet lors du démontage du composant
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopPreviewVideo();
@@ -65,32 +120,47 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     };
   }, []);
 
-  const activeFilterCss =
-    REEL_VIDEO_FILTERS.find((f) => f.id === selectedFilter)?.filterCss ?? "none";
+  // Update video element playback rate, volume, trim loop
+  useEffect(() => {
+    const vid = previewRef.current;
+    if (!vid) return;
+
+    vid.playbackRate = editorState.playbackRate;
+    vid.volume = editorState.isMuted ? 0 : editorState.volume / 100;
+  }, [editorState.playbackRate, editorState.volume, editorState.isMuted]);
+
+  // Trim boundary enforcement during playback
+  const handleTimeUpdate = () => {
+    const vid = previewRef.current;
+    if (!vid) return;
+
+    const cur = vid.currentTime;
+    setCurrentTime(cur);
+
+    if (editorState.trimEnd > 0 && cur >= editorState.trimEnd) {
+      vid.currentTime = editorState.trimStart || 0;
+    }
+  };
 
   const processSelectedVideoFile = (file: File) => {
     if (!file || !file.type.startsWith("video/")) return;
 
-    // Arrêt et révocation de l'ancienne ressource vidéo si présente
     stopPreviewVideo();
     if (recordedUrl) {
       URL.revokeObjectURL(recordedUrl);
     }
 
-    // Conservation immédiate du fichier ORIGINAL et création de l'ObjectURL de prévisualisation
     const newUrl = URL.createObjectURL(file);
     setSelectedFile(file);
     setRecordedUrl(newUrl);
-    setSelectedFilter("naturel");
+    setEditorState(INITIAL_EDITOR_STATE);
     setIsPlaying(true);
     setCurrentTime(0);
   };
 
   const handleGalleryFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      processSelectedVideoFile(file);
-    }
+    if (file) processSelectedVideoFile(file);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -119,7 +189,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     }
     setSelectedFile(null);
     setRecordedUrl(null);
-    setSelectedFilter("naturel");
+    setEditorState(INITIAL_EDITOR_STATE);
     setCurrentTime(0);
     setDuration(0);
   };
@@ -127,7 +197,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const handleNext = () => {
     if (selectedFile) {
       stopPreviewVideo();
-      onVideoReady(selectedFile, selectedFilter);
+      onVideoReady(selectedFile, editorState.filterId);
     }
   };
 
@@ -139,23 +209,14 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
       vid.play().then(() => {
         setIsPlaying(true);
         setCenterIconState("play");
-        setTimeout(() => setCenterIconState(null), 650);
+        setTimeout(() => setCenterIconState(null), 600);
       }).catch(() => {});
     } else {
       vid.pause();
       setIsPlaying(false);
       setCenterIconState("pause");
-      setTimeout(() => setCenterIconState(null), 650);
+      setTimeout(() => setCenterIconState(null), 600);
     }
-  };
-
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const vid = previewRef.current;
-    if (!vid) return;
-    const nextMuted = !isMuted;
-    vid.muted = nextMuted;
-    setIsMuted(nextMuted);
   };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -172,180 +233,225 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     setCurrentTime(newTime);
   };
 
-  // PREVIEW MODE (après sélection de la vidéo originale avec lecteur personnalisé)
+  const handleSeekDirect = (seconds: number) => {
+    const vid = previewRef.current;
+    if (vid) {
+      vid.currentTime = seconds;
+      setCurrentTime(seconds);
+    }
+  };
+
+  // Build combined CSS filter string
+  const baseFilterObj = REEL_VIDEO_FILTERS.find((f) => f.id === editorState.filterId);
+  const baseFilterCss = baseFilterObj ? baseFilterObj.filterCss : "none";
+  const finalCssFilter = buildCombinedCssFilter(editorState, baseFilterCss);
+
+  // Compute transform style
+  const transformStyle: React.CSSProperties = {
+    filter: finalCssFilter,
+    transform: `rotate(${editorState.rotation}deg) scaleX(${editorState.flipHorizontal ? -1 : 1})`,
+    transition: "transform 0.2s ease, filter 0.15s ease",
+  };
+
+  // Compute Aspect Ratio container class
+  let aspectContainerClass = "aspect-[9/16] max-h-[60vh]";
+  if (editorState.aspectRatio === "1:1") aspectContainerClass = "aspect-square max-h-[50vh]";
+  else if (editorState.aspectRatio === "4:5") aspectContainerClass = "aspect-[4/5] max-h-[55vh]";
+  else if (editorState.aspectRatio === "16:9") aspectContainerClass = "aspect-[16/9] max-w-full";
+
+  // Categories Toolbar list
+  const categories: { id: TabCategory; label: string; icon: React.FC<{ className?: string }> }[] = [
+    { id: "filtres", label: "Filtres", icon: Sparkles },
+    { id: "ajuster", label: "Ajuster", icon: Sliders },
+    { id: "couper", label: "Couper", icon: Scissors },
+    { id: "vitesse", label: "Vitesse", icon: Gauge },
+    { id: "transformer", label: "Format", icon: FlipHorizontal },
+    { id: "audio", label: "Audio", icon: Volume2 },
+    { id: "texte", label: "Texte", icon: Type },
+    { id: "stickers", label: "Stickers", icon: Smile },
+    { id: "effets", label: "Effets", icon: Sparkles },
+    { id: "couverture", label: "Couverture", icon: CoverIcon },
+  ];
+
+  // PREVIEW / EDITOR MODE
   if (recordedUrl && selectedFile) {
     const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
     return createPortal(
-      <div className="fixed inset-0 bg-black z-[9999] flex flex-col select-none">
-        {/* Top Navigation Bar */}
-        <div className="flex items-center justify-between px-4 py-3 z-20 bg-gradient-to-b from-black/90 via-black/50 to-transparent">
+      <div className="fixed inset-0 bg-background text-foreground z-[9999] flex flex-col select-none overflow-hidden">
+        {/* Top Header Navigation */}
+        <div className="flex items-center justify-between px-4 py-3 shrink-0 z-30 bg-background/90 border-b border-border backdrop-blur-md">
           <button
             onClick={handleRetake}
-            className="text-white p-2 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all cursor-pointer backdrop-blur-md"
+            className="p-2 rounded-full bg-muted/60 hover:bg-muted text-foreground active:scale-95 transition-all cursor-pointer"
             title="Changer de vidéo"
           >
             <X className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 border border-[#D4AF37]/30 backdrop-blur-md">
+
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-[#D4AF37]/30">
             <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-            <span className="text-white text-xs font-mono font-bold tracking-wide">
-              Édition Réel
+            <span className="text-foreground text-xs font-mono font-bold tracking-wide">
+              Édition Réel AFRIGOMBO
             </span>
           </div>
+
           <button
             onClick={handleNext}
             disabled={!selectedFile}
-            className="flex items-center gap-1 bg-[#D4AF37] hover:bg-amber-400 text-black font-black px-4 py-1.5 rounded-full text-xs uppercase tracking-wider cursor-pointer shadow-lg hover:shadow-[#D4AF37]/20 active:scale-95 transition-all"
+            className="flex items-center gap-1 bg-[#D4AF37] hover:bg-amber-400 text-black font-black px-4 py-1.5 rounded-full text-xs uppercase tracking-wider cursor-pointer shadow-md active:scale-95 transition-all"
           >
             <span>Suivant</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Custom Video Stage with Gestures & Overlays */}
-        <div
-          className="flex-1 flex items-center justify-center overflow-hidden relative bg-black cursor-pointer"
-          onClick={togglePlayPause}
-        >
-          <video
-            ref={previewRef}
-            src={recordedUrl}
-            controls={false}
-            autoPlay
-            loop
-            playsInline
-            muted={isMuted}
-            style={{ filter: activeFilterCss }}
-            className="max-h-full max-w-full object-contain pointer-events-none transition-all duration-300"
-            onTimeUpdate={() => {
-              if (previewRef.current) {
-                setCurrentTime(previewRef.current.currentTime);
-              }
-            }}
-            onLoadedMetadata={() => {
-              if (previewRef.current) {
-                setDuration(previewRef.current.duration || 0);
-                previewRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
-              }
-            }}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-          />
-
-          {/* Animated Center Play/Pause Ripple Overlay */}
-          {centerIconState && (
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20">
-              <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-2xl animate-scale-up">
-                {centerIconState === "play" ? (
-                  <Play className="w-8 h-8 fill-current text-[#D4AF37] ml-1" />
-                ) : (
-                  <Pause className="w-8 h-8 fill-current text-white" />
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Persistent Paused Indicator if paused without recent tap */}
-          {!isPlaying && !centerIconState && (
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10 bg-black/25 backdrop-blur-[1px]">
-              <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] shadow-xl">
-                <Play className="w-8 h-8 fill-current ml-1" />
-              </div>
-            </div>
-          )}
-
-          {/* Floating Sound Toggle Button */}
-          <button
-            onClick={toggleMute}
-            className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-black/60 border border-white/20 text-white backdrop-blur-md hover:bg-black/80 active:scale-95 transition-all cursor-pointer shadow-lg"
-            title={isMuted ? "Activer le son" : "Couper le son"}
-          >
-            {isMuted ? (
-              <VolumeX className="w-4 h-4 text-red-400" />
-            ) : (
-              <Volume2 className="w-4 h-4 text-[#D4AF37]" />
-            )}
-          </button>
-
-          {/* File Info Pill */}
-          <div className="absolute top-4 left-4 z-20 px-2.5 py-1 rounded-md bg-black/60 border border-white/10 text-[10px] font-mono text-zinc-300 backdrop-blur-md pointer-events-none truncate max-w-[180px]">
-            {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(1)} Mo)
-          </div>
-
-          {/* In-Stage Bottom Controls: Scrubber & Time */}
+        {/* Central Stage: Video Preview Box */}
+        <div className="flex-1 flex items-center justify-center relative bg-black/95 dark:bg-black p-2 overflow-hidden">
           <div
-            className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-20 space-y-1.5"
-            onClick={(e) => e.stopPropagation()}
+            className={`relative rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center bg-black cursor-pointer ${aspectContainerClass}`}
+            onClick={togglePlayPause}
           >
-            {/* Scrubber Bar */}
-            <div
-              ref={progressBarRef}
-              onClick={handleSeek}
-              className="w-full h-3 flex items-center cursor-pointer group py-1"
-            >
-              <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden relative group-hover:h-2 transition-all">
-                <div
-                  className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-300 transition-all duration-75 rounded-full"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-            </div>
+            <video
+              ref={previewRef}
+              src={recordedUrl}
+              style={transformStyle}
+              className="w-full h-full object-cover rounded-2xl pointer-events-none"
+              playsInline
+              loop={false}
+              muted={editorState.isMuted}
+              onTimeUpdate={handleTimeUpdate}
+              onLoadedMetadata={() => {
+                if (previewRef.current) {
+                  const d = previewRef.current.duration || 0;
+                  setDuration(d);
+                  setEditorState((prev) => ({
+                    ...prev,
+                    trimEnd: prev.trimEnd || d,
+                  }));
+                  previewRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+                }
+              }}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+            />
 
-            {/* Time Indicators */}
-            <div className="flex items-center justify-between text-[11px] font-mono text-zinc-300 px-0.5">
-              <span className="text-[#D4AF37] font-bold">{formatTime(currentTime)}</span>
-              <span className="text-zinc-400">{formatTime(duration)}</span>
+            {/* Ripple Icon on Tap */}
+            {centerIconState && (
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-30">
+                <div className="w-16 h-16 rounded-full bg-black/70 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-2xl animate-scale-up">
+                  {centerIconState === "play" ? (
+                    <Play className="w-8 h-8 fill-current text-[#D4AF37] ml-1" />
+                  ) : (
+                    <Pause className="w-8 h-8 fill-current text-white" />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Indicator when paused */}
+            {!isPlaying && !centerIconState && (
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20 bg-black/30 backdrop-blur-[1px]">
+                <div className="w-14 h-14 rounded-full bg-black/70 backdrop-blur-md border border-[#D4AF37]/50 flex items-center justify-center text-[#D4AF37] shadow-xl">
+                  <Play className="w-7 h-7 fill-current ml-1" />
+                </div>
+              </div>
+            )}
+
+            {/* Text Overlays Render */}
+            {editorState.texts.map((t) => (
+              <div
+                key={t.id}
+                className="absolute z-20 px-2 py-1 rounded-md text-center font-bold tracking-wide backdrop-blur-sm pointer-events-none select-none"
+                style={{
+                  left: `${t.x}%`,
+                  top: `${t.y}%`,
+                  transform: "translate(-50%, -50%)",
+                  color: t.color,
+                  backgroundColor: t.bgColor,
+                  fontSize: `${t.fontSize}px`,
+                  fontWeight: t.isBold ? "bold" : "normal",
+                  fontStyle: t.isItalic ? "italic" : "normal",
+                }}
+              >
+                {t.text}
+              </div>
+            ))}
+
+            {/* Sticker Overlays Render */}
+            {editorState.stickers.map((s) => (
+              <div
+                key={s.id}
+                className="absolute z-20 pointer-events-none select-none"
+                style={{
+                  left: `${s.x}%`,
+                  top: `${s.y}%`,
+                  transform: `translate(-50%, -50%) rotate(${s.rotation}deg)`,
+                  fontSize: `${s.size}px`,
+                }}
+              >
+                {s.emoji}
+              </div>
+            ))}
+
+            {/* Bottom Scrubber & Time */}
+            <div
+              className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-20 space-y-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                ref={progressBarRef}
+                onClick={handleSeek}
+                className="w-full h-3 flex items-center cursor-pointer group py-1"
+              >
+                <div className="w-full h-1.5 bg-white/30 rounded-full overflow-hidden relative">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-300 rounded-full"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[10px] font-mono text-zinc-300">
+                <span className="text-[#D4AF37] font-bold">{formatTime(currentTime)}</span>
+                <span className="text-zinc-400">{formatTime(duration)}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Carousel des filtres visuels personnalisés */}
-        <div className="p-4 bg-black/95 border-t border-white/10 z-20">
-          <div className="text-xs font-mono text-zinc-400 mb-2.5 flex items-center justify-between px-1 uppercase tracking-wider">
-            <div className="flex items-center gap-1.5">
-              <span>Filtre d'ambiance :</span>
-              <span className="text-[#D4AF37] font-bold">
-                {REEL_VIDEO_FILTERS.find((f) => f.id === selectedFilter)?.name}
-              </span>
-            </div>
-            <span className="text-[10px] text-zinc-500 font-normal">Prévisualisation en direct</span>
-          </div>
+        {/* Active Panel Content Box */}
+        <div className="shrink-0 p-3 bg-card border-t border-border z-30 max-h-56 overflow-y-auto">
+          {activeTab === "filtres" && <FiltersPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
+          {activeTab === "ajuster" && <AdjustmentsPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
+          {activeTab === "couper" && <TrimPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
+          {activeTab === "vitesse" && <SpeedPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
+          {activeTab === "transformer" && <TransformPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
+          {activeTab === "audio" && <AudioPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
+          {activeTab === "texte" && <TextPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
+          {activeTab === "stickers" && <StickersPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
+          {activeTab === "effets" && <EffectsPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
+          {activeTab === "couverture" && <CoverPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
+        </div>
 
-          <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none snap-x">
-            {REEL_VIDEO_FILTERS.map((f) => {
-              const isSelected = selectedFilter === f.id;
+        {/* Bottom Horizontal Scrollable Categories Bar */}
+        <div className="shrink-0 p-2 bg-background border-t border-border z-30">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1">
+            {categories.map((cat) => {
+              const Icon = cat.icon;
+              const isActive = activeTab === cat.id;
               return (
                 <button
-                  key={f.id}
-                  onClick={() => setSelectedFilter(f.id)}
-                  className={`flex flex-col items-center gap-1.5 snap-start shrink-0 cursor-pointer transition-all ${
-                    isSelected ? "scale-105" : "opacity-70 hover:opacity-100"
+                  key={cat.id}
+                  onClick={() => setActiveTab(cat.id)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer shrink-0 ${
+                    isActive
+                      ? "bg-[#D4AF37] text-black shadow-md scale-105"
+                      : "bg-muted text-muted-foreground hover:bg-accent hover:text-foreground"
                   }`}
                 >
-                  <div
-                    className={`w-14 h-14 rounded-2xl overflow-hidden border-2 flex items-center justify-center relative shadow-lg transition-all ${
-                      isSelected
-                        ? "border-[#D4AF37] ring-2 ring-[#D4AF37]/50 shadow-[#D4AF37]/20 scale-105"
-                        : "border-white/20 hover:border-white/50"
-                    }`}
-                  >
-                    <div
-                      className="absolute inset-0 bg-gradient-to-br from-amber-500 via-rose-500 to-indigo-600"
-                      style={{ filter: f.filterCss }}
-                    />
-                    <div className="absolute inset-0 bg-black/20" />
-                    <span className="relative z-10 text-[10px] font-bold text-white uppercase text-center px-1 leading-tight drop-shadow">
-                      {f.name.split(" ")[0]}
-                    </span>
-                  </div>
-                  <span
-                    className={`text-[11px] font-mono tracking-tight transition-colors ${
-                      isSelected ? "text-[#D4AF37] font-bold" : "text-zinc-400"
-                    }`}
-                  >
-                    {f.name}
-                  </span>
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{cat.label}</span>
                 </button>
               );
             })}
@@ -356,17 +462,17 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     );
   }
 
-  // IMPORT / SELECTION MODE
+  // IMPORT / SELECTION INITIAL MODE
   return createPortal(
     <div
-      className="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center gap-6 px-6 select-none"
+      className="fixed inset-0 bg-background text-foreground z-[9999] flex flex-col items-center justify-center gap-6 px-6 select-none"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       <button
         onClick={handleCloseCreator}
-        className="absolute top-4 left-4 text-white p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-all cursor-pointer backdrop-blur-md"
+        className="absolute top-4 left-4 p-2.5 rounded-full bg-muted/80 hover:bg-muted text-foreground transition-all cursor-pointer"
         title="Fermer"
       >
         <X className="w-6 h-6" />
@@ -375,8 +481,8 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
       <div
         className={`w-24 h-24 rounded-3xl border-2 flex items-center justify-center transition-all ${
           isDraggingOver
-            ? "border-[#D4AF37] bg-[#D4AF37]/20 scale-110 shadow-2xl shadow-[#D4AF37]/20"
-            : "bg-zinc-900 border-zinc-800"
+            ? "border-[#D4AF37] bg-[#D4AF37]/20 scale-110 shadow-2xl"
+            : "bg-muted/50 border-border"
         }`}
       >
         {isDraggingOver ? (
@@ -387,8 +493,8 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
       </div>
 
       <div className="text-center space-y-1.5 max-w-xs">
-        <h2 className="text-white font-black text-xl tracking-tight">Nouveau Réel</h2>
-        <p className="text-zinc-400 text-xs leading-relaxed">
+        <h2 className="font-black text-xl tracking-tight">Nouveau Réel AFRIGOMBO</h2>
+        <p className="text-muted-foreground text-xs leading-relaxed">
           {isDraggingOver
             ? "Relâchez le fichier vidéo pour l'importer"
             : "Sélectionnez ou déposez une vidéo depuis votre appareil (MP4, MOV, WebM)"}
@@ -397,7 +503,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
 
       <button
         onClick={() => fileInputRef.current?.click()}
-        className="bg-[#D4AF37] hover:bg-amber-400 text-black font-black px-6 py-3 rounded-full text-xs uppercase tracking-wider shadow-xl hover:shadow-[#D4AF37]/25 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+        className="bg-[#D4AF37] hover:bg-amber-400 text-black font-black px-6 py-3 rounded-full text-xs uppercase tracking-wider shadow-xl active:scale-95 transition-all cursor-pointer flex items-center gap-2"
       >
         <Upload className="w-4 h-4 stroke-[2.5]" />
         <span>Importer une vidéo</span>
