@@ -1744,8 +1744,8 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
   });
 
-  // Accès et streaming direct aux médias publics Cloudflare R2
-  app.get("/api/r2/media/*", async (req, res) => {
+  // Accès et streaming direct aux médias publics Cloudflare R2 (Express v5 compatible)
+  app.get("/api/r2/media/*all", async (req, res) => {
     try {
       const rawKey = req.path.replace(/^\/api\/r2\/media\//, "");
       const key = decodeURIComponent(rawKey);

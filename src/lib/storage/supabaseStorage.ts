@@ -527,10 +527,9 @@ export const supabaseStorage = {
   },
 
   /**
-   * 2. UPLOAD VIDÉO DIRECT VIA URL SIGNÉE (POUR REELS / GROS MÉDIAS)
-   * Envoi binaire pur (0 conversion Base64, contourne les proxys Express et Cloud Run)
+   * 2. UPLOAD VIDÉO DIRECT VIA CLOUDFLARE R2 (POUR REELS / MÉDIAS VIDÉO)
+   * Envoi binaire pur direct vers Cloudflare R2 (bucket: afrigombo-public)
    * Progression réelle 0% -> 100% via XMLHttpRequest.upload.onprogress
-   * Fallback résilient automatique vers Supabase Client direct en cas d'erreur de jeton/proxy
    */
   async uploadVideoDirectSigned(
     file: File | Blob,
@@ -539,48 +538,23 @@ export const supabaseStorage = {
     onProgress?: (progress: ProgressInfo) => void,
     idToken?: string
   ): Promise<StorageUploadResult> {
-    const timestamp = Date.now();
     const isFile = file instanceof File;
-    let originalName = isFile ? file.name : `reel_${timestamp}.mp4`;
-    
-    // Normaliser l'extension si MOV -> MP4
-    if (originalName.toLowerCase().endsWith(".mov")) {
-      originalName = originalName.replace(/\.mov$/i, ".mp4");
-    }
-    
-    const fileName = sanitizeFileName(originalName);
-    const storagePath = `reels/${userId}/${timestamp}_${fileName}`;
-    const bucket = SUPABASE_BUCKET_NAME;
-
-    // Déterminer le MIME type exact pour Safari (MP4 H.264 prioritaire)
     let rawMime = (file as Blob).type || "";
     let mimeType = "video/mp4";
-    if (rawMime === "video/quicktime" || originalName.toLowerCase().endsWith(".mp4") || originalName.toLowerCase().endsWith(".mov")) {
-      mimeType = "video/mp4";
-    } else if (rawMime === "video/webm" || originalName.toLowerCase().endsWith(".webm")) {
-      mimeType = "video/webm";
-    } else if (rawMime) {
+    if (rawMime) {
       mimeType = rawMime;
     }
 
-    const blob = isFile ? file : new Blob([file], { type: mimeType });
-
     if (onProgress) {
-      onProgress({ percentage: 5, state: "uploading", log: "Obtention de l'autorisation de stockage..." });
+      onProgress({ percentage: 5, state: "uploading", log: "Initialisation du téléversement Cloudflare R2..." });
     }
 
-    let signedUploadSuccess = false;
-    let publicUrlResult = "";
-    let signedErrorDetails = "";
-    let supabaseErrorDetails = "";
-
-    // 0. Envoi prioritaire et exclusif des vidéos vers Cloudflare R2
-    if (isFile) {
-      try {
-        if (onProgress) {
-          onProgress({ percentage: 10, state: "uploading", log: "Initialisation du téléversement Cloudflare R2..." });
-        }
-        const r2Result = await r2StorageService.uploadReelVideo(file as File, userId, publicationId, (p) => {
+    try {
+      const r2Result = await r2StorageService.uploadReelVideo(
+        file,
+        userId,
+        publicationId,
+        (p) => {
           if (onProgress) {
             onProgress({
               percentage: p.percentage,
@@ -590,193 +564,41 @@ export const supabaseStorage = {
               log: p.log,
             });
           }
-        }, idToken);
+        },
+        idToken
+      );
 
-        if (r2Result && r2Result.success) {
-          const mediaUrl = r2Result.url || "";
-          const metadata: FirestoreMediaMetadata = {
-            provider: "external",
-            bucket: r2Result.bucket || "afrigombo-public",
-            storagePath: r2Result.key,
-            mediaUrl,
-            mediaType: "video",
-            size: r2Result.fileSize || file.size,
-            mimeType: r2Result.contentType || mimeType,
-            createdAt: new Date().toISOString(),
-            userId,
-            isPrivate: false,
-          };
-          return {
-            success: true,
-            url: mediaUrl,
-            storagePath: r2Result.key,
-            metadata,
-          };
-        }
-      } catch (r2Err: any) {
-        console.error("[R2 STORAGE ERROR]", r2Err);
-        throw new Error(r2Err?.message || "Échec du téléversement de la vidéo vers Cloudflare R2.");
+      if (r2Result && r2Result.success) {
+        const mediaUrl = r2Result.url || "";
+        const metadata: FirestoreMediaMetadata = {
+          provider: "external",
+          bucket: r2Result.bucket || "afrigombo-public",
+          storagePath: r2Result.key,
+          mediaUrl,
+          mediaType: "video",
+          size: r2Result.fileSize || file.size,
+          mimeType: r2Result.contentType || mimeType,
+          createdAt: new Date().toISOString(),
+          userId,
+          isPrivate: false,
+        };
+        return {
+          success: true,
+          url: mediaUrl,
+          storagePath: r2Result.key,
+          metadata,
+        };
+      } else {
+        throw new Error("Échec du téléversement vers Cloudflare R2");
       }
-    }
-
-    // 1. Essai via URL signée Super Fondateur si idToken présent
-    if (idToken) {
-      try {
-        const urlResp = await fetch("/api/admin/media/signed-upload-url", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${idToken}`
-          },
-          body: JSON.stringify({
-            idToken,
-            storagePath,
-            bucket
-          })
-        });
-
-        let urlJson: any = {};
-        const cType = urlResp.headers.get("content-type") || "";
-        if (cType.includes("application/json")) {
-          try {
-            urlJson = await urlResp.json();
-          } catch (_) {}
-        }
-
-        if (urlResp.ok && urlJson.success && urlJson.signedUrl) {
-          const { signedUrl, publicUrl } = urlJson;
-
-          if (onProgress) {
-            onProgress({ percentage: 10, state: "uploading", log: "Démarrage du transfert direct..." });
-          }
-
-          await new Promise<void>((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open("PUT", signedUrl, true);
-            xhr.setRequestHeader("Content-Type", mimeType);
-
-            xhr.upload.onprogress = (event) => {
-              if (event.lengthComputable && onProgress) {
-                const rawPercent = Math.round((event.loaded / event.total) * 100);
-                const scaledPercent = Math.min(95, Math.max(10, 10 + Math.round(rawPercent * 0.85)));
-                const loadedMb = (event.loaded / 1024 / 1024).toFixed(1);
-                const totalMb = (event.total / 1024 / 1024).toFixed(1);
-                onProgress({
-                  percentage: scaledPercent,
-                  bytesTransferred: event.loaded,
-                  totalBytes: event.total,
-                  state: "uploading",
-                  log: `Téléversement en cours : ${loadedMb} Mo / ${totalMb} Mo (${scaledPercent}%)`
-                });
-              }
-            };
-
-            xhr.onload = () => {
-              if (xhr.status >= 200 && xhr.status < 300) {
-                if (onProgress) {
-                  onProgress({ percentage: 100, state: "success", log: "Transfert terminé avec succès" });
-                }
-                resolve();
-              } else {
-                reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
-              }
-            };
-
-            xhr.onerror = () => reject(new Error("Erreur réseau de connexion"));
-            xhr.onabort = () => reject(new Error("Transfert annulé"));
-            xhr.send(blob);
-          });
-
-          signedUploadSuccess = true;
-          publicUrlResult = publicUrl;
-        } else {
-          signedErrorDetails = urlJson.error || `Erreur HTTP ${urlResp.status}`;
-        }
-      } catch (signedErr: any) {
-        signedErrorDetails = signedErr?.message || String(signedErr);
-        console.warn("[SUPABASE STORAGE] Téléversement signé indisponible, bascule sur téléversement direct résilient:", signedErr);
-      }
-    }
-
-    // 2. Si l'URL signée a fonctionné, retourner le résultat
-    if (signedUploadSuccess && publicUrlResult) {
-      const metadata: FirestoreMediaMetadata = {
-        provider: "supabase",
-        bucket,
-        storagePath,
-        mediaUrl: publicUrlResult,
-        mediaType: "video",
-        size: blob.size,
-        mimeType,
-        createdAt: new Date().toISOString(),
-        userId,
-        isPrivate: false,
-      };
-
-      return {
-        success: true,
-        url: publicUrlResult,
-        storagePath,
-        metadata,
-      };
-    }
-
-    // 3. Fallback résilient 1 : Téléversement direct client Supabase Storage
-    const client = getSupabaseClient();
-    if (client) {
+    } catch (r2Err: any) {
+      console.error("[R2 VIDEO UPLOAD ERROR]", r2Err);
+      const userFacingError = `Impossible de téléverser la vidéo vers Cloudflare R2 (${r2Err?.message || "Erreur de transfert"}).`;
       if (onProgress) {
-        onProgress({ percentage: 20, state: "uploading", log: "Connexion au stockage Supabase..." });
+        onProgress({ percentage: 0, state: "error", log: userFacingError });
       }
-
-      try {
-        const { data, error } = await client.storage.from(bucket).upload(storagePath, blob, {
-          contentType: mimeType,
-          upsert: true,
-        });
-
-        if (!error && data) {
-          const finalUrl = this.getPublicUrl(data.path || storagePath, bucket);
-
-          if (onProgress) {
-            onProgress({ percentage: 100, state: "success", log: "Téléversement terminé avec succès" });
-          }
-
-          const metadata: FirestoreMediaMetadata = {
-            provider: "supabase",
-            bucket,
-            storagePath: data.path || storagePath,
-            mediaUrl: finalUrl,
-            mediaType: "video",
-            size: blob.size,
-            mimeType,
-            createdAt: new Date().toISOString(),
-            userId,
-            isPrivate: false,
-          };
-
-          return {
-            success: true,
-            url: finalUrl,
-            storagePath: data.path || storagePath,
-            metadata,
-          };
-        } else if (error) {
-          supabaseErrorDetails = error.message || String(error);
-          console.warn("[SUPABASE STORAGE DIRECT FALLBACK ERROR]", error);
-        }
-      } catch (clientErr: any) {
-        supabaseErrorDetails = clientErr?.message || String(clientErr);
-      }
+      throw new Error(userFacingError);
     }
-
-    const failureReason = supabaseErrorDetails || signedErrorDetails || "Erreur de stockage Supabase. Veuillez vérifier les permissions de votre bucket Supabase Storage.";
-    const userFacingError = `Impossible de téléverser la vidéo vers Supabase Storage (${failureReason}). Veuillez réessayer.`;
-    
-    if (onProgress) {
-      onProgress({ percentage: 0, state: "error", log: userFacingError });
-    }
-
-    throw new Error(userFacingError);
   },
 
   /**
