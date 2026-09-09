@@ -32,7 +32,7 @@ export interface StorageUploadResult {
   success: boolean;
   url: string;
   storagePath: string;
-  metadata: FirestoreMediaMetadata;
+  metadata?: FirestoreMediaMetadata;
   error?: string;
 }
 

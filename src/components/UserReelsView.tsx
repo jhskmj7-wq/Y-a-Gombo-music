@@ -25,7 +25,11 @@ export function UserReelsView({ users, setReelsVideoId, setReelsVideoUrl }: User
     id: media.id,
     title: media.title || "Démo Artiste",
     type: media.type || "video",
-    url: media.videoUrl || media.mediaUrl || media.url || media.media_url || media.src,
+    url: (() => {
+      const c = media.videoUrl || media.mediaUrl || media.url || media.media_url || media.src || (media.storagePath?.startsWith("reels/") ? media.storagePath : "");
+      if (typeof c === "string" && c.startsWith("reels/")) return `/api/r2/media/${encodeURIComponent(c)}`;
+      return c;
+    })(),
     artisticName: u.artisticName || u.name || "Artiste Gombo",
     category: media.type === "video" ? "raw" : "youtube",
     avatar: u.photoURL || u.photoUrl || u.avatarUrl || u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",

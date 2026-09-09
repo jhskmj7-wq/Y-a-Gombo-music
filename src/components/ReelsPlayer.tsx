@@ -63,12 +63,23 @@ function getYoutubeId(rawUrl: string): string | null {
   return null;
 }
 
-// Portfolio & Reels unified video URL resolution (accepts videoUrl, mediaUrl, url, src)
+// Portfolio & Reels unified video URL resolution (accepts videoUrl, mediaUrl, url, src, storagePath)
 function resolveVideoUrl(item: any): string | null {
   if (!item) return null;
-  const candidate = item.videoUrl || item.mediaUrl || item.url || item.media_url || item.src;
+  const candidate =
+    item.videoUrl ||
+    item.mediaUrl ||
+    item.url ||
+    item.media_url ||
+    item.src ||
+    (item.storagePath?.startsWith("reels/") ? `/api/r2/media/${encodeURIComponent(item.storagePath)}` : null);
+
   if (typeof candidate === "string" && candidate.trim().length > 0) {
-    return candidate.trim();
+    const trimmed = candidate.trim();
+    if (trimmed.startsWith("reels/")) {
+      return `/api/r2/media/${encodeURIComponent(trimmed)}`;
+    }
+    return trimmed;
   }
   return null;
 }
