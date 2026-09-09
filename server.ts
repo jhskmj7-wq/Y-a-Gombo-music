@@ -1621,8 +1621,8 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     });
   });
 
-  // Test réel de connectivité aux buckets Cloudflare R2
-  app.get("/api/r2/test-connection", async (req, res) => {
+  // Test réel de connectivité aux buckets Cloudflare R2 (GET & POST)
+  const handleTestConnection = async (req: express.Request, res: express.Response) => {
     if (!isR2Configured()) {
       return res.status(503).json({
         configured: false,
@@ -1639,7 +1639,9 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       publicBucket: publicTest,
       privateBucket: privateTest,
     });
-  });
+  };
+  app.get("/api/r2/test-connection", handleTestConnection);
+  app.post("/api/r2/test-connection", handleTestConnection);
 
   // Génération d'URL présignée d'upload (PUT) vers Cloudflare R2
   app.post("/api/r2/presigned-upload-url", async (req, res) => {
@@ -1655,19 +1657,24 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       }
 
       const authHeader = req.headers.authorization || "";
-      const token = authHeader.replace(/^Bearer\s+/i, "");
+      const token = authHeader.replace(/^Bearer\s+/i, "") || req.body?.idToken || "";
 
       if (!token) {
         return res.status(401).json({ error: "Authentification requise" });
       }
 
       const adminAuth = getAdminAuthClient();
-      if (!adminAuth) {
-        return res.status(500).json({ error: "Firebase Admin non initialisé" });
+      let decodedUid = "";
+      if (adminAuth) {
+        try {
+          const decoded = await adminAuth.verifyIdToken(token);
+          if (decoded && decoded.uid) {
+            decodedUid = decoded.uid;
+          }
+        } catch (_) {}
       }
 
-      const decoded = await adminAuth.verifyIdToken(token);
-      if (!decoded || !decoded.uid) {
+      if (!decodedUid) {
         return res.status(401).json({ error: "Jeton d'authentification invalide" });
       }
 
@@ -1687,7 +1694,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       return res.json({
         success: true,
         ...result,
-        userId: decoded.uid,
+        userId: decodedUid,
       });
     } catch (error: any) {
       console.error("[R2 PRESIGNED UPLOAD URL ERROR]", error);
@@ -1705,19 +1712,24 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       }
 
       const authHeader = req.headers.authorization || "";
-      const token = authHeader.replace(/^Bearer\s+/i, "");
+      const token = authHeader.replace(/^Bearer\s+/i, "") || req.body?.idToken || "";
 
       if (!token) {
         return res.status(401).json({ error: "Authentification requise" });
       }
 
       const adminAuth = getAdminAuthClient();
-      if (!adminAuth) {
-        return res.status(500).json({ error: "Firebase Admin non initialisé" });
+      let decodedUid = "";
+      if (adminAuth) {
+        try {
+          const decoded = await adminAuth.verifyIdToken(token);
+          if (decoded && decoded.uid) {
+            decodedUid = decoded.uid;
+          }
+        } catch (_) {}
       }
 
-      const decoded = await adminAuth.verifyIdToken(token);
-      if (!decoded || !decoded.uid) {
+      if (!decodedUid) {
         return res.status(401).json({ error: "Jeton invalide" });
       }
 
@@ -1736,7 +1748,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       return res.json({
         success: true,
         ...result,
-        userId: decoded.uid,
+        userId: decodedUid,
       });
     } catch (error: any) {
       console.error("[R2 PRESIGNED READ URL ERROR]", error);
