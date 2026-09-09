@@ -9,7 +9,7 @@ export interface StorageProgress {
 
 export interface R2UploadResult {
   success: boolean;
-  url: string;
+  url?: string;
   key: string;
   storagePath: string;
   bucket: string;
@@ -113,7 +113,7 @@ export class R2StorageService {
 
     await this.uploadDirect(uploadUrl, file, mimeType, onProgress);
 
-    const finalUrl = publicUrl || `https://pub-afrigombo.r2.dev/${key}`;
+    const finalUrl = publicUrl || undefined;
 
     return {
       success: true,
@@ -130,7 +130,7 @@ export class R2StorageService {
     file: File,
     userId: string,
     publicationId: string
-  ): Promise<{ url: string; key: string }> {
+  ): Promise<{ url?: string; key: string }> {
     const timestamp = Date.now();
     const extension = file.name.split(".").pop() || "jpg";
     const mimeType = file.type || "image/jpeg";
@@ -140,7 +140,7 @@ export class R2StorageService {
     await this.uploadDirect(uploadUrl, file, mimeType);
 
     return {
-      url: publicUrl || `https://pub-afrigombo.r2.dev/${key}`,
+      url: publicUrl || undefined,
       key,
     };
   }
