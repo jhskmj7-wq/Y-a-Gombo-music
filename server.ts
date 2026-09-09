@@ -9,6 +9,16 @@ import { getFirestore as getAdminFirestore, FieldValue } from "firebase-admin/fi
 import { getAuth as getAdminAuth } from "firebase-admin/auth";
 import { getStorage as getAdminStorage } from "firebase-admin/storage";
 
+import {
+  generateR2PresignedUploadUrl,
+  generateR2PresignedReadUrl,
+  isR2Configured,
+  getR2Config,
+  resolveR2Bucket,
+  testR2BucketConnection,
+  type R2BucketType,
+} from "./server/r2";
+
 dotenv.config();
 
 // Safe Lazy Initializers for Server Operations
@@ -1596,6 +1606,144 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
   });
 
+  // ==========================================
+  // Cloudflare R2 Object Storage Endpoints
+  // ==========================================
+
+  // Statut de la configuration Cloudflare R2 pour AFRIGOMBO
+  app.get("/api/r2/status", (req, res) => {
+    const config = getR2Config();
+    return res.json({
+      configured: isR2Configured(),
+      endpoint: config.endpoint,
+      publicBucket: config.publicBucket,
+      privateBucket: config.privateBucket,
+    });
+  });
+
+  // Test réel de connectivité aux buckets Cloudflare R2
+  app.get("/api/r2/test-connection", async (req, res) => {
+    if (!isR2Configured()) {
+      return res.status(503).json({
+        configured: false,
+        error: "R2 non configuré dans l'environnement serveur (R2_ACCESS_KEY_ID ou R2_SECRET_ACCESS_KEY manquant)",
+      });
+    }
+
+    const publicTest = await testR2BucketConnection("public");
+    const privateTest = await testR2BucketConnection("private");
+
+    return res.json({
+      configured: true,
+      endpoint: process.env.R2_ENDPOINT,
+      publicBucket: publicTest,
+      privateBucket: privateTest,
+    });
+  });
+
+  // Génération d'URL présignée d'upload (PUT) vers Cloudflare R2
+  app.post("/api/r2/presigned-upload-url", async (req, res) => {
+    try {
+      const { key, contentType, bucketType = "public", expiresInSeconds } = req.body;
+
+      if (!key || typeof key !== "string") {
+        return res.status(400).json({ error: "La clé de fichier (key) est requise" });
+      }
+
+      if (bucketType !== "public" && bucketType !== "private") {
+        return res.status(400).json({ error: 'bucketType invalide (doit être "public" ou "private")' });
+      }
+
+      const authHeader = req.headers.authorization || "";
+      const token = authHeader.replace(/^Bearer\s+/i, "");
+
+      if (!token) {
+        return res.status(401).json({ error: "Authentification requise" });
+      }
+
+      const adminAuth = getAdminAuthClient();
+      if (!adminAuth) {
+        return res.status(500).json({ error: "Firebase Admin non initialisé" });
+      }
+
+      const decoded = await adminAuth.verifyIdToken(token);
+      if (!decoded || !decoded.uid) {
+        return res.status(401).json({ error: "Jeton d'authentification invalide" });
+      }
+
+      if (!isR2Configured()) {
+        return res.status(503).json({
+          error: "Cloudflare R2 n'est pas encore configuré (R2_ACCESS_KEY_ID ou R2_SECRET_ACCESS_KEY manquant)",
+        });
+      }
+
+      const result = await generateR2PresignedUploadUrl({
+        key,
+        bucketType: bucketType as R2BucketType,
+        contentType,
+        expiresInSeconds: expiresInSeconds ? Number(expiresInSeconds) : 3600,
+      });
+
+      return res.json({
+        success: true,
+        ...result,
+        userId: decoded.uid,
+      });
+    } catch (error: any) {
+      console.error("[R2 PRESIGNED UPLOAD URL ERROR]", error);
+      return res.status(500).json({ error: error.message || "Erreur serveur lors de la génération de l'URL présignée R2" });
+    }
+  });
+
+  // Génération d'URL présignée de lecture (GET) pour les objets Cloudflare R2
+  app.post("/api/r2/presigned-read-url", async (req, res) => {
+    try {
+      const { key, bucketType = "private", expiresInSeconds } = req.body;
+
+      if (!key || typeof key !== "string") {
+        return res.status(400).json({ error: "La clé de fichier (key) est requise" });
+      }
+
+      const authHeader = req.headers.authorization || "";
+      const token = authHeader.replace(/^Bearer\s+/i, "");
+
+      if (!token) {
+        return res.status(401).json({ error: "Authentification requise" });
+      }
+
+      const adminAuth = getAdminAuthClient();
+      if (!adminAuth) {
+        return res.status(500).json({ error: "Firebase Admin non initialisé" });
+      }
+
+      const decoded = await adminAuth.verifyIdToken(token);
+      if (!decoded || !decoded.uid) {
+        return res.status(401).json({ error: "Jeton invalide" });
+      }
+
+      if (!isR2Configured()) {
+        return res.status(503).json({
+          error: "Cloudflare R2 n'est pas encore configuré (R2_ACCESS_KEY_ID ou R2_SECRET_ACCESS_KEY manquant)",
+        });
+      }
+
+      const result = await generateR2PresignedReadUrl({
+        key,
+        bucketType: bucketType as R2BucketType,
+        expiresInSeconds: expiresInSeconds ? Number(expiresInSeconds) : 3600,
+      });
+
+      return res.json({
+        success: true,
+        ...result,
+        userId: decoded.uid,
+      });
+    } catch (error: any) {
+      console.error("[R2 PRESIGNED READ URL ERROR]", error);
+      return res.status(500).json({ error: error.message || "Erreur serveur lors de la lecture présignée R2" });
+    }
+  });
+
   // Guarantee JSON responses for all unhandled /api requests (never HTML)
   app.use("/api", (req: express.Request, res: express.Response) => {
     res.status(404).json({
@@ -1643,7 +1791,7 @@ async function startServer() {
         }
       }
     }));
-    app.get('*', (req, res, next) => {
+    app.use((req, res, next) => {
       if (req.path.startsWith('/api/')) {
         return next();
       }

@@ -1,5 +1,6 @@
 import { getSupabaseClient, SUPABASE_BUCKET_NAME, isSupabaseConfigured, sanitizeBucketName } from "../supabase";
 import { auth } from "../../firebase";
+import { r2StorageService } from "./r2Storage";
 
 /**
  * Service centralisé pour le stockage de fichiers via Supabase Storage pour AfriGombo.
@@ -573,7 +574,50 @@ export const supabaseStorage = {
     let signedErrorDetails = "";
     let supabaseErrorDetails = "";
 
-    // 1. Essai prioritaire via URL signée Super Fondateur si idToken présent
+    // 0. Essai prioritaire absolu : Cloudflare R2
+    if (isFile && idToken) {
+      try {
+        if (onProgress) {
+          onProgress({ percentage: 10, state: "uploading", log: "Initialisation du stockage Cloudflare R2..." });
+        }
+        const r2Result = await r2StorageService.uploadReelVideo(file as File, userId, publicationId, (p) => {
+          if (onProgress) {
+            onProgress({
+              percentage: p.percentage,
+              bytesTransferred: Math.round((p.percentage / 100) * file.size),
+              totalBytes: file.size,
+              state: p.state === "error" ? "error" : "uploading",
+              log: p.log,
+            });
+          }
+        });
+
+        if (r2Result && r2Result.success && r2Result.url) {
+          const metadata: FirestoreMediaMetadata = {
+            provider: "external",
+            bucket: r2Result.bucket || "afrigombo-public",
+            storagePath: r2Result.key,
+            mediaUrl: r2Result.url,
+            mediaType: "video",
+            size: r2Result.fileSize || file.size,
+            mimeType: r2Result.contentType || mimeType,
+            createdAt: new Date().toISOString(),
+            userId,
+            isPrivate: false,
+          };
+          return {
+            success: true,
+            url: r2Result.url,
+            storagePath: r2Result.key,
+            metadata,
+          };
+        }
+      } catch (r2Err: any) {
+        console.warn("[R2 STORAGE] Téléversement R2 non disponible, bascule vers le stockage de secours:", r2Err?.message);
+      }
+    }
+
+    // 1. Essai via URL signée Super Fondateur si idToken présent
     if (idToken) {
       try {
         const urlResp = await fetch("/api/admin/media/signed-upload-url", {
