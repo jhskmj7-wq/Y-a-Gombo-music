@@ -1,4 +1,4 @@
-import { getR2Config, isR2Configured } from "../../server/r2";
+import { getR2Config, isR2Configured } from "../_r2Helper";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Content-Type", "application/json");

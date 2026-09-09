@@ -3,7 +3,7 @@ import {
   generateR2PresignedReadUrl,
   isR2Configured,
   R2BucketType,
-} from "../../server/r2";
+} from "../_r2Helper";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Content-Type", "application/json");

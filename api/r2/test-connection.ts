@@ -1,5 +1,5 @@
 import { verifyUserToken } from "../_firebaseHelper";
-import { isR2Configured, testR2BucketConnection } from "../../server/r2";
+import { isR2Configured, testR2BucketConnection } from "../_r2Helper";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Content-Type", "application/json");

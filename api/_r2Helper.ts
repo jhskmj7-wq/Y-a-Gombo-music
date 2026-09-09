@@ -1,0 +1,180 @@
+import { S3Client, PutObjectCommand, GetObjectCommand, HeadBucketCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+export type R2BucketType = "public" | "private";
+
+export interface R2PresignedUploadParams {
+  key: string;
+  bucketType?: R2BucketType;
+  contentType?: string;
+  expiresInSeconds?: number;
+}
+
+export interface R2PresignedReadParams {
+  key: string;
+  bucketType?: R2BucketType;
+  expiresInSeconds?: number;
+}
+
+export interface R2PresignedUploadResult {
+  uploadUrl: string;
+  key: string;
+  bucket: string;
+  bucketType: R2BucketType;
+  publicUrl?: string;
+  expiresInSeconds: number;
+}
+
+export interface R2PresignedReadResult {
+  readUrl: string;
+  key: string;
+  bucket: string;
+  bucketType: R2BucketType;
+  expiresInSeconds: number;
+}
+
+export interface R2BucketTestResult {
+  bucket: string;
+  bucketType: R2BucketType;
+  accessible: boolean;
+  error?: string;
+}
+
+let r2Client: S3Client | null = null;
+
+export function getR2Client(): S3Client {
+  if (!r2Client) {
+    const accessKeyId = (process.env.R2_ACCESS_KEY_ID || "").trim();
+    const secretAccessKey = (process.env.R2_SECRET_ACCESS_KEY || "").trim();
+    let rawEndpoint = (process.env.R2_ENDPOINT || "https://d336ac8939fd48099d0e284310a7deb5.r2.cloudflarestorage.com").trim();
+
+    if (!accessKeyId || !secretAccessKey) {
+      throw new Error(
+        "Identifiants Cloudflare R2 manquants : R2_ACCESS_KEY_ID et R2_SECRET_ACCESS_KEY doivent être configurés dans l'environnement."
+      );
+    }
+
+    if (rawEndpoint && !rawEndpoint.startsWith("http://") && !rawEndpoint.startsWith("https://")) {
+      rawEndpoint = `https://${rawEndpoint}`;
+    }
+
+    r2Client = new S3Client({
+      region: "auto",
+      forcePathStyle: true,
+      endpoint: rawEndpoint,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+      },
+    });
+  }
+  return r2Client;
+}
+
+export function isR2Configured(): boolean {
+  const accessKeyId = (process.env.R2_ACCESS_KEY_ID || "").trim();
+  const secretAccessKey = (process.env.R2_SECRET_ACCESS_KEY || "").trim();
+  return Boolean(accessKeyId && secretAccessKey);
+}
+
+export function resolveR2Bucket(type: R2BucketType = "public"): string {
+  if (type === "private") {
+    return (process.env.R2_PRIVATE_BUCKET || "afrigombo-private").trim();
+  }
+  return (process.env.R2_PUBLIC_BUCKET || "afrigombo-public").trim();
+}
+
+export function getR2Config() {
+  return {
+    endpoint: process.env.R2_ENDPOINT || "https://d336ac8939fd48099d0e284310a7deb5.r2.cloudflarestorage.com",
+    publicBucket: resolveR2Bucket("public"),
+    privateBucket: resolveR2Bucket("private"),
+    isConfigured: isR2Configured(),
+  };
+}
+
+export async function generateR2PresignedUploadUrl(
+  params: R2PresignedUploadParams
+): Promise<R2PresignedUploadResult> {
+  const {
+    key,
+    bucketType = "public",
+    contentType = "application/octet-stream",
+    expiresInSeconds = 3600,
+  } = params;
+
+  const client = getR2Client();
+  const bucket = resolveR2Bucket(bucketType);
+
+  const command = new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    ContentType: contentType,
+  });
+
+  const uploadUrl = await getSignedUrl(client, command, { expiresIn: expiresInSeconds });
+
+  const publicBaseUrl = (process.env.R2_PUBLIC_BASE_URL || "").trim();
+  const publicUrl = publicBaseUrl ? `${publicBaseUrl.replace(/\/$/, "")}/${key}` : undefined;
+
+  return {
+    uploadUrl,
+    key,
+    bucket,
+    bucketType,
+    publicUrl,
+    expiresInSeconds,
+  };
+}
+
+export async function generateR2PresignedReadUrl(
+  params: R2PresignedReadParams
+): Promise<R2PresignedReadResult> {
+  const {
+    key,
+    bucketType = "private",
+    expiresInSeconds = 3600,
+  } = params;
+
+  const client = getR2Client();
+  const bucket = resolveR2Bucket(bucketType);
+
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: key,
+  });
+
+  const readUrl = await getSignedUrl(client, command, { expiresIn: expiresInSeconds });
+
+  return {
+    readUrl,
+    key,
+    bucket,
+    bucketType,
+    expiresInSeconds,
+  };
+}
+
+export async function testR2BucketConnection(bucketType: R2BucketType): Promise<R2BucketTestResult> {
+  const bucket = resolveR2Bucket(bucketType);
+  try {
+    const client = getR2Client();
+    try {
+      await client.send(new HeadBucketCommand({ Bucket: bucket }));
+    } catch {
+      await client.send(new ListObjectsV2Command({ Bucket: bucket, MaxKeys: 1 }));
+    }
+    return {
+      bucket,
+      bucketType,
+      accessible: true,
+    };
+  } catch (err: any) {
+    return {
+      bucket,
+      bucketType,
+      accessible: false,
+      error: err?.name || err?.message || "Erreur de connexion R2",
+    };
+  }
+}
