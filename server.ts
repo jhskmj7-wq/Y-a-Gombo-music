@@ -19,7 +19,7 @@ import {
   type R2BucketType,
 } from "./server/r2";
 
-dotenv.config();
+dotenv.config({ override: true });
 
 // Safe Lazy Initializers for Server Operations
 let adminInitialized = false;
