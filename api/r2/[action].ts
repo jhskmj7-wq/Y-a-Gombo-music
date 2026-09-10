@@ -9,24 +9,27 @@ import {
 } from "../_lib/r2Helper";
 
 export default async function handler(req: any, res: any) {
-  res.setHeader("Content-Type", "application/json");
+  try {
+    if (res && typeof res.setHeader === "function") {
+      res.setHeader("Content-Type", "application/json");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    }
 
-  // Handle CORS Preflight
-  if (req.method === "OPTIONS") {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    return res.status(200).json({ success: true });
-  }
+    // Handle CORS Preflight
+    if (req.method === "OPTIONS") {
+      return res.status(200).json({ success: true });
+    }
 
-  // Determine action from route parameter or URL
-  const actionParam = (
-    req.query?.action ||
-    (req.url && req.url.match(/\/api\/r2\/([^/?]+)/)?.[1]) ||
-    ""
-  ).toString().toLowerCase();
+    // Determine action from route parameter, query, or URL
+    const rawAction =
+      req.query?.action ||
+      (req.url ? req.url.match(/\/api\/r2\/([^/?]+)/)?.[1] : "") ||
+      "";
+    const actionParam = String(rawAction).toLowerCase().trim();
 
-  switch (actionParam) {
+    switch (actionParam) {
     // ----------------------------------------------------
     // 1. STATUS
     // ----------------------------------------------------
@@ -302,5 +305,12 @@ export default async function handler(req: any, res: any) {
         success: false,
         error: `Action R2 inconnue: ${actionParam}`,
       });
+  }
+  } catch (globalError: any) {
+    console.error("[FATAL R2 HANDLER ERROR]", globalError);
+    return res.status(500).json({
+      success: false,
+      error: globalError?.message || "Erreur interne critique du gestionnaire R2.",
+    });
   }
 }

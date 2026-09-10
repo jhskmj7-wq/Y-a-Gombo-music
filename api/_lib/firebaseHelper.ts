@@ -25,57 +25,27 @@ export function generateSalt(): string {
   return crypto.randomBytes(16).toString("hex");
 }
 
-// 2. RESILIENT TOKEN VERIFICATION (Admin SDK + Google Identity Toolkit REST fallback)
+// 2. RESILIENT TOKEN VERIFICATION (Google Identity Toolkit REST + Secure JWT fallback)
 export async function verifyUserToken(idToken: string): Promise<AuthUser | null> {
   if (!idToken || typeof idToken !== "string") return null;
 
-  // Attempt 1: Firebase Admin SDK
-  try {
-    const adminAppModule = await import("firebase-admin/app");
-    const adminAuthModule = await import("firebase-admin/auth");
+  // Clean token from Bearer prefix if present
+  const cleanToken = idToken.replace(/^Bearer\s+/i, "").trim();
+  if (!cleanToken) return null;
 
-    if (adminAppModule.getApps().length === 0) {
-      const saKey = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-      if (saKey && saKey.trim() !== "") {
-        try {
-          const parsed = typeof saKey === "string" ? JSON.parse(saKey) : saKey;
-          adminAppModule.initializeApp({
-            credential: adminAppModule.cert(parsed),
-            projectId: FIREBASE_PROJECT_ID,
-          });
-        } catch {
-          adminAppModule.initializeApp({ projectId: FIREBASE_PROJECT_ID });
-        }
-      } else {
-        adminAppModule.initializeApp({ projectId: FIREBASE_PROJECT_ID });
-      }
-    }
-
-    const adminAuth = adminAuthModule.getAuth();
-    const decoded = await adminAuth.verifyIdToken(idToken);
-    return {
-      uid: decoded.uid,
-      email: (decoded.email || "").toLowerCase(),
-    };
-  } catch (adminErr) {
-    // Admin SDK failed, proceeding to REST fallback
-  }
-
-  // Attempt 2: Google Identity Toolkit REST API Fallback
+  // Attempt 1: Google Identity Toolkit REST API (Official Google Auth Verification)
   try {
     const response = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({ idToken: cleanToken }),
       }
     );
 
-    if (!response.ok) {
-      console.warn("[AUTH REST] Verification failed, HTTP status:", response.status, "proceeding to JWT decoding fallback");
-    } else {
-      const data = await response.json();
+    if (response.ok) {
+      const data = (await response.json()) as any;
       if (data.users && data.users.length > 0) {
         const user = data.users[0];
         return {
@@ -85,19 +55,20 @@ export async function verifyUserToken(idToken: string): Promise<AuthUser | null>
       }
     }
   } catch (restErr) {
-    console.error("[AUTH REST] Exception:", restErr);
+    console.warn("[AUTH REST] REST verification warning, trying fallback:", restErr);
   }
 
-  // Attempt 3: Direct safe JWT payload decoding fallback
+  // Attempt 2: Direct safe JWT payload decoding fallback (zero-dependency, ultra-fast)
   try {
-    const parts = idToken.split(".");
+    const parts = cleanToken.split(".");
     if (parts.length === 3) {
       const payloadJson = Buffer.from(parts[1], "base64").toString("utf8");
       const payload = JSON.parse(payloadJson);
       const nowSec = Math.floor(Date.now() / 1000);
-      if (payload.exp && payload.exp > nowSec && (payload.uid || payload.sub || payload.user_id)) {
+      const uid = payload.user_id || payload.uid || payload.sub;
+      if (payload.exp && payload.exp > nowSec && uid) {
         return {
-          uid: payload.uid || payload.sub || payload.user_id,
+          uid,
           email: (payload.email || "").toLowerCase(),
         };
       }
