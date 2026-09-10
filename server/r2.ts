@@ -161,6 +161,31 @@ export interface R2BucketTestResult {
   error?: string;
 }
 
+export async function uploadBufferToR2(params: {
+  key: string;
+  buffer: Buffer;
+  contentType: string;
+  bucketType?: R2BucketType;
+}): Promise<{ key: string; bucket: string; publicUrl?: string }> {
+  const { key, buffer, contentType, bucketType = "public" } = params;
+  const client = getR2Client();
+  const bucket = resolveR2Bucket(bucketType);
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    })
+  );
+
+  const publicBaseUrl = (process.env.R2_PUBLIC_BASE_URL || "").trim();
+  const publicUrl = publicBaseUrl ? `${publicBaseUrl.replace(/\/$/, "")}/${key}` : undefined;
+
+  return { key, bucket, publicUrl };
+}
+
 export async function testR2BucketConnection(bucketType: R2BucketType): Promise<R2BucketTestResult> {
   const bucket = resolveR2Bucket(bucketType);
   try {
@@ -181,3 +206,5 @@ export async function testR2BucketConnection(bucketType: R2BucketType): Promise<
     };
   }
 }
+
+

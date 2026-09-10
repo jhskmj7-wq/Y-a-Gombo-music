@@ -15,6 +15,7 @@ import {
   isR2Configured,
   getR2Config,
   resolveR2Bucket,
+  uploadBufferToR2,
   testR2BucketConnection,
   type R2BucketType,
 } from "./server/r2";
@@ -1849,6 +1850,61 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     } catch (error: any) {
       console.error("[R2 PRESIGNED READ URL ERROR]", error);
       return res.status(500).json({ error: error.message || "Erreur serveur lors de la lecture présignée R2" });
+    }
+  });
+
+  // Upload sécurisé direct par proxy serveur (résilient aux coupures réseau / CORS)
+  app.post("/api/r2/proxy-upload", async (req, res) => {
+    try {
+      const { key, contentType = "video/mp4", bucketType = "public", base64Data, idToken: bodyIdToken } = req.body || {};
+
+      if (!key || !base64Data) {
+        return res.status(400).json({ error: "Clé (key) et données (base64Data) requises." });
+      }
+
+      const authHeader = req.headers?.authorization || req.headers?.Authorization || "";
+      const idToken = (typeof authHeader === "string" ? authHeader.replace(/^Bearer\s+/i, "") : "") || bodyIdToken;
+
+      let decodedUid = "system_user";
+      if (idToken) {
+        const adminAuth = getAdminAuthClient();
+        if (adminAuth) {
+          try {
+            const decoded = await adminAuth.verifyIdToken(idToken);
+            decodedUid = decoded.uid;
+          } catch (_) {
+            const parts = idToken.split(".");
+            if (parts.length === 3) {
+              const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf8"));
+              if (payload.user_id || payload.uid) decodedUid = payload.user_id || payload.uid;
+            }
+          }
+        }
+      }
+
+      if (!isR2Configured()) {
+        return res.status(503).json({ error: "Stockage Cloudflare R2 non configuré." });
+      }
+
+      const base64Clean = base64Data.replace(/^data:[^;]+;base64,/, "");
+      const buffer = Buffer.from(base64Clean, "base64");
+      const cleanKey = key.replace(/^\/+/, "");
+
+      const uploadRes = await uploadBufferToR2({
+        key: cleanKey,
+        buffer,
+        contentType,
+        bucketType: bucketType as R2BucketType,
+      });
+
+      return res.json({
+        success: true,
+        ...uploadRes,
+        userId: decodedUid,
+      });
+    } catch (proxyErr: any) {
+      console.error("[R2 PROXY UPLOAD SERVER ERROR]", proxyErr);
+      return res.status(500).json({ error: proxyErr.message || "Erreur lors du transfert R2 par le serveur." });
     }
   });
 
