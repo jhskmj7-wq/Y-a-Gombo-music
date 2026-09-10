@@ -25,15 +25,15 @@ export function generateSalt(): string {
   return crypto.randomBytes(16).toString("hex");
 }
 
-// 2. RESILIENT TOKEN VERIFICATION (Google Identity Toolkit REST + Secure JWT fallback)
+// 2. RESILIENT TOKEN VERIFICATION (Google Identity Toolkit REST API)
 export async function verifyUserToken(idToken: string): Promise<AuthUser | null> {
   if (!idToken || typeof idToken !== "string") return null;
 
-  // Clean token from Bearer prefix if present
+  // Clean token from Bearer prefix and extraneous whitespace
   const cleanToken = idToken.replace(/^Bearer\s+/i, "").trim();
   if (!cleanToken) return null;
 
-  // Attempt 1: Google Identity Toolkit REST API (Official Google Auth Verification)
+  // Step 1: Google Identity Toolkit REST API (Official Google Cloud verification)
   try {
     const response = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
@@ -46,19 +46,25 @@ export async function verifyUserToken(idToken: string): Promise<AuthUser | null>
 
     if (response.ok) {
       const data = (await response.json()) as any;
-      if (data.users && data.users.length > 0) {
+      if (data.users && Array.isArray(data.users) && data.users.length > 0) {
         const user = data.users[0];
-        return {
-          uid: user.localId,
-          email: (user.email || "").toLowerCase(),
-        };
+        if (user.localId) {
+          return {
+            uid: user.localId,
+            email: (user.email || "").toLowerCase(),
+          };
+        }
       }
+    } else {
+      const errData = await response.json().catch(() => null);
+      console.warn("[AUTH IDENTITY_TOOLKIT] Token verification rejected by Google:", errData?.error?.message || response.statusText);
+      return null;
     }
   } catch (restErr) {
-    console.warn("[AUTH REST] REST verification warning, trying fallback:", restErr);
+    console.warn("[AUTH IDENTITY_TOOLKIT] Network error reaching Google auth servers:", restErr);
   }
 
-  // Attempt 2: Direct safe JWT payload decoding fallback (zero-dependency, ultra-fast)
+  // Step 2: Safe JWT structural check only if Google REST network was unreachable
   try {
     const parts = cleanToken.split(".");
     if (parts.length === 3) {
@@ -74,7 +80,7 @@ export async function verifyUserToken(idToken: string): Promise<AuthUser | null>
       }
     }
   } catch (jwtErr) {
-    console.warn("[AUTH JWT FALLBACK NOTICE]", jwtErr);
+    console.warn("[AUTH JWT PARSE WARNING]", jwtErr);
   }
 
   return null;
