@@ -52,8 +52,24 @@ export class R2StorageService {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: `Erreur HTTP ${response.status}` }));
-      throw new Error(errorData.error || `Erreur ${response.status} lors de l'obtention de l'URL signée Cloudflare R2`);
+      let errorMessage = `Erreur HTTP ${response.status}`;
+      let errorCode = "HTTP_ERROR";
+      try {
+        const text = await response.text();
+        try {
+          const json = JSON.parse(text);
+          if (json.error) errorMessage = json.error;
+          else if (json.message) errorMessage = json.message;
+          if (json.code) errorCode = json.code;
+        } catch (_) {
+          if (text && text.trim().length > 0 && text.trim().length < 300 && !text.includes("<!DOCTYPE")) {
+            errorMessage = text.trim();
+          }
+        }
+      } catch (_) {}
+      
+      console.error(`[R2 Storage Error] Code: ${errorCode} | Statut: ${response.status} | Message: ${errorMessage}`);
+      throw new Error(errorMessage);
     }
 
     return await response.json();

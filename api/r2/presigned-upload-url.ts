@@ -22,6 +22,7 @@ export default async function handler(req: any, res: any) {
     if (req.method !== "POST") {
       return res.status(405).json({
         success: false,
+        code: "METHOD_NOT_ALLOWED",
         error: "Méthode non autorisée. Utilisez POST.",
       });
     }
@@ -48,6 +49,7 @@ export default async function handler(req: any, res: any) {
     if (!key || typeof key !== "string") {
       return res.status(400).json({
         success: false,
+        code: "INVALID_KEY",
         error: "La clé de fichier (key) est requise.",
       });
     }
@@ -55,6 +57,7 @@ export default async function handler(req: any, res: any) {
     if (bucketType !== "public" && bucketType !== "private") {
       return res.status(400).json({
         success: false,
+        code: "INVALID_BUCKET_TYPE",
         error: 'bucketType invalide (doit être "public" ou "private").',
       });
     }
@@ -69,6 +72,7 @@ export default async function handler(req: any, res: any) {
     if (!idToken) {
       return res.status(401).json({
         success: false,
+        code: "AUTH_TOKEN_MISSING",
         error:
           "Authentification requise pour le téléversement Cloudflare R2 (jeton manquant).",
       });
@@ -78,6 +82,7 @@ export default async function handler(req: any, res: any) {
     if (!authUser || !authUser.uid) {
       return res.status(401).json({
         success: false,
+        code: "AUTH_SESSION_INVALID",
         error: "Session invalide ou expirée. Veuillez vous reconnecter.",
       });
     }
@@ -85,8 +90,9 @@ export default async function handler(req: any, res: any) {
     if (!isR2Configured()) {
       return res.status(503).json({
         success: false,
+        code: "R2_NOT_CONFIGURED",
         error:
-          "Cloudflare R2 n'est pas encore configuré (R2_ACCESS_KEY_ID ou R2_SECRET_ACCESS_KEY manquant sur Vercel).",
+          "Cloudflare R2 n'est pas encore configuré (identifiants R2_ACCESS_KEY_ID ou R2_SECRET_ACCESS_KEY manquants).",
       });
     }
 
@@ -103,9 +109,10 @@ export default async function handler(req: any, res: any) {
       userId: authUser.uid,
     });
   } catch (error: any) {
-    console.error("[R2 PRESIGNED UPLOAD DEDICATED ROUTE ERROR]", error);
+    console.error("[R2 PRESIGNED UPLOAD DEDICATED ROUTE ERROR]", error?.message || error);
     return res.status(500).json({
       success: false,
+      code: "INTERNAL_SERVER_ERROR",
       error:
         error?.message ||
         "Erreur serveur lors de la génération de l'URL présignée Cloudflare R2.",
