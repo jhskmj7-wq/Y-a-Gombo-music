@@ -1719,7 +1719,17 @@ app.post("/api/wallet/request-reset", async (req, res) => {
   // Génération d'URL présignée d'upload (PUT) vers Cloudflare R2
   app.post("/api/r2/presigned-upload-url", async (req, res) => {
     try {
-      const { key, contentType, bucketType = "public", expiresInSeconds } = req.body;
+      let body = req.body;
+      if (typeof body === "string") {
+        try {
+          body = JSON.parse(body);
+        } catch (_) {
+          body = {};
+        }
+      } else if (!body) {
+        body = {};
+      }
+      const { key, contentType, bucketType = "public", expiresInSeconds } = body;
 
       if (!key || typeof key !== "string") {
         return res.status(400).json({ error: "La clé de fichier (key) est requise" });

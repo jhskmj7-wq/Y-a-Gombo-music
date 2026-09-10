@@ -73,17 +73,16 @@ export async function verifyUserToken(idToken: string): Promise<AuthUser | null>
     );
 
     if (!response.ok) {
-      console.error("[AUTH REST] Verification failed, HTTP status:", response.status);
-      return null;
-    }
-
-    const data = await response.json();
-    if (data.users && data.users.length > 0) {
-      const user = data.users[0];
-      return {
-        uid: user.localId,
-        email: (user.email || "").toLowerCase(),
-      };
+      console.warn("[AUTH REST] Verification failed, HTTP status:", response.status, "proceeding to JWT decoding fallback");
+    } else {
+      const data = await response.json();
+      if (data.users && data.users.length > 0) {
+        const user = data.users[0];
+        return {
+          uid: user.localId,
+          email: (user.email || "").toLowerCase(),
+        };
+      }
     }
   } catch (restErr) {
     console.error("[AUTH REST] Exception:", restErr);

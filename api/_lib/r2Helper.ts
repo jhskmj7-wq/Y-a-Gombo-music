@@ -66,6 +66,8 @@ export function getR2Client(): S3Client {
         accessKeyId,
         secretAccessKey,
       },
+      requestChecksumCalculation: "WHEN_REQUIRED",
+      responseChecksumValidation: "WHEN_REQUIRED",
     });
   }
   return r2Client;
