@@ -1,4 +1,4 @@
-import { verifyUserToken, getAdminFirestoreInstance } from "../_firebaseHelper";
+import { verifyUserToken, getAdminFirestoreInstance } from "../_lib/firebaseHelper";
 
 const PROTECTED_FOUNDER_EMAILS = ["jhs.kmj7@gmail.com"];
 const RESET_PHRASE = "RESET AFRIGOMBO TEST";

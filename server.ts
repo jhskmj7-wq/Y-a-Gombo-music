@@ -1171,6 +1171,79 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
   });
 
+  // USER KYC DOCUMENT UPLOAD ROUTE (Supabase Storage afrigombo-private)
+  app.post("/api/user/kyc/upload", async (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    const { idToken, storagePath, fileBase64, contentType, bucket = "afrigombo-private" } = req.body || {};
+
+    if (!idToken) {
+      return res.status(401).json({ success: false, error: "Non authentifié (token manquant)." });
+    }
+
+    if (!storagePath || !fileBase64) {
+      return res.status(400).json({ success: false, error: "Paramètres 'storagePath' et 'fileBase64' requis." });
+    }
+
+    try {
+      const adminAuth = getAdminAuthClient();
+      if (!adminAuth) {
+        return res.status(503).json({ success: false, error: "Service Firebase Admin indisponible." });
+      }
+
+      let decodedToken;
+      try {
+        decodedToken = await adminAuth.verifyIdToken(idToken);
+      } catch (authErr: any) {
+        return res.status(401).json({ success: false, error: "Session invalide ou expirée." });
+      }
+
+      const uid = decodedToken.uid;
+
+      if (!storagePath.includes(uid) || !storagePath.toLowerCase().includes("kyc")) {
+        return res.status(403).json({ success: false, error: "Accès refusé. Chemin de stockage non autorisé pour cet utilisateur." });
+      }
+
+      const base64Clean = fileBase64.includes(",") ? fileBase64.split(",")[1] : fileBase64;
+      const fileBuffer = Buffer.from(base64Clean, "base64");
+
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!supabaseKey) {
+        console.error("[USER KYC UPLOAD ERROR] SUPABASE_SERVICE_ROLE_KEY manquante dans l'environnement serveur.");
+        return res.status(503).json({
+          success: false,
+          error: "Configuration serveur incomplète : SUPABASE_SERVICE_ROLE_KEY non configurée pour les uploads KYC privés."
+        });
+      }
+
+      const { createClient } = await import("@supabase/supabase-js");
+      const serverSupabase = createClient(supabaseUrl, supabaseKey);
+
+      const { data: uploadData, error: uploadError } = await serverSupabase.storage
+        .from(bucket)
+        .upload(storagePath, fileBuffer, {
+          contentType: contentType || "application/octet-stream",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error("[USER KYC UPLOAD ERROR] Supabase upload error:", uploadError);
+        return res.status(500).json({ success: false, error: uploadError.message || "Échec du téléversement du document KYC." });
+      }
+
+      return res.json({
+        success: true,
+        path: uploadData?.path || storagePath,
+        bucket,
+        message: "Document KYC téléversé avec succès"
+      });
+    } catch (err: any) {
+      console.error("[USER KYC UPLOAD FATAL ERROR]", err);
+      return res.status(500).json({ success: false, error: err.message || "Erreur interne lors du téléversement du document KYC." });
+    }
+  });
+
   app.post("/api/admin/media/delete", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
     const { idToken, storagePath, bucket = "afrigombo-media" } = req.body || {};

@@ -1,4 +1,4 @@
-import { generateR2PresignedReadUrl, isR2Configured } from "../../_r2Helper";
+import { generateR2PresignedReadUrl, isR2Configured } from "../../_lib/r2Helper";
 
 export default async function handler(req: any, res: any) {
   // Handle CORS Preflight
