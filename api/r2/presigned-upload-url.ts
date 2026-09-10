@@ -1,9 +1,55 @@
-import { verifyUserToken } from "../_lib/firebaseHelper";
-import {
-  isR2Configured,
-  generateR2PresignedUploadUrl,
-  R2BucketType,
-} from "../_lib/r2Helper";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import dotenv from "dotenv";
+
+dotenv.config({ override: true });
+
+const FIREBASE_API_KEY =
+  process.env.VITE_FIREBASE_API_KEY ||
+  process.env.FIREBASE_API_KEY ||
+  "AIzaSyC3eJm2GfUMxGUNGu7uZeIP9-rtcLRljNk";
+
+async function verifyToken(idToken: string): Promise<{ uid: string; email: string } | null> {
+  if (!idToken || typeof idToken !== "string") return null;
+  const cleanToken = idToken.replace(/^Bearer\s+/i, "").trim();
+  if (!cleanToken) return null;
+
+  try {
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: cleanToken }),
+      }
+    );
+    if (res.ok) {
+      const data = (await res.json()) as any;
+      if (data.users && Array.isArray(data.users) && data.users.length > 0 && data.users[0].localId) {
+        return {
+          uid: data.users[0].localId,
+          email: (data.users[0].email || "").toLowerCase(),
+        };
+      }
+    }
+  } catch (_) {
+    // Network fallback
+  }
+
+  // JWT fallback
+  try {
+    const parts = cleanToken.split(".");
+    if (parts.length === 3) {
+      const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf8"));
+      const uid = payload.user_id || payload.uid || payload.sub;
+      if (uid) {
+        return { uid, email: (payload.email || "").toLowerCase() };
+      }
+    }
+  } catch (_) {}
+
+  return null;
+}
 
 export default async function handler(req: any, res: any) {
   try {
@@ -14,7 +60,6 @@ export default async function handler(req: any, res: any) {
       res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     }
 
-    // Handle CORS Preflight
     if (req.method === "OPTIONS") {
       return res.status(200).json({ success: true });
     }
@@ -40,9 +85,9 @@ export default async function handler(req: any, res: any) {
 
     const {
       key,
-      contentType,
+      contentType = "video/mp4",
       bucketType = "public",
-      expiresInSeconds,
+      expiresInSeconds = 3600,
       idToken: bodyIdToken,
     } = body;
 
@@ -54,31 +99,20 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    if (bucketType !== "public" && bucketType !== "private") {
-      return res.status(400).json({
-        success: false,
-        code: "INVALID_BUCKET_TYPE",
-        error: 'bucketType invalide (doit être "public" ou "private").',
-      });
-    }
-
-    const authHeader =
-      req.headers?.authorization || req.headers?.Authorization || "";
+    const authHeader = req.headers?.authorization || req.headers?.Authorization || "";
     const idToken =
-      (typeof authHeader === "string"
-        ? authHeader.replace(/^Bearer\s+/i, "")
-        : "") || bodyIdToken;
+      (typeof authHeader === "string" ? authHeader.replace(/^Bearer\s+/i, "") : "") ||
+      bodyIdToken;
 
     if (!idToken) {
       return res.status(401).json({
         success: false,
         code: "AUTH_TOKEN_MISSING",
-        error:
-          "Authentification requise pour le téléversement Cloudflare R2 (jeton manquant).",
+        error: "Authentification requise pour le téléversement Cloudflare R2 (jeton manquant).",
       });
     }
 
-    const authUser = await verifyUserToken(idToken);
+    const authUser = await verifyToken(idToken);
     if (!authUser || !authUser.uid) {
       return res.status(401).json({
         success: false,
@@ -87,35 +121,65 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    if (!isR2Configured()) {
+    const accessKeyId = (process.env.R2_ACCESS_KEY_ID || "").trim();
+    const secretAccessKey = (process.env.R2_SECRET_ACCESS_KEY || "").trim();
+    let rawEndpoint = (process.env.R2_ENDPOINT || "https://d336ac8939fd48099d0e284310a7deb5.r2.cloudflarestorage.com").trim();
+    const publicBucket = (process.env.R2_PUBLIC_BUCKET || "afrigombo-public").trim();
+    const privateBucket = (process.env.R2_PRIVATE_BUCKET || "afrigombo-private").trim();
+    const publicBaseUrl = (process.env.R2_PUBLIC_BASE_URL || "https://pub-9b8a37b996274704aee625c82e6430f3.r2.dev").replace(/\/+$/, "");
+
+    if (!accessKeyId || !secretAccessKey) {
       return res.status(503).json({
         success: false,
         code: "R2_NOT_CONFIGURED",
-        error:
-          "Cloudflare R2 n'est pas encore configuré (identifiants R2_ACCESS_KEY_ID ou R2_SECRET_ACCESS_KEY manquants).",
+        error: "Cloudflare R2 n'est pas configuré sur ce serveur (clés R2_ACCESS_KEY_ID ou R2_SECRET_ACCESS_KEY manquantes dans l'environnement).",
       });
     }
 
-    const result = await generateR2PresignedUploadUrl({
-      key,
-      bucketType: bucketType as R2BucketType,
-      contentType: contentType || "application/octet-stream",
-      expiresInSeconds: expiresInSeconds ? Number(expiresInSeconds) : 3600,
+    if (rawEndpoint && !rawEndpoint.startsWith("http://") && !rawEndpoint.startsWith("https://")) {
+      rawEndpoint = `https://${rawEndpoint}`;
+    }
+
+    const client = new S3Client({
+      region: "auto",
+      forcePathStyle: true,
+      endpoint: rawEndpoint,
+      credentials: { accessKeyId, secretAccessKey },
+      requestChecksumCalculation: "WHEN_REQUIRED",
+      responseChecksumValidation: "WHEN_REQUIRED",
     });
+
+    const targetBucket = bucketType === "private" ? privateBucket : publicBucket;
+    const cleanKey = key.replace(/^\/+/, "");
+
+    const command = new PutObjectCommand({
+      Bucket: targetBucket,
+      Key: cleanKey,
+      ContentType: contentType,
+    });
+
+    const uploadUrl = await getSignedUrl(client, command, {
+      expiresIn: Math.min(Math.max(Number(expiresInSeconds) || 3600, 60), 86400),
+    });
+
+    const publicUrl = bucketType === "public" ? `${publicBaseUrl}/${cleanKey}` : undefined;
 
     return res.status(200).json({
       success: true,
-      ...result,
+      uploadUrl,
+      key: cleanKey,
+      bucket: targetBucket,
+      bucketType,
+      publicUrl,
+      expiresInSeconds: Number(expiresInSeconds) || 3600,
       userId: authUser.uid,
     });
   } catch (error: any) {
-    console.error("[R2 PRESIGNED UPLOAD DEDICATED ROUTE ERROR]", error?.message || error);
+    console.error("[R2 SERVERLESS PRESIGNED UPLOAD ERROR]", error);
     return res.status(500).json({
       success: false,
       code: "INTERNAL_SERVER_ERROR",
-      error:
-        error?.message ||
-        "Erreur serveur lors de la génération de l'URL présignée Cloudflare R2.",
+      error: error?.message || "Erreur serveur lors de la génération de l'URL présignée Cloudflare R2.",
     });
   }
 }
