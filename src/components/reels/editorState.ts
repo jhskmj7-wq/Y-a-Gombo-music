@@ -108,28 +108,32 @@ export function buildCombinedCssFilter(state: VideoEditorState, baseFilterCss: s
   
   // Base filter with intensity
   if (baseFilterCss && baseFilterCss !== "none") {
-    if (state.filterIntensity < 100) {
-      parts.push(`opacity(${0.3 + (state.filterIntensity / 100) * 0.7})`);
+    if (state.filterIntensity <= 0) {
+      // 0% intensity means base filter is completely bypassed
     } else {
       parts.push(baseFilterCss);
     }
   }
   
-  // Brightness: map -100..100 to 0.5..1.5
+  // Brightness: map -100..100 to 0.2..1.8
   if (state.brightness !== 0) {
-    const b = 1 + state.brightness / 100;
+    const b = Math.max(0.1, 1 + state.brightness / 100);
     parts.push(`brightness(${b.toFixed(2)})`);
   }
   
-  // Contrast: map -100..100 to 0.5..1.5
+  // Contrast: map -100..100 to 0.2..1.8
   if (state.contrast !== 0) {
-    const c = 1 + state.contrast / 100;
+    const c = Math.max(0.1, 1 + state.contrast / 100);
     parts.push(`contrast(${c.toFixed(2)})`);
   }
   
-  // Saturation: map -100..100 to 0..2
+  // Saturation: map -100..100 smoothly from 0.0 (grayscale) to 2.5 (vivid)
+  // When saturation is negative: 0..1 (desaturates down to 0)
+  // When saturation is positive: 1..2.5 (saturates up to 2.5)
   if (state.saturation !== 0) {
-    const s = 1 + state.saturation / 100;
+    const s = state.saturation < 0
+      ? Math.max(0, 1 + state.saturation / 100)
+      : 1 + (state.saturation / 100) * 1.5;
     parts.push(`saturate(${s.toFixed(2)})`);
   }
   

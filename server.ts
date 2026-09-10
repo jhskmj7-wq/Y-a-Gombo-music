@@ -1736,20 +1736,11 @@ app.post("/api/wallet/request-reset", async (req, res) => {
         return res.status(401).json({ error: "Authentification requise" });
       }
 
-      const adminAuth = getAdminAuthClient();
-      let decodedUid = "";
-      if (adminAuth) {
-        try {
-          const decoded = await adminAuth.verifyIdToken(token);
-          if (decoded && decoded.uid) {
-            decodedUid = decoded.uid;
-          }
-        } catch (_) {}
+      const authUser = await verifyFirebaseTokenSafe(token);
+      if (!authUser || !authUser.uid) {
+        return res.status(401).json({ error: "Jeton d'authentification invalide ou expiré" });
       }
-
-      if (!decodedUid) {
-        return res.status(401).json({ error: "Jeton d'authentification invalide" });
-      }
+      const decodedUid = authUser.uid;
 
       if (!isR2Configured()) {
         return res.status(503).json({
@@ -1889,7 +1880,10 @@ async function startServer() {
     try {
       const { createServer: createViteServer } = await import("vite");
       const vite = await createViteServer({
-        server: { middlewareMode: true },
+        server: {
+          middlewareMode: true,
+          hmr: process.env.DISABLE_HMR === "true" ? false : undefined,
+        },
         appType: "spa",
       });
       app.use(vite.middlewares);

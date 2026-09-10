@@ -30,14 +30,22 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
   const activeFilterObj = REEL_VIDEO_FILTERS.find((f) => f.id === filterId);
 
   const publishVideoNodeRef = React.useRef<HTMLVideoElement | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string>("");
+
+  useEffect(() => {
+    if (!videoFile) return;
+    const url = URL.createObjectURL(videoFile);
+    setVideoPreviewUrl(url);
+
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [videoFile]);
 
   const stopPublishPreviewVideo = () => {
     if (publishVideoNodeRef.current) {
       try {
         publishVideoNodeRef.current.pause();
-        publishVideoNodeRef.current.currentTime = 0;
-        publishVideoNodeRef.current.removeAttribute("src");
-        publishVideoNodeRef.current.load();
       } catch (_) {}
     }
   };
@@ -46,17 +54,6 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
     stopPublishPreviewVideo();
     onClose();
   };
-
-  const videoPreviewUrl = React.useMemo(() => URL.createObjectURL(videoFile), [videoFile]);
-
-  useEffect(() => {
-    return () => {
-      stopPublishPreviewVideo();
-      if (videoPreviewUrl) {
-        URL.revokeObjectURL(videoPreviewUrl);
-      }
-    };
-  }, [videoPreviewUrl]);
 
   const addHashtag = () => {
     const clean = hashtagInput.trim().replace(/^#/, "").replace(/\s+/g, "");
@@ -320,19 +317,31 @@ export default function ReelPublishScreen({ videoFile, filterId, onClose, onPubl
 
       <div className="flex-1 overflow-y-auto p-4 space-y-5">
         <div className="flex gap-3">
-          <div className="relative w-24 h-40 shrink-0">
-            <video
-              ref={(el) => { if (el) publishVideoNodeRef.current = el; }}
-              src={videoPreviewUrl}
-              muted
-              loop
-              autoPlay
-              playsInline
-              style={{ filter: activeFilterCss }}
-              className="w-full h-full object-cover rounded-xl border border-white/10"
-            />
+          <div className="relative w-24 h-40 shrink-0 bg-zinc-950 rounded-xl overflow-hidden border border-white/15 flex items-center justify-center shadow-lg">
+            {videoPreviewUrl ? (
+              <video
+                ref={(el) => { if (el) publishVideoNodeRef.current = el; }}
+                src={videoPreviewUrl}
+                muted
+                loop
+                autoPlay
+                playsInline
+                onLoadedData={() => {
+                  if (publishVideoNodeRef.current) {
+                    publishVideoNodeRef.current.play().catch(() => {});
+                  }
+                }}
+                style={{ filter: activeFilterCss }}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center p-2 text-zinc-500">
+                <Loader2 className="w-5 h-5 animate-spin text-[#D4AF37]" />
+                <span className="text-[9px] font-mono mt-1 text-zinc-400">Chargement...</span>
+              </div>
+            )}
             {filterId && filterId !== "naturel" && (
-              <div className="absolute bottom-1 left-1 right-1 bg-black/80 backdrop-blur-xs rounded-md px-1 py-0.5 text-[9px] font-mono text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center gap-0.5 truncate">
+              <div className="absolute bottom-1 left-1 right-1 bg-black/85 backdrop-blur-xs rounded-md px-1 py-0.5 text-[9px] font-mono text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center gap-0.5 truncate pointer-events-none">
                 <Sparkles className="w-2.5 h-2.5 shrink-0" />
                 <span className="truncate">{activeFilterObj?.name || filterId}</span>
               </div>

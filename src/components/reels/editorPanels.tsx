@@ -104,6 +104,8 @@ export function AdjustmentsPanel({ state, onChange }: PanelProps) {
   const resetAll = () => {
     onChange((prev) => ({
       ...prev,
+      filterId: "naturel",
+      filterIntensity: 100,
       brightness: 0,
       contrast: 0,
       saturation: 0,
@@ -111,6 +113,18 @@ export function AdjustmentsPanel({ state, onChange }: PanelProps) {
       hue: 0,
       sepia: 0,
       fade: 0,
+      vignette: 0,
+      shadows: 0,
+      highlights: 0,
+      grain: 0,
+      activeEffect: "none",
+    }));
+  };
+
+  const resetSingle = (key: string) => {
+    onChange((prev) => ({
+      ...prev,
+      [key]: 0,
     }));
   };
 
@@ -122,32 +136,42 @@ export function AdjustmentsPanel({ state, onChange }: PanelProps) {
         </span>
         <button
           onClick={resetAll}
-          className="text-[10px] text-zinc-500 dark:text-zinc-400 hover:text-foreground flex items-center gap-1 cursor-pointer"
+          className="text-[10px] text-zinc-500 dark:text-zinc-400 hover:text-[#D4AF37] flex items-center gap-1 cursor-pointer transition-colors px-2 py-0.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          title="Réinitialiser tous les réglages et filtres"
         >
-          <RotateCcw className="w-3 h-3" /> Réinitialiser
+          <RotateCcw className="w-3 h-3" /> Tout réinitialiser
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {adjustments.map((adj) => (
-          <div key={adj.key} className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-900/60 p-2 rounded-xl border border-zinc-200 dark:border-white/5">
-            <span className="text-[11px] text-zinc-700 dark:text-zinc-300 w-20 shrink-0">{adj.label}</span>
-            <input
-              type="range"
-              min={adj.min}
-              max={adj.max}
-              value={adj.val}
-              onChange={(e) => {
-                const num = Number(e.target.value);
-                onChange((prev) => ({ ...prev, [adj.key]: num }));
-              }}
-              className="flex-1 h-1.5 bg-zinc-300 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-            />
-            <span className="text-[10px] font-mono text-[#D4AF37] font-bold w-8 text-right">
-              {adj.val > 0 ? `+${adj.val}` : adj.val}
-            </span>
-          </div>
-        ))}
+        {adjustments.map((adj) => {
+          const currentVal = Number.isFinite(adj.val) ? adj.val : 0;
+          return (
+            <div key={adj.key} className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-900/60 p-2 rounded-xl border border-zinc-200 dark:border-white/5">
+              <span className="text-[11px] text-zinc-700 dark:text-zinc-300 w-20 shrink-0 select-none">{adj.label}</span>
+              <input
+                type="range"
+                min={adj.min}
+                max={adj.max}
+                step={1}
+                value={currentVal}
+                onChange={(e) => {
+                  const num = Math.round(Number(e.target.value));
+                  onChange((prev) => ({ ...prev, [adj.key]: num }));
+                }}
+                className="flex-1 h-1.5 bg-zinc-300 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+              />
+              <button
+                type="button"
+                onClick={() => resetSingle(adj.key)}
+                title="Cliquer pour remettre à 0"
+                className="text-[10px] font-mono text-[#D4AF37] font-bold w-9 text-right hover:underline cursor-pointer select-none"
+              >
+                {currentVal > 0 ? `+${currentVal}` : currentVal}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

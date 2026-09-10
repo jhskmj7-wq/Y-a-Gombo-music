@@ -40,6 +40,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { supabaseStorage } from "./lib/supabaseStorage";
+import { optimizeImage } from "./lib/media/imageOptimizer";
 export { app, auth, db, storage } from "./lib/firebase";
 export { supabaseStorage } from "./lib/supabaseStorage";
 import { app, auth, db, storage } from "./lib/firebase";
@@ -2242,7 +2243,6 @@ export const gomboDB = {
         // Automatic image optimization for image files
         if (mediaType === "image" && finalFile) {
           try {
-            const { optimizeImage } = await import("./lib/media/imageOptimizer");
             let context: "avatar" | "cover" | "post" | "gallery" | "custom" = "custom";
             if (lower.includes("avatar") || lower.includes("profile")) context = "avatar";
             else if (lower.includes("cover") || lower.includes("banniere")) context = "cover";

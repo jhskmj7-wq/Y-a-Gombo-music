@@ -95,7 +95,7 @@ const BetaCheckPanel = lazyWithRetry(() => import("./admin/BetaCheckPanel"));
 const NearbyPageView = lazyWithRetry(() => import("./NearbyPageView").then(m => ({ default: m.NearbyPageView })));
 const GomboBoostManager = lazyWithRetry(() => import("./GomboBoostManager"));
 const GomboApply = lazyWithRetry(() => import("./GomboApply"));
-const GomboItineraryModal = lazyWithRetry(() => import("./GomboItineraryModal"));
+import GomboItineraryModal from "./GomboItineraryModal";
 const GomboSecureModal = lazyWithRetry(() => import("./GomboSecureModal"));
 const AfrigomboSupportModal = lazyWithRetry(() => import("./AfrigomboSupportModal").then(m => ({ default: m.AfrigomboSupportModal })));
 import NotificationCenter from "./NotificationCenter";

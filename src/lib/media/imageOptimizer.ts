@@ -1,3 +1,5 @@
+import { supabaseStorage } from "../supabaseStorage";
+
 export type ImageContext = "avatar" | "cover" | "post" | "gallery" | "custom";
 
 export interface ImageOptimizerOptions {
@@ -339,7 +341,6 @@ export async function uploadOptimizedImage(params: {
     let uploadSuccess = false;
 
     // Use Supabase Storage client if available
-    const { supabaseStorage } = await import("../supabaseStorage");
     if (supabaseStorage.isConfigured()) {
       try {
         const uploadResult = await supabaseStorage.uploadGenericFile(optimized.file, storagePath, {
