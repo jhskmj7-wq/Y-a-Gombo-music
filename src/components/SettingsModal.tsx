@@ -321,6 +321,20 @@ export default function SettingsModal({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Custom non-blocking React Dialog/Alert system
+  const [alertModal, setAlertModal] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    type: "success" | "error" | "info";
+    onConfirm?: () => void;
+  }>({
+    show: false,
+    title: "",
+    message: "",
+    type: "info"
+  });
+
   // Support Screens Overlay
   const [activeSupportPage, setActiveSupportPage] = useState<"none" | "help" | "issue" | "terms" | "privacy_policy" | "about">("none");
   const [issueText, setIssueText] = useState("");
@@ -355,15 +369,27 @@ export default function SettingsModal({
     setIsDeleting(true);
     try {
       await gomboDB.scheduleUserProfileDeletion(currentUser.uid);
-      alert("Votre compte est programmé pour être supprimé dans 30 jours. Vous pourrez encore le récupérer avant cette date.");
-      if (onLogout) {
-        onLogout();
-      } else {
-        window.location.reload();
-      }
+      setAlertModal({
+        show: true,
+        title: "Compte Programmé",
+        message: "Votre compte est programmé pour être supprimé dans 30 jours. Vous pourrez encore le récupérer avant cette date.",
+        type: "success",
+        onConfirm: () => {
+          if (onLogout) {
+            onLogout();
+          } else {
+            window.location.reload();
+          }
+        }
+      });
     } catch (err: any) {
       console.error("Failed to delete account:", err);
-      alert(`Erreur: ${err?.message || "Une erreur est survenue lors de la suppression."}`);
+      setAlertModal({
+        show: true,
+        title: "Erreur de suppression",
+        message: `Erreur: ${err?.message || "Une erreur est survenue lors de la suppression."}`,
+        type: "error"
+      });
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -467,6 +493,48 @@ export default function SettingsModal({
                 className="w-full py-3 rounded-xl bg-afri-bg border border-afri-border text-afri-text hover:text-afri-text font-bold text-xs transition-all"
               >
                 {mt("delete_cancel_btn")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOM ALERT MODAL OVERLAY */}
+      {alertModal.show && (
+        <div className="fixed inset-0 z-[80] bg-afri-bg/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="max-w-md w-full bg-afri-bg-sec border border-afri-border p-6 sm:p-8 rounded-3xl space-y-5 text-left shadow-2xl">
+            <div className="flex items-center gap-3">
+              {alertModal.type === "error" ? (
+                <div className="p-2 rounded-full bg-red-500/10 text-red-500">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+              ) : alertModal.type === "success" ? (
+                <div className="p-2 rounded-full bg-emerald-500/10 text-emerald-400">
+                  <Check className="w-5 h-5" />
+                </div>
+              ) : (
+                <div className="p-2 rounded-full bg-afri-gold/10 text-afri-gold">
+                  <Info className="w-5 h-5" />
+                </div>
+              )}
+              <h3 className="text-sm sm:text-base font-black uppercase tracking-tight text-afri-text">
+                {alertModal.title}
+              </h3>
+            </div>
+            <p className="text-xs text-afri-text-sec leading-relaxed font-sans">
+              {alertModal.message}
+            </p>
+            <div className="pt-2">
+              <button
+                onClick={() => {
+                  setAlertModal(prev => ({ ...prev, show: false }));
+                  if (alertModal.onConfirm) {
+                    alertModal.onConfirm();
+                  }
+                }}
+                className="w-full py-3 rounded-xl bg-afri-gold text-black font-black uppercase text-xs transition-all hover:bg-opacity-90 active:scale-95 cursor-pointer"
+              >
+                OK / CONFIRMER
               </button>
             </div>
           </div>
@@ -882,70 +950,23 @@ export default function SettingsModal({
         </div>
 
         {/* 2D-WAL. TICALE WALLET SÉCURITÉ */}
-        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
+        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)] opacity-75">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            🛡️ 3. SÉCURITÉ & CONFIDENTIALITÉ
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+            💳 TICALE WALLET — CODE SECRET & SÉCURITÉ
           </h2>
 
-          <div className="p-3.5 bg-afri-bg border border-afri-border rounded-xl space-y-3 font-mono text-xs">
+          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-3 font-mono text-xs">
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400 font-bold uppercase text-[10px]">Statut du Secret Wallet</span>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${walletSecurityStatus?.pinConfigured ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/10 text-[#D4AF37] border border-[#D4AF37]/30"}`}>
-                {walletSecurityStatus?.pinConfigured ? "🟢 Protection activée" : "⚪ Protection non configurée"}
+              <span className="text-zinc-400 font-bold uppercase text-[10px]">Code secret / PIN Wallet</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                🔒 Bientôt disponible
               </span>
             </div>
 
-            <div className="space-y-1.5 pt-1 border-t border-afri-border/50 text-[11px]">
-              <div className="flex items-center justify-between text-zinc-300 py-1">
-                <span>• Code secret Wallet 6 chiffres</span>
-                <span className={walletSecurityStatus?.pinConfigured ? "text-emerald-400 font-bold" : "text-zinc-500 font-bold"}>
-                  {walletSecurityStatus?.pinConfigured ? "Configuré" : "Non défini"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-zinc-300 py-1">
-                <span>• Expiration de session dynamique</span>
-                <span className={isWalletSessionActive ? "text-emerald-400 font-bold" : "text-afri-gold font-bold"}>
-                  {isWalletSessionActive ? "15 Min (Session Active)" : "15 Min (Inerte / Verrouillé)"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-zinc-300 py-1">
-                <span>• Protection Anti-Bruteforce S-O-A</span>
-                <span className={walletSecurityStatus?.pinStatus === "LOCKED" ? "text-red-400 font-bold" : walletSecurityStatus?.pinStatus === "RESET_PENDING" ? "text-amber-400 font-bold" : "text-emerald-400 font-bold"}>
-                  {walletSecurityStatus?.pinStatus === "LOCKED" ? "🔒 Verrouillé" : walletSecurityStatus?.pinStatus === "RESET_PENDING" ? "⏳ Attente S-O-A" : "Actif"}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
-              <button
-                type="button"
-                onClick={async () => {
-                  if (walletSecurityStatus?.pinConfigured) {
-                    await changeWalletPin();
-                  } else {
-                    await setupWalletPin();
-                  }
-                }}
-                className="py-2.5 px-3 bg-[#D4AF37] text-zinc-950 font-black rounded-xl text-[10px] uppercase tracking-wider cursor-pointer shadow active:scale-98"
-              >
-                {walletSecurityStatus?.pinConfigured ? "Modifier mon code secret" : "Définir secret Wallet"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  try {
-                    requestPinResetSOA("Demande de réinitialisation PIN / assistance via les Paramètres").catch(() => {});
-                  } catch (e) {}
-                  supportConfig.openSupport("Demande d'assistance Wallet & Réinitialisation PIN auprès du Support Officiel AFRIGOMBO (S-O-A)");
-                }}
-                className="py-2.5 px-3 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 hover:text-white font-black rounded-xl text-[10px] uppercase tracking-wider cursor-pointer active:scale-98 flex items-center justify-center gap-1.5 shadow-sm"
-              >
-                <span>🆘 CONTACTER S-O-A</span>
-                <span className="text-[9px] opacity-80">(SUPPORT OFFICIEL AFRIGOMBO)</span>
-              </button>
-            </div>
+            <p className="text-[11px] text-afri-text-sec leading-relaxed font-sans pt-1">
+              Le code secret et le système de PIN du Wallet seront disponibles prochainement avec l'activation complète du Wallet. Aucune configuration n'est requise pour le moment.
+            </p>
           </div>
         </div>
 
