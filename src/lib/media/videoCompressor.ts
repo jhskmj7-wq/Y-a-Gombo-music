@@ -457,11 +457,13 @@ function executeCompressionPass(
 
     const renderFrame = () => {
       if (isTerminated) return;
-      if (!videoEl.paused && !videoEl.ended) {
-        ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-        if (videoEl.duration > 0 && onProgress) {
-          const pct = Math.min(99, Math.round((videoEl.currentTime / videoEl.duration) * 100));
-          onProgress(pct);
+      if (!videoEl.ended) {
+        if (!videoEl.paused) {
+          ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+          if (videoEl.duration > 0 && onProgress) {
+            const pct = Math.min(99, Math.round((videoEl.currentTime / videoEl.duration) * 100));
+            onProgress(pct);
+          }
         }
         animId = requestAnimationFrame(renderFrame);
       }

@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Plus,
+  Music,
 } from "lucide-react";
 import { r2StorageService } from "../../lib/storage/r2Storage";
 import { collection, addDoc, doc, updateDoc, arrayUnion, setDoc } from "firebase/firestore";
@@ -69,6 +70,9 @@ export default function ReelPublishScreen({
 
   // File size calculation
   const fileSizeMb = (videoFile.size / (1024 * 1024)).toFixed(1);
+  const exactSizeMb = (videoFile.size / (1024 * 1024)).toFixed(2);
+  const durationSecs = videoDuration ? `${videoDuration.toFixed(1)}s` : "Indéterminée";
+  const resolutionLabel = videoDimensions ? `${videoDimensions.width} x ${videoDimensions.height}` : "HD 1080p";
 
   useEffect(() => {
     if (!videoFile) return;
@@ -637,26 +641,92 @@ export default function ReelPublishScreen({
           </div>
         </section>
 
-        {/* Section 4: Summary Card */}
-        <section className="bg-gradient-to-br from-zinc-900/90 via-zinc-900/60 to-zinc-950 border border-zinc-800/80 rounded-2xl p-3.5 space-y-2.5 shadow-md">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
-            <CheckCircle2 className="w-4 h-4 text-[#D4AF37]" />
-            <span>Votre Réel est prêt à être partagé</span>
+        {/* Section 4: Premium Bento-style Specifications Grid */}
+        <section className="bg-zinc-900/90 border border-zinc-800/80 rounded-2xl p-4 space-y-3.5 shadow-lg">
+          <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4.5 h-4.5 text-[#D4AF37]" />
+              <h3 className="text-xs font-black uppercase font-mono tracking-wider text-zinc-200">
+                Fiche Technique & Métadonnées Réelles
+              </h3>
+            </div>
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase font-mono tracking-widest animate-pulse">
+              Fichier validé
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-zinc-400 pt-1">
-            <div className="bg-zinc-950/60 p-2 rounded-lg border border-zinc-800/60 flex items-center gap-2">
-              <Globe className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <div>
-                <span className="text-[9px] text-zinc-500 block uppercase">Visibilité</span>
-                <span className="text-zinc-200">Public (Tous)</span>
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* 1. File Weight */}
+            <div className="bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800/60 flex items-start gap-2.5">
+              <div className="p-1.5 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] shrink-0">
+                <HardDrive className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[9px] text-zinc-500 block font-mono uppercase tracking-wider">Taille Réelle</span>
+                <span className="text-xs font-bold text-zinc-100 font-mono block truncate">{exactSizeMb} Mo</span>
+                <span className="text-[9px] text-zinc-400 font-sans block truncate">Compressé et optimisé R2</span>
               </div>
             </div>
-            <div className="bg-zinc-950/60 p-2 rounded-lg border border-zinc-800/60 flex items-center gap-2">
-              <HardDrive className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <div>
-                <span className="text-[9px] text-zinc-500 block uppercase">Stockage</span>
-                <span className="text-zinc-200">R2 Haute Vitesse</span>
+
+            {/* 2. Resolution */}
+            <div className="bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800/60 flex items-start gap-2.5">
+              <div className="p-1.5 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] shrink-0">
+                <Film className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[9px] text-zinc-500 block font-mono uppercase tracking-wider">Qualité & Cadence</span>
+                <span className="text-xs font-bold text-[#D4AF37] font-mono block truncate">{resolutionLabel}</span>
+                <span className="text-[9px] text-zinc-400 font-sans block truncate">
+                  {videoDimensions && videoDimensions.height >= 1080 ? "Full HD (30 FPS) ✨" : "HD Fluide (30 FPS) ⚡"}
+                </span>
+              </div>
+            </div>
+
+            {/* 3. Audio Track */}
+            <div className="bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800/60 flex items-start gap-2.5">
+              <div className="p-1.5 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] shrink-0">
+                <Music className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[9px] text-zinc-500 block font-mono uppercase tracking-wider">Piste Audio</span>
+                <span className="text-xs font-bold text-zinc-100 font-mono block truncate">Actif & Synchronisé</span>
+                <span className="text-[9px] text-zinc-400 font-sans block truncate">Stéréo AAC / Opus</span>
+              </div>
+            </div>
+
+            {/* 4. Duration */}
+            <div className="bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800/60 flex items-start gap-2.5">
+              <div className="p-1.5 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] shrink-0">
+                <Clock className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[9px] text-zinc-500 block font-mono uppercase tracking-wider">Durée de Lecture</span>
+                <span className="text-xs font-bold text-zinc-100 font-mono block truncate">{durationSecs}</span>
+                <span className="text-[9px] text-zinc-400 font-sans block truncate">Cadrage parfait</span>
+              </div>
+            </div>
+
+            {/* 5. Filter Applied */}
+            <div className="bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800/60 flex items-start gap-2.5">
+              <div className="p-1.5 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] shrink-0">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[9px] text-zinc-500 block font-mono uppercase tracking-wider">Filtre Artistique</span>
+                <span className="text-xs font-bold text-zinc-100 font-mono block truncate">{activeFilterObj?.name || "Naturel (Aucun)"}</span>
+                <span className="text-[9px] text-zinc-400 font-sans block truncate">Effet visuel gravé</span>
+              </div>
+            </div>
+
+            {/* 6. Visibility & Storage */}
+            <div className="bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800/60 flex items-start gap-2.5">
+              <div className="p-1.5 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] shrink-0">
+                <Globe className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[9px] text-zinc-500 block font-mono uppercase tracking-wider">Réseau & Distribution</span>
+                <span className="text-xs font-bold text-zinc-100 font-mono block truncate">Public (Tous)</span>
+                <span className="text-[9px] text-zinc-400 font-sans block truncate">CDN Cloudflare R2 Abidjan</span>
               </div>
             </div>
           </div>

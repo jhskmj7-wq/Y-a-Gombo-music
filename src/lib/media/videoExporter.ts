@@ -401,6 +401,7 @@ export async function exportVideoFile(
         videoEl.currentTime = trimStart;
 
         videoEl.onseeked = () => {
+          videoEl.onseeked = null; // Unsubscribe immediately to prevent any potential double triggering
           if (onProgress) onProgress(10, "Démarrage du ré-encodage vidéo haute fidélité...");
           try {
             mediaRecorder.start(200); // 200ms slice chunks
