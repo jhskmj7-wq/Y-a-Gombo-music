@@ -18,7 +18,9 @@ import {
   Smile,
   Music,
   ImageIcon as CoverIcon,
-  RotateCcw
+  RotateCcw,
+  Film,
+  Loader2
 } from "lucide-react";
 
 import { VideoFilter, REEL_VIDEO_FILTERS, getFilterCss } from "./videoFilters";
@@ -41,6 +43,8 @@ import {
   EffectsPanel,
   CoverPanel
 } from "./editorPanels";
+import { exportVideoFile } from "../../lib/media/videoExporter";
+import { compressVideoFile } from "../../lib/media/videoCompressor";
 
 export type { VideoFilter };
 export { REEL_VIDEO_FILTERS, getFilterCss };
@@ -80,6 +84,13 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   // Core Structured Editor State
   const [editorState, setEditorState] = useState<VideoEditorState>(INITIAL_EDITOR_STATE);
   const [activeTab, setActiveTab] = useState<TabCategory>("filtres");
+
+  // Processing & Compression Pipeline States
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [processingPhase, setProcessingPhase] = useState<"export" | "compress">("export");
+  const [processingPercent, setProcessingPercent] = useState<number>(0);
+  const [processingLog, setProcessingLog] = useState<string>("");
+  const [processingError, setProcessingError] = useState<string | null>(null);
 
   // Player States
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -194,10 +205,55 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     setDuration(0);
   };
 
-  const handleNext = () => {
-    if (selectedFile) {
-      stopPreviewVideo();
-      onVideoReady(selectedFile, editorState.filterId);
+  const handleNext = async () => {
+    if (!selectedFile || isProcessing) return;
+
+    stopPreviewVideo();
+    setIsProcessing(true);
+    setProcessingError(null);
+    setProcessingPhase("export");
+    setProcessingPercent(0);
+    setProcessingLog("Initialisation de l'exportation vidéo...");
+
+    try {
+      // 1. Exportation & Gravure réelle des effets / calques / filtres
+      const exportResult = await exportVideoFile(selectedFile, editorState, {
+        onProgress: (percent, phase) => {
+          setProcessingPhase("export");
+          setProcessingPercent(percent);
+          if (phase) setProcessingLog(phase);
+        },
+      });
+
+      const editedFile = exportResult.file;
+
+      // 2. Compression adaptative
+      setProcessingPhase("compress");
+      setProcessingPercent(0);
+      setProcessingLog("Analyse et compression vidéo adaptative...");
+
+      let finalFile = editedFile;
+      try {
+        const compressionResult = await compressVideoFile(editedFile, {
+          onProgress: (percent, phase) => {
+            setProcessingPhase("compress");
+            setProcessingPercent(percent);
+            if (phase) setProcessingLog(phase);
+          },
+        });
+        finalFile = compressionResult.file;
+      } catch (compressErr: any) {
+        console.warn("[REEL PROCESSOR] Compression adaptative contournée, conservation du fichier exporté pur:", compressErr);
+        // Direct fallback to edited file if compressed is larger or unsupported
+        finalFile = editedFile;
+      }
+
+      setIsProcessing(false);
+      onVideoReady(finalFile, editorState.filterId);
+    } catch (err: any) {
+      console.error("[REEL PROCESSOR ERROR]", err);
+      setIsProcessing(false);
+      setProcessingError(err?.message || "Erreur lors du traitement et du rendu de la vidéo.");
     }
   };
 
@@ -457,6 +513,74 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
             })}
           </div>
         </div>
+
+        {/* PROCESSING OVERLAY MODAL */}
+        {isProcessing && (
+          <div className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-white text-center animate-fadeIn select-none">
+            <div className="max-w-md w-full bg-zinc-900 border border-[#D4AF37]/40 rounded-3xl p-6 space-y-5 shadow-2xl relative overflow-hidden">
+              <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center mx-auto text-[#D4AF37]">
+                {processingPhase === "export" ? (
+                  <Film className="w-8 h-8 animate-pulse" />
+                ) : (
+                  <Sparkles className="w-8 h-8 animate-pulse" />
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="font-black text-lg text-white">
+                  {processingPhase === "export"
+                    ? "Rendu & Exportation de la vidéo..."
+                    : "Compression adaptative en cours..."}
+                </h3>
+                <p className="text-xs text-zinc-400 font-mono">
+                  {processingLog || "Traitement des images et calques..."}
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden border border-zinc-700/60">
+                  <div
+                    className="bg-gradient-to-r from-[#D4AF37] to-amber-300 h-full transition-all duration-200"
+                    style={{ width: `${Math.max(5, processingPercent)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[11px] font-mono text-zinc-400">
+                  <span>{processingPhase === "export" ? "Étape 1/2 : Gravure des effets" : "Étape 2/2 : Optimisation R2"}</span>
+                  <span className="text-[#D4AF37] font-bold">{processingPercent}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ERROR OVERLAY MODAL */}
+        {processingError && (
+          <div className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-white text-center animate-fadeIn select-none">
+            <div className="max-w-md w-full bg-zinc-950 border border-red-500/50 rounded-3xl p-6 space-y-4 shadow-2xl">
+              <div className="w-12 h-12 rounded-2xl bg-red-500/20 text-red-400 border border-red-500/40 flex items-center justify-center mx-auto">
+                <X className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-bold text-base text-red-400">Échec du traitement vidéo</h3>
+                <p className="text-xs text-zinc-300 font-sans leading-relaxed">{processingError}</p>
+              </div>
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={() => setProcessingError(null)}
+                  className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-xl text-xs transition cursor-pointer"
+                >
+                  Fermer
+                </button>
+                <button
+                  onClick={handleNext}
+                  className="flex-1 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-black rounded-xl text-xs transition cursor-pointer uppercase tracking-wider"
+                >
+                  Réessayer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>,
       document.body
     );
