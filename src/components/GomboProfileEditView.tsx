@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useLocations } from "../hooks/useLocations";
 import UserLocationProposalModal from "./common/UserLocationProposalModal";
+import { isModuleVisible } from "../lib/featureFlags";
 
 interface GomboProfileEditViewProps {
   firstName: string;
@@ -323,20 +324,22 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     </div>
 
                     <div className="space-y-3 pt-2">
-                      <button
-                        type="button"
-                        id="btn-open-3d-avatar-studio"
-                        onClick={() => {
-                          setIsAvatarSheetOpen(false);
-                          if (typeof window !== "undefined") {
-                            window.dispatchEvent(new CustomEvent("gombo_open_avatar_editor"));
-                          }
-                        }}
-                        className="min-h-[52px] w-full bg-gradient-to-r from-amber-500/20 to-[#D4AF37]/30 border border-[#D4AF37] rounded-2xl flex items-center justify-center gap-3 text-xs font-black text-[#D4AF37] active:scale-[0.98] cursor-pointer shadow-sm transition-transform"
-                      >
-                        <User className="w-5 h-5 text-[#D4AF37]" />
-                        <span>Créer / Personnaliser mon Avatar 3D</span>
-                      </button>
+                      {isModuleVisible("avatar") && (
+                        <button
+                          type="button"
+                          id="btn-open-3d-avatar-studio"
+                          onClick={() => {
+                            setIsAvatarSheetOpen(false);
+                            if (typeof window !== "undefined") {
+                              window.dispatchEvent(new CustomEvent("gombo_open_avatar_editor"));
+                            }
+                          }}
+                          className="min-h-[52px] w-full bg-gradient-to-r from-amber-500/20 to-[#D4AF37]/30 border border-[#D4AF37] rounded-2xl flex items-center justify-center gap-3 text-xs font-black text-[#D4AF37] active:scale-[0.98] cursor-pointer shadow-sm transition-transform"
+                        >
+                          <User className="w-5 h-5 text-[#D4AF37]" />
+                          <span>Créer / Personnaliser mon Avatar 3D</span>
+                        </button>
+                      )}
 
                       <input 
                         type="file" 
@@ -729,9 +732,6 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           <div className="grid grid-cols-1 gap-3 pt-4">
             <button id="btn-profile-submit" type="submit" disabled={editLoading} className="afri-btn-primary py-3.5 min-h-[52px] text-sm font-black uppercase tracking-wider rounded-xl">
               {editLoading ? "Synchronisation..." : "Enregistrer les modifications"}
-            </button>
-            <button id="btn-profile-cancel" type="button" onClick={onCancel} className="afri-btn-secondary py-3.5 min-h-[52px] text-sm font-black uppercase tracking-wider rounded-xl">
-              Fermer sans enregistrer
             </button>
           </div>
 

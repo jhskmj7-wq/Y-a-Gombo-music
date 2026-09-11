@@ -29,6 +29,7 @@ import { uploadOptimizedImage, safeFetchJson } from "../lib/media/imageOptimizer
 import { AvatarCropModal } from "./ui/AvatarCropModal";
 import AvatarEditor from "./avatar/AvatarEditor";
 import AvatarStore from "./avatar/AvatarStore";
+import { isModuleVisible } from "../lib/featureFlags";
 
 interface GomboProfileProps {
   currentUserProfile: UserProfile;
@@ -99,13 +100,28 @@ export default function GomboProfile({
   const profileContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleOpenEditor = () => setIsAvatarEditorOpen(true);
-    const handleOpenStore = () => setIsAvatarStoreOpen(true);
+    const handleOpenEditor = () => {
+      if (isModuleVisible("avatar")) {
+        setIsAvatarEditorOpen(true);
+      }
+    };
+    const handleOpenStore = () => {
+      if (isModuleVisible("avatar")) {
+        setIsAvatarStoreOpen(true);
+      }
+    };
+    const handleOpenEditProfile = () => {
+      setPanelView("edit");
+    };
+
     window.addEventListener("gombo_open_avatar_editor", handleOpenEditor);
     window.addEventListener("gombo_open_avatar_store", handleOpenStore);
+    window.addEventListener("gombo_open_edit_profile", handleOpenEditProfile);
+
     return () => {
       window.removeEventListener("gombo_open_avatar_editor", handleOpenEditor);
       window.removeEventListener("gombo_open_avatar_store", handleOpenStore);
+      window.removeEventListener("gombo_open_edit_profile", handleOpenEditProfile);
     };
   }, []);
 

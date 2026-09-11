@@ -153,8 +153,8 @@ export const CANONICAL_FEATURE_IDS: Record<string, string> = {
   // Avatar
   avatar: "avatar",
   user_avatar: "avatar",
-  user_profile_view: "avatar",
-  user_edit_profile: "avatar",
+  avatar_store: "avatar",
+  avatar_editor: "avatar",
 
   // Gombo ID
   gombo_id: "gombo_id",
@@ -186,6 +186,8 @@ export const CANONICAL_FEATURE_IDS: Record<string, string> = {
   profil: "heritage",
   user_heritage: "heritage",
   menu_heritage: "heritage",
+  user_edit_profile: "heritage",
+  user_profile_view: "heritage",
 
   // Podcasts & Vibes
   podcasts: "podcasts",

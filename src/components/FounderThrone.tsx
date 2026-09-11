@@ -304,7 +304,14 @@ export default function FounderThrone({
                      </div>
                    </div>
                    <div className="w-full max-w-lg flex justify-between items-center mt-3 font-mono text-[10px] sm:text-xs font-black text-afri-text">
-                      <button className="flex items-center gap-2 text-[#D4AF37] border border-[#D4AF37]/50 hover:bg-afri-bg-sec hover:text-black px-4 py-1.5 rounded-lg uppercase tracking-widest shadow-[0_0_10px_rgba(212,175,55,0.1)]">
+                      <button 
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("gombo_open_edit_profile"));
+                }
+              }}
+              className="flex items-center gap-2 text-[#D4AF37] border border-[#D4AF37]/50 hover:bg-afri-bg-sec hover:text-black px-4 py-1.5 rounded-lg uppercase tracking-widest shadow-[0_0_10px_rgba(212,175,55,0.1)] cursor-pointer"
+            >
                          Modifier le profil <PenTool className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                       <span className="uppercase tracking-widest">NIVEAU MAX <span className="text-[#D4AF37] ml-2 text-sm">100%</span></span>

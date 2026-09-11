@@ -330,13 +330,17 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           {/* LEFT: Premium double-ring avatar frame */}
           <div 
             onClick={() => {
-              if (onOpenAvatarEditor) onOpenAvatarEditor();
-              else if (typeof window !== "undefined") {
-                window.dispatchEvent(new CustomEvent("gombo_open_avatar_editor"));
+              if (isModuleVisible("avatar")) {
+                if (onOpenAvatarEditor) onOpenAvatarEditor();
+                else if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("gombo_open_avatar_editor"));
+                }
               }
             }}
-            title="Modifier l'avatar"
-            className="relative shrink-0 select-none cursor-pointer group active:scale-95 transition-transform"
+            title={isModuleVisible("avatar") ? "Modifier l'avatar" : undefined}
+            className={`relative shrink-0 select-none ${
+              isModuleVisible("avatar") ? "cursor-pointer group active:scale-95 transition-transform" : "cursor-default"
+            }`}
           >
             <div className={`w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 rounded-full border-2 p-0.5 overflow-hidden aspect-square ${
               isLight ? "border-[#D4AF37] bg-[#FDFBF7]" : "border-amber-400 bg-afri-bg-sec"
@@ -355,9 +359,11 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                   }}
                 />
                 {/* Hover overlay hint */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
-                  <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 text-afri-gold" />
-                </div>
+                {isModuleVisible("avatar") && (
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                    <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 text-afri-gold" />
+                  </div>
+                )}
               </div>
             </div>
             {/* Crown Badge */}
