@@ -739,6 +739,395 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.ownerId) || isAdmin();
     }
 
+    // CALLS & WEBRTC
+    match /calls/{callId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.callerUid == request.auth.uid || resource.data.receiverUid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && incoming().callerUid == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.callerUid == request.auth.uid || resource.data.receiverUid == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && (resource.data.callerUid == request.auth.uid || resource.data.receiverUid == request.auth.uid || isAdmin());
+      
+      match /callerCandidates/{id} {
+        allow read, write: if isSignedIn();
+      }
+      match /receiverCandidates/{id} {
+        allow read, write: if isSignedIn();
+      }
+    }
+
+    // PRESENCE & TYPING
+    match /presence/{uid} {
+      allow read: if true;
+      allow write: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+    }
+    match /typing/{id} {
+      allow read, write: if isSignedIn();
+    }
+
+    // SUPPORTS & WAITLISTS
+    match /supportContributions/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /builder_supports/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /builder_challenges/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /secure_waitlist/{id} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+    match /waitlist/{id} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+    match /feature_waitlist/{id} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+    match /afrigombo_supports/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /supportMessages/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /supportConversations/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /supportCategories/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /supportLogs/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /support_tickets/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /support_messages/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // WALLETS, REFUNDS & FINANCIAL RECORDS
+    match /walletRefunds/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create, update, delete: if isAdmin();
+    }
+    match /walletAdjustments/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create, update, delete: if isAdmin();
+    }
+    match /wallet_codes/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    match /wallets/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+    match /AfriSOSCreditAccount/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+    match /AfriSOSCreditLedger/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /escrowTransactions/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // CONTRACTS, MESSAGES & REVIEWS
+    match /contractMessages/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /contractDisputes/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /contractEvents/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /contract_reviews/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /reviews/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /alerts/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // FOUNDER THRONE, DECISIONS & SYSTEM LOGS
+    match /throne/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /throne_music/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /throne_backups/{id} {
+      allow read, write: if isFounder();
+    }
+    match /imperial_logs/{id} {
+      allow read, write: if isFounder() || isAdmin();
+    }
+    match /founder_notebook_notes/{id} {
+      allow read, write: if isFounder() || isAdmin();
+    }
+    match /founder_analytics/{id} {
+      allow read, write: if isFounder() || isAdmin();
+    }
+    match /founder_notifications/{id} {
+      allow read, write: if isFounder() || isAdmin();
+    }
+    match /strategic_decisions/{id} {
+      allow read, write: if isFounder() || isAdmin();
+    }
+    match /deployment_history/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /adminActions/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /admin_notes/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /adminGomboAdsLogs/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /bypassAttempts/{id} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+    match /bypass_attempts/{id} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+    match /callLogs/{id} {
+      allow read: if isSignedIn() && (resource.data.callerUid == request.auth.uid || resource.data.receiverUid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // GAMIFICATION, LOTS & POLLS
+    match /reward_lot_templates/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /userLots/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /wheelPriceHistory/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /pollQuestions/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /pollStatistics/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /premium_codes/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    match /premium_subscriptions/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /subscription_requests/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /subscription_refunds/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /roadmap/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /bugReports/{id} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+    match /archivesValidated/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /renfort_applications/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /audio_publications/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /user_activities/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /user_creator_stats/{id} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    match /system_stats/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /tendances_feed/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /studio_market/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /studio_market_reviews/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /casting_calls/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /casting_applications/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /voice_announcements/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /group_invitations/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /group_members/{id} {
+      allow read: if true;
+      allow create, update: if isSignedIn();
+      allow delete: if isSignedIn() || isAdmin();
+    }
+    match /certificates/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /academy_guides/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /ticket_events/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /purchased_tickets/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /certification_requests/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /verification_requests/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /reservations/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /beta_feedback/{id} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+    match /beta_updates/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /suspensions/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /configs/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /userInterests/{id} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    match /gawaMissions/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /userGawaMissions/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+    match /chats/{id} {
+      allow read, write: if isSignedIn();
+    }
+    match /syncLogs/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /blockedUsers/{id} {
+      allow read, write: if isSignedIn();
+    }
+    match /validation_codes/{id} {
+      allow read, write: if isAdmin();
+    }
+
     // ADMISSIONS
     match /admins/{adminId} {
       allow read: if isFounder();

@@ -19,6 +19,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ uid }) => {
       if (snap.exists()) {
         setProfile(snap.data());
       }
+    }, (err) => {
+      console.warn("[ProfileHeader] user listener warning:", err);
     });
     return () => unsubscribe();
   }, [uid]);

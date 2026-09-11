@@ -270,6 +270,8 @@ export default function GomboWheelSection({
           soldeGawa: gawaSolde 
         });
       }
+    }, (err) => {
+      console.warn("[GomboWheelSection] Wallet listener warning:", err);
     });
 
     // Fetch Gawa Packs

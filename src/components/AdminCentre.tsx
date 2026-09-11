@@ -3056,7 +3056,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               setActiveMenu("user_builders");
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
                             } },
-                            ...(currentUser ? [{
+                            ...(currentUser || profile ? [{
                               key: "menu_logout", label: "Déconnexion", icon: "🚪", action: () => {
                                 setShowLogoutConfirm(true);
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
@@ -9276,6 +9276,73 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           requireAuthThen(() => {}, intent);
         }}
       />
+
+      {/* CONFIRMATION DE DÉCONNEXION POPUP */}
+      <AndroidCenteredDialog
+        isOpen={showLogoutConfirm}
+        onClose={() => {
+          if (!isLoggingOut) setShowLogoutConfirm(false);
+        }}
+        title="Confirmation de déconnexion"
+      >
+        <div className="text-left space-y-4 pt-1">
+          <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-center justify-center mx-auto text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.15)]">
+            <LogOut className="w-6 h-6 text-red-400 stroke-[2.2]" />
+          </div>
+
+          <div className="text-center space-y-1.5">
+            <h4 className="text-sm font-bold text-afri-text font-sans">
+              Voulez-vous vraiment vous déconnecter ?
+            </h4>
+            <p className="text-xs text-afri-text-sec font-sans leading-relaxed">
+              Vous quitterez votre session active. Vous devrez vous reconnecter pour accéder à votre GOMBO ID officiel, vos cachets, vos contrats et votre Wallet sécurisé.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              type="button"
+              id="btn-cancel-logout"
+              disabled={isLoggingOut}
+              onClick={() => setShowLogoutConfirm(false)}
+              className="flex-1 py-2.5 px-3 rounded-xl bg-afri-bg-sec border border-afri-border hover:border-afri-gold/40 text-afri-text text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              id="btn-confirm-logout"
+              disabled={isLoggingOut}
+              onClick={async () => {
+                setIsLoggingOut(true);
+                try {
+                  setShowLogoutConfirm(false);
+                  setIsSidebarOpen(false);
+                  await logout();
+                  setActiveMenu("user_terrain");
+                  setPerspective("user");
+                  addToTerminal("[SESSION] Déconnexion effectuée avec succès.");
+                  try { audioSynth.playTamTam(false); } catch (_) {}
+                } catch (err) {
+                  console.error("Logout error:", err);
+                } finally {
+                  setIsLoggingOut(false);
+                }
+              }}
+              className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(239,68,68,0.3)] cursor-pointer active:scale-98 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {isLoggingOut ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Déconnexion...</span>
+                </>
+              ) : (
+                <span>Se déconnecter</span>
+              )}
+            </button>
+          </div>
+        </div>
+      </AndroidCenteredDialog>
 
       {/* AUTHENTICATION POPUP MODAL FOR LOCKED MODULES & PUBLISH */}
       <AuthModal

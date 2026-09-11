@@ -68,6 +68,8 @@ export class WebRTCCallService {
           onCallReceived({ id: change.doc.id, ...data } as CallSession);
         }
       });
+    }, (err) => {
+      console.warn("[WebRTC] Incoming calls listener notice:", err);
     });
   }
 
@@ -174,6 +176,8 @@ export class WebRTCCallService {
         if (data.status === "rejected" || data.status === "ended") {
           this.cleanup();
         }
+      }, (err) => {
+        console.warn("[WebRTC] Call doc listener warning:", err);
       });
 
       // Listen for receiver ICE candidates
@@ -185,6 +189,8 @@ export class WebRTCCallService {
             this.pc?.addIceCandidate(candidate);
           }
         });
+      }, (err) => {
+        console.warn("[WebRTC] Receiver candidates listener warning:", err);
       });
 
       return this.currentCallId;
@@ -275,6 +281,8 @@ export class WebRTCCallService {
             this.pc?.addIceCandidate(candidate);
           }
         });
+      }, (err) => {
+        console.warn("[WebRTC] Caller candidates listener warning:", err);
       });
 
       // Listen for call status
@@ -286,6 +294,8 @@ export class WebRTCCallService {
         if (data && (data.status === "ended" || data.status === "rejected")) {
           this.cleanup();
         }
+      }, (err) => {
+        console.warn("[WebRTC] Call doc answer listener warning:", err);
       });
     } catch (err) {
       if (callbacks.onError) callbacks.onError(err);

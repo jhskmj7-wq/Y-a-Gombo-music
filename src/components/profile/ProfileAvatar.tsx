@@ -33,6 +33,8 @@ export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ uid, size = 'md', 
           setAvatarConfig(data.avatarConfig);
         }
       }
+    }, (err) => {
+      console.warn("[ProfileAvatar] userRef listener warning:", err);
     });
 
     const avatarRef = doc(db, 'userAvatars', uid);
@@ -46,6 +48,8 @@ export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ uid, size = 'md', 
           setAvatarConfig(data.config);
         }
       }
+    }, (err) => {
+      console.warn("[ProfileAvatar] userAvatars listener warning:", err);
     });
 
     return () => {

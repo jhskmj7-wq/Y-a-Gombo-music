@@ -16,6 +16,9 @@ export const AvatarState = {
     return onSnapshot(q, (snapshot) => {
       const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as AvatarItem));
       callback(items);
+    }, (err) => {
+      console.warn("[AvatarState] Store subscription warning:", err);
+      callback([]);
     });
   },
 
@@ -30,6 +33,9 @@ export const AvatarState = {
       } else {
         callback({ uid: userId, ownedItems: [], equippedItems: [], coinsSpent: 0, premiumItems: [] });
       }
+    }, (err) => {
+      console.warn("[AvatarState] Inventory subscription warning:", err);
+      callback({ uid: userId, ownedItems: [], equippedItems: [], coinsSpent: 0, premiumItems: [] });
     });
   },
 
@@ -44,6 +50,9 @@ export const AvatarState = {
       } else {
         callback(null);
       }
+    }, (err) => {
+      console.warn("[AvatarState] Avatar config subscription warning:", err);
+      callback(null);
     });
   }
 };

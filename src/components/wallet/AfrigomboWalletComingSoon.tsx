@@ -155,7 +155,10 @@ export default function AfrigomboWalletComingSoon({
   ];
 
   return (
-    <div className="w-full min-h-full bg-afri-bg text-afri-text pb-20 font-sans selection:bg-[#D4AF37]/30">
+    <div 
+      className="w-full h-full flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] bg-afri-bg text-afri-text pb-28 font-sans selection:bg-[#D4AF37]/30 scroll-smooth"
+      style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorY: "contain" }}
+    >
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           HEADER DE NAVIGATION & CONTRÔLE ADMIN
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
