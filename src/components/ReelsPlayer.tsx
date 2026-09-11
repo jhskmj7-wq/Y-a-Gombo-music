@@ -15,6 +15,7 @@ import { useAppSettings } from "../context/AppSettingsContext";
 import { useAuth } from "../AuthContext";
 import { openPublicProfile } from "../lib/publicProfile";
 import { getFilterCss } from "./reels/videoFilters";
+import { rankReels } from "../lib/reelsEngine";
 
 export interface ReelItem {
   id: string;
@@ -123,7 +124,15 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const effectiveUser = currentUser || authUser;
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const sessionTimestamp = useRef(Date.now()).current;
+  const [seenReels, setSeenReels] = useState<Set<string>>(() => {
+    try {
+      const stored = sessionStorage.getItem("afrigombo_seen_reels");
+      if (stored) return new Set(JSON.parse(stored));
+    } catch (_) {}
+    return new Set<string>();
+  });
   const [followedUsers, setFollowedUsers] = useState<string[]>([]);
   const [showCommentsFor, setShowCommentsFor] = useState<ReelItem | null>(null);
   const [showMoreFor, setShowMoreFor] = useState<ReelItem | null>(null);
@@ -322,8 +331,8 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
           musicTrack: m.musicTrack || m.title || `Prestation Live — ${u.artisticName || u.name || "Artiste"}`,
           hashtags: Array.isArray(m.hashtags) ? m.hashtags : ["#Afrigombo", "#Portfolio", "#Live"],
           appliedFilter: m.appliedFilter || "naturel",
-          likesCount: typeof m.likes === "number" ? m.likes : (m.likesCount || 12),
-          commentsCount: typeof m.commentsCount === "number" ? m.commentsCount : (Array.isArray(m.comments) ? m.comments.length : 0),
+          likesCount: typeof m.likes === "number" ? m.likes : (typeof m.likesCount === "number" ? m.likesCount : (Array.isArray(m.likes) ? m.likes.length : 0)),
+          commentsCount: typeof m.commentsCount === "number" ? m.commentsCount : (Array.isArray(m.comments) ? m.comments.length : (typeof m.comments === "number" ? m.comments : 0)),
           comments: Array.isArray(m.comments) ? m.comments : [],
           isLiked: false,
           userId: u.id || u.uid,
@@ -353,6 +362,21 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       const likedBy = Array.isArray(p.likedBy) ? p.likedBy : [];
       const isLiked = effectiveUser?.uid ? (likedBy.includes(effectiveUser.uid) || Boolean(p.isLiked)) : Boolean(p.isLiked);
 
+      const realLikes = (function() {
+        if (Array.isArray(p.likedBy)) return p.likedBy.length;
+        if (Array.isArray(p.likes)) return p.likes.length;
+        if (typeof p.likesCount === "number") return p.likesCount;
+        if (typeof p.likes === "number") return p.likes;
+        return 0;
+      })();
+
+      const realComments = (function() {
+        if (Array.isArray(p.comments)) return p.comments.length;
+        if (typeof p.commentsCount === "number") return p.commentsCount;
+        if (typeof p.comments === "number") return p.comments;
+        return 0;
+      })();
+
       list.push({
         id: p.id || `post_${idx}`,
         title: p.title || p.caption || "Vibration Artistique",
@@ -365,8 +389,8 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         musicTrack: p.title || p.musicTrack || "Son original AFRIGOMBO ELITE",
         hashtags: Array.isArray(p.hashtags) ? p.hashtags : ["#Afrigombo", "#FilReel", "#ArtisteIvoirien"],
         appliedFilter: p.appliedFilter || "naturel",
-        likesCount: p.likes || p.likesCount || 0,
-        commentsCount: typeof p.comments === "number" ? p.comments : (Array.isArray(p.comments) ? p.comments.length : (p.commentsCount || 0)),
+        likesCount: realLikes,
+        commentsCount: realComments,
         comments: Array.isArray(p.comments) ? p.comments : [],
         isLiked: Boolean(isLiked),
         userId: p.userId || p.authorId,
@@ -374,9 +398,14 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       });
     });
 
-    // If real videos exist, ONLY return real project videos! Mixkit 403 fallbacks removed.
-    return list;
-  }, [posts, users, firestorePosts, firestoreUsers, profile, effectiveUser]);
+    // 4. Apply dynamic ranking algorithm (Engagement + Recency + Affinity + Discovery - Seen Penalty)
+    return rankReels(list, { 
+      currentUserId: effectiveUser?.uid, 
+      followedUsers, 
+      seenReelIds: seenReels, 
+      sessionTimestamp 
+    });
+  }, [posts, users, firestorePosts, firestoreUsers, profile, effectiveUser, followedUsers, seenReels]);
 
   const [localReels, setLocalReels] = useState<ReelItem[]>(reelsList);
 
@@ -397,7 +426,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     }
   }, [initialReelId, localReels]);
 
-  // Handle Scroll to update current index
+  // Handle Scroll to update current index and track seen reels
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
     const height = container.clientHeight;
@@ -405,6 +434,18 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       const index = Math.round(container.scrollTop / height);
       if (index !== currentIndex && index >= 0 && index < localReels.length) {
         setCurrentIndex(index);
+        const viewedReel = localReels[index];
+        if (viewedReel && viewedReel.id) {
+          setSeenReels(prev => {
+            if (prev.has(viewedReel.id)) return prev;
+            const next = new Set(prev);
+            next.add(viewedReel.id);
+            try {
+              sessionStorage.setItem("afrigombo_seen_reels", JSON.stringify(Array.from(next)));
+            } catch (_) {}
+            return next;
+          });
+        }
       }
     }
   };
@@ -425,6 +466,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
     if (activeVideoRef.current) {
       activeVideoRef.current.currentTime = 0;
+      activeVideoRef.current.muted = isMuted;
       const playPromise = activeVideoRef.current.play();
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
@@ -821,7 +863,19 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         <div className="flex items-center gap-2">
           {/* Sound Toggle */}
           <button 
-            onClick={() => setIsMuted(!isMuted)}
+            onClick={(e) => {
+              e.stopPropagation();
+              const nextMuted = !isMuted;
+              setIsMuted(nextMuted);
+              if (activeVideoRef.current) {
+                activeVideoRef.current.muted = nextMuted;
+                if (!nextMuted) {
+                  activeVideoRef.current.play().catch((err) => {
+                    console.warn("[ReelsPlayer] Error playing unmuted audio:", err);
+                  });
+                }
+              }
+            }}
             className="p-2.5 rounded-full bg-afri-bg/50 backdrop-blur-md border border-afri-border text-afri-text hover:bg-white/20 active:scale-95 transition cursor-pointer"
             title={isMuted ? "Activer le son" : "Couper le son"}
           >

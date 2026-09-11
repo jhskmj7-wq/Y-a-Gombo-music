@@ -316,6 +316,10 @@ export default function ReelPublishScreen({
         title: caption.trim() || "Réel - Extrait vidéo",
         description: caption.trim(),
         appliedFilter: filterId,
+        likes: 0,
+        likesCount: 0,
+        comments: [],
+        commentsCount: 0,
         createdAt: new Date().toISOString(),
       };
 
