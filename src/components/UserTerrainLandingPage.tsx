@@ -341,16 +341,18 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     let unsubPosts = () => {};
     let unsubSocial = () => {};
 
-    try {
-      const usersRef = query(collection(db, "users"), limit(100));
-      unsubUsers = onSnapshot(usersRef, (snapshot) => {
-        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        setFirestoreUsers(list);
-      }, (err) => {
-        console.warn("[UserTerrainLandingPage] users listener warning:", err);
-      });
-    } catch (e) {
-      console.warn("[UserTerrainLandingPage] users listener setup error:", e);
+    if (authUser) {
+      try {
+        const usersRef = query(collection(db, "users"), limit(100));
+        unsubUsers = onSnapshot(usersRef, (snapshot) => {
+          const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          setFirestoreUsers(list);
+        }, (err) => {
+          console.warn("[UserTerrainLandingPage] users listener warning:", err);
+        });
+      } catch (e) {
+        console.warn("[UserTerrainLandingPage] users listener setup error:", e);
+      }
     }
 
     try {
@@ -392,7 +394,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       unsubPosts();
       unsubSocial();
     };
-  }, []);
+  }, [authUser]);
 
   useEffect(() => {
     if (!currentUser?.uid) return;

@@ -332,12 +332,28 @@ export const gomboAuth = {
 
   async loginWithGoogle() {
     if (auth && db) {
+      const isInIframe = typeof window !== "undefined" && window.self !== window.top;
       try {
         let res: any = null;
         try {
           res = await signInWithPopup(auth, GOOGLE_PROVIDER);
         } catch (popupErr: any) {
-          console.warn("signInWithPopup error/blocked, attempting signInWithRedirect fallback:", popupErr);
+          console.warn("signInWithPopup error/blocked:", popupErr);
+          if (popupErr.code === "auth/unauthorized-domain") {
+            const domain = typeof window !== "undefined" ? window.location.hostname : "";
+            const error: any = new Error(
+              `Le domaine "${domain}" n'est pas autorisé dans votre console Firebase (Authentication > Paramètres > Domaines autorisés).`
+            );
+            error.code = "auth/unauthorized-domain";
+            throw error;
+          }
+          if (isInIframe) {
+            const error: any = new Error(
+              "Le pop-up de connexion Google est bloqué par l'aperçu. Veuillez ouvrir l'application dans un nouvel onglet."
+            );
+            error.code = "auth/popup-blocked";
+            throw error;
+          }
           if (
             popupErr.code === "auth/popup-blocked" ||
             popupErr.code === "auth/popup-closed-by-user" ||

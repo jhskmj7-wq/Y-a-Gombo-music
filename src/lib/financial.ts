@@ -44,22 +44,29 @@ let currentPricing: PricingConfig = {
   premiumCommissionRate: 0.015   // 1.5%
 };
 
-// Setup real-time listener for sovereign economy settings
-onSnapshot(doc(db, "system_settings", "economy"), (snap) => {
-  if (snap.exists()) {
-    const data = snap.data();
-    if (typeof data?.commissionBase === "number") {
-      currentPricing.standardCommissionRate = data.commissionBase / 100;
-    } else if (typeof data?.commissionRateStandard === "number") {
-      currentPricing.standardCommissionRate = data.commissionRateStandard;
+// Setup real-time listener for sovereign economy settings with graceful fallback
+onSnapshot(
+  doc(db, "system_settings", "economy"), 
+  (snap) => {
+    if (snap.exists()) {
+      const data = snap.data();
+      if (typeof data?.commissionBase === "number") {
+        currentPricing.standardCommissionRate = data.commissionBase / 100;
+      } else if (typeof data?.commissionRateStandard === "number") {
+        currentPricing.standardCommissionRate = data.commissionRateStandard;
+      }
+      if (typeof data?.commissionPremium === "number") {
+        currentPricing.premiumCommissionRate = data.commissionPremium / 100;
+      } else if (typeof data?.commissionRatePremium === "number") {
+        currentPricing.premiumCommissionRate = data.commissionRatePremium;
+      }
     }
-    if (typeof data?.commissionPremium === "number") {
-      currentPricing.premiumCommissionRate = data.commissionPremium / 100;
-    } else if (typeof data?.commissionRatePremium === "number") {
-      currentPricing.premiumCommissionRate = data.commissionRatePremium;
-    }
+  },
+  (err) => {
+    // Graceful fallback to default pricing if permissions are restricted
+    console.warn("[Economy Settings] Real-time listener fallback active:", err?.message || err);
   }
-});
+);
 
 /**
  * Fetch configured platform pricing from Firestore configs/pricing document.

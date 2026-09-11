@@ -91,6 +91,8 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
       });
 
       setActivePolls(filtered);
+    }, (err) => {
+      console.warn("[UserPollsWidget] polls sync notice:", err.message);
     });
 
     return () => unsubscribe();
@@ -108,6 +110,8 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
         respMap[resp.pollId] = resp;
       });
       setUserResponses(respMap);
+    }, (err) => {
+      console.warn("[UserPollsWidget] pollResponses sync notice:", err.message);
     });
 
     return () => unsubscribe();
@@ -126,6 +130,8 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
     const unsubscribeChoices = onSnapshot(choicesQ, (snap) => {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PollChoice[];
       setChoices(list.sort((a, b) => a.order - b.order));
+    }, (err) => {
+      console.warn("[UserPollsWidget] pollChoices sync notice:", err.message);
     });
 
     // Fetch all responses to compute real-time visual statistics
@@ -133,6 +139,8 @@ export default function UserPollsWidget({ currentUser, profile, audioSynth }: Us
     const unsubscribeResponses = onSnapshot(responsesQ, (snap) => {
       const list = snap.docs.map(doc => doc.data() as PollResponse);
       setPollStats(list);
+    }, (err) => {
+      console.warn("[UserPollsWidget] pollResponses detail sync notice:", err.message);
     });
 
     return () => {

@@ -80,7 +80,7 @@ service cloud.firestore {
 
     // USERS
     match /users/{userId} {
-      allow read: if isSignedIn(); // Allow users to see each other's basic profile
+      allow read: if true; // Allow public discovery of profiles, artists, and landing page members
       allow create: if isOwner(userId) && isValidUser(incoming());
       allow update: if (isOwner(userId) && !incoming().diff(existing()).affectedKeys().hasAny(['role', 'isAdmin', 'isFounder', 'profileBoosted', 'profileBoostedUntil', 'profileBoostPriority', 'profileBoostType']))
                     || (isOwner(userId) && !incoming().diff(existing()).affectedKeys().hasAny(['role', 'isAdmin', 'isFounder']) && incoming().get('lastBoostId', '') != '' && exists(/databases/$(database)/documents/boosts/$(incoming().lastBoostId)) && get(/databases/$(database)/documents/boosts/$(incoming().lastBoostId)).data.userId == request.auth.uid)
@@ -582,6 +582,46 @@ service cloud.firestore {
       allow write: if isFounder();
     }
 
+    // CONTENT DISCOVERY & PUBLIC FEED (Trending, Featured Content, Notifications, Events, Polls)
+    match /trending/{id} {
+      allow read: if true;
+      allow write: if isFounder() || isAdmin();
+    }
+    match /featuredContent/{id} {
+      allow read: if true;
+      allow write: if isFounder() || isAdmin();
+    }
+    match /featuredPosts/{id} {
+      allow read: if true;
+      allow write: if isFounder() || isAdmin();
+    }
+    match /featuredProfiles/{id} {
+      allow read: if true;
+      allow write: if isFounder() || isAdmin();
+    }
+    match /global_notifications/{id} {
+      allow read: if true;
+      allow write: if isFounder() || isAdmin();
+    }
+    match /events/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin() || isFounder());
+    }
+    match /polls/{id} {
+      allow read: if true;
+      allow write: if isFounder() || isAdmin();
+    }
+    match /pollChoices/{id} {
+      allow read: if true;
+      allow write: if isFounder() || isAdmin();
+    }
+    match /pollResponses/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && (resource.data.userUid == request.auth.uid || isAdmin());
+    }
+
     // NOTIFICATIONS
     match /notifications/{id} {
       allow read: if isOwner(resource.data.userId) || isAdmin();
@@ -589,7 +629,13 @@ service cloud.firestore {
       allow update, delete: if isOwner(resource.data.userId) || isAdmin();
     }
 
-    // FORM COLLECTIONS (Support, Disputes, KYC, Bugs)
+    // FORM COLLECTIONS (Support, Disputes, KYC, Bugs, Security Alerts)
+    match /security_alerts/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
     match /tickets_support/{id} {
       allow read: if isOwner(resource.data.userId) || isAdmin();
       allow create: if isSignedIn();

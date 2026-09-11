@@ -361,12 +361,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         setPendingIntent(intent);
       }
       setIsAuthModalOpen(true);
+      if (setShowAuthPopup) setShowAuthPopup(true);
     } else {
       const hasGoogle = currentUser.providerData?.some(
         (p) => p.providerId === "google.com" || p.providerId.includes("google")
       ) ?? false;
       if (!hasGoogle) {
-        setShowGoogleLoginRequiredModal(true);
+        setIsAuthModalOpen(true);
+        if (setShowAuthPopup) setShowAuthPopup(true);
       } else {
         action();
       }
@@ -379,6 +381,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         setPendingIntent(intent);
       }
       setIsAuthModalOpen(true);
+      if (setShowAuthPopup) setShowAuthPopup(true);
     } else {
       action();
     }
@@ -9271,6 +9274,21 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         }}
         onShowAuth={(intent) => {
           requireAuthThen(() => {}, intent);
+        }}
+      />
+
+      {/* AUTHENTICATION POPUP MODAL FOR LOCKED MODULES & PUBLISH */}
+      <AuthModal
+        open={isAuthModalOpen || Boolean(showAuthPopup)}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setShowGoogleLoginRequiredModal(false);
+          if (setShowAuthPopup) setShowAuthPopup(false);
+        }}
+        onSuccess={() => {
+          setIsAuthModalOpen(false);
+          setShowGoogleLoginRequiredModal(false);
+          if (setShowAuthPopup) setShowAuthPopup(false);
         }}
       />
     </div>

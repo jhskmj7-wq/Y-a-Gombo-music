@@ -38,6 +38,8 @@ export default function GlobalNotificationBanner() {
         }
       });
       setNotifications(notifs);
+    }, (err) => {
+      console.warn("[GlobalNotificationBanner] sync notice:", err.message);
     });
 
     return () => unsubscribe();

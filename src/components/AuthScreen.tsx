@@ -5,7 +5,8 @@ import {
   AlertTriangle,
   Lock,
   ArrowRight,
-  X
+  X,
+  ExternalLink
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { gomboDB } from "../firebase";
@@ -272,8 +273,15 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       onSuccess();
     } catch (err: any) {
       console.error("Google SSO Failure:", err);
-      // Log Firebase errors in console, show user-friendly message only
-      setErrorMSG("Connexion impossible. Veuillez réessayer.");
+      if (err?.code === "auth/unauthorized-domain" || err?.message?.includes("Domaines autorisés")) {
+        setErrorMSG(err.message || "Domaine non autorisé dans Firebase Console.");
+      } else if (err?.code === "auth/popup-blocked") {
+        setErrorMSG(err.message || "Le pop-up a été bloqué. Utilisez le bouton « Ouvrir dans un nouvel onglet » ci-dessous.");
+      } else if (err?.code === "auth/popup-closed-by-user") {
+        setErrorMSG("La fenêtre de connexion Google a été fermée avant la sélection.");
+      } else {
+        setErrorMSG(err?.message || "Connexion impossible. Veuillez réessayer.");
+      }
       setLoading(false);
     }
   };
@@ -518,6 +526,18 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                   BIENTÔT DISPONIBLE
                 </span>
               </button>
+
+              {typeof window !== "undefined" && window.self !== window.top && (
+                <button
+                  type="button"
+                  id="open-in-new-tab-auth-btn"
+                  onClick={() => window.open(window.location.href, "_blank")}
+                  className="w-full py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-sans font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                  <span>Ouvrir dans un nouvel onglet pour se connecter avec Google</span>
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -74,19 +74,24 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
 
   // Real-time listener for Firestore `trending/` collection
   useEffect(() => {
-    const q = query(collection(db, "trending"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const map: Record<string, any> = {};
-      snapshot.forEach(doc => {
-        map[doc.id] = doc.data();
+    if (!currentUserProfile) return;
+    try {
+      const q = query(collection(db, "trending"));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const map: Record<string, any> = {};
+        snapshot.forEach(doc => {
+          map[doc.id] = doc.data();
+        });
+        setFirestoreTrendingMap(map);
+      }, () => {
+        // Silent graceful fallback to local algorithmic ranking
       });
-      setFirestoreTrendingMap(map);
-    }, (err) => {
-      console.warn("Firestore trending snapshot error:", err);
-    });
 
-    return () => unsubscribe();
-  }, []);
+      return () => unsubscribe();
+    } catch (_) {
+      return () => {};
+    }
+  }, [currentUserProfile]);
 
   // Helper to trigger toast messages
   const showToast = (msg: string) => {

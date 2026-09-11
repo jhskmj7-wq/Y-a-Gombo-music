@@ -18,6 +18,7 @@ import { AfriModal } from "./common/AfriModal";
 import { GomboAdsService } from "../services/GomboAdsService";
 import { GomboAdCard } from "./ads/GomboAdCard";
 import { GomboAdsCampaign } from "../types";
+import { useAuth } from "../AuthContext";
 
 interface FilDecouvertesSectionProps {
   userCommune?: string;
@@ -39,6 +40,7 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedDetail, setSelectedDetail] = useState<FeaturedContentDoc | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | "market" | "academy">("all");
+  const { currentUser, profile } = useAuth();
 
   // Listen to Gombo Ads active campaigns for home placement
   useEffect(() => {
@@ -54,7 +56,9 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
 
   // Synchronize Firestore onSnapshot
   useEffect(() => {
-    seedInitialFeaturedContentIfEmpty();
+    if (currentUser && (currentUser.email === "jhs.kmj7@gmail.com" || profile?.role === "admin")) {
+      seedInitialFeaturedContentIfEmpty();
+    }
 
     const colRef = collection(db, "featuredContent");
     const unsubscribe = onSnapshot(colRef, (snapshot) => {

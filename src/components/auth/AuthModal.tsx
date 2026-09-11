@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Sparkles, AlertCircle, X, Check } from "lucide-react";
+import { Sparkles, AlertCircle, X, Check, ExternalLink } from "lucide-react";
 import { signInWithGoogle, signInWithApple } from "../../auth/authService";
 import { AUTH_PROVIDERS_CONFIG, AUTH_POPUP_DEFAULT_TEXTS } from "./authConfig";
 import { motion, AnimatePresence } from "motion/react";
@@ -242,6 +242,18 @@ export function AuthModal({
                 {AUTH_PROVIDERS_CONFIG.facebook.badgeText}
               </span>
             </button>
+
+            {typeof window !== "undefined" && window.self !== window.top && (
+              <button
+                type="button"
+                id="auth-modal-open-new-tab"
+                onClick={() => window.open(window.location.href, "_blank")}
+                className="w-full py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-sans font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                <span>Ouvrir dans un nouvel onglet pour Google</span>
+              </button>
+            )}
           </div>
 
           {/* Dismiss / Plus tard button */}

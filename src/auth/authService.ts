@@ -54,16 +54,32 @@ export const authService = {
 
   async signInWithGoogle(): Promise<{ uid: string; email: string | null } | null> {
     if (!auth || !db) throw new Error("Firebase Auth non initialisé");
+    const isInIframe = typeof window !== "undefined" && window.self !== window.top;
     try {
       let res: any = null;
       try {
         res = await signInWithPopup(auth, GOOGLE_PROVIDER);
       } catch (popupErr: any) {
+        console.warn("Google popup auth error:", popupErr);
+        if (popupErr.code === "auth/unauthorized-domain") {
+          const domain = typeof window !== "undefined" ? window.location.hostname : "";
+          const error: any = new Error(
+            `Le domaine "${domain}" n'est pas encore autorisé dans Firebase. Rendez-vous dans Firebase Console > Authentication > Paramètres > Domaines autorisés et ajoutez "${domain}".`
+          );
+          error.code = "auth/unauthorized-domain";
+          throw error;
+        }
+        if (isInIframe) {
+          // Inside iframe, redirect fails due to X-Frame-Options: DENY. Inform user to open in new tab.
+          const error: any = new Error(
+            "Le pop-up de connexion Google est bloqué par la fenêtre d'aperçu. Veuillez utiliser le bouton « Ouvrir dans un nouvel onglet » ci-dessous."
+          );
+          error.code = "auth/popup-blocked";
+          throw error;
+        }
         if (
           popupErr.code === "auth/popup-blocked" ||
-          popupErr.code === "auth/popup-closed-by-user" ||
           popupErr.code === "auth/operation-not-supported-in-this-environment" ||
-          popupErr.code === "auth/cancelled-popup-request" ||
           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
         ) {
           await signInWithRedirect(auth, GOOGLE_PROVIDER);

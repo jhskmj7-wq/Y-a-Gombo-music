@@ -47,6 +47,8 @@ export default function BouclierAfrigombo() {
     const unsubPosts = onSnapshot(collection(db, "posts"), (snap) => {
       setStats(s => ({ ...s, publications: snap.size }));
       setLastSync(new Date());
+    }, (err) => {
+      console.warn("Posts snapshot error handled:", err);
     });
 
     const unsubGombos = onSnapshot(collection(db, "gombos"), (snap) => {
@@ -60,11 +62,15 @@ export default function BouclierAfrigombo() {
       });
       setStats(s => ({ ...s, revenues: totalRev }));
       setLastSync(new Date());
+    }, (err) => {
+      console.warn("Gombos snapshot error handled:", err);
     });
 
     const unsubAlerts = onSnapshot(collection(db, "security_alerts"), (snap) => {
       setStats(s => ({ ...s, alerts: snap.size }));
       setLastSync(new Date());
+    }, (err) => {
+      console.warn("Alerts snapshot error handled:", err);
     });
 
     return () => {
