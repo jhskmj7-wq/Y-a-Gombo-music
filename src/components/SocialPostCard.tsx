@@ -47,11 +47,27 @@ export default function SocialPostCard({
 }: SocialPostCardProps) {
   const gpsActive = isGpsActive(null, currentUserProfile);
 
+  const getHonoursCount = (p: any) => {
+    if (typeof p.honoursCount === "number") return p.honoursCount;
+    if (typeof p.likesCount === "number") return p.likesCount;
+    if (typeof p.likes === "number") return p.likes;
+    if (typeof p.honorsCount === "number") return p.honorsCount;
+    if (Array.isArray(p.honouredBy)) return p.honouredBy.length;
+    if (Array.isArray(p.likedBy)) return p.likedBy.length;
+    if (Array.isArray(p.honoredBy)) return p.honoredBy.length;
+    if (Array.isArray(p.honors)) return p.honors.length;
+    return 0;
+  };
+
+  const isHonouredByUser = (p: any, uid?: string) => {
+    if (!uid) return false;
+    const list = p.honouredBy || p.likedBy || p.honoredBy || p.honors || [];
+    return Array.isArray(list) && list.includes(uid);
+  };
+
   // Local reactive states
-  const [honours, setHonours] = useState(post.honoursCount || 0);
-  const [hasHonoured, setHasHonoured] = useState(() => {
-    return currentUser && post.honouredBy ? post.honouredBy.includes(currentUser.uid) : false;
-  });
+  const [honours, setHonours] = useState(() => getHonoursCount(post));
+  const [hasHonoured, setHasHonoured] = useState(() => isHonouredByUser(post, currentUser?.uid));
 
   const [encourages, setEncourages] = useState(post.encouragesCount || 0);
   const [hasEncouraged, setHasEncouraged] = useState(() => {
@@ -101,12 +117,13 @@ export default function SocialPostCard({
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Sync honour status if currentUser changes
+  // Sync honour status if currentUser or post changes
   useEffect(() => {
-    if (currentUser) {
-      setHasHonoured((post.honouredBy || []).includes(currentUser.uid));
-      setHasSaved(post.savedBy.includes(currentUser.uid));
-      setHasReported(post.reportedBy ? post.reportedBy.includes(currentUser.uid) : false);
+    setHonours(getHonoursCount(post));
+    if (currentUser?.uid) {
+      setHasHonoured(isHonouredByUser(post, currentUser.uid));
+      setHasSaved(Array.isArray(post.savedBy) ? post.savedBy.includes(currentUser.uid) : false);
+      setHasReported(Array.isArray(post.reportedBy) ? post.reportedBy.includes(currentUser.uid) : false);
     } else {
       setHasHonoured(false);
       setHasSaved(false);
@@ -341,33 +358,28 @@ export default function SocialPostCard({
     setFollowed(!followed);
   };
 
-  // Honour / Clap Action
+  // Honour / Clap Action (Real-time & Persisted in Firestore)
   const handleHonourToggle = async () => {
     if (!currentUser) {
       onTriggerLogin();
       return;
     }
 
-    let updatedHonouredBy = [...post.honouredBy || []];
-    let newHonourCount = honours;
+    const currentUid = currentUser.uid;
+    const currentList: string[] = post.honouredBy || post.likedBy || post.honoredBy || post.honors || [];
+    const isCurrentlyHonoured = hasHonoured;
+    const nextHonoured = !isCurrentlyHonoured;
+    const nextCount = Math.max(0, honours + (nextHonoured ? 1 : -1));
 
-    if (hasHonoured) {
-      updatedHonouredBy = updatedHonouredBy.filter(uid => uid !== currentUser.uid);
-      newHonourCount = Math.max(0, newHonourCount - 1);
-    } else {
-      updatedHonouredBy.push(currentUser.uid);
-      newHonourCount += 1;
-    }
+    const updatedList = nextHonoured
+      ? Array.from(new Set([...currentList, currentUid]))
+      : currentList.filter(uid => uid !== currentUid);
 
-    setHonours(newHonourCount);
-    setHasHonoured(!hasHonoured);
-    gomboDB.toggleHonor(currentUser.uid, post.id);
+    setHonours(nextCount);
+    setHasHonoured(nextHonoured);
 
-    // Save update in DB
-    await gomboDB.updateSocialPost(post.id, {
-      honoursCount: newHonourCount,
-      honouredBy: updatedHonouredBy
-    });
+    // Persist in Firestore
+    await gomboDB.toggleHonor(post.id, currentUid);
   };
 
   // Save Action
@@ -377,26 +389,20 @@ export default function SocialPostCard({
       return;
     }
 
-    let updatedSavedBy = [...post.savedBy || []];
-    let newSaveCount = saves;
+    const currentUid = currentUser.uid;
+    const currentList: string[] = post.savedBy || [];
+    const isCurrentlySaved = hasSaved;
+    const nextSaved = !isCurrentlySaved;
+    const nextCount = Math.max(0, (saves || 0) + (nextSaved ? 1 : -1));
 
-    if (hasSaved) {
-      updatedSavedBy = updatedSavedBy.filter(uid => uid !== currentUser.uid);
-      newSaveCount = Math.max(0, newSaveCount - 1);
-    } else {
-      updatedSavedBy.push(currentUser.uid);
-      newSaveCount += 1;
-    }
+    const updatedList = nextSaved
+      ? Array.from(new Set([...currentList, currentUid]))
+      : currentList.filter(uid => uid !== currentUid);
 
-    setSaves(newSaveCount);
-    setHasSaved(!hasSaved);
-    gomboDB.toggleSaveAction(currentUser.uid, post.id);
+    setSaves(nextCount);
+    setHasSaved(nextSaved);
 
-    // Save update in DB
-    await gomboDB.updateSocialPost(post.id, {
-      savesCount: newSaveCount,
-      savedBy: updatedSavedBy
-    });
+    await gomboDB.toggleSaveAction(post.id, currentUid);
   };
 
   // Comment Submission Action
@@ -806,26 +812,58 @@ export default function SocialPostCard({
              </div>
            </div>
          </div>
-       ) : post.videoUrl ? (
-         <div className="px-4 sm:px-5 pb-4">
-           <video 
-             src={post.videoUrl} 
-             controls 
-             preload="metadata"
-             
-             className="w-full max-h-80 bg-afri-bg rounded-2xl border border-gray-150 dark:border-[#2B2B2B] object-contain shadow-xs"
-           />
-         </div>
-       ) : post.imageUrl ? (
-         <div className="px-4 sm:px-5 pb-4">
-           <img 
-             referrerPolicy="no-referrer"
-             src={post.imageUrl} 
-             alt={post.title} 
-             className="w-full h-48 object-cover rounded-2xl border border-gray-150 dark:border-[#2B2B2B] shadow-xs"
-           />
-         </div>
-       ) : null}
+       ) : (() => {
+         // Resolve video and image media sources
+         const isExplicitVideo = post.type === "video" || post.type === "reel" || post.mediaType === "video" || Boolean(post.videoUrl);
+         const rawVideoUrl =
+           post.videoUrl ||
+           (isExplicitVideo ? post.mediaUrl || post.url || (post as any).src : null) ||
+           (typeof post.mediaUrl === "string" && (post.mediaUrl.includes(".mp4") || post.mediaUrl.includes(".webm") || post.mediaUrl.includes(".mov") || post.mediaUrl.includes("/api/r2/media/") || post.mediaUrl.startsWith("reels/")) ? post.mediaUrl : null) ||
+           (typeof post.url === "string" && (post.url.includes(".mp4") || post.url.includes(".webm") || post.url.includes(".mov") || post.url.includes("/api/r2/media/") || post.url.startsWith("reels/")) ? post.url : null) ||
+           (post.storagePath?.startsWith("reels/") ? post.storagePath : null);
+
+         if (rawVideoUrl && typeof rawVideoUrl === "string" && rawVideoUrl.trim().length > 0) {
+           const trimmed = rawVideoUrl.trim();
+           const finalVideoUrl = trimmed.startsWith("reels/")
+             ? `/api/r2/media/${encodeURIComponent(trimmed)}`
+             : trimmed;
+           return (
+             <div className="px-4 sm:px-5 pb-4">
+               <div className="relative w-full rounded-2xl overflow-hidden bg-black/95 border border-afri-border/80 shadow-md flex items-center justify-center">
+                 <video 
+                   src={finalVideoUrl} 
+                   controls 
+                   playsInline
+                   preload="metadata"
+                   // @ts-ignore
+                   webkit-playsinline="true"
+                   className="w-full aspect-video sm:aspect-auto max-h-[480px] object-contain mx-auto"
+                 />
+               </div>
+             </div>
+           );
+         }
+
+         const rawImageUrl = post.imageUrl || (post.type !== "audio" ? post.mediaUrl || post.url : null);
+         if (rawImageUrl && typeof rawImageUrl === "string" && rawImageUrl.trim().length > 0) {
+           const trimmed = rawImageUrl.trim();
+           const clean = trimmed.toLowerCase().split("?")[0];
+           if (!clean.endsWith(".mp3") && !clean.endsWith(".wav") && !clean.endsWith(".ogg") && !clean.endsWith(".m4a")) {
+             return (
+               <div className="px-4 sm:px-5 pb-4">
+                 <img 
+                   referrerPolicy="no-referrer"
+                   src={trimmed} 
+                   alt={post.title || "Illustration"} 
+                   className="w-full h-48 sm:h-64 object-cover rounded-2xl border border-gray-150 dark:border-[#2B2B2B] shadow-xs"
+                 />
+               </div>
+             );
+           }
+         }
+
+         return null;
+       })()}
  
       {/* 4. Footer interactions buttons (Likes, Comments, Shares, Saves, Reports, Répondre) */}
       <div className="px-3 sm:px-5 py-4 bg-gray-50/50 dark:bg-afri-bg-sec border-t border-afri-border dark:border-[#2B2B2B]">

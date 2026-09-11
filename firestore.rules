@@ -1057,6 +1057,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+    match /gomboVerifications/{gomboId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /academy_guides/{id} {
       allow read: if true;
       allow write: if isAdmin();

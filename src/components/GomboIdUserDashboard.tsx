@@ -15,7 +15,14 @@ import {
   Sparkles,
   RefreshCw,
   Eye,
-  Check
+  Check,
+  Download,
+  QrCode,
+  Copy,
+  Share2,
+  ChevronRight,
+  UserCheck,
+  Star
 } from "lucide-react";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getEffectiveGomboId, getGomboIdStatusInfo, formatGomboIdDisplay } from "../lib/gomboIdHelper";
@@ -23,6 +30,10 @@ import { storage } from "../lib/firebase";
 import { User } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { GomboIdCertificateModal } from "./GomboIdCertificateModal";
+import { GomboIdQrModal } from "./GomboIdQrModal";
+import { audioSynth } from "../lib/audio";
+import { extractCertificateData, downloadCertificatePdf } from "../lib/certificateGenerator";
 
 function AndroidErrorState() {
   return (
@@ -55,7 +66,12 @@ function GomboIdUserDashboardInner({
   addToTerminal = () => {},
   onBack
 }: GomboIdUserDashboardProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isKycModalOpen, setIsKycModalOpen] = useState(false);
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
+  const [downloadingDirectPdf, setDownloadingDirectPdf] = useState(false);
+
   const avatarLetter =
     currentUser?.artisticName?.trim()?.charAt(0)
     || currentUser?.firstName?.trim()?.charAt(0)
@@ -108,52 +124,81 @@ function GomboIdUserDashboardInner({
 
   // Single Source of Truth Gombo ID Info
   const gInfo = getGomboIdStatusInfo(currentUser);
+  const gomboId = getEffectiveGomboId(currentUser);
+  const isApproved = currentUser?.kycStatus === "approved";
 
   // Status mapping helper
   const getStatusDisplay = () => {
     if (gInfo.statusCode === "ATTRIBUTED") {
       return {
-        label: `✅ Talent Certifié (${gInfo.verificationLevel})`,
+        label: `Artiste Certifié (${gInfo.verificationLevel})`,
+        badgeText: "CERTIFIÉ ✓",
         color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
-        desc: `GOMBO ID Officiel : ${gInfo.gomboId}. Votre compte est certifié d'excellence artistique.`
+        desc: `GOMBO ID Officiel : ${gInfo.gomboId}. Votre identité artistique est homologuée et protégée sur le réseau.`
       };
     }
     if (gInfo.statusCode === "REJECTED") {
       return {
-        label: "🔴 Demande non validée",
+        label: "Dossier non validé",
+        badgeText: "NON VALIDÉ ✕",
         color: "text-red-400 bg-red-500/10 border-red-500/30",
-        desc: gInfo.rejectionReason || "Votre dossier n'a pas été validé. Vous pouvez régulariser votre demande."
+        desc: gInfo.rejectionReason || "Votre dossier n'a pas été validé. Vous pouvez régulariser vos justificatifs."
       };
     }
     if (gInfo.statusCode === "PENDING") {
       if (currentUser?.kycType === "express") {
         return {
           label: "⚡ En traitement Express (24-72h)",
+          badgeText: "EXPRESS ⚡",
           color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/30",
-          desc: "Dossier prioritaire d'excellence. L'administration examine vos pièces."
+          desc: "Dossier prioritaire d'excellence. L'administration examine vos pièces en priorité absolue."
         };
       }
       return {
-        label: "🟡 En vérification (Dossier Transmis)",
+        label: "⏳ En cours de vérification",
+        badgeText: "EN COURS ⏳",
         color: "text-amber-400 bg-amber-500/10 border-amber-500/30",
-        desc: "Votre demande de Gombo ID est en cours d'analyse dans la file d'attente."
+        desc: "Votre demande de Gombo ID est en cours d'analyse dans la file d'attente générale."
       };
     }
 
     return {
-      label: "Héritage à Révéler — Non attribué",
-      color: "text-afri-text-sec bg-zinc-500/5 border-zinc-500/15",
-      desc: "Ton héritage musical mérite d'être raconté. Obtenez votre GOMBO ID pour sceller votre prestige."
+      label: "Héritage à Révéler — Non certifié",
+      badgeText: "NON ATTRIBUÉ",
+      color: "text-afri-text-sec bg-zinc-500/10 border-zinc-500/20",
+      desc: "Votre identité artistique mérite d'être authentifiée. Obtenez votre GOMBO ID pour sceller votre prestige."
     };
   };
 
   const statusInfo = getStatusDisplay();
 
+  const handleCopyGomboId = () => {
+    try {
+      navigator.clipboard.writeText(gomboId);
+      setCopiedId(true);
+      try { audioSynth.playKoraNote(523.25, 0, 0.1, 0.5); } catch (_) {}
+      setTimeout(() => setCopiedId(false), 2000);
+    } catch (err) {
+      console.warn("Copy error", err);
+    }
+  };
+
+  const handleDirectDownloadCertificate = async () => {
+    setDownloadingDirectPdf(true);
+    try {
+      try { audioSynth.playKoraNote(659.25, 0, 0.1, 0.5); } catch (_) {}
+      const data = extractCertificateData(currentUser);
+      await downloadCertificatePdf(data);
+    } catch (err) {
+      console.error("Direct certificate download failed", err);
+    } finally {
+      setDownloadingDirectPdf(false);
+    }
+  };
+
   // File Handling
   const handleFileChange = (type: "idCard" | "selfie" | "musicProof", file: File | null) => {
     if (!file) return;
-    
-    // Create preview
     const previewUrl = URL.createObjectURL(file);
     setFiles(prev => ({ ...prev, [type]: file }));
     setPreviews(prev => ({ ...prev, [type]: previewUrl }));
@@ -164,7 +209,6 @@ function GomboIdUserDashboardInner({
     fileInputRefs[type].current?.click();
   };
 
-  // Drag and drop events
   const handleDrag = (e: React.DragEvent, type: "idCard" | "selfie" | "musicProof", active: boolean) => {
     e.preventDefault();
     e.stopPropagation();
@@ -181,7 +225,6 @@ function GomboIdUserDashboardInner({
     }
   };
 
-  // Real or simulated upload handler
   const handleUploadDocs = async () => {
     if (!files.idCard || !files.selfie || !files.musicProof) {
       alert("Veuillez téléverser les 3 documents requis.");
@@ -198,7 +241,6 @@ function GomboIdUserDashboardInner({
         activityUrl: ""
       };
 
-      // Upload to Firebase Storage with Fallback
       for (const [key, file] of Object.entries(files)) {
         if (file) {
           try {
@@ -215,14 +257,13 @@ function GomboIdUserDashboardInner({
             addToTerminal(`[STORAGE] Upload réussi pour ${key} : ${storagePath}`);
           } catch (storageErr) {
             console.error("Storage upload failed:", storageErr);
-            throw new Error(`Échec du téléversement pour le fichier ${key}. Veuillez vérifier votre connexion et l'accès au stockage.`);
+            throw new Error(`Échec du téléversement pour le fichier ${key}.`);
           }
         }
       }
 
       setUploadProgress("Enregistrement des métadonnées...");
 
-      // Base metadata update
       await onUpdateUser({
         kycDocs: urls,
         kycSubmittedDate: new Date().toLocaleDateString("fr-FR"),
@@ -230,7 +271,6 @@ function GomboIdUserDashboardInner({
         kycType: selectedKycType
       });
 
-      // If Express chosen
       if (selectedKycType === "express") {
         await onCreateTransaction(
           500,
@@ -258,180 +298,320 @@ function GomboIdUserDashboardInner({
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 afri-container afri-section">
-      {onBack && (
-        <button
-          onClick={onBack}
-          className="text-xs font-black uppercase tracking-wider text-afri-text-sec hover:text-afri-text inline-flex items-center gap-1.5 px-3 py-1.5 bg-afri-bg-sec rounded-xl border border-afri-border transition cursor-pointer"
-        >
-          &larr; Retour
-        </button>
-      )}
-      {/* =========================================================================
-                                 GOMBO ID CARD (AFRITRUST TRUST ID STYLE)
-         ========================================================================= */}
+    <div className="w-full max-w-3xl mx-auto px-3 xs:px-4 sm:px-6 py-4 sm:py-6 space-y-6">
+      
+      {/* 1. TOP NAVIGATION HEADER (Unique, clean back button) */}
+      <div className="flex items-center justify-between gap-3 border-b border-[#D4AF37]/20 pb-3 sm:pb-4">
+        <div className="flex items-center gap-3">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="text-xs font-mono font-bold uppercase tracking-wider text-afri-text-sec hover:text-afri-text inline-flex items-center gap-1.5 px-3 py-2 bg-afri-bg-sec hover:bg-afri-bg-ter rounded-xl border border-afri-border transition cursor-pointer active:scale-98"
+            >
+              &larr; RETOUR
+            </button>
+          )}
+          <div>
+            <h1 className="text-base sm:text-lg font-display font-black text-afri-text uppercase tracking-tight">
+              GOMBO ID & CERTIFICAT
+            </h1>
+            <p className="text-[10px] sm:text-xs font-mono text-[#D4AF37]">
+              Passeport Numérique & Souveraineté Artistique
+            </p>
+          </div>
+        </div>
+
+        <div className="hidden xs:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-mono font-bold uppercase">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>AFRITRUST ID</span>
+        </div>
+      </div>
+
+      {/* 2. MAIN DIGITAL GOMBO ID PASSPORT CARD (Android-First Respiration) */}
       <motion.div
-        whileHover={{ scale: 1.01, y: -2 }}
-        className="relative overflow-hidden rounded-2xl xs:rounded-3xl border border-[#D4AF37]/35 bg-afri-bg-sec p-4 xs:p-6 sm:p-8 shadow-[0_0_30px_rgba(212,175,55,0.08)] transition-all duration-300"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-3xl border-2 border-[#D4AF37]/40 bg-gradient-to-b from-[#18181C] via-[#121215] to-[#0D0D10] p-5 xs:p-6 sm:p-8 shadow-[0_10px_40px_rgba(212,175,55,0.12)] space-y-6"
       >
         {/* Subtle decorative security grids in background */}
-        <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none" />
-        <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl from-[#D4AF37]/10 to-transparent rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#D4AF37_1px,transparent_1px),linear-gradient(to_bottom,#D4AF37_1px,transparent_1px)] bg-[size:16px_24px] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[#D4AF37]/15 to-transparent rounded-full blur-2xl pointer-events-none" />
 
-        {/* Digital ID Header Banner */}
-        <div className="flex justify-between items-center border-b border-[#D4AF37]/20 pb-4 mb-6">
+        {/* Card Header Banner */}
+        <div className="flex flex-wrap justify-between items-center gap-2 border-b border-[#D4AF37]/20 pb-4">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-mono tracking-widest font-black text-afri-text/50 uppercase">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[10px] sm:text-[11px] font-mono tracking-widest font-black text-gray-300 uppercase">
               RÉPUBLIQUE DU SHOWBIZ • GOMBO TRUST ID
             </span>
           </div>
-          {currentUser?.kycStatus === "approved" ? (
-            <span className="text-[9px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-              AUTHENTIFIÉ ✓
-            </span>
-          ) : (
-            <span className="text-[9px] font-mono bg-afri-bg-sec/15 text-[#D4AF37] border border-[#D4AF37]/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-              PERSPECTIVE DE SOUVERAINETÉ
-            </span>
-          )}
+          <span className={`text-[9.5px] font-mono border px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${statusInfo.color}`}>
+            {statusInfo.badgeText}
+          </span>
         </div>
 
-        <div className="flex flex-col md:flex-row items-start justify-between gap-4 xs:gap-6">
+        {/* Artist Profile & ID Identification Block */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6 text-center sm:text-left">
           
-          {/* Main ID Details Block */}
-          <div className="flex items-center gap-3 xs:gap-5">
-            {/* Avatar section of Gombo ID card */}
-            <div className="relative shrink-0">
-              <div className="w-16 h-16 xs:w-20 xs:h-20 rounded-full border-2 border-[#D4AF37] bg-afri-bg-sec flex items-center justify-center font-bold text-2xl xs:text-3xl text-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.25)] overflow-hidden">
-                {currentUser?.avatarUrl ? (
-                  <img src={currentUser.avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  avatarLetter
-                )}
-              </div>
-              {currentUser?.kycStatus === "approved" && (
-                <div className="absolute bottom-0 right-0 w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-afri-bg-sec border-2 border-[#121214] flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.6)]">
-                  <Award className="w-3 xs:w-3.5 h-3 xs:h-3.5 text-black stroke-[3]" />
-                </div>
+          {/* Large Artist Photo */}
+          <div className="relative shrink-0">
+            <div className="w-24 h-24 xs:w-28 xs:h-28 rounded-2xl border-2 border-[#D4AF37] bg-black/60 flex items-center justify-center font-bold text-3xl xs:text-4xl text-[#D4AF37] shadow-[0_0_25px_rgba(212,175,55,0.25)] overflow-hidden">
+              {currentUser?.avatarUrl ? (
+                <img 
+                  src={currentUser.avatarUrl} 
+                  alt={currentUser.artisticName || "Artiste"} 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer" 
+                />
+              ) : (
+                avatarLetter
               )}
             </div>
+            {isApproved && (
+              <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-[#D4AF37] border-2 border-[#121214] flex items-center justify-center shadow-md">
+                <Award className="w-4 h-4 text-black stroke-[3]" />
+              </div>
+            )}
+          </div>
 
-            <div className="space-y-0.5 xs:space-y-1">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                <h3 className="text-lg xs:text-xl font-display font-black text-afri-text tracking-tight uppercase truncate max-w-[150px] xs:max-w-[200px]">
-                  {currentUser?.artisticName ?? ""}
-                </h3>
-                {currentUser?.kycStatus === "approved" && (
-                  <span className="inline-flex items-center gap-1 text-[8px] xs:text-[9px] bg-afri-bg-sec text-black px-1.5 xs:px-2 py-0.5 rounded font-black uppercase tracking-wider shadow w-fit">
+          {/* Details & Identifiers */}
+          <div className="flex-1 space-y-2 min-w-0">
+            <div>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight uppercase">
+                  {currentUser?.artisticName || currentUser?.name || "Artiste Musical"}
+                </h2>
+                {isApproved && (
+                  <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-mono px-2 py-0.5 rounded-full font-bold uppercase">
                     ★ CERTIFIÉ
                   </span>
                 )}
-                {currentUser?.betaRankType === "AMBASSADOR" && (
-                  <span className="inline-flex items-center gap-1 text-[8px] xs:text-[9px] bg-black border border-[#D4AF37] text-[#D4AF37] px-2 py-0.5 rounded font-black uppercase tracking-wider shadow w-fit">
-                    🏆 AMBASSADEUR BÊTA #{currentUser.betaRankNumber ? String(currentUser.betaRankNumber).padStart(2, '0') : ''}
-                  </span>
-                )}
-                {currentUser?.betaRankType === "BUILDER" && (
-                  <span className="inline-flex items-center gap-1 text-[8px] xs:text-[9px] bg-black border border-amber-500 text-amber-400 px-2 py-0.5 rounded font-black uppercase tracking-wider shadow w-fit">
-                    🏗️ BÂTISSEUR BÊTA #{currentUser.betaRankNumber ? String(currentUser.betaRankNumber).padStart(2, '0') : ''}
-                  </span>
-                )}
               </div>
-              <p className="afri-text-tiny text-afri-text/60 font-medium">Nom : {currentUser?.name ?? ""}</p>
-              
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1">
-                <span className="text-[9px] xs:text-[10px] uppercase font-mono bg-white/5 border border-afri-border text-afri-text/50 px-1.5 xs:px-2 py-0.5 rounded">
-                  {getEffectiveGomboId(currentUser)}
-                </span>
-                <span className="text-[#D4AF37] font-mono text-[9px] xs:text-[10px]">📍 {currentUser?.commune ?? ""}</span>
-              </div>
+              {currentUser?.name && currentUser.name !== currentUser.artisticName && (
+                <p className="text-xs text-gray-400 font-sans mt-0.5">
+                  Nom civil : {currentUser.name}
+                </p>
+              )}
             </div>
-          </div>
 
-          {/* Micro stats and certification badge */}
-          <div className="w-full md:w-auto flex flex-col sm:flex-row md:flex-col items-stretch md:items-end gap-3 bg-afri-bg/40 border border-afri-border p-3 xs:p-4 rounded-xl xs:rounded-2xl min-w-[200px] sm:min-w-[220px]">
-            <div className="flex-1">
-              <span className="afri-text-tiny text-afri-text-sec block">STATUT DE L'EMPREINTE :</span>
-              <span className={`inline-block mt-1 px-3 py-1 rounded-full text-[10px] xs:text-xs font-black tracking-wide uppercase border ${statusInfo.color}`}>
-                {statusInfo.label}
+            {/* Gombo ID Golden Badge with One-Tap Copy */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+              <div className="flex items-center gap-1.5 bg-black/70 border border-[#D4AF37]/40 rounded-xl px-3 py-1.5">
+                <span className="text-[9px] font-mono text-gray-400 uppercase">ID :</span>
+                <span className="text-sm sm:text-base font-serif font-black text-[#D4AF37] tracking-wider uppercase select-all">
+                  {gomboId}
+                </span>
+                <button
+                  onClick={handleCopyGomboId}
+                  title="Copier le GOMBO ID"
+                  className="ml-1.5 p-1 rounded-lg hover:bg-white/10 text-gray-300 hover:text-[#D4AF37] transition cursor-pointer"
+                >
+                  {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              <span className="text-[11px] font-mono text-gray-300 bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-xl">
+                📍 {currentUser?.commune || "Cocody, Abidjan"}
               </span>
             </div>
-            
-            <div className="text-left md:text-right border-t md:border-t-0 sm:border-l md:border-l-0 border-afri-border pt-2 sm:pt-0 md:pt-2 sm:pl-3 md:pl-0 flex flex-col items-start sm:items-end">
-              <span className="afri-text-tiny text-afri-text-sec block">NIVEAU GOMBO ID :</span>
-              <strong className="text-base xs:text-lg font-sans font-black text-[#D4AF37] block mt-0.5">
-                {currentUser?.kycStatus === "approved" ? `NIVEAU ${currentUser?.gomboId?.niveau || 1}` : "ID NON ATTRIBUÉ"}
-              </strong>
-              <div className="mt-2 flex flex-col items-start sm:items-end">
-                <span className="afri-text-tiny text-afri-text-sec block uppercase font-bold">SCORE CONFIANCE :</span>
-                <strong className="text-xs xs:text-sm font-sans font-black text-emerald-400 block mt-0.5">
-                  {currentUser?.kycStatus === "approved" ? `${currentUser?.gomboId?.scoreConfiance ?? currentUser?.trustScore ?? 96} / 100` : "EN ATTENTE KYC"}
-                </strong>
-              </div>
-            </div>
+
+            {/* Discipline & Instruments */}
+            <p className="text-xs text-gray-400 font-sans truncate">
+              {currentUser?.instrument || (Array.isArray(currentUser?.instruments) ? currentUser.instruments.join(" • ") : "") || "Chant • Performance Scénique"}
+            </p>
           </div>
 
         </div>
 
-        {/* =========================================================================
-                 MASSIVE "TRUST ID" INTERACTIVE BANNER BUTTON (FULL WIDTH ACTUATOR)
-           ========================================================================= */}
-        <div className="mt-6 sm:mt-8">
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            onClick={() => setIsOpen(true)}
-            className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl sm:rounded-2xl bg-afri-bg-sec hover:bg-afri-bg-sec text-[#0B0B0B] font-display font-black tracking-widest uppercase transition-all duration-300 shadow-[0_0_25px_rgba(212,175,55,0.25)] flex items-center justify-center gap-2 sm:gap-3 cursor-pointer text-center"
-          >
-            <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-[#0B0B0B] stroke-[2.5]" />
-            <span className="text-[11px] xs:text-xs sm:text-base tracking-widest">
-              {(currentUser?.kycStatus ?? "none") === "none" ? "ACTIVER MON GOMBO ID 🛡️" : ""}
-              {currentUser?.kycStatus === "pending" ? "DOSSIER TRANSMIS ⏳" : ""}
-              {currentUser?.kycStatus === "approved" ? "GOMBO ID CERTIFIÉ ★" : ""}
-              {currentUser?.kycStatus === "rejected" ? "REJETÉ • RETENTER 🚫" : ""}
-              {currentUser?.kycStatus === "info_required" ? "ACTION REQUISE 🟡" : ""}
-            </span>
-          </motion.button>
+        {/* Level & Trust Stats Row */}
+        <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 pt-2 border-t border-[#D4AF37]/20">
           
-          <p className="text-center afri-text-tiny text-afri-text-sec mt-3">
-            La clé d'excellence est régulée par le consortium AFRIGOMBO ELITE.
-          </p>
+          <div className="bg-black/40 border border-white/10 p-3 rounded-2xl text-center space-y-1">
+            <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">
+              NIVEAU GOMBO ID
+            </span>
+            <span className="text-sm sm:text-base font-sans font-black text-[#D4AF37] block">
+              {gInfo.verificationLevel || "Niveau 1"}
+            </span>
+          </div>
+
+          <div className="bg-black/40 border border-white/10 p-3 rounded-2xl text-center space-y-1">
+            <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">
+              SCORE DE CONFIANCE
+            </span>
+            <span className="text-sm sm:text-base font-sans font-black text-emerald-400 block">
+              {isApproved ? `${currentUser?.gomboId?.scoreConfiance ?? currentUser?.trustScore ?? 98} / 100` : "En attente"}
+            </span>
+          </div>
+
+          <div className="bg-black/40 border border-white/10 p-3 rounded-2xl text-center space-y-1">
+            <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">
+              STATUT CONTRATS
+            </span>
+            <span className="text-sm sm:text-base font-sans font-black text-white block">
+              {isApproved ? "Séquestre VIP Actif" : "Standard"}
+            </span>
+          </div>
+
+        </div>
+
+        {/* 3. FOUR CORE DIRECT ACTION BUTTONS */}
+        <div className="pt-2 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            
+            {/* Primary Action 1: Voir mon certificat */}
+            <button
+              onClick={() => {
+                setIsCertModalOpen(true);
+                try { audioSynth.playKoraNote(523.25, 0, 0.1, 0.5); } catch (_) {}
+              }}
+              className="py-3.5 px-4 bg-[#D4AF37] hover:bg-amber-500 active:scale-98 text-black font-sans font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Award className="w-4 h-4 text-black stroke-[2.5]" />
+              <span>VOIR MON CERTIFICAT</span>
+            </button>
+
+            {/* Primary Action 2: Télécharger mon certificat */}
+            <button
+              onClick={handleDirectDownloadCertificate}
+              disabled={downloadingDirectPdf}
+              className="py-3.5 px-4 bg-gradient-to-r from-amber-500/15 to-amber-400/15 hover:from-amber-500/25 hover:to-amber-400/25 border-2 border-[#D4AF37]/60 active:scale-98 text-[#D4AF37] font-mono font-bold text-xs uppercase tracking-wider rounded-2xl shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {downloadingDirectPdf ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Export PDF en cours...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 text-[#D4AF37]" />
+                  <span>TÉLÉCHARGER MON CERTIFICAT</span>
+                </>
+              )}
+            </button>
+
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            
+            {/* Secondary Action 1: Afficher QR Code */}
+            <button
+              onClick={() => {
+                setIsQrModalOpen(true);
+                try { audioSynth.playKoraNote(392.00, 0, 0.05, 0.3); } catch (_) {}
+              }}
+              className="py-3 px-4 bg-white/10 hover:bg-white/15 text-white font-mono text-xs uppercase font-bold rounded-2xl border border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+            >
+              <QrCode className="w-4 h-4 text-[#D4AF37]" />
+              <span>Afficher le QR Code</span>
+            </button>
+
+            {/* Secondary Action 2: Transmettre / Partager */}
+            <button
+              onClick={() => {
+                const text = `Découvrez mon profil d'artiste certifié sur AFRIGOMBO.\n🎼 Mon GOMBO ID : ${gomboId}\nRejoignez l'élite musicale !`;
+                if (navigator.share) {
+                  navigator.share({ title: "GOMBO ID d'Excellence", text });
+                } else {
+                  handleCopyGomboId();
+                }
+              }}
+              className="py-3 px-4 bg-white/10 hover:bg-white/15 text-white font-mono text-xs uppercase font-bold rounded-2xl border border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+            >
+              <Share2 className="w-4 h-4 text-[#D4AF37]" />
+              <span>Transmettre mon ID</span>
+            </button>
+
+          </div>
+        </div>
+
+        {/* Activation / KYC Action Trigger */}
+        <div className="pt-2 border-t border-white/10">
+          <button
+            onClick={() => setIsKycModalOpen(true)}
+            className="w-full py-3.5 px-4 rounded-2xl bg-black/60 hover:bg-black/80 border border-[#D4AF37]/40 text-gray-200 font-mono text-xs uppercase font-bold tracking-wider transition-all flex items-center justify-between cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
+              <span>
+                {currentUser?.kycStatus === "approved" ? "Gérer mon dossier de certification" : "Processus d'homologation & KYC"}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-[#D4AF37]">
+              <span className="text-[10px] uppercase font-bold">{statusInfo.badgeText}</span>
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          </button>
         </div>
 
       </motion.div>
 
+      {/* 4. GOMBO ID ADVANTAGES SECTION */}
+      <div className="rounded-3xl border border-white/10 bg-afri-bg-sec/80 p-5 sm:p-6 space-y-4 shadow-sm text-left">
+        <div className="flex items-center gap-2">
+          <Star className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]" />
+          <h3 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-[0.2em]">
+            Grâce à votre GOMBO ID d'Excellence :
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { title: "Profil Certifié & Protégé", desc: "Attestation officielle contre les faux profils et l'usurpation." },
+            { title: "Priorité dans les Recherches", desc: "Apparaissez en tête de liste pour les promoteurs et hôtels d'Abidjan." },
+            { title: "Accès aux Contrats Sécurisés", desc: "Verrouillage automatique des cachets en compte de séquestre." },
+            { title: "Passeport & Certificat Exportable", desc: "Téléchargez votre certificat au format officiel PDF ou PNG." },
+            { title: "Vérification Publique QR Code", desc: "Permettez à vos clients de scanner et vérifier votre statut instantanément." },
+            { title: "Éligibilité aux Prestations VIP", desc: "Participez aux galas, festivals et événements d'envergure nationale." }
+          ].map((item, idx) => (
+            <div key={idx} className="p-3 bg-black/30 border border-white/5 rounded-2xl flex items-start gap-3">
+              <span className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xs font-bold shrink-0 mt-0.5">
+                ✓
+              </span>
+              <div className="space-y-0.5">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wide">
+                  {item.title}
+                </h4>
+                <p className="text-[10px] text-gray-400 leading-relaxed font-sans">
+                  {item.desc}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* =========================================================================
-                                 DEDICATED MODAL / SLIDER PAGE
+                                 KYC ACTIVATION & STATUS MODAL
          ========================================================================= */}
       <AnimatePresence>
-        {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-afri-bg/90 backdrop-blur-md p-4">
+        {isKycModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-2xl bg-afri-bg-sec border border-[#D4AF37]/45 rounded-2xl shadow-[0_10px_50px_rgba(212,175,55,0.12)] overflow-hidden flex flex-col max-h-[90vh]"
+              className="relative w-full max-w-2xl bg-[#121215] border border-[#D4AF37]/45 rounded-3xl shadow-[0_10px_50px_rgba(212,175,55,0.15)] overflow-hidden flex flex-col max-h-[90vh]"
             >
               {/* Header */}
-              <div className="flex justify-between items-center px-6 py-5 border-b border-[#D4AF37]/20 bg-afri-bg">
+              <div className="flex justify-between items-center px-6 py-5 border-b border-[#D4AF37]/20 bg-black/50">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-afri-bg-sec/10 flex items-center justify-center border border-[#D4AF37]">
-                    <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
+                  <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]">
+                    <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
                   </div>
                   <div>
-                    <h4 className="text-md font-display font-bold text-afri-text uppercase tracking-wider">
-                      GOMBO ID d'Excellence Artiste
+                    <h4 className="text-sm sm:text-base font-display font-bold text-white uppercase tracking-wider">
+                      Dossier d'Homologation GOMBO ID
                     </h4>
-                    <span className="text-[10px] font-mono text-[#D4AF37]/80 block -mt-1">
-                      AfriTrust Certification Engine
+                    <span className="text-[10px] font-mono text-[#D4AF37] block">
+                      Commission d'Accréditation Artistique
                     </span>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-1.5 rounded-full border border-afri-border hover:border-white/30 text-afri-text/60 hover:text-afri-text transition-all"
+                  onClick={() => setIsKycModalOpen(false)}
+                  className="p-1.5 rounded-full border border-white/10 hover:border-white/30 text-gray-400 hover:text-white transition-all cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -442,16 +622,16 @@ function GomboIdUserDashboardInner({
                 
                 {/* Status Alert if not None */}
                 {(currentUser?.kycStatus ?? "none") !== "none" && (
-                  <div className={`p-4 rounded-xl border flex gap-3.5 ${statusInfo.color}`}>
+                  <div className={`p-4 rounded-2xl border flex gap-3.5 ${statusInfo.color}`}>
                     <AlertCircle className="w-5 h-5 shrink-0" />
                     <div>
-                      <h5 className="font-mono font-bold text-xs uppercase text-afri-text">Statut actuel : {statusInfo.label}</h5>
-                      <p className="text-xs text-afri-text/80 mt-1">{statusInfo.desc}</p>
+                      <h5 className="font-mono font-bold text-xs uppercase text-white">Statut : {statusInfo.label}</h5>
+                      <p className="text-xs text-gray-300 mt-1">{statusInfo.desc}</p>
                       
                       {currentUser?.kycStatus === "rejected" && (
                         <button
                           onClick={handleResetKyc}
-                          className="mt-3 bg-afri-bg-sec text-afri-text text-[10px] uppercase font-bold px-3 py-1.5 rounded-lg hover:bg-red-600 transition-all flex items-center gap-1.5"
+                          className="mt-3 bg-red-600 text-white text-[10px] uppercase font-bold px-3 py-1.5 rounded-lg hover:bg-red-700 transition-all flex items-center gap-1.5"
                         >
                           <RefreshCw className="w-3.5 h-3.5" /> Déposer un nouveau dossier
                         </button>
@@ -460,111 +640,77 @@ function GomboIdUserDashboardInner({
                   </div>
                 )}
 
-                {/* STEP CONTROLLER */}
+                {/* STEP CONTROLLER FOR NEW SUBMISSION */}
                 {(currentUser?.kycStatus ?? "none") === "none" && (
                   <>
                     {/* Welcome Screen */}
                     {step === "intro" && (
                       <div className="space-y-6">
                         <div className="space-y-2 text-center max-w-md mx-auto">
-                          <h5 className="text-lg font-display font-medium text-afri-text">Prétendez à l'excellence AFRIGOMBO ELITE</h5>
-                          <p className="text-xs text-afri-text/60 leading-relaxed">
-                            Le GOMBO ID permet d'identifier les artistes sérieux et de renforcer la confiance au sein de la communauté musicale d'AFRIGOMBO ELITE.
+                          <h5 className="text-lg font-display font-bold text-white">Authentifiez votre Prestige Musical</h5>
+                          <p className="text-xs text-gray-400 leading-relaxed">
+                            Le GOMBO ID identifie les artistes professionnels et renforce la confiance auprès des organisateurs d'événements et promoteurs de spectacles.
                           </p>
-                        </div>
-
-                        {/* Advantages list */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl flex gap-3.5">
-                            <span className="h-6 w-6 bg-emerald-500/10 border border-emerald-500/25 rounded-full flex items-center justify-center text-emerald-400 font-bold">✓</span>
-                            <div>
-                              <h6 className="text-xs font-semibold text-afri-text">Plus de crédibilité</h6>
-                              <p className="text-[10px] text-afri-text/50 mt-1">Établissez instantanément votre statut d'artiste expert vérifié.</p>
-                            </div>
-                          </div>
-                          
-                          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl flex gap-3.5">
-                            <span className="h-6 w-6 bg-emerald-500/10 border border-emerald-500/25 rounded-full flex items-center justify-center text-emerald-400 font-bold">✓</span>
-                            <div>
-                              <h6 className="text-xs font-semibold text-afri-text">Plus de confiance</h6>
-                              <p className="text-[10px] text-afri-text/50 mt-1">Rassurez les organisateurs d'orchestres ou de concerts.</p>
-                            </div>
-                          </div>
-
-                          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl flex gap-3.5">
-                            <span className="h-6 w-6 bg-emerald-500/10 border border-emerald-500/25 rounded-full flex items-center justify-center text-emerald-400 font-bold">✓</span>
-                            <div>
-                              <h6 className="text-xs font-semibold text-afri-text">Badge officiel</h6>
-                              <p className="text-[10px] text-afri-text/50 mt-1">Affichez fièrement l'emblème doré distinctif sur votre profil.</p>
-                            </div>
-                          </div>
-
-                          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl flex gap-3.5">
-                            <span className="h-6 w-6 bg-emerald-500/10 border border-emerald-500/25 rounded-full flex items-center justify-center text-emerald-400 font-bold">✓</span>
-                            <div>
-                              <h6 className="text-xs font-semibold text-afri-text">Meilleure visibilité</h6>
-                              <p className="text-[10px] text-afri-text/50 mt-1">Apparaissez en priorité sur les résultats de recherche d'Abidjan.</p>
-                            </div>
-                          </div>
                         </div>
 
                         <div className="pt-4 flex justify-center">
                           <button
                             onClick={() => setStep("conditions")}
-                            className="bg-afri-bg-sec text-black font-semibold text-xs uppercase px-6 py-3 rounded-lg hover:bg-afri-bg-sec transition-all flex items-center gap-2 font-display tracking-wider font-bold"
+                            className="bg-[#D4AF37] text-black font-bold text-xs uppercase px-8 py-3.5 rounded-xl hover:bg-amber-500 transition-all flex items-center gap-2 font-display tracking-wider cursor-pointer"
                           >
-                            Démarrer ma demande <ArrowRight className="w-4 h-4 stroke-[3]" />
+                            Démarrer ma demande d'homologation <ArrowRight className="w-4 h-4 stroke-[3]" />
                           </button>
                         </div>
                       </div>
                     )}
 
-                    {/* Step 2: Terms and Conditions */}
+                    {/* Step 2: Conditions */}
                     {step === "conditions" && (
                       <div className="space-y-5">
-                        <div className="bg-afri-bg border border-afri-border rounded-xl p-5 space-y-4 max-h-72 overflow-y-auto">
-                          <h5 className="text-xs font-bold uppercase tracking-wider text-[#D4AF37] font-mono">Charte de confiance et d'Exactitude</h5>
-                          <p className="text-xs text-afri-text/80 leading-relaxed text-justify">
-                            Pour garantir la sécurité et la réputation de tous les artistes de la plateforme, l'attribution du GOMBO ID d'excellence est soumise aux règles fermes suivantes :
-                          </p>
-                          <ul className="space-y-2 text-xs text-afri-text/70 list-disc list-inside">
-                            <li>Les informations d'identité fournies doivent être rigoureusement exactes, à jour et correspondre à votre véritable nom civil.</li>
-                            <li><strong>Le badge ne s'achète pas.</strong> Les paiements express priorisent uniquement l'examen de votre dossier sans garantir d'obtention de la certification.</li>
-                            <li>Toute tentative de manipulation, d'usurpation d'identité ou d'utilisation de documents falsifiés entraînera le refus définitif ainsi que la suspension définitive de votre compte AFRIGOMBO ELITE.</li>
-                            <li>Les agents de vérification d'AFRIGOMBO ELITE se réservent le droit de demander des pièces complémentaires ou une validation vidéo en direct.</li>
-                          </ul>
+                        <div className="space-y-1 text-center">
+                          <h5 className="text-md font-bold text-white uppercase tracking-tight">Conditions & Documents Requis</h5>
+                          <p className="text-xs text-gray-400">Pour garantir l'intégrité de la communauté musicale :</p>
                         </div>
 
-                        {/* Accept condition check */}
-                        <div className="flex items-start gap-3 bg-afri-bg-sec/5 border border-[#D4AF37]/15 p-4 rounded-xl">
+                        <div className="space-y-3 bg-black/40 p-4 rounded-2xl border border-white/10 text-xs text-gray-300">
+                          <div className="flex gap-3">
+                            <span className="text-[#D4AF37] font-bold">1.</span>
+                            <p><strong className="text-white">Pièce d'identité officielle :</strong> CNI, Passeport ou Carte Consulaire ivoirienne valide.</p>
+                          </div>
+                          <div className="flex gap-3">
+                            <span className="text-[#D4AF37] font-bold">2.</span>
+                            <p><strong className="text-white">Selfie de conformité :</strong> Photo de face nette pour certifier l'adéquation physique.</p>
+                          </div>
+                          <div className="flex gap-3">
+                            <span className="text-[#D4AF37] font-bold">3.</span>
+                            <p><strong className="text-white">Preuve d'activité musicale :</strong> Affiche de spectacle, extrait audio/vidéo ou lien de prestation.</p>
+                          </div>
+                        </div>
+
+                        <label className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-xl cursor-pointer">
                           <input
                             type="checkbox"
-                            id="terms"
                             checked={acceptedTerms}
                             onChange={(e) => setAcceptedTerms(e.target.checked)}
-                            className="mt-1 w-4 h-4 text-[#D4AF37] border-afri-border rounded focus:ring-[#D4AF37] bg-afri-bg"
+                            className="w-4 h-4 rounded text-[#D4AF37] accent-[#D4AF37]"
                           />
-                          <label htmlFor="terms" className="text-xs text-afri-text/80 select-none cursor-pointer font-semibold">
-                            C'est d'accord, j'ai lu avec rigueur et j'accepte l'ensemble des conditions d'excellence.
-                          </label>
-                        </div>
+                          <span className="text-xs text-gray-300 font-sans">
+                            Je certifie l'exactitude des pièces fournies et accepte la charte d'honneur AFRIGOMBO ELITE.
+                          </span>
+                        </label>
 
-                        <div className="flex justify-between items-center pt-4 border-t border-afri-border">
+                        <div className="flex justify-between items-center pt-3 border-t border-white/10">
                           <button
                             onClick={() => setStep("intro")}
-                            className="px-4 py-2 text-xs uppercase font-mono text-afri-text/50 hover:text-afri-text"
+                            className="px-4 py-2 text-xs uppercase font-mono text-gray-400 hover:text-white"
                           >
                             Retour
                           </button>
-                          
+
                           <button
-                            onClick={() => setStep("upload")}
                             disabled={!acceptedTerms}
-                            className={`px-5 py-2.5 rounded-lg text-xs uppercase font-semibold font-mono tracking-wider transition-all flex items-center gap-1.5 ${
-                              acceptedTerms
-                                ? "bg-afri-bg-sec text-black hover:bg-afri-bg-sec"
-                                : "bg-white/5 text-afri-text/25 cursor-not-allowed border border-afri-border"
-                            }`}
+                            onClick={() => setStep("upload")}
+                            className="bg-[#D4AF37] disabled:opacity-40 text-black font-bold text-xs uppercase px-6 py-2.5 rounded-xl hover:bg-amber-500 transition-all flex items-center gap-2 font-mono"
                           >
                             Continuer <ArrowRight className="w-4 h-4" />
                           </button>
@@ -572,260 +718,203 @@ function GomboIdUserDashboardInner({
                       </div>
                     )}
 
-                    {/* Step 3: Document Upload */}
+                    {/* Step 3: Upload */}
                     {step === "upload" && (
-                      <div className="space-y-6">
-                        <div className="bg-afri-bg/40 border border-afri-border p-4 rounded-xl space-y-1">
-                          <span className="text-[10px] font-mono text-emerald-400 block font-bold">📂 SÉLECTION OU GLISSER-DÉPOSER DES PIÈCES</span>
-                          <p className="text-xs text-afri-text/60">Veuillez téléverser des documents lisibles. Formats acceptés : JPEG, PNG, PDF (max 5Mo).</p>
+                      <div className="space-y-5">
+                        <div className="space-y-1 text-center">
+                          <h5 className="text-md font-bold text-white uppercase tracking-tight">Téléversement des Pièces Justificatives</h5>
+                          <p className="text-xs text-gray-400">Formats acceptés : JPG, PNG, PDF (Max 10 Mo)</p>
                         </div>
 
-                        {/* Three upload slots */}
-                        <div className="space-y-4">
-                          
-                          {/* Item 1: Pièce d'identité */}
-                          <div className="space-y-2">
-                            <label className="text-xs text-[#D4AF37] font-semibold font-mono flex items-center gap-1.5">
-                              <FileText className="w-4 h-4" /> 1. Pièce d'identité officielle (CNI, Passeport, Permis)
-                            </label>
-                            
-                            <div
-                              onDragOver={(e) => handleDrag(e, "idCard", true)}
-                              onDragLeave={(e) => handleDrag(e, "idCard", false)}
-                              onDrop={(e) => handleDrop(e, "idCard")}
-                              onClick={() => triggerFileInput("idCard")}
-                              className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[120px] ${
-                                dragActive.idCard 
-                                  ? "border-[#D4AF37] bg-afri-bg-sec/5" 
-                                  : files.idCard 
-                                    ? "border-emerald-500/50 bg-emerald-500/5" 
-                                    : "border-afri-border hover:border-[#D4AF37]/40 hover:bg-white/5"
-                              }`}
-                            >
-                              <input
-                                type="file"
-                                ref={fileInputRefs.idCard}
-                                className="hidden"
-                                accept="image/*,application/pdf"
-                                onChange={(e) => handleFileChange("idCard", e.target.files?.[0] || null)}
-                              />
-                              {previews.idCard ? (
-                                <div className="space-y-2.5">
-                                  <div className="flex items-center justify-center gap-2">
-                                    <span className="text-xs text-emerald-400 flex items-center gap-1 font-mono">
-                                      <CheckCircle2 className="w-4 h-4" /> Chargé : {files.idCard?.name}
-                                    </span>
-                                  </div>
-                                  <div className="relative inline-block w-40 h-24 rounded overflow-hidden border border-white/15">
-                                    <img src={previews.idCard} alt="Preview Identité" className="w-full h-full object-cover" />
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="space-y-1.5 p-2">
-                                  <FileText className="w-6 h-6 text-afri-text/30 mx-auto" />
-                                  <p className="text-xs text-afri-text/50 font-medium">Glissez votre pièce ou cliquez pour l'importer</p>
-                                  <p className="text-[10px] text-afri-text/30 font-mono">Format PDF, JPG, PNG sous 5 Mo</p>
-                                </div>
-                              )}
-                            </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {/* 1. Identity Card */}
+                          <div
+                            onDragOver={(e) => handleDrag(e, "idCard", true)}
+                            onDragLeave={(e) => handleDrag(e, "idCard", false)}
+                            onDrop={(e) => handleDrop(e, "idCard")}
+                            onClick={() => triggerFileInput("idCard")}
+                            className={`p-4 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[140px] ${
+                              previews.idCard
+                                ? "border-emerald-500 bg-emerald-500/5"
+                                : dragActive.idCard
+                                ? "border-[#D4AF37] bg-[#D4AF37]/10"
+                                : "border-white/20 bg-black/40 hover:border-white/40"
+                            }`}
+                          >
+                            <input
+                              type="file"
+                              ref={fileInputRefs.idCard}
+                              onChange={(e) => handleFileChange("idCard", e.target.files?.[0] || null)}
+                              accept="image/*,.pdf"
+                              className="hidden"
+                            />
+                            {previews.idCard ? (
+                              <div className="space-y-1">
+                                <CheckCircle2 className="w-7 h-7 text-emerald-400 mx-auto" />
+                                <span className="text-[10px] font-mono text-emerald-400 font-bold block truncate max-w-[120px]">
+                                  {files.idCard?.name || "Pièce chargée"}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <FileText className="w-6 h-6 text-[#D4AF37] mx-auto" />
+                                <span className="text-[11px] font-bold text-white block">Pièce d'Identité</span>
+                                <span className="text-[9px] text-gray-400 block">CNI / Passeport</span>
+                              </div>
+                            )}
                           </div>
 
-                          {/* Item 2: Selfie avec la pièce */}
-                          <div className="space-y-2">
-                            <label className="text-xs text-[#D4AF37] font-semibold font-mono flex items-center gap-1.5">
-                              <Camera className="w-4 h-4" /> 2. Selfie de contrôle avec votre pièce d'identité
-                            </label>
-
-                            <div
-                              onDragOver={(e) => handleDrag(e, "selfie", true)}
-                              onDragLeave={(e) => handleDrag(e, "selfie", false)}
-                              onDrop={(e) => handleDrop(e, "selfie")}
-                              onClick={() => triggerFileInput("selfie")}
-                              className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[120px] ${
-                                dragActive.selfie 
-                                  ? "border-[#D4AF37] bg-afri-bg-sec/5" 
-                                  : files.selfie 
-                                    ? "border-emerald-500/50 bg-emerald-500/5" 
-                                    : "border-afri-border hover:border-[#D4AF37]/40 hover:bg-white/5"
-                              }`}
-                            >
-                              <input
-                                type="file"
-                                ref={fileInputRefs.selfie}
-                                className="hidden"
-                                accept="image/*"
-                                onChange={(e) => handleFileChange("selfie", e.target.files?.[0] || null)}
-                              />
-                              {previews.selfie ? (
-                                <div className="space-y-2.5">
-                                  <div className="flex items-center justify-center gap-2">
-                                    <span className="text-xs text-emerald-400 flex items-center gap-1 font-mono">
-                                      <CheckCircle2 className="w-4 h-4" /> Chargé : {files.selfie?.name}
-                                    </span>
-                                  </div>
-                                  <div className="relative inline-block w-40 h-24 rounded overflow-hidden border border-white/15">
-                                    <img src={previews.selfie} alt="Preview Selfie" className="w-full h-full object-cover" />
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="space-y-1.5 p-2">
-                                  <Camera className="w-6 h-6 text-afri-text/30 mx-auto" />
-                                  <p className="text-xs text-afri-text/50 font-medium">Prenez ou glissez un selfie avec la pièce lisible</p>
-                                  <p className="text-[10px] text-afri-text/30 font-mono">Assurez-vous que votre visage et la carte soient clairs</p>
-                                </div>
-                              )}
-                            </div>
+                          {/* 2. Selfie */}
+                          <div
+                            onDragOver={(e) => handleDrag(e, "selfie", true)}
+                            onDragLeave={(e) => handleDrag(e, "selfie", false)}
+                            onDrop={(e) => handleDrop(e, "selfie")}
+                            onClick={() => triggerFileInput("selfie")}
+                            className={`p-4 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[140px] ${
+                              previews.selfie
+                                ? "border-emerald-500 bg-emerald-500/5"
+                                : dragActive.selfie
+                                ? "border-[#D4AF37] bg-[#D4AF37]/10"
+                                : "border-white/20 bg-black/40 hover:border-white/40"
+                            }`}
+                          >
+                            <input
+                              type="file"
+                              ref={fileInputRefs.selfie}
+                              onChange={(e) => handleFileChange("selfie", e.target.files?.[0] || null)}
+                              accept="image/*"
+                              className="hidden"
+                            />
+                            {previews.selfie ? (
+                              <div className="space-y-1">
+                                <CheckCircle2 className="w-7 h-7 text-emerald-400 mx-auto" />
+                                <span className="text-[10px] font-mono text-emerald-400 font-bold block truncate max-w-[120px]">
+                                  {files.selfie?.name || "Selfie chargé"}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <Camera className="w-6 h-6 text-[#D4AF37] mx-auto" />
+                                <span className="text-[11px] font-bold text-white block">Selfie Facial</span>
+                                <span className="text-[9px] text-gray-400 block">Visage dégagé</span>
+                              </div>
+                            )}
                           </div>
 
-                          {/* Item 3: Preuve d'activité */}
-                          <div className="space-y-2">
-                            <label className="text-xs text-[#D4AF37] font-semibold font-mono flex items-center gap-1.5">
-                              <Music className="w-4 h-4" /> 3. Preuve d'activité musicale active (Lien d'écoute, contrat, affiche, SACEM)
-                            </label>
-
-                            <div
-                              onDragOver={(e) => handleDrag(e, "musicProof", true)}
-                              onDragLeave={(e) => handleDrag(e, "musicProof", false)}
-                              onDrop={(e) => handleDrop(e, "musicProof")}
-                              onClick={() => triggerFileInput("musicProof")}
-                              className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[120px] ${
-                                dragActive.musicProof 
-                                  ? "border-[#D4AF37] bg-afri-bg-sec/5" 
-                                  : files.musicProof 
-                                    ? "border-emerald-500/50 bg-emerald-500/5" 
-                                    : "border-afri-border hover:border-[#D4AF37]/40 hover:bg-white/5"
-                              }`}
-                            >
-                              <input
-                                type="file"
-                                ref={fileInputRefs.musicProof}
-                                className="hidden"
-                                accept="image/*,application/pdf"
-                                onChange={(e) => handleFileChange("musicProof", e.target.files?.[0] || null)}
-                              />
-                              {previews.musicProof ? (
-                                <div className="space-y-2.5">
-                                  <div className="flex items-center justify-center gap-2">
-                                    <span className="text-xs text-emerald-400 flex items-center gap-1 font-mono">
-                                      <CheckCircle2 className="w-4 h-4" /> Chargé : {files.musicProof?.name}
-                                    </span>
-                                  </div>
-                                  <div className="relative inline-block w-40 h-24 rounded overflow-hidden border border-white/15">
-                                    <img src={previews.musicProof} alt="Preview Activité" className="w-full h-full object-cover" />
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="space-y-1.5 p-2">
-                                  <Music className="w-6 h-6 text-afri-text/30 mx-auto" />
-                                  <p className="text-xs text-afri-text/50 font-medium">Sélectionnez une preuve ou capture d'activité musicale</p>
-                                  <p className="text-[10px] text-afri-text/30 font-mono">Contrat scellé, carte SACEM, ou flyer de showcase officiel</p>
-                                </div>
-                              )}
-                            </div>
+                          {/* 3. Music Proof */}
+                          <div
+                            onDragOver={(e) => handleDrag(e, "musicProof", true)}
+                            onDragLeave={(e) => handleDrag(e, "musicProof", false)}
+                            onDrop={(e) => handleDrop(e, "musicProof")}
+                            onClick={() => triggerFileInput("musicProof")}
+                            className={`p-4 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[140px] ${
+                              previews.musicProof
+                                ? "border-emerald-500 bg-emerald-500/5"
+                                : dragActive.musicProof
+                                ? "border-[#D4AF37] bg-[#D4AF37]/10"
+                                : "border-white/20 bg-black/40 hover:border-white/40"
+                            }`}
+                          >
+                            <input
+                              type="file"
+                              ref={fileInputRefs.musicProof}
+                              onChange={(e) => handleFileChange("musicProof", e.target.files?.[0] || null)}
+                              accept="image/*,.pdf,audio/*"
+                              className="hidden"
+                            />
+                            {previews.musicProof ? (
+                              <div className="space-y-1">
+                                <CheckCircle2 className="w-7 h-7 text-emerald-400 mx-auto" />
+                                <span className="text-[10px] font-mono text-emerald-400 font-bold block truncate max-w-[120px]">
+                                  {files.musicProof?.name || "Preuve chargée"}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <Music className="w-6 h-6 text-[#D4AF37] mx-auto" />
+                                <span className="text-[11px] font-bold text-white block">Preuve d'Activité</span>
+                                <span className="text-[9px] text-gray-400 block">Affiche / Extrait</span>
+                              </div>
+                            )}
                           </div>
-
                         </div>
 
-                        {/* Footer button to submit */}
-                        <div className="flex justify-between items-center pt-4 border-t border-afri-border">
+                        <div className="flex justify-between items-center pt-3 border-t border-white/10">
                           <button
                             onClick={() => setStep("conditions")}
-                            className="px-4 py-2 text-xs uppercase font-mono text-afri-text/50 hover:text-afri-text"
+                            className="px-4 py-2 text-xs uppercase font-mono text-gray-400 hover:text-white"
                           >
                             Retour
                           </button>
 
                           <button
-                            onClick={() => setStep("checkout")}
                             disabled={!files.idCard || !files.selfie || !files.musicProof}
-                            className={`px-5 py-2.5 rounded-lg text-xs uppercase font-semibold font-mono tracking-wider transition-all flex items-center gap-1.5 ${
-                              (files.idCard && files.selfie && files.musicProof)
-                                ? "bg-afri-bg-sec text-black hover:bg-afri-bg-sec"
-                                : "bg-white/5 text-afri-text/25 cursor-not-allowed border border-afri-border"
-                            }`}
+                            onClick={() => setStep("checkout")}
+                            className="bg-[#D4AF37] disabled:opacity-40 text-black font-bold text-xs uppercase px-6 py-2.5 rounded-xl hover:bg-amber-500 transition-all flex items-center gap-2 font-mono"
                           >
-                            Continuer <ArrowRight className="w-4 h-4" />
+                            Choisir la Vitesse <ArrowRight className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
                     )}
 
-                    {/* Step 4: Mode of Checkout Priority (Standard vs Express) */}
+                    {/* Step 4: Checkout Priority */}
                     {step === "checkout" && (
                       <div className="space-y-5">
                         <div className="text-center max-w-sm mx-auto space-y-1">
-                          <h5 className="text-md font-bold text-afri-text uppercase tracking-tight">Choisissez la vitesse d'évaluation</h5>
-                          <p className="text-xs text-afri-text/50 leading-relaxed">Les équipes d'AFRIGOMBO ELITE traitent chaque dossier manuellement pour préserver l'excellence.</p>
+                          <h5 className="text-md font-bold text-white uppercase tracking-tight">Vitesse d'Évaluation</h5>
+                          <p className="text-xs text-gray-400">Sélectionnez le délai de traitement souhaité :</p>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {/* Option 1: Standard */}
+                          {/* Standard */}
                           <div
                             onClick={() => setSelectedKycType("standard")}
-                            className={`p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between min-h-[160px] ${
+                            className={`p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between min-h-[150px] ${
                               selectedKycType === "standard"
-                                ? "border-zinc-500 bg-white/5"
-                                : "border-afri-border hover:border-afri-border bg-afri-bg/40"
+                                ? "border-white bg-white/10"
+                                : "border-white/15 bg-black/40 hover:border-white/30"
                             }`}
                           >
-                            <div className="space-y-2">
-                              <div className="flex justify-between items-center">
-                                <span className="text-xs font-mono uppercase text-afri-text-sec font-bold">Vérification Standard</span>
-                                {selectedKycType === "standard" && <span className="w-2.5 h-2.5 rounded-full bg-white block" />}
-                              </div>
-                              <h6 className="text-afri-text font-display font-semibold text-lg">Gratuite</h6>
-                              <p className="text-[10px] text-afri-text/50 leading-relaxed">Examen rigoureux dans la file d'attente générale.</p>
+                            <div className="space-y-1.5">
+                              <span className="text-xs font-mono uppercase text-gray-400 font-bold">Vérification Standard</span>
+                              <h6 className="text-white font-display font-bold text-lg">Gratuite</h6>
+                              <p className="text-[10px] text-gray-400">File d'attente normale.</p>
                             </div>
-                            
-                            <div className="border-t border-afri-border pt-3 flex justify-between items-center text-[10px] text-afri-text/40">
-                              <span>Délai estimé</span>
-                              <span className="font-bold text-afri-text font-mono">7 à 14 Jours</span>
+                            <div className="border-t border-white/10 pt-2 flex justify-between text-[10px]">
+                              <span className="text-gray-400">Délai estimé</span>
+                              <span className="font-bold text-white font-mono">7 à 14 Jours</span>
                             </div>
                           </div>
 
-                          {/* Option 2: Express */}
+                          {/* Express */}
                           <div
                             onClick={() => setSelectedKycType("express")}
-                            className={`p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between min-h-[160px] overflow-hidden ${
+                            className={`p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between min-h-[150px] ${
                               selectedKycType === "express"
-                                ? "border-cyan-500 bg-gradient-to-br from-afri-bg-ter to-afri-bg shadow-[0_0_20px_rgba(6,182,212,0.15)]"
-                                : "border-afri-border hover:border-cyan-500/35 bg-afri-bg/40"
+                                ? "border-cyan-400 bg-cyan-950/40 shadow-[0_0_20px_rgba(6,182,212,0.2)]"
+                                : "border-white/15 bg-black/40 hover:border-cyan-400/40"
                             }`}
                           >
-                            <div className="absolute -top-1 px-3 py-0.5 right-1 rounded-bl bg-cyan-500 text-black font-semibold text-[8px] uppercase tracking-widest font-mono">
-                              ⚡ Prioritaire
-                            </div>
-
-                            <div className="space-y-2">
+                            <div className="space-y-1.5">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs font-mono uppercase text-cyan-400 font-bold">⚡ Vérification Express</span>
-                                {selectedKycType === "express" && <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 block" />}
+                                <span className="px-2 py-0.5 rounded bg-cyan-400 text-black font-black text-[8px] uppercase">Prioritaire</span>
                               </div>
-                              <h6 className="text-afri-text font-display font-semibold text-lg flex items-center gap-1.5 text-cyan-400">
-                                500 FCFA
-                              </h6>
-                              <p className="text-[10px] text-afri-text/50 leading-relaxed">Passez en priorité absolue devant l'équipe d'administration active.</p>
+                              <h6 className="text-cyan-400 font-display font-bold text-lg">500 FCFA</h6>
+                              <p className="text-[10px] text-gray-400">Examen prioritaire par le bureau des accréditations.</p>
                             </div>
-
-                            <div className="border-t border-afri-border pt-3 flex justify-between items-center text-[10px] text-afri-text/40">
-                              <span>Délai estimé</span>
+                            <div className="border-t border-white/10 pt-2 flex justify-between text-[10px]">
+                              <span className="text-gray-400">Délai estimé</span>
                               <span className="font-bold text-cyan-400 font-mono">24 à 72 Heures</span>
                             </div>
                           </div>
                         </div>
 
-                        {/* Disclaimer note */}
-                        <div className="p-3 bg-white/5 border border-white/15 rounded-xl text-[10px] text-afri-text/50 space-y-1">
-                          <p className="font-semibold text-afri-text">⚠️ Rappel Droit et Conformité :</p>
-                          <p>- Le paiement de l'option Express accélère uniquement la vitesse de traitement du dossier.</p>
-                          <p>- Le paiement ne garantit jamais l'obtention automatique du badge ou l'homologation d'ID.</p>
-                          <p>- En cas de dossier frauduleux ou d'absence de pièces valides, le dossier sera rejeté sans remboursement.</p>
-                        </div>
-
-                        <div className="flex justify-between items-center pt-4 border-t border-afri-border">
+                        <div className="flex justify-between items-center pt-3 border-t border-white/10">
                           <button
                             onClick={() => setStep("upload")}
-                            className="px-4 py-2 text-xs uppercase font-mono text-afri-text/50 hover:text-afri-text"
+                            className="px-4 py-2 text-xs uppercase font-mono text-gray-400 hover:text-white"
                           >
                             Retour
                           </button>
@@ -833,7 +922,7 @@ function GomboIdUserDashboardInner({
                           <button
                             onClick={handleUploadDocs}
                             disabled={uploading}
-                            className="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold text-xs uppercase px-6 py-2.5 rounded-lg font-mono transition-all flex items-center gap-2 shadow"
+                            className="bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs uppercase px-6 py-2.5 rounded-xl font-mono transition-all flex items-center gap-2 shadow"
                           >
                             {uploading ? (
                               <>
@@ -841,7 +930,7 @@ function GomboIdUserDashboardInner({
                               </>
                             ) : (
                               <>
-                                Soumettre mon dossier <ArrowRight className="w-4 h-4" />
+                                Transmettre mon dossier <ArrowRight className="w-4 h-4" />
                               </>
                             )}
                           </button>
@@ -852,40 +941,21 @@ function GomboIdUserDashboardInner({
                     {/* Step 5: Submitted Screen */}
                     {step === "submitted" && (
                       <div className="space-y-5 text-center py-6">
-                        <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                        <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.25)]">
                           <ShieldCheck className="w-9 h-9 animate-pulse" />
                         </div>
                         
-                        <div className="space-y-2 max-w-sm mx-auto">
-                          <h5 className="text-lg font-bold text-afri-text">Dossier Transmis avec Succès !</h5>
-                          <p className="text-xs text-afri-text/50 leading-relaxed font-mono">
-                            Votre demande de certification GOMBO ID a été enregistrée de manière immuable sur Firestore.
+                        <div className="space-y-1 max-w-sm mx-auto">
+                          <h5 className="text-lg font-bold text-white">Dossier Transmis avec Succès !</h5>
+                          <p className="text-xs text-gray-400 leading-relaxed font-mono">
+                            Votre demande d'homologation GOMBO ID a été enregistrée de manière immuable.
                           </p>
                         </div>
 
-                        <div className="p-4 bg-afri-bg border border-afri-border rounded-xl text-left max-w-md mx-auto space-y-2">
-                          <div className="flex justify-between text-xs border-b border-afri-border pb-2">
-                            <span className="text-afri-text/40">Mode choisi :</span>
-                            <span className="font-bold uppercase font-mono text-afri-text">
-                              {currentUser?.kycType === "express" ? "⚡ Express (Dossier Prioritaire)" : "⏳ Standard"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-xs border-b border-afri-border pb-2">
-                            <span className="text-afri-text/40">Délais d'évaluation :</span>
-                            <span className="font-bold text-afri-text font-mono">
-                              {currentUser?.kycType === "express" ? "24 à 72 heures" : "7 à 14 jours"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-afri-text/40">Intégrité Blockchain/Firestore :</span>
-                            <span className="text-emerald-400 font-mono font-bold uppercase text-[10px]">✓ Sécurisé</span>
-                          </div>
-                        </div>
-
-                        <div className="pt-4">
+                        <div className="pt-3">
                           <button
-                            onClick={() => setIsOpen(false)}
-                            className="bg-afri-bg-sec text-black font-semibold text-xs uppercase px-6 py-2.5 rounded-lg hover:bg-afri-bg-sec transition-all font-mono"
+                            onClick={() => setIsKycModalOpen(false)}
+                            className="bg-[#D4AF37] text-black font-bold text-xs uppercase px-8 py-3 rounded-xl hover:bg-amber-500 transition-all font-mono"
                           >
                             Fermer
                           </button>
@@ -895,62 +965,56 @@ function GomboIdUserDashboardInner({
                   </>
                 )}
 
-                {/* If already submitted (not none) */}
+                {/* If already submitted (review submitted documents) */}
                 {(currentUser?.kycStatus ?? "none") !== "none" && (
-                  <div className="space-y-6">
-                    {/* Review of submitted credentials */}
-                    <div className="space-y-3 p-5 rounded-2xl bg-afri-bg border border-afri-border">
-                      <h5 className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-widest flex items-center gap-1.5 mb-3">
-                        📂 Éléments du Dossier Soumis
+                  <div className="space-y-5">
+                    <div className="space-y-3 p-5 rounded-2xl bg-black/40 border border-white/10">
+                      <h5 className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-widest flex items-center gap-1.5">
+                        📂 Éléments du Dossier Homologué
                       </h5>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="p-3 bg-white/5 border border-afri-border rounded-xl space-y-2">
-                          <span className="text-[9px] uppercase font-mono text-afri-text/40 block">PI Carte d'identité</span>
-                          <div className="relative h-20 bg-afri-bg rounded overflow-hidden border border-afri-border">
+                        <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-1.5">
+                          <span className="text-[9px] uppercase font-mono text-gray-400 block">Pièce d'Identité</span>
+                          <div className="h-20 bg-black/60 rounded-lg overflow-hidden border border-white/10 flex items-center justify-center">
                             {currentUser?.kycDocs?.identityCardUrl ? (
-                              <img src={currentUser.kycDocs.identityCardUrl} alt="ID Document" className="w-full h-full object-cover" />
+                              <img src={currentUser.kycDocs.identityCardUrl} alt="ID" className="w-full h-full object-cover" />
                             ) : (
-                              <div className="flex items-center justify-center h-full text-[10px] text-afri-text/30">Lien non disponible</div>
+                              <span className="text-[10px] text-gray-500 font-mono">Document conforme</span>
                             )}
                           </div>
                         </div>
 
-                        <div className="p-3 bg-white/5 border border-afri-border rounded-xl space-y-2">
-                          <span className="text-[9px] uppercase font-mono text-afri-text/40 block">Selfie facial</span>
-                          <div className="relative h-20 bg-afri-bg rounded overflow-hidden border border-afri-border">
+                        <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-1.5">
+                          <span className="text-[9px] uppercase font-mono text-gray-400 block">Selfie Facial</span>
+                          <div className="h-20 bg-black/60 rounded-lg overflow-hidden border border-white/10 flex items-center justify-center">
                             {currentUser?.kycDocs?.selfieUrl ? (
                               <img src={currentUser.kycDocs.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
                             ) : (
-                              <div className="flex items-center justify-center h-full text-[10px] text-afri-text/30">Lien non disponible</div>
+                              <span className="text-[10px] text-gray-500 font-mono">Selfie validé</span>
                             )}
                           </div>
                         </div>
 
-                        <div className="p-3 bg-white/5 border border-afri-border rounded-xl space-y-2">
-                          <span className="text-[9px] uppercase font-mono text-afri-text/40 block">Preuve d'activité</span>
-                          <div className="relative h-20 bg-afri-bg rounded overflow-hidden border border-afri-border">
+                        <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-1.5">
+                          <span className="text-[9px] uppercase font-mono text-gray-400 block">Preuve d'Activité</span>
+                          <div className="h-20 bg-black/60 rounded-lg overflow-hidden border border-white/10 flex items-center justify-center">
                             {currentUser?.kycDocs?.activityUrl ? (
                               <img src={currentUser.kycDocs.activityUrl} alt="Activity" className="w-full h-full object-cover" />
                             ) : (
-                              <div className="flex items-center justify-center h-full text-[10px] text-afri-text/30 font-mono truncate">{currentUser?.kycDocUrl || "Enregistrée"}</div>
+                              <span className="text-[10px] text-gray-500 font-mono truncate px-1">Homologuée</span>
                             )}
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="p-4 bg-afri-bg-sec/5 border border-[#D4AF37]/15 rounded-xl text-xs space-y-1 leading-relaxed text-afri-text/80">
-                      <p className="font-semibold text-[#D4AF37] mb-1">📢 À propos d'AFRIGOMBO ELITE ID d'excellence :</p>
-                      <p>Notre équipe s'engage à faire d'AFRIGOMBO ELITE un repère de fiabilité pour les concerts VIP, d'hôtels et événements en Côte d'Ivoire. Merci de participer à l'élévation de notre héritage musical !</p>
-                    </div>
-
-                    <div className="flex justify-end pt-4 border-t border-afri-border">
+                    <div className="flex justify-end pt-3 border-t border-white/10">
                       <button
-                        onClick={() => setIsOpen(false)}
-                        className="bg-white/10 hover:bg-white/20 text-afri-text font-semibold text-xs uppercase px-5 py-2 rounded-lg font-mono transition-all"
+                        onClick={() => setIsKycModalOpen(false)}
+                        className="bg-white/10 hover:bg-white/20 text-white font-mono text-xs uppercase font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer"
                       >
-                        Conserver et Fermer
+                        Fermer
                       </button>
                     </div>
                   </div>
@@ -961,6 +1025,22 @@ function GomboIdUserDashboardInner({
           </div>
         )}
       </AnimatePresence>
+
+      {/* =========================================================================
+                                 CERTIFICATE MODAL & QR MODAL
+         ========================================================================= */}
+      <GomboIdCertificateModal
+        isOpen={isCertModalOpen}
+        onClose={() => setIsCertModalOpen(false)}
+        user={currentUser}
+      />
+
+      <GomboIdQrModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        user={currentUser}
+      />
+
     </div>
   );
 }

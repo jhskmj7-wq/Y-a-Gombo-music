@@ -32,6 +32,7 @@ import { LivingInteractions } from "./components/LivingInteractions";
 const PWADiagnosticPage = lazyWithRetry(() => import("./components/PWADiagnosticPage"));
 const TheThroneOfTheFounder = lazyWithRetry(() => import("./components/TheThroneOfTheFounder"));
 const FounderThronePage = lazyWithRetry(() => import("./components/FounderThronePage"));
+const GomboVerificationPage = lazyWithRetry(() => import("./components/GomboVerificationPage"));
 const IntelligentNotificationManager = lazyWithRetry(() => import("./components/IntelligentNotificationManager").then(m => ({ default: m.IntelligentNotificationManager })));
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
@@ -314,6 +315,22 @@ function App() {
             element={
               <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg" />}>
                 <PWADiagnosticPage />
+              </Suspense>
+            } 
+          />
+          <Route 
+            path="/verification/:gomboId" 
+            element={
+              <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg flex items-center justify-center"><div className="w-10 h-10 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /></div>}>
+                <GomboVerificationPage />
+              </Suspense>
+            } 
+          />
+          <Route 
+            path="/verification" 
+            element={
+              <Suspense fallback={<div className="h-[100dvh] w-full bg-afri-bg flex items-center justify-center"><div className="w-10 h-10 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /></div>}>
+                <GomboVerificationPage />
               </Suspense>
             } 
           />

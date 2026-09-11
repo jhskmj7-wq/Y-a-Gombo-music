@@ -1415,59 +1415,177 @@ export const gomboDB = {
     }
   },
 
-  async updateSocialPost(id: string, updates: Partial<SocialPost>) {
-    if (db) {
-      await updateDoc(doc(db, "social_posts", id), updates);
+  async updateSocialPost(id: string, updates: Partial<SocialPost> & Record<string, any>) {
+    if (db && id) {
+      try {
+        const unifiedUpdates: Record<string, any> = { ...updates };
+        if (updates.honoursCount !== undefined) {
+          unifiedUpdates.likesCount = updates.honoursCount;
+          unifiedUpdates.likes = updates.honoursCount;
+          unifiedUpdates.honorsCount = updates.honoursCount;
+        } else if (updates.likesCount !== undefined) {
+          unifiedUpdates.honoursCount = updates.likesCount;
+          unifiedUpdates.likes = updates.likesCount;
+          unifiedUpdates.honorsCount = updates.likesCount;
+        } else if (updates.likes !== undefined) {
+          unifiedUpdates.likesCount = updates.likes;
+          unifiedUpdates.honoursCount = updates.likes;
+          unifiedUpdates.honorsCount = updates.likes;
+        }
+
+        if (updates.honouredBy !== undefined) {
+          unifiedUpdates.likedBy = updates.honouredBy;
+          unifiedUpdates.honoredBy = updates.honouredBy;
+          unifiedUpdates.honors = updates.honouredBy;
+        } else if (updates.likedBy !== undefined) {
+          unifiedUpdates.honouredBy = updates.likedBy;
+          unifiedUpdates.honoredBy = updates.likedBy;
+          unifiedUpdates.honors = updates.likedBy;
+        }
+
+        await updateDoc(doc(db, "social_posts", id), unifiedUpdates).catch(() => {});
+        await updateDoc(doc(db, "posts", id), unifiedUpdates).catch(() => {});
+      } catch (err) {
+        console.warn("⚠️ [UPDATE_SOCIAL_POST] Error updating post:", err);
+      }
     }
   },
 
   async deleteSocialPost(id: string) {
-    if (db) {
-      await deleteDoc(doc(db, "social_posts", id));
-    }
-  },
-
-  async toggleHonor(postId: string, userId: string) {
-    if (db) {
-      const postRef = doc(db, "social_posts", postId);
-      const postSnap = await getDoc(postRef);
-      if (postSnap.exists()) {
-        const post = postSnap.data() as SocialPost;
-        const honors = post.honors || [];
-        if (honors.includes(userId)) {
-          await updateDoc(postRef, {
-            honors: arrayRemove(userId),
-            honorsCount: increment(-1)
-          });
-        } else {
-          await updateDoc(postRef, {
-            honors: arrayUnion(userId),
-            honorsCount: increment(1)
-          });
-        }
+    if (db && id) {
+      try {
+        await deleteDoc(doc(db, "social_posts", id)).catch(() => {});
+        await deleteDoc(doc(db, "posts", id)).catch(() => {});
+      } catch (err) {
+        console.warn("⚠️ [DELETE_SOCIAL_POST] Error deleting post:", err);
       }
     }
   },
 
-  async toggleSaveAction(postId: string, userId: string) {
-    if (db) {
-      const postRef = doc(db, "social_posts", postId);
-      const postSnap = await getDoc(postRef);
-      if (postSnap.exists()) {
-        const post = postSnap.data() as SocialPost;
-        const savedBy = post.savedBy || [];
-        if (savedBy.includes(userId)) {
-          await updateDoc(postRef, {
-            savedBy: arrayRemove(userId),
-            savesCount: increment(-1)
-          });
+  async toggleHonor(param1: string, param2: string) {
+    if (!db || !param1 || !param2) return;
+    try {
+      // Determine which parameter is postId/targetId and which is userId
+      let targetId = param1;
+      let userId = param2;
+
+      // Check if doc exists with param1 in social_posts, posts, or gombos
+      let postRef = doc(db, "social_posts", targetId);
+      let postSnap = await getDoc(postRef);
+
+      if (!postSnap.exists()) {
+        postRef = doc(db, "posts", targetId);
+        postSnap = await getDoc(postRef);
+      }
+
+      if (!postSnap.exists()) {
+        // Try inverted arguments
+        const altRef1 = doc(db, "social_posts", param2);
+        const altSnap1 = await getDoc(altRef1);
+        if (altSnap1.exists()) {
+          targetId = param2;
+          userId = param1;
+          postRef = altRef1;
+          postSnap = altSnap1;
         } else {
-          await updateDoc(postRef, {
-            savedBy: arrayUnion(userId),
-            savesCount: increment(1)
-          });
+          const altRef2 = doc(db, "posts", param2);
+          const altSnap2 = await getDoc(altRef2);
+          if (altSnap2.exists()) {
+            targetId = param2;
+            userId = param1;
+            postRef = altRef2;
+            postSnap = altSnap2;
+          }
         }
       }
+
+      // If still not found, check gombos collection
+      if (!postSnap.exists()) {
+        let gomboRef = doc(db, "gombos", targetId);
+        let gomboSnap = await getDoc(gomboRef);
+        if (!gomboSnap.exists()) {
+          gomboRef = doc(db, "gombos", param2);
+          gomboSnap = await getDoc(gomboRef);
+          if (gomboSnap.exists()) {
+            targetId = param2;
+            userId = param1;
+          }
+        }
+        if (gomboSnap.exists()) {
+          const gData = gomboSnap.data() || {};
+          const likedList: string[] = gData.likedBy || gData.honoredBy || gData.honours || [];
+          const isCurrentlyLiked = likedList.includes(userId);
+          const gomboPayload = {
+            likes: increment(isCurrentlyLiked ? -1 : 1),
+            likesCount: increment(isCurrentlyLiked ? -1 : 1),
+            honorsCount: increment(isCurrentlyLiked ? -1 : 1),
+            honoursCount: increment(isCurrentlyLiked ? -1 : 1),
+            likedBy: isCurrentlyLiked ? arrayRemove(userId) : arrayUnion(userId),
+            honoredBy: isCurrentlyLiked ? arrayRemove(userId) : arrayUnion(userId)
+          };
+          await updateDoc(gomboRef, gomboPayload).catch(() => {});
+          return;
+        }
+      }
+
+      // Now update posts and social_posts
+      const currentData = postSnap.exists() ? (postSnap.data() as any) : {};
+      const likedUsers: string[] = currentData.likedBy || currentData.honouredBy || currentData.honoredBy || currentData.honors || [];
+      const hasAlreadyLiked = likedUsers.includes(userId);
+
+      const delta = hasAlreadyLiked ? -1 : 1;
+      const updateData = {
+        likes: increment(delta),
+        likesCount: increment(delta),
+        honoursCount: increment(delta),
+        honorsCount: increment(delta),
+        likedBy: hasAlreadyLiked ? arrayRemove(userId) : arrayUnion(userId),
+        honouredBy: hasAlreadyLiked ? arrayRemove(userId) : arrayUnion(userId),
+        honoredBy: hasAlreadyLiked ? arrayRemove(userId) : arrayUnion(userId),
+        honors: hasAlreadyLiked ? arrayRemove(userId) : arrayUnion(userId)
+      };
+
+      await updateDoc(doc(db, "social_posts", targetId), updateData).catch(() => {});
+      await updateDoc(doc(db, "posts", targetId), updateData).catch(() => {});
+    } catch (err) {
+      console.warn("⚠️ [TOGGLE_HONOR] Exception during toggleHonor:", err);
+    }
+  },
+
+  async toggleSaveAction(param1: string, param2: string) {
+    if (!db || !param1 || !param2) return;
+    try {
+      let targetId = param1;
+      let userId = param2;
+
+      let postRef = doc(db, "social_posts", targetId);
+      let postSnap = await getDoc(postRef);
+
+      if (!postSnap.exists()) {
+        const altRef = doc(db, "social_posts", param2);
+        const altSnap = await getDoc(altRef);
+        if (altSnap.exists()) {
+          targetId = param2;
+          userId = param1;
+          postRef = altRef;
+          postSnap = altSnap;
+        }
+      }
+
+      const postData = postSnap.exists() ? (postSnap.data() as any) : {};
+      const savedList: string[] = postData.savedBy || [];
+      const isSaved = savedList.includes(userId);
+
+      const delta = isSaved ? -1 : 1;
+      const payload = {
+        savedBy: isSaved ? arrayRemove(userId) : arrayUnion(userId),
+        savesCount: increment(delta)
+      };
+
+      await updateDoc(doc(db, "social_posts", targetId), payload).catch(() => {});
+      await updateDoc(doc(db, "posts", targetId), payload).catch(() => {});
+    } catch (err) {
+      console.warn("⚠️ [TOGGLE_SAVE] Exception during toggleSaveAction:", err);
     }
   },
 

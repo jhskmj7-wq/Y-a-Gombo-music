@@ -2097,7 +2097,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       setSavedGomboIds(prev => {
         const isSaved = prev.includes(id);
         if (currentUser) {
-          gomboDB.toggleSaveAction(currentUser.uid, id);
+          gomboDB.toggleSaveAction(id, currentUser.uid);
         }
         if (isSaved) {
           addToTerminal(`[📌 PERSISTENCE] Gombo retiré du coffre-fort d'or.`);
@@ -2115,7 +2115,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       setHonoredGomboIds(prev => {
         const hasHonored = prev.includes(id);
         if (currentUser) {
-          gomboDB.toggleHonor(currentUser.uid, id);
+          gomboDB.toggleHonor(id, currentUser.uid);
         }
         if (hasHonored) {
           addToTerminal(`[🏆 HONNEUR] Vous avez retiré votre honneur au gombo.`);
@@ -4621,10 +4621,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                             requireAuthThen(() => {
                                               if (isLiked) {
                                                 setLikedPosts(prev => prev.filter(id => id !== p.id));
-                                                gomboDB.toggleHonor(currentUser!.uid, p.id);
+                                                gomboDB.toggleHonor(p.id, currentUser!.uid);
                                               } else {
                                                 setLikedPosts(prev => [...prev, p.id]);
-                                                gomboDB.toggleHonor(currentUser!.uid, p.id);
+                                                gomboDB.toggleHonor(p.id, currentUser!.uid);
                                                 try { audioSynth.playValidationSuccess(); } catch(e){}
                                               }
                                             });

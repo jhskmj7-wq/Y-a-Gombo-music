@@ -13,6 +13,9 @@ import { AndroidBottomSheet } from "./ui/AndroidBottomSheet";
 import { useTheme } from "../context/ThemeContext";
 import { useFeatureFlags } from "../lib/featureFlags";
 import { openPublicProfile } from "../lib/publicProfile";
+import { GomboIdCertificateModal } from "./GomboIdCertificateModal";
+import { GomboIdQrModal } from "./GomboIdQrModal";
+import { extractCertificateData, downloadCertificatePdf } from "../lib/certificateGenerator";
 
 interface GomboProfileMainViewProps {
   currentUserProfile: UserProfile;
@@ -778,14 +781,14 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               <span>Voir mon certificat</span>
             </button>
             <button 
-              onClick={() => {
-                const link = document.createElement('a');
-                link.href = 'data:text/plain;charset=utf-8,Certificat%20GOMBO%20ID%20Afrigombo%0AIdentifiant:%20' + gomboId;
-                link.download = `Certificat_Afrigombo_${gomboId}.txt`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                try { audioSynth.playKoraNote(659.25, 0, 0.1, 0.5); } catch (_) {}
+              onClick={async () => {
+                try {
+                  audioSynth.playKoraNote(659.25, 0, 0.1, 0.5);
+                  const certData = extractCertificateData(currentUserProfile);
+                  await downloadCertificatePdf(certData);
+                } catch (err) {
+                  console.error("PDF download failed", err);
+                }
               }}
               className={`py-2 px-3 border font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1 shadow-sm ${
                 isLight ? "bg-[#FDFBF7] border-[#D4AF37]/50 text-amber-800 hover:bg-[#D4AF37]/10" : "bg-afri-bg-sec border-amber-300/40 hover:border-amber-500/50 text-amber-400"
@@ -1011,130 +1014,18 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         )}
 
       {/* Interactive QR Code Modal */}
-      <AndroidBottomSheet
+      <GomboIdQrModal
         isOpen={showQrModal}
-        onClose={() => {
-          setShowQrModal(false);
-          try { audioSynth.playKoraNote(392.00, 0, 0.1, 0.4); } catch (_) {}
-        }}
-        title="QR CODE GOMBO ID"
-        subtitle="Scanner & Recruter"
-      >
-        <div className="text-center space-y-5">
-          {/* Vector Golden Simulated High-Tech QR Code */}
-          <div className="w-48 h-48 mx-auto bg-afri-bg border border-afri-gold/20 rounded-2xl p-4 flex items-center justify-center relative shadow-inner">
-            <div className="absolute inset-4 rounded-full bg-afri-gold/5 blur-xl pointer-events-none" />
-            <svg viewBox="0 0 100 100" className="w-full  text-afri-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]">
-              {/* Outer Frame Corners */}
-              <rect x="5" y="5" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="3" rx="2" />
-              <rect x="10" y="10" width="15" height="15" fill="currentColor" rx="1" />
-              
-              <rect x="70" y="5" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="3" rx="2" />
-              <rect x="75" y="10" width="15" height="15" fill="currentColor" rx="1" />
-              
-              <rect x="5" y="70" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="3" rx="2" />
-              <rect x="10" y="75" width="15" height="15" fill="currentColor" rx="1" />
-
-              {/* Aesthetic Golden Abstract Pixels */}
-              <g fill="currentColor" opacity="0.95">
-                <rect x="38" y="10" width="4" height="4" />
-                <rect x="44" y="6" width="8" height="4" />
-                <rect x="56" y="12" width="4" height="8" />
-                <rect x="42" y="24" width="12" height="4" />
-
-                <rect x="10" y="38" width="8" height="4" />
-                <rect x="6" y="46" width="4" height="12" />
-                <rect x="18" y="50" width="12" height="4" />
-                <rect x="22" y="58" width="4" height="8" />
-
-                <rect x="38" y="38" width="24" height="24" rx="4" fill="none" stroke="currentColor" strokeWidth="2.5" />
-                <circle cx="50" cy="50" r="4" />
-
-                <rect x="72" y="38" width="12" height="4" />
-                <rect x="80" y="46" width="14" height="6" />
-                <rect x="70" y="58" width="6" height="12" />
-
-                <rect x="38" y="72" width="16" height="4" />
-                <rect x="42" y="80" width="8" height="8" />
-                <rect x="56" y="84" width="12" height="4" />
-
-                <rect x="72" y="72" width="22" height="4" />
-                <rect x="76" y="80" width="8" height="12" />
-              </g>
-            </svg>
-          </div>
-
-          <div className="space-y-1">
-            <p className="text-sm font-sans font-black text-afri-text">{currentUserProfile.artisticName}</p>
-            <span className="text-xs font-mono font-bold text-afri-gold uppercase tracking-wider">{gomboId}</span>
-          </div>
-
-          <button 
-            onClick={() => {
-              handleCopyId();
-              setShowQrModal(false);
-            }}
-            className="w-full py-3 px-4 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text font-mono text-xs uppercase rounded-xl border border-afri-border/80 active:scale-98 transition-all cursor-pointer"
-          >
-            Copier GOMBO ID & Fermer
-          </button>
-        </div>
-      </AndroidBottomSheet>
+        onClose={() => setShowQrModal(false)}
+        user={currentUserProfile}
+      />
 
       {/* Interactive Certificate Modal */}
-      <AndroidBottomSheet
+      <GomboIdCertificateModal
         isOpen={showCertModal}
-        onClose={() => {
-          setShowCertModal(false);
-          try { audioSynth.playKoraNote(392.00, 0, 0.1, 0.4); } catch (_) {}
-        }}
-        title="CERTIFICAT D'EXCELLENCE"
-        subtitle="Temple de la Souveraineté"
-      >
-        <div className="space-y-4">
-          <div className="border border-afri-gold/30 rounded-2xl p-4 sm:p-6 space-y-4 relative bg-afri-bg/40 text-left">
-            <div className="space-y-1 text-center">
-              <div className="flex justify-center gap-1 text-afri-gold mb-1">
-                <Star className="w-3.5 h-3.5 fill-afri-gold" />
-                <Star className="w-3.5 h-3.5 fill-afri-gold" />
-                <Star className="w-3.5 h-3.5 fill-afri-gold" />
-              </div>
-              <span className="text-afri-gold text-[9px] font-mono uppercase tracking-[0.2em] block leading-none">TEMPLE DE LA SOUVERAINETÉ</span>
-              <h3 className="text-base sm:text-lg font-serif font-black italic tracking-wider text-afri-text uppercase leading-tight">CERTIFICAT D'EXCELLENCE</h3>
-            </div>
-
-            <div className="py-2 border-y border-afri-border/80 text-center">
-              <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-widest block">IDENTIFIANT ATTRIBUÉ</span>
-              <span className="text-xl font-serif font-black text-afri-gold tracking-widest block uppercase italic select-all">{gomboId}</span>
-            </div>
-
-            <p className="text-[10px] text-afri-text-sec font-sans leading-relaxed max-w-[320px] mx-auto italic text-center">
-              « Par ce présent certificat, l'équipe artistique et le comité de souveraineté d'AFRIGOMBO ELITE certifient l'artiste ci-dessous comme membre agréé de l'élite musicale ivoirienne. »
-            </p>
-
-            <div className="space-y-1 text-center">
-              <p className="text-afri-text-sec text-[9px] font-mono uppercase tracking-widest">ARTISTE TITULAIRE</p>
-              <p className="text-base font-sans font-black text-afri-text uppercase tracking-wider">{currentUserProfile.artisticName || `${currentUserProfile.firstName || "Artiste"} ${currentUserProfile.lastName || ""}`.trim()}</p>
-              <p className="text-xs font-mono font-bold text-afri-text-sec uppercase">{currentUserProfile.commune || "Cocody"}, Abidjan</p>
-            </div>
-          </div>
-
-          <div className="flex gap-2 justify-center">
-            <button 
-              onClick={handleCopyId}
-              className="flex-1 py-3 px-4 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text font-mono text-xs uppercase rounded-xl border border-afri-border cursor-pointer transition-all active:scale-98"
-            >
-              Copier GOMBO ID
-            </button>
-            <button 
-              onClick={() => setShowCertModal(false)}
-              className="flex-1 py-3 px-4 bg-afri-gold text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl cursor-pointer hover:brightness-110 transition-all active:scale-98"
-            >
-              Fermer
-            </button>
-          </div>
-        </div>
-      </AndroidBottomSheet>
+        onClose={() => setShowCertModal(false)}
+        user={currentUserProfile}
+      />
 
       {/* 👑 MON STATUT DIALOG */}
       <AndroidCenteredDialog
