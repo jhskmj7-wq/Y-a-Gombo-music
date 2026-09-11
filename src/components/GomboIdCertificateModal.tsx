@@ -22,6 +22,7 @@ import {
   downloadCertificatePng 
 } from "../lib/certificateGenerator";
 import { audioSynth } from "../lib/audio";
+import { getGomboIdStatusInfo } from "../lib/gomboIdHelper";
 
 interface GomboIdCertificateModalProps {
   isOpen: boolean;
@@ -39,17 +40,22 @@ export function GomboIdCertificateModal({
   const [copiedLink, setCopiedLink] = useState(false);
   const [downloadingFormat, setDownloadingFormat] = useState<"pdf" | "png" | null>(null);
 
+  const statusInfo = getGomboIdStatusInfo(user);
+  const isApproved = statusInfo.statusCode === "ATTRIBUTED";
+
   useEffect(() => {
-    if (user && isOpen) {
+    if (user && isOpen && isApproved) {
       const data = extractCertificateData(user);
       setCertData(data);
       generateQrCodeDataUrl(data.verificationUrl).then((url) => {
         setQrCodeDataUrl(url);
       });
+    } else {
+      setCertData(null);
     }
-  }, [user, isOpen]);
+  }, [user, isOpen, isApproved]);
 
-  if (!isOpen || !certData) return null;
+  if (!isOpen || !certData || !isApproved) return null;
 
   const handleCopyVerificationLink = () => {
     try {

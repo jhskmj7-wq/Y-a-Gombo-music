@@ -774,6 +774,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </button>
             <button 
               onClick={() => {
+                if (!isKycApproved) return;
                 setShowCertModal(true);
                 try { audioSynth.playKoraNote(523.25, 0, 0.1, 0.5); } catch (_) {}
               }}
@@ -788,6 +789,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </button>
             <button 
               onClick={async () => {
+                if (!isKycApproved) return;
                 try {
                   audioSynth.playKoraNote(659.25, 0, 0.1, 0.5);
                   const certData = extractCertificateData(currentUserProfile);

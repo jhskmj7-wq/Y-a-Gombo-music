@@ -125,7 +125,7 @@ function GomboIdUserDashboardInner({
   // Single Source of Truth Gombo ID Info
   const gInfo = getGomboIdStatusInfo(currentUser);
   const gomboId = getEffectiveGomboId(currentUser);
-  const isApproved = currentUser?.kycStatus === "approved";
+  const isApproved = gInfo.statusCode === "ATTRIBUTED";
 
   // Status mapping helper
   const getStatusDisplay = () => {
@@ -184,6 +184,10 @@ function GomboIdUserDashboardInner({
   };
 
   const handleDirectDownloadCertificate = async () => {
+    if (!isApproved) {
+      addToTerminal("[GOMBO ID] Échec de la tentative de téléchargement : utilisateur non certifié.");
+      return;
+    }
     setDownloadingDirectPdf(true);
     try {
       try { audioSynth.playKoraNote(659.25, 0, 0.1, 0.5); } catch (_) {}
@@ -456,74 +460,79 @@ function GomboIdUserDashboardInner({
         </div>
 
         {/* 3. FOUR CORE DIRECT ACTION BUTTONS */}
-        <div className="pt-2 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            
-            {/* Primary Action 1: Voir mon certificat */}
-            <button
-              onClick={() => {
-                setIsCertModalOpen(true);
-                try { audioSynth.playKoraNote(523.25, 0, 0.1, 0.5); } catch (_) {}
-              }}
-              className="py-3.5 px-4 bg-[#D4AF37] hover:bg-amber-500 active:scale-98 text-black font-sans font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Award className="w-4 h-4 text-black stroke-[2.5]" />
-              <span>VOIR MON CERTIFICAT</span>
-            </button>
+        {isApproved && (
+          <div className="pt-2 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              
+              {/* Primary Action 1: Voir mon certificat */}
+              <button
+                onClick={() => {
+                  if (!isApproved) return;
+                  setIsCertModalOpen(true);
+                  try { audioSynth.playKoraNote(523.25, 0, 0.1, 0.5); } catch (_) {}
+                }}
+                className="py-3.5 px-4 bg-[#D4AF37] hover:bg-amber-500 active:scale-98 text-black font-sans font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Award className="w-4 h-4 text-black stroke-[2.5]" />
+                <span>VOIR MON CERTIFICAT</span>
+              </button>
 
-            {/* Primary Action 2: Télécharger mon certificat */}
-            <button
-              onClick={handleDirectDownloadCertificate}
-              disabled={downloadingDirectPdf}
-              className="py-3.5 px-4 bg-gradient-to-r from-amber-500/15 to-amber-400/15 hover:from-amber-500/25 hover:to-amber-400/25 border-2 border-[#D4AF37]/60 active:scale-98 text-[#D4AF37] font-mono font-bold text-xs uppercase tracking-wider rounded-2xl shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {downloadingDirectPdf ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Export PDF en cours...</span>
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 text-[#D4AF37]" />
-                  <span>TÉLÉCHARGER MON CERTIFICAT</span>
-                </>
-              )}
-            </button>
+              {/* Primary Action 2: Télécharger mon certificat */}
+              <button
+                onClick={handleDirectDownloadCertificate}
+                disabled={downloadingDirectPdf}
+                className="py-3.5 px-4 bg-gradient-to-r from-amber-500/15 to-amber-400/15 hover:from-amber-500/25 hover:to-amber-400/25 border-2 border-[#D4AF37]/60 active:scale-98 text-[#D4AF37] font-mono font-bold text-xs uppercase tracking-wider rounded-2xl shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {downloadingDirectPdf ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Export PDF en cours...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 text-[#D4AF37]" />
+                    <span>TÉLÉCHARGER MON CERTIFICAT</span>
+                  </>
+                )}
+              </button>
 
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              
+              {/* Secondary Action 1: Afficher QR Code */}
+              <button
+                onClick={() => {
+                  if (!isApproved) return;
+                  setIsQrModalOpen(true);
+                  try { audioSynth.playKoraNote(392.00, 0, 0.05, 0.3); } catch (_) {}
+                }}
+                className="py-3 px-4 bg-white/10 hover:bg-white/15 text-white font-mono text-xs uppercase font-bold rounded-2xl border border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+              >
+                <QrCode className="w-4 h-4 text-[#D4AF37]" />
+                <span>Afficher le QR Code</span>
+              </button>
+
+              {/* Secondary Action 2: Transmettre / Partager */}
+              <button
+                onClick={() => {
+                  if (!isApproved) return;
+                  const text = `Découvrez mon profil d'artiste certifié sur AFRIGOMBO.\n🎼 Mon GOMBO ID : ${gomboId}\nRejoignez l'élite musicale !`;
+                  if (navigator.share) {
+                    navigator.share({ title: "GOMBO ID d'Excellence", text });
+                  } else {
+                    handleCopyGomboId();
+                  }
+                }}
+                className="py-3 px-4 bg-white/10 hover:bg-white/15 text-white font-mono text-xs uppercase font-bold rounded-2xl border border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+              >
+                <Share2 className="w-4 h-4 text-[#D4AF37]" />
+                <span>Transmettre mon ID</span>
+              </button>
+
+            </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            
-            {/* Secondary Action 1: Afficher QR Code */}
-            <button
-              onClick={() => {
-                setIsQrModalOpen(true);
-                try { audioSynth.playKoraNote(392.00, 0, 0.05, 0.3); } catch (_) {}
-              }}
-              className="py-3 px-4 bg-white/10 hover:bg-white/15 text-white font-mono text-xs uppercase font-bold rounded-2xl border border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-            >
-              <QrCode className="w-4 h-4 text-[#D4AF37]" />
-              <span>Afficher le QR Code</span>
-            </button>
-
-            {/* Secondary Action 2: Transmettre / Partager */}
-            <button
-              onClick={() => {
-                const text = `Découvrez mon profil d'artiste certifié sur AFRIGOMBO.\n🎼 Mon GOMBO ID : ${gomboId}\nRejoignez l'élite musicale !`;
-                if (navigator.share) {
-                  navigator.share({ title: "GOMBO ID d'Excellence", text });
-                } else {
-                  handleCopyGomboId();
-                }
-              }}
-              className="py-3 px-4 bg-white/10 hover:bg-white/15 text-white font-mono text-xs uppercase font-bold rounded-2xl border border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-            >
-              <Share2 className="w-4 h-4 text-[#D4AF37]" />
-              <span>Transmettre mon ID</span>
-            </button>
-
-          </div>
-        </div>
+        )}
 
         {/* Activation / KYC Action Trigger */}
         <div className="pt-2 border-t border-white/10">
@@ -699,14 +708,7 @@ function GomboIdUserDashboardInner({
                           </span>
                         </label>
 
-                        <div className="flex justify-between items-center pt-3 border-t border-white/10">
-                          <button
-                            onClick={() => setStep("intro")}
-                            className="px-4 py-2 text-xs uppercase font-mono text-gray-400 hover:text-white"
-                          >
-                            Retour
-                          </button>
-
+                        <div className="flex justify-end items-center pt-3 border-t border-white/10">
                           <button
                             disabled={!acceptedTerms}
                             onClick={() => setStep("upload")}
@@ -839,14 +841,7 @@ function GomboIdUserDashboardInner({
                           </div>
                         </div>
 
-                        <div className="flex justify-between items-center pt-3 border-t border-white/10">
-                          <button
-                            onClick={() => setStep("conditions")}
-                            className="px-4 py-2 text-xs uppercase font-mono text-gray-400 hover:text-white"
-                          >
-                            Retour
-                          </button>
-
+                        <div className="flex justify-end items-center pt-3 border-t border-white/10">
                           <button
                             disabled={!files.idCard || !files.selfie || !files.musicProof}
                             onClick={() => setStep("checkout")}
@@ -911,14 +906,7 @@ function GomboIdUserDashboardInner({
                           </div>
                         </div>
 
-                        <div className="flex justify-between items-center pt-3 border-t border-white/10">
-                          <button
-                            onClick={() => setStep("upload")}
-                            className="px-4 py-2 text-xs uppercase font-mono text-gray-400 hover:text-white"
-                          >
-                            Retour
-                          </button>
-
+                        <div className="flex justify-end items-center pt-3 border-t border-white/10">
                           <button
                             onClick={handleUploadDocs}
                             disabled={uploading}
