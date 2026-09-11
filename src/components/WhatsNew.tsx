@@ -29,7 +29,7 @@ export default function WhatsNew({ onBack }: WhatsNewProps) {
             {
               id: "1",
               title: "Lancement de la Bêta Publique",
-              content: "Bienvenue sur la version Bêta d'AFRIGOMBO ELITE. Explorez le terrain, publiez des gombos libres et aidez-nous à construire le Temple.",
+              content: "Bienvenue sur la version Bêta d'AFRIGOMBO. Explorez le terrain, publiez des gombos libres et aidez-nous à construire le Temple.",
               version: "v0.9.0",
               date: new Date().toISOString(),
               type: "feature"
@@ -37,7 +37,7 @@ export default function WhatsNew({ onBack }: WhatsNewProps) {
             {
               id: "2",
               title: "Système de Cache & Performance",
-              content: "AFRIGOMBO ELITE est désormais équipé d'une gestion de cache locale optimisée pour un chargement et une réactivité instantanés.",
+              content: "AFRIGOMBO est désormais équipé d'une gestion de cache locale optimisée pour un chargement et une réactivité instantanés.",
               version: "v0.8.5",
               date: new Date(Date.now() - 86400000).toISOString(),
               type: "security"

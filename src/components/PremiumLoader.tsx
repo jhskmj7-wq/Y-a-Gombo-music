@@ -42,7 +42,7 @@ export default function PremiumLoader({ message = "Connexion sécurisée..." }: 
         {/* Glowing aura */}
         <div className="absolute w-24 h-24 rounded-full bg-afri-bg-sec/5 blur-xl animate-pulse" />
 
-        {/* LOGO AFRIGOMBO ELITE (Official Image) */}
+        {/* LOGO AFRIGOMBO (Official Image) */}
         {isLogoLoaded && !isLogoFailed ? (
           <img 
             src="/logo_afrigombo.png" 
@@ -58,7 +58,7 @@ export default function PremiumLoader({ message = "Connexion sécurisée..." }: 
       {/* Loading message */}
       <div className="space-y-1.5 z-10">
         <h2 className="text-afri-text text-xs font-mono uppercase tracking-[0.2em] font-black">{message}</h2>
-        <p className="text-[10px] font-mono tracking-widest text-[#D4AF37] opacity-65 uppercase">Afrigombo Elite</p>
+        <p className="text-[10px] font-mono tracking-widest text-[#D4AF37] opacity-65 uppercase">AFRIGOMBO</p>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 /**
- * Single source of truth for GOMBO ID logic & generation across AFRIGOMBO ELITE.
+ * Single source of truth for GOMBO ID logic & generation across AFRIGOMBO.
  * Rule: Le GOMBO ID ne doit jamais exister tant que le KYC n'est pas validé.
  * Le KYC est la seule source de vérité.
  */

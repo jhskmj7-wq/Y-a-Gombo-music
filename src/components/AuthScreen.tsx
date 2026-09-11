@@ -89,7 +89,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         
         // Log connection activity
         try {
-          await gomboDB.logUserActivity(uid, "Connexion", "Connexion à AFRIGOMBO ELITE réussie.");
+          await gomboDB.logUserActivity(uid, "Connexion", "Connexion à AFRIGOMBO réussie.");
         } catch (logErr) {
           console.warn("Could not log login activity:", logErr);
         }

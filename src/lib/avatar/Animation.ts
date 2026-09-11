@@ -1,6 +1,6 @@
 
 /**
- * AFRIGOMBO ELITE - AVATAR ANIMATION ENGINE
+ * AFRIGOMBO - AVATAR ANIMATION ENGINE
  * Handles lightweight SVG animations for premium items.
  */
 export const AvatarAnimation = {

@@ -137,7 +137,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
       timeRange = `du ${startDate} à ${startTime} au ${endDate} à ${endTime}`;
     }
     
-    return `🛠️ Maintenance AFRIGOMBO ELITE programmée\n\nUne maintenance est prévue ${timeRange}.\n\nL'accès à certaines fonctionnalités pourra être temporairement indisponible pendant cette période. Merci pour votre compréhension.`;
+    return `🛠️ Maintenance AFRIGOMBO programmée\n\nUne maintenance est prévue ${timeRange}.\n\nL'accès à certaines fonctionnalités pourra être temporairement indisponible pendant cette période. Merci pour votre compréhension.`;
   };
 
   // Update preview when dates change
@@ -834,7 +834,7 @@ export function SuperFounderMaintenanceModal({ isOpen, onClose }: SuperFounderMa
                         </span>
                       </div>
                       <h4 className="text-xs font-bold text-zinc-300">
-                        AFRIGOMBO ELITE
+                        AFRIGOMBO
                       </h4>
                       <p className="text-[11px] text-zinc-400">
                         Le {startFormatted || "Date inconnue"} de <span className="font-mono font-bold text-zinc-200">{startTime}</span> à <span className="font-mono font-bold text-zinc-200">{endTime}</span>

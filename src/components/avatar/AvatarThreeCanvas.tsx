@@ -12,7 +12,7 @@ interface AvatarThreeCanvasProps {
 }
 
 /**
- * AFRIGOMBO ELITE 3D MEMOJI CANVAS
+ * AFRIGOMBO 3D MEMOJI CANVAS
  * Professional WebGL 3D Avatar Engine with Toon Shading & Precise Anchors
  */
 export const AvatarThreeCanvas: React.FC<AvatarThreeCanvasProps> = ({

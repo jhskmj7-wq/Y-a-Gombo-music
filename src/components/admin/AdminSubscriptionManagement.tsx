@@ -781,7 +781,7 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
                       {/* Contact on WhatsApp shortcut */}
                       {req.userPhone && (
                         <a
-                          href={`https://wa.me/${req.userPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Bonjour ${req.userName}, concernant votre demande d'abonnement ${req.planName || "AFRIGOMBO ELITE"}...`)}`}
+                          href={`https://wa.me/${req.userPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Bonjour ${req.userName}, concernant votre demande d'abonnement ${req.planName || "AFRIGOMBO"}...`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 mt-1"

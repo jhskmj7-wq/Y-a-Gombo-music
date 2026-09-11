@@ -5,7 +5,7 @@ import { SecurityService } from "./SecurityService";
 import { sanitizeForFirestore } from "./firestoreUtils";
 
 /**
- * 15 000 FCFA MINIMUM RULE - OFFICIAL RULE IN AFRIGOMBO ELITE
+ * 15 000 FCFA MINIMUM RULE - OFFICIAL RULE IN AFRIGOMBO
  * MIN_GOMBO_AMOUNT = 15000 XOF
  */
 export const MIN_GOMBO_AMOUNT = 15000; // 15 000 FCFA

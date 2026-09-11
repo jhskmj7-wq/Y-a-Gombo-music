@@ -430,9 +430,9 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         authorArtisticName: p.authorArtisticName || p.authorName || p.artistName || "Artiste Gombo",
         authorAvatar: p.authorAvatar || p.userAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
         commune: p.commune || p.location || "Abidjan",
-        content: p.content || p.caption || p.text || "Publication vidéo sur le Fil Réel d'AFRIGOMBO ELITE.",
+        content: p.content || p.caption || p.text || "Publication vidéo sur le Fil Réel d'AFRIGOMBO.",
         mediaUrl: url,
-        musicTrack: p.title || p.musicTrack || "Son original AFRIGOMBO ELITE",
+        musicTrack: p.title || p.musicTrack || "Son original AFRIGOMBO",
         hashtags: Array.isArray(p.hashtags) ? p.hashtags : ["#Afrigombo", "#FilReel", "#ArtisteIvoirien"],
         appliedFilter: p.appliedFilter || "naturel",
         likesCount: realLikes,
@@ -785,7 +785,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     if (navigator.share) {
       try {
         await navigator.share({
-          title: reel.title || "Fil Réel AFRIGOMBO ELITE",
+          title: reel.title || "Fil Réel AFRIGOMBO",
           text: `${reel.authorArtisticName}: ${reel.content}`,
           url: window.location.href
         });
@@ -1332,7 +1332,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                 {/* Music Track Banner */}
                 <div className="flex items-center gap-2 pt-1 text-[10px] font-mono text-[#D4AF37] font-bold drop-shadow">
                   <Music className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: "4s" }} />
-                  <span className="truncate max-w-[200px]">{reel.musicTrack || "Son original AFRIGOMBO ELITE"}</span>
+                  <span className="truncate max-w-[200px]">{reel.musicTrack || "Son original AFRIGOMBO"}</span>
                 </div>
               </div>
             </div>

@@ -32,7 +32,7 @@ export default function AdminRevenue({
           Gestion Comptable & Caisse Réelle
         </h3>
         <p className="text-xs text-afri-text-sec mt-1">
-          Suivi comptable en temps réel lié à l'Académie et aux transactions financières d'AFRIGOMBO ELITE.
+          Suivi comptable en temps réel lié à l'Académie et aux transactions financières d'AFRIGOMBO.
         </p>
       </div>
 

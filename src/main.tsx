@@ -62,7 +62,7 @@ if (typeof window !== "undefined") {
 import { supportConfig } from "./supportConfig";
 
 // 8. Console traces representing boot sequence
-console.log("🚀 [AFRIGOMBO ELITE] MAIN START", supportConfig.APP_VERSION);
+console.log("🚀 [AFRIGOMBO] MAIN START", supportConfig.APP_VERSION);
 
 console.log("BOOT 1: React & BrowserRouter Ready");
 console.log("BOOT 2: Firebase Initialized");
@@ -74,7 +74,7 @@ if (import.meta.env.PROD) {
   console.info = () => {};
 }
 
-console.log("📡 [AFRIGOMBO ELITE] FIREBASE OK");
+console.log("📡 [AFRIGOMBO] FIREBASE OK");
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

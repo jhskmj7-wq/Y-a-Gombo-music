@@ -6,7 +6,7 @@ import { AvatarRenderer } from "./Renderer";
 import { sanitizeForFirestore } from "../firestoreUtils";
 
 /**
- * AFRIGOMBO ELITE - PROFILE SYNCHRONIZER
+ * AFRIGOMBO - PROFILE SYNCHRONIZER
  * Ensures the avatar is updated across all platform views in real-time.
  */
 export const AvatarSynchronizer = {

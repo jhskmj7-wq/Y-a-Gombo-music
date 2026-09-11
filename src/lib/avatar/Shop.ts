@@ -2,7 +2,7 @@
 import { AvatarItem } from "../../types/avatar";
 
 /**
- * AFRIGOMBO ELITE - SHOP ENGINE
+ * AFRIGOMBO - SHOP ENGINE
  * Logic for item properties, sorting, and commerce logic.
  */
 export const AvatarShop = {

@@ -169,7 +169,7 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
                   )}
                 </div>
                 <p className="text-[10px] text-afri-text-sec line-clamp-2 leading-relaxed">
-                  {item.description || item.bio || "Découvrez cette opportunité unique sur AFRIGOMBO ELITE."}
+                  {item.description || item.bio || "Découvrez cette opportunité unique sur AFRIGOMBO."}
                 </p>
                 <div className="flex items-center gap-2 pt-1">
                   {item.location && (

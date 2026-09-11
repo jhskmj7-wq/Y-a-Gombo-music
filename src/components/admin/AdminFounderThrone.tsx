@@ -272,7 +272,7 @@ export default function AdminFounderThrone({
   const [allPayments, setAllPayments] = useState<any[]>([]);
   const [govData, setGovData] = useState<GovernanceData>({
     vision: "Bâtir le premier empire de mise en relation artistique d'Afrique de l'Ouest.",
-    journal: "Aujourd'hui, lancement de la phase impériale d'AFRIGOMBO ELITE.",
+    journal: "Aujourd'hui, lancement de la phase impériale d'AFRIGOMBO.",
     decisions: "1. Certification systématique Gombo ID.\n2. Lancement des abonnements Elite.",
     announcements: "Bienvenue sur le fil de l'écosystème souverain !",
     growth: "Atteindre 10,000 membres actifs certifiés d'ici décembre 2026.",
@@ -756,7 +756,7 @@ export default function AdminFounderThrone({
           const gomboIdObj = {
             id: gomboIdNumber,
             scoreConfiance: 95,
-            niveau: "🟢 Vérifié AFRIGOMBO ELITE",
+            niveau: "🟢 Vérifié AFRIGOMBO",
             certifie: true,
             createdAt: new Date().toISOString()
           };
@@ -1904,7 +1904,7 @@ export default function AdminFounderThrone({
                       {getGreeting()}, <span className="text-[#D4AF37]">Sylvester</span>
                     </h1>
                     <p className="text-[10px] font-mono font-black uppercase tracking-[0.15em] text-[#D4AF37]/90">
-                      Fondateur d'AFRIGOMBO ELITE • Gardien du Temple du Gombo Musical
+                      Fondateur d'AFRIGOMBO • Gardien du Temple du Gombo Musical
                     </p>
                   </div>
                 </div>
@@ -3136,14 +3136,14 @@ export default function AdminFounderThrone({
                   <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Accéder →</span>
                 </div>
 
-                {/* Bouclier AFRIGOMBO ELITE */}
+                {/* Bouclier AFRIGOMBO */}
                 <div
                   onClick={() => setSelectedSection("bouclier")}
                   className="p-5 bg-afri-bg-sec/40 border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between"
                 >
                   <div className="space-y-2">
                     <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
-                    <h4 className="text-xs font-sans font-black text-afri-text">Bouclier AFRIGOMBO ELITE</h4>
+                    <h4 className="text-xs font-sans font-black text-afri-text">Bouclier AFRIGOMBO</h4>
                     <p className="text-[10px] font-mono text-afri-text-sec leading-relaxed">Cyber-défense & filtrage de sécurité.</p>
                   </div>
                   <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Accéder →</span>
@@ -3252,7 +3252,7 @@ export default function AdminFounderThrone({
                       handleSaveGovField("vision", e.target.value);
                     }}
                     className="w-full h-44 bg-afri-bg border border-afri-border rounded-2xl p-4 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37] font-mono leading-relaxed resize-none focus:ring-1 focus:ring-[#D4AF37]/45"
-                    placeholder="Écrivez la vision stratégique d'AFRIGOMBO ELITE..."
+                    placeholder="Écrivez la vision stratégique d'AFRIGOMBO..."
                   />
                   <div className="flex justify-between items-center text-[9px] font-mono text-afri-text-sec">
                     <span>⚡ CODES SYSTÈME COGÉRATEURS : CLASSE 1</span>
@@ -3407,7 +3407,7 @@ export default function AdminFounderThrone({
             )}
 
             {/* =========================================================
-                 DETAILED VIEW: 🛡 Bouclier AFRIGOMBO ELITE
+                 DETAILED VIEW: 🛡 Bouclier AFRIGOMBO
                  ========================================================= */}
             {selectedSection === "bouclier" && (
               <div className="space-y-6">
@@ -4630,7 +4630,7 @@ export default function AdminFounderThrone({
                 <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <CheckSquare className="w-8 h-8 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
                   <div className="text-xs text-afri-text leading-relaxed font-mono">
-                    <strong>📋 CHECKLIST DE VALIDATION DE LA BÊTA PUBLIQUE :</strong> Suivez pas à pas la validation de l'écosystème souverain AFRIGOMBO ELITE. Cochez les modules pour certifier leur bon fonctionnement avant le déploiement général.
+                    <strong>📋 CHECKLIST DE VALIDATION DE LA BÊTA PUBLIQUE :</strong> Suivez pas à pas la validation de l'écosystème souverain AFRIGOMBO. Cochez les modules pour certifier leur bon fonctionnement avant le déploiement général.
                   </div>
                 </div>
 
@@ -5852,7 +5852,7 @@ export default function AdminFounderThrone({
                 <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <Wrench className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5 animate-pulse" />
                   <div className="text-xs text-afri-text leading-relaxed font-mono">
-                    <strong>⚙️ PARAMÈTRES ET CONFIGURATION DE L'EMPIRE :</strong> Ajustez en temps réel les variables d'exécution globales de la plateforme AFRIGOMBO ELITE.
+                    <strong>⚙️ PARAMÈTRES ET CONFIGURATION DE L'EMPIRE :</strong> Ajustez en temps réel les variables d'exécution globales de la plateforme AFRIGOMBO.
                   </div>
                 </div>
 
@@ -5935,7 +5935,7 @@ export default function AdminFounderThrone({
                   </div>
 
                   <p className="text-[11px] text-afri-text-muted dark:text-afri-text-sec font-mono leading-relaxed">
-                    Cette action réinitialisera l'intégralité des données de l'application AFRIGOMBO ELITE, y compris tous les comptes d'utilisateurs/membres, leurs profils, leurs publications, leurs gombos, leurs contrats et leur historique de transactions.
+                    Cette action réinitialisera l'intégralité des données de l'application AFRIGOMBO, y compris tous les comptes d'utilisateurs/membres, leurs profils, leurs publications, leurs gombos, leurs contrats et leur historique de transactions.
                     <br />
                     <strong className="text-red-400 font-bold">⚠️ SEUL VOTRE COMPTE FONDATEUR ET LES DOCUMENTS DE CONFIGURATION SYSTÈME RESTERONT DEBOUT.</strong>
                   </p>

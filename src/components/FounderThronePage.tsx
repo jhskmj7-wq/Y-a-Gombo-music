@@ -176,7 +176,7 @@ export default function FounderThronePage() {
         <AlertOctagon className="w-16 h-16 mb-4 animate-bounce text-red-600" />
         <h1 className="text-2xl font-black uppercase tracking-wider mb-2 text-red-600">ACCÈS SOUVERAIN REFUSÉ</h1>
         <p className="text-xs max-w-md leading-relaxed text-gray-500 mb-6">
-          Votre signature numérique ne correspond pas au sceau du Trône du Fondateur d'AFRIGOMBO ELITE. Cet incident a été consigné dans les registres de sécurité.
+          Votre signature numérique ne correspond pas au sceau du Trône du Fondateur d'AFRIGOMBO. Cet incident a été consigné dans les registres de sécurité.
         </p>
         <button
           onClick={() => navigate("/Le-Throne-Of-The-Founder")}

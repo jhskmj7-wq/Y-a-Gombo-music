@@ -35,7 +35,7 @@ const KNOWLEDGE_BASE = [
   {
     keywords: ["contacter le support", "support", "contacter assistance", "aide", "contact", "probleme technique"],
     question: "Comment contacter le support ?",
-    answer: "L'assistance d'élite d'AFRIGOMBO ELITE est à votre disposition permanente. Vous pouvez joindre le Support AFRIGOMBO ELITE directement par WhatsApp officiel au +225 0503222712."
+    answer: "L'assistance d'élite d'AFRIGOMBO est à votre disposition permanente. Vous pouvez joindre le Support AFRIGOMBO directement par WhatsApp officiel au +225 0503222712."
   },
   {
     keywords: ["certification", "certifie", "obtenir certification", "badge bleu", "artiste certifie"],
@@ -55,7 +55,7 @@ const KNOWLEDGE_BASE = [
   {
     keywords: ["utiliser l'application", "comment ca marche", "tutoriel", "guide", "fonctionnement"],
     question: "Comment utiliser l'application ?",
-    answer: "AFRIGOMBO ELITE met en relation sécurisée les talents et recruteurs d'Abidjan : postulez à des Gombos, gérez vos paiements et échangez via notre chat crypté."
+    answer: "AFRIGOMBO met en relation sécurisée les talents et recruteurs d'Abidjan : postulez à des Gombos, gérez vos paiements et échangez via notre chat crypté."
   }
 ];
 
@@ -65,7 +65,7 @@ export default function GriotIA() {
     {
       id: "welcome",
       sender: "griot",
-      text: "Akwaba au Temple d'AFRIGOMBO ELITE. Je suis le GRIOT IA, votre gardien de la connaissance impériale d'Abidjan. Quelle sagesse recherchez-vous aujourd'hui ?",
+      text: "Akwaba au Temple d'AFRIGOMBO. Je suis le GRIOT IA, votre gardien de la connaissance impériale d'Abidjan. Quelle sagesse recherchez-vous aujourd'hui ?",
       timestamp: new Date()
     }
   ]);
@@ -304,7 +304,7 @@ export default function GriotIA() {
                       <div className="p-3 bg-afri-bg border border-afri-border rounded-xl">
                         <span className="text-[#D4AF37] font-bold">2. OpenAI Assistant Engine</span>
                         <p className="text-[10px] text-afri-text-sec mt-1 font-sans">
-                          Raccordé à l'API OpenAI Assistants spécifiée avec instanciation du modèle gpt-4o ou gemini-2.5-pro, ancré dans le corpus doctrinal d'AFRIGOMBO ELITE.
+                          Raccordé à l'API OpenAI Assistants spécifiée avec instanciation du modèle gpt-4o ou gemini-2.5-pro, ancré dans le corpus doctrinal d'AFRIGOMBO.
                         </p>
                       </div>
 

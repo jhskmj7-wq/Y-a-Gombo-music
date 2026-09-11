@@ -110,7 +110,7 @@ type ActiveSection = "dashboard" | "audio" | "images" | "videos" | "sounds" | "n
 // Predefined official spots
 const AUDIO_SPOTS = [
   { id: "intro", title: "Musique d'introduction", desc: "Symphonie d'accueil jouée au premier démarrage de la plateforme." },
-  { id: "anthem", title: "Hymne officiel", desc: "Hymne solennel de prestige d'AFRIGOMBO ELITE." },
+  { id: "anthem", title: "Hymne officiel", desc: "Hymne solennel de prestige d'AFRIGOMBO." },
   { id: "ambient", title: "Musique d'ambiance", desc: "Son continu de fond d'écran pour l'accueil principal." },
   { id: "throne", title: "Musique du Trône", desc: "Thème impérial majestueux réservé au Cabinet Privé." },
   { id: "command", title: "Musique du Centre de Commandement", desc: "Ambiance high-tech immersive du quartier général." },
@@ -120,7 +120,7 @@ const AUDIO_SPOTS = [
 
 const IMAGE_SPOTS = [
   { id: "splash", title: "Splash Screen", desc: "Écran d'accueil de démarrage affiché lors du chargement initial." },
-  { id: "logo", title: "Logo officiel", desc: "Emblème central royal d'AFRIGOMBO ELITE." },
+  { id: "logo", title: "Logo officiel", desc: "Emblème central royal d'AFRIGOMBO." },
   { id: "icon", title: "Icône de la plateforme", desc: "Icône d'affichage officiel de l'application mobile et web." },
   { id: "bg_home", title: "Fond d'accueil", desc: "Arrière-plan thématique de l'interface principale." },
   { id: "bg_throne", title: "Fond du Trône", desc: "Texture visuelle noble du Cabinet Impérial." },
@@ -133,7 +133,7 @@ const VIDEO_SPOTS = [
   { id: "video_intro", title: "Vidéo d'accueil", desc: "Cinématique d'accueil de la plateforme (Optionnelle)." },
   { id: "video_event", title: "Vidéo événementielle", desc: "Teaser vidéo immersif pour les événements nationaux." },
   { id: "video_tutorial", title: "Vidéo tutorielle", desc: "Guide audiovisuel officiel pour maîtriser l'écosystème du Gombo." },
-  { id: "video_promo", title: "Vidéo promotionnelle", desc: "Clip de présentation marketing d'AFRIGOMBO ELITE." }
+  { id: "video_promo", title: "Vidéo promotionnelle", desc: "Clip de présentation marketing d'AFRIGOMBO." }
 ];
 
 const SOUND_SPOTS = [
@@ -164,8 +164,8 @@ const SYSTEM_SPOTS = [
   { id: "sys_loader", title: "Animation de chargement", desc: "Logo ou indicateur rotatif impérial affiché lors du chargement." },
   { id: "sys_banner_elite", title: "Bannière d'élite", desc: "Visuel d'en-tête exclusif de l'espace VIP." },
   { id: "sys_avatar_fallback", title: "Avatar par défaut", desc: "Image de substitution élégante pour les profils sans photo." },
-  { id: "sys_watermark", title: "Filigrane de certification", desc: "Fonds en transparence certifiant l'authenticité d'AFRIGOMBO ELITE." },
-  { id: "doc_cgu", title: "Conditions Générales d'Utilisation (CGU)", desc: "Contrat d'adhésion juridique d'AFRIGOMBO ELITE." },
+  { id: "sys_watermark", title: "Filigrane de certification", desc: "Fonds en transparence certifiant l'authenticité d'AFRIGOMBO." },
+  { id: "doc_cgu", title: "Conditions Générales d'Utilisation (CGU)", desc: "Contrat d'adhésion juridique d'AFRIGOMBO." },
   { id: "doc_privacy", title: "Politique de Confidentialité", desc: "Règles relatives au traitement des données de la plateforme." }
 ];
 
@@ -1781,7 +1781,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
             <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-widest">
               Test d'Animation : {testAnimationType ? testAnimationType.toUpperCase() : ""}
             </h4>
-            <p className="text-[9px] text-zinc-550 font-mono">Déclenchement instantané sur les clients AFRIGOMBO ELITE</p>
+            <p className="text-[9px] text-zinc-550 font-mono">Déclenchement instantané sur les clients AFRIGOMBO</p>
           </div>
         </div>
       )}
@@ -1805,7 +1805,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           <div className="flex items-center gap-2">
             <Crown className="w-5 h-5 text-[#D4AF37]" />
             <h3 className="text-sm font-display font-black text-afri-text uppercase tracking-wider">
-              CENTRE MÉDIA AFRIGOMBO ELITE
+              CENTRE MÉDIA AFRIGOMBO
             </h3>
           </div>
           <p className="text-[11px] text-afri-text-sec">
@@ -2318,7 +2318,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               🧩 Médias et documents système réglementaires
             </h4>
             <p className="text-[10px] text-afri-text-sec">
-              Gérez les bannières système, avatars de substitution, filigranes et éditez en direct le contenu des mentions légales d'AFRIGOMBO ELITE (CGU, Charte de Confidentialité).
+              Gérez les bannières système, avatars de substitution, filigranes et éditez en direct le contenu des mentions légales d'AFRIGOMBO (CGU, Charte de Confidentialité).
             </p>
           </div>
 
@@ -2433,7 +2433,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
                             disabled={!isAuthorizedSuperFounder}
-                            placeholder="Écrivez le texte juridique d'AFRIGOMBO ELITE..."
+                            placeholder="Écrivez le texte juridique d'AFRIGOMBO..."
                             className="w-full h-80 bg-afri-bg border border-afri-border rounded-xl p-3 text-xs font-mono text-afri-text placeholder-zinc-700 focus:outline-none focus:border-[#D4AF37] resize-none flex-1"
                           />
                         </div>

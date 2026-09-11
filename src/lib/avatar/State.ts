@@ -4,7 +4,7 @@ import { onSnapshot, doc, collection, query, where, getDocs, addDoc } from "fire
 import { AvatarItem, UserInventoryData, UserAvatarData } from "../../types/avatar";
 
 /**
- * AFRIGOMBO ELITE - AVATAR STATE MANAGER
+ * AFRIGOMBO - AVATAR STATE MANAGER
  * Handles real-time subscriptions and data fetching for the engine.
  */
 export const AvatarState = {

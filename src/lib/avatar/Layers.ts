@@ -1,6 +1,6 @@
 
 /**
- * AFRIGOMBO ELITE - AVATAR LAYERS CONFIGURATION
+ * AFRIGOMBO - AVATAR LAYERS CONFIGURATION
  * Defines the precise rendering order for the premium engine.
  */
 

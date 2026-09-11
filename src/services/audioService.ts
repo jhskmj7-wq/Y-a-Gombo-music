@@ -162,7 +162,7 @@ function playSynthFallback(soundName: string) {
         break;
 
       case "success":
-        // Petit jingle AFRIGOMBO ELITE céleste
+        // Petit jingle AFRIGOMBO céleste
         audioSynth.playKoraSuccess(true);
         break;
 

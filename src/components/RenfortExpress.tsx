@@ -367,7 +367,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth, onClose
               statut: "success",
               gomboId: createdRenfortId,
               contractId: createdRenfortId,
-              description: `Commission AFRIGOMBO ELITE (${(dynamicRate * 100).toFixed(1)}%) Renfort Express : "${renfortPayload.title}"`,
+              description: `Commission AFRIGOMBO (${(dynamicRate * 100).toFixed(1)}%) Renfort Express : "${renfortPayload.title}"`,
               createdAt: nowIso,
               timestamp: Date.now()
             };
@@ -1562,7 +1562,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth, onClose
                   <span className="font-mono font-bold text-afri-text">{renfortInsufficientFundsDetails.cachet.toLocaleString()} FCFA</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-afri-text-sec">Commission AFRIGOMBO ELITE :</span>
+                  <span className="text-afri-text-sec">Commission AFRIGOMBO :</span>
                   <span className="font-mono text-afri-text-sec">{renfortInsufficientFundsDetails.fee.toLocaleString()} FCFA</span>
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t border-afri-border">

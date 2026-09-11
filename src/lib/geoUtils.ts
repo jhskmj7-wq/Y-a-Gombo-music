@@ -1,5 +1,5 @@
 /**
- * AFRIGOMBO ELITE GEO ENGINE UTILS
+ * AFRIGOMBO GEO ENGINE UTILS
  * Pure mathematical functions for distance and time estimation.
  */
 

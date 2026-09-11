@@ -13,7 +13,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
   
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
   const [config, setConfig] = useState({
-    appName: "AFRIGOMBO ELITE",
+    appName: "AFRIGOMBO",
     version: "1.0.0",
     maintenanceMode: false,
     welcomeMessage: "Bienvenue sur l'Empire d'Afrigombo, le réseau exclusif des artistes.",

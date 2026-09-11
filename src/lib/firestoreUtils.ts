@@ -1,5 +1,5 @@
 /**
- * AFRIGOMBO ELITE - FIRESTORE SANITIZER UTILITY
+ * AFRIGOMBO - FIRESTORE SANITIZER UTILITY
  * Prevents "Unsupported field value: undefined" errors by sanitizing
  * objects before sending them to Firestore (setDoc, updateDoc, writeBatch, runTransaction, addDoc).
  */

@@ -1016,7 +1016,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     return users.filter(u => u.role === "musicien" || u.role === "artiste").slice(0, 8);
   }, [users]);
 
-  // Section 10: Univers AFRIGOMBO ELITE
+  // Section 10: Univers AFRIGOMBO
   const universeItems = React.useMemo(() => [
     { id: "u1", type: "product" as const, title: "Micro Studio Pro Neumann", image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=400&auto=format&fit=crop&q=80", description: "Qualité exceptionnelle pour vos sessions studio à Abidjan.", tag: "Grand Marché" },
     { id: "u2", type: "course" as const, title: "Maîtrise du Piano Afro-Jazz", image: "https://images.unsplash.com/photo-1520529612722-68ec39750058?w=400&auto=format&fit=crop&q=80", description: "Apprenez avec les virtuoses du Trône.", tag: "Académie" },
@@ -1679,7 +1679,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       />
 
        {/* ==========================================
-          SECTION 3 — 🔥 TENDANCES AFRIGOMBO ELITE (PREMIUM)
+          SECTION 3 — 🔥 TENDANCES AFRIGOMBO (PREMIUM)
           Vitrine officielle de la plateforme. Apparaît AVANT les Gombos.
          ========================================== */}
       {isModuleVisible("trends") && (
@@ -1824,11 +1824,11 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       )}
 
       {/* ==========================================
-          NIVEAU 2 — UNIVERS AFRIGOMBO ELITE
+          NIVEAU 2 — UNIVERS AFRIGOMBO
           Découverte intelligente et libre de tout l'écosystème.
          ========================================== */}
       <div className="space-y-8 pb-10 pt-2">
-        {/* AFRIGOMBO ELITE GEO ENGINE: RADAR & ARTISTES */}
+        {/* AFRIGOMBO GEO ENGINE: RADAR & ARTISTES */}
         {isModuleVisible("radar") && (
           <div className="relative">
             {isModuleComingSoon("radar") && (
@@ -1961,7 +1961,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             {!isModuleComingSoon("reels") && reelsData.length === 0 && (
               <div className="p-4 text-center border border-dashed border-afri-border bg-afri-bg-sec/20 rounded-2xl my-2 cursor-pointer hover:border-[#D4AF37]/40 transition-colors" onClick={() => setActiveMenu("user_reels")}>
                 <p className="text-xs text-afri-text font-bold mb-1">📹 Aucun Réel publié pour le moment</p>
-                <p className="text-[10px] text-afri-text-sec">Soyez le premier artiste à publier votre vidéo sur le Fil Réel d'AFRIGOMBO ELITE !</p>
+                <p className="text-[10px] text-afri-text-sec">Soyez le premier artiste à publier votre vidéo sur le Fil Réel d'AFRIGOMBO !</p>
               </div>
             )}
             {isModuleComingSoon("reels") && (
@@ -1984,7 +1984,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           />
         )}
 
-        {/* 10. UNIVERS AFRIGOMBO ELITE */}
+        {/* 10. UNIVERS AFRIGOMBO */}
         {universeItems.length > 0 && (
           <SmartUniverseCarousel 
             items={universeItems}
@@ -1997,7 +1997,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 }
               } else if (item.type === "course") {
                 if (isModuleComingSoon("academie")) {
-                  setLocalComingSoonKey("AFRIGOMBO ELITE Academy 🎓");
+                  setLocalComingSoonKey("AFRIGOMBO Academy 🎓");
                 } else {
                   setActiveMenu("user_academie");
                 }
@@ -2105,7 +2105,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           </div>
         )}
 
-        {/* 12. AFRIGOMBO ELITE ACADEMY */}
+        {/* 12. AFRIGOMBO ACADEMY */}
         {isModuleVisible("academie") && (
           <div className="space-y-3 py-2 text-left bg-afri-bg-sec/30 p-4 rounded-3xl border border-afri-border relative">
             {isModuleComingSoon("academie") && (
@@ -2117,13 +2117,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               <div className="flex items-center gap-2">
                 <GraduationCap className="w-4 h-4 text-sky-400" />
                 <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
-                  🎓 AFRIGOMBO ELITE Academy & Masterclasses
+                  🎓 AFRIGOMBO Academy & Masterclasses
                 </h3>
               </div>
               <button 
                 onClick={() => {
                   if (isModuleComingSoon("academie")) {
-                    setLocalComingSoonKey("AFRIGOMBO ELITE Academy 🎓");
+                    setLocalComingSoonKey("AFRIGOMBO Academy 🎓");
                   } else {
                     setActiveMenu("user_academie");
                   }
@@ -2157,7 +2157,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   key={course.id}
                   onClick={() => {
                     if (isModuleComingSoon("academie")) {
-                      setLocalComingSoonKey("AFRIGOMBO ELITE Academy 🎓");
+                      setLocalComingSoonKey("AFRIGOMBO Academy 🎓");
                     } else {
                       setActiveMenu("user_academie");
                     }
@@ -2179,7 +2179,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             <button
               onClick={() => {
                 if (isModuleComingSoon("academie")) {
-                  setLocalComingSoonKey("AFRIGOMBO ELITE Academy 🎓");
+                  setLocalComingSoonKey("AFRIGOMBO Academy 🎓");
                 } else {
                   setActiveMenu("user_academie");
                 }
@@ -2252,7 +2252,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               <MapPin className="w-8 h-8 text-[#D4AF37] animate-bounce" />
             </div>
             <p className="text-xs text-afri-text-sec font-bold uppercase leading-relaxed">
-              Autoriser AFRIGOMBO ELITE à accéder à votre position afin de trouver les opportunités et artistes proches de vous.
+              Autoriser AFRIGOMBO à accéder à votre position afin de trouver les opportunités et artistes proches de vous.
             </p>
             <div className="flex gap-2">
               <button 
@@ -2530,7 +2530,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             <span className="text-xl">🌟</span>
             <div>
               <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
-                AFRIGOMBO ELITE PLUS COCKPIT
+                AFRIGOMBO PLUS COCKPIT
               </h3>
               <p className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Tableau des Commandes Avancées</p>
             </div>
@@ -2943,7 +2943,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             {
               id: "univers_elite",
               featureId: "cahier",
-              title: "Univers AFRIGOMBO ELITE",
+              title: "Univers AFRIGOMBO",
               tag: "BÂTISSEURS",
               icon: "🌍",
               tagColor: "text-red-400",
@@ -2995,7 +2995,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   {
                     id: "univers_elite",
                     featureId: "cahier",
-                    title: "Univers AFRIGOMBO ELITE",
+                    title: "Univers AFRIGOMBO",
                     tag: "BÂTISSEURS",
                     icon: "🌍",
                     tagColor: "text-red-400",
@@ -3251,7 +3251,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   {localComingSoonKey === "menu_favorites" ? "Enregistrez vos artistes et opportunités préférées pour ne plus jamais manquer un Gombo en Or !" :
                    localComingSoonKey === "menu_history" ? "Consultez l'historique de vos gombos, contrats, transactions et performances en un clin d'œil." :
                    localComingSoonKey === "menu_classement" ? "Découvrez le Top 10 des meilleurs artistes et recruteurs du pays. Grimpez dans la hiérarchie !" :
-                   "Cette fonctionnalité est en cours de finalisation pour la communauté AFRIGOMBO ELITE."}
+                   "Cette fonctionnalité est en cours de finalisation pour la communauté AFRIGOMBO."}
                 </p>
               </div>
 
@@ -3681,7 +3681,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
                       Top Talents
                     </h3>
-                    <p className="text-[8.5px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Classements d'Or AFRIGOMBO ELITE</p>
+                    <p className="text-[8.5px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Classements d'Or AFRIGOMBO</p>
                   </div>
                 </div>
                 <button

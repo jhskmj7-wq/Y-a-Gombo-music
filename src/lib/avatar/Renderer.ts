@@ -26,7 +26,7 @@ const FREE_ITEM_IDS = [
 ];
 
 /**
- * AFRIGOMBO ELITE - PROFESSIONAL 3D STYLIZED SVG EXPORT RENDERER
+ * AFRIGOMBO - PROFESSIONAL 3D STYLIZED SVG EXPORT RENDERER
  * Renders 3D-stylized vector avatars with volumetric melanin shaders and full African identity.
  */
 export const AvatarRenderer = {

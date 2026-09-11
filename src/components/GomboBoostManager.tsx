@@ -495,7 +495,7 @@ export default function GomboBoostManager({
               <div>
                 <h3 className="text-base sm:text-lg font-black uppercase text-emerald-500">Boost Activé avec Succès !</h3>
                 <p className="text-xs text-stone-500 dark:text-afri-text-sec mt-1 max-w-sm mx-auto font-sans leading-relaxed">
-                  Votre {activeItem.type === "profile" ? "profil" : "publication"} a été propulsé(e) au sommet de l'affiche. Merci de faire confiance à AFRIGOMBO ELITE !
+                  Votre {activeItem.type === "profile" ? "profil" : "publication"} a été propulsé(e) au sommet de l'affiche. Merci de faire confiance à AFRIGOMBO !
                 </p>
               </div>
               <button

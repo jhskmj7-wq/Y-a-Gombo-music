@@ -1,5 +1,5 @@
 /**
- * Premium African Musical Synthesizer & Notification Sound Engine for AFRIGOMBO ELITE
+ * Premium African Musical Synthesizer & Notification Sound Engine for AFRIGOMBO
  */
 
 class AudioSynthesizer {

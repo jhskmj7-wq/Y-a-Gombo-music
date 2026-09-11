@@ -508,7 +508,7 @@ export default function NotificationCenter({
               </h1>
             </div>
             <p className="text-[#D4AF37] font-bold tracking-widest text-[9px] uppercase ml-10">
-              Mises à jour et alertes en temps réel AFRIGOMBO ELITE
+              Mises à jour et alertes en temps réel AFRIGOMBO
             </p>
           </div>
           
@@ -652,7 +652,7 @@ export default function NotificationCenter({
       {/* FOOTER REFLECTION */}
       <div className="pt-8 border-t border-afri-border text-center">
         <p className="text-[9px] font-mono text-afri-text-sec uppercase tracking-[0.4em]">
-          AFRIGOMBO ELITE • Centre de Communication Souveraine
+          AFRIGOMBO • Centre de Communication Souveraine
         </p>
       </div>
     </div>

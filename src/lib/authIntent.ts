@@ -1,5 +1,5 @@
 /**
- * AFRIGOMBO ELITE - AUTHENTICATION INTENT PERSISTENCE ENGINE
+ * AFRIGOMBO - AUTHENTICATION INTENT PERSISTENCE ENGINE
  * 
  * Permet de mémoriser et reprendre automatiquement l'action et le contexte
  * cible (ex: contacter Koffi, proposer un cachet, ouvrir un message) lorsqu'un

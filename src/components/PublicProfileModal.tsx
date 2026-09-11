@@ -301,7 +301,7 @@ export function PublicProfileModal({
             {reportSubmitted ? (
               <div className="py-6 text-center text-xs font-bold text-emerald-400 space-y-2">
                 <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
-                <p>Signalement transmis aux Administrateurs AFRIGOMBO ELITE.</p>
+                <p>Signalement transmis aux Administrateurs AFRIGOMBO.</p>
               </div>
             ) : (
               <div className="space-y-3 text-xs">
@@ -728,7 +728,7 @@ export function PublicProfileModal({
                                   {a.title || "Prestation Audio"}
                                 </h4>
                                 <span className="text-[10px] text-afri-text-sec font-mono uppercase">
-                                  AFRIGOMBO ELITE AUDIO • 320 KBPS
+                                  AFRIGOMBO AUDIO • 320 KBPS
                                 </span>
                               </div>
                             </div>

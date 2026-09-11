@@ -1,7 +1,7 @@
 import { supabaseStorage } from "./supabaseStorage";
 
 /**
- * Utilitaire pour normaliser et résoudre les URLs Audio d'AFRIGOMBO ELITE
+ * Utilitaire pour normaliser et résoudre les URLs Audio d'AFRIGOMBO
  * Supporte : Supabase Storage (afrigombo-médias), Firebase Storage, GitHub et URLs distantes.
  */
 

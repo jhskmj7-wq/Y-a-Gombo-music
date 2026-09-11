@@ -2,7 +2,7 @@
 import { AvatarItem } from "../../types/avatar";
 
 /**
- * AFRIGOMBO ELITE - CREATION ENGINE
+ * AFRIGOMBO - CREATION ENGINE
  * Logic for validating and processing new avatar assets.
  */
 export const AvatarCreator = {

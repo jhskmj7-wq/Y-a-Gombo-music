@@ -704,7 +704,7 @@ function GomboIdUserDashboardInner({
                             className="w-4 h-4 rounded text-[#D4AF37] accent-[#D4AF37]"
                           />
                           <span className="text-xs text-gray-300 font-sans">
-                            Je certifie l'exactitude des pièces fournies et accepte la charte d'honneur AFRIGOMBO ELITE.
+                            Je certifie l'exactitude des pièces fournies et accepte la charte d'honneur AFRIGOMBO.
                           </span>
                         </label>
 

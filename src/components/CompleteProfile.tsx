@@ -270,7 +270,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
       }
     } else if (step === 4) {
       if (collaborations.length === 0) {
-        setErrorMSG("Veuillez choisir ce que vous recherchez sur AFRIGOMBO ELITE.");
+        setErrorMSG("Veuillez choisir ce que vous recherchez sur AFRIGOMBO.");
         return false;
       }
     }
@@ -336,9 +336,9 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
         toast.className = "fixed bottom-5 right-5 bg-afri-bg border border-[#D4AF37] text-afri-text px-6 py-4 rounded-xl shadow-2xl z-[10000] flex flex-col gap-1";
         toast.innerHTML = `
           <div class="flex items-center gap-2 text-[#D4AF37] font-black tracking-wide text-xs">
-            <span>AFRIGOMBO ELITE LOGISTIC</span> <span>♫ 🎷 🪘</span>
+            <span>AFRIGOMBO LOGISTIC</span> <span>♫ 🎷 🪘</span>
           </div>
-          <div class="text-xs text-afri-text">Bienvenue sur AFRIGOMBO ELITE</div>
+          <div class="text-xs text-afri-text">Bienvenue sur AFRIGOMBO</div>
         `;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 2500);
@@ -417,7 +417,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
         await gomboDB.publishActivity({
           type: "talent",
           title: "🔑 Profil Bêta Certifié !",
-          message: `👑 ${updates.nomArtistique} a rejoint la famille AFRIGOMBO ELITE en tant que ${mainRole} à ${city} (${country}) !`,
+          message: `👑 ${updates.nomArtistique} a rejoint la famille AFRIGOMBO en tant que ${mainRole} à ${city} (${country}) !`,
           userId: currentUserProfile.uid,
           userName: updates.nomArtistique || "Artiste Gombo",
           userAvatar: avatarUrl,
@@ -547,7 +547,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
 
               <div className="space-y-3">
                 <h2 className="text-2xl md:text-3xl font-black tracking-widest text-[#D4AF37] uppercase font-sans">
-                  Bienvenue dans AFRIGOMBO ELITE
+                  Bienvenue dans AFRIGOMBO
                 </h2>
                 <p className="text-sm text-afri-text font-medium max-w-sm mx-auto leading-relaxed">
                   Le terrain d'action de l'Afrique musicale
@@ -1038,7 +1038,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <span>4. Vos Collaborations</span>
                 </h3>
                 <p className="text-[11px] text-afri-text-sec">
-                  Déterminez précisément ce que vous recherchez au sein de l'écosystème AFRIGOMBO ELITE (Sélection multiple).
+                  Déterminez précisément ce que vous recherchez au sein de l'écosystème AFRIGOMBO (Sélection multiple).
                 </p>
               </div>
 
@@ -1272,7 +1272,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
         </AnimatePresence>
 
         <p className="text-[8px] text-zinc-700 font-mono mt-8 uppercase tracking-widest text-center">
-          VOTRE SÉCURITÉ ET VOTRE RETRAITE D'ARTISTE SONT GARANTIES PAR AFRIGOMBO ELITE
+          VOTRE SÉCURITÉ ET VOTRE RETRAITE D'ARTISTE SONT GARANTIES PAR AFRIGOMBO
         </p>
 
         <AvatarCropModal

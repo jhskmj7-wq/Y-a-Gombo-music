@@ -253,12 +253,12 @@ export default function AdminDeploymentCenter({
     { id: "subscriptions", name: "👑 Abonnements (Gombo Plus)", category: "Monétisation", enabled: true, visibilityStatus: "ACTIVE", status: "validated", description: "Gestion des offres d'abonnement Gombo Pro et Gombo Élite." },
     { id: "manual_payments", name: "📱 Paiements Manuels", category: "Monétisation", enabled: true, visibilityStatus: "ACTIVE", status: "validated", description: "Paiement manuel par Mobile Money (Wave, Orange, MTN, Moov) pour les adhésions (dépend des Abonnements)." },
     { id: "escrow", name: "🔐 Séquestre & Contrats Dépôt", category: "Finance", enabled: false, visibilityStatus: "HIDDEN", status: "disabled", description: "Système de séquestre de cachets et contrats", parentId: "wallet" },
-    { id: "premium", name: "💎 AFRIGOMBO ELITE PREMIUM (Legacy)", category: "Monétisation", enabled: true, visibilityStatus: "ACTIVE", status: "validated", description: "Alias legacy de l'abonnement Premium (synchronisé avec Abonnements)." },
+    { id: "premium", name: "💎 AFRIGOMBO PREMIUM (Legacy)", category: "Monétisation", enabled: true, visibilityStatus: "ACTIVE", status: "validated", description: "Alias legacy de l'abonnement Premium (synchronisé avec Abonnements)." },
     { id: "monetisation", name: "📈 Programme de Monétisation", category: "Monétisation", enabled: true, visibilityStatus: "ACTIVE", status: "validated", description: "Fonds créateurs et revenus partagés" },
 
     // UNIVERS
     { id: "grandMarket", name: "🛒 Grand Marché AFRIGOMBO", category: "Économie", enabled: true, status: "validated", description: "Plateforme de transactions et petites annonces" },
-    { id: "academie", name: "🎓 Académie AFRIGOMBO ELITE", category: "Formation", enabled: false, status: "pending", description: "Tutoriels et certifications professionnelles" },
+    { id: "academie", name: "🎓 Académie AFRIGOMBO", category: "Formation", enabled: false, status: "pending", description: "Tutoriels et certifications professionnelles" },
     { id: "gombo_id", name: "🪪 Gombo ID Souverain", category: "Sécurité", enabled: true, status: "validated", description: "Système de badges d'accréditation" },
     { id: "avatar", name: "AVATAR", category: "Profil", enabled: true, status: "validated", description: "Système de personnalisation d'avatars et boutique d'accessoires virtuels." },
     { id: "heritage", name: "👑 Mon Héritage & Portfolio", category: "Profil", enabled: true, status: "validated", description: "Portfolio artistique et palmarès du membre" },
@@ -611,7 +611,7 @@ export default function AdminDeploymentCenter({
     { name: "Cahier Numérique du Fondateur", status: "Terminé", env: "Production", code: "MOD_NOTEBOOK" },
     { name: "Centre de Déploiement", status: "Terminé", env: "Production", code: "MOD_DEPLOY" },
     { name: "Appels WebRTC Directs", status: "En développement", env: "Bêta", code: "MOD_WEBRTC" },
-    { name: "Académie AFRIGOMBO ELITE", status: "Pas encore disponible", env: "Backlog", code: "MOD_ACADEMY" }
+    { name: "Académie AFRIGOMBO", status: "Pas encore disponible", env: "Backlog", code: "MOD_ACADEMY" }
   ];
 
   const currentProdRecord = deploymentHistory.find((d) => d.targetEnv === "production") || {

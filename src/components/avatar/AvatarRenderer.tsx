@@ -13,7 +13,7 @@ export interface AvatarRendererProps {
 }
 
 /**
- * AFRIGOMBO ELITE - TRUE 3D STYLIZED MEMOJI / BITMOJI AVATAR ENGINE
+ * AFRIGOMBO - TRUE 3D STYLIZED MEMOJI / BITMOJI AVATAR ENGINE
  * Renders real-time 3D WebGL meshes with toon shading, lighting, and volumetric melanin skin shaders.
  */
 const AvatarRenderer = memo(({ 

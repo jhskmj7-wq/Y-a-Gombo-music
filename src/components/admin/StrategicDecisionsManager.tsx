@@ -284,7 +284,7 @@ export default function StrategicDecisionsManager() {
             Décisions Stratégiques & Gouvernance
           </h2>
           <p className="text-xs text-afri-text-sec max-w-xl">
-            Journal souverain des orientations majeures de la plateforme AFRIGOMBO ELITE. Toutes les actions sont archivées et synchronisées dans Firestore.
+            Journal souverain des orientations majeures de la plateforme AFRIGOMBO. Toutes les actions sont archivées et synchronisées dans Firestore.
           </p>
         </div>
 
@@ -534,7 +534,7 @@ export default function StrategicDecisionsManager() {
                     <h3 className="text-base font-black text-afri-text uppercase tracking-tight font-display">
                       {editingDecision ? "Modifier la Décision" : "Nouvel Acte Stratégique"}
                     </h3>
-                    <p className="text-[10px] text-afri-text-sec font-mono uppercase">Registre Souverain AFRIGOMBO ELITE</p>
+                    <p className="text-[10px] text-afri-text-sec font-mono uppercase">Registre Souverain AFRIGOMBO</p>
                   </div>
                 </div>
 

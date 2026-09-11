@@ -13,7 +13,7 @@ import { SystemMedia } from "../types";
 const DEFAULT_AUDIO_SPOTS: Record<string, { title: string; subtitle: string; iconType: "hymn" | "intro" | "ambient" | "general"; defaultPublic: boolean }> = {
   anthem: {
     title: "Hymne officiel",
-    subtitle: "AFRIGOMBO ELITE SHOWBIZ",
+    subtitle: "AFRIGOMBO SHOWBIZ",
     iconType: "hymn",
     defaultPublic: true,
   },

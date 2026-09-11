@@ -275,7 +275,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
 
         <div className="max-w-3xl mx-auto space-y-2.5 relative z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-afri-gold/10 border border-afri-gold/30 text-afri-gold text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
-            👑 AFRIGOMBO ELITE PREMIUM
+            👑 AFRIGOMBO PREMIUM
           </div>
           
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-afri-text uppercase leading-tight">

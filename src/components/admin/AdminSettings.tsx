@@ -120,7 +120,7 @@ export default function AdminSettings({
           Paramètres Généraux du Système
         </h3>
         <p className="text-xs text-afri-text-sec mt-1">
-          Gérez les frais d'infrastructure, taux d'imposition administratifs et options globales d'AFRIGOMBO ELITE.
+          Gérez les frais d'infrastructure, taux d'imposition administratifs et options globales d'AFRIGOMBO.
         </p>
       </div>
 
@@ -195,7 +195,7 @@ export default function AdminSettings({
             🎵 Gestion de la Musique Officielle
           </h4>
           <p className="text-xs text-afri-text-sec">
-            Contrôlez les pistes officielles et hymnes d'AFRIGOMBO ELITE intégrés à l'application.
+            Contrôlez les pistes officielles et hymnes d'AFRIGOMBO intégrés à l'application.
           </p>
           <div className="space-y-4">
             {/* BUTTONS ROW */}
