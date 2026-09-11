@@ -1823,7 +1823,7 @@ export default function AdminFounderThrone({
         className={`relative overflow-hidden rounded-3xl border-2 border-[#D4AF37]/50 shadow-xl transition-all duration-500 mb-4 p-0 ${
           isDark 
             ? 'bg-afri-bg shadow-[0_10px_40px_-10px_rgba(212,175,55,0.15)]' 
-            : 'bg-[#EDEDED] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)]'
+            : 'bg-[#FAF7F2] shadow-[0_10px_40px_-10px_rgba(212,175,55,0.12)]'
         }`}
       >
         {/* Animated Imperial Glow Overlay */}
@@ -6015,7 +6015,7 @@ export default function AdminFounderThrone({
          ========================================================================= */}
       <div 
         className={`founder-bottom-nav fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 backdrop-blur-md border-t sm:border border-[#D4AF37]/50 p-1.5 px-3 sm:px-6 flex items-center z-45 sm:rounded-2xl w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1.5 sm:gap-4 select-none pr-6 ${
-          isDark ? 'bg-afri-bg/95 shadow-[0_8px_35px_rgba(212,175,55,0.35)]' : 'bg-[#EDEDED]/95 shadow-[0_8px_35px_rgba(0,0,0,0.15)]'
+          isDark ? 'bg-afri-bg/95 shadow-[0_8px_35px_rgba(212,175,55,0.35)]' : 'bg-[#FAF7F2]/95 shadow-[0_8px_35px_rgba(212,175,55,0.15)]'
         }`}
         style={{ paddingBottom: 'calc(6px + env(safe-area-inset-bottom, 0px))' }}
       >

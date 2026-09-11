@@ -452,17 +452,21 @@ img {
 .light .bg-zinc-950\/50,
 .light .bg-black\/60,
 .light .bg-black\/70,
-.light .bg-black\/80,
-.light .bg-black\/90,
-.light [class*="bg-black/"],
 .light [class*="bg-zinc-950/"],
 .light [class*="bg-zinc-900/"],
 .light [class*="bg-neutral-900/"] {
   background-color: var(--afri-bg-ter, #F4EFE6) !important;
   color: var(--afri-text, #2C211B) !important;
   border-color: var(--afri-border, #E5DFC5) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+}
+
+/* Modal and Drawer fixed backdrop overlays in light mode: soft translucent dark taupe blur */
+.light div.fixed.inset-0[class*="bg-black"],
+.light div.fixed.inset-0[class*="bg-afri-bg"],
+.light div.absolute.inset-0[class*="bg-black"] {
+  background-color: rgba(44, 33, 27, 0.45) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
 }
 
 /* Specific dark gradients converted to elegant ivory / gold gradients in light mode */
@@ -470,7 +474,11 @@ img {
 .light [class*="from-[#161619]"],
 .light [class*="from-[#14120C]"],
 .light [class*="from-[#101915]"],
-.light [class*="from-[#121215]"] {
+.light [class*="from-[#121215]"],
+.light [class*="from-[#030303]"],
+.light [class*="from-[#050505]"],
+.light [class*="from-[#0a0a0a]"],
+.light [class*="from-[#0d0d15]"] {
   background-image: linear-gradient(to bottom right, #FFFFFF, #FAF7F2, #F4EFE6) !important;
   background-color: #FFFFFF !important;
   color: var(--afri-text, #2C211B) !important;
