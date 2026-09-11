@@ -474,13 +474,13 @@ export default function SettingsModal({
       )}
 
       {/* MAIN CONTAINER CONFIG */}
-      <div className="max-w-xl mx-auto space-y-6">
+      <div className="max-w-[540px] mx-auto px-3 xs:px-4 sm:px-6 space-y-6">
 
         {/* 2. APPARENCE & THÈME */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            🎨 APPARENCE & MODE VISUEL
+            🎨 1. APPARENCE & INTERACTION
           </h2>
 
           <div className="space-y-4">
@@ -597,15 +597,11 @@ export default function SettingsModal({
             {/* PRESET DE PALETTES COULEURS */}
             <div className="space-y-1.5">
               <span className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest block">{mt("theme_label")}</span>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: "imperial", label: "Noir Impérial", premium: false, icon: "🌑" },
-                  { id: "light", label: "Blanc Ivoire", premium: false, icon: "☀️" },
-                  { id: "royal", label: "Or Royal", premium: true, icon: "👑" },
-                  { id: "saphir", label: "Bleu Saphir", premium: true, icon: "💎" },
-                  { id: "emeraude", label: "Vert Émeraude", premium: true, icon: "🌿" },
-                  { id: "studio", label: "Violet Impérial", premium: true, icon: "🌌" },
-                  { id: "rouge", label: "Rouge Prestige", premium: true, icon: "❤️" }
+                  { id: "light", label: "Ivoire", premium: false, icon: "☀️" },
+                  { id: "imperial", label: "Noir", premium: false, icon: "🌑" },
+                  { id: "system", label: "Système", premium: false, icon: "📱" }
                 ].map((th) => {
                   const isSelected = themePreset === th.id;
                   const locked = th.premium && !isPremium;
@@ -620,29 +616,17 @@ export default function SettingsModal({
                         }
                         setThemePreset(th.id as any);
                       }}
-                      className={`flex items-center justify-between gap-2 p-3 rounded-xl border text-left cursor-pointer relative overflow-hidden group ${
+                      className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border text-center cursor-pointer relative overflow-hidden group ${
                         isSelected 
                           ? "bg-afri-gold/10 border-afri-gold text-afri-gold font-black" 
                           : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text-sec"
                       } ${locked ? "opacity-60" : ""}`}
                     >
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <span className="text-xs shrink-0">{th.icon}</span>
-                        <span className="text-[9px] uppercase tracking-tighter truncate">{th.label}</span>
-                      </div>
+                      <span className="text-sm shrink-0">{th.icon}</span>
+                      <span className="text-[9px] uppercase tracking-tighter truncate font-bold">{th.label}</span>
                       
-                      {locked ? (
-                        <Lock className="w-3 h-3 text-afri-text-muted shrink-0" />
-                      ) : (
-                        isSelected && <Check className="w-3 h-3 text-afri-gold shrink-0" />
-                      )}
-
                       {isSelected && (
-                        <div className="absolute top-0 left-0 w-1 h-full bg-afri-gold" />
-                      )}
-                      
-                      {isFounder && th.premium && (
-                        <span className="absolute bottom-1 right-1 text-[7px] text-afri-gold font-bold uppercase">Fondateur</span>
+                        <div className="absolute bottom-0 left-0 w-full h-[3px] bg-afri-gold" />
                       )}
                     </button>
                   );
@@ -684,7 +668,7 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            👑 PERSONNALISATION DU PROFIL
+            👑 2. PROFIL, PERSONNALISATION & STATS
           </h2>
 
           <div className="space-y-3.5">
@@ -794,7 +778,7 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            🌐 RÉSEAU & PERFORMANCES MOBILE
+            🌐 4. RÉSEAU & PERFORMANCE
           </h2>
 
           <div className="space-y-3.5">
@@ -901,7 +885,7 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            💳 TICALE WALLET — SÉCURITÉ DU WALLET
+            🛡️ 3. SÉCURITÉ & CONFIDENTIALITÉ
           </h2>
 
           <div className="p-3.5 bg-afri-bg border border-afri-border rounded-xl space-y-3 font-mono text-xs">
@@ -969,7 +953,7 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            🛡️ SÉCURITÉ AVANCÉE & SESSIONS
+            🛡️ SÉCURITÉ BIOMÉTRIQUE & SESSIONS (SÉCURITÉ)
           </h2>
 
           <div className="space-y-3.5">
@@ -1061,7 +1045,7 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            📊 STATISTIQUES PERSONNELLES D'ÉLITE
+            📊 STATISTIQUES D'ÉLITE (PROFIL)
           </h2>
 
           <div className="grid grid-cols-2 gap-2.5">
@@ -1101,7 +1085,7 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            🔊 PRÉFÉRENCES AUDIO & LECTURE
+            🔊 AUDIO & LECTURE (APPARENCE)
           </h2>
 
           <div className="space-y-4">
@@ -1254,7 +1238,7 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            {mt("notif_title")}
+            🔔 FLUX DE NOTIFICATIONS & ALERTES (AIDE)
           </h2>
 
           <div className="space-y-3">
@@ -1309,7 +1293,7 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            {mt("security_title")}
+            🔒 VISIBILITÉ & CONFIDENTIALITÉ (SÉCURITÉ)
           </h2>
 
           <div className="space-y-4">
@@ -1409,7 +1393,7 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            {mt("storage_title")}
+            💾 OPTIMISATION STOCKAGE & CACHE (RÉSEAU)
           </h2>
 
           <div className="space-y-3">
@@ -1469,7 +1453,7 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-3.5 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            {mt("langue_title")}
+            🌍 LANGUE DE L'APPLICATION (APPARENCE)
           </h2>
           
           <div className="grid grid-cols-3 gap-2">
@@ -1505,7 +1489,7 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-3.5 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            {mt("support_title")}
+            🆘 5. AIDE & INFORMATIONS
           </h2>
 
           <div className="grid grid-cols-1 gap-2">

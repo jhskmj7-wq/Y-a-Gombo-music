@@ -1,30 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { globalAudioManager } from "../lib/audioManager";
-import { useAuth } from "../AuthContext";
-import { gomboDB } from "../firebase";
+import { useAppSettings } from "./AppSettingsContext";
 import { Theme, ThemeColors, themeColors } from "../theme/colors";
 
 export type { Theme, ThemeColors };
 type TextSize = "petit" | "moyen" | "grand";
 
-const safeGetItem = (key: string, fallback: string): string => {
-  try {
-    return localStorage.getItem(key) || fallback;
-  } catch (e) {
-    return fallback;
-  }
-};
-
-const safeSetItem = (key: string, value: string): void => {
-  try {
-    localStorage.setItem(key, value);
-  } catch (e) {
-    // ignore
-  }
-};
-
 interface ThemeContextType {
-  theme: Theme;
+  theme: "light" | "imperial"; // Resolved active visual theme
   colors: ThemeColors;
   setTheme: (t: Theme) => void;
   toggleTheme: () => void;
@@ -43,74 +26,64 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentUser, profile } = useAuth() || {};
+  const {
+    themePreset,
+    setThemePreset,
+    textSize,
+    setTextSize,
+    experience,
+    updateExperiencePref,
+    audio,
+    updateAudioPref,
+    notifications,
+    updateNotificationPref
+  } = useAppSettings();
 
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window !== "undefined") {
-      const stored = safeGetItem("gombo_theme", "imperial");
-      if (["imperial", "light", "royal", "saphir", "emeraude", "studio", "rouge"].includes(stored)) {
-        return stored as Theme;
-      }
+  // 1. System Preference Listening (Real-time update)
+  const [systemIsDark, setSystemIsDark] = useState<boolean>(() => {
+    if (typeof window !== "undefined" && window.matchMedia) {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
-    return "imperial";
+    return false;
   });
 
-  const [textSize, setTextSizeState] = useState<TextSize>(() => {
-    if (typeof window !== "undefined") {
-      return (safeGetItem("gombo_pref_text_size", "moyen") as TextSize);
-    }
-    return "moyen";
-  });
-
-  const [notificationsEnabled, setNotificationsEnabledState] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return safeGetItem("gombo_pref_notif_enabled", "true") !== "false";
-    }
-    return true;
-  });
-
-  const [musicEnabled, setMusicEnabledState] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return safeGetItem("gombo_pref_music_muted", "false") !== "true";
-    }
-    return true;
-  });
-
-  const [soundsEnabled, setSoundsEnabledState] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return safeGetItem("gombo_pref_ui_sounds", "true") !== "false";
-    }
-    return true;
-  });
-
-  const [vibrationsEnabled, setVibrationsEnabledState] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return safeGetItem("gombo_pref_vibration", "true") !== "false";
-    }
-    return true;
-  });
-
-  // Sync theme from loaded user profile
   useEffect(() => {
-    if (profile?.theme && profile.theme !== theme) {
-      if (["imperial", "light", "royal", "saphir", "emeraude", "studio", "rouge"].includes(profile.theme)) {
-        setThemeState(profile.theme as Theme);
-      }
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const listener = (e: MediaQueryListEvent) => {
+      setSystemIsDark(e.matches);
+    };
+    
+    // Modern API with fallback
+    if (media.addEventListener) {
+      media.addEventListener("change", listener);
+      return () => media.removeEventListener("change", listener);
+    } else {
+      // @ts-ignore
+      media.addListener(listener);
+      // @ts-ignore
+      return () => media.removeListener(listener);
     }
-  }, [profile?.theme]);
+  }, []);
 
-  // Apply theme & store
+  // 2. Resolve Active Theme
+  const resolvedTheme: "light" | "imperial" =
+    themePreset === "system" ? (systemIsDark ? "imperial" : "light") : (themePreset === "imperial" ? "imperial" : "light");
+
+  // 3. Apply Theme Classes & Styles to documentElement (DOM)
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove("light", "dark", "imperial", "royal", "saphir", "emeraude", "studio", "rouge");
-    root.classList.add(theme);
-    
-    // Treat all except "light" as dark-based for tailwind dark: classes
-    if (theme !== "light") {
+    root.classList.remove("light", "dark", "imperial");
+    root.classList.add(resolvedTheme);
+
+    // Set tailwind classes
+    if (resolvedTheme === "imperial") {
       root.classList.add("dark");
+    } else {
+      root.classList.add("light");
     }
-    
-    const cols = themeColors[theme] || themeColors.imperial;
+
+    const cols = themeColors[resolvedTheme] || themeColors.light;
     root.style.setProperty("--afri-bg", cols.background);
     root.style.setProperty("--afri-bg-sec", cols.surface);
     root.style.setProperty("--afri-bg-ter", cols.card);
@@ -124,79 +97,40 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.style.setProperty("--afri-error", cols.error);
     root.style.setProperty("--afri-success", cols.success);
     root.style.setProperty("--afri-warning", cols.warning);
-    
-    let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
       metaThemeColor.setAttribute("content", cols.background);
     }
-
-    safeSetItem("gombo_theme", theme);
-  }, [theme]);
-
-  // Apply text size & store
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove("text-size-petit", "text-size-moyen", "text-size-grand");
-    root.classList.add(`text-size-${textSize}`);
-    safeSetItem("gombo_pref_text_size", textSize);
-  }, [textSize]);
-
-  // Sync musicEnabled with globalAudioManager
-  useEffect(() => {
-    globalAudioManager.setIsMuted(!musicEnabled);
-    safeSetItem("gombo_pref_music_muted", (!musicEnabled).toString());
-  }, [musicEnabled]);
-
-  // Sync other settings
-  useEffect(() => {
-    safeSetItem("gombo_pref_notif_enabled", notificationsEnabled.toString());
-  }, [notificationsEnabled]);
-
-  useEffect(() => {
-    safeSetItem("gombo_pref_ui_sounds", soundsEnabled.toString());
-  }, [soundsEnabled]);
-
-  useEffect(() => {
-    safeSetItem("gombo_pref_vibration", vibrationsEnabled.toString());
-  }, [vibrationsEnabled]);
+  }, [resolvedTheme]);
 
   const toggleTheme = () => {
-    const nextTheme = theme === "imperial" ? "light" : "imperial";
-    setTheme(nextTheme);
+    const nextPreset = resolvedTheme === "imperial" ? "light" : "imperial";
+    setThemePreset(nextPreset);
   };
 
-  const setTheme = async (t: Theme) => {
-    setThemeState(t);
-    safeSetItem("gombo_theme", t);
-    
-    // If user is connected, persist in Firestore
-    if (currentUser?.uid) {
-      try {
-        await gomboDB.updateUserProfile(currentUser.uid, { theme: t });
-      } catch (err) {
-        console.error("Failed to save theme in user profile Firestore document:", err);
-      }
-    }
+  const setTheme = (t: Theme) => {
+    setThemePreset(t);
   };
 
-  const setTextSize = (s: TextSize) => {
-    setTextSizeState(s);
-  };
-
-  const setNotificationsEnabled = (val: boolean) => {
-    setNotificationsEnabledState(val);
-  };
-
+  // Sync music with globalAudioManager
+  const musicEnabled = !audio.musicMuted;
   const setMusicEnabled = (val: boolean) => {
-    setMusicEnabledState(val);
+    updateAudioPref("musicMuted", !val);
   };
 
+  // Sound effects
+  const soundsEnabled = audio.soundEffects;
   const setSoundsEnabled = (val: boolean) => {
-    setSoundsEnabledState(val);
+    updateAudioPref("soundEffects", val);
+    updateExperiencePref("soundEffects", val);
   };
 
+  // Vibrations
+  const vibrationsEnabled = audio.vibrations;
   const setVibrationsEnabled = (val: boolean) => {
-    setVibrationsEnabledState(val);
+    updateAudioPref("vibrations", val);
+    updateExperiencePref("vibrations", val);
     if (val && typeof navigator !== "undefined" && navigator.vibrate) {
       try {
         navigator.vibrate(50);
@@ -204,11 +138,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // Notifications
+  const notificationsEnabled = notifications.masterEnabled;
+  const setNotificationsEnabled = (val: boolean) => {
+    updateNotificationPref("masterEnabled", val);
+  };
+
   return (
     <ThemeContext.Provider
       value={{
-        theme,
-        colors: themeColors[theme] || themeColors.imperial,
+        theme: resolvedTheme,
+        colors: themeColors[resolvedTheme] || themeColors.light,
         setTheme,
         toggleTheme,
         textSize,

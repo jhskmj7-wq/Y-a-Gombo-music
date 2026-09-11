@@ -226,10 +226,16 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [toast]);
 
-  // 2. Theme Mode & Preset State
-  const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
-    return (safeGetItem("gombo_theme_mode", "system") as ThemeMode);
+  // 2. Theme Mode & Preset State (Unified under themePreset)
+  const [themePreset, setThemePresetState] = useState<Theme>(() => {
+    const stored = safeGetItem("gombo_theme", "light");
+    if (["light", "imperial", "system"].includes(stored)) {
+      return stored as Theme;
+    }
+    return "light";
   });
+
+  const themeMode: ThemeMode = themePreset === "light" ? "light" : themePreset === "imperial" ? "dark" : "system";
 
   // 2b. Experience Settings State
   const [experience, setExperience] = useState<ExperienceSettings>(() => ({
@@ -615,60 +621,15 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     postsCount: 19,
   };
 
-  const [themePreset, setThemePresetState] = useState<Theme>(() => {
-    const stored = safeGetItem("gombo_theme", "imperial");
-    if (["imperial", "light", "royal", "saphir", "emeraude", "studio", "rouge"].includes(stored)) {
-      return stored as Theme;
-    }
-    return "imperial";
-  });
-
   const [textSize, setTextSizeState] = useState<"petit" | "moyen" | "grand">(
     () => safeGetItem("gombo_pref_text_size", "moyen") as any
   );
 
-  // Apply Theme Mode & Preset to DOM
+  // Sync state changes with local storage
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove("light", "dark", "imperial", "royal", "saphir", "emeraude", "studio", "rouge");
-
-    // Apply Preset CSS variables
-    const activePreset = themePreset;
-    root.classList.add(activePreset);
-
-    const cols = themeColors[activePreset] || themeColors.imperial;
-    root.style.setProperty("--afri-bg", cols.background);
-    root.style.setProperty("--afri-bg-sec", cols.surface);
-    root.style.setProperty("--afri-bg-ter", cols.card);
-    root.style.setProperty("--afri-text", cols.text);
-    root.style.setProperty("--afri-text-sec", cols.textSecondary);
-    root.style.setProperty("--afri-text-muted", cols.secondary);
-    root.style.setProperty("--afri-border", cols.border);
-    root.style.setProperty("--afri-gold", cols.gold);
-
-    // Apply Mode (Dark / Light / System)
-    let isDark = true;
-    if (themeMode === "light" || activePreset === "light") {
-      isDark = false;
-    } else if (themeMode === "dark") {
-      isDark = true;
-    } else if (themeMode === "system") {
-      if (typeof window !== "undefined" && window.matchMedia) {
-        isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      }
-    }
-
-    if (isDark) {
-      root.classList.add("dark");
-      root.classList.remove("light");
-    } else {
-      root.classList.add("light");
-      root.classList.remove("dark");
-    }
-
-    safeSetItem("gombo_theme_mode", themeMode);
-    safeSetItem("gombo_theme", activePreset);
-  }, [themeMode, themePreset]);
+    safeSetItem("gombo_theme", themePreset);
+    safeSetItem("gombo_theme_mode", themePreset === "light" ? "light" : themePreset === "imperial" ? "dark" : "system");
+  }, [themePreset]);
 
   // Apply Text Size
   useEffect(() => {
@@ -679,7 +640,12 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [textSize]);
 
   const setThemeMode = (mode: ThemeMode) => {
-    setThemeModeState(mode);
+    const presetMap: Record<ThemeMode, Theme> = {
+      light: "light",
+      dark: "imperial",
+      system: "system"
+    };
+    setThemePreset(presetMap[mode]);
     const modeLabels: Record<ThemeMode, string> = {
       dark: "Mode Sombre activé 🌙",
       light: "Mode Clair activé ☀️",
@@ -690,7 +656,7 @@ export const AppSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const setThemePreset = async (preset: Theme) => {
     setThemePresetState(preset);
-    showToast(`Thème visual : [${preset.toUpperCase()}] appliqué 🎨`);
+    showToast(`Thème : [${preset === "light" ? "IVOIRE" : preset === "imperial" ? "NOIR" : "SYSTÈME"}] appliqué 🎨`);
     if (currentUser?.uid) {
       try {
         await gomboDB.updateUserProfile(currentUser.uid, { theme: preset });
