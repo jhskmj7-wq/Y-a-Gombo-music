@@ -151,25 +151,65 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const containerRef = useRef<HTMLDivElement>(null);
   const activeVideoRef = useRef<HTMLVideoElement | null>(null);
   const videoElementsRef = useRef<Map<string, HTMLVideoElement>>(new Map());
+  const allCreatedVideos = useRef<Set<HTMLVideoElement>>(new Set());
+  const allCreatedIframes = useRef<Set<HTMLIFrameElement>>(new Set());
+  const userClickedMute = useRef<boolean | null>(null);
+
+  const syncVideoAudio = (videoEl: HTMLVideoElement, muted: boolean) => {
+    try {
+      videoEl.muted = muted;
+      if (!muted) {
+        if (videoEl.volume === 0 || videoEl.volume === null || videoEl.volume === undefined) {
+          videoEl.volume = 1.0;
+        }
+      }
+    } catch (err) {
+      console.warn("[ReelsPlayer] Error syncing video audio:", err);
+    }
+  };
 
   // Bulletproof cleanup of all media (videos, audios, youtube iframes)
   const stopAllMedia = () => {
+    // 1. Halt and mute all tracked video elements (including unmounted ones still in memory)
+    allCreatedVideos.current.forEach((videoEl) => {
+      try {
+        videoEl.pause();
+        videoEl.currentTime = 0;
+        videoEl.muted = true;
+        videoEl.removeAttribute("src");
+        videoEl.load();
+      } catch (_) {}
+    });
+    allCreatedVideos.current.clear();
+
+    // 2. Halt all active elements in videoElementsRef map
     videoElementsRef.current.forEach((videoEl) => {
       try {
         videoEl.pause();
         videoEl.currentTime = 0;
+        videoEl.muted = true;
         videoEl.removeAttribute("src");
         videoEl.load();
       } catch (_) {}
     });
     videoElementsRef.current.clear();
 
+    // 3. Halt all tracked YouTube iframes
+    allCreatedIframes.current.forEach((f) => {
+      try {
+        f.src = "about:blank";
+      } catch (_) {}
+    });
+    allCreatedIframes.current.clear();
+
+    // 4. Fallback search inside containerRef if still present
     if (containerRef.current) {
       const vids = containerRef.current.querySelectorAll("video");
       vids.forEach((v) => {
         try {
           v.pause();
           v.currentTime = 0;
+          v.muted = true;
           v.removeAttribute("src");
           v.load();
         } catch (_) {}
@@ -193,6 +233,10 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
           }
         } catch (_) {}
       });
+    }
+
+    if (activeVideoRef.current) {
+      activeVideoRef.current = null;
     }
   };
 
@@ -468,12 +512,19 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
     if (activeVideoRef.current) {
       activeVideoRef.current.currentTime = 0;
-      activeVideoRef.current.muted = isMuted;
+
+      // Determine initial mute state: use explicit user choice if any, otherwise default to unmuted (false)
+      const targetMuted = userClickedMute.current !== null ? userClickedMute.current : false;
+      
+      setIsMuted(targetMuted);
+      syncVideoAudio(activeVideoRef.current, targetMuted);
+
       const playPromise = activeVideoRef.current.play();
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
           console.warn("[ReelsPlayer] Autoplay prevented by browser, falling back to muted autoplay:", err);
           if (activeVideoRef.current && !activeVideoRef.current.muted) {
+            // Fall back to muted autoplay
             activeVideoRef.current.muted = true;
             setIsMuted(true);
             activeVideoRef.current.play().catch(() => {});
@@ -481,7 +532,14 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         });
       }
     }
-  }, [currentIndex, isMuted, localReels]);
+  }, [currentIndex, localReels]);
+
+  // Handle mute state change smoothly without resetting currentTime
+  useEffect(() => {
+    if (activeVideoRef.current) {
+      syncVideoAudio(activeVideoRef.current, isMuted);
+    }
+  }, [isMuted]);
 
   // COMPLETE UNMOUNT CLEANUP
   useEffect(() => {
@@ -869,8 +927,9 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
               e.stopPropagation();
               const nextMuted = !isMuted;
               setIsMuted(nextMuted);
+              userClickedMute.current = nextMuted; // persist explicit user choice
               if (activeVideoRef.current) {
-                activeVideoRef.current.muted = nextMuted;
+                syncVideoAudio(activeVideoRef.current, nextMuted);
                 if (!nextMuted) {
                   activeVideoRef.current.play().catch((err) => {
                     console.warn("[ReelsPlayer] Error playing unmuted audio:", err);
@@ -967,6 +1026,11 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   >
                     {getYoutubeId(reel.mediaUrl) ? (
                       <iframe
+                        ref={(el) => {
+                          if (el) {
+                            allCreatedIframes.current.add(el);
+                          }
+                        }}
                         src={`https://www.youtube.com/embed/${getYoutubeId(reel.mediaUrl)}?autoplay=${isActive ? 1 : 0}&mute=${isMuted ? 1 : 0}&loop=1&playlist=${getYoutubeId(reel.mediaUrl)}&playsinline=1&controls=0&rel=0&modestbranding=1`}
                         title={reel.title || "Vidéo Réel"}
                         className="w-full h-full object-cover pointer-events-auto bg-black"
@@ -978,6 +1042,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                         ref={(el) => {
                           if (el) {
                             videoElementsRef.current.set(reel.id, el);
+                            allCreatedVideos.current.add(el);
                             if (isActive) {
                               activeVideoRef.current = el;
                             }
