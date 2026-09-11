@@ -153,7 +153,7 @@ export const MonAbonnementView: React.FC<Props> = ({
   }
 
   return (
-    <div className="afri-container space-y-5 animate-fadeIn text-left py-2 xs:py-4 max-w-2xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 space-y-5 animate-fadeIn text-left py-2 xs:py-4">
       
       {/* HEADER */}
       <div className="flex items-center justify-center border-b border-afri-border/60 pb-3">

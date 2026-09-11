@@ -115,7 +115,7 @@ export default function PublishPage({ currentUserProfile, onSuccess, onCancel, o
   };
 
   return (
-    <div className="min-h-[100dvh] bg-afri-bg-sec text-afri-text py-6 px-4">
+    <div className="w-full max-w-4xl mx-auto text-afri-text py-3 sm:py-5 px-1.5 xs:px-2.5 sm:px-6">
       {!profile ? (
         <div className="flex justify-center items-center h-[50vh] text-afri-text-sec">
           Chargement du profil...

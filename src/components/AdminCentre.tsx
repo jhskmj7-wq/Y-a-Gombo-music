@@ -3459,7 +3459,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 } ${
                   activeMenu === "super_admin" || activeMenu === "user_builders" || activeMenu === "dashboard" || activeMenu === "user_terrain" || activeMenu === "user_vibes" || activeMenu === "user_mes_gombos" || activeMenu === "user_heritage"
                     ? "px-4 xs:px-5 sm:px-8 max-w-5xl mx-auto w-full pt-0 pb-16 sm:pb-20 space-y-6"
-                    : activeMenu === "user_gombo_id"
+                    : ["user_gombo_id", "user_grand_marche", "user_academie", "user_gombo_plus", "user_publish", "user_subscription_management"].includes(activeMenu)
                     ? "px-1.5 xs:px-2.5 sm:px-6 max-w-5xl mx-auto w-full pt-0 pb-16 sm:pb-20 space-y-4"
                     : ["user_messages", "user_settings", "user_notifications", "user_reels", "user_wallet"].includes(activeMenu)
                     ? "p-0 m-0"
@@ -5492,7 +5492,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {activeMenu === "user_grand_marche" && (
-                <div className="afri-container space-y-6 animate-fadeIn text-left py-2 xs:py-4">
+                <div className="w-full space-y-6 animate-fadeIn text-left py-2 xs:py-4">
                   <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
                     <GrandMarcheView
                       currentUserProfile={profile}
@@ -5504,7 +5504,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {activeMenu === "user_academie" && (
-                <div className="afri-container space-y-6 animate-fadeIn text-left py-2 xs:py-4">
+                <div className="w-full space-y-6 animate-fadeIn text-left py-2 xs:py-4">
                   <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
                     <AcademieView
                       currentUserProfile={profile}
