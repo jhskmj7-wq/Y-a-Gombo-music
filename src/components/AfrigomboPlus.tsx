@@ -309,7 +309,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+      <div className="max-w-5xl mx-auto px-1.5 xs:px-2.5 sm:px-6 pt-6 space-y-6">
         
         {/* BILLING TOGGLE */}
         <div className="flex justify-center">

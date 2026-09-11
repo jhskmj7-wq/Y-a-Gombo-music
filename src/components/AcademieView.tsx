@@ -550,7 +550,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
               <p className="text-xs text-afri-text-sec">Essayez une autre recherche ou modifiez les filtres de catégorie.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full pt-2">
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4 w-full pt-2">
               {filteredCourses.map((course) => {
               const isEnrolled = enrolledCourseIds.includes(course.id);
               return (

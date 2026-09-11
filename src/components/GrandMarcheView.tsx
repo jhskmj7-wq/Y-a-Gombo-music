@@ -585,7 +585,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-4 w-full pt-2">
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-4 w-full pt-2">
               {filteredItems.map((item) => {
                 const isFav = favoriteIds.includes(item.id);
                 return (

@@ -928,7 +928,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel, 
   const finalSpecialtyDisplay = specialty === "Autre" ? (customSpecialty || "Spécialité personnalisée") : specialty;
 
   return (
-    <div className="max-w-xl mx-auto py-2 sm:py-4 px-2">
+    <div className="w-full max-w-2xl mx-auto py-2 sm:py-4 px-1.5 xs:px-2.5 sm:px-6">
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
