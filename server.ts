@@ -17,6 +17,7 @@ import {
   resolveR2Bucket,
   uploadBufferToR2,
   testR2BucketConnection,
+  deleteObjectFromR2,
   type R2BucketType,
 } from "./server/r2";
 
@@ -1905,6 +1906,52 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     } catch (proxyErr: any) {
       console.error("[R2 PROXY UPLOAD SERVER ERROR]", proxyErr);
       return res.status(500).json({ error: proxyErr.message || "Erreur lors du transfert R2 par le serveur." });
+    }
+  });
+
+  app.post("/api/r2/delete", async (req, res) => {
+    try {
+      const { key, idToken } = req.body;
+      const authHeader = req.headers.authorization;
+      const token = idToken || (authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null);
+
+      if (!key || typeof key !== "string") {
+        return res.status(400).json({ error: "Clé R2 invalide ou manquante." });
+      }
+
+      let uid: string | null = null;
+      let userEmail: string | null = null;
+
+      if (token) {
+        try {
+          const adminAuth = getAdminAuthClient();
+          if (adminAuth) {
+            const decoded = await adminAuth.verifyIdToken(token);
+            uid = decoded.uid;
+            userEmail = decoded.email || null;
+          }
+        } catch (authErr) {
+          console.warn("[R2 Delete API] Token invalide/expiré:", authErr);
+        }
+      }
+
+      if (!uid) {
+        return res.status(401).json({ error: "Authentification requise pour supprimer un fichier R2." });
+      }
+
+      // Check ownership or admin status
+      const isOwner = key.includes(uid);
+      const isFounderOrAdmin = userEmail && PROTECTED_FOUNDER_EMAILS.includes(userEmail);
+
+      if (!isOwner && !isFounderOrAdmin) {
+        return res.status(403).json({ error: "Permission refusée. Vous ne pouvez supprimer que vos propres fichiers R2." });
+      }
+
+      const success = await deleteObjectFromR2(key, "public");
+      return res.json({ success, key });
+    } catch (err: any) {
+      console.error("[R2 DELETE API ERROR]", err);
+      return res.status(500).json({ error: err?.message || "Erreur lors de la suppression R2." });
     }
   });
 

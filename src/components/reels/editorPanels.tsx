@@ -21,7 +21,7 @@ export function FiltersPanel({ state, onChange }: PanelProps) {
         </span>
         <button
           onClick={() => onChange((prev) => ({ ...prev, filterId: "naturel", filterIntensity: 100 }))}
-          className="text-[10px] text-zinc-400 dark:text-zinc-400 hover:text-foreground flex items-center gap-1 cursor-pointer"
+          className="text-[10px] text-afri-text-muted hover:text-afri-text flex items-center gap-1 cursor-pointer transition-colors"
         >
           <RotateCcw className="w-3 h-3" /> Réinitialiser
         </button>
@@ -42,7 +42,7 @@ export function FiltersPanel({ state, onChange }: PanelProps) {
                 className={`w-14 h-14 rounded-2xl overflow-hidden border-2 flex items-center justify-center relative shadow-lg transition-all ${
                   isSelected
                     ? "border-[#D4AF37] ring-2 ring-[#D4AF37]/50 shadow-[#D4AF37]/20 scale-105"
-                    : "border-zinc-300 dark:border-white/20 hover:border-zinc-400 dark:hover:border-white/50"
+                    : "border-afri-border/50 hover:border-[#D4AF37]/50"
                 }`}
               >
                 <div
@@ -56,7 +56,7 @@ export function FiltersPanel({ state, onChange }: PanelProps) {
               </div>
               <span
                 className={`text-[10px] font-mono tracking-tight transition-colors ${
-                  isSelected ? "text-[#D4AF37] font-bold" : "text-zinc-500 dark:text-zinc-400"
+                  isSelected ? "text-[#D4AF37] font-bold" : "text-afri-text-sec"
                 }`}
               >
                 {f.name}
@@ -68,7 +68,7 @@ export function FiltersPanel({ state, onChange }: PanelProps) {
 
       {state.filterId !== "naturel" && (
         <div className="flex items-center gap-3 pt-1 px-1">
-          <span className="text-[11px] text-zinc-600 dark:text-zinc-400 w-16 shrink-0">Intensité</span>
+          <span className="text-[11px] text-afri-text-sec w-16 shrink-0">Intensité</span>
           <input
             type="range"
             min="0"
@@ -78,7 +78,7 @@ export function FiltersPanel({ state, onChange }: PanelProps) {
               const val = Number(e.target.value);
               onChange((prev) => ({ ...prev, filterIntensity: val }));
             }}
-            className="flex-1 h-1.5 bg-zinc-300 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+            className="flex-1 h-1.5 bg-afri-bg-ter rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
           />
           <span className="text-[11px] font-mono text-[#D4AF37] font-bold w-8 text-right">
             {state.filterIntensity}%
@@ -129,14 +129,14 @@ export function AdjustmentsPanel({ state, onChange }: PanelProps) {
   };
 
   return (
-    <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1 text-foreground scrollbar-thin">
+    <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1 text-afri-text scrollbar-thin">
       <div className="flex items-center justify-between pb-1">
         <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-wider">
           Ajustements Visuels
         </span>
         <button
           onClick={resetAll}
-          className="text-[10px] text-zinc-500 dark:text-zinc-400 hover:text-[#D4AF37] flex items-center gap-1 cursor-pointer transition-colors px-2 py-0.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          className="text-[10px] text-afri-text-muted hover:text-[#D4AF37] flex items-center gap-1 cursor-pointer transition-colors px-2 py-0.5 rounded-md hover:bg-afri-bg-action"
           title="Réinitialiser tous les réglages et filtres"
         >
           <RotateCcw className="w-3 h-3" /> Tout réinitialiser
@@ -147,8 +147,8 @@ export function AdjustmentsPanel({ state, onChange }: PanelProps) {
         {adjustments.map((adj) => {
           const currentVal = Number.isFinite(adj.val) ? adj.val : 0;
           return (
-            <div key={adj.key} className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-900/60 p-2 rounded-xl border border-zinc-200 dark:border-white/5">
-              <span className="text-[11px] text-zinc-700 dark:text-zinc-300 w-20 shrink-0 select-none">{adj.label}</span>
+            <div key={adj.key} className="flex items-center gap-2 bg-afri-bg-ter/80 p-2 rounded-xl border border-afri-border/40">
+              <span className="text-[11px] text-afri-text-sec w-20 shrink-0 select-none">{adj.label}</span>
               <input
                 type="range"
                 min={adj.min}
@@ -159,7 +159,7 @@ export function AdjustmentsPanel({ state, onChange }: PanelProps) {
                   const num = Math.round(Number(e.target.value));
                   onChange((prev) => ({ ...prev, [adj.key]: num }));
                 }}
-                className="flex-1 h-1.5 bg-zinc-300 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                className="flex-1 h-1.5 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
               />
               <button
                 type="button"
@@ -188,14 +188,14 @@ export function TrimPanel({ state, onChange, duration, onSeek }: PanelProps) {
         <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-wider">
           Couper / Trim Video
         </span>
-        <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
+        <span className="text-[10px] font-mono text-afri-text-sec">
           Sélection: {(trimEnd - trimStart).toFixed(1)}s / Total: {duration.toFixed(1)}s
         </span>
       </div>
 
-      <div className="relative bg-zinc-100 dark:bg-zinc-900/80 p-3 rounded-xl border border-zinc-200 dark:border-white/10 space-y-2">
+      <div className="relative bg-afri-bg-ter/80 p-3 rounded-xl border border-afri-border/40 space-y-2">
         <div className="flex items-center gap-3">
-          <span className="text-[11px] text-zinc-600 dark:text-zinc-400 w-12">Début</span>
+          <span className="text-[11px] text-afri-text-sec w-12">Début</span>
           <input
             type="range"
             min={0}
@@ -207,7 +207,7 @@ export function TrimPanel({ state, onChange, duration, onSeek }: PanelProps) {
               onChange((prev) => ({ ...prev, trimStart: val }));
               onSeek(val);
             }}
-            className="flex-1 h-2 bg-zinc-300 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+            className="flex-1 h-2 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
           />
           <span className="text-[11px] font-mono text-[#D4AF37] font-bold w-12 text-right">
             {trimStart.toFixed(1)}s
@@ -215,7 +215,7 @@ export function TrimPanel({ state, onChange, duration, onSeek }: PanelProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-[11px] text-zinc-600 dark:text-zinc-400 w-12">Fin</span>
+          <span className="text-[11px] text-afri-text-sec w-12">Fin</span>
           <input
             type="range"
             min={Math.min(duration, trimStart + 0.5)}
@@ -227,7 +227,7 @@ export function TrimPanel({ state, onChange, duration, onSeek }: PanelProps) {
               onChange((prev) => ({ ...prev, trimEnd: val }));
               onSeek(val);
             }}
-            className="flex-1 h-2 bg-zinc-300 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+            className="flex-1 h-2 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
           />
           <span className="text-[11px] font-mono text-[#D4AF37] font-bold w-12 text-right">
             {trimEnd.toFixed(1)}s
@@ -262,8 +262,8 @@ export function SpeedPanel({ state, onChange }: PanelProps) {
               onClick={() => onChange((prev) => ({ ...prev, playbackRate: s }))}
               className={`py-2 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer ${
                 isSelected
-                  ? "bg-[#D4AF37] text-black border-amber-400 shadow-md scale-105"
-                  : "bg-zinc-100 dark:bg-zinc-900/80 text-zinc-800 dark:text-zinc-300 border-zinc-300 dark:border-white/10 hover:border-zinc-400 dark:hover:border-white/30"
+                  ? "bg-[#D4AF37] text-black border-amber-400 shadow-md font-black"
+                  : "bg-afri-bg-ter text-afri-text border-afri-border/40 hover:border-[#D4AF37]/50"
               }`}
             >
               {s}x
@@ -304,7 +304,7 @@ export function TransformPanel({ state, onChange }: PanelProps) {
       <div className="flex items-center gap-3">
         <button
           onClick={rotate}
-          className="flex-1 py-2 px-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-white/10 hover:border-[#D4AF37]/50 flex items-center justify-center gap-2 text-xs font-mono text-zinc-800 dark:text-zinc-200 cursor-pointer"
+          className="flex-1 py-2 px-3 rounded-xl bg-afri-bg-ter border border-afri-border/40 hover:border-[#D4AF37]/50 flex items-center justify-center gap-2 text-xs font-mono text-afri-text cursor-pointer"
         >
           <RotateCw className="w-4 h-4 text-[#D4AF37]" />
           <span>Rotation ({state.rotation}°)</span>
@@ -315,7 +315,7 @@ export function TransformPanel({ state, onChange }: PanelProps) {
           className={`flex-1 py-2 px-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-mono cursor-pointer transition-all ${
             state.flipHorizontal
               ? "bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37] font-bold"
-              : "bg-zinc-100 dark:bg-zinc-900 border-zinc-300 dark:border-white/10 text-zinc-800 dark:text-zinc-200"
+              : "bg-afri-bg-ter border-afri-border/40 text-afri-text"
           }`}
         >
           <FlipHorizontal className="w-4 h-4" />
@@ -324,7 +324,7 @@ export function TransformPanel({ state, onChange }: PanelProps) {
       </div>
 
       <div className="space-y-1.5">
-        <span className="text-[11px] text-zinc-600 dark:text-zinc-400">Ratio d'aspect :</span>
+        <span className="text-[11px] text-afri-text-sec">Ratio d'aspect :</span>
         <div className="grid grid-cols-4 gap-2">
           {aspectRatios.map((ratio) => {
             const isSelected = state.aspectRatio === ratio;
@@ -335,7 +335,7 @@ export function TransformPanel({ state, onChange }: PanelProps) {
                 className={`py-1.5 rounded-lg border text-xs font-mono transition-all cursor-pointer ${
                   isSelected
                     ? "bg-[#D4AF37] text-black border-amber-400 font-bold"
-                    : "bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-300 border-zinc-300 dark:border-white/10"
+                    : "bg-afri-bg-ter text-afri-text border-afri-border/40 hover:border-[#D4AF37]/50"
                 }`}
               >
                 {ratio}
@@ -361,7 +361,7 @@ export function AudioPanel({ state, onChange }: PanelProps) {
           className={`p-1.5 rounded-lg border text-xs flex items-center gap-1.5 cursor-pointer ${
             state.isMuted
               ? "bg-red-500/20 text-red-500 border-red-500/40"
-              : "bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-300 border-zinc-300 dark:border-white/10"
+              : "bg-afri-bg-ter text-afri-text border-afri-border/40 hover:border-[#D4AF37]/50"
           }`}
         >
           {state.isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-[#D4AF37]" />}
@@ -369,8 +369,8 @@ export function AudioPanel({ state, onChange }: PanelProps) {
         </button>
       </div>
 
-      <div className="flex items-center gap-3 bg-zinc-100 dark:bg-zinc-900/80 p-3 rounded-xl border border-zinc-200 dark:border-white/10">
-        <span className="text-[11px] text-zinc-700 dark:text-zinc-300 w-20">Volume Video</span>
+      <div className="flex items-center gap-3 bg-afri-bg-ter/80 p-3 rounded-xl border border-afri-border/40">
+        <span className="text-[11px] text-afri-text-sec w-20">Volume Video</span>
         <input
           type="range"
           min="0"
@@ -381,7 +381,7 @@ export function AudioPanel({ state, onChange }: PanelProps) {
             const val = Number(e.target.value);
             onChange((prev) => ({ ...prev, volume: val }));
           }}
-          className="flex-1 h-2 bg-zinc-300 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[#D4AF37] disabled:opacity-40"
+          className="flex-1 h-2 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-[#D4AF37] disabled:opacity-40"
         />
         <span className="text-[11px] font-mono text-[#D4AF37] font-bold w-10 text-right">
           {state.isMuted ? "0%" : `${state.volume}%`}
@@ -389,7 +389,7 @@ export function AudioPanel({ state, onChange }: PanelProps) {
       </div>
 
       <div className="flex items-center gap-3 pt-1">
-        <label className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 cursor-pointer">
+        <label className="flex items-center gap-2 text-xs text-afri-text-sec cursor-pointer">
           <input
             type="checkbox"
             checked={state.fadeIn}
@@ -397,12 +397,12 @@ export function AudioPanel({ state, onChange }: PanelProps) {
               const checked = e.target.checked;
               onChange((prev) => ({ ...prev, fadeIn: checked }));
             }}
-            className="rounded border-zinc-400 accent-[#D4AF37]"
+            className="rounded border-afri-border accent-[#D4AF37]"
           />
           Fondu d'entrée audio
         </label>
 
-        <label className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 cursor-pointer">
+        <label className="flex items-center gap-2 text-xs text-afri-text-sec cursor-pointer">
           <input
             type="checkbox"
             checked={state.fadeOut}
@@ -410,7 +410,7 @@ export function AudioPanel({ state, onChange }: PanelProps) {
               const checked = e.target.checked;
               onChange((prev) => ({ ...prev, fadeOut: checked }));
             }}
-            className="rounded border-zinc-400 accent-[#D4AF37]"
+            className="rounded border-afri-border accent-[#D4AF37]"
           />
           Fondu de sortie audio
         </label>
@@ -458,7 +458,7 @@ export function TextPanel({ state, onChange }: PanelProps) {
         <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-wider">
           Superposition de texte
         </span>
-        <span className="text-[10px] text-zinc-500 dark:text-zinc-400">Glissez le texte sur l'aperçu</span>
+        <span className="text-[10px] text-afri-text-sec">Glissez le texte sur l'aperçu</span>
       </div>
 
       <div className="flex items-center gap-2">
@@ -470,13 +470,13 @@ export function TextPanel({ state, onChange }: PanelProps) {
           onKeyDown={(e) => {
             if (e.key === "Enter") addText();
           }}
-          className="flex-1 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-foreground placeholder-zinc-500 focus:outline-none focus:border-[#D4AF37]"
+          className="flex-1 bg-afri-bg border border-afri-border/50 rounded-xl px-3 py-2 text-xs text-afri-text placeholder-afri-text-muted focus:outline-none focus:border-[#D4AF37]"
         />
         <input
           type="color"
           value={textColor}
           onChange={(e) => setTextColor(e.target.value)}
-          className="w-8 h-8 rounded-lg border border-zinc-300 dark:border-white/20 bg-transparent cursor-pointer p-0.5"
+          className="w-8 h-8 rounded-lg border border-afri-border bg-transparent cursor-pointer p-0.5"
           title="Couleur du texte"
         />
         <button
@@ -493,7 +493,7 @@ export function TextPanel({ state, onChange }: PanelProps) {
           {state.texts.map((t) => (
             <div
               key={t.id}
-              className="flex items-center justify-between bg-zinc-100 dark:bg-zinc-900/80 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-white/5 text-xs text-foreground"
+              className="flex items-center justify-between bg-afri-bg-ter px-3 py-1.5 rounded-lg border border-afri-border/40 text-xs text-afri-text"
             >
               <span className="truncate max-w-[200px]" style={{ color: t.color }}>
                 {t.text}
@@ -544,7 +544,7 @@ export function StickersPanel({ state, onChange }: PanelProps) {
         <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-wider">
           Stickers & Emojis
         </span>
-        <span className="text-[10px] text-zinc-500 dark:text-zinc-400">Touchez un emoji pour l'ajouter</span>
+        <span className="text-[10px] text-afri-text-sec">Touchez un emoji pour l'ajouter</span>
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -552,7 +552,7 @@ export function StickersPanel({ state, onChange }: PanelProps) {
           <button
             key={e}
             onClick={() => addEmoji(e)}
-            className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 border border-zinc-300 dark:border-white/10 flex items-center justify-center text-xl cursor-pointer hover:scale-110 active:scale-95 transition-all shrink-0"
+            className="w-10 h-10 rounded-xl bg-afri-bg-ter hover:bg-afri-bg-action border border-afri-border/40 flex items-center justify-center text-xl cursor-pointer hover:scale-110 active:scale-95 transition-all shrink-0"
           >
             {e}
           </button>
@@ -564,7 +564,7 @@ export function StickersPanel({ state, onChange }: PanelProps) {
           {state.stickers.map((s) => (
             <div
               key={s.id}
-              className="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1 rounded-lg border border-zinc-300 dark:border-white/10 text-xs text-foreground"
+              className="flex items-center gap-1.5 bg-afri-bg-ter px-2.5 py-1 rounded-lg border border-afri-border/40 text-xs text-afri-text"
             >
               <span>{s.emoji}</span>
               <button
@@ -611,8 +611,8 @@ export function EffectsPanel({ state, onChange }: PanelProps) {
               onClick={() => onChange((prev) => ({ ...prev, activeEffect: eff.id as any }))}
               className={`py-2.5 px-2 rounded-xl border text-[11px] font-mono font-bold transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
                 isSelected
-                  ? "bg-[#D4AF37] text-black border-amber-400 shadow-md scale-105"
-                  : "bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-300 border-zinc-300 dark:border-white/10 hover:border-zinc-400 dark:hover:border-white/30"
+                  ? "bg-[#D4AF37] text-black border-amber-400 shadow-md font-black"
+                  : "bg-afri-bg-ter text-afri-text border-afri-border/40 hover:border-[#D4AF37]/50"
               }`}
             >
               <Sparkles className={`w-3.5 h-3.5 ${isSelected ? "text-black" : "text-[#D4AF37]"}`} />
@@ -638,9 +638,9 @@ export function CoverPanel({ state, onChange, duration, currentTime, onSeek }: P
         </span>
       </div>
 
-      <div className="bg-zinc-100 dark:bg-zinc-900/80 p-3 rounded-xl border border-zinc-200 dark:border-white/10 space-y-2">
+      <div className="bg-afri-bg-ter/80 p-3 rounded-xl border border-afri-border/40 space-y-2">
         <div className="flex items-center gap-3">
-          <span className="text-[11px] text-zinc-600 dark:text-zinc-400 w-24">Temps de capture</span>
+          <span className="text-[11px] text-afri-text-sec w-24">Temps de capture</span>
           <input
             type="range"
             min={0}
@@ -652,7 +652,7 @@ export function CoverPanel({ state, onChange, duration, currentTime, onSeek }: P
               onChange((prev) => ({ ...prev, coverTime: val }));
               onSeek(val);
             }}
-            className="flex-1 h-2 bg-zinc-300 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+            className="flex-1 h-2 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
           />
         </div>
 

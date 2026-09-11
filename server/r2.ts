@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, HeadBucketCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, HeadBucketCommand, ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 
@@ -204,6 +204,22 @@ export async function testR2BucketConnection(bucketType: R2BucketType): Promise<
       accessible: false,
       error: err?.message || String(err),
     };
+  }
+}
+
+export async function deleteObjectFromR2(key: string, bucketType: R2BucketType = "public"): Promise<boolean> {
+  if (!key) return false;
+  try {
+    const client = getR2Client();
+    const bucket = resolveR2Bucket(bucketType);
+    await client.send(new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    }));
+    return true;
+  } catch (err) {
+    console.warn(`[R2 Delete] Échec de la suppression de l'objet R2 ${key}:`, err);
+    return false;
   }
 }
 

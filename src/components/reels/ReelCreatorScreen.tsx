@@ -20,7 +20,10 @@ import {
   ImageIcon as CoverIcon,
   RotateCcw,
   Film,
-  Loader2
+  Loader2,
+  Bookmark,
+  CheckCircle2,
+  AlertTriangle
 } from "lucide-react";
 
 import { VideoFilter, REEL_VIDEO_FILTERS, getFilterCss } from "./videoFilters";
@@ -45,6 +48,8 @@ import {
 } from "./editorPanels";
 import { exportVideoFile } from "../../lib/media/videoExporter";
 import { compressVideoFile } from "../../lib/media/videoCompressor";
+import { reelsDraftsService, ReelDraft } from "../../lib/reelsDraftsService";
+import { auth } from "../../lib/firebase";
 
 export type { VideoFilter };
 export { REEL_VIDEO_FILTERS, getFilterCss };
@@ -52,6 +57,7 @@ export { REEL_VIDEO_FILTERS, getFilterCss };
 interface ReelCreatorScreenProps {
   onVideoReady: (file: File, filterId: string) => void;
   onClose: () => void;
+  initialDraft?: ReelDraft | null;
 }
 
 type TabCategory =
@@ -73,7 +79,7 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 }
 
-export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreatorScreenProps) {
+export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft }: ReelCreatorScreenProps) {
   const previewRef = useRef<HTMLVideoElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
@@ -92,6 +98,12 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const [processingLog, setProcessingLog] = useState<string>("");
   const [processingError, setProcessingError] = useState<string | null>(null);
 
+  // Draft & Exit States
+  const [showExitModal, setShowExitModal] = useState<boolean>(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [savingDraft, setSavingDraft] = useState<boolean>(false);
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(initialDraft?.id || null);
+
   // Player States
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -107,7 +119,8 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
 
   const stopPreviewVideo = () => {
     if (previewRef.current) {
-      try {        previewRef.current.pause();
+      try {
+        previewRef.current.pause();
         previewRef.current.currentTime = 0;
         previewRef.current.removeAttribute("src");
         previewRef.current.load();
@@ -118,6 +131,67 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
   const handleCloseCreator = () => {
     stopPreviewVideo();
     onClose();
+  };
+
+  // Restore draft if provided
+  useEffect(() => {
+    if (initialDraft) {
+      if (initialDraft.editorState) {
+        setEditorState(initialDraft.editorState);
+      }
+      if (initialDraft.videoBlob) {
+        const file = initialDraft.videoBlob instanceof File 
+          ? initialDraft.videoBlob 
+          : new File([initialDraft.videoBlob], "brouillon_reel.mp4", { type: initialDraft.videoBlob.type || "video/mp4" });
+        const url = URL.createObjectURL(file);
+        setSelectedFile(file);
+        setRecordedUrl(url);
+      } else if (initialDraft.videoSourceUrl) {
+        setRecordedUrl(initialDraft.videoSourceUrl);
+        // create placeholder file if needed
+        const dummyFile = new File([""], "brouillon_remote.mp4", { type: "video/mp4" });
+        setSelectedFile(dummyFile);
+      }
+      if (initialDraft.id) {
+        setCurrentDraftId(initialDraft.id);
+      }
+    }
+  }, [initialDraft]);
+
+  const handleSaveDraft = async (andClose = false) => {
+    const userId = auth.currentUser?.uid || "user_guest";
+    setSavingDraft(true);
+    try {
+      const saved = await reelsDraftsService.saveDraft({
+        id: currentDraftId || undefined,
+        userId,
+        caption: "",
+        editorState,
+        videoBlob: selectedFile || undefined,
+        videoSourceUrl: recordedUrl || undefined,
+      });
+      setCurrentDraftId(saved.id);
+      setToastMsg("Brouillon enregistré avec succès !");
+      setTimeout(() => setToastMsg(null), 3000);
+      if (andClose) {
+        handleCloseCreator();
+      }
+    } catch (err: any) {
+      console.error("Erreur sauvegarde brouillon :", err);
+      setToastMsg("Erreur lors de la sauvegarde du brouillon");
+      setTimeout(() => setToastMsg(null), 3000);
+    } finally {
+      setSavingDraft(false);
+      setShowExitModal(false);
+    }
+  };
+
+  const handleExitWithPrompt = () => {
+    if (selectedFile || recordedUrl) {
+      setShowExitModal(true);
+    } else {
+      handleCloseCreator();
+    }
   };
 
   // Cleanup on unmount
@@ -334,36 +408,52 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
     const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
     return createPortal(
-      <div className="fixed inset-0 bg-background text-foreground z-[9999] flex flex-col select-none overflow-hidden">
+      <div className="fixed inset-0 bg-afri-bg text-afri-text z-[9999] flex flex-col select-none overflow-hidden">
         {/* Top Header Navigation */}
-        <div className="flex items-center justify-between px-4 py-3 shrink-0 z-30 bg-background/90 border-b border-border backdrop-blur-md">
+        <div className="flex items-center justify-between px-4 py-3 shrink-0 z-30 bg-afri-bg-sec border-b border-afri-border/50 backdrop-blur-md">
           <button
-            onClick={handleRetake}
-            className="p-2 rounded-full bg-muted/60 hover:bg-muted text-foreground active:scale-95 transition-all cursor-pointer"
-            title="Changer de vidéo"
+            onClick={handleExitWithPrompt}
+            className="p-2 rounded-full bg-afri-bg-ter hover:bg-afri-bg-action text-afri-text active:scale-95 transition-all cursor-pointer"
+            title="Quitter / Fermer"
           >
             <X className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-[#D4AF37]/30">
             <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-            <span className="text-foreground text-xs font-mono font-bold tracking-wide">
+            <span className="text-afri-text text-xs font-mono font-bold tracking-wide">
               Édition Réel AFRIGOMBO
             </span>
           </div>
 
-          <button
-            onClick={handleNext}
-            disabled={!selectedFile}
-            className="flex items-center gap-1 bg-[#D4AF37] hover:bg-amber-400 text-black font-black px-4 py-1.5 rounded-full text-xs uppercase tracking-wider cursor-pointer shadow-md active:scale-95 transition-all"
-          >
-            <span>Suivant</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleSaveDraft(false)}
+              disabled={savingDraft || !selectedFile}
+              className="flex items-center gap-1.5 bg-afri-bg-ter hover:bg-afri-bg-action border border-[#D4AF37]/40 text-afri-text font-bold px-3 py-1.5 rounded-full text-xs cursor-pointer shadow-sm active:scale-95 transition-all"
+              title="Enregistrer comme brouillon"
+            >
+              {savingDraft ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#D4AF37]" />
+              ) : (
+                <Bookmark className="w-3.5 h-3.5 text-[#D4AF37]" />
+              )}
+              <span className="hidden sm:inline">Brouillon</span>
+            </button>
+
+            <button
+              onClick={handleNext}
+              disabled={!selectedFile}
+              className="flex items-center gap-1 bg-[#D4AF37] hover:bg-amber-400 text-black font-black px-4 py-1.5 rounded-full text-xs uppercase tracking-wider cursor-pointer shadow-md active:scale-95 transition-all"
+            >
+              <span>Suivant</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Central Stage: Video Preview Box */}
-        <div className="flex-1 flex items-center justify-center relative bg-black/95 dark:bg-black p-2 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center relative bg-black p-2 overflow-hidden">
           <div
             className={`relative rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center bg-black cursor-pointer ${aspectContainerClass}`}
             onClick={togglePlayPause}
@@ -477,7 +567,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
         </div>
 
         {/* Active Panel Content Box */}
-        <div className="shrink-0 p-3 bg-card border-t border-border z-30 max-h-56 overflow-y-auto">
+        <div className="shrink-0 p-3 bg-afri-bg-sec border-t border-afri-border/50 text-afri-text z-30 max-h-56 overflow-y-auto">
           {activeTab === "filtres" && <FiltersPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
           {activeTab === "ajuster" && <AdjustmentsPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
           {activeTab === "couper" && <TrimPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
@@ -491,7 +581,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
         </div>
 
         {/* Bottom Horizontal Scrollable Categories Bar */}
-        <div className="shrink-0 p-2 bg-background border-t border-border z-30">
+        <div className="shrink-0 p-2 bg-afri-bg-ter border-t border-afri-border/50 z-30">
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1">
             {categories.map((cat) => {
               const Icon = cat.icon;
@@ -502,8 +592,8 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
                   onClick={() => setActiveTab(cat.id)}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer shrink-0 ${
                     isActive
-                      ? "bg-[#D4AF37] text-black shadow-md scale-105"
-                      : "bg-muted text-muted-foreground hover:bg-accent hover:text-foreground"
+                      ? "bg-[#D4AF37] text-black shadow-md font-black"
+                      : "bg-afri-bg border border-afri-border/40 text-afri-text-sec hover:bg-afri-bg-action hover:text-afri-text"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -516,8 +606,8 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
 
         {/* PROCESSING OVERLAY MODAL */}
         {isProcessing && (
-          <div className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-white text-center animate-fadeIn select-none">
-            <div className="max-w-md w-full bg-zinc-900 border border-[#D4AF37]/40 rounded-3xl p-6 space-y-5 shadow-2xl relative overflow-hidden">
+          <div className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-white text-center animate-fadeIn select-none">
+            <div className="max-w-md w-full bg-afri-bg-sec border border-[#D4AF37]/40 rounded-3xl p-6 space-y-5 shadow-2xl relative overflow-hidden text-afri-text">
               <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center mx-auto text-[#D4AF37]">
                 {processingPhase === "export" ? (
                   <Film className="w-8 h-8 animate-pulse" />
@@ -579,6 +669,57 @@ export default function ReelCreatorScreen({ onVideoReady, onClose }: ReelCreator
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* EXIT CONFIRMATION MODAL */}
+        {showExitModal && (
+          <div className="fixed inset-0 z-[10001] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+            <div className="max-w-sm w-full bg-afri-bg-sec border border-[#D4AF37]/40 rounded-3xl p-6 space-y-4 shadow-2xl text-afri-text text-center">
+              <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] flex items-center justify-center mx-auto">
+                <Bookmark className="w-6 h-6" />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="font-black text-base text-afri-text">Enregistrer votre brouillon ?</h3>
+                <p className="text-xs text-afri-text-sec">
+                  Vous avez un montage en cours. Souhaitez-vous le sauvegarder pour le reprendre plus tard ?
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <button
+                  onClick={() => handleSaveDraft(true)}
+                  disabled={savingDraft}
+                  className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-black rounded-2xl text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {savingDraft ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bookmark className="w-4 h-4" />}
+                  <span>Enregistrer en brouillon</span>
+                </button>
+
+                <button
+                  onClick={handleCloseCreator}
+                  className="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold border border-red-500/20 rounded-2xl text-xs transition cursor-pointer"
+                >
+                  Quitter sans enregistrer
+                </button>
+
+                <button
+                  onClick={() => setShowExitModal(false)}
+                  className="w-full py-2 bg-transparent text-afri-text-sec hover:text-afri-text text-xs font-medium cursor-pointer"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TOAST NOTIFICATION */}
+        {toastMsg && (
+          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[10002] bg-[#D4AF37] text-black font-black px-4 py-2.5 rounded-full text-xs shadow-2xl flex items-center gap-2 animate-bounce">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{toastMsg}</span>
           </div>
         )}
       </div>,

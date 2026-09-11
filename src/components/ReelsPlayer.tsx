@@ -314,6 +314,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     consolidatedUsers.forEach(u => {
       const gallery = Array.isArray(u.mediaGallery) ? u.mediaGallery : [];
       gallery.forEach((m: any, idx: number) => {
+        if (m.status === "draft" || m.status === "hidden" || m.status === "archived" || m.visible === false) return;
         const url = resolveVideoUrl(m);
         if (!url || seenUrls.has(url)) return;
         if (!isVideoItem(m, url)) return;
@@ -354,6 +355,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
     const consolidatedPosts = Array.from(allPostsMap.values());
     consolidatedPosts.forEach((p: any, idx: number) => {
+      if (p.status === "draft" || p.status === "hidden" || p.status === "archived" || p.visible === false) return;
       const url = resolveVideoUrl(p);
       if (!url || seenUrls.has(url)) return;
       if (!isVideoItem(p, url)) return;
@@ -836,7 +838,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-afri-bg text-afri-text font-sans overflow-hidden flex flex-col h-[100dvh] w-screen">
+    <div className="fixed inset-0 z-[100] bg-black text-white font-sans overflow-hidden flex flex-col h-[100dvh] w-screen">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[120] bg-[#D4AF37] text-black font-mono font-black text-xs px-4 py-2 rounded-full shadow-2xl animate-bounce border border-black/20">
@@ -848,7 +850,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       <div className="absolute top-0 left-0 right-0 z-50 p-4 pt-4 flex items-center justify-between bg-gradient-to-b from-black/90 via-black/40 to-transparent">
         <button 
           onClick={handleClose}
-          className="p-2.5 rounded-full bg-afri-bg/50 backdrop-blur-md border border-afri-border text-afri-text hover:bg-white/20 active:scale-95 transition cursor-pointer"
+          className="p-2.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 active:scale-95 transition cursor-pointer"
           title="Fermer le Fil Réel"
         >
           <ChevronLeft className="w-6 h-6" />
@@ -876,7 +878,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                 }
               }
             }}
-            className="p-2.5 rounded-full bg-afri-bg/50 backdrop-blur-md border border-afri-border text-afri-text hover:bg-white/20 active:scale-95 transition cursor-pointer"
+            className="p-2.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 active:scale-95 transition cursor-pointer"
             title={isMuted ? "Activer le son" : "Couper le son"}
           >
             {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5 text-emerald-400" />}
@@ -902,22 +904,22 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       {/* SNAP-Y VERTICAL FULLSCREEN STREAM */}
       <div 
         ref={containerRef}
-        className="w-full h-full overflow-y-auto snap-y snap-mandatory scrollbar-none overscroll-contain [-webkit-overflow-scrolling:touch]"
+        className="w-full h-full overflow-y-auto snap-y snap-mandatory scrollbar-none overscroll-contain [-webkit-overflow-scrolling:touch] bg-black"
         style={{ touchAction: "pan-y" }}
         onScroll={handleScroll}
       >
         {localReels.length === 0 ? (
-          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-afri-bg">
+          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-black text-white">
             <div className="w-20 h-20 rounded-3xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center mb-4 shadow-2xl">
               <Film className="w-10 h-10 text-[#D4AF37]" />
             </div>
             <span className="text-[10px] font-mono tracking-widest text-[#D4AF37] font-black uppercase bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/20 mb-3">
               FIL RÉEL AFRIGOMBO
             </span>
-            <h3 className="text-lg font-black text-afri-text uppercase tracking-wide">
+            <h3 className="text-lg font-black text-white uppercase tracking-wide">
               Aucun Réel vidéo disponible
             </h3>
-            <p className="text-xs text-afri-text-sec mt-2 max-w-sm leading-relaxed">
+            <p className="text-xs text-zinc-400 mt-2 max-w-sm leading-relaxed">
               Les vidéos enregistrées dans votre Portfolio ou publiées sur le terrain apparaîtront automatiquement ici.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 mt-6">
@@ -938,7 +940,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-5 py-2.5 bg-afri-bg-sec border border-afri-border hover:bg-white/10 text-afri-text font-bold text-xs uppercase tracking-wider rounded-2xl transition cursor-pointer"
+                className="px-5 py-2.5 bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition cursor-pointer"
               >
                 Retour au Terrain
               </button>
@@ -954,12 +956,12 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
             return (
               <div 
                 key={reel.id} 
-                className="relative w-full h-[100dvh] snap-start bg-afri-bg flex justify-center items-center overflow-hidden shrink-0"
+                className="relative w-full h-[100dvh] snap-start bg-black flex justify-center items-center overflow-hidden shrink-0"
               >
                 {/* VIDEO PLAYER LAYER */}
                 {isActive || isNext ? (
                   <div 
-                    className="relative w-full h-full"
+                    className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden"
                     onClick={(e) => handleVideoTouchOrClick(e, reel.id)}
                     onTouchEnd={(e) => handleVideoTouchOrClick(e, reel.id)}
                   >
@@ -967,7 +969,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                       <iframe
                         src={`https://www.youtube.com/embed/${getYoutubeId(reel.mediaUrl)}?autoplay=${isActive ? 1 : 0}&mute=${isMuted ? 1 : 0}&loop=1&playlist=${getYoutubeId(reel.mediaUrl)}&playsinline=1&controls=0&rel=0&modestbranding=1`}
                         title={reel.title || "Vidéo Réel"}
-                        className="w-full h-full object-cover pointer-events-auto"
+                        className="w-full h-full object-cover pointer-events-auto bg-black"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
@@ -990,7 +992,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                         autoPlay={isActive}
                         preload={isActive ? "auto" : "metadata"}
                         style={{ filter: getFilterCss(reel.appliedFilter) }}
-                        className="w-full h-full object-cover cursor-pointer"
+                        className="w-full h-full object-cover cursor-pointer bg-black"
                         loop
                         muted={isMuted}
                         playsInline
