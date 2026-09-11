@@ -661,3 +661,81 @@ body,
   overscroll-behavior: contain;
 }
 
+/* ==================================================
+   IMMERSIVE DARK ISOLATION (REELS PLAYER THEME FIX)
+   ================================================== */
+.immersive-dark,
+.light .immersive-dark {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.immersive-dark *,
+.light .immersive-dark *,
+.light .immersive-dark p,
+.light .immersive-dark span,
+.light .immersive-dark div,
+.light .immersive-dark h1,
+.light .immersive-dark h2,
+.light .immersive-dark h3,
+.light .immersive-dark h4,
+.light .immersive-dark h5,
+.light .immersive-dark h6,
+.light .immersive-dark label,
+.light .immersive-dark a,
+.light .immersive-dark li,
+.light .immersive-dark button {
+  color: #ffffff !important;
+}
+
+/* Secondary & grey text in immersive dark */
+.light .immersive-dark .text-white\/60,
+.light .immersive-dark .text-white\/70,
+.light .immersive-dark .text-zinc-400,
+.light .immersive-dark .text-gray-400,
+.light .immersive-dark .text-afri-text-sec {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Yellow/Gold accents in immersive dark */
+.light .immersive-dark .text-afri-gold,
+.light .immersive-dark .text-\[\#D4AF37\] {
+  color: #D4AF37 !important;
+}
+
+/* Retain dark background styles on overlays/containers in immersive dark */
+.light .immersive-dark .bg-black,
+.light .immersive-dark .bg-black\/60,
+.light .immersive-dark .bg-black\/50,
+.light .immersive-dark .bg-black\/40,
+.light .immersive-dark .bg-black\/85,
+.light .immersive-dark .bg-black\/90,
+.light .immersive-dark .bg-zinc-950,
+.light .immersive-dark .bg-zinc-900,
+.light .immersive-dark .bg-zinc-800,
+.light .immersive-dark [class*="bg-black"],
+.light .immersive-dark [class*="bg-zinc"] {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.light .immersive-dark .bg-black {
+  background-color: #000000 !important;
+}
+
+.light .immersive-dark .bg-gradient-to-b {
+  background-image: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 40%, transparent 100%) !important;
+}
+
+.light .immersive-dark .bg-gradient-to-t {
+  background-image: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 50%, transparent 100%) !important;
+}
+
+.light .immersive-dark .border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.light .immersive-dark .border-white\/10 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+

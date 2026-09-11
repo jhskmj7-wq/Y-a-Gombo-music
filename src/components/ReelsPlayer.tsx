@@ -124,7 +124,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const effectiveUser = currentUser || authUser;
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const sessionTimestamp = useRef(Date.now()).current;
   const [seenReels, setSeenReels] = useState<Set<string>>(() => {
     try {
@@ -513,8 +513,8 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     if (activeVideoRef.current) {
       activeVideoRef.current.currentTime = 0;
 
-      // Determine initial mute state: use explicit user choice if any, otherwise default to unmuted (false)
-      const targetMuted = userClickedMute.current !== null ? userClickedMute.current : false;
+      // Determine initial mute state: use explicit user choice if any, otherwise default to muted (true) for autoplay compatibility
+      const targetMuted = userClickedMute.current !== null ? userClickedMute.current : true;
       
       setIsMuted(targetMuted);
       syncVideoAudio(activeVideoRef.current, targetMuted);
@@ -896,7 +896,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black text-white font-sans overflow-hidden flex flex-col h-[100dvh] w-screen">
+    <div className="immersive-dark fixed inset-0 z-[100] bg-black text-white font-sans overflow-hidden flex flex-col h-[100dvh] w-screen">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[120] bg-[#D4AF37] text-black font-mono font-black text-xs px-4 py-2 rounded-full shadow-2xl animate-bounce border border-black/20">
