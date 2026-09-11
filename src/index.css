@@ -495,6 +495,77 @@ img {
   box-shadow: 0 4px 25px rgba(212, 175, 55, 0.08) !important;
 }
 
+/* Hardcoded dark backgrounds converted to clean light mode cards in .light theme */
+.light .bg-black,
+.light .bg-black\/95,
+.light .bg-black\/90,
+.light .bg-black\/85,
+.light .bg-black\/80,
+.light .bg-black\/75,
+.light .bg-black\/70,
+.light .bg-black\/65,
+.light .bg-black\/60,
+.light .bg-black\/50,
+.light .bg-black\/40,
+.light .bg-zinc-950,
+.light .bg-zinc-950\/90,
+.light .bg-zinc-950\/80,
+.light .bg-zinc-950\/70,
+.light .bg-zinc-950\/60,
+.light .bg-zinc-950\/50,
+.light .bg-zinc-950\/40,
+.light .bg-zinc-900,
+.light .bg-zinc-900\/90,
+.light .bg-zinc-900\/80,
+.light .bg-zinc-900\/70,
+.light .bg-zinc-900\/60,
+.light .bg-zinc-900\/50,
+.light .bg-zinc-900\/40,
+.light .bg-zinc-850,
+.light .bg-zinc-800,
+.light .bg-neutral-950,
+.light .bg-neutral-900,
+.light .bg-neutral-800,
+.light .bg-stone-950,
+.light .bg-stone-900,
+.light .bg-stone-800 {
+  background-color: var(--afri-bg-sec, #FFFFFF) !important;
+  color: var(--afri-text, #2C211B) !important;
+  border-color: var(--afri-border, #E5DFC5) !important;
+}
+
+/* Hardcoded subtle dark backgrounds converted to warm inset containers in .light theme */
+.light .bg-black\/30,
+.light .bg-black\/20,
+.light .bg-black\/10,
+.light .bg-black\/5,
+.light .bg-zinc-950\/30,
+.light .bg-zinc-950\/20,
+.light .bg-zinc-950\/10,
+.light .bg-zinc-900\/30,
+.light .bg-zinc-900\/20,
+.light .bg-zinc-900\/10,
+.light .bg-zinc-800\/50,
+.light .bg-zinc-800\/30,
+.light .bg-zinc-800\/20 {
+  background-color: var(--afri-bg-ter, #F4EFE6) !important;
+  color: var(--afri-text, #2C211B) !important;
+  border-color: var(--afri-border, #E5DFC5) !important;
+}
+
+/* Modal and Drawer fixed backdrop overlays in light mode: soft translucent dark taupe blur */
+.light div.fixed.inset-0[class*="bg-black"],
+.light div.fixed.inset-0[class*="bg-afri-bg"],
+.light div.fixed.inset-0[class*="bg-zinc"],
+.light div.absolute.inset-0[class*="bg-black"],
+.light div.fixed[class*="bg-black\/80"],
+.light div.fixed[class*="bg-black\/90"],
+.light div.fixed[class*="bg-black\/70"] {
+  background-color: rgba(44, 33, 27, 0.45) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
 /* Secondary dark accent containers (brown / warm taupe) */
 .light .bg-white\/5,
 .light .bg-white\/10,
