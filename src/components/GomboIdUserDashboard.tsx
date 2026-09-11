@@ -298,7 +298,7 @@ function GomboIdUserDashboardInner({
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-3 xs:px-4 sm:px-6 py-4 sm:py-6 space-y-6">
+    <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 py-3 sm:py-5 space-y-4 sm:space-y-6">
       
       {/* 1. TOP NAVIGATION HEADER (Unique, clean back button) */}
       <div className="flex items-center justify-between gap-3 border-b border-[#D4AF37]/20 pb-3 sm:pb-4">
@@ -331,14 +331,14 @@ function GomboIdUserDashboardInner({
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl border-2 border-[#D4AF37]/40 bg-gradient-to-b from-[#18181C] via-[#121215] to-[#0D0D10] p-5 xs:p-6 sm:p-8 shadow-[0_10px_40px_rgba(212,175,55,0.12)] space-y-6"
+        className="relative overflow-hidden rounded-2xl xs:rounded-3xl border-2 border-[#D4AF37]/45 bg-gradient-to-b from-[#18181C] via-[#121215] to-[#0D0D10] p-4 xs:p-5 sm:p-8 shadow-[0_10px_40px_rgba(212,175,55,0.12)] space-y-4 sm:space-y-6"
       >
         {/* Subtle decorative security grids in background */}
         <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#D4AF37_1px,transparent_1px),linear-gradient(to_bottom,#D4AF37_1px,transparent_1px)] bg-[size:16px_24px] pointer-events-none" />
         <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[#D4AF37]/15 to-transparent rounded-full blur-2xl pointer-events-none" />
 
         {/* Card Header Banner */}
-        <div className="flex flex-wrap justify-between items-center gap-2 border-b border-[#D4AF37]/20 pb-4">
+        <div className="flex flex-wrap justify-between items-center gap-2 border-b border-[#D4AF37]/20 pb-3 sm:pb-4">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-[10px] sm:text-[11px] font-mono tracking-widest font-black text-gray-300 uppercase">
@@ -351,11 +351,11 @@ function GomboIdUserDashboardInner({
         </div>
 
         {/* Artist Profile & ID Identification Block */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6 text-center sm:text-left">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 xs:gap-5 sm:gap-6 text-center sm:text-left">
           
           {/* Large Artist Photo */}
           <div className="relative shrink-0">
-            <div className="w-24 h-24 xs:w-28 xs:h-28 rounded-2xl border-2 border-[#D4AF37] bg-black/60 flex items-center justify-center font-bold text-3xl xs:text-4xl text-[#D4AF37] shadow-[0_0_25px_rgba(212,175,55,0.25)] overflow-hidden">
+            <div className="w-24 h-24 xs:w-28 xs:h-28 sm:w-32 sm:h-32 rounded-2xl border-2 border-[#D4AF37] bg-black/60 flex items-center justify-center font-bold text-3xl xs:text-4xl text-[#D4AF37] shadow-[0_0_25px_rgba(212,175,55,0.25)] overflow-hidden">
               {currentUser?.avatarUrl ? (
                 <img 
                   src={currentUser.avatarUrl} 
@@ -375,7 +375,7 @@ function GomboIdUserDashboardInner({
           </div>
 
           {/* Details & Identifiers */}
-          <div className="flex-1 space-y-2 min-w-0">
+          <div className="flex-1 space-y-2.5 min-w-0">
             <div>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                 <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight uppercase">
@@ -395,7 +395,7 @@ function GomboIdUserDashboardInner({
             </div>
 
             {/* Gombo ID Golden Badge with One-Tap Copy */}
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-0.5">
               <div className="flex items-center gap-1.5 bg-black/70 border border-[#D4AF37]/40 rounded-xl px-3 py-1.5">
                 <span className="text-[9px] font-mono text-gray-400 uppercase">ID :</span>
                 <span className="text-sm sm:text-base font-serif font-black text-[#D4AF37] tracking-wider uppercase select-all">
@@ -424,7 +424,7 @@ function GomboIdUserDashboardInner({
         </div>
 
         {/* Level & Trust Stats Row */}
-        <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 pt-2 border-t border-[#D4AF37]/20">
+        <div className="grid grid-cols-1 xs:grid-cols-3 gap-2.5 xs:gap-3 pt-2 border-t border-[#D4AF37]/20">
           
           <div className="bg-black/40 border border-white/10 p-3 rounded-2xl text-center space-y-1">
             <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">
@@ -547,7 +547,7 @@ function GomboIdUserDashboardInner({
       </motion.div>
 
       {/* 4. GOMBO ID ADVANTAGES SECTION */}
-      <div className="rounded-3xl border border-white/10 bg-afri-bg-sec/80 p-5 sm:p-6 space-y-4 shadow-sm text-left">
+      <div className="rounded-2xl xs:rounded-3xl border border-white/10 bg-afri-bg-sec/80 p-4 xs:p-5 sm:p-6 space-y-4 shadow-sm text-left">
         <div className="flex items-center gap-2">
           <Star className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]" />
           <h3 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-[0.2em]">

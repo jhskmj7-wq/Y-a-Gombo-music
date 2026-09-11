@@ -79,15 +79,16 @@ html, body {
 }
 
 .light {
-  --afri-bg: #F9F8F6;
-  --afri-bg-sec: #FFFFFF;
-  --afri-bg-ter: #F2EFE9;
-  --afri-bg-action: #EBE8E0;
+  --afri-bg: #FAF7F2; /* Fond général Ivoire chaleureux et luxueux */
+  --afri-bg-sec: #FFFFFF; /* Container Blanc cassé / Ivoire clair */
+  --afri-bg-ter: #F4EFE6; /* Container secondaire Ivoire subtil */
+  --afri-bg-action: #EAE2D4; /* Action / hover ivoire-taupe */
   --afri-bar: #FFFFFF;
-  --afri-text: #1C1917;
-  --afri-text-sec: #57534E;
-  --afri-text-muted: #8E8B82;
-  --afri-border: #DDD8CF;
+  --afri-text: #2C211B; /* Brun profond / Café de prestige pour une lisibilité parfaite */
+  --afri-text-sec: #63534B; /* Taupe chaud intermédiaire */
+  --afri-text-muted: #8E7D73; /* Taupe chaud atténué */
+  --afri-border: #E5DFC5; /* Bordure ivoire dorée délicate */
+  --afri-dark-accent: #261D18; /* Brun / taupe profond pour éléments sombres raffinés */
 }
 
 
@@ -322,19 +323,19 @@ img {
   background: var(--color-afri-gold-light);
 }
 
-/* Premium Light Mode Comprehensive Overrides */
+/* Premium Light Mode Comprehensive Overrides (IVOIRE + BLANC CASSÉ + OR + BRUN/TAUPE CHAUD) */
 .light,
 .light body,
 .light #root,
 .light main,
 .light .app-container {
-  background-color: var(--afri-bg, #F9F8F6) !important;
-  color: var(--afri-text, #1C1917) !important;
+  background-color: var(--afri-bg, #FAF7F2) !important;
+  color: var(--afri-text, #2C211B) !important;
 }
 
 /* Base text overrides for light mode */
 .light p, .light span, .light div, .light h1, .light h2, .light h3, .light h4, .light h5, .light h6, .light label, .light a, .light li {
-  color: var(--afri-text, #1C1917);
+  color: var(--afri-text, #2C211B);
 }
 
 .light .text-white,
@@ -356,7 +357,7 @@ img {
 .light .text-slate-200,
 .light .text-\[\#F5F5F5\],
 .light .text-\[\#f5f5f5\] {
-  color: var(--afri-text, #1C1917) !important;
+  color: var(--afri-text, #2C211B) !important;
 }
 
 .light .text-zinc-400,
@@ -370,10 +371,34 @@ img {
 .light .text-slate-400,
 .light .text-slate-500,
 .light .text-afri-text-sec {
-  color: var(--afri-text-sec, #57534E) !important;
+  color: var(--afri-text-sec, #63534B) !important;
 }
 
-/* All dark backgrounds in light mode convert to white or ivory surface */
+.light .text-zinc-600,
+.light .text-gray-600,
+.light .text-afri-text-muted {
+  color: var(--afri-text-muted, #8E7D73) !important;
+}
+
+/* Ensure emerald/positive text has strong contrast on light background */
+.light .text-emerald-400 {
+  color: #059669 !important;
+}
+
+/* Ensure gold primary buttons keep high-contrast black text */
+.light .bg-\[\#D4AF37\],
+.light .bg-afri-gold,
+.light [class*="bg-[#D4AF37]"] {
+  color: #1A1208 !important;
+}
+.light .bg-\[\#D4AF37\] span,
+.light .bg-\[\#D4AF37\] svg,
+.light .bg-afri-gold span,
+.light .bg-afri-gold svg {
+  color: #1A1208 !important;
+}
+
+/* All dark backgrounds in light mode convert to ivory or off-white surface */
 .light .bg-black,
 .light .bg-\[\#000\],
 .light .bg-\[\#000000\],
@@ -387,6 +412,17 @@ img {
 .light .bg-\[\#111\],
 .light .bg-\[\#111111\],
 .light .bg-\[\#121217\],
+.light .bg-\[\#121215\],
+.light .bg-\[\#12100C\],
+.light .bg-\[\#0D0D10\],
+.light .bg-\[\#161619\],
+.light .bg-\[\#0E0E11\],
+.light .bg-\[\#0A0A0C\],
+.light .bg-\[\#17140E\],
+.light .bg-\[\#0B0A08\],
+.light .bg-\[\#101915\],
+.light .bg-\[\#121216\],
+.light .bg-\[\#0A0A0D\],
 .light .bg-\[\#141414\],
 .light .bg-\[\#161616\],
 .light .bg-\[\#181818\],
@@ -405,30 +441,56 @@ img {
 .light .bg-slate-950,
 .light .bg-slate-900 {
   background-color: var(--afri-bg-sec, #FFFFFF) !important;
-  color: var(--afri-text, #1C1917) !important;
-  border-color: var(--afri-border, #DDD8CF) !important;
+  color: var(--afri-text, #2C211B) !important;
+  border-color: var(--afri-border, #E5DFC5) !important;
 }
 
+/* Semi-transparent dark surfaces convert to warm light surfaces with soft shadow */
+.light .bg-black\/30,
 .light .bg-black\/40,
 .light .bg-black\/50,
 .light .bg-zinc-950\/50,
 .light .bg-black\/60,
+.light .bg-black\/70,
 .light .bg-black\/80,
 .light .bg-black\/90,
 .light [class*="bg-black/"],
 .light [class*="bg-zinc-950/"],
 .light [class*="bg-zinc-900/"],
 .light [class*="bg-neutral-900/"] {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  color: var(--afri-text, #1C1917) !important;
-  border-color: var(--afri-border, #DDD8CF) !important;
+  background-color: var(--afri-bg-ter, #F4EFE6) !important;
+  color: var(--afri-text, #2C211B) !important;
+  border-color: var(--afri-border, #E5DFC5) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
+/* Specific dark gradients converted to elegant ivory / gold gradients in light mode */
+.light [class*="from-[#18181C]"],
+.light [class*="from-[#161619]"],
+.light [class*="from-[#14120C]"],
+.light [class*="from-[#101915]"],
+.light [class*="from-[#121215]"] {
+  background-image: linear-gradient(to bottom right, #FFFFFF, #FAF7F2, #F4EFE6) !important;
+  background-color: #FFFFFF !important;
+  color: var(--afri-text, #2C211B) !important;
+  border-color: rgba(212, 175, 55, 0.45) !important;
+  box-shadow: 0 4px 25px rgba(212, 175, 55, 0.08) !important;
+}
+
+/* Secondary dark accent containers (brown / warm taupe) */
+.light .bg-white\/5,
+.light .bg-white\/10,
+.light .bg-white\/15,
+.light .bg-white\/20 {
+  background-color: var(--afri-bg-ter, #F4EFE6) !important;
+  color: var(--afri-text, #2C211B) !important;
+  border-color: var(--afri-border, #E5DFC5) !important;
+}
+
 /* Page level containers */
 .light .bg-afri-bg {
-  background-color: var(--afri-bg, #F9F8F6) !important;
+  background-color: var(--afri-bg, #FAF7F2) !important;
 }
 
 .light .bg-afri-bg-sec {
@@ -436,7 +498,7 @@ img {
 }
 
 .light .bg-afri-bg-ter {
-  background-color: var(--afri-bg-ter, #F2EFE9) !important;
+  background-color: var(--afri-bg-ter, #F4EFE6) !important;
 }
 
 /* Borders in light mode */
@@ -455,7 +517,7 @@ img {
 .light .border-white\/15,
 .light .border-white\/20,
 .light .border-white\/30 {
-  border-color: var(--afri-border, #DDD8CF) !important;
+  border-color: var(--afri-border, #E5DFC5) !important;
 }
 
 /* Form inputs & controls */
@@ -463,13 +525,13 @@ img {
 .light select,
 .light textarea {
   background-color: #FFFFFF !important;
-  color: #1C1917 !important;
-  border-color: #DDD8CF !important;
+  color: #2C211B !important;
+  border-color: #E5DFC5 !important;
 }
 
 .light input::placeholder,
 .light textarea::placeholder {
-  color: #8E8B82 !important;
+  color: #8E7D73 !important;
 }
 
 /* Sidebars, Headers, Navbars, Footers */
@@ -478,18 +540,18 @@ img {
 .light footer,
 .light nav {
   background-color: var(--afri-bg-sec, #FFFFFF) !important;
-  border-color: var(--afri-border, #DDD8CF) !important;
+  border-color: var(--afri-border, #E5DFC5) !important;
 }
 
 .light .afri-card {
   background-color: #FFFFFF !important;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
-  border-color: #DDD8CF !important;
+  box-shadow: 0 4px 20px -2px rgba(44, 33, 27, 0.05) !important;
+  border-color: #E5DFC5 !important;
 }
 
 .light .afri-card-inset {
-  background-color: #F2EFE9 !important;
-  border-color: #DDD8CF !important;
+  background-color: #F4EFE6 !important;
+  border-color: #E5DFC5 !important;
 }
 
 /* Android First Scroll & Overflow Normalisation */
