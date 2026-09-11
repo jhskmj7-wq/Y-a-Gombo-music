@@ -199,7 +199,7 @@ export default function WalletView({
     <AndroidPageLayout title="Mon Portefeuille" onBack={onBack} scrollable={true} className="pb-safe bg-afri-bg">
       <div className="p-4 space-y-4">
         {/* Main Sovereign Balance Card */}
-        <AndroidCard className="bg-gradient-to-br from-zinc-900 to-black border border-afri-border/60 p-5 rounded-2xl relative overflow-hidden shadow-xl">
+        <AndroidCard className="bg-afri-bg-sec border border-afri-border/60 p-5 rounded-2xl relative overflow-hidden shadow-xl">
           <div className="absolute top-0 right-0 w-32 h-32 bg-afri-gold/5 rounded-full blur-3xl"></div>
           
           <div className="flex items-center justify-between mb-4">
@@ -210,7 +210,7 @@ export default function WalletView({
           </div>
 
           <div className="space-y-1">
-            <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider font-mono">Solde Disponible</span>
+            <span className="text-[10px] text-afri-text-sec uppercase font-bold tracking-wider font-mono">Solde Disponible</span>
             <div className="flex items-baseline gap-1">
               <span className="text-3xl font-black text-afri-text tracking-tight font-mono">
                 {available.toLocaleString("fr-FR")}
@@ -221,7 +221,7 @@ export default function WalletView({
 
           {held > 0 && (
             <div className="mt-4 pt-3 border-t border-afri-border/40 flex justify-between items-center text-xs font-mono">
-              <span className="text-zinc-400 font-bold uppercase tracking-wider text-[9px] flex items-center gap-1.5">
+              <span className="text-afri-text-sec font-bold uppercase tracking-wider text-[9px] flex items-center gap-1.5">
                 <Lock className="w-3 h-3 text-amber-500" />
                 Réservations de crédit (Held)
               </span>
@@ -248,11 +248,11 @@ export default function WalletView({
         </AndroidCard>
 
         {/* Security Info Label */}
-        <div className="bg-zinc-950 border border-afri-border/30 rounded-xl p-3 flex gap-2.5 items-start">
+        <div className="bg-afri-bg-sec border border-afri-border/30 rounded-xl p-3 flex gap-2.5 items-start">
           <Lock className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             <h4 className="text-[10px] font-bold uppercase tracking-wider text-afri-text font-mono">Sécurité de l'Héritage</h4>
-            <p className="text-[10px] text-zinc-400 leading-relaxed font-mono">
+            <p className="text-[10px] text-afri-text-sec leading-relaxed font-mono">
               Vos crédits prépayés sont cryptés et immuables. Ils servent uniquement au paiement des services de l'application (validation de contrats, Gombos certifiés, abonnements et boosts). Les transferts et retraits d'argent direct ne sont pas autorisés par mesure de conformité réglementaire.
             </p>
           </div>
@@ -262,28 +262,28 @@ export default function WalletView({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h3 className="text-xs uppercase font-black text-afri-text tracking-wider font-mono flex items-center gap-2">
-              <History className="w-3.5 h-3.5 text-zinc-400" />
+              <History className="w-3.5 h-3.5 text-afri-text-sec" />
               Grand Livre de Compte (Mouvements)
             </h3>
-            <span className="text-[9px] font-bold text-zinc-500 uppercase font-mono">XOF</span>
+            <span className="text-[9px] font-bold text-afri-text-sec uppercase font-mono">XOF</span>
           </div>
 
           <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
             {transactions.length === 0 ? (
-              <div className="bg-zinc-900/30 border border-afri-border/30 rounded-xl p-6 text-center font-mono">
-                <p className="text-[10px] text-zinc-500 uppercase">Aucun mouvement de crédit enregistré</p>
+              <div className="bg-afri-bg-sec border border-afri-border/30 rounded-xl p-6 text-center font-mono">
+                <p className="text-[10px] text-afri-text-sec uppercase">Aucun mouvement de crédit enregistré</p>
               </div>
             ) : (
               transactions.map((tx) => (
                 <div 
                   key={tx.id}
-                  className="bg-zinc-950 border border-afri-border/20 rounded-xl p-3 flex items-center justify-between gap-3 font-mono"
+                  className="bg-afri-bg-sec border border-afri-border/20 rounded-xl p-3 flex items-center justify-between gap-3 font-mono"
                 >
                   <div className="min-w-0 flex items-center gap-2.5">
                     <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${getMovementColor(tx.type).split(' ')[0]}`}></span>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black text-zinc-200 truncate block">
+                        <span className="text-[10px] font-black text-afri-text truncate block">
                           {getMovementLabel(tx.type)}
                         </span>
                         <span className={`text-[8px] uppercase px-1 py-0.2 rounded font-black ${

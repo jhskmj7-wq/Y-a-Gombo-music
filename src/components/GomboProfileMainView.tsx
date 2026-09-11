@@ -830,8 +830,8 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         const rapidActions = [
           { 
             id: "edit",
-            label: "Modifier mon héritage", 
-            desc: "Éditer votre profil", 
+            label: "Modifier mon profil", 
+            desc: "Éditer votre profil & informations", 
             icon: Edit3, 
             action: () => setPanelView("edit"), 
             color: "text-amber-400/90",

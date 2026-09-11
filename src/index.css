@@ -478,7 +478,16 @@ img {
 .light [class*="from-[#030303]"],
 .light [class*="from-[#050505]"],
 .light [class*="from-[#0a0a0a]"],
-.light [class*="from-[#0d0d15]"] {
+.light [class*="from-[#0d0d15]"],
+.light [class*="from-zinc-900"],
+.light [class*="from-zinc-950"],
+.light [class*="from-black"],
+.light [class*="via-zinc-900"],
+.light [class*="via-zinc-950"],
+.light [class*="via-black"],
+.light [class*="to-zinc-900"],
+.light [class*="to-zinc-950"],
+.light [class*="to-black"] {
   background-image: linear-gradient(to bottom right, #FFFFFF, #FAF7F2, #F4EFE6) !important;
   background-color: #FFFFFF !important;
   color: var(--afri-text, #2C211B) !important;

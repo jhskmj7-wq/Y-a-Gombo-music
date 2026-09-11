@@ -1475,19 +1475,19 @@ export default function AfrigomboWalletDashboard({
       <div className="w-full space-y-2">
         {/* • Bannière mode bientôt disponible */}
         {isComingSoon && (
-          <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-zinc-950 to-zinc-950 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left shadow-lg">
+          <div className="w-full p-4 rounded-2xl bg-afri-bg-sec border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left shadow-lg">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
                 <Lock className="w-4 h-4" />
               </div>
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-black text-white">Mode Déploiement : Wallet « Bientôt disponible »</span>
+                  <span className="text-xs font-black text-afri-text">Mode Déploiement : Wallet « Bientôt disponible »</span>
                   <span className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.2 rounded uppercase">
                     Admin Toggle
                   </span>
                 </div>
-                <p className="text-[11px] text-zinc-400 font-sans">
+                <p className="text-[11px] text-afri-text-sec font-sans">
                   Toutes les opérations réelles (dépôts, retraits, transferts) sont temporairement verrouillées.
                 </p>
               </div>
@@ -1582,7 +1582,7 @@ export default function AfrigomboWalletDashboard({
         {onNavigateToGomboAds && (
           <button 
             onClick={onNavigateToGomboAds}
-            className="w-full p-3.5 rounded-[20px] bg-gradient-to-r from-zinc-900 via-black to-zinc-900 border border-[#D4AF37]/40 flex items-center justify-between gap-3 shadow-xl hover:border-[#D4AF37] transition-all group active:scale-98"
+            className="w-full p-3.5 rounded-[20px] bg-afri-bg-sec border border-[#D4AF37]/40 flex items-center justify-between gap-3 shadow-xl hover:border-[#D4AF37] transition-all group active:scale-98"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:scale-110 transition-transform">
@@ -1590,10 +1590,10 @@ export default function AfrigomboWalletDashboard({
               </div>
               <div className="text-left">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-white">GOMBO ADS</span>
+                  <span className="text-xs font-black text-afri-text">GOMBO ADS</span>
                   <span className="text-[9px] font-black text-black bg-[#D4AF37] px-1.5 py-0.2 rounded uppercase">Nouveau</span>
                 </div>
-                <p className="text-[11px] text-zinc-400">Paye tes campagnes directement avec ton Wallet</p>
+                <p className="text-[11px] text-afri-text-sec">Paye tes campagnes directement avec ton Wallet</p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-[#D4AF37] group-hover:translate-x-1 transition-transform" />

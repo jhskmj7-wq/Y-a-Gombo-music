@@ -2927,12 +2927,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             }, customBadge: (() => {
                               const gInfo = getGomboIdStatusInfo(currentUser);
                               return (
-                                <span className={`text-[7px] font-mono py-0.5 px-1.5 rounded border uppercase font-black ${
+                                <span className={`text-[7.5px] font-mono py-0.5 px-1.5 rounded border uppercase font-black ${
                                   gInfo.statusCode === "ATTRIBUTED" 
-                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
+                                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40" 
                                     : gInfo.statusCode === "PENDING"
-                                    ? "bg-amber-500/10 text-amber-400 border-amber-500/30 font-semibold"
-                                    : "bg-zinc-800/80 text-zinc-400 border-zinc-700/50"
+                                    ? "bg-amber-500/15 text-amber-800 dark:text-amber-400 border-amber-500/40 font-bold"
+                                    : "bg-stone-200 dark:bg-zinc-800/80 text-stone-800 dark:text-zinc-300 border-stone-300 dark:border-zinc-700/50"
                                 }`}>
                                   {gInfo.badgeLabel}
                                 </span>
