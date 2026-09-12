@@ -61,7 +61,7 @@ import { WalletSecurityService } from "../lib/WalletSecurityService";
 import { useWalletSecurity } from "../context/WalletSecurityContext";
 import { auth, googleProvider } from "../lib/firebase";
 import { GoogleAuthProvider, reauthenticateWithPopup } from "firebase/auth";
-import WalletView from "./Views/WalletView";
+import AfrigomboWalletComingSoon from "./wallet/AfrigomboWalletComingSoon";
 
 
 interface AfrigomboWalletDashboardProps {
@@ -1402,9 +1402,7 @@ export default function AfrigomboWalletDashboard({
   }
 
   return (
-    <WalletView 
-      currentUserProfile={currentUserProfile}
-      addToTerminal={addToTerminal}
+    <AfrigomboWalletComingSoon 
       onBack={onBack}
     />
   );

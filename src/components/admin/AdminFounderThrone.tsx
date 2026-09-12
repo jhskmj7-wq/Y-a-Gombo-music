@@ -12,7 +12,6 @@ import {
   Clock, MapPin, Cloud, Zap, Sun, ChevronDown, ChevronUp, Flame, ToggleLeft, ToggleRight, UserCheck, Radio, Eye, Bot,
   MessageSquare, Scale, Archive, ArrowUpRight, X
 } from "lucide-react";
-import BetaTransactionsAdminPanel from "./BetaTransactionsAdminPanel";
 import { PendingPublicationsAdminPanel } from "./PendingPublicationsAdminPanel";
 import { AdminPublicationsManager } from "./AdminPublicationsManager";
 import { AdminDisputesManager } from "./AdminDisputesManager";
@@ -2082,7 +2081,7 @@ export default function AdminFounderThrone({
                     <p className="text-[10px] text-afri-text-sec font-mono">
                       {isCriticalZoneFolded ? (
                         <span className="text-amber-400 font-bold">
-                          {pendingPostsCount} publications en attente • {highAlertsCount} signalement(s) • {displayUsers.length} utilisateurs • {pendingBetaTransactions.length} dépôts
+                          {pendingPostsCount} publications en attente • {highAlertsCount} signalement(s) • {displayUsers.length} utilisateurs
                         </span>
                       ) : (
                         <span>Sync Temps Réel Firebase • Vue d'ensemble stratégique</span>
@@ -2188,34 +2187,6 @@ export default function AdminFounderThrone({
                           {pendingPostsCount}
                         </strong>
                         <span className="text-[8.5px] font-mono text-sky-400 font-bold group-hover:underline">Valider →</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 4. 💳 Dépôts à valider */}
-                  <div
-                    onClick={() => setSelectedSection("beta_escrow")}
-                    className="p-2.5 bg-gradient-to-br from-emerald-500/10 via-zinc-950/20 to-zinc-950/40 border border-emerald-500/30 hover:border-emerald-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm group relative flex flex-col justify-between h-[100px]"
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="p-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400">
-                        <CreditCard className="w-3.5 h-3.5" />
-                      </span>
-                      {pendingBetaTransactions.length > 0 ? (
-                        <span className="px-1 py-0.5 bg-emerald-500 text-afri-text rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
-                          {pendingBetaTransactions.length} PAY
-                        </span>
-                      ) : (
-                        <span className="px-1 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-[4px] text-[7.5px] font-mono leading-none">ACTIF</span>
-                      )}
-                    </div>
-                    <div>
-                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Dépôts Bêta</span>
-                      <div className="flex items-baseline justify-between mt-0.5">
-                        <strong className="text-lg font-display font-black text-emerald-400 leading-none">
-                          {pendingBetaTransactions.length}
-                        </strong>
-                        <span className="text-[8.5px] font-mono text-emerald-400 font-bold group-hover:underline">Traiter →</span>
                       </div>
                     </div>
                   </div>
@@ -2808,7 +2779,7 @@ export default function AdminFounderThrone({
 
                 {/* 📬 Candidatures */}
                 <div
-                  onClick={() => setSelectedSection("beta_escrow")}
+                  onClick={() => setSelectedSection("contracts")}
                   className="p-3.5 bg-afri-bg border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.02]"
                 >
                   <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block flex items-center gap-1">
@@ -3030,10 +3001,10 @@ export default function AdminFounderThrone({
                     <Wallet className="w-5 h-5" />
                   </span>
                   <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
-                    Wallet
+                    Wallet Souverain
                   </h4>
-                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Portefeuilles & garanties Bêta</p>
-                  <span className="text-[9px] font-mono text-teal-400 font-bold block mt-3">Gérer le séquestre →</span>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Architecture financière & séquestre</p>
+                  <span className="text-[9px] font-mono text-amber-400 font-bold block mt-3">Bientôt disponible →</span>
                 </div>
 
                 {/* Paramètres système */}
@@ -4250,21 +4221,18 @@ export default function AdminFounderThrone({
             )}
 
             {/* =========================================================
-                 DETAILED VIEW: 🛡 Recharges Wallet (Bêta)
+                 DETAILED VIEW: 🛡 Wallet Souverain (Bientôt disponible)
                  ========================================================= */}
             {selectedSection === "beta_escrow" && (
               <div className="space-y-6">
-                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
-                  <ShieldCheck className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5 animate-pulse" />
-                  <div className="text-xs text-afri-text leading-relaxed font-mono">
-                    <strong>RECHARGES WALLET (BÊTA) :</strong> Validez ou refusez instantanément les demandes de rechargement Mobile Money. La validation crédite automatiquement le solde disponible du membre.
+                <div className="p-8 bg-afri-bg-sec border border-afri-border rounded-3xl text-center space-y-4 max-w-xl mx-auto my-12 shadow-2xl">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-[#D4AF37]">
+                    <Wallet className="w-7 h-7" />
                   </div>
-                </div>
-
-                <div className="p-1 sm:p-4 bg-afri-bg border border-afri-border rounded-3xl">
-                  <BetaTransactionsAdminPanel 
-                    currentUser={profile} 
-                  />
+                  <h3 className="text-base font-bold text-afri-text uppercase font-mono">Wallet Souverain (Bientôt disponible)</h3>
+                  <p className="text-xs text-afri-text-sec leading-relaxed">
+                    Le module financier est actuellement inactif. Toutes les données de test ont été définitivement retirées afin de préserver l'intégrité comptable de la plateforme.
+                  </p>
                 </div>
               </div>
             )}

@@ -18,7 +18,6 @@ const AdminFounderThrone = lazyWithRetry(() => import("./AdminFounderThrone"));
 // Lazy load the independent modules
 import AdminDashboard from "./AdminDashboard";
 import AdminSupportCenter from "./AdminSupportCenter";
-import BetaTransactionsAdminPanel from "./BetaTransactionsAdminPanel";
 const GeoLocationCenter = lazyWithRetry(() => import("./GeoLocationCenter"));
 const AdminLocationsCenter = lazyWithRetry(() => import("./AdminLocationsCenter"));
 const AdminAvatarStore = lazyWithRetry(() => import("./AdminAvatarStore"));
@@ -349,7 +348,15 @@ export default function AdminSuperFounderHub({
 
           <ErrorBoundary moduleName="Transactions">
             {activeModule === "transactions" && (
-              <BetaTransactionsAdminPanel currentUser={currentUser} />
+              <div className="p-8 bg-afri-bg-sec border border-afri-border rounded-3xl text-center space-y-4 max-w-xl mx-auto my-12 shadow-2xl">
+                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-[#D4AF37]">
+                  <CreditCard className="w-7 h-7" />
+                </div>
+                <h3 className="text-base font-bold text-afri-text uppercase font-mono">Module Transactions Inactif</h3>
+                <p className="text-xs text-afri-text-sec leading-relaxed">
+                  Le Wallet Souverain et le flux des transactions financières sont actuellement configurés sur « Bientôt disponible ». Les transactions du mode test ont été définitivement archivées.
+                </p>
+              </div>
             )}
           </ErrorBoundary>
 

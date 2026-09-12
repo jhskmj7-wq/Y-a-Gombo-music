@@ -14,7 +14,6 @@ import { audioSynth } from "../lib/audio";
 import { db } from "../lib/firebase";
 import { collection, query, where, getDocs, onSnapshot, orderBy } from "firebase/firestore";
 import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
-import { createBetaTransaction, proceedToSupportAssistance } from "../lib/betaEscrowEngine";
 import { supportConfig } from "../supportConfig";
 import { 
   payContractEscrow, 

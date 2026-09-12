@@ -58,7 +58,6 @@ const MultimediaCenter = lazyWithRetry(() => import("./admin/MultimediaCenter"))
 const AfrigomboEconomieDashboard = lazyWithRetry(() => import("./AfrigomboEconomieDashboard"));
 const AfrigomboBuilders = lazyWithRetry(() => import("./AfrigomboBuilders"));
 const AfrigomboBuildersAdminDashboard = lazyWithRetry(() => import("./AfrigomboBuildersAdminDashboard"));
-import BetaTransactionsAdminPanel from "./admin/BetaTransactionsAdminPanel";
 const GeoLocationCenter = lazyWithRetry(() => import("./admin/GeoLocationCenter"));
 const UserCommentsView = lazyWithRetry(() => import("./UserCommentsView"));
 const GomboMusikEcosystem = lazyWithRetry(() => import("./GomboMusikEcosystem"));
@@ -122,7 +121,6 @@ import { GomboAdsCampaign, UserProfile } from "../types";
 
 // Extracted Sub-components
 const UserReelsView = lazyWithRetry(() => import("./UserReelsView").then(m => ({ default: m.UserReelsView })));
-const RevenuQuickActionModal = lazyWithRetry(() => import("./RevenuQuickActionModal").then(m => ({ default: m.RevenuQuickActionModal })));
 
 // Chart Isolation
 const AdminAreaChart = lazyWithRetry(() => import("./charts/AdminAreaChart"));
@@ -1505,8 +1503,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [sonsEnabled, setSonsEnabled] = useState<boolean>(() => localStorage.getItem("afrigombo_sounds") !== "false");
   const [showDashboardIntro, setShowDashboardIntro] = useState<boolean>(true);
   const [dashboardStep, setDashboardStep] = useState<number>(1);
-  const [superAdminTab, setSuperAdminTab] = useState<"throne" | "beta_transactions" | "media" | "economie" | "batisseurs" | "geolocalisation" | "avatar_store">("throne");
-  const pendingBetaCount = transactions.filter((t: any) => t.status === "en_attente_validation").length;
+  const [superAdminTab, setSuperAdminTab] = useState<"throne" | "media" | "economie" | "batisseurs" | "geolocalisation" | "avatar_store">("throne");
 
   // --- STATE FOR ACTIONS RAPIDES AND RECHERCHE UNIVERSELLE ---
   const [universalSearchTerm, setUniversalSearchTerm] = useState("");
@@ -3791,9 +3788,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           {/* 7. Revenus */}
                           <button
                             onClick={() => {
-                              setActiveQuickActionModal("revenu");
-                              addToTerminal("[ACTIONS RAPIDES] Caisse / Portefeuille d'or chargé.");
-                              try { audioSynth.playKoraSuccess(); } catch (_) {}
+                              setActiveMenu("user_wallet");
+                              addToTerminal("[ACTIONS RAPIDES] Module Wallet Souverain (Bientôt disponible).");
+                              try { audioSynth.playTamTam(false); } catch (_) {}
                             }}
                             className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
@@ -3802,7 +3799,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             </div>
                             <div className="min-w-0">
                               <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Revenus</div>
-                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-afri-text-sec uppercase tracking-widest block leading-none mt-0.5">Sécurisé</span>
+                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-afri-text-sec uppercase tracking-widest block leading-none mt-0.5">Bientôt disponible</span>
                             </div>
                           </button>
 
@@ -4162,12 +4159,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               <div className="grid grid-cols-2 gap-2 text-left pt-2 border-t border-afri-border select-none">
                                 <div className="p-3 bg-afri-bg border border-afri-border rounded-2xl">
                                   <span className="text-[8px] font-mono text-zinc-550 block uppercase">FLUX CACHETS</span>
-                                  <strong className="text-sm font-display font-black text-afri-gold block mt-1">2 840 000 F</strong>
-                                  <span className="text-[7.5px] font-mono text-emerald-400 block mt-0.5">+14% ce mois</span>
+                                  <strong className="text-sm font-display font-black text-afri-gold block mt-1">
+                                    {contracts.reduce((acc, c) => acc + (Number(c.budget) || 0), 0).toLocaleString()} F
+                                  </strong>
+                                  <span className="text-[7.5px] font-mono text-emerald-400 block mt-0.5">Contrats réels</span>
                                 </div>
                                 <div className="p-3 bg-afri-bg border border-afri-border rounded-2xl">
                                   <span className="text-[8px] font-mono text-zinc-550 block uppercase">CONFIANCE COMMUNE</span>
-                                  <strong className="text-sm font-sans font-black text-afri-text block mt-1">98.4%</strong>
+                                  <strong className="text-sm font-sans font-black text-afri-text block mt-1">100%</strong>
                                   <span className="text-[7.5px] font-mono text-emerald-400 block mt-0.5">0 disputes actives</span>
                                 </div>
                               </div>
@@ -4192,21 +4191,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 </div>
                               </div>
                             </div>
-                          )}
-
-                          {/* MODAL 6: REVENUS / CAISSE */}
-                          {activeQuickActionModal === "revenu" && (
-                            <Suspense fallback={<div className="p-6 text-center text-afri-gold font-mono animate-pulse">Chargement de la Caisse...</div>}>
-                              <RevenuQuickActionModal
-                                activeArtistId={activeArtistId}
-                                users={users}
-                                saveToFirestore={saveToFirestore}
-                                transactions={transactions}
-                                setTransactions={setTransactions}
-                                setActiveQuickActionModal={setActiveQuickActionModal}
-                                addToTerminal={addToTerminal}
-                              />
-                            </Suspense>
                           )}
                         </div>
                       </div>
@@ -5470,10 +5454,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "user_wallet" && (
                 <div className="w-full h-full flex-1 flex flex-col min-h-0 bg-afri-bg animate-fadeIn text-left">
                   <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
-                    <WalletView 
-                      currentUserProfile={profile || (currentUser as any)} 
-                      addToTerminal={addToTerminal}
+                    <AfrigomboWalletComingSoon 
                       onBack={goBackMenu}
+                      isSuperFounderUser={isSuperFounderUser}
                     />
                   </Suspense>
                 </div>
