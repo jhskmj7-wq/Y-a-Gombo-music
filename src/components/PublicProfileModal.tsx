@@ -15,6 +15,9 @@ import { useAudio } from "../context/AudioContext";
 import { useAuth } from "../AuthContext";
 import { AndroidBottomSheet, AfriModal } from "./common/AfriModal";
 import { PendingAuthIntent } from "../lib/authIntent";
+import { PremiumEngine } from "../lib/premiumEngine";
+import { SecurityService } from "../lib/SecurityService";
+import { AdminSubscriptionTestBar } from "./admin/AdminSubscriptionTestBar";
 
 interface PublicProfileModalProps {
   isOpen: boolean;
@@ -39,7 +42,15 @@ export function PublicProfileModal({
   const activeUser = currentUser || auth?.currentUser;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<"reels" | "audios" | "photos" | "collaborations" | "reviews" | "posts" | "gombos">("reels");
+  const [activeTab, setActiveTab] = useState<"gombos" | "reels">("gombos");
+  const [, setSimTick] = useState(0);
+
+  // Re-evaluate on simulated tier changes
+  useEffect(() => {
+    const handleSimChange = () => setSimTick((t) => t + 1);
+    window.addEventListener("afrigombo_simulated_tier_changed", handleSimChange);
+    return () => window.removeEventListener("afrigombo_simulated_tier_changed", handleSimChange);
+  }, []);
   
   // Real statistical state from Firebase
   const [userPosts, setUserPosts] = useState<Post[]>([]);
@@ -257,7 +268,8 @@ export function PublicProfileModal({
 
   // Derive profile attributes safely
   const isKycApproved = profile?.kycStatus === "approved";
-  const isPremium = profile?.isPro || profile?.isVip || (profile?.balance !== undefined && profile.balance > 0);
+  const isPremium = PremiumEngine.isPremium(profile);
+  const profilePlan = PremiumEngine.getSubscriptionPlan(profile);
   const displayName = profile?.artisticName || profile?.artistName || profile?.displayName || `${profile?.firstName || "Artiste"} ${profile?.lastName || ""}`.trim();
   const gomboId = getEffectiveGomboId(profile);
   const trustScore = profile?.trustScore ?? profile?.reputationScore ?? 96;
@@ -268,28 +280,47 @@ export function PublicProfileModal({
   // Media items extraction from profile mediaGallery + posts attachments
   const mediaGallery = profile?.mediaGallery || [];
   const reelsMedia = mediaGallery.filter(m => m.type === "reel" || m.type === "video" || m.url?.includes(".mp4") || m.url?.includes("video"));
-  const audioMedia = mediaGallery.filter(m => m.type === "audio" || m.url?.includes(".mp3") || m.url?.includes(".wav"));
   const photoMedia = mediaGallery.filter(m => m.type === "photo" || m.type === "image" || m.url?.includes(".jpg") || m.url?.includes(".png"));
 
-  // Add post attachments to portfolio if available
+  // Add post video attachments to reelsMedia if available
   userPosts.forEach(post => {
     const isVideo = post.type === "video" || post.type === "reel" || post.mediaType === "video" || post.mediaUrl?.includes(".mp4") || post.mediaUrl?.includes(".webm") || post.mediaUrl?.includes(".mov");
-    const isAudio = post.type === "audio" || post.mediaType === "audio" || post.mediaUrl?.includes(".mp3") || post.mediaUrl?.includes(".wav");
-
     if (isVideo && post.mediaUrl) {
       if (!reelsMedia.some(r => r.url === post.mediaUrl)) {
         reelsMedia.push({ id: post.id, title: post.caption || (post as any).content || "Vidéo de prestation", url: post.mediaUrl, type: "video" });
       }
-    } else if (isAudio && post.mediaUrl) {
-      if (!audioMedia.some(a => a.url === post.mediaUrl)) {
-        audioMedia.push({ id: post.id, title: post.caption || (post as any).content || "Morceau Audio", url: post.mediaUrl, type: "audio" });
-      }
-    } else if (post.mediaUrl) {
-      if (!photoMedia.some(p => p.url === post.mediaUrl)) {
-        photoMedia.push({ id: post.id, title: post.caption || (post as any).content || "Photo Scène", url: post.mediaUrl, type: "photo" });
-      }
     }
   });
+
+  // Synthesize Unified Gombos List for Portfolio Showcase
+  const allGombos = [
+    ...userContracts.map(c => ({
+      id: c.id,
+      title: c.gomboTitle || "Prestation Musicale Sécurisée",
+      category: c.instrument || c.role || "Cachet Garanti",
+      description: (c as any).description || `Prestation artistique réalisée et sécurisée via Contrat Gombo.`,
+      location: (c as any).location || (c as any).commune || profile?.commune || "Abidjan",
+      date: c.createdAt || (c as any).date,
+      status: (c.status as string) === "completed" || (c.status as string) === "termine" || (c.status as string) === "paid" ? "Réalisé & Rémunéré" : c.status || "Validé",
+      budget: c.amount || c.cachetAmount || (c as any).budget,
+      imageUrl: (c as any).imageUrl || (c as any).mediaUrl || (photoMedia[0]?.url),
+      videoUrl: (c as any).videoUrl,
+      type: "contract"
+    })),
+    ...publishedGombos.map(g => ({
+      id: g.id,
+      title: g.title,
+      category: g.category || g.musicGenre || "Gombo Scène",
+      description: g.description,
+      location: g.location || g.commune || "Abidjan",
+      date: g.createdAt || g.eventDate,
+      status: g.status === "closed" ? "Terminé" : g.status === "active" ? "En cours" : g.status || "Actif",
+      budget: g.budget,
+      imageUrl: (g as any).imageUrl || (g as any).mediaUrl,
+      videoUrl: (g as any).videoUrl,
+      type: "published"
+    }))
+  ];
 
   return (
     <AndroidBottomSheet
@@ -374,6 +405,13 @@ export function PublicProfileModal({
               </div>
             ) : (
               <>
+                {/* MODE TEST ABONNEMENT (ADMIN SEULEMENT) */}
+                {(SecurityService.isAdmin(activeUser) || activeUser?.email === "jhs.kmj7@gmail.com") && (
+                  <div className="mb-3">
+                    <AdminSubscriptionTestBar currentUser={activeUser} />
+                  </div>
+                )}
+
                 {/* 1. TOP CARRIER CARD */}
                 <div className="relative overflow-hidden rounded-2xl border-2 border-afri-gold/40 bg-gradient-to-br from-afri-bg-sec via-afri-bg to-afri-bg-sec p-4 xs:p-5 sm:p-6 shadow-xl space-y-4">
                   {/* Glowing background accent */}
@@ -406,8 +444,12 @@ export function PublicProfileModal({
                           {displayName}
                         </h2>
                         {isPremium && (
-                          <span className="px-2.5 py-0.5 rounded-full bg-afri-gold/20 border border-afri-gold text-[9px] font-mono font-black text-afri-gold uppercase">
-                            PREMIUM ELITE
+                          <span className={`px-2.5 py-0.5 rounded-full border text-[9px] font-mono font-black uppercase ${
+                            profilePlan === "elite"
+                              ? "bg-afri-gold/20 border-afri-gold text-afri-gold"
+                              : "bg-blue-500/20 border-blue-400 text-blue-300"
+                          }`}>
+                            {profilePlan === "elite" ? "PREMIUM ELITE" : "MEMBRE PRO"}
                           </span>
                         )}
                       </div>
@@ -562,19 +604,19 @@ export function PublicProfileModal({
                 <div className="grid grid-cols-2 xs:grid-cols-4 gap-2.5">
                   <div className="bg-afri-bg border border-afri-border p-3 rounded-2xl text-center space-y-0.5">
                     <span className="text-xl font-serif font-black text-afri-gold block">
-                      {userPosts.length}
+                      {allGombos.length || profile.gombosCompleted || userContracts.length}
                     </span>
                     <span className="text-[9px] font-mono font-bold text-afri-text-sec uppercase tracking-wider block">
-                      Publications
+                      Gombos Réalisés
                     </span>
                   </div>
 
                   <div className="bg-afri-bg border border-afri-border p-3 rounded-2xl text-center space-y-0.5">
                     <span className="text-xl font-serif font-black text-afri-gold block">
-                      {profile.gombosCompleted || userContracts.length}
+                      {reelsMedia.length}
                     </span>
                     <span className="text-[9px] font-mono font-bold text-afri-text-sec uppercase tracking-wider block">
-                      Gombos Réalisés
+                      Vidéos Scène
                     </span>
                   </div>
 
@@ -597,80 +639,166 @@ export function PublicProfileModal({
                   </div>
                 </div>
 
-                {/* 3. PORTFOLIO TABS */}
+                {/* 3. PORTFOLIO TABS (GOMBOS & RÉELS/VIDÉOS UNIQUEMENT) */}
                 <div className="space-y-4">
                   {/* Tab Navigation */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar border-b border-afri-border/60">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar border-b border-afri-border/60">
+                    <button
+                      onClick={() => setActiveTab("gombos")}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-2 ${
+                        activeTab === "gombos"
+                          ? "bg-afri-gold text-black shadow-md"
+                          : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border/50"
+                      }`}
+                    >
+                      <Briefcase className="w-3.5 h-3.5" />
+                      <span>Gombos ({allGombos.length})</span>
+                    </button>
+
                     <button
                       onClick={() => setActiveTab("reels")}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+                      className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-2 ${
                         activeTab === "reels"
                           ? "bg-afri-gold text-black shadow-md"
-                          : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
+                          : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border/50"
                       }`}
                     >
                       <Film className="w-3.5 h-3.5" />
                       <span>Réels & Vidéos ({reelsMedia.length})</span>
                     </button>
-
-                    <button
-                      onClick={() => setActiveTab("audios")}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
-                        activeTab === "audios"
-                          ? "bg-afri-gold text-black shadow-md"
-                          : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
-                      }`}
-                    >
-                      <Volume2 className="w-3.5 h-3.5" />
-                      <span>Audios ({audioMedia.length})</span>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveTab("photos")}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
-                        activeTab === "photos"
-                          ? "bg-afri-gold text-black shadow-md"
-                          : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
-                      }`}
-                    >
-                      <ImageIcon className="w-3.5 h-3.5" />
-                      <span>Photos ({photoMedia.length})</span>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveTab("posts")}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
-                        activeTab === "posts"
-                          ? "bg-afri-gold text-black shadow-md"
-                          : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
-                      }`}
-                    >
-                      <FileText className="w-3.5 h-3.5" />
-                      <span>Posts ({userPosts.length})</span>
-                    </button>
-
-                    {isRecruiter && (
-                      <button
-                        onClick={() => setActiveTab("gombos")}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
-                          activeTab === "gombos"
-                            ? "bg-afri-gold text-black shadow-md"
-                            : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
-                        }`}
-                      >
-                        <Briefcase className="w-3.5 h-3.5" />
-                        <span>Gombos Publiés ({publishedGombos.length})</span>
-                      </button>
-                    )}
                   </div>
 
-                  {/* TAB CONTENTS */}
+                  {/* TAB 1: GOMBOS RÉALISÉS & PUBLIÉS */}
+                  {activeTab === "gombos" && (
+                    <div className="space-y-3">
+                      {allGombos.length === 0 ? (
+                        <div className="py-12 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl p-6 space-y-2">
+                          <Briefcase className="w-10 h-10 text-afri-gold/50 mx-auto mb-2" />
+                          <h4 className="text-sm font-bold text-afri-text">Aucun Gombo enregistré dans ce portfolio</h4>
+                          <p className="text-[11px] text-afri-text-sec max-w-sm mx-auto">
+                            Les prestations scéniques, contrats et gombos réalisés par l&apos;artiste apparaîtront ici avec leurs illustrations photo et vidéo.
+                          </p>
+                        </div>
+                      ) : (
+                        allGombos.map((g, idx) => (
+                          <div
+                            key={g.id || idx}
+                            className="p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-3 hover:border-afri-gold/50 transition-all shadow-sm"
+                          >
+                            {/* Header row: Type/Catégorie, Titre, Budget */}
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="px-2 py-0.5 rounded-md bg-afri-gold/15 border border-afri-gold/40 text-[9px] font-mono font-black text-afri-gold uppercase">
+                                    {g.category || "GOMBO ARTISTIQUE"}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-[9px] font-mono font-bold text-emerald-400 uppercase flex items-center gap-1">
+                                    <ShieldCheck className="w-3 h-3" />
+                                    {g.status}
+                                  </span>
+                                </div>
+                                <h4 className="text-sm font-black text-afri-text">{g.title}</h4>
+                              </div>
+
+                              {g.budget !== undefined && g.budget > 0 && (
+                                <div className="shrink-0 text-right">
+                                  <span className="text-sm font-black text-afri-gold font-mono block">
+                                    {Number(g.budget).toLocaleString("fr-FR")} F
+                                  </span>
+                                  <span className="text-[9px] font-mono text-afri-text-sec uppercase block">
+                                    Cachet Réalisé
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Description */}
+                            {g.description && (
+                              <p className="text-xs text-afri-text-sec font-sans leading-relaxed">
+                                {g.description}
+                              </p>
+                            )}
+
+                            {/* Informations pertinentes : Lieu, Date */}
+                            <div className="flex items-center gap-3 text-[11px] font-mono text-afri-text-sec pt-1 border-t border-afri-border/40 flex-wrap">
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3 text-afri-gold" />
+                                {g.location}
+                              </span>
+                              {g.date && (
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3 text-afri-text-sec" />
+                                  {new Date(g.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Image d'illustration réellement associée au Gombo */}
+                            {g.imageUrl && (
+                              <div className="pt-2">
+                                <span className="text-[10px] font-mono font-bold uppercase text-afri-text-sec block mb-1.5 flex items-center gap-1">
+                                  <ImageIcon className="w-3 h-3 text-afri-gold" />
+                                  Illustration de la prestation
+                                </span>
+                                <div
+                                  onClick={() => setSelectedMediaViewer({ type: "photo", url: g.imageUrl!, title: g.title })}
+                                  className="relative rounded-xl overflow-hidden border border-afri-border/80 bg-black/40 group cursor-pointer max-h-56 hover:border-afri-gold transition-all"
+                                >
+                                  <img
+                                    src={g.imageUrl}
+                                    alt={g.title}
+                                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                  <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                    <span className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-sm text-[10px] font-bold text-afri-gold uppercase flex items-center gap-1 border border-afri-gold/40">
+                                      <ExternalLink className="w-3 h-3" /> Agrandir
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Vidéo réellement associée lorsqu'elle existe */}
+                            {g.videoUrl && (
+                              <div className="pt-2">
+                                <span className="text-[10px] font-mono font-bold uppercase text-afri-text-sec block mb-1.5 flex items-center gap-1">
+                                  <Film className="w-3 h-3 text-afri-gold" />
+                                  Vidéo de la prestation
+                                </span>
+                                <div
+                                  onClick={() => setSelectedMediaViewer({ type: "video", url: g.videoUrl!, title: g.title })}
+                                  className="relative rounded-xl overflow-hidden border border-afri-border/80 bg-black group cursor-pointer h-48 hover:border-afri-gold transition-all flex items-center justify-center"
+                                >
+                                  <video
+                                    src={g.videoUrl}
+                                    className="w-full h-full object-cover pointer-events-none opacity-80"
+                                    preload="metadata"
+                                    muted
+                                  />
+                                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                    <div className="w-12 h-12 rounded-full bg-afri-gold text-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                      <Play className="w-6 h-6 fill-current ml-0.5" />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {/* TAB 2: RÉELS & VIDÉOS (Miniatures compactes, visionneuse AFRIGOMBO) */}
                   {activeTab === "reels" && (
                     <div className="grid grid-cols-3 gap-2">
                       {reelsMedia.length === 0 ? (
-                        <div className="col-span-full py-10 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl">
-                          <Film className="w-8 h-8 text-afri-text-sec mx-auto mb-2 opacity-50" />
-                          Aucun Réel ou Vidéo publié pour le moment.
+                        <div className="col-span-full py-12 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl p-6 space-y-2">
+                          <Film className="w-10 h-10 text-afri-gold/50 mx-auto mb-2" />
+                          <h4 className="text-sm font-bold text-afri-text">Aucun Réel ou Vidéo publié</h4>
+                          <p className="text-[11px] text-afri-text-sec max-w-sm mx-auto">
+                            Les vidéos de scène, solos et performances ajoutés au portfolio apparaîtront ici.
+                          </p>
                         </div>
                       ) : (
                         reelsMedia.map((m, idx) => (
@@ -692,149 +820,13 @@ export function PublicProfileModal({
                                 <span className="text-[9px] font-bold text-afri-text line-clamp-2">{m.title}</span>
                               </div>
                             )}
-                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors flex items-center justify-center">
-                              <div className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm text-afri-gold flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                            <div className="absolute inset-0 bg-black/25 group-hover:bg-black/0 transition-colors flex items-center justify-center">
+                              <div className="w-8 h-8 rounded-full bg-black/70 backdrop-blur-sm text-afri-gold flex items-center justify-center shadow-md group-hover:scale-110 transition-transform border border-afri-gold/30">
                                 <Play className="w-4 h-4 fill-current ml-0.5" />
                               </div>
                             </div>
-                            <div className="absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none">
+                            <div className="absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black via-black/70 to-transparent pointer-events-none">
                               <p className="text-[9px] font-bold text-afri-text truncate">{m.title || "Réel Scène"}</p>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-
-                  {activeTab === "audios" && (
-                    <div className="space-y-2">
-                      {audioMedia.length === 0 ? (
-                        <div className="py-10 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl">
-                          <Volume2 className="w-8 h-8 text-afri-text-sec mx-auto mb-2 opacity-50" />
-                          Aucun extrait audio disponible dans la fiche.
-                        </div>
-                      ) : (
-                        audioMedia.map((a, idx) => (
-                          <div
-                            key={a.id || idx}
-                            className="p-3 bg-afri-bg border border-afri-border rounded-2xl flex items-center justify-between gap-3 hover:border-afri-gold/50 transition-colors"
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <button
-                                onClick={() => toggleAudio(a.url, a.id || String(idx), a.title)}
-                                className="w-10 h-10 rounded-full bg-afri-gold text-black flex items-center justify-center shrink-0 cursor-pointer shadow-md hover:scale-105 transition-transform"
-                              >
-                                {currentTrack?.id === (a.id || String(idx)) && isPlaying ? (
-                                  <Pause className="w-5 h-5 fill-current" />
-                                ) : (
-                                  <Play className="w-5 h-5 fill-current ml-0.5" />
-                                )}
-                              </button>
-                              <div className="min-w-0">
-                                <h4 className="text-xs font-bold text-afri-text truncate">
-                                  {a.title || "Prestation Audio"}
-                                </h4>
-                                <span className="text-[10px] text-afri-text-sec font-mono uppercase">
-                                  AFRIGOMBO AUDIO • 320 KBPS
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-
-                  {activeTab === "photos" && (
-                    <div className="grid grid-cols-3 gap-2">
-                      {photoMedia.length === 0 ? (
-                        <div className="col-span-full py-10 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl">
-                          <ImageIcon className="w-8 h-8 text-afri-text-sec mx-auto mb-2 opacity-50" />
-                          Aucune photo de scène publiée.
-                        </div>
-                      ) : (
-                        photoMedia.map((p, idx) => (
-                          <div
-                            key={p.id || idx}
-                            onClick={() => setSelectedMediaViewer({ type: "photo", url: p.url, title: p.title || "Photo Scène" })}
-                            className="aspect-square rounded-xl overflow-hidden border border-afri-border bg-afri-bg-sec group relative shadow-sm cursor-pointer hover:border-afri-gold/50 transition-all"
-                          >
-                            <img
-                              src={p.url}
-                              alt={p.title || "Prestation"}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                            {p.title && (
-                              <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black via-black/50 to-transparent">
-                                <p className="text-[9px] font-bold text-afri-text truncate">{p.title}</p>
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-
-                  {activeTab === "posts" && (
-                    <div className="space-y-3">
-                      {userPosts.length === 0 ? (
-                        <div className="py-10 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl">
-                          Aucune publication disponible.
-                        </div>
-                      ) : (
-                        userPosts.map((post) => (
-                          <div
-                            key={post.id}
-                            className="p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-2 text-xs"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-mono text-[10px] text-afri-gold uppercase font-bold">
-                                {post.category || "PUBLICATION"}
-                              </span>
-                              <span className="text-[10px] text-afri-text-sec">
-                                {new Date(post.createdAt).toLocaleDateString("fr-FR")}
-                              </span>
-                            </div>
-                            <p className="text-afri-text leading-relaxed font-sans">{post.caption || post.text}</p>
-                            {post.mediaUrl && (
-                              <div className="rounded-xl overflow-hidden border border-afri-border max-h-48 mt-2">
-                                {post.mediaType === "video" ? (
-                                  <video src={post.mediaUrl} controls className="w-full h-full object-cover" />
-                                ) : (
-                                  <img src={post.mediaUrl} alt="Media" className="w-full h-full object-cover" />
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-
-                  {activeTab === "gombos" && isRecruiter && (
-                    <div className="space-y-2.5">
-                      {publishedGombos.length === 0 ? (
-                        <div className="py-10 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl">
-                          Aucun Gombo publié par cette structure.
-                        </div>
-                      ) : (
-                        publishedGombos.map((g) => (
-                          <div
-                            key={g.id}
-                            onClick={() => onNavigateToGombo && onNavigateToGombo(g.id)}
-                            className="p-3.5 bg-afri-bg border border-afri-border rounded-2xl flex items-center justify-between gap-3 hover:border-afri-gold/60 cursor-pointer transition-colors"
-                          >
-                            <div className="min-w-0 space-y-0.5">
-                              <h4 className="text-xs font-black text-afri-text truncate">{g.title}</h4>
-                              <p className="text-[10px] font-mono text-afri-text-sec">
-                                {g.location || "Abidjan"} • Status: <span className="text-emerald-400 font-bold">{g.status}</span>
-                              </p>
-                            </div>
-                            <div className="shrink-0 text-right">
-                              <span className="text-xs font-black text-afri-gold block font-mono">
-                                {(g.budget || 0).toLocaleString("fr-FR")} F
-                              </span>
-                              <ChevronRight className="w-4 h-4 text-afri-text-sec ml-auto mt-0.5" />
                             </div>
                           </div>
                         ))

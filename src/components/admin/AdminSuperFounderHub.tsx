@@ -40,6 +40,7 @@ const AdminRevenueFeatures = lazyWithRetry(() => import("./AdminRevenueFeatures"
 import { GomboAdsAdminSection } from "../ads/GomboAdsAdminSection";
 import AdminSubscriptionManagement from "./AdminSubscriptionManagement";
 import FounderSubscriptionBubble from "../FounderSubscriptionBubble";
+import { AdminSubscriptionTestBar } from "./AdminSubscriptionTestBar";
 
 export type AdminModuleType = 
   | "throne"
@@ -284,6 +285,11 @@ export default function AdminSuperFounderHub({
           paddingBottom: 'calc(140px + env(safe-area-inset-bottom, 0px))'
         }}
       >
+        {/* MODE TEST ABONNEMENT (ADMIN) */}
+        <div className="mb-4 max-w-5xl mx-auto">
+          <AdminSubscriptionTestBar currentUser={currentUser} />
+        </div>
+
         <Suspense fallback={
           <div className="p-16 text-center text-[#D4AF37] font-mono text-xs animate-pulse flex flex-col items-center justify-center gap-3">
             <Crown className="w-8 h-8 text-[#D4AF37] animate-bounce" />

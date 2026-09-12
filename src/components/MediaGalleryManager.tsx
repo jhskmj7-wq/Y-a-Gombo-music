@@ -18,6 +18,14 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
   onRefresh,
   onSetGallery
 }) => {
+  const [, setSimulationTick] = useState(0);
+
+  useEffect(() => {
+    const handleSimChange = () => setSimulationTick((t) => t + 1);
+    window.addEventListener("afrigombo_simulated_tier_changed", handleSimChange);
+    return () => window.removeEventListener("afrigombo_simulated_tier_changed", handleSimChange);
+  }, []);
+
   const currentPlan = PremiumEngine.getSubscriptionPlan(currentUserProfile);
   const mediaLimit = PremiumEngine.getPortfolioMediaLimit(currentUserProfile);
   const isLimitReached = mediaGallery.length >= mediaLimit;

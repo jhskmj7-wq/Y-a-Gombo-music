@@ -30,6 +30,7 @@ import {
   formatIvorianPhoneNumber
 } from "../../lib/manualPaymentConfig";
 import { NotificationService } from "../../lib/NotificationService";
+import { AdminSubscriptionTestBar } from "./AdminSubscriptionTestBar";
 
 interface AdminSubscriptionManagementProps {
   currentUser: any;
@@ -533,6 +534,9 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
           </div>
         </div>
       </div>
+
+      {/* MODE TEST ABONNEMENT (ADMIN SEULEMENT) */}
+      <AdminSubscriptionTestBar currentUser={currentUser} />
 
       {/* Tabs Navigation & Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

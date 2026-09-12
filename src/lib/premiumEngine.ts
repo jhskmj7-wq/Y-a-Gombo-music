@@ -2,6 +2,38 @@ import { NotificationService } from "../lib/NotificationService";
 import { getPlatformPricing, recordWalletTransaction } from "./financial";
 import { db } from "./firebase";
 import { doc, updateDoc, getDoc, collection, addDoc } from "firebase/firestore";
+import { SecurityService } from "./SecurityService";
+
+export type SimulatedTier = "free" | "pro" | "elite" | null;
+
+const SIMULATED_TIER_KEY = "afrigombo_admin_simulated_tier";
+
+export const getAdminSimulatedTier = (): SimulatedTier => {
+  try {
+    if (typeof window === "undefined") return null;
+    const val = localStorage.getItem(SIMULATED_TIER_KEY) || sessionStorage.getItem(SIMULATED_TIER_KEY);
+    if (val === "free" || val === "pro" || val === "elite") return val;
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+export const setAdminSimulatedTier = (tier: SimulatedTier): void => {
+  try {
+    if (typeof window === "undefined") return;
+    if (!tier) {
+      localStorage.removeItem(SIMULATED_TIER_KEY);
+      sessionStorage.removeItem(SIMULATED_TIER_KEY);
+    } else {
+      localStorage.setItem(SIMULATED_TIER_KEY, tier);
+      sessionStorage.setItem(SIMULATED_TIER_KEY, tier);
+    }
+    window.dispatchEvent(new CustomEvent("afrigombo_simulated_tier_changed", { detail: tier }));
+  } catch (e) {
+    console.error("Failed to set simulated tier:", e);
+  }
+};
 
 export interface UserPremiumProfile {
   premium?: boolean;
@@ -32,6 +64,13 @@ export const PremiumEngine = {
    */
   isPremium(userData: any): boolean {
     if (!userData) return false;
+
+    // Simulation check for authorized admin/founder only (instant testing)
+    if (SecurityService.isAdmin(userData)) {
+      const simTier = getAdminSimulatedTier();
+      if (simTier === "free") return false;
+      if (simTier === "pro" || simTier === "elite") return true;
+    }
 
     // Check modern fields, fallback fields, badges, subscriptionPlan, isVip, isPro, isFounder, role, niveauWallet
     const hasPremiumField = userData.premium === true || userData.isPremium === true;
@@ -230,6 +269,12 @@ export const PremiumEngine = {
    * Resolves the exact active tier for a user ("free", "pro", or "elite").
    */
   getSubscriptionPlan(userData: any): "free" | "pro" | "elite" {
+    // Simulation check for authorized admin/founder only (instant testing)
+    if (userData && SecurityService.isAdmin(userData)) {
+      const simTier = getAdminSimulatedTier();
+      if (simTier) return simTier;
+    }
+
     if (!this.isPremium(userData)) return "free";
     
     const plan = (
