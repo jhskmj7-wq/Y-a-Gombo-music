@@ -58,6 +58,7 @@ export function PublicProfileModal({
 
   // Audio player state
   const { currentTrack, isPlaying, playTrack, pause } = useAudio();
+  const [selectedMediaViewer, setSelectedMediaViewer] = useState<{ type: 'video' | 'photo' | 'audio'; url: string; title: string } | null>(null);
 
   // Fetch target user data whenever targetUserId changes
   useEffect(() => {
@@ -665,7 +666,7 @@ export function PublicProfileModal({
 
                   {/* TAB CONTENTS */}
                   {activeTab === "reels" && (
-                    <div className="grid grid-cols-2 xs:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2">
                       {reelsMedia.length === 0 ? (
                         <div className="col-span-full py-10 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl">
                           <Film className="w-8 h-8 text-afri-text-sec mx-auto mb-2 opacity-50" />
@@ -675,23 +676,29 @@ export function PublicProfileModal({
                         reelsMedia.map((m, idx) => (
                           <div
                             key={m.id || idx}
-                            className="relative aspect-[9/16] rounded-2xl bg-afri-bg overflow-hidden border border-afri-border group shadow-md"
+                            onClick={() => setSelectedMediaViewer({ type: "video", url: m.url, title: m.title || "Réel Scène" })}
+                            className="relative aspect-[9/16] rounded-xl bg-afri-bg overflow-hidden border border-afri-border group shadow-sm cursor-pointer hover:border-afri-gold/50 transition-all"
                           >
                             {m.url ? (
                               <video
                                 src={m.url}
-                                className="w-full h-full object-cover"
-                                controls
+                                className="w-full h-full object-cover pointer-events-none"
                                 preload="metadata"
+                                muted
                               />
                             ) : (
-                              <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-afri-bg-sec">
-                                <Film className="w-6 h-6 text-afri-gold mb-1" />
-                                <span className="text-[10px] font-bold text-afri-text line-clamp-2">{m.title}</span>
+                              <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-afri-bg-sec">
+                                <Film className="w-5 h-5 text-afri-gold mb-1" />
+                                <span className="text-[9px] font-bold text-afri-text line-clamp-2">{m.title}</span>
                               </div>
                             )}
-                            <div className="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none">
-                              <p className="text-[10px] font-bold text-afri-text truncate">{m.title || "Réel Scène"}</p>
+                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors flex items-center justify-center">
+                              <div className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm text-afri-gold flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                                <Play className="w-4 h-4 fill-current ml-0.5" />
+                              </div>
+                            </div>
+                            <div className="absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none">
+                              <p className="text-[9px] font-bold text-afri-text truncate">{m.title || "Réel Scène"}</p>
                             </div>
                           </div>
                         ))
@@ -739,7 +746,7 @@ export function PublicProfileModal({
                   )}
 
                   {activeTab === "photos" && (
-                    <div className="grid grid-cols-2 xs:grid-cols-3 gap-2.5">
+                    <div className="grid grid-cols-3 gap-2">
                       {photoMedia.length === 0 ? (
                         <div className="col-span-full py-10 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl">
                           <ImageIcon className="w-8 h-8 text-afri-text-sec mx-auto mb-2 opacity-50" />
@@ -749,7 +756,8 @@ export function PublicProfileModal({
                         photoMedia.map((p, idx) => (
                           <div
                             key={p.id || idx}
-                            className="aspect-square rounded-2xl overflow-hidden border border-afri-border bg-afri-bg-sec group relative shadow-sm"
+                            onClick={() => setSelectedMediaViewer({ type: "photo", url: p.url, title: p.title || "Photo Scène" })}
+                            className="aspect-square rounded-xl overflow-hidden border border-afri-border bg-afri-bg-sec group relative shadow-sm cursor-pointer hover:border-afri-gold/50 transition-all"
                           >
                             <img
                               src={p.url}
@@ -757,7 +765,7 @@ export function PublicProfileModal({
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                             {p.title && (
-                              <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black via-black/50 to-transparent">
+                              <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black via-black/50 to-transparent">
                                 <p className="text-[9px] font-bold text-afri-text truncate">{p.title}</p>
                               </div>
                             )}
@@ -851,6 +859,75 @@ export function PublicProfileModal({
               </>
             )}
           </div>
+      )}
+
+      {/* DEDICATED AFRIGOMBO MEDIA VIEWER MODAL */}
+      {selectedMediaViewer && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="relative w-full max-w-lg bg-afri-bg border border-afri-border rounded-2xl p-4 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase text-afri-gold truncate">{selectedMediaViewer.title}</h3>
+              <button
+                onClick={() => setSelectedMediaViewer(null)}
+                className="w-8 h-8 rounded-full bg-afri-bg-sec text-afri-text flex items-center justify-center cursor-pointer hover:bg-afri-bg-ter"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="relative rounded-xl overflow-hidden bg-black flex items-center justify-center max-h-[60vh]">
+              {selectedMediaViewer.type === "video" ? (
+                <video
+                  src={selectedMediaViewer.url}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="w-full max-h-[60vh] object-contain"
+                />
+              ) : (
+                <img
+                  src={selectedMediaViewer.url}
+                  alt={selectedMediaViewer.title}
+                  className="w-full max-h-[60vh] object-contain"
+                />
+              )}
+            </div>
+
+            <div className="flex items-center justify-between gap-3 pt-2">
+              <button
+                onClick={() => {
+                  const a = document.createElement('a');
+                  a.href = selectedMediaViewer.url;
+                  a.download = `${selectedMediaViewer.title || 'media'}_afrigombo`;
+                  a.target = '_blank';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                }}
+                className="flex-1 py-2.5 bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border rounded-xl text-xs font-bold uppercase tracking-wider text-afri-text flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Télécharger</span>
+              </button>
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: selectedMediaViewer.title,
+                      url: selectedMediaViewer.url
+                    }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(selectedMediaViewer.url);
+                    alert("Lien du média copié dans le presse-papier !");
+                  }
+                }}
+                className="flex-1 py-2.5 bg-afri-gold text-black hover:opacity-90 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-md"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Partager</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </AndroidBottomSheet>
   );
