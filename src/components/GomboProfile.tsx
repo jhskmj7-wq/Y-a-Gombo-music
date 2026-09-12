@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import SettingsModal from "./SettingsModal";
 import { supportConfig } from "../supportConfig";
 import { uploadOptimizedImage, safeFetchJson } from "../lib/media/imageOptimizer";
+import { getFreshIdToken } from "../lib/authUtils";
 import { AvatarCropModal } from "./ui/AvatarCropModal";
 import AvatarEditor from "./avatar/AvatarEditor";
 import AvatarStore from "./avatar/AvatarStore";
@@ -569,8 +570,7 @@ export default function GomboProfile({
     setUploading(true);
     setUploadProgress(15);
     try {
-      const currentUser = auth.currentUser;
-      const idToken = currentUser ? await currentUser.getIdToken() : undefined;
+      const idToken = await getFreshIdToken(true);
 
       const result = await uploadOptimizedImage({
         file,
@@ -621,8 +621,7 @@ export default function GomboProfile({
     setCoverUploading(true);
     setCoverUploadProgress(15);
     try {
-      const currentUser = auth.currentUser;
-      const idToken = currentUser ? await currentUser.getIdToken() : undefined;
+      const idToken = await getFreshIdToken(true);
 
       const result = await uploadOptimizedImage({
         file,

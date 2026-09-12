@@ -41,6 +41,7 @@ import {
 import { ref, uploadBytes, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { supabaseStorage } from "./lib/supabaseStorage";
 import { optimizeImage } from "./lib/media/imageOptimizer";
+import { getFreshIdToken } from "./lib/authUtils";
 export { app, auth, db, storage } from "./lib/firebase";
 export { supabaseStorage } from "./lib/supabaseStorage";
 import { app, auth, db, storage } from "./lib/firebase";
@@ -2306,11 +2307,10 @@ export const gomboDB = {
     if (isKyc) {
       console.log("[STORAGE] Document KYC détecté, upload via route sécurisée...");
 
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
+      let idToken = await getFreshIdToken(true);
+      if (!idToken) {
         throw new Error("Utilisateur non authentifié.");
       }
-      const idToken = await currentUser.getIdToken();
 
       const fileForUpload = finalFile as File;
 
@@ -2330,7 +2330,7 @@ export const gomboDB = {
         progressCallback(50, { state: "uploading", log: "Envoi sécurisé du document..." });
       }
 
-      const response = await fetch("/api/user/kyc/upload", {
+      let response = await fetch("/api/user/kyc/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2341,6 +2341,26 @@ export const gomboDB = {
           bucket: "afrigombo-private"
         })
       });
+
+      // Retry unique sur HTTP 401
+      if (response.status === 401) {
+        console.warn("[STORAGE KYC] 401 reçu, renouvellement forcé du token et réessai...");
+        const freshToken = await getFreshIdToken(true);
+        if (freshToken && freshToken !== idToken) {
+          idToken = freshToken;
+          response = await fetch("/api/user/kyc/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              idToken,
+              storagePath: finalPath,
+              fileBase64: base64Data,
+              contentType,
+              bucket: "afrigombo-private"
+            })
+          });
+        }
+      }
 
       const result = await response.json();
 

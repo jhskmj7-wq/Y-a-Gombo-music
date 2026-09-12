@@ -1,4 +1,5 @@
 import { supabaseStorage } from "../supabaseStorage";
+import { getFreshIdToken } from "../authUtils";
 
 export type ImageContext = "avatar" | "cover" | "post" | "gallery" | "custom";
 
@@ -339,6 +340,7 @@ export async function uploadOptimizedImage(params: {
     // Attempt direct Supabase upload or API proxy upload
     let finalUrl = "";
     let uploadSuccess = false;
+    let activeToken = idToken || (await getFreshIdToken(true));
 
     // Use Supabase Storage client if available
     if (supabaseStorage.isConfigured()) {
@@ -346,6 +348,7 @@ export async function uploadOptimizedImage(params: {
         const uploadResult = await supabaseStorage.uploadGenericFile(optimized.file, storagePath, {
           userId,
           mediaType: "image",
+          idToken: activeToken,
           onProgress: (pInfo) => {
             if (pInfo.percentage) {
               onProgress?.("uploading", "Téléversement…", 50 + Math.round(pInfo.percentage * 0.45));
@@ -363,20 +366,39 @@ export async function uploadOptimizedImage(params: {
     }
 
     // Fallback to Express backend proxy if direct failed or ID token provided for avatar/cover
-    if (!uploadSuccess && idToken) {
+    if (!uploadSuccess && activeToken) {
       let endpoint = "/api/user/avatar/upload";
       if (context === "cover") endpoint = "/api/user/cover/upload";
 
-      const res = await safeFetchJson(endpoint, {
+      let res = await safeFetchJson(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          idToken,
+          idToken: activeToken,
           storagePath,
           fileBase64: optimized.base64,
           contentType: optimized.mimeType
         })
       });
+
+      // Retry unique transparent sur HTTP 401
+      if (!res.ok && (res.status === 401 || res.error?.includes("Session invalide"))) {
+        console.warn("[IMAGE OPTIMIZER PROXY] 401 reçu, renouvellement forcé du token Firebase et retry...");
+        const freshToken = await getFreshIdToken(true);
+        if (freshToken && freshToken !== activeToken) {
+          activeToken = freshToken;
+          res = await safeFetchJson(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              idToken: activeToken,
+              storagePath,
+              fileBase64: optimized.base64,
+              contentType: optimized.mimeType
+            })
+          });
+        }
+      }
 
       if (res.ok && res.data?.publicUrl) {
         finalUrl = res.data.publicUrl;

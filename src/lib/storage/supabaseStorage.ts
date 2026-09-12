@@ -1,6 +1,7 @@
 import { getSupabaseClient, SUPABASE_BUCKET_NAME, isSupabaseConfigured, sanitizeBucketName } from "../supabase";
 import { auth } from "../../firebase";
 import { r2StorageService } from "./r2Storage";
+import { getFreshIdToken } from "../authUtils";
 
 /**
  * Service centralisé pour le stockage de fichiers via Supabase Storage pour AfriGombo.
@@ -259,6 +260,7 @@ export const supabaseStorage = {
       contentType?: string;
       idToken?: string;
       useBackendProxy?: boolean;
+      _retryCount?: number;
     } = {}
   ): Promise<StorageUploadResult> {
     const bucket = sanitizeBucketName(options.bucket || SUPABASE_BUCKET_NAME);
@@ -313,15 +315,13 @@ export const supabaseStorage = {
         throw new Error(validation.error || "Fichier non conforme.");
       }
 
-      // Tenter d'obtenir l'idToken Firebase si non fourni et que le proxy est requis/demandé
+      // Tenter d'obtenir l'idToken Firebase fraîchement renouvelé si non fourni et que le proxy est requis/demandé
       let idToken = options.idToken;
-      if (!idToken && (options.useBackendProxy || options.mediaType === "video" || options.idToken)) {
+      if (!idToken && (options.useBackendProxy || options.mediaType === "video" || options.idToken !== undefined)) {
         try {
-          if (auth?.currentUser) {
-            idToken = await auth.currentUser.getIdToken();
-          }
+          idToken = await getFreshIdToken(true);
         } catch (tokenErr) {
-          console.warn("[SUPABASE STORAGE] Impossible de récupérer automatiquement l'idToken :", tokenErr);
+          console.warn("[SUPABASE STORAGE] Impossible de récupérer automatiquement l'idToken frais :", tokenErr);
         }
       }
 
@@ -367,6 +367,19 @@ export const supabaseStorage = {
             };
           }
 
+          // Gestion du Retry unique transparent sur HTTP 401 (Session expirée)
+          if (resp.status === 401 && (options._retryCount || 0) < 1) {
+            console.warn("[SUPABASE STORAGE VIA BACKEND PROXY] Réponse 401 reçue. Renouvellement forcé du jeton Firebase et nouvel essai...");
+            const freshToken = await getFreshIdToken(true);
+            if (freshToken && freshToken !== idToken) {
+              return await this.uploadGenericFile(fileInput, storagePath, {
+                ...options,
+                idToken: freshToken,
+                _retryCount: (options._retryCount || 0) + 1,
+              });
+            }
+          }
+
           if (!resp.ok || !json.success) {
             throw new Error(json.error || `Erreur d'upload sécurisé (HTTP ${resp.status})`);
           }
@@ -402,7 +415,7 @@ export const supabaseStorage = {
             metadata,
           };
         } catch (backendErr: any) {
-          console.error("[SUPABASE STORAGE] Échec strict de l'upload via proxy backend Express :", backendErr);
+          console.error("[SUPABASE STORAGE] Échec de l'upload via proxy backend Express :", backendErr);
           // NE PAS faire de fallback direct vers Supabase navigateur si idToken est fourni.
           throw backendErr;
         }
