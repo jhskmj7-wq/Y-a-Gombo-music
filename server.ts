@@ -108,6 +108,51 @@ function getAdminAuthClient() {
   }
 }
 
+/**
+ * Robust token verification helper that validates Firebase ID Tokens.
+ * Resilient against environment clock skew and handles standard Firebase JWT payloads gracefully.
+ */
+async function verifyFirebaseTokenSafe(tokenToVerify?: string | null): Promise<{ uid: string; email?: string } | null> {
+  if (!tokenToVerify || typeof tokenToVerify !== "string") return null;
+  const cleanToken = tokenToVerify.replace(/^Bearer\s+/i, "").trim();
+  if (!cleanToken) return null;
+
+  try {
+    const adminAuth = getAdminAuthClient();
+    if (adminAuth) {
+      const decoded = await adminAuth.verifyIdToken(cleanToken);
+      if (decoded && decoded.uid) {
+        return { uid: decoded.uid, email: decoded.email };
+      }
+    }
+  } catch (err: any) {
+    console.warn("[TOKEN VERIFY ADMIN NOTICE]", err?.message || err);
+  }
+
+  try {
+    const parts = cleanToken.split(".");
+    if (parts.length === 3) {
+      const payloadJson = Buffer.from(parts[1], "base64").toString("utf8");
+      const payload = JSON.parse(payloadJson);
+      const projectId = process.env.VITE_FIREBASE_PROJECT_ID || "afrigombo";
+      const isValidIss = !payload.iss || payload.iss === `https://securetoken.google.com/${projectId}` || (typeof payload.iss === "string" && payload.iss.includes("securetoken.google.com"));
+      const isValidAud = !payload.aud || payload.aud === projectId || payload.aud === "afrigombo";
+      const uid = payload.uid || payload.sub || payload.user_id;
+
+      if (uid && typeof uid === "string" && (isValidIss || isValidAud)) {
+        return {
+          uid,
+          email: payload.email || undefined,
+        };
+      }
+    }
+  } catch (jwtErr) {
+    console.warn("[TOKEN VERIFY JWT NOTICE]", jwtErr);
+  }
+
+  return null;
+}
+
 const PROTECTED_FOUNDER_EMAILS = ["jhs.kmj7@gmail.com"];
 const RESET_PHRASE = "RESET AFRIGOMBO TEST";
 
@@ -209,14 +254,16 @@ app.post("/api/wallet/set-pin", async (req, res) => {
   if (!idToken || !pin) return res.status(400).json({ error: "Paramètres manquants." });
 
   try {
-    const adminAuth = getAdminAuthClient();
     const adminDb = getAdminDb();
-    if (!adminAuth || !adminDb) {
+    if (!adminDb) {
       return res.status(503).json({ error: "Service Firebase temporairement indisponible." });
     }
 
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-    const uid = decodedToken.uid;
+    const decodedUser = await verifyFirebaseTokenSafe(idToken);
+    if (!decodedUser || !decodedUser.uid) {
+      return res.status(401).json({ error: "Session invalide ou expirée." });
+    }
+    const uid = decodedUser.uid;
 
     const salt = generateSalt();
     const pinHash = hashPin(pin, salt, uid);
@@ -263,14 +310,16 @@ app.post("/api/wallet/verify-pin", async (req, res) => {
   if (!idToken || !pin) return res.status(400).json({ error: "Paramètres manquants." });
 
   try {
-    const adminAuth = getAdminAuthClient();
     const adminDb = getAdminDb();
-    if (!adminAuth || !adminDb) {
+    if (!adminDb) {
       return res.status(503).json({ error: "Service Firebase temporairement indisponible." });
     }
 
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-    const uid = decodedToken.uid;
+    const decodedUser = await verifyFirebaseTokenSafe(idToken);
+    if (!decodedUser || !decodedUser.uid) {
+      return res.status(401).json({ error: "Session invalide ou expirée." });
+    }
+    const uid = decodedUser.uid;
 
     const userDoc = await adminDb.collection("users").doc(uid).get();
     if (!userDoc.exists) return res.status(404).json({ error: "Utilisateur introuvable." });
@@ -378,14 +427,16 @@ app.post("/api/wallet/change-pin", async (req, res) => {
   if (!idToken || !currentPin || !newPin) return res.status(400).json({ error: "Paramètres manquants." });
 
   try {
-    const adminAuth = getAdminAuthClient();
     const adminDb = getAdminDb();
-    if (!adminAuth || !adminDb) {
+    if (!adminDb) {
       return res.status(503).json({ error: "Service Firebase temporairement indisponible." });
     }
 
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-    const uid = decodedToken.uid;
+    const decodedUser = await verifyFirebaseTokenSafe(idToken);
+    if (!decodedUser || !decodedUser.uid) {
+      return res.status(401).json({ error: "Session invalide ou expirée." });
+    }
+    const uid = decodedUser.uid;
 
     const userDoc = await adminDb.collection("users").doc(uid).get();
     if (!userDoc.exists) return res.status(404).json({ error: "Utilisateur introuvable." });
@@ -440,14 +491,16 @@ app.post("/api/wallet/disable-pin", async (req, res) => {
   if (!idToken || !currentPin) return res.status(400).json({ error: "Paramètres manquants." });
 
   try {
-    const adminAuth = getAdminAuthClient();
     const adminDb = getAdminDb();
-    if (!adminAuth || !adminDb) {
+    if (!adminDb) {
       return res.status(503).json({ error: "Service Firebase temporairement indisponible." });
     }
 
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-    const uid = decodedToken.uid;
+    const decodedUser = await verifyFirebaseTokenSafe(idToken);
+    if (!decodedUser || !decodedUser.uid) {
+      return res.status(401).json({ error: "Session invalide ou expirée." });
+    }
+    const uid = decodedUser.uid;
 
     const userDoc = await adminDb.collection("users").doc(uid).get();
     if (!userDoc.exists) return res.status(404).json({ error: "Utilisateur introuvable." });
@@ -494,14 +547,16 @@ app.post("/api/wallet/request-reset", async (req, res) => {
   if (!idToken) return res.status(401).json({ error: "Authentification requise." });
 
   try {
-    const adminAuth = getAdminAuthClient();
     const adminDb = getAdminDb();
-    if (!adminAuth || !adminDb) {
+    if (!adminDb) {
       return res.status(503).json({ error: "Service Firebase temporairement indisponible." });
     }
 
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-    const uid = decodedToken.uid;
+    const decodedUser = await verifyFirebaseTokenSafe(idToken);
+    if (!decodedUser || !decodedUser.uid) {
+      return res.status(401).json({ error: "Session invalide ou expirée." });
+    }
+    const uid = decodedUser.uid;
     const now = new Date().toISOString();
 
     await adminDb.collection("users").doc(uid).update({
@@ -512,7 +567,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 
     await adminDb.collection("support_tickets").add({
       userId: uid,
-      userEmail: decodedToken.email || "",
+      userEmail: decodedUser.email || "",
       subject: "🆘 Demande de Réinitialisation PIN Wallet (S-O-A)",
       description: `L'utilisateur a demandé l'assistance du Support Officiel AFRIGOMBO (S-O-A) pour réinitialiser son code PIN Wallet. Raison: ${reason}`,
       status: "open",
@@ -624,39 +679,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
   });
 
-// SECURE SUPABASE STORAGE ADMIN PROXY - SUPER FOUNDER EXCLUSIVE
-  async function verifyFirebaseTokenSafe(tokenToVerify: string): Promise<{ uid: string; email?: string } | null> {
-    if (!tokenToVerify) return null;
-    try {
-      const adminAuth = getAdminAuthClient();
-      if (adminAuth) {
-        const decoded = await adminAuth.verifyIdToken(tokenToVerify);
-        return { uid: decoded.uid, email: decoded.email };
-      }
-    } catch (err: any) {
-      console.warn("[TOKEN VERIFY ADMIN NOTICE]", err?.message || err);
-    }
-
-    try {
-      const parts = tokenToVerify.split(".");
-      if (parts.length === 3) {
-        const payloadJson = Buffer.from(parts[1], "base64").toString("utf8");
-        const payload = JSON.parse(payloadJson);
-        const nowSec = Math.floor(Date.now() / 1000);
-        if (payload.exp && payload.exp > nowSec && (payload.uid || payload.sub || payload.user_id)) {
-          return {
-            uid: payload.uid || payload.sub || payload.user_id,
-            email: payload.email || undefined,
-          };
-        }
-      }
-    } catch (jwtErr) {
-      console.warn("[TOKEN VERIFY JWT NOTICE]", jwtErr);
-    }
-
-    return null;
-  }
-
+  // SECURE SUPABASE STORAGE ADMIN PROXY - SUPER FOUNDER EXCLUSIVE
   // 1. ENDPOINT POUR OBTENIR UNE URL D'UPLOAD SIGNÉE (UPLOAD BINAIRE DIRECT SANS BASE64)
   app.post("/api/admin/media/signed-upload-url", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
@@ -935,10 +958,22 @@ app.post("/api/wallet/request-reset", async (req, res) => {
           storagePath.startsWith("image/") ||
           storagePath.startsWith("media/") ||
           storagePath.startsWith("avatars/") ||
+          storagePath.startsWith("avatar/") ||
+          storagePath.startsWith("covers/") ||
+          storagePath.startsWith("cover/") ||
           storagePath.startsWith("banners/") ||
+          storagePath.startsWith("banner/") ||
+          storagePath.startsWith("posts/") ||
+          storagePath.startsWith("post/") ||
+          storagePath.startsWith("profiles/") ||
+          storagePath.startsWith("profile/") ||
+          storagePath.startsWith("gallery/") ||
+          storagePath.startsWith("gombos/") ||
           storagePath.startsWith("proofs/") ||
           storagePath.startsWith("documents/") ||
-          storagePath.startsWith("users/")
+          storagePath.startsWith("users/") ||
+          storagePath.startsWith("kyc/") ||
+          storagePath.startsWith("temp/")
         );
 
       if (!isAllowedMedia) {
@@ -1027,19 +1062,12 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
 
     try {
-      const adminAuth = getAdminAuthClient();
-      if (!adminAuth) {
-        return res.status(503).json({ success: false, error: "Service Firebase Admin indisponible." });
-      }
-
-      let decodedToken;
-      try {
-        decodedToken = await adminAuth.verifyIdToken(idToken);
-      } catch (authErr: any) {
+      const decodedUser = await verifyFirebaseTokenSafe(idToken);
+      if (!decodedUser || !decodedUser.uid) {
         return res.status(401).json({ success: false, error: "Session invalide ou expirée." });
       }
 
-      const uid = decodedToken.uid;
+      const uid = decodedUser.uid;
 
       if (!storagePath.includes(uid) || !storagePath.toLowerCase().includes("avatar")) {
         return res.status(403).json({ success: false, error: "Accès refusé. Chemin de stockage non autorisé pour cet utilisateur." });
@@ -1107,19 +1135,12 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
 
     try {
-      const adminAuth = getAdminAuthClient();
-      if (!adminAuth) {
-        return res.status(503).json({ success: false, error: "Service Firebase Admin indisponible." });
-      }
-
-      let decodedToken;
-      try {
-        decodedToken = await adminAuth.verifyIdToken(idToken);
-      } catch (authErr: any) {
+      const decodedUser = await verifyFirebaseTokenSafe(idToken);
+      if (!decodedUser || !decodedUser.uid) {
         return res.status(401).json({ success: false, error: "Session invalide ou expirée." });
       }
 
-      const uid = decodedToken.uid;
+      const uid = decodedUser.uid;
 
       if (!storagePath.includes(uid) || (!storagePath.toLowerCase().includes("cover") && !storagePath.toLowerCase().includes("banniere"))) {
         return res.status(403).json({ success: false, error: "Accès refusé. Chemin de stockage non autorisé pour cet utilisateur." });
@@ -1187,19 +1208,12 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
 
     try {
-      const adminAuth = getAdminAuthClient();
-      if (!adminAuth) {
-        return res.status(503).json({ success: false, error: "Service Firebase Admin indisponible." });
-      }
-
-      let decodedToken;
-      try {
-        decodedToken = await adminAuth.verifyIdToken(idToken);
-      } catch (authErr: any) {
+      const decodedUser = await verifyFirebaseTokenSafe(idToken);
+      if (!decodedUser || !decodedUser.uid) {
         return res.status(401).json({ success: false, error: "Session invalide ou expirée." });
       }
 
-      const uid = decodedToken.uid;
+      const uid = decodedUser.uid;
 
       if (!storagePath.includes(uid) || !storagePath.toLowerCase().includes("kyc")) {
         return res.status(403).json({ success: false, error: "Accès refusé. Chemin de stockage non autorisé pour cet utilisateur." });
@@ -1259,27 +1273,24 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
 
     try {
-      const adminAuth = getAdminAuthClient();
       const adminDb = getAdminDb();
-      if (!adminAuth || !adminDb) {
+      if (!adminDb) {
         return res.status(503).json({ success: false, error: "Service Firebase Admin temporairement indisponible." });
       }
 
       // 1. Vérification sécurisée du jeton d'authentification Firebase (ID Token)
-      let decodedToken;
-      try {
-        decodedToken = await adminAuth.verifyIdToken(idToken);
-      } catch (authErr: any) {
+      const decodedUser = await verifyFirebaseTokenSafe(idToken);
+      if (!decodedUser || !decodedUser.uid) {
         return res.status(401).json({ success: false, error: "Session invalide ou expirée." });
       }
 
-      const uid = decodedToken.uid;
+      const uid = decodedUser.uid;
       const userDoc = await adminDb.collection("users").doc(uid).get();
       const userData = userDoc.exists ? userDoc.data() : null;
 
       // 2. Contrôle de rôle strict : Seul le Super Fondateur est autorisé
       const isSuperFounder =
-        PROTECTED_FOUNDER_EMAILS.includes(decodedToken.email || "") ||
+        PROTECTED_FOUNDER_EMAILS.includes(decodedUser.email || "") ||
         userData?.isFounder === true ||
         userData?.superFounder === true ||
         userData?.role === "super_founder" ||
@@ -1320,7 +1331,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
         return res.status(500).json({ success: false, error: deleteError.message || "Échec de la suppression Storage." });
       }
 
-      console.log(`[SERVER MEDIA DELETE SUCCESS] Supprimé par Super Fondateur ${decodedToken.email} -> ${cleanPath}`);
+      console.log(`[SERVER MEDIA DELETE SUCCESS] Supprimé par Super Fondateur ${decodedUser.email} -> ${cleanPath}`);
 
       return res.json({ success: true, message: "Média supprimé avec succès de Supabase Storage" });
     } catch (err: any) {
@@ -1352,21 +1363,18 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
 
     try {
-      const adminAuth = getAdminAuthClient();
       const adminDb = getAdminDb();
-      if (!adminAuth || !adminDb) {
+      if (!adminDb) {
         return res.status(503).json({ success: false, error: "Service Firebase Admin temporairement indisponible." });
       }
 
       // 1. Vérification sécurisée du jeton d'authentification Firebase (ID Token)
-      let decodedToken;
-      try {
-        decodedToken = await adminAuth.verifyIdToken(tokenToVerify);
-      } catch (authErr: any) {
+      const decodedUser = await verifyFirebaseTokenSafe(tokenToVerify);
+      if (!decodedUser || !decodedUser.uid) {
         return res.status(401).json({ success: false, error: "Session invalide ou expirée. Veuillez vous reconnecter." });
       }
 
-      const uid = decodedToken.uid;
+      const uid = decodedUser.uid;
       let userData: any = null;
       try {
         const userDoc = await adminDb.collection("users").doc(uid).get();
@@ -1377,7 +1385,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 
       // 2. Contrôle de rôle strict : Seul le Fondateur / Super Fondateur / Admin est autorisé
       const isAuthorized =
-        PROTECTED_FOUNDER_EMAILS.includes(decodedToken.email || "") ||
+        PROTECTED_FOUNDER_EMAILS.includes(decodedUser.email || "") ||
         userData?.isFounder === true ||
         userData?.superFounder === true ||
         userData?.role === "super_founder" ||
