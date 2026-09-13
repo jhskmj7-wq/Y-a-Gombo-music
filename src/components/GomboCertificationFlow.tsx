@@ -7,7 +7,7 @@ import {
 import { UserProfile } from "../types";
 import { gomboDB } from "../firebase";
 import { audioSynth } from "../lib/audio";
-import { getFreshIdToken } from "../lib/authUtils";
+import { getFreshIdToken, fetchSignedKycUrl } from "../lib/authUtils";
 
 interface GomboCertificationFlowProps {
   currentUserProfile: UserProfile;
@@ -93,47 +93,37 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
   // KYC Viewing State & Signed URLs
   const [kycSignedUrls, setKycSignedUrls] = useState<Record<string, string>>({});
   const [kycLoadingUrls, setKycLoadingUrls] = useState<Record<string, boolean>>({});
-  const [activePreviewDoc, setActivePreviewDoc] = useState<{ title: string; url: string } | null>(null);
+  const [activePreviewDoc, setActivePreviewDoc] = useState<{ title: string; url: string; error?: string } | null>(null);
 
   const handlePreviewDoc = async (rawUrl: string, title: string) => {
     if (!rawUrl) return;
     const signed = kycSignedUrls[rawUrl];
-    if (signed) {
+    if (signed && (signed.startsWith("http://") || signed.startsWith("https://"))) {
       setActivePreviewDoc({ title, url: signed });
       return;
     }
-    if (rawUrl.includes("token=") || rawUrl.startsWith("data:") || rawUrl.startsWith("blob:")) {
+    if (
+      (rawUrl.includes("token=") && (rawUrl.startsWith("http://") || rawUrl.startsWith("https://"))) ||
+      rawUrl.startsWith("data:") ||
+      rawUrl.startsWith("blob:")
+    ) {
       setActivePreviewDoc({ title, url: rawUrl });
       return;
     }
 
     setKycLoadingUrls(prev => ({ ...prev, [rawUrl]: true }));
     try {
-      const idToken = await getFreshIdToken(true);
-      const res = await fetch("/api/user/kyc/view", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          idToken,
-          storagePaths: [rawUrl],
-          bucket: "afrigombo-private"
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const sUrl = data?.results?.[0]?.signedUrl;
-        if (sUrl) {
-          setKycSignedUrls(prev => ({ ...prev, [rawUrl]: sUrl }));
-          setActivePreviewDoc({ title, url: sUrl });
-          return;
-        }
+      const { signedUrl, error } = await fetchSignedKycUrl(rawUrl, false);
+      if (signedUrl) {
+        setKycSignedUrls(prev => ({ ...prev, [rawUrl]: signedUrl }));
+        setActivePreviewDoc({ title, url: signedUrl });
+      } else {
+        console.warn("[KYC CERT PREVIEW ERROR]", error);
+        setActivePreviewDoc({ title, url: "", error: error || "Document introuvable ou en cours de traitement." });
       }
-      setActivePreviewDoc({ title, url: rawUrl });
-    } catch {
-      setActivePreviewDoc({ title, url: rawUrl });
+    } catch (e: any) {
+      console.error("[KYC CERT PREVIEW EXCEPTION]", e);
+      setActivePreviewDoc({ title, url: "", error: e?.message || "Erreur de chargement du document." });
     } finally {
       setKycLoadingUrls(prev => ({ ...prev, [rawUrl]: false }));
     }
@@ -1232,53 +1222,79 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
         </div>
       )}
 
-      {/* MODAL LIGHTBOX PRÉVISUALISATION PLEIN ÉCRAN DOCUMENT KYC */}
+      {/* MODAL LIGHTBOX PRÉVISUALISATION PLEIN ÉCRAN DOCUMENT KYC (THEME AFRI) */}
       <AnimatePresence>
         {activePreviewDoc && (
-          <div className="fixed inset-0 z-[999999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div 
+            className="fixed inset-0 z-[999999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 select-none"
+            onClick={() => setActivePreviewDoc(null)}
+          >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-2xl bg-afri-bg border border-afri-gold/40 rounded-3xl p-4 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+              initial={{ opacity: 0, scale: 0.96, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 10 }}
+              className="relative w-full max-w-2xl bg-afri-bg-sec border border-afri-border rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between pb-3 border-b border-afri-border">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
-                  <span className="font-mono text-xs uppercase font-bold text-afri-text">
-                    {activePreviewDoc.title}
-                  </span>
+              <div className="flex items-center justify-between pb-3.5 border-b border-afri-border">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37]">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-mono text-xs uppercase font-bold text-afri-text tracking-wider">
+                      {activePreviewDoc.title}
+                    </h3>
+                    <p className="text-[10px] text-afri-text-sec font-mono">Pièce officielle pour certification</p>
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setActivePreviewDoc(null)}
-                  className="p-1 rounded-full text-afri-text-sec hover:text-afri-text bg-afri-bg-sec hover:bg-afri-bg-ter transition-all cursor-pointer"
+                  className="p-1.5 rounded-xl text-afri-text-sec hover:text-afri-text bg-afri-bg hover:bg-afri-border/40 border border-afri-border transition-all cursor-pointer"
+                  title="Fermer la prévisualisation"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-auto flex items-center justify-center p-4 min-h-[300px]">
-                <img
-                  src={activePreviewDoc.url}
-                  alt={activePreviewDoc.title}
-                  className="max-h-[65vh] w-auto max-w-full object-contain rounded-xl border border-afri-border shadow-lg"
-                />
+              <div className="flex-1 overflow-auto flex items-center justify-center p-3 sm:p-4 min-h-[280px] max-h-[60vh] bg-afri-bg rounded-2xl border border-afri-border my-4 relative">
+                {activePreviewDoc.url ? (
+                  <img
+                    src={activePreviewDoc.url}
+                    alt={activePreviewDoc.title}
+                    className="max-h-[55vh] w-auto max-w-full object-contain rounded-xl shadow-md border border-afri-border/60"
+                  />
+                ) : (
+                  <div className="text-center p-6 space-y-3">
+                    <div className="w-12 h-12 mx-auto rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <p className="text-xs text-afri-text font-mono font-semibold">
+                      {activePreviewDoc.error || "Impossible de charger l'aperçu du document."}
+                    </p>
+                    <p className="text-[10px] text-afri-text-sec">
+                      Le fichier est conservé en sécurité dans le coffre privé.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between pt-3 border-t border-afri-border">
-                <a
-                  href={activePreviewDoc.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-mono text-[#D4AF37] hover:underline flex items-center gap-1.5"
-                >
-                  <span>Ouvrir en plein écran ↗</span>
-                </a>
+                {activePreviewDoc.url ? (
+                  <a
+                    href={activePreviewDoc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-mono text-[#D4AF37] hover:underline flex items-center gap-1.5 font-bold"
+                  >
+                    <span>Ouvrir en plein écran ↗</span>
+                  </a>
+                ) : <div />}
                 <button
                   type="button"
                   onClick={() => setActivePreviewDoc(null)}
-                  className="px-4 py-2 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text rounded-xl font-mono text-xs uppercase font-bold transition-all cursor-pointer"
+                  className="px-5 py-2.5 bg-afri-bg hover:bg-afri-border/30 text-afri-text border border-afri-border rounded-xl font-mono text-xs uppercase font-bold transition-all cursor-pointer"
                 >
                   Fermer
                 </button>

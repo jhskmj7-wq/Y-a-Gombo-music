@@ -1,7 +1,7 @@
 import { NotificationService } from "../../lib/NotificationService";
 import BouclierAfrigombo from "./BouclierAfrigombo";
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { getFreshIdToken } from "../../lib/authUtils";
+import { getFreshIdToken, fetchSignedKycUrl } from "../../lib/authUtils";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Crown, ShieldCheck, UserPlus, UserX, Info, ShieldAlert,
@@ -201,43 +201,32 @@ export default function AdminFounderThrone({
       setKycPreviewUrl(rawUrl);
       return;
     }
-    if (kycSignedUrls[rawUrl]) {
+    if (kycSignedUrls[rawUrl] && (kycSignedUrls[rawUrl].startsWith("http://") || kycSignedUrls[rawUrl].startsWith("https://"))) {
       setKycPreviewUrl(kycSignedUrls[rawUrl]);
       return;
     }
 
     setKycLoadingUrls(prev => ({ ...prev, [rawUrl]: true }));
     try {
-      const idToken = await getFreshIdToken(true);
-      if (!idToken) {
-        setKycPreviewUrl(rawUrl);
-        return;
-      }
-      const response = await fetch("/api/admin/kyc/view", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          idToken,
-          storagePaths: [rawUrl],
-          bucket: "afrigombo-private"
-        })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const signed = data?.results?.[0]?.signedUrl;
-        if (signed) {
-          setKycSignedUrls(prev => ({ ...prev, [rawUrl]: signed }));
-          setKycPreviewUrl(signed);
-          return;
+      const { signedUrl, error } = await fetchSignedKycUrl(rawUrl, true);
+      if (signedUrl) {
+        setKycSignedUrls(prev => ({ ...prev, [rawUrl]: signedUrl }));
+        setKycPreviewUrl(signedUrl);
+      } else {
+        console.warn("[ADMIN TRONE KYC PREVIEW WARN]", error);
+        if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+          setKycPreviewUrl(rawUrl);
+        } else {
+          setKycPreviewUrl("");
         }
       }
-      setKycPreviewUrl(rawUrl);
     } catch (e) {
       console.error("Erreur preview KYC:", e);
-      setKycPreviewUrl(rawUrl);
+      if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+        setKycPreviewUrl(rawUrl);
+      } else {
+        setKycPreviewUrl("");
+      }
     } finally {
       setKycLoadingUrls(prev => ({ ...prev, [rawUrl]: false }));
     }
@@ -4173,19 +4162,39 @@ export default function AdminFounderThrone({
                                   </span>
                                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     {docs.map((docItem, dIdx) => {
-                                      const displaySrc = (docItem.url && kycSignedUrls[docItem.url]) || docItem.url;
+                                      const isDirectUrl = Boolean(
+                                        docItem.url && (
+                                          docItem.url.startsWith("http://") || 
+                                          docItem.url.startsWith("https://") || 
+                                          docItem.url.startsWith("data:") || 
+                                          docItem.url.startsWith("blob:")
+                                        )
+                                      );
+                                      const signedUrl = docItem.url ? kycSignedUrls[docItem.url] : undefined;
+                                      const displaySrc = signedUrl || (isDirectUrl ? docItem.url : undefined);
                                       const isLoading = docItem.url ? kycLoadingUrls[docItem.url] : false;
+
                                       return (
-                                        <div key={dIdx} className="space-y-1 bg-black/60 p-2 rounded-xl border border-zinc-900">
-                                          <span className="text-[9px] font-mono text-zinc-300 block truncate">{docItem.label}</span>
-                                          <div className="relative group cursor-pointer" onClick={() => handlePreviewKycDoc(docItem.url)}>
-                                            <img
-                                              src={displaySrc}
-                                              alt={docItem.label}
-                                              className="w-full h-16 object-cover rounded-lg border border-zinc-800 group-hover:border-[#D4AF37] transition-all shadow-md"
-                                            />
+                                        <div key={dIdx} className="space-y-1 bg-afri-bg p-2 rounded-xl border border-afri-border/60">
+                                          <span className="text-[9px] font-mono text-afri-text-sec block truncate">{docItem.label}</span>
+                                          <div 
+                                            className="relative group cursor-pointer w-full h-16 rounded-lg border border-afri-border overflow-hidden flex items-center justify-center bg-black/40 hover:border-[#D4AF37] transition-all" 
+                                            onClick={() => handlePreviewKycDoc(docItem.url)}
+                                          >
+                                            {displaySrc ? (
+                                              <img
+                                                src={displaySrc}
+                                                alt={docItem.label}
+                                                className="w-full h-full object-cover"
+                                              />
+                                            ) : (
+                                              <div className="flex flex-col items-center justify-center p-1 text-center">
+                                                <Eye className="w-4 h-4 text-[#D4AF37] mb-0.5" />
+                                                <span className="text-[8.5px] font-mono text-zinc-300 font-bold">Consulter</span>
+                                              </div>
+                                            )}
                                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-all text-[10px] font-bold text-[#D4AF37]">
-                                              {isLoading ? "Chargement..." : "Voir ↗"}
+                                              {isLoading ? "Chargement..." : "Consulter ↗"}
                                             </div>
                                           </div>
                                         </div>
@@ -6309,49 +6318,91 @@ export default function AdminFounderThrone({
         </div>
       )}
 
-      {/* LIGHTBOX APERÇU DOCUMENT KYC SÉCURISÉ */}
-      {kycPreviewUrl && (
-        <div 
-          className="fixed inset-0 bg-black/90 backdrop-blur-md z-[10000] flex items-center justify-center p-4 select-none"
-          onClick={() => setKycPreviewUrl(null)}
-        >
-          <div
-            className="bg-zinc-950 border border-[#D4AF37] max-w-2xl w-full rounded-2xl p-4 space-y-3 text-left shadow-2xl relative"
-            onClick={(e) => e.stopPropagation()}
+      {/* LIGHTBOX APERÇU DOCUMENT KYC SÉCURISÉ (THEME AFRI) */}
+      <AnimatePresence>
+        {kycPreviewUrl !== null && (
+          <div 
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 select-none"
+            onClick={() => setKycPreviewUrl(null)}
           >
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-2 text-[#D4AF37]">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 shrink-0" />
-                <h4 className="text-xs font-mono font-extrabold uppercase tracking-wide">Document KYC Sécurisé</h4>
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 10 }}
+              className="bg-afri-bg-sec border border-afri-border max-w-2xl w-full rounded-3xl p-5 sm:p-6 space-y-3 text-left shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-afri-border pb-3.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37]">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-mono font-extrabold uppercase tracking-wide text-afri-text">Dossier KYC Souverain</h4>
+                    <p className="text-[10px] text-afri-text-sec font-mono">Trône Impérial - Contrôle d'Accréditation</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {kycPreviewUrl ? (
+                    <a
+                      href={kycPreviewUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-mono text-[#D4AF37] hover:underline flex items-center gap-1 font-bold"
+                    >
+                      Ouvrir en grand <ArrowUpRight className="w-3.5 h-3.5" />
+                    </a>
+                  ) : null}
+                  <button
+                    onClick={() => setKycPreviewUrl(null)}
+                    className="p-1.5 rounded-xl text-afri-text-sec hover:text-afri-text bg-afri-bg hover:bg-afri-border/40 border border-afri-border transition-all cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <a
-                  href={kycPreviewUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[11px] font-mono text-[#D4AF37] hover:underline flex items-center gap-1"
-                >
-                  Ouvrir en grand <ArrowUpRight className="w-3.5 h-3.5" />
-                </a>
+
+              <div className="flex items-center justify-center p-3 sm:p-4 bg-afri-bg rounded-2xl border border-afri-border min-h-[260px] max-h-[65vh] overflow-hidden my-3 relative">
+                {kycPreviewUrl ? (
+                  <img
+                    src={kycPreviewUrl}
+                    alt="Aperçu Document KYC"
+                    className="max-w-full max-h-[60vh] object-contain rounded-xl shadow-md border border-afri-border/60"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      target.style.display = "none";
+                      if (target.parentElement) {
+                        const errDiv = document.createElement("div");
+                        errDiv.className = "text-center p-6 text-xs text-afri-text-sec font-mono space-y-2";
+                        errDiv.innerHTML = "<div class='text-amber-400 font-bold'>⚠️ Document en cours de synchronisation ou introuvable</div><div class='text-[10px] text-zinc-500'>Le fichier n'est pas encore accessible publiquement ou nécessite une re-signature.</div>";
+                        target.parentElement.appendChild(errDiv);
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="text-center p-6 space-y-2 font-mono">
+                    <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <p className="text-xs text-afri-text font-bold">Document KYC introuvable ou protégé</p>
+                    <p className="text-[10px] text-afri-text-sec">Le chemin d'accès au fichier privé n'a pas pu être résolu.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end pt-2 border-t border-afri-border">
                 <button
+                  type="button"
                   onClick={() => setKycPreviewUrl(null)}
-                  className="text-zinc-400 hover:text-white p-1 rounded cursor-pointer"
+                  className="px-5 py-2.5 bg-afri-bg hover:bg-afri-border/30 text-afri-text border border-afri-border rounded-xl font-mono text-xs uppercase font-bold transition-all cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  Fermer
                 </button>
               </div>
-            </div>
-
-            <div className="flex items-center justify-center p-2 bg-black/60 rounded-xl min-h-[250px] max-h-[70vh] overflow-hidden">
-              <img
-                src={kycPreviewUrl}
-                alt="Aperçu Document KYC"
-                className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-xl"
-              />
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
     </div>
   );

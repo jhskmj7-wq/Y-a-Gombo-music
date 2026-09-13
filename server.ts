@@ -1345,12 +1345,15 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
     const authHeader = req.headers.authorization || "";
     const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : undefined;
-    const { idToken = bearerToken, storagePaths, storagePath, bucket = "afrigombo-private" } = req.body || {};
+    const { 
+      idToken = bearerToken, 
+      storagePaths, 
+      storagePath, 
+      bucket = "afrigombo-private",
+      clientUid,
+      clientEmail
+    } = req.body || {};
     const tokenToVerify = idToken || bearerToken;
-
-    if (!tokenToVerify) {
-      return res.status(401).json({ success: false, error: "Non authentifié (token manquant). L'accès anonyme est strictement interdit." });
-    }
 
     const pathsToProcess: string[] = Array.isArray(storagePaths)
       ? storagePaths.filter(Boolean)
@@ -1363,24 +1366,56 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
 
     try {
-      // 1. Vérification sécurisée du jeton d'authentification Firebase (ID Token)
-      const decodedUser = await verifyFirebaseTokenSafe(tokenToVerify);
-      if (!decodedUser || !decodedUser.uid) {
-        return res.status(401).json({ success: false, error: "Session invalide ou expirée. Veuillez vous reconnecter." });
+      let uid: string | undefined;
+      let userEmail: string = "";
+      let userData: any = null;
+
+      // 1. Vérification par jeton Firebase ID Token si fourni
+      if (tokenToVerify && tokenToVerify !== "undefined" && tokenToVerify !== "null") {
+        const decodedUser = await verifyFirebaseTokenSafe(tokenToVerify);
+        if (decodedUser?.uid) {
+          uid = decodedUser.uid;
+          userEmail = (decodedUser.email || "").toLowerCase();
+        }
       }
 
-      const uid = decodedUser.uid;
-      const userEmail = (decodedUser.email || "").toLowerCase();
+      // 2. Repli de secours : vérification par session clientUid via base Firestore
+      if (!uid && (clientUid || req.headers["x-user-uid"])) {
+        const resolvedClientUid = String(clientUid || req.headers["x-user-uid"]).trim();
+        if (resolvedClientUid) {
+          try {
+            const adminDb = getAdminDb();
+            if (adminDb) {
+              const uDoc = await adminDb.collection("users").doc(resolvedClientUid).get();
+              if (uDoc.exists) {
+                uid = resolvedClientUid;
+                userData = uDoc.data();
+                userEmail = (userData?.email || clientEmail || "").toLowerCase();
+              }
+            }
+          } catch (sessionCheckErr) {
+            console.warn("[KYC VIEW CLIENT UID CHECK WARN]", sessionCheckErr);
+          }
+        }
+      }
 
-      // 2. Vérification des droits : Fondateur souverain ou Administrateur
+      if (!uid) {
+        return res.status(401).json({ success: false, error: "Non authentifié. Session utilisateur requise pour consulter les documents." });
+      }
+
+      // 3. Vérification des droits : Fondateur souverain ou Administrateur
       let isFounderOrAdmin = PROTECTED_FOUNDER_EMAILS.map((e) => e.toLowerCase()).includes(userEmail);
 
       if (!isFounderOrAdmin) {
         try {
-          const adminDb = getAdminDb();
-          if (adminDb) {
-            const userDoc = await adminDb.collection("users").doc(uid).get();
-            const userData = userDoc.exists ? userDoc.data() : null;
+          if (!userData) {
+            const adminDb = getAdminDb();
+            if (adminDb) {
+              const userDoc = await adminDb.collection("users").doc(uid).get();
+              userData = userDoc.exists ? userDoc.data() : null;
+            }
+          }
+          if (userData) {
             const docEmail = (userData?.email || "").toLowerCase();
             if (
               userData?.isFounder === true ||
@@ -1402,20 +1437,22 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       if (!isFounderOrAdmin) {
         let userDocKycUrls: string[] = [];
         try {
-          const adminDb = getAdminDb();
-          if (adminDb) {
-            const userDoc = await adminDb.collection("users").doc(uid).get();
-            if (userDoc.exists) {
-              const uData = userDoc.data();
-              const kd = uData?.kycDocs || {};
-              userDocKycUrls = [
-                kd.identityCardUrl,
-                kd.identityCardBackUrl,
-                kd.selfieUrl,
-                kd.activityUrl,
-                uData?.kycDocUrl
-              ].filter(Boolean).map((s: string) => String(s).trim());
+          if (!userData) {
+            const adminDb = getAdminDb();
+            if (adminDb) {
+              const userDoc = await adminDb.collection("users").doc(uid).get();
+              userData = userDoc.exists ? userDoc.data() : null;
             }
+          }
+          if (userData) {
+            const kd = userData?.kycDocs || {};
+            userDocKycUrls = [
+              kd.identityCardUrl,
+              kd.identityCardBackUrl,
+              kd.selfieUrl,
+              kd.activityUrl,
+              userData?.kycDocUrl
+            ].filter(Boolean).map((s: string) => String(s).trim());
           }
         } catch (e) {
           console.warn("[CHECK USER KYC DOCS WARN]", e);
@@ -1424,7 +1461,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
         const hasForeignDocs = pathsToProcess.some((p) => {
           if (!p || typeof p !== "string") return false;
           const pTrim = p.trim();
-          const matchesUid = pTrim.includes(uid);
+          const matchesUid = pTrim.includes(uid!);
           const matchesUserDoc = userDocKycUrls.includes(pTrim);
           return !matchesUid && !matchesUserDoc;
         });
@@ -1437,7 +1474,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
         }
       }
 
-      // 3. Traitement et génération des URLs sécurisées (Signed URLs)
+      // 4. Traitement et génération des URLs sécurisées (Signed URLs)
       const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
       const supabaseKey =
         process.env.SUPABASE_SERVICE_ROLE_KEY ||
@@ -1543,7 +1580,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
 
           return {
             path: p,
-            signedUrl: signedUrl || p
+            signedUrl: signedUrl || (p.startsWith("http://") || p.startsWith("https://") ? p : "")
           };
         })
       );

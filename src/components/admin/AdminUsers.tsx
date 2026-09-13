@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { User } from "../../types";
 import { getEffectiveGomboId } from "../../lib/gomboIdHelper";
-import { getFreshIdToken } from "../../lib/authUtils";
+import { getFreshIdToken, fetchSignedKycUrl } from "../../lib/authUtils";
 import { db, auth } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
 import { 
@@ -144,41 +144,38 @@ export default function AdminUsers({
     setKycLoading(prev => ({ ...prev, [uid]: true }));
 
     try {
-      const idToken = await getFreshIdToken(true);
-      if (!idToken) {
-        console.error("Token admin Firebase manquant");
-        setKycLoading(prev => ({ ...prev, [uid]: false }));
-        return;
-      }
-
-      const response = await fetch("/api/admin/kyc/view", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          idToken,
-          storagePaths: rawPaths,
-          bucket: "afrigombo-private"
+      const urlMap: Record<string, string> = {};
+      await Promise.all(
+        rawPaths.map(async (p) => {
+          if (
+            (p.includes("token=") && (p.startsWith("http://") || p.startsWith("https://"))) ||
+            p.startsWith("data:") ||
+            p.startsWith("blob:")
+          ) {
+            urlMap[p] = p;
+            return;
+          }
+          const { signedUrl } = await fetchSignedKycUrl(p, true);
+          if (signedUrl) {
+            urlMap[p] = signedUrl;
+          }
         })
-      });
+      );
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && Array.isArray(data.results)) {
-          const urlMap: Record<string, string> = {};
-          data.results.forEach((item: any) => {
-            if (item.path && item.signedUrl) {
-              urlMap[item.path] = item.signedUrl;
-            }
-          });
-          setKycSignedUrls(prev => ({
-            ...prev,
-            [uid]: urlMap
-          }));
-          if (autoPreviewDocPath && urlMap[autoPreviewDocPath]) {
-            setKycPreviewUrl(urlMap[autoPreviewDocPath]);
+      setKycSignedUrls(prev => ({
+        ...prev,
+        [uid]: urlMap
+      }));
+
+      if (autoPreviewDocPath) {
+        const found = urlMap[autoPreviewDocPath];
+        if (found) {
+          setKycPreviewUrl(found);
+        } else {
+          // Direct fallback
+          const { signedUrl } = await fetchSignedKycUrl(autoPreviewDocPath, true);
+          if (signedUrl) {
+            setKycPreviewUrl(signedUrl);
           }
         }
       }
@@ -1893,49 +1890,74 @@ export default function AdminUsers({
         )}
       </AnimatePresence>
 
-      {/* KYC SECURE DOCUMENT LIGHTBOX MODAL */}
+      {/* KYC SECURE DOCUMENT LIGHTBOX MODAL (THEME AFRI) */}
       <AnimatePresence>
         {kycPreviewUrl && (
           <div 
-            className="fixed inset-0 bg-black/90 backdrop-blur-md z-[10000] flex items-center justify-center p-4 select-none"
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 select-none"
             onClick={() => setKycPreviewUrl(null)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-zinc-950 border border-[#D4AF37] max-w-2xl w-full rounded-2xl p-4 space-y-3 text-left shadow-2xl relative"
+              initial={{ scale: 0.96, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 10 }}
+              className="bg-afri-bg-sec border border-afri-border max-w-2xl w-full rounded-3xl p-5 sm:p-6 space-y-3 text-left shadow-2xl relative"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-zinc-900 pb-2 text-[#D4AF37]">
-                <div className="flex items-center gap-2">
-                  <Award className="w-5 h-5 shrink-0" />
-                  <h4 className="text-xs font-mono font-extrabold uppercase tracking-wide">Document KYC Sécurisé</h4>
+              <div className="flex items-center justify-between border-b border-afri-border pb-3.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37]">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-mono font-extrabold uppercase tracking-wide text-afri-text">Dossier KYC Sécurisé</h4>
+                    <p className="text-[10px] text-afri-text-sec font-mono">Contrôle de conformité de l'artiste</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <a
                     href={kycPreviewUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11px] font-mono text-[#D4AF37] hover:underline flex items-center gap-1"
+                    className="text-xs font-mono text-[#D4AF37] hover:underline flex items-center gap-1 font-bold"
                   >
                     Ouvrir en grand <ArrowUpRight className="w-3.5 h-3.5" />
                   </a>
                   <button
                     onClick={() => setKycPreviewUrl(null)}
-                    className="text-zinc-400 hover:text-white p-1 rounded"
+                    className="p-1.5 rounded-xl text-afri-text-sec hover:text-afri-text bg-afri-bg hover:bg-afri-border/40 border border-afri-border transition-all cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-center p-2 bg-black/60 rounded-xl min-h-[250px] max-h-[70vh] overflow-hidden">
+              <div className="flex items-center justify-center p-3 sm:p-4 bg-afri-bg rounded-2xl border border-afri-border min-h-[260px] max-h-[65vh] overflow-hidden my-3 relative">
                 <img
                   src={kycPreviewUrl}
                   alt="Aperçu Document KYC"
-                  className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-xl"
+                  className="max-w-full max-h-[60vh] object-contain rounded-xl shadow-md border border-afri-border/60"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    target.style.display = "none";
+                    if (target.parentElement) {
+                      const errDiv = document.createElement("div");
+                      errDiv.className = "text-center p-6 text-xs text-afri-text-sec font-mono";
+                      errDiv.innerHTML = "⚠️ Impossible de charger l'aperçu du document.<br/><span class='text-[10px] text-amber-500'>Veuillez vérifier les permissions d'accès.</span>";
+                      target.parentElement.appendChild(errDiv);
+                    }
+                  }}
                 />
+              </div>
+
+              <div className="flex items-center justify-end pt-2 border-t border-afri-border">
+                <button
+                  type="button"
+                  onClick={() => setKycPreviewUrl(null)}
+                  className="px-5 py-2.5 bg-afri-bg hover:bg-afri-border/30 text-afri-text border border-afri-border rounded-xl font-mono text-xs uppercase font-bold transition-all cursor-pointer"
+                >
+                  Fermer
+                </button>
               </div>
             </motion.div>
           </div>
