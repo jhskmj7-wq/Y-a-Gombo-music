@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   ArrowLeft, Shield, ShieldCheck, User, Music, Camera, FileText, Globe, 
-  Clock, Check, AlertCircle, Upload, X, Fingerprint, Sparkles, HelpCircle 
+  Clock, Check, AlertCircle, Upload, X, Fingerprint, Sparkles, HelpCircle, Eye 
 } from "lucide-react";
 import { UserProfile } from "../types";
 import { gomboDB } from "../firebase";
 import { audioSynth } from "../lib/audio";
+import { getFreshIdToken } from "../lib/authUtils";
 
 interface GomboCertificationFlowProps {
   currentUserProfile: UserProfile;
@@ -88,6 +89,55 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
   const [savingStep, setSavingStep] = useState<number | null>(null);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // KYC Viewing State & Signed URLs
+  const [kycSignedUrls, setKycSignedUrls] = useState<Record<string, string>>({});
+  const [kycLoadingUrls, setKycLoadingUrls] = useState<Record<string, boolean>>({});
+  const [activePreviewDoc, setActivePreviewDoc] = useState<{ title: string; url: string } | null>(null);
+
+  const handlePreviewDoc = async (rawUrl: string, title: string) => {
+    if (!rawUrl) return;
+    const signed = kycSignedUrls[rawUrl];
+    if (signed) {
+      setActivePreviewDoc({ title, url: signed });
+      return;
+    }
+    if (rawUrl.includes("token=") || rawUrl.startsWith("data:") || rawUrl.startsWith("blob:")) {
+      setActivePreviewDoc({ title, url: rawUrl });
+      return;
+    }
+
+    setKycLoadingUrls(prev => ({ ...prev, [rawUrl]: true }));
+    try {
+      const idToken = await getFreshIdToken(true);
+      const res = await fetch("/api/user/kyc/view", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          idToken,
+          storagePaths: [rawUrl],
+          bucket: "afrigombo-private"
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const sUrl = data?.results?.[0]?.signedUrl;
+        if (sUrl) {
+          setKycSignedUrls(prev => ({ ...prev, [rawUrl]: sUrl }));
+          setActivePreviewDoc({ title, url: sUrl });
+          return;
+        }
+      }
+      setActivePreviewDoc({ title, url: rawUrl });
+    } catch {
+      setActivePreviewDoc({ title, url: rawUrl });
+    } finally {
+      setKycLoadingUrls(prev => ({ ...prev, [rawUrl]: false }));
+    }
+  };
 
   // Sync state changes from DB when updated elsewhere
   useEffect(() => {
@@ -552,6 +602,13 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                     <p className="text-[10px] font-bold text-afri-text truncate">Reçu</p>
                   </div>
                   <button 
+                    type="button"
+                    onClick={() => handlePreviewDoc(idCardUrl, "Carte Recto (Face)")}
+                    className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-[#D4AF37] rounded-lg text-[9px] font-mono font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Eye className="w-3 h-3" /> Voir
+                  </button>
+                  <button 
                     onClick={() => setIdCardUrl("")}
                     className="bg-afri-bg-sec hover:bg-afri-bg-ter p-1 rounded-lg text-afri-text-sec text-[10px]"
                   >
@@ -596,6 +653,13 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-bold text-afri-text truncate">Reçu</p>
                   </div>
+                  <button 
+                    type="button"
+                    onClick={() => handlePreviewDoc(idCardBackUrl, "Carte Verso (Dos)")}
+                    className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-[#D4AF37] rounded-lg text-[9px] font-mono font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Eye className="w-3 h-3" /> Voir
+                  </button>
                   <button 
                     onClick={() => setIdCardBackUrl("")}
                     className="bg-afri-bg-sec hover:bg-afri-bg-ter p-1 rounded-lg text-afri-text-sec text-[10px]"
@@ -661,6 +725,13 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                   <p className="text-[11px] font-bold text-afri-text truncate">Selfie de vérification reçu</p>
                   <p className="text-[9px] text-afri-text-sec font-mono">Comparaison faciale prête</p>
                 </div>
+                <button 
+                  type="button"
+                  onClick={() => handlePreviewDoc(selfieUrl, "Selfie de vérification")}
+                  className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-[#D4AF37] rounded-lg text-[10px] font-mono font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <Eye className="w-3 h-3" /> Voir
+                </button>
                 <button 
                   onClick={() => setSelfieUrl("")}
                   className="bg-afri-bg-sec hover:bg-afri-bg-ter p-1 rounded-lg text-afri-text-sec hover:text-afri-text"
@@ -917,6 +988,43 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                 </p>
               </div>
             )}
+
+            {/* Consultation des pièces justificatives transmises */}
+            {(() => {
+              const uploadedDocs = [
+                { label: "Carte Recto", url: idCardUrl },
+                { label: "Carte Verso", url: idCardBackUrl },
+                { label: "Selfie Facial", url: selfieUrl }
+              ].filter(d => Boolean(d.url));
+
+              if (uploadedDocs.length === 0) return null;
+
+              return (
+                <div className="mt-4 p-3 bg-afri-bg border border-afri-border rounded-2xl text-left space-y-2">
+                  <span className="text-[9.5px] font-mono font-bold uppercase text-[#D4AF37] block">
+                    📂 Pièces Justificatives Associées ({uploadedDocs.length})
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {uploadedDocs.map((doc, dIdx) => (
+                      <button
+                        key={dIdx}
+                        type="button"
+                        onClick={() => handlePreviewDoc(doc.url, doc.label)}
+                        className="p-2 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border text-center transition-all cursor-pointer space-y-1"
+                      >
+                        <FileText className="w-4 h-4 text-[#D4AF37] mx-auto" />
+                        <span className="text-[8.5px] font-mono block truncate text-afri-text font-bold">
+                          {doc.label}
+                        </span>
+                        <span className="text-[7.5px] font-mono text-emerald-400 block">
+                          Consulter ↗
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         );
       }
@@ -1123,6 +1231,62 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
           </div>
         </div>
       )}
+
+      {/* MODAL LIGHTBOX PRÉVISUALISATION PLEIN ÉCRAN DOCUMENT KYC */}
+      <AnimatePresence>
+        {activePreviewDoc && (
+          <div className="fixed inset-0 z-[999999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-2xl bg-afri-bg border border-afri-gold/40 rounded-3xl p-4 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-afri-border">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
+                  <span className="font-mono text-xs uppercase font-bold text-afri-text">
+                    {activePreviewDoc.title}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActivePreviewDoc(null)}
+                  className="p-1 rounded-full text-afri-text-sec hover:text-afri-text bg-afri-bg-sec hover:bg-afri-bg-ter transition-all cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-auto flex items-center justify-center p-4 min-h-[300px]">
+                <img
+                  src={activePreviewDoc.url}
+                  alt={activePreviewDoc.title}
+                  className="max-h-[65vh] w-auto max-w-full object-contain rounded-xl border border-afri-border shadow-lg"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-afri-border">
+                <a
+                  href={activePreviewDoc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-mono text-[#D4AF37] hover:underline flex items-center gap-1.5"
+                >
+                  <span>Ouvrir en plein écran ↗</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setActivePreviewDoc(null)}
+                  className="px-4 py-2 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text rounded-xl font-mono text-xs uppercase font-bold transition-all cursor-pointer"
+                >
+                  Fermer
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

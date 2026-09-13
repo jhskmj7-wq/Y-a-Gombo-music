@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { getFreshIdToken } from "../lib/authUtils";
 import { 
   ShieldCheck, 
   Award, 
@@ -106,6 +107,112 @@ function GomboIdUserDashboardInner({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
   const [selectedKycType, setSelectedKycType] = useState<"standard" | "express">("standard");
+
+  // KYC Viewing State & Signed URLs
+  const [kycSignedUrls, setKycSignedUrls] = useState<Record<string, string>>({});
+  const [kycLoadingUrls, setKycLoadingUrls] = useState<Record<string, boolean>>({});
+  const [activePreviewDoc, setActivePreviewDoc] = useState<{ title: string; url: string } | null>(null);
+
+  useEffect(() => {
+    const rawDocs = [
+      currentUser?.kycDocs?.identityCardUrl,
+      currentUser?.kycDocs?.identityCardBackUrl,
+      currentUser?.kycDocs?.selfieUrl,
+      currentUser?.kycDocs?.activityUrl,
+      currentUser?.kycDocUrl
+    ].filter(Boolean) as string[];
+
+    if (rawDocs.length === 0) return;
+
+    const urlsToSign = rawDocs.filter((url) => {
+      if (!url) return false;
+      if (url.startsWith("data:") || url.startsWith("blob:") || url.includes("token=")) return false;
+      return !kycSignedUrls[url];
+    });
+
+    if (urlsToSign.length === 0) return;
+
+    (async () => {
+      try {
+        const idToken = await getFreshIdToken(true);
+        if (!idToken) return;
+
+        const response = await fetch("/api/user/kyc/view", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`
+          },
+          body: JSON.stringify({
+            idToken,
+            storagePaths: urlsToSign,
+            bucket: "afrigombo-private"
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.results && Array.isArray(data.results)) {
+            setKycSignedUrls(prev => {
+              const next = { ...prev };
+              data.results.forEach((item: any) => {
+                if (item.path && item.signedUrl) {
+                  next[item.path] = item.signedUrl;
+                }
+              });
+              return next;
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("[GOMBO ID KYC USER SIGN WARN]", err);
+      }
+    })();
+  }, [currentUser?.kycDocs, currentUser?.kycDocUrl, isKycModalOpen]);
+
+  const handleOpenDocPreview = async (rawUrl: string, title: string) => {
+    if (!rawUrl) return;
+    const signed = kycSignedUrls[rawUrl];
+    if (signed) {
+      setActivePreviewDoc({ title, url: signed });
+      return;
+    }
+    if (rawUrl.includes("token=") || rawUrl.startsWith("data:") || rawUrl.startsWith("blob:")) {
+      setActivePreviewDoc({ title, url: rawUrl });
+      return;
+    }
+
+    setKycLoadingUrls(prev => ({ ...prev, [rawUrl]: true }));
+    try {
+      const idToken = await getFreshIdToken(true);
+      const res = await fetch("/api/user/kyc/view", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          idToken,
+          storagePaths: [rawUrl],
+          bucket: "afrigombo-private"
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const sUrl = data?.results?.[0]?.signedUrl;
+        if (sUrl) {
+          setKycSignedUrls(prev => ({ ...prev, [rawUrl]: sUrl }));
+          setActivePreviewDoc({ title, url: sUrl });
+          return;
+        }
+      }
+      setActivePreviewDoc({ title, url: rawUrl });
+    } catch (e) {
+      setActivePreviewDoc({ title, url: rawUrl });
+    } finally {
+      setKycLoadingUrls(prev => ({ ...prev, [rawUrl]: false }));
+    }
+  };
 
   // drag hover flags
   const [dragActive, setDragActive] = useState<{ [key: string]: boolean }>({
@@ -953,48 +1060,93 @@ function GomboIdUserDashboardInner({
                   </>
                 )}
 
-                {/* If already submitted (review submitted documents) */}
-                {(currentUser?.kycStatus ?? "none") !== "none" && (
+                {/* If already submitted or documents exist (review submitted documents) */}
+                {((currentUser?.kycStatus ?? "none") !== "none" || currentUser?.kycDocs?.identityCardUrl || currentUser?.kycDocs?.selfieUrl || currentUser?.kycDocUrl) && (
                   <div className="space-y-5">
                     <div className="space-y-3 p-5 rounded-2xl bg-black/40 border border-white/10">
-                      <h5 className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-widest flex items-center gap-1.5">
-                        📂 Éléments du Dossier Homologué
-                      </h5>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-1.5">
-                          <span className="text-[9px] uppercase font-mono text-gray-400 block">Pièce d'Identité</span>
-                          <div className="h-20 bg-black/60 rounded-lg overflow-hidden border border-white/10 flex items-center justify-center">
-                            {currentUser?.kycDocs?.identityCardUrl ? (
-                              <img src={currentUser.kycDocs.identityCardUrl} alt="ID" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-[10px] text-gray-500 font-mono">Document conforme</span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-1.5">
-                          <span className="text-[9px] uppercase font-mono text-gray-400 block">Selfie Facial</span>
-                          <div className="h-20 bg-black/60 rounded-lg overflow-hidden border border-white/10 flex items-center justify-center">
-                            {currentUser?.kycDocs?.selfieUrl ? (
-                              <img src={currentUser.kycDocs.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-[10px] text-gray-500 font-mono">Selfie validé</span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-1.5">
-                          <span className="text-[9px] uppercase font-mono text-gray-400 block">Preuve d'Activité</span>
-                          <div className="h-20 bg-black/60 rounded-lg overflow-hidden border border-white/10 flex items-center justify-center">
-                            {currentUser?.kycDocs?.activityUrl ? (
-                              <img src={currentUser.kycDocs.activityUrl} alt="Activity" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-[10px] text-gray-500 font-mono truncate px-1">Homologuée</span>
-                            )}
-                          </div>
-                        </div>
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-widest flex items-center gap-1.5">
+                          📂 Éléments du Dossier Homologué
+                        </h5>
+                        <span className="text-[10px] font-mono text-gray-400">
+                          {currentUser?.kycStatus === "approved" ? "Documents certifiés" : "Documents en revue"}
+                        </span>
                       </div>
+
+                      {(() => {
+                        const submittedDocs = [
+                          { label: "Carte d'Identité (Recto)", url: currentUser?.kycDocs?.identityCardUrl },
+                          { label: "Carte d'Identité (Verso)", url: currentUser?.kycDocs?.identityCardBackUrl },
+                          { label: "Selfie Facial de Contrôle", url: currentUser?.kycDocs?.selfieUrl },
+                          { label: "Preuve d'Activité Artistique", url: currentUser?.kycDocs?.activityUrl || currentUser?.kycDocUrl }
+                        ];
+
+                        return (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {submittedDocs.map((doc, idx) => {
+                              const rawUrl = doc.url;
+                              const signedUrl = rawUrl ? (kycSignedUrls[rawUrl] || rawUrl) : "";
+                              const isLoading = rawUrl ? kycLoadingUrls[rawUrl] : false;
+
+                              return (
+                                <div key={idx} className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] uppercase font-mono font-bold text-gray-300 truncate">
+                                      {doc.label}
+                                    </span>
+                                    {rawUrl && (
+                                      <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-800/40">
+                                        Transmis
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div 
+                                    className="h-28 bg-black/60 rounded-lg overflow-hidden border border-white/10 flex items-center justify-center relative group cursor-pointer"
+                                    onClick={() => rawUrl && handleOpenDocPreview(rawUrl, doc.label)}
+                                  >
+                                    {rawUrl ? (
+                                      <>
+                                        <img 
+                                          src={signedUrl} 
+                                          alt={doc.label} 
+                                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                                          onError={(e) => {
+                                            // Si échec de chargement, tenter de demander une nouvelle URL signée
+                                            if (!signedUrl.includes("token=")) {
+                                              handleOpenDocPreview(rawUrl, doc.label);
+                                            }
+                                          }}
+                                        />
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-all text-xs font-mono font-bold text-[#D4AF37]">
+                                          <Eye className="w-5 h-5" />
+                                          <span>{isLoading ? "Chargement..." : "Agrandir le document"}</span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <div className="text-center p-2">
+                                        <FileText className="w-5 h-5 text-gray-600 mx-auto mb-1" />
+                                        <span className="text-[10px] text-gray-500 font-mono">Non renseigné</span>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {rawUrl && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenDocPreview(rawUrl, doc.label)}
+                                      className="w-full py-1.5 px-2 rounded-lg bg-white/5 hover:bg-[#D4AF37]/20 border border-white/10 hover:border-[#D4AF37]/40 text-[#D4AF37] font-mono text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                    >
+                                      <Eye className="w-3 h-3" />
+                                      <span>Consulter le document ↗</span>
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="flex justify-end pt-3 border-t border-white/10">
@@ -1028,6 +1180,64 @@ function GomboIdUserDashboardInner({
         onClose={() => setIsQrModalOpen(false)}
         user={currentUser}
       />
+
+      {/* =========================================================================
+                                 DOCUMENT FULL PREVIEW LIGHTBOX MODAL
+         ========================================================================= */}
+      <AnimatePresence>
+        {activePreviewDoc && (
+          <div className="fixed inset-0 z-[999999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-2xl bg-[#141416] border border-[#D4AF37]/40 rounded-3xl p-4 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
+                  <span className="font-mono text-xs uppercase font-bold text-gray-200">
+                    {activePreviewDoc.title}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActivePreviewDoc(null)}
+                  className="p-1 rounded-full text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-auto flex items-center justify-center p-4 min-h-[300px]">
+                <img
+                  src={activePreviewDoc.url}
+                  alt={activePreviewDoc.title}
+                  className="max-h-[65vh] w-auto max-w-full object-contain rounded-xl border border-white/10 shadow-lg"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                <a
+                  href={activePreviewDoc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-mono text-[#D4AF37] hover:underline flex items-center gap-1.5"
+                >
+                  <span>Ouvrir en plein écran ↗</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setActivePreviewDoc(null)}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-mono text-xs uppercase font-bold transition-all cursor-pointer"
+                >
+                  Fermer
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

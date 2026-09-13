@@ -30,6 +30,8 @@ export const AvatarCropModal: React.FC<AvatarCropModalProps> = ({
   const startPanRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const touchDistanceRef = useRef<number | null>(null);
 
+  const [isProcessing, setIsProcessing] = useState(false);
+
   // Fixed crop viewport size in pixels
   const VIEWPORT_SIZE = 300;
 
@@ -160,51 +162,100 @@ export const AvatarCropModal: React.FC<AvatarCropModalProps> = ({
 
   // Render cropped 1:1 image onto a 600x600 canvas upon confirmation
   const handleConfirm = () => {
-    if (!imageSrc || !imgDimensions.width || !imgDimensions.height) return;
+    if (isProcessing) return;
+    setIsProcessing(true);
 
-    const canvas = document.createElement("canvas");
-    const OUTPUT_SIZE = 600;
-    canvas.width = OUTPUT_SIZE;
-    canvas.height = OUTPUT_SIZE;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      ctx.clearRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
-
-      const scaleFactor = OUTPUT_SIZE / VIEWPORT_SIZE;
-
-      ctx.save();
-      ctx.translate(OUTPUT_SIZE / 2, OUTPUT_SIZE / 2);
-      ctx.rotate((rotation * Math.PI) / 180);
-      ctx.translate(pan.x * scaleFactor, pan.y * scaleFactor);
-
-      const w = img.naturalWidth;
-      const h = img.naturalHeight;
-
-      const renderW = w * baseScale * zoom * scaleFactor;
-      const renderH = h * baseScale * zoom * scaleFactor;
-
-      ctx.drawImage(img, -renderW / 2, -renderH / 2, renderW, renderH);
-      ctx.restore();
-
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) return;
-          const fileName = imageFile.name
-            ? `cropped_${imageFile.name.replace(/\.[^/.]+$/, "")}.jpg`
-            : `avatar_cropped_${Date.now()}.jpg`;
-          const croppedFile = new File([blob], fileName, { type: "image/jpeg" });
-          onCropComplete(croppedFile);
-          onClose();
-        },
-        "image/jpeg",
-        0.95
-      );
+    const fallbackFile = () => {
+      try {
+        onCropComplete(imageFile);
+        onClose();
+      } catch (fErr) {
+        console.warn("[AVATAR CROP FALLBACK ERROR]", fErr);
+      } finally {
+        setIsProcessing(false);
+      }
     };
-    img.src = imageSrc;
+
+    if (!imageSrc) {
+      fallbackFile();
+      return;
+    }
+
+    try {
+      const canvas = document.createElement("canvas");
+      const OUTPUT_SIZE = 600;
+      canvas.width = OUTPUT_SIZE;
+      canvas.height = OUTPUT_SIZE;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        fallbackFile();
+        return;
+      }
+
+      const img = new Image();
+      // DO NOT set crossOrigin = "anonymous" for local blob URLs: it breaks on Chrome/Safari Android.
+      img.onload = () => {
+        try {
+          ctx.clearRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+
+          const scaleFactor = OUTPUT_SIZE / VIEWPORT_SIZE;
+
+          ctx.save();
+          ctx.translate(OUTPUT_SIZE / 2, OUTPUT_SIZE / 2);
+          ctx.rotate((rotation * Math.PI) / 180);
+          ctx.translate(pan.x * scaleFactor, pan.y * scaleFactor);
+
+          const w = img.naturalWidth || imgDimensions.width || VIEWPORT_SIZE;
+          const h = img.naturalHeight || imgDimensions.height || VIEWPORT_SIZE;
+
+          const activeBaseScale = baseScale || 1;
+          const renderW = w * activeBaseScale * zoom * scaleFactor;
+          const renderH = h * activeBaseScale * zoom * scaleFactor;
+
+          ctx.drawImage(img, -renderW / 2, -renderH / 2, renderW, renderH);
+          ctx.restore();
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                fallbackFile();
+                return;
+              }
+              const fileName = imageFile.name
+                ? `cropped_${imageFile.name.replace(/\.[^/.]+$/, "")}.jpg`
+                : `avatar_cropped_${Date.now()}.jpg`;
+              const croppedFile = new File([blob], fileName, { type: "image/jpeg" });
+              onCropComplete(croppedFile);
+              onClose();
+              setIsProcessing(false);
+            },
+            "image/jpeg",
+            0.92
+          );
+        } catch (cropErr) {
+          console.warn("[AVATAR CROP CANVAS ERROR]", cropErr);
+          fallbackFile();
+        }
+      };
+
+      img.onerror = (imgErr) => {
+        console.warn("[AVATAR CROP IMG ONERROR]", imgErr);
+        fallbackFile();
+      };
+
+      img.src = imageSrc;
+
+      // Fallback timer in case image loading stalls
+      setTimeout(() => {
+        if (!img.complete && isProcessing) {
+          console.warn("[AVATAR CROP TIMEOUT] Falling back to original image");
+          fallbackFile();
+        }
+      }, 1500);
+    } catch (err) {
+      console.warn("[AVATAR CROP FATAL ERROR]", err);
+      fallbackFile();
+    }
   };
 
   return (
@@ -360,11 +411,23 @@ export const AvatarCropModal: React.FC<AvatarCropModalProps> = ({
 
         <button
           type="button"
+          disabled={isProcessing}
           onClick={handleConfirm}
-          className="flex-1 py-3.5 px-4 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:from-amber-400 hover:to-amber-600 text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-amber-500/20 active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+          className={`flex-1 py-3.5 px-4 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:from-amber-400 hover:to-amber-600 text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-amber-500/20 active:scale-98 cursor-pointer flex items-center justify-center gap-2 ${
+            isProcessing ? "opacity-80 cursor-wait" : ""
+          }`}
         >
-          <Check className="w-4 h-4 stroke-[3]" />
-          <span>Confirmer</span>
+          {isProcessing ? (
+            <>
+              <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              <span>Téléversement...</span>
+            </>
+          ) : (
+            <>
+              <Check className="w-4 h-4 stroke-[3]" />
+              <span>Confirmer</span>
+            </>
+          )}
         </button>
       </div>
     </div>

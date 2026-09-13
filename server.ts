@@ -1340,8 +1340,8 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
   });
 
-  // 3. ENDPOINT SÉCURISÉ POUR LA CONSULTATION KYC - SUPER FONDATEUR & ADMIN
-  app.post("/api/admin/kyc/view", async (req, res) => {
+  // 3. ENDPOINT SÉCURISÉ POUR LA CONSULTATION KYC - SUPER FONDATEUR, ADMIN ET UTILISATEUR (POUR SES PROPRES DOCS)
+  const handleKycView = async (req: express.Request, res: express.Response) => {
     res.setHeader("Content-Type", "application/json");
     const authHeader = req.headers.authorization || "";
     const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : undefined;
@@ -1363,11 +1363,6 @@ app.post("/api/wallet/request-reset", async (req, res) => {
     }
 
     try {
-      const adminDb = getAdminDb();
-      if (!adminDb) {
-        return res.status(503).json({ success: false, error: "Service Firebase Admin temporairement indisponible." });
-      }
-
       // 1. Vérification sécurisée du jeton d'authentification Firebase (ID Token)
       const decodedUser = await verifyFirebaseTokenSafe(tokenToVerify);
       if (!decodedUser || !decodedUser.uid) {
@@ -1375,33 +1370,81 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       }
 
       const uid = decodedUser.uid;
-      let userData: any = null;
-      try {
-        const userDoc = await adminDb.collection("users").doc(uid).get();
-        userData = userDoc.exists ? userDoc.data() : null;
-      } catch (firestoreErr: any) {
-        console.warn("[KYC VIEW FIRESTORE ERROR]", firestoreErr?.message || firestoreErr);
+      const userEmail = (decodedUser.email || "").toLowerCase();
+
+      // 2. Vérification des droits : Fondateur souverain ou Administrateur
+      let isFounderOrAdmin = PROTECTED_FOUNDER_EMAILS.map((e) => e.toLowerCase()).includes(userEmail);
+
+      if (!isFounderOrAdmin) {
+        try {
+          const adminDb = getAdminDb();
+          if (adminDb) {
+            const userDoc = await adminDb.collection("users").doc(uid).get();
+            const userData = userDoc.exists ? userDoc.data() : null;
+            const docEmail = (userData?.email || "").toLowerCase();
+            if (
+              userData?.isFounder === true ||
+              userData?.superFounder === true ||
+              userData?.role === "super_founder" ||
+              userData?.role === "admin" ||
+              userData?.role === "founder" ||
+              PROTECTED_FOUNDER_EMAILS.map((e) => e.toLowerCase()).includes(docEmail)
+            ) {
+              isFounderOrAdmin = true;
+            }
+          }
+        } catch (dbErr) {
+          console.warn("[KYC VIEW DB CHECK WARN]", dbErr);
+        }
       }
 
-      // 2. Contrôle de rôle strict : Seul le Fondateur / Super Fondateur / Admin est autorisé
-      const isAuthorized =
-        PROTECTED_FOUNDER_EMAILS.includes(decodedUser.email || "") ||
-        userData?.isFounder === true ||
-        userData?.superFounder === true ||
-        userData?.role === "super_founder" ||
-        userData?.role === "admin" ||
-        userData?.role === "founder";
+      // Si l'utilisateur n'est pas Fondateur / Admin, il a le droit STRICT de consulter SES PROPRES documents KYC
+      if (!isFounderOrAdmin) {
+        let userDocKycUrls: string[] = [];
+        try {
+          const adminDb = getAdminDb();
+          if (adminDb) {
+            const userDoc = await adminDb.collection("users").doc(uid).get();
+            if (userDoc.exists) {
+              const uData = userDoc.data();
+              const kd = uData?.kycDocs || {};
+              userDocKycUrls = [
+                kd.identityCardUrl,
+                kd.identityCardBackUrl,
+                kd.selfieUrl,
+                kd.activityUrl,
+                uData?.kycDocUrl
+              ].filter(Boolean).map((s: string) => String(s).trim());
+            }
+          }
+        } catch (e) {
+          console.warn("[CHECK USER KYC DOCS WARN]", e);
+        }
 
-      if (!isAuthorized) {
-        return res.status(403).json({
-          success: false,
-          error: "Accès refusé. Seul le Fondateur souverain ou un Administrateur autorisé peut consulter les documents KYC."
+        const hasForeignDocs = pathsToProcess.some((p) => {
+          if (!p || typeof p !== "string") return false;
+          const pTrim = p.trim();
+          const matchesUid = pTrim.includes(uid);
+          const matchesUserDoc = userDocKycUrls.includes(pTrim);
+          return !matchesUid && !matchesUserDoc;
         });
+
+        if (hasForeignDocs) {
+          return res.status(403).json({
+            success: false,
+            error: "Accès refusé. Vous n'avez l'autorisation de consulter que vos propres documents KYC."
+          });
+        }
       }
 
-      // 3. Traitement et génération des URLs sécurisées
+      // 3. Traitement et génération des URLs sécurisées (Signed URLs)
       const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://qefnkgtstcisplbrjcxy.supabase.co";
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+      const supabaseKey =
+        process.env.SUPABASE_SERVICE_ROLE_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+        process.env.VITE_SUPABASE_ANON_KEY;
+
       let serverSupabase: any = null;
       if (supabaseKey) {
         try {
@@ -1418,20 +1461,33 @@ app.post("/api/wallet/request-reset", async (req, res) => {
             return { path: p, signedUrl: "" };
           }
 
-          // Si c'est déjà une URL HTTP(S) complète ou data URI, la retourner directement
-          if (
-            p.startsWith("http://") ||
-            p.startsWith("https://") ||
-            p.startsWith("data:") ||
-            p.startsWith("blob:")
-          ) {
+          let cleanPath = p.trim();
+
+          // Si c'est déjà une URL signée active avec token, la conserver
+          if (cleanPath.includes("token=") && (cleanPath.startsWith("http://") || cleanPath.startsWith("https://"))) {
             return { path: p, signedUrl: p };
           }
 
-          const cleanPath = p.replace(
-            /^(?:https?:\/\/[^/]+\/storage\/v1\/object\/public\/[^/]+\/)/,
-            ""
-          );
+          // Si c'est un data URI ou blob local, le retourner
+          if (cleanPath.startsWith("data:") || cleanPath.startsWith("blob:")) {
+            return { path: p, signedUrl: p };
+          }
+
+          // Nettoyer querystring et fragments éventuels (?t=... #...)
+          cleanPath = cleanPath.split("?")[0].split("#")[0];
+
+          // Décodage d'éventuels caractères encodés
+          try {
+            cleanPath = decodeURIComponent(cleanPath);
+          } catch {}
+
+          // Nettoyage complet des préfixes d'URLs publiques ou de buckets
+          cleanPath = cleanPath
+            .replace(/^https?:\/\/[^/]+\/storage\/v1\/object\/(?:public|sign|authenticated)\/[^/]+\//, "")
+            .replace(/^https?:\/\/[^/]+\/storage\/v1\/object\/[^/]+\//, "")
+            .replace(/^https?:\/\/[^/]+\//, "")
+            .replace(/^\/?(?:afrigombo-private|afrigombo-media)\//, "")
+            .replace(/^\/+/, "");
 
           let signedUrl = "";
 
@@ -1441,17 +1497,17 @@ app.post("/api/wallet/request-reset", async (req, res) => {
               // 1. Essai sur le bucket demandé (ex: afrigombo-private)
               const { data: signData, error: signError } = await serverSupabase.storage
                 .from(bucket)
-                .createSignedUrl(cleanPath, 3600);
+                .createSignedUrl(cleanPath, 7200);
 
               if (signData?.signedUrl && !signError) {
                 signedUrl = signData.signedUrl;
               } else {
-                // 2. Essai de repli sur afrigombo-media ou autres buckets
-                const fallbackBuckets = ["afrigombo-media", "afrigombo-private", "documents"].filter((b: string) => b !== bucket);
+                // 2. Essai de repli sur afrigombo-private / afrigombo-media
+                const fallbackBuckets = ["afrigombo-private", "afrigombo-media", "documents"].filter((b: string) => b !== bucket);
                 for (const fb of fallbackBuckets) {
                   const { data: fbData } = await serverSupabase.storage
                     .from(fb)
-                    .createSignedUrl(cleanPath, 3600);
+                    .createSignedUrl(cleanPath, 7200);
                   if (fbData?.signedUrl) {
                     signedUrl = fbData.signedUrl;
                     break;
@@ -1463,7 +1519,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
             }
           }
 
-          // Tentative via Firebase Storage si Firebase Admin Storage est disponible et pas encore signé
+          // Tentative via Firebase Storage si disponible
           if (!signedUrl) {
             try {
               if (getAdminApps().length > 0) {
@@ -1473,7 +1529,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
                 if (exists) {
                   const [fbSignedUrl] = await file.getSignedUrl({
                     action: "read",
-                    expires: Date.now() + 3600 * 1000
+                    expires: Date.now() + 7200 * 1000
                   });
                   if (fbSignedUrl) {
                     signedUrl = fbSignedUrl;
@@ -1483,16 +1539,6 @@ app.post("/api/wallet/request-reset", async (req, res) => {
             } catch (fbStorageErr) {
               console.warn("[FIREBASE STORAGE KYC SIGN WARN]", fbStorageErr);
             }
-          }
-
-          // Fallback : Si aucune signature n'a pu être complétée, générer une URL publique Supabase si possible
-          if (!signedUrl && serverSupabase) {
-            try {
-              const { data: publicData } = serverSupabase.storage.from(bucket).getPublicUrl(cleanPath);
-              if (publicData?.publicUrl) {
-                signedUrl = publicData.publicUrl;
-              }
-            } catch (_) {}
           }
 
           return {
@@ -1507,10 +1553,13 @@ app.post("/api/wallet/request-reset", async (req, res) => {
         results
       });
     } catch (err: any) {
-      console.error("[ADMIN KYC VIEW FATAL ERROR]", err);
+      console.error("[KYC VIEW FATAL ERROR]", err);
       return res.status(500).json({ success: false, error: err.message || "Erreur interne lors de la consultation KYC." });
     }
-  });
+  };
+
+  app.post("/api/admin/kyc/view", handleKycView);
+  app.post("/api/user/kyc/view", handleKycView);
 
 // SECURE RESET API - PHASE 1 BUSINESS DATA RESET
   app.post("/api/admin/reset-environment", async (req, res) => {

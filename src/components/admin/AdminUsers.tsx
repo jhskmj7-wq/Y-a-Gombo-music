@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { User } from "../../types";
 import { getEffectiveGomboId } from "../../lib/gomboIdHelper";
+import { getFreshIdToken } from "../../lib/authUtils";
 import { db, auth } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
 import { 
@@ -143,7 +144,7 @@ export default function AdminUsers({
     setKycLoading(prev => ({ ...prev, [uid]: true }));
 
     try {
-      const idToken = await auth.currentUser?.getIdToken();
+      const idToken = await getFreshIdToken(true);
       if (!idToken) {
         console.error("Token admin Firebase manquant");
         setKycLoading(prev => ({ ...prev, [uid]: false }));
@@ -152,7 +153,10 @@ export default function AdminUsers({
 
       const response = await fetch("/api/admin/kyc/view", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
         body: JSON.stringify({
           idToken,
           storagePaths: rawPaths,
@@ -972,8 +976,7 @@ export default function AdminUsers({
                                   const userMap = user.id ? kycSignedUrls[user.id] : undefined;
                                   const signedUrl = userMap ? userMap[docItem.path] : undefined;
                                   const isDirectUrl = typeof docItem.path === "string" && (
-                                    docItem.path.startsWith("http://") || 
-                                    docItem.path.startsWith("https://") || 
+                                    docItem.path.includes("token=") || 
                                     docItem.path.startsWith("data:") || 
                                     docItem.path.startsWith("blob:")
                                   );

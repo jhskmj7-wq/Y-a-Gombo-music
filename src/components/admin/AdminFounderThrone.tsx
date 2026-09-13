@@ -1,6 +1,7 @@
 import { NotificationService } from "../../lib/NotificationService";
 import BouclierAfrigombo from "./BouclierAfrigombo";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { getFreshIdToken } from "../../lib/authUtils";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Crown, ShieldCheck, UserPlus, UserX, Info, ShieldAlert,
@@ -190,9 +191,10 @@ export default function AdminFounderThrone({
 
   const handlePreviewKycDoc = async (rawUrl: string) => {
     if (!rawUrl) return;
+    
+    // Si c'est déjà une URL signée active avec token, ou data/blob, affichage direct
     if (
-      rawUrl.startsWith("http://") ||
-      rawUrl.startsWith("https://") ||
+      (rawUrl.includes("token=") && (rawUrl.startsWith("http://") || rawUrl.startsWith("https://"))) ||
       rawUrl.startsWith("data:") ||
       rawUrl.startsWith("blob:")
     ) {
@@ -206,14 +208,17 @@ export default function AdminFounderThrone({
 
     setKycLoadingUrls(prev => ({ ...prev, [rawUrl]: true }));
     try {
-      const idToken = await currentUser?.getIdToken?.();
+      const idToken = await getFreshIdToken(true);
       if (!idToken) {
         setKycPreviewUrl(rawUrl);
         return;
       }
       const response = await fetch("/api/admin/kyc/view", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
         body: JSON.stringify({
           idToken,
           storagePaths: [rawUrl],
@@ -687,6 +692,102 @@ export default function AdminFounderThrone({
   const displayUsers = liveUsers.length > 0 ? liveUsers : (users || []);
   const displayPosts = livePosts.length > 0 ? livePosts : (posts || []);
   const displayGombos = liveGombos.length > 0 ? liveGombos : (gombos || []);
+
+  // Consolidation de tous les dossiers KYC : demandes en base + utilisateurs homologués/certifiés
+  const allKycDossiers = useMemo(() => {
+    const list = [...kycRequests];
+    const existingUserIds = new Set(list.map((k: any) => k.userId).filter(Boolean));
+
+    displayUsers.forEach((u: any) => {
+      const uid = u.id || u.uid;
+      if (!uid || existingUserIds.has(uid)) return;
+
+      const hasKyc = Boolean(
+        u.isCertified ||
+        u.isIdVerified ||
+        u.kycStatus === "approved" ||
+        u.kycStatus === "pending" ||
+        u.kycDocs?.identityCardUrl ||
+        u.kycDocs?.selfieUrl ||
+        u.kycDocUrl
+      );
+
+      if (hasKyc) {
+        list.push({
+          id: `user_kyc_${uid}`,
+          userId: uid,
+          userName: u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.artisticName || u.artistName || "Utilisateur Homologué",
+          userEmail: u.email || "Non renseigné",
+          status: (u.kycStatus === "approved" || u.isCertified) ? "APPROVED" : (u.kycStatus === "rejected" ? "REJECTED" : "APPROVED"),
+          details: `Dossier homologué GOMBO ID (${u.role || "Artiste"}). Statut: ${u.kycStatus || (u.isCertified ? "Homologué" : "Vérifié")}`,
+          kycDocs: u.kycDocs || {},
+          kycDocUrl: u.kycDocUrl,
+          createdAt: u.createdAt || new Date().toISOString(),
+          synthetic: true
+        });
+      }
+    });
+
+    return list;
+  }, [kycRequests, displayUsers]);
+
+  // Précharger automatiquement les URLs signées pour tous les documents KYC affichés
+  useEffect(() => {
+    const urlsToSign: string[] = [];
+    allKycDossiers.forEach((k: any) => {
+      const u = displayUsers.find((user: any) => (user.id || user.uid) === k.userId);
+      const docs = [
+        k.kycDocs?.identityCardUrl || u?.kycDocs?.identityCardUrl,
+        k.kycDocs?.identityCardBackUrl || u?.kycDocs?.identityCardBackUrl,
+        k.kycDocs?.selfieUrl || u?.kycDocs?.selfieUrl,
+        k.kycDocs?.activityUrl || k.kycDocUrl || u?.kycDocs?.activityUrl || u?.kycDocUrl
+      ].filter(Boolean);
+
+      docs.forEach((d: string) => {
+        if (!kycSignedUrls[d] && !d.startsWith("data:") && !d.startsWith("blob:") && !d.includes("token=")) {
+          urlsToSign.push(d);
+        }
+      });
+    });
+
+    if (urlsToSign.length === 0) return;
+    const uniqueUrls = Array.from(new Set(urlsToSign)).slice(0, 30);
+
+    (async () => {
+      try {
+        const idToken = await getFreshIdToken(true);
+        if (!idToken) return;
+        const res = await fetch("/api/admin/kyc/view", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`
+          },
+          body: JSON.stringify({
+            idToken,
+            storagePaths: uniqueUrls,
+            bucket: "afrigombo-private"
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.results && Array.isArray(data.results)) {
+            setKycSignedUrls(prev => {
+              const next = { ...prev };
+              data.results.forEach((item: any) => {
+                if (item.path && item.signedUrl) {
+                  next[item.path] = item.signedUrl;
+                }
+              });
+              return next;
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("[PRELOAD KYC SIGNED URLS WARN]", err);
+      }
+    })();
+  }, [allKycDossiers.length, kycStatusTab]);
   const getGrowthMetrics = (list: any[], dateField: string = "createdAt") => {
     if (!list || list.length === 0) return { dailyVolume: 0, growthPercent: "0" };
     const now = Date.now();
@@ -3960,11 +4061,11 @@ export default function AdminFounderThrone({
                       <div className="flex flex-wrap items-center gap-2 p-2 bg-afri-bg-sec/30 border border-afri-border rounded-2xl">
                         {(
                           [
-                            { id: "TOUTES", label: "Toutes", count: kycRequests.length },
-                            { id: "A_TRAITER", label: "À Traiter", count: kycRequests.filter((k: any) => k.status !== "APPROVED" && k.status !== "REJECTED" && k.status !== "ARCHIVED").length },
-                            { id: "VALIDEES", label: "Validées", count: kycRequests.filter((k: any) => k.status === "APPROVED").length },
-                            { id: "REFUSEES", label: "Refusées", count: kycRequests.filter((k: any) => k.status === "REJECTED").length },
-                            { id: "ARCHIVEES", label: "Archivées", count: kycRequests.filter((k: any) => k.status === "ARCHIVED").length },
+                            { id: "TOUTES", label: "Toutes", count: allKycDossiers.length },
+                            { id: "A_TRAITER", label: "À Traiter", count: allKycDossiers.filter((k: any) => k.status !== "APPROVED" && k.status !== "REJECTED" && k.status !== "ARCHIVED").length },
+                            { id: "VALIDEES", label: "Validées", count: allKycDossiers.filter((k: any) => k.status === "APPROVED").length },
+                            { id: "REFUSEES", label: "Refusées", count: allKycDossiers.filter((k: any) => k.status === "REJECTED").length },
+                            { id: "ARCHIVEES", label: "Archivées", count: allKycDossiers.filter((k: any) => k.status === "ARCHIVED").length },
                           ] as const
                         ).map((tab) => (
                           <button
@@ -3986,7 +4087,7 @@ export default function AdminFounderThrone({
 
                       {/* LISTE DES DOSSIERS FILTRÉS */}
                       {(() => {
-                        const filteredKyc = kycRequests.filter((k: any) => {
+                        const filteredKyc = allKycDossiers.filter((k: any) => {
                           if (kycStatusTab === "TOUTES") return true;
                           if (kycStatusTab === "A_TRAITER") return k.status !== "APPROVED" && k.status !== "REJECTED" && k.status !== "ARCHIVED";
                           if (kycStatusTab === "VALIDEES") return k.status === "APPROVED";
@@ -5412,6 +5513,34 @@ export default function AdminFounderThrone({
                                     </span>
                                   )}
                                 </div>
+                                {(() => {
+                                  const docs = [
+                                    { label: "Recto", url: u.kycDocs?.identityCardUrl },
+                                    { label: "Verso", url: u.kycDocs?.identityCardBackUrl },
+                                    { label: "Selfie", url: u.kycDocs?.selfieUrl },
+                                    { label: "Preuve", url: u.kycDocs?.activityUrl || u.kycDocUrl }
+                                  ].filter((d: any) => Boolean(d.url));
+
+                                  if (docs.length === 0) return null;
+                                  return (
+                                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                                      {docs.map((docItem: any, dIdx: number) => (
+                                        <button
+                                          key={dIdx}
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handlePreviewKycDoc(docItem.url);
+                                          }}
+                                          className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-[#D4AF37] border border-[#D4AF37]/30 hover:bg-[#D4AF37]/20 transition-all flex items-center gap-0.5 cursor-pointer"
+                                          title={`Voir ${docItem.label}`}
+                                        >
+                                          📄 {docItem.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             </div>
 
