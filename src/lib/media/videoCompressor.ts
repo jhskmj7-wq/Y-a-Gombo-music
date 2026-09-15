@@ -587,10 +587,11 @@ export async function compressVideoFile(
           );
         }
 
-        const extension = passResult.mimeType.includes("mp4") ? ".mp4" : ".webm";
+        const isMp4 = passResult.mimeType.toLowerCase().includes("mp4");
+        const extension = isMp4 ? ".mp4" : ".webm";
         const cleanName = file.name.replace(/\.[^.]+$/, "") + `_opt${extension}`;
         const finalCompressedFile = new File([compressedBlob], cleanName, {
-          type: passResult.mimeType || "video/webm",
+          type: isMp4 ? "video/mp4" : "video/webm",
         });
 
         const reduction = Math.max(

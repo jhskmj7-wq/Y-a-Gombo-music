@@ -212,9 +212,10 @@ export async function exportVideoFile(
           }
 
           const exportBlob = new Blob(recordedChunks, { type: mimeType });
-          const ext = mimeType.includes("mp4") ? ".mp4" : ".webm";
+          const isMp4 = mimeType.toLowerCase().includes("mp4");
+          const ext = isMp4 ? ".mp4" : ".webm";
           const cleanName = file.name.replace(/\.[^.]+$/, "") + `_export${ext}`;
-          const exportedFile = new File([exportBlob], cleanName, { type: mimeType });
+          const exportedFile = new File([exportBlob], cleanName, { type: isMp4 ? "video/mp4" : "video/webm" });
 
           if (onProgress) onProgress(100, "Rendu vidéo terminé avec succès !");
 

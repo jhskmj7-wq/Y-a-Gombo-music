@@ -174,3 +174,23 @@ export function buildCombinedCssFilter(state: VideoEditorState, baseFilterCss: s
   
   return parts.length > 0 ? parts.join(" ") : "none";
 }
+
+/**
+ * Checks if the user made any visual, audio, trim, text, sticker or transform edits.
+ * If false, the original pristine MP4/H.264 file can be preserved directly without re-encoding.
+ */
+export function hasEditorModifications(state: VideoEditorState): boolean {
+  if (state.filterId !== "naturel" && state.filterIntensity > 0) return true;
+  if (state.brightness !== 0 || state.contrast !== 0 || state.saturation !== 0) return true;
+  if (state.temperature !== 0 || state.hue !== 0 || state.fade !== 0) return true;
+  if (state.shadows !== 0 || state.highlights !== 0 || state.sepia !== 0 || state.vignette !== 0 || state.grain !== 0) return true;
+  if (state.trimStart > 0 || state.trimEnd > 0) return true;
+  if (state.playbackRate !== 1) return true;
+  if (state.rotation !== 0 || state.flipHorizontal) return true;
+  if (state.volume !== 100 || state.isMuted || state.fadeIn || state.fadeOut) return true;
+  if (state.texts && state.texts.length > 0) return true;
+  if (state.stickers && state.stickers.length > 0) return true;
+  if (state.activeEffect !== "none") return true;
+  return false;
+}
+

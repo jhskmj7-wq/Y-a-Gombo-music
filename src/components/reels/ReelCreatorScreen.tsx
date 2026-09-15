@@ -31,6 +31,7 @@ import {
   VideoEditorState,
   INITIAL_EDITOR_STATE,
   buildCombinedCssFilter,
+  hasEditorModifications,
   VideoTextOverlay,
   VideoStickerOverlay
 } from "./editorState";
@@ -290,36 +291,52 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
     setProcessingLog("Initialisation de l'exportation vidéo...");
 
     try {
-      // 1. Exportation & Gravure réelle des effets / calques / filtres
-      const exportResult = await exportVideoFile(selectedFile, editorState, {
-        onProgress: (percent, phase) => {
-          setProcessingPhase("export");
-          setProcessingPercent(percent);
-          if (phase) setProcessingLog(phase);
-        },
-      });
+      const isEdited = hasEditorModifications(editorState);
+      const isOriginalMp4 = (selectedFile.type || "").toLowerCase().includes("mp4") || selectedFile.name.toLowerCase().endsWith(".mp4");
+      const isOriginalReasonableSize = selectedFile.size <= 70 * 1024 * 1024; // <= 70 Mo
 
-      const editedFile = exportResult.file;
+      // Si le fichier source est déjà un MP4 compatible et qu'aucune retouche n'a été effectuée,
+      // on préserve à 100% le conteneur MP4 / codec d'origine du smartphone sans ré-encodage WebM
+      if (!isEdited && isOriginalMp4 && isOriginalReasonableSize) {
+        setIsProcessing(false);
+        onVideoReady(selectedFile, editorState.filterId);
+        return;
+      }
 
-      // 2. Compression adaptative
-      setProcessingPhase("compress");
-      setProcessingPercent(0);
-      setProcessingLog("Analyse et compression vidéo adaptative...");
-
-      let finalFile = editedFile;
-      try {
-        const compressionResult = await compressVideoFile(editedFile, {
+      // 1. Exportation & Gravure réelle des effets / calques / filtres si modifications
+      let editedFile = selectedFile;
+      if (isEdited) {
+        const exportResult = await exportVideoFile(selectedFile, editorState, {
           onProgress: (percent, phase) => {
-            setProcessingPhase("compress");
+            setProcessingPhase("export");
             setProcessingPercent(percent);
             if (phase) setProcessingLog(phase);
           },
         });
-        finalFile = compressionResult.file;
-      } catch (compressErr: any) {
-        console.warn("[REEL PROCESSOR] Compression adaptative contournée, conservation du fichier exporté pur:", compressErr);
-        // Direct fallback to edited file if compressed is larger or unsupported
-        finalFile = editedFile;
+        editedFile = exportResult.file;
+      }
+
+      // 2. Compression adaptative si le fichier est volumineux (> 18 Mo)
+      let finalFile = editedFile;
+      if (editedFile.size > 18 * 1024 * 1024) {
+        setProcessingPhase("compress");
+        setProcessingPercent(0);
+        setProcessingLog("Analyse et compression vidéo adaptative...");
+
+        try {
+          const compressionResult = await compressVideoFile(editedFile, {
+            onProgress: (percent, phase) => {
+              setProcessingPhase("compress");
+              setProcessingPercent(percent);
+              if (phase) setProcessingLog(phase);
+            },
+          });
+          finalFile = compressionResult.file;
+        } catch (compressErr: any) {
+          console.warn("[REEL PROCESSOR] Compression adaptative contournée, conservation du fichier exporté pur:", compressErr);
+          // Direct fallback to edited file if compressed is larger or unsupported
+          finalFile = editedFile;
+        }
       }
 
       setIsProcessing(false);
