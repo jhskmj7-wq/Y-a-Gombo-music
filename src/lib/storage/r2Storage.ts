@@ -29,6 +29,8 @@ function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
+export const R2_PUBLIC_BASE_URL = "https://pub-9b8a37b996274704aee625c82e6430f3.r2.dev";
+
 export class R2StorageService {
   async getPresignedUploadUrl(
     key: string,
@@ -275,7 +277,7 @@ export class R2StorageService {
       if (proxyRes.bucket) bucket = proxyRes.bucket;
     }
 
-    const finalUrl = publicUrl || `/api/r2/media/${encodeURIComponent(key)}`;
+    const finalUrl = publicUrl || `${R2_PUBLIC_BASE_URL}/${key.replace(/^\/+/, "")}`;
 
     return {
       success: true,
@@ -303,13 +305,13 @@ export class R2StorageService {
       const { uploadUrl, publicUrl } = await this.getPresignedUploadUrl(key, mimeType, "public", explicitIdToken);
       await this.uploadDirect(uploadUrl, file, mimeType);
       return {
-        url: publicUrl || `/api/r2/media/${encodeURIComponent(key)}`,
+        url: publicUrl || `${R2_PUBLIC_BASE_URL}/${key.replace(/^\/+/, "")}`,
         key,
       };
     } catch (_) {
       const proxyRes = await this.uploadViaProxy(key, file, mimeType, "public", undefined, explicitIdToken);
       return {
-        url: proxyRes.publicUrl || `/api/r2/media/${encodeURIComponent(key)}`,
+        url: proxyRes.publicUrl || `${R2_PUBLIC_BASE_URL}/${key.replace(/^\/+/, "")}`,
         key,
       };
     }

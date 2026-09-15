@@ -47,6 +47,37 @@ interface ReelsPlayerProps {
   initialReelId?: string;
 }
 
+export const R2_PUBLIC_BASE_URL = "https://pub-9b8a37b996274704aee625c82e6430f3.r2.dev";
+
+// Convert any R2 key, proxy path or relative path to absolute Cloudflare R2 Public CDN URL
+export function toDirectR2PublicUrl(rawPathOrUrl: string): string {
+  if (!rawPathOrUrl || typeof rawPathOrUrl !== "string") return "";
+  const trimmed = rawPathOrUrl.trim();
+
+  // If already full CDN or HTTP URL, return as-is
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("blob:") || trimmed.startsWith("data:")) {
+    // If it points to /api/r2/media/, convert to direct R2 public CDN
+    if (trimmed.includes("/api/r2/media/")) {
+      const parts = trimmed.split("/api/r2/media/");
+      const rawKey = parts[1] || "";
+      const decodedKey = decodeURIComponent(rawKey).replace(/^\/+/, "");
+      return `${R2_PUBLIC_BASE_URL}/${decodedKey}`;
+    }
+    return trimmed;
+  }
+
+  // Handle /api/r2/media/{key} relative paths
+  if (trimmed.startsWith("/api/r2/media/")) {
+    const rawKey = trimmed.replace(/^\/api\/r2\/media\/?/, "");
+    const decodedKey = decodeURIComponent(rawKey).replace(/^\/+/, "");
+    return `${R2_PUBLIC_BASE_URL}/${decodedKey}`;
+  }
+
+  // Handle reels/... or covers/... or any R2 key paths
+  const cleanKey = trimmed.replace(/^\/+/, "");
+  return `${R2_PUBLIC_BASE_URL}/${cleanKey}`;
+}
+
 // Unified YouTube ID extractor
 function getYoutubeId(rawUrl: string): string | null {
   if (!rawUrl || typeof rawUrl !== "string") return null;
@@ -73,14 +104,11 @@ function resolveVideoUrl(item: any): string | null {
     item.url ||
     item.media_url ||
     item.src ||
-    (item.storagePath?.startsWith("reels/") ? `/api/r2/media/${encodeURIComponent(item.storagePath)}` : null);
+    (item.storagePath ? toDirectR2PublicUrl(item.storagePath) : null);
 
   if (typeof candidate === "string" && candidate.trim().length > 0) {
     const trimmed = candidate.trim();
-    if (trimmed.startsWith("reels/")) {
-      return `/api/r2/media/${encodeURIComponent(trimmed)}`;
-    }
-    return trimmed;
+    return toDirectR2PublicUrl(trimmed);
   }
   return null;
 }
