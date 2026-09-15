@@ -495,7 +495,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   useEffect(() => {
     const currentReel = localReels[currentIndex];
 
-    // Pause all non-active videos immediately
+    // Pause and clean up all non-active videos immediately
     videoElementsRef.current.forEach((videoEl, reelId) => {
       if (!currentReel || reelId !== currentReel.id) {
         try {
@@ -506,23 +506,24 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     });
 
     if (activeVideoRef.current) {
-      activeVideoRef.current.currentTime = 0;
+      const activeEl = activeVideoRef.current;
+      activeEl.currentTime = 0;
 
       // Determine initial mute state: use explicit user choice if any, otherwise default to muted (true) for autoplay compatibility
       const targetMuted = userClickedMute.current !== null ? userClickedMute.current : true;
       
       setIsMuted(targetMuted);
-      syncVideoAudio(activeVideoRef.current, targetMuted);
+      syncVideoAudio(activeEl, targetMuted);
 
-      const playPromise = activeVideoRef.current.play();
+      const playPromise = activeEl.play();
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
           console.warn("[ReelsPlayer] Autoplay prevented by browser, falling back to muted autoplay:", err);
-          if (activeVideoRef.current && !activeVideoRef.current.muted) {
+          if (activeEl && !activeEl.muted) {
             // Fall back to muted autoplay
-            activeVideoRef.current.muted = true;
+            activeEl.muted = true;
             setIsMuted(true);
-            activeVideoRef.current.play().catch(() => {});
+            activeEl.play().catch(() => {});
           }
         });
       }
@@ -678,6 +679,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
   // Double-tap handler on video area to like and trigger floating heart animation
   const handleVideoTouchOrClick = (e: React.MouseEvent | React.TouchEvent, reelId: string) => {
+    // If it is a simulated synthetic click right after a touch, ignore it
     const now = Date.now();
     const lastTap = lastTapRef.current;
     if (lastTap.reelId === reelId && now - lastTap.time < 350) {
@@ -1019,7 +1021,6 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   <div 
                     className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden"
                     onClick={(e) => handleVideoTouchOrClick(e, reel.id)}
-                    onTouchEnd={(e) => handleVideoTouchOrClick(e, reel.id)}
                   >
                     {getYoutubeId(reel.mediaUrl) ? (
                       <iframe
