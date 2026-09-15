@@ -143,10 +143,9 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const [videoErrors, setVideoErrors] = useState<Record<string, boolean>>({});
   const [doubleTapHeart, setDoubleTapHeart] = useState<{ reelId: string; x: number; y: number } | null>(null);
   const lastTapRef = useRef<{ time: number; reelId: string }>({ time: 0, reelId: "" });
-
-  // Real-time Firestore sync identical to Portfolio & Feed
-  const [firestorePosts, setFirestorePosts] = useState<any[]>([]);
-  const [firestoreUsers, setFirestoreUsers] = useState<any[]>([]);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isScrollingLockedRef = useRef<boolean>(false);
+  const touchStartYRef = useRef<number>(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const activeVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -245,66 +244,6 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     onClose();
   };
 
-  // Synchronize Firestore collections (posts, social_posts, users) in real-time
-  useEffect(() => {
-    if (!db) return;
-    let unsubPosts = () => {};
-    let unsubSocial = () => {};
-    let unsubUsers = () => {};
-
-    try {
-      const postsRef = query(collection(db, "posts"), limit(100));
-      unsubPosts = onSnapshot(postsRef, (snapshot) => {
-        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        setFirestorePosts(prev => {
-          const map = new Map<string, any>();
-          prev.forEach(p => { if (p?.id) map.set(p.id, p); });
-          list.forEach(p => { if (p?.id) map.set(p.id, { ...map.get(p.id), ...p }); });
-          return Array.from(map.values());
-        });
-      }, (err) => {
-        console.warn("[ReelsPlayer] Posts listener warning:", err);
-      });
-    } catch (e) {
-      console.warn("[ReelsPlayer] Error attaching posts listener:", e);
-    }
-
-    try {
-      const socialRef = query(collection(db, "social_posts"), limit(100));
-      unsubSocial = onSnapshot(socialRef, (snapshot) => {
-        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        setFirestorePosts(prev => {
-          const map = new Map<string, any>();
-          prev.forEach(p => { if (p?.id) map.set(p.id, p); });
-          list.forEach(p => { if (p?.id) map.set(p.id, { ...map.get(p.id), ...p }); });
-          return Array.from(map.values());
-        });
-      }, (err) => {
-        console.warn("[ReelsPlayer] Social posts listener warning:", err);
-      });
-    } catch (e) {
-      console.warn("[ReelsPlayer] Error attaching social listener:", e);
-    }
-
-    try {
-      const usersRef = query(collection(db, "users"), limit(100));
-      unsubUsers = onSnapshot(usersRef, (snapshot) => {
-        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        setFirestoreUsers(list);
-      }, (err) => {
-        console.warn("[ReelsPlayer] Users listener warning:", err);
-      });
-    } catch (e) {
-      console.warn("[ReelsPlayer] Error attaching users listener:", e);
-    }
-
-    return () => {
-      unsubPosts();
-      unsubSocial();
-      unsubUsers();
-    };
-  }, []);
-
   // Initialize followed users from currentUser following array
   useEffect(() => {
     if (effectiveUser?.following && Array.isArray(effectiveUser.following)) {
@@ -317,18 +256,11 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     const list: ReelItem[] = [];
     const seenUrls = new Set<string>();
 
-    // 1. Gather all users (props.users, Firestore users, useAuth().profile, effectiveUser, local storage session)
+    // 1. Gather all users (props.users, useAuth().profile, effectiveUser, local storage session)
     const allUsersMap = new Map<string, any>();
 
     (users || []).forEach(u => {
       if (u && (u.id || u.uid)) allUsersMap.set(u.id || u.uid, u);
-    });
-
-    firestoreUsers.forEach(u => {
-      if (u && (u.id || u.uid)) {
-        const uid = u.id || u.uid;
-        allUsersMap.set(uid, { ...allUsersMap.get(uid), ...u });
-      }
     });
 
     if (profile && (profile.id || profile.uid || effectiveUser?.uid)) {
@@ -386,15 +318,10 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       });
     });
 
-    // 3. Extract videos from all posts (props.posts + Firestore posts + social_posts)
+    // 3. Extract videos from all posts (props.posts source of truth)
     const allPostsMap = new Map<string, any>();
     (posts || []).forEach(p => {
       if (p && p.id) allPostsMap.set(p.id, p);
-    });
-    firestorePosts.forEach(p => {
-      if (p && p.id) {
-        allPostsMap.set(p.id, { ...allPostsMap.get(p.id), ...p });
-      }
     });
 
     const consolidatedPosts = Array.from(allPostsMap.values());
@@ -451,7 +378,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       seenReelIds: seenReels, 
       sessionTimestamp 
     });
-  }, [posts, users, firestorePosts, firestoreUsers, profile, effectiveUser, followedUsers, seenReels]);
+  }, [posts, users, profile, effectiveUser, followedUsers, seenReels]);
 
   const [localReels, setLocalReels] = useState<ReelItem[]>(reelsList);
 
@@ -472,24 +399,64 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     }
   }, [initialReelId, localReels]);
 
-  // Handle Scroll to update current index and track seen reels
+  // Handle Scroll to update current index with debounce and single-gesture stabilization
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
-    const height = container.clientHeight;
-    if (height > 0) {
-      const index = Math.round(container.scrollTop / height);
-      if (index !== currentIndex && index >= 0 && index < localReels.length) {
-        setCurrentIndex(index);
-        const viewedReel = localReels[index];
-        if (viewedReel && viewedReel.id) {
-          setSeenReels(prev => {
-            if (prev.has(viewedReel.id)) return prev;
-            const next = new Set(prev);
-            next.add(viewedReel.id);
-            try {
-              sessionStorage.setItem("afrigombo_seen_reels", JSON.stringify(Array.from(next)));
-            } catch (_) {}
-            return next;
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      const height = container.clientHeight;
+      if (height > 0) {
+        const index = Math.round(container.scrollTop / height);
+        if (index >= 0 && index < localReels.length && index !== currentIndex) {
+          setCurrentIndex(index);
+          const viewedReel = localReels[index];
+          if (viewedReel && viewedReel.id) {
+            setSeenReels(prev => {
+              if (prev.has(viewedReel.id)) return prev;
+              const next = new Set(prev);
+              next.add(viewedReel.id);
+              try {
+                sessionStorage.setItem("afrigombo_seen_reels", JSON.stringify(Array.from(next)));
+              } catch (_) {}
+              return next;
+            });
+          }
+        }
+      }
+    }, 80);
+  };
+
+  // Touch gesture listener to guarantee 1 Reel per swipe on mobile/Android
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length > 0) {
+      touchStartYRef.current = e.touches[0].clientY;
+      isScrollingLockedRef.current = false;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.changedTouches.length > 0 && !isScrollingLockedRef.current && containerRef.current) {
+      const touchEndY = e.changedTouches[0].clientY;
+      const deltaY = touchStartYRef.current - touchEndY;
+      const height = containerRef.current.clientHeight;
+
+      // Minimum swipe distance threshold (55px)
+      if (Math.abs(deltaY) > 55 && height > 0) {
+        isScrollingLockedRef.current = true;
+        let targetIndex = currentIndex;
+        if (deltaY > 0 && currentIndex < localReels.length - 1) {
+          targetIndex = currentIndex + 1;
+        } else if (deltaY < 0 && currentIndex > 0) {
+          targetIndex = currentIndex - 1;
+        }
+
+        if (targetIndex !== currentIndex) {
+          setCurrentIndex(targetIndex);
+          containerRef.current.scrollTo({
+            top: targetIndex * height,
+            behavior: "smooth"
           });
         }
       }
@@ -966,6 +933,8 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         className="w-full h-full overflow-y-auto snap-y snap-mandatory scrollbar-none overscroll-contain [-webkit-overflow-scrolling:touch] bg-black"
         style={{ touchAction: "pan-y" }}
         onScroll={handleScroll}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         {localReels.length === 0 ? (
           <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-black text-white">

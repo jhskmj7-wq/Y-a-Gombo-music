@@ -2056,11 +2056,11 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       const key = decodeURIComponent(rawKey);
 
       if (!key) {
-        return res.status(400).json({ error: "Clé de média manquante" });
+        return res.status(404).end();
       }
 
       if (!isR2Configured()) {
-        return res.status(503).json({ error: "Stockage R2 non configuré" });
+        return res.status(503).end();
       }
 
       const publicBaseUrl = (process.env.R2_PUBLIC_BASE_URL || "").trim();
@@ -2077,7 +2077,7 @@ app.post("/api/wallet/request-reset", async (req, res) => {
       return res.redirect(302, signed.readUrl);
     } catch (err: any) {
       console.error("[R2 MEDIA ACCESS ERROR]", err);
-      return res.status(500).json({ error: "Impossible de lire le média Cloudflare R2" });
+      return res.status(500).end();
     }
   });
 

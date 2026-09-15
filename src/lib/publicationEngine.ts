@@ -265,3 +265,109 @@ export function filterActivePublications<T extends PublicationBase>(
   return items.filter(item => isPublicationActive(item, options));
 }
 
+export interface PublicationRankingContext {
+  userCommune?: string;
+  userInterests?: string[];
+  userFollowedAuthors?: string[];
+}
+
+/**
+ * Multi-criteria ranking score for publications
+ * Combines freshness (recency decay), authentic engagement (likes, comments, shares),
+ * geographical affinity (commune match), and content diversity.
+ */
+export function scorePublication(
+  item: PublicationBase,
+  context: PublicationRankingContext = {}
+): number {
+  if (!item || !isPublicationActive(item)) return -1;
+
+  let score = 50; // baseline score for active items
+
+  // 1. Freshness / Recency Decay (48-hour half-life curve)
+  const now = Date.now();
+  const timestamp = item.createdAt || item.timestamp || item.publishedAt || item.date;
+  const itemTime = typeof timestamp === "number" 
+    ? timestamp 
+    : (timestamp ? new Date(timestamp).getTime() : now);
+  
+  const ageHours = Math.max(0, (now - itemTime) / (1000 * 60 * 60));
+  if (ageHours < 2) {
+    score += 40; // ultra fresh (<2h)
+  } else if (ageHours < 12) {
+    score += 30; // very fresh (<12h)
+  } else if (ageHours < 24) {
+    score += 20; // past 24h
+  } else if (ageHours < 72) {
+    score += 10; // past 3 days
+  } else {
+    // Gradual decay
+    score += Math.max(0, 10 - Math.floor((ageHours - 72) / 24));
+  }
+
+  // 2. Authentic Engagement (Likes, Comments, Shares, Views)
+  const likes = Number(item.likes || item.likesCount || 0);
+  const comments = Array.isArray(item.comments) 
+    ? item.comments.length 
+    : Number(item.commentsCount || item.comments || 0);
+  const shares = Number(item.sharesCount || item.shares || 0);
+  const views = Number(item.viewsCount || item.views || 0);
+
+  score += Math.min(25, likes * 2);
+  score += Math.min(25, comments * 3);
+  score += Math.min(20, shares * 4);
+  score += Math.min(10, Math.floor(views / 10));
+
+  // 3. Certified / Verified Creator Boost
+  if (item.authorVerified || item.isGomboIdVerified || item.isPro) {
+    score += 8;
+  }
+
+  // 4. Geographical Affinity (User Commune match)
+  if (context.userCommune && item.commune) {
+    if (String(item.commune).toLowerCase() === String(context.userCommune).toLowerCase()) {
+      score += 15;
+    }
+  }
+
+  // 5. Media Richness (Video > Audio > Image > Text)
+  if (item.videoUrl || item.type === "video") {
+    score += 6;
+  } else if (item.audioUrl || item.type === "audio") {
+    score += 4;
+  }
+
+  return Math.round(score * 10) / 10;
+}
+
+/**
+ * Dynamically rank publications using the multi-factor scoring engine
+ */
+export function rankPublications<T extends PublicationBase>(
+  items: T[],
+  context: PublicationRankingContext = {}
+): T[] {
+  if (!Array.isArray(items) || items.length === 0) return [];
+
+  // Filter only active & valid items
+  const activeItems = items.filter(i => isPublicationActive(i));
+
+  // Score each publication
+  const scored = activeItems.map(item => ({
+    item,
+    score: scorePublication(item, context)
+  }));
+
+  // Sort by score descending, with deterministic secondary sort on timestamp
+  scored.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    const tA = new Date(a.item.createdAt || a.item.timestamp || a.item.date || 0).getTime();
+    const tB = new Date(b.item.createdAt || b.item.timestamp || b.item.date || 0).getTime();
+    return tB - tA;
+  });
+
+  return scored.map(s => s.item);
+}
+

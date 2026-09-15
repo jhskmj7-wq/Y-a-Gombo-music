@@ -40,7 +40,7 @@ import { AfrigomboFooter } from "./AfrigomboFooter";
 import { AfriGomboLogo } from "./AfriGomboLogo";
 
 import { isGomboExpired } from "../lib/gomboDateUtils";
-import { isPublicationActive, filterActivePublications } from "../lib/publicationEngine";
+import { isPublicationActive, filterActivePublications, rankPublications } from "../lib/publicationEngine";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -334,13 +334,10 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   };
 
   const [firestoreUsers, setFirestoreUsers] = useState<any[]>([]);
-  const [firestorePosts, setFirestorePosts] = useState<any[]>([]);
 
   useEffect(() => {
     if (!db) return;
     let unsubUsers = () => {};
-    let unsubPosts = () => {};
-    let unsubSocial = () => {};
 
     if (authUser) {
       try {
@@ -356,44 +353,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       }
     }
 
-    try {
-      const postsRef = query(collection(db, "posts"), limit(100));
-      unsubPosts = onSnapshot(postsRef, (snapshot) => {
-        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        setFirestorePosts(prev => {
-          const map = new Map<string, any>();
-          prev.forEach(p => { if (p?.id) map.set(p.id, p); });
-          list.forEach(p => { if (p?.id) map.set(p.id, { ...map.get(p.id), ...p }); });
-          return Array.from(map.values());
-        });
-      }, (err) => {
-        console.warn("[UserTerrainLandingPage] posts listener warning:", err);
-      });
-    } catch (e) {
-      console.warn("[UserTerrainLandingPage] posts listener setup error:", e);
-    }
-
-    try {
-      const socialRef = query(collection(db, "social_posts"), limit(100));
-      unsubSocial = onSnapshot(socialRef, (snapshot) => {
-        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        setFirestorePosts(prev => {
-          const map = new Map<string, any>();
-          prev.forEach(p => { if (p?.id) map.set(p.id, p); });
-          list.forEach(p => { if (p?.id) map.set(p.id, { ...map.get(p.id), ...p }); });
-          return Array.from(map.values());
-        });
-      }, (err) => {
-        console.warn("[UserTerrainLandingPage] social_posts listener warning:", err);
-      });
-    } catch (e) {
-      console.warn("[UserTerrainLandingPage] social_posts listener setup error:", e);
-    }
-
     return () => {
       unsubUsers();
-      unsubPosts();
-      unsubSocial();
     };
   }, [authUser]);
 
@@ -975,17 +936,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     });
 
     // 3. Extraire les vidéos des posts sociaux et publications terrain
-    const allPostsMap = new Map<string, any>();
-    (posts || []).forEach(p => {
-      if (p && p.id) allPostsMap.set(p.id, p);
-    });
-    firestorePosts.forEach(p => {
-      if (p && p.id) {
-        allPostsMap.set(p.id, { ...allPostsMap.get(p.id), ...p });
-      }
-    });
-
-    Array.from(allPostsMap.values()).forEach((p: any, idx: number) => {
+    (posts || []).forEach((p: any, idx: number) => {
       // Filtrage du cycle de vie canonique (supprimé, archivé, suspendu, non validé, programmé dans le futur, expiré, média invalide)
       if (!isPublicationActive(p, { requireValidMedia: true })) return;
 
@@ -1013,21 +964,21 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
     // Données réelles du projet uniquement (pas de vidéos démo Mixkit factices)
     return list;
-  }, [posts, users, profile, currentUser, firestoreUsers, firestorePosts]);
+  }, [posts, users, profile, currentUser, firestoreUsers]);
 
-  // Publications actives sur le Terrain (filtrage canonique Phase 2B : exclut programmées dans le futur, expirées, supprimées, archivées, suspendues)
+  // Publications actives sur le Terrain (filtrage canonique Phase 2B & classement dynamique rankPublications Phase 2H)
   const activePosts = React.useMemo(() => {
-    const allPostsMap = new Map<string, any>();
-    (posts || []).forEach(p => {
-      if (p && p.id) allPostsMap.set(p.id, p);
+    const rawActive = filterActivePublications(posts || [], { requireValidMedia: false });
+    
+    // Classement dynamique multicritères (récence, engagement réel, affinité commune)
+    const userCommune = profile?.commune || (profile as any)?.location || undefined;
+    const userInterests = (profile as any)?.interests || (profile as any)?.specialties || [];
+    
+    return rankPublications(rawActive, {
+      userCommune,
+      userInterests
     });
-    firestorePosts.forEach(p => {
-      if (p && p.id) {
-        allPostsMap.set(p.id, { ...allPostsMap.get(p.id), ...p });
-      }
-    });
-    return filterActivePublications(Array.from(allPostsMap.values()), { requireValidMedia: false });
-  }, [posts, firestorePosts]);
+  }, [posts, profile]);
 
   // Section 9: Nouveaux talents
   const talentsData = React.useMemo(() => {
