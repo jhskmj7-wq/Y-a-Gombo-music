@@ -43,7 +43,14 @@ export default function MyPublicationsSection({ onOpenCreate, onClose }: MyPubli
   const [loading, setLoading] = useState<boolean>(true);
 
   // Active item for deletion confirmation modal
-  const [itemToDelete, setItemToDelete] = useState<{ id: string; type: "pub" | "draft"; title: string; storagePath?: string } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{
+    id: string;
+    type: "pub" | "draft";
+    title: string;
+    storagePath?: string;
+    mediaUrl?: string;
+    videoUrl?: string;
+  } | null>(null);
   const [deleting, setDeleting] = useState<boolean>(false);
 
   // Active draft for resuming in ReelCreatorScreen
@@ -143,7 +150,13 @@ export default function MyPublicationsSection({ onOpenCreate, onClose }: MyPubli
         showToast("Brouillon supprimé définitivement.");
         loadDrafts();
       } else {
-        await publicationService.deletePermanently(itemToDelete.id, userId, itemToDelete.storagePath);
+        await publicationService.deletePermanently(
+          itemToDelete.id,
+          userId,
+          itemToDelete.storagePath,
+          itemToDelete.mediaUrl || itemToDelete.videoUrl,
+          "posts"
+        );
         showToast("Publication supprimée définitivement.");
       }
     } catch (err) {
@@ -256,7 +269,7 @@ export default function MyPublicationsSection({ onOpenCreate, onClose }: MyPubli
                     actions={[
                       { label: "Masquer", icon: EyeOff, onClick: () => handleUpdateStatus(item.id, "hidden") },
                       { label: "Archiver", icon: Archive, onClick: () => handleUpdateStatus(item.id, "archived") },
-                      { label: "Supprimer", icon: Trash2, danger: true, onClick: () => setItemToDelete({ id: item.id, type: "pub", title: item.caption || "Publication", storagePath: item.storagePath }) },
+                      { label: "Supprimer", icon: Trash2, danger: true, onClick: () => setItemToDelete({ id: item.id, type: "pub", title: item.caption || "Publication", storagePath: item.storagePath, mediaUrl: item.mediaUrl, videoUrl: item.videoUrl }) },
                     ]}
                   />
                 ))}
@@ -294,7 +307,7 @@ export default function MyPublicationsSection({ onOpenCreate, onClose }: MyPubli
                     item={item}
                     actions={[
                       { label: "Restaurer", icon: RotateCcw, onClick: () => handleUpdateStatus(item.id, "published") },
-                      { label: "Supprimer définitivement", icon: Trash2, danger: true, onClick: () => setItemToDelete({ id: item.id, type: "pub", title: item.caption || "Publication", storagePath: item.storagePath }) },
+                      { label: "Supprimer définitivement", icon: Trash2, danger: true, onClick: () => setItemToDelete({ id: item.id, type: "pub", title: item.caption || "Publication", storagePath: item.storagePath, mediaUrl: item.mediaUrl, videoUrl: item.videoUrl }) },
                     ]}
                   />
                 ))}
@@ -314,7 +327,7 @@ export default function MyPublicationsSection({ onOpenCreate, onClose }: MyPubli
                     item={item}
                     actions={[
                       { label: "Rendre visible", icon: Eye, onClick: () => handleUpdateStatus(item.id, "published") },
-                      { label: "Supprimer définitivement", icon: Trash2, danger: true, onClick: () => setItemToDelete({ id: item.id, type: "pub", title: item.caption || "Publication", storagePath: item.storagePath }) },
+                      { label: "Supprimer définitivement", icon: Trash2, danger: true, onClick: () => setItemToDelete({ id: item.id, type: "pub", title: item.caption || "Publication", storagePath: item.storagePath, mediaUrl: item.mediaUrl, videoUrl: item.videoUrl }) },
                     ]}
                   />
                 ))}

@@ -35,6 +35,7 @@ import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "
 import { db } from "../../lib/firebase";
 import { generateGomboId, formatGomboIdDisplay } from "../../lib/gomboIdHelper";
 import { useAuth } from "../../AuthContext";
+import { publicationService } from "../../lib/publicationService";
 import { 
   collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, getDocs, getDoc 
 } from "firebase/firestore";
@@ -395,10 +396,84 @@ export default function AdminFounderThrone({
       if (list.length > 0) setLiveUsers(list);
     });
 
+    let rawPostsList: any[] = [];
+    let rawSocialList: any[] = [];
+
+    const syncAdminLivePosts = () => {
+      const normalizeMediaUrl = (url: any): string | null => {
+        if (typeof url !== "string") return null;
+        const trimmed = url.trim();
+        if (!trimmed) return null;
+        try {
+          if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            const parsed = new URL(trimmed);
+            return (parsed.origin + parsed.pathname).toLowerCase();
+          }
+        } catch (_) {}
+        return trimmed.split("?")[0].toLowerCase();
+      };
+
+      const normalizeStoragePath = (path: any): string | null => {
+        if (typeof path !== "string") return null;
+        const trimmed = path.trim().toLowerCase();
+        return trimmed.length > 0 ? trimmed : null;
+      };
+
+      const combined: any[] = [];
+      const knownIds = new Set<string>();
+      const knownStoragePaths = new Set<string>();
+      const knownMediaUrls = new Set<string>();
+
+      // 1. Priorité absolue aux publications de 'posts' (source canonique)
+      rawPostsList.forEach((item) => {
+        if (!item || !item.id) return;
+        if (knownIds.has(item.id)) return;
+        knownIds.add(item.id);
+        combined.push(item);
+
+        const sp = normalizeStoragePath(item.storagePath);
+        if (sp) knownStoragePaths.add(sp);
+
+        [item.videoUrl, item.mediaUrl, item.imageUrl, item.url].forEach((u) => {
+          const norm = normalizeMediaUrl(u);
+          if (norm) knownMediaUrls.add(norm);
+        });
+      });
+
+      // 2. Traitement dédupliqué de 'social_posts' historique
+      rawSocialList.forEach((item) => {
+        if (!item || !item.id) return;
+        if (knownIds.has(item.id)) return;
+
+        const sp = normalizeStoragePath(item.storagePath);
+        if (sp && knownStoragePaths.has(sp)) return;
+
+        const urls = [item.videoUrl, item.mediaUrl, item.imageUrl, item.url]
+          .map(normalizeMediaUrl)
+          .filter(Boolean) as string[];
+        if (urls.length > 0 && urls.some((u) => knownMediaUrls.has(u))) return;
+
+        knownIds.add(item.id);
+        if (sp) knownStoragePaths.add(sp);
+        urls.forEach((u) => knownMediaUrls.add(u));
+        combined.push(item);
+      });
+
+      setLivePosts(combined);
+    };
+
+    const unsubPosts = onSnapshot(collection(db, "posts"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      rawPostsList = list;
+      syncAdminLivePosts();
+    });
+
     const unsubSocialPosts = onSnapshot(collection(db, "social_posts"), (snap) => {
       const list: any[] = [];
       snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      setLivePosts(list);
+      rawSocialList = list;
+      syncAdminLivePosts();
     });
 
     const unsubGombos = onSnapshot(collection(db, "gombos"), (snap) => {
@@ -454,6 +529,7 @@ export default function AdminFounderThrone({
       unsubAutoPilot();
       unsubLogs();
       unsubUsers();
+      unsubPosts();
       unsubSocialPosts();
       unsubGombos();
       unsubSupport();
@@ -1397,7 +1473,13 @@ export default function AdminFounderThrone({
 
   const handleDeletePostGlobal = async (p: any) => {
     try {
-      await deleteDoc(doc(db, "posts", p.id));
+      await publicationService.deletePermanently(
+        p.id,
+        p.userId || p.authorId,
+        p.storagePath,
+        p.videoUrl || p.mediaUrl || p.imageUrl || p.url,
+        "posts"
+      );
       await logImperialAction("Suppression Publication", `Publication "${p.title || p.id}" supprimée définitivement.`);
       setSuccessMsg("Publication supprimée de Firestore.");
       setTimeout(() => setSuccessMsg(""), 3000);
@@ -1663,7 +1745,7 @@ export default function AdminFounderThrone({
 
   const handleDeletePost = async (postId: string) => {
     try {
-      await deleteDoc(doc(db, "posts", postId));
+      await publicationService.deletePermanently(postId, undefined, undefined, undefined, "posts");
       setSuccessMsg("Publication supprimée pour non-respect de la charte culturelle.");
       setTimeout(() => setSuccessMsg(""), 3000);
       try { audioSynth?.playValidationSuccess(); } catch (_) {}

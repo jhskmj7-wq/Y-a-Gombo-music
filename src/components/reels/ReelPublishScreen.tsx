@@ -26,6 +26,7 @@ import { getFilterCss, REEL_VIDEO_FILTERS } from "./videoFilters";
 interface ReelPublishScreenProps {
   videoFile: File;
   filterId: string;
+  scheduledAt?: string | null;
   onClose: () => void;
   onPublished: () => void;
 }
@@ -44,6 +45,7 @@ const POPULAR_HASHTAGS = [
 export default function ReelPublishScreen({
   videoFile,
   filterId,
+  scheduledAt = null,
   onClose,
   onPublished,
 }: ReelPublishScreenProps) {
@@ -248,69 +250,46 @@ export default function ReelPublishScreen({
       const artisticName =
         currentUserProfile?.nomArtistique || currentUserProfile?.artistName || authorName;
 
+      const nowIso = new Date().toISOString();
+      const isScheduled = !!(scheduledAt && new Date(scheduledAt).getTime() > Date.now());
+
       const payload = {
         userId: uid,
-        authorName,
-        authorArtisticName: artisticName,
-        authorAvatar,
-        commune: currentUserProfile?.commune || currentUserProfile?.location || "Abidjan",
-        content: caption.trim(),
-        mediaUrl: videoMediaRef,
-        videoUrl: videoMediaRef,
-        storagePath: uploadResult.storagePath,
-        type: "video",
-        status: "published",
-        visible: true,
-        adminValidated: true,
-        hashtags,
-        appliedFilter: filterId,
-        allowComments,
-        likes: 0,
-        likesCount: 0,
-        comments: 0,
-        commentsCount: 0,
-        likedBy: [],
-        bookmarkedBy: [],
-        timestamp: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-      };
-
-      const socialPostPayload = {
         authorId: uid,
-        userId: uid,
-        userName: authorName,
         authorName,
+        userName: authorName,
         authorArtisticName: artisticName,
-        userAvatar: authorAvatar,
         authorAvatar,
+        userAvatar: authorAvatar,
         title: artisticName || "Réel",
+        commune: currentUserProfile?.commune || currentUserProfile?.location || "Abidjan",
         caption: caption.trim(),
         content: caption.trim(),
-        videoUrl: videoMediaRef,
         mediaUrl: videoMediaRef,
+        videoUrl: videoMediaRef,
         imageUrl: videoMediaRef,
         storagePath: uploadResult.storagePath,
         type: "video",
-        status: "published",
+        status: isScheduled ? "scheduled" : "published",
+        scheduledAt: scheduledAt || null,
         visible: true,
         adminValidated: true,
-        commune: currentUserProfile?.commune || currentUserProfile?.location || "Abidjan",
         hashtags,
         tags: hashtags,
         appliedFilter: filterId,
         allowComments,
-        likesCount: 0,
         likes: 0,
+        likesCount: 0,
         sharesCount: 0,
         savesCount: 0,
+        comments: 0,
         commentsCount: 0,
-        comments: [],
         likedBy: [],
         savedBy: [],
         bookmarkedBy: [],
-        timestamp: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        timestamp: nowIso,
+        createdAt: nowIso,
+        updatedAt: nowIso,
       };
 
       const mediaGalleryItem = {
@@ -329,13 +308,10 @@ export default function ReelPublishScreen({
 
       try {
         if (db) {
-          // 1. Collection 'posts'
+          // 1. Source canonique unique 'posts'
           await addDoc(collection(db, "posts"), payload);
 
-          // 2. Collection 'social_posts'
-          await addDoc(collection(db, "social_posts"), socialPostPayload);
-
-          // 3. Profil utilisateur
+          // 2. Profil utilisateur (mediaGallery pour Portfolio / Profil)
           if (uid && uid !== "anonymous") {
             try {
               const userRef = doc(db, "users", uid);

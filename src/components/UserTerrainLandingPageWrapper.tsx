@@ -65,18 +65,91 @@ export default function UserTerrainLandingPageWrapper() {
         let socialList: any[] = [];
 
         const syncCombinedPosts = () => {
-          const map = new Map<string, any>();
-          
-          // Add posts first, then social_posts (merging fields)
-          [...postsList, ...socialList].forEach(item => {
-            if (item && item.id) {
-              const existing = map.get(item.id) || {};
-              map.set(item.id, { ...existing, ...item });
+          // Normalisation d'URL média pour comparaison robuste
+          const normalizeMediaUrl = (url: any): string | null => {
+            if (typeof url !== "string") return null;
+            const trimmed = url.trim();
+            if (!trimmed) return null;
+            try {
+              if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+                const parsed = new URL(trimmed);
+                return (parsed.origin + parsed.pathname).toLowerCase();
+              }
+            } catch (_) {}
+            return trimmed.split("?")[0].toLowerCase();
+          };
+
+          const normalizeStoragePath = (path: any): string | null => {
+            if (typeof path !== "string") return null;
+            const trimmed = path.trim().toLowerCase();
+            return trimmed.length > 0 ? trimmed : null;
+          };
+
+          const getItemMediaUrls = (item: any): string[] => {
+            const urls: string[] = [];
+            [item.videoUrl, item.mediaUrl, item.imageUrl, item.url].forEach((u) => {
+              const normalized = normalizeMediaUrl(u);
+              if (normalized && !urls.includes(normalized)) {
+                urls.push(normalized);
+              }
+            });
+            return urls;
+          };
+
+          const combinedList: any[] = [];
+          const knownIds = new Set<string>();
+          const knownStoragePaths = new Set<string>();
+          const knownMediaUrls = new Set<string>();
+
+          // 1. Priorité absolue à la collection canonique 'posts'
+          postsList.forEach((item) => {
+            if (!item) return;
+            const docId = item.id;
+            if (docId) {
+              if (knownIds.has(docId)) return;
+              knownIds.add(docId);
             }
+
+            combinedList.push(item);
+
+            const sp = normalizeStoragePath(item.storagePath);
+            if (sp) knownStoragePaths.add(sp);
+
+            const mediaUrls = getItemMediaUrls(item);
+            mediaUrls.forEach((u) => knownMediaUrls.add(u));
           });
 
-          const rawList = Array.from(map.values());
-          const publicList = rawList.filter(social =>
+          // 2. Traitement des publications historiques de 'social_posts' (déduplication avec posts)
+          socialList.forEach((item) => {
+            if (!item) return;
+            const docId = item.id;
+
+            // A. Même identifiant de document Firestore
+            if (docId && knownIds.has(docId)) {
+              return; // Doublon déjà présent dans 'posts'
+            }
+
+            // B. Règle 1 : Même storagePath (prioritaire)
+            const sp = normalizeStoragePath(item.storagePath);
+            if (sp && knownStoragePaths.has(sp)) {
+              return; // Doublon du même fichier sur le stockage R2/Firebase
+            }
+
+            // C. Règle 2 : Même URL média / vidéo (mediaUrl, videoUrl, imageUrl, url)
+            const mediaUrls = getItemMediaUrls(item);
+            if (mediaUrls.length > 0 && mediaUrls.some((u) => knownMediaUrls.has(u))) {
+              return; // Doublon du même média vidéo / image
+            }
+
+            // D. Aucun identifiant média commun : publication historique distincte conservée
+            if (docId) knownIds.add(docId);
+            if (sp) knownStoragePaths.add(sp);
+            mediaUrls.forEach((u) => knownMediaUrls.add(u));
+
+            combinedList.push(item);
+          });
+
+          const publicList = combinedList.filter(social =>
             social.status !== "pending_deposit" &&
             social.visible !== false &&
             social.adminValidated !== false &&

@@ -40,6 +40,7 @@ import { AfrigomboFooter } from "./AfrigomboFooter";
 import { AfriGomboLogo } from "./AfriGomboLogo";
 
 import { isGomboExpired } from "../lib/gomboDateUtils";
+import { isPublicationActive, filterActivePublications } from "../lib/publicationEngine";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -985,6 +986,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     });
 
     Array.from(allPostsMap.values()).forEach((p: any, idx: number) => {
+      // Filtrage du cycle de vie canonique (supprimé, archivé, suspendu, non validé, programmé dans le futur, expiré, média invalide)
+      if (!isPublicationActive(p, { requireValidMedia: true })) return;
+
       const url = resolveVideoUrl(p);
       if (!url || seenUrls.has(url)) return;
       if (!isVideoItem(p, url)) return;
@@ -1010,6 +1014,20 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     // Données réelles du projet uniquement (pas de vidéos démo Mixkit factices)
     return list;
   }, [posts, users, profile, currentUser, firestoreUsers, firestorePosts]);
+
+  // Publications actives sur le Terrain (filtrage canonique Phase 2B : exclut programmées dans le futur, expirées, supprimées, archivées, suspendues)
+  const activePosts = React.useMemo(() => {
+    const allPostsMap = new Map<string, any>();
+    (posts || []).forEach(p => {
+      if (p && p.id) allPostsMap.set(p.id, p);
+    });
+    firestorePosts.forEach(p => {
+      if (p && p.id) {
+        allPostsMap.set(p.id, { ...allPostsMap.get(p.id), ...p });
+      }
+    });
+    return filterActivePublications(Array.from(allPostsMap.values()), { requireValidMedia: false });
+  }, [posts, firestorePosts]);
 
   // Section 9: Nouveaux talents
   const talentsData = React.useMemo(() => {
@@ -1686,7 +1704,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <div id="tendances-afrigombo-section" className="space-y-4">
           <TendancesSection 
             gombos={gombos}
-            posts={posts}
+            posts={activePosts}
             users={users}
             currentUserProfile={profile}
             onSelectGomboDetails={handleOpenGomboDetails}
@@ -2452,8 +2470,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                           authorArtisticName: `TRÔNE [${newNoticeCategory}]`,
                           content: `📣 [${newNoticeTitle.toUpperCase()}] : ${newNoticeBody}`,
                           likes: 12,
-                          comments: 0
-                        };
+                          comments: 0,
+                          status: "published",
+                          visible: true,
+                          adminValidated: true,
+                          scheduledAt: null,
+                          createdAt: new Date().toISOString()
+                        } as any;
                         setPosts(prev => [newNoticePost, ...prev]);
                         addToTerminal(`[DIFFUSION] Publication réussie sur le Terrain : ${newNoticeTitle}`);
                         setActiveQuickActionModal(null);

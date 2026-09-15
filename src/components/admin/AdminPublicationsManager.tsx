@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { db } from "../../lib/firebase";
 import { collection, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { publicationService } from "../../lib/publicationService";
 import { audioSynth } from "../../lib/audio";
 import { FounderBottomSheet } from "./FounderBottomSheet";
 
@@ -35,6 +36,8 @@ export type PublicationStatus = "ACTIVE" | "EN_COURS" | "EXPIREE" | "ARCHIVEE" |
 export interface AdminPublicationItem {
   id: string;
   collectionName: "social_posts" | "gombos" | "posts";
+  storagePath?: string;
+  videoUrl?: string;
   title: string;
   caption?: string;
   authorName: string;
@@ -133,22 +136,108 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
 
     setLoading(true);
 
-    // 1. Sync social_posts
-    const unsubSocial = onSnapshot(collection(db, "social_posts"), (snapSocial) => {
-      const socialList: AdminPublicationItem[] = [];
-      snapSocial.forEach((d) => {
+    let postsList: AdminPublicationItem[] = [];
+    let socialList: AdminPublicationItem[] = [];
+    let gomboList: AdminPublicationItem[] = [];
+
+    const normalizeMediaUrl = (url: any): string | null => {
+      if (typeof url !== "string") return null;
+      const trimmed = url.trim();
+      if (!trimmed) return null;
+      try {
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+          const parsed = new URL(trimmed);
+          return (parsed.origin + parsed.pathname).toLowerCase();
+        }
+      } catch (_) {}
+      return trimmed.split("?")[0].toLowerCase();
+    };
+
+    const normalizeStoragePath = (path: any): string | null => {
+      if (typeof path !== "string") return null;
+      const trimmed = path.trim().toLowerCase();
+      return trimmed.length > 0 ? trimmed : null;
+    };
+
+    const syncAdminPublications = () => {
+      const combined: AdminPublicationItem[] = [];
+      const knownIds = new Set<string>();
+      const knownStoragePaths = new Set<string>();
+      const knownMediaUrls = new Set<string>();
+
+      // 1. Priorité absolue aux publications de 'posts' (source canonique)
+      postsList.forEach((item) => {
+        if (!item || !item.id) return;
+        if (knownIds.has(item.id)) return;
+        knownIds.add(item.id);
+
+        const sp = normalizeStoragePath(item.storagePath);
+        if (sp) knownStoragePaths.add(sp);
+
+        [item.mediaUrl, item.videoUrl].forEach((u) => {
+          const norm = normalizeMediaUrl(u);
+          if (norm) knownMediaUrls.add(norm);
+        });
+
+        combined.push(item);
+      });
+
+      // 2. Traitement dédupliqué des publications historiques de 'social_posts'
+      socialList.forEach((item) => {
+        if (!item || !item.id) return;
+        if (knownIds.has(item.id)) return; // Même ID déjà présent dans 'posts'
+
+        // Critère 1 : Même storagePath
+        const sp = normalizeStoragePath(item.storagePath);
+        if (sp && knownStoragePaths.has(sp)) return; // Doublon détecté via storagePath
+
+        // Critère 2 : Même URL média normalisée
+        const urls = [item.mediaUrl, item.videoUrl].map(normalizeMediaUrl).filter(Boolean) as string[];
+        if (urls.length > 0 && urls.some((u) => knownMediaUrls.has(u))) return; // Doublon détecté via URL
+
+        // Document historique distinct : conservé pour l'administration
+        knownIds.add(item.id);
+        if (sp) knownStoragePaths.add(sp);
+        urls.forEach((u) => knownMediaUrls.add(u));
+        combined.push(item);
+      });
+
+      // 3. Intégration des opportunités / prestations Gombos
+      gomboList.forEach((g) => {
+        if (!combined.some((c) => c.id === g.id)) {
+          combined.push(g);
+        }
+      });
+
+      // Tri chronologique antéchronologique (les plus récents en premier)
+      combined.sort((a, b) => {
+        const timeA = new Date(a.createdAt || 0).getTime();
+        const timeB = new Date(b.createdAt || 0).getTime();
+        return timeB - timeA;
+      });
+
+      setItems(combined);
+      setLoading(false);
+    };
+
+    // 1. Écoute temps réel de 'posts' (source canonique principale)
+    const unsubPosts = onSnapshot(collection(db, "posts"), (snapPosts) => {
+      const list: AdminPublicationItem[] = [];
+      snapPosts.forEach((d) => {
         const data = d.data();
         const computed = computeStatus(data);
-        socialList.push({
+        list.push({
           id: d.id,
-          collectionName: "social_posts",
-          title: data.title || data.caption || "Publication sociale",
-          caption: data.caption || data.description || "",
-          authorName: data.authorName || data.userName || "Citoyen",
+          collectionName: "posts",
+          storagePath: data.storagePath || "",
+          videoUrl: data.videoUrl || data.mediaUrl || "",
+          title: data.title || data.caption || data.content || "Publication",
+          caption: data.caption || data.content || data.description || "",
+          authorName: data.authorName || data.userName || data.authorArtisticName || "Artiste",
           authorId: data.authorId || data.userId || "",
           authorAvatar: data.authorAvatar || data.userAvatar || "",
           budget: Number(data.budget || data.feeAmount || 0),
-          createdAt: data.createdAt || new Date().toISOString(),
+          createdAt: data.createdAt || data.timestamp || new Date().toISOString(),
           startDate: data.startDate || data.dateDebut || "",
           expiresAt: data.expiresAt || data.dateFin || data.deadline || "",
           status: computed,
@@ -161,81 +250,123 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
           visible: data.visible !== false,
           commune: data.commune || "",
           category: data.category || data.postCategory || "Social",
-          type: data.type || "Publication",
+          type: data.type === "video" ? "Réel" : (data.type || "Publication"),
           isFlagged: !!data.isFlagged,
           reportsCount: Number(data.reportsCount || 0),
           reportReason: data.reportReason || data.motifs || "",
-          mediaUrl: data.imageUrl || data.mediaUrl || data.photoUrl || "",
-          mediaType: data.mediaType || (data.audioUrl ? "audio" : data.imageUrl ? "image" : "none"),
+          mediaUrl: data.mediaUrl || data.videoUrl || data.imageUrl || data.photoUrl || "",
+          mediaType: data.type === "video" || data.videoUrl ? "video" : (data.audioUrl ? "audio" : data.imageUrl || data.mediaUrl ? "image" : "none"),
           contactPhone: data.contactPhone || data.phone || "",
           contactEmail: data.contactEmail || data.email || "",
           description: data.description || data.content || data.caption || ""
         });
       });
-
-      // 2. Sync gombos
-      const unsubGombos = onSnapshot(collection(db, "gombos"), (snapGombos) => {
-        const gomboList: AdminPublicationItem[] = [];
-        snapGombos.forEach((d) => {
-          const data = d.data();
-          const computed = computeStatus(data);
-          gomboList.push({
-            id: d.id,
-            collectionName: "gombos",
-            title: data.title || "Prestation Gombo",
-            caption: data.description || "",
-            authorName: data.clientName || data.organizerName || data.authorName || "Organisateur",
-            authorId: data.clientId || data.organizerId || data.authorId || "",
-            authorAvatar: data.clientAvatar || data.authorAvatar || "",
-            budget: Number(data.budget || data.remuneration || 0),
-            createdAt: data.createdAt || new Date().toISOString(),
-            startDate: data.startDate || data.eventDate || "",
-            expiresAt: data.expiresAt || data.deadline || data.dateFin || "",
-            status: computed,
-            rawStatus: data.status || "open",
-            viewsCount: Number(data.viewsCount || data.views || 0),
-            likesCount: Number(data.likesCount || (Array.isArray(data.likes) ? data.likes.length : 0)),
-            commentsCount: Number(data.commentsCount || (Array.isArray(data.comments) ? data.comments.length : 0)),
-            applicationsCount: Number(data.applicationsCount || (Array.isArray(data.candidatures) ? data.candidatures.length : 0) || (Array.isArray(data.proposals) ? data.proposals.length : 0)),
-            sharesCount: Number(data.sharesCount || data.shares || 0),
-            visible: data.visible !== false,
-            commune: data.commune || data.location || "",
-            category: data.category || data.eventType || "Gombo",
-            type: "Gombo",
-            isFlagged: !!data.isFlagged,
-            reportsCount: Number(data.reportsCount || 0),
-            reportReason: data.reportReason || data.motifs || "",
-            mediaUrl: data.imageUrl || data.bannerUrl || "",
-            mediaType: data.imageUrl ? "image" : "none",
-            contactPhone: data.contactPhone || data.phone || "",
-            contactEmail: data.contactEmail || "",
-            description: data.description || ""
-          });
-        });
-
-        // Merge without duplicates
-        const combined = [...socialList];
-        gomboList.forEach(g => {
-          if (!combined.some(c => c.id === g.id)) {
-            combined.push(g);
-          }
-        });
-
-        setItems(combined);
-        setLoading(false);
-      }, (err) => {
-        console.warn("AdminPublications: Gombos sync error:", err);
-        setItems(socialList);
-        setLoading(false);
-      });
-
-      return () => unsubGombos();
+      postsList = list;
+      syncAdminPublications();
     }, (err) => {
-      console.warn("AdminPublications: Social posts sync error:", err);
-      setLoading(false);
+      console.warn("AdminPublications: Posts sync error:", err);
+      syncAdminPublications();
     });
 
-    return () => unsubSocial();
+    // 2. Écoute temps réel de 'social_posts' (données historiques)
+    const unsubSocial = onSnapshot(collection(db, "social_posts"), (snapSocial) => {
+      const list: AdminPublicationItem[] = [];
+      snapSocial.forEach((d) => {
+        const data = d.data();
+        const computed = computeStatus(data);
+        list.push({
+          id: d.id,
+          collectionName: "social_posts",
+          storagePath: data.storagePath || "",
+          videoUrl: data.videoUrl || data.mediaUrl || "",
+          title: data.title || data.caption || "Publication sociale",
+          caption: data.caption || data.description || data.content || "",
+          authorName: data.authorName || data.userName || "Citoyen",
+          authorId: data.authorId || data.userId || "",
+          authorAvatar: data.authorAvatar || data.userAvatar || "",
+          budget: Number(data.budget || data.feeAmount || 0),
+          createdAt: data.createdAt || data.timestamp || new Date().toISOString(),
+          startDate: data.startDate || data.dateDebut || "",
+          expiresAt: data.expiresAt || data.dateFin || data.deadline || "",
+          status: computed,
+          rawStatus: data.status || "active",
+          viewsCount: Number(data.viewsCount || data.views || 0),
+          likesCount: Number(data.likesCount || (Array.isArray(data.likes) ? data.likes.length : 0)),
+          commentsCount: Number(data.commentsCount || (Array.isArray(data.comments) ? data.comments.length : 0)),
+          applicationsCount: Number(data.applicationsCount || (Array.isArray(data.candidatures) ? data.candidatures.length : 0)),
+          sharesCount: Number(data.sharesCount || data.shares || 0),
+          visible: data.visible !== false,
+          commune: data.commune || "",
+          category: data.category || data.postCategory || "Social",
+          type: data.type === "video" ? "Réel" : (data.type || "Publication"),
+          isFlagged: !!data.isFlagged,
+          reportsCount: Number(data.reportsCount || 0),
+          reportReason: data.reportReason || data.motifs || "",
+          mediaUrl: data.imageUrl || data.mediaUrl || data.videoUrl || data.photoUrl || "",
+          mediaType: data.type === "video" || data.videoUrl ? "video" : (data.mediaType || (data.audioUrl ? "audio" : data.imageUrl ? "image" : "none")),
+          contactPhone: data.contactPhone || data.phone || "",
+          contactEmail: data.contactEmail || data.email || "",
+          description: data.description || data.content || data.caption || ""
+        });
+      });
+      socialList = list;
+      syncAdminPublications();
+    }, (err) => {
+      console.warn("AdminPublications: Social posts sync error:", err);
+      syncAdminPublications();
+    });
+
+    // 3. Écoute temps réel de 'gombos'
+    const unsubGombos = onSnapshot(collection(db, "gombos"), (snapGombos) => {
+      const list: AdminPublicationItem[] = [];
+      snapGombos.forEach((d) => {
+        const data = d.data();
+        const computed = computeStatus(data);
+        list.push({
+          id: d.id,
+          collectionName: "gombos",
+          title: data.title || "Prestation Gombo",
+          caption: data.description || "",
+          authorName: data.clientName || data.organizerName || data.authorName || "Organisateur",
+          authorId: data.clientId || data.organizerId || data.authorId || "",
+          authorAvatar: data.clientAvatar || data.authorAvatar || "",
+          budget: Number(data.budget || data.remuneration || 0),
+          createdAt: data.createdAt || new Date().toISOString(),
+          startDate: data.startDate || data.eventDate || "",
+          expiresAt: data.expiresAt || data.deadline || data.dateFin || "",
+          status: computed,
+          rawStatus: data.status || "open",
+          viewsCount: Number(data.viewsCount || data.views || 0),
+          likesCount: Number(data.likesCount || (Array.isArray(data.likes) ? data.likes.length : 0)),
+          commentsCount: Number(data.commentsCount || (Array.isArray(data.comments) ? data.comments.length : 0)),
+          applicationsCount: Number(data.applicationsCount || (Array.isArray(data.candidatures) ? data.candidatures.length : 0) || (Array.isArray(data.proposals) ? data.proposals.length : 0)),
+          sharesCount: Number(data.sharesCount || data.shares || 0),
+          visible: data.visible !== false,
+          commune: data.commune || data.location || "",
+          category: data.category || data.eventType || "Gombo",
+          type: "Gombo",
+          isFlagged: !!data.isFlagged,
+          reportsCount: Number(data.reportsCount || 0),
+          reportReason: data.reportReason || data.motifs || "",
+          mediaUrl: data.imageUrl || data.bannerUrl || "",
+          mediaType: data.imageUrl ? "image" : "none",
+          contactPhone: data.contactPhone || data.phone || "",
+          contactEmail: data.contactEmail || "",
+          description: data.description || ""
+        });
+      });
+      gomboList = list;
+      syncAdminPublications();
+    }, (err) => {
+      console.warn("AdminPublications: Gombos sync error:", err);
+      syncAdminPublications();
+    });
+
+    return () => {
+      unsubPosts();
+      unsubSocial();
+      unsubGombos();
+    };
   }, []);
 
   // Format date helper
@@ -256,7 +387,7 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
     }
   };
 
-  // Actions
+  // Actions ciblées et sécurisées
   const handleArchive = async (item: AdminPublicationItem) => {
     setActionLoadingId(item.id);
     try {
@@ -267,11 +398,13 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
         isArchived: newSt === "archived",
         archivedAt: newSt === "archived" ? new Date().toISOString() : null
       };
-      await Promise.allSettled([
-        updateDoc(doc(db, "social_posts", item.id), updateData),
-        updateDoc(doc(db, "gombos", item.id), updateData),
-        updateDoc(doc(db, "posts", item.id), updateData)
-      ]);
+      // Cible la collection spécifique du document
+      await updateDoc(doc(db, item.collectionName, item.id), updateData);
+      // Synchronisation de sécurité si le même ID existe dans l'autre collection de publications
+      if (item.collectionName === "posts" || item.collectionName === "social_posts") {
+        const altCollection = item.collectionName === "posts" ? "social_posts" : "posts";
+        await updateDoc(doc(db, altCollection, item.id), updateData).catch(() => {});
+      }
       showToast(newSt === "archived" ? `📦 Publication archivée avec succès.` : `✅ Publication désarchivée.`);
       try { audioSynth?.playValidationSuccess(); } catch (_) {}
     } catch (err: any) {
@@ -290,11 +423,13 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
         statut: nextSuspended ? "suspended" : "active",
         visible: !nextSuspended
       };
-      await Promise.allSettled([
-        updateDoc(doc(db, "social_posts", item.id), updateData),
-        updateDoc(doc(db, "gombos", item.id), updateData),
-        updateDoc(doc(db, "posts", item.id), updateData)
-      ]);
+      // Cible la collection spécifique du document
+      await updateDoc(doc(db, item.collectionName, item.id), updateData);
+      // Synchronisation de sécurité si le même ID existe dans l'autre collection de publications
+      if (item.collectionName === "posts" || item.collectionName === "social_posts") {
+        const altCollection = item.collectionName === "posts" ? "social_posts" : "posts";
+        await updateDoc(doc(db, altCollection, item.id), updateData).catch(() => {});
+      }
       showToast(nextSuspended ? `🛑 Publication suspendue.` : `✅ Publication réactivée.`);
       try { audioSynth?.playValidationSuccess(); } catch (_) {}
     } catch (err: any) {
@@ -308,11 +443,19 @@ export const AdminPublicationsManager: React.FC<AdminPublicationsManagerProps> =
     if (!itemToDelete) return;
     setActionLoadingId(itemToDelete.id);
     try {
-      await Promise.allSettled([
-        deleteDoc(doc(db, "social_posts", itemToDelete.id)),
-        deleteDoc(doc(db, "gombos", itemToDelete.id)),
-        deleteDoc(doc(db, "posts", itemToDelete.id))
-      ]);
+      if (itemToDelete.collectionName === "gombos") {
+        // Règle 9 : Ne PAS toucher aux Gombos - suppression ciblée uniquement du Gombo
+        await deleteDoc(doc(db, "gombos", itemToDelete.id));
+      } else {
+        // Suppression sécurisée avec recherche ciblée des doublons par média dans la collection miroir
+        await publicationService.deletePermanently(
+          itemToDelete.id,
+          itemToDelete.authorId,
+          itemToDelete.storagePath,
+          itemToDelete.mediaUrl || itemToDelete.videoUrl,
+          itemToDelete.collectionName
+        );
+      }
       showToast(`🗑️ Publication "${itemToDelete.title}" supprimée définitivement.`);
       setItemToDelete(null);
       if (selectedItem?.id === itemToDelete.id) {

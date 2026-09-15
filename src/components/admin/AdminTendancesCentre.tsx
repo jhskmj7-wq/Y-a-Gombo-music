@@ -13,7 +13,8 @@ import {
   togglePinTrendingDoc, 
   toggleSponsorTrendingDoc, 
   removeTrendingDoc, 
-  calculateTrendingScore 
+  calculateTrendingScore,
+  calculateAfrigomboScore
 } from "../../lib/tendancesEngine";
 import { Gombo, Post } from "../../types";
 
@@ -49,11 +50,12 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
       const docs: TrendingDoc[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data() as TrendingDoc;
+        const dynamicScore = calculateAfrigomboScore(data as any).finalScore;
         docs.push({
           ...data,
           id: doc.id,
           publicationId: data.publicationId || doc.id,
-          score: calculateTrendingScore(data)
+          score: dynamicScore
         });
       });
 
@@ -132,6 +134,13 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
     const title = isGombo ? (gombo?.title || "Gombo Musique") : (post?.authorArtisticName ? `Vibe de ${post.authorArtisticName}` : "Publication Vibe");
     const description = isGombo ? (gombo?.description || "") : (post?.content || "");
 
+    const viewsCount = isGombo ? ((gombo as any)?.viewsCount || (gombo as any)?.views || 0) : ((post as any)?.viewsCount || 0);
+    const favoritesCount = isGombo ? ((gombo as any)?.favoritesCount || (gombo as any)?.favorites || 0) : ((post as any)?.favoritesCount || 0);
+    const sharesCount = isGombo ? ((gombo as any)?.sharesCount || 0) : ((post as any)?.sharesCount || 0);
+    const discussionsCount = isGombo ? ((gombo as any)?.commentsCount || 0) : (post?.comments || (post as any)?.commentsCount || 0);
+    const candidaturesCount = isGombo ? (gombo?.applicantsCount || 0) : 0;
+    const likesCount = isGombo ? (gombo?.likesCount || (gombo as any)?.likes || 0) : (post?.likes || 0);
+
     await saveOrUpdateTrendingDoc({
       publicationId: pubId,
       type,
@@ -140,12 +149,12 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
       mode: "manuel",
       pinned: false,
       sponsored: false,
-      viewsCount: 150,
-      favoritesCount: 15,
-      sharesCount: 10,
-      discussionsCount: 8,
-      candidaturesCount: 5,
-      likesCount: 25,
+      viewsCount,
+      favoritesCount,
+      sharesCount,
+      discussionsCount,
+      candidaturesCount,
+      likesCount,
       authorName: isGombo ? (gombo?.clientName || "Organisateur") : (post?.authorArtisticName || post?.authorName || "Artiste"),
       category: "musique",
       commune: isGombo ? (typeof gombo?.location === "string" ? gombo.location : "Cocody") : "Abidjan",

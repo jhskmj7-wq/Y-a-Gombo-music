@@ -1455,8 +1455,46 @@ export const gomboDB = {
   async deleteSocialPost(id: string) {
     if (db && id) {
       try {
-        await deleteDoc(doc(db, "social_posts", id)).catch(() => {});
-        await deleteDoc(doc(db, "posts", id)).catch(() => {});
+        const socialRef = doc(db, "social_posts", id);
+        const socialSnap = await getDoc(socialRef).catch(() => null);
+        const postRef = doc(db, "posts", id);
+        const postSnap = await getDoc(postRef).catch(() => null);
+
+        let deleteSocial = false;
+        let deletePost = false;
+
+        const normSp = (val: any) => (typeof val === "string" ? val.trim().toLowerCase() : "");
+        const normUrl = (val: any) => {
+          if (typeof val !== "string") return "";
+          try {
+            if (val.startsWith("http://") || val.startsWith("https://")) {
+              const u = new URL(val);
+              return (u.origin + u.pathname).toLowerCase();
+            }
+          } catch (_) {}
+          return val.split("?")[0].toLowerCase();
+        };
+
+        if (socialSnap && socialSnap.exists()) {
+          deleteSocial = true;
+          const sData = socialSnap.data();
+          if (postSnap && postSnap.exists()) {
+            const pData = postSnap.data();
+            const sPath = normSp(sData.storagePath);
+            const pPath = normSp(pData.storagePath);
+            const sUrls = [sData.videoUrl, sData.mediaUrl, sData.imageUrl, sData.url].map(normUrl).filter(Boolean);
+            const pUrls = [pData.videoUrl, pData.mediaUrl, pData.imageUrl, pData.url].map(normUrl).filter(Boolean);
+
+            if ((sPath && sPath === pPath) || (sUrls.length > 0 && pUrls.some(u => sUrls.includes(u)))) {
+              deletePost = true;
+            }
+          }
+        } else if (postSnap && postSnap.exists()) {
+          deletePost = true;
+        }
+
+        if (deleteSocial) await deleteDoc(socialRef).catch(() => {});
+        if (deletePost) await deleteDoc(postRef).catch(() => {});
       } catch (err) {
         console.warn("⚠️ [DELETE_SOCIAL_POST] Error deleting post:", err);
       }
