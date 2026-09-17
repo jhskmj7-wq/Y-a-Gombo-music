@@ -1214,8 +1214,16 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                     </div>
                   )}
 
-              {/* GRADIENT OVERLAYS FOR CONTRAST */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/40 pointer-events-none" />
+              {/* GRADIENT OVERLAYS FOR CONTRAST (Sanctuarisé avec style inline contre tout écrasement CSS de thème) */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: "linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.15) 50%, rgba(0, 0, 0, 0.4) 100%)",
+                  backgroundColor: "transparent",
+                  backdropFilter: "none",
+                  WebkitBackdropFilter: "none"
+                }}
+              />
 
               {/* RIGHT INTERACTION SIDEBAR */}
               <div className="absolute bottom-16 right-3 sm:right-5 z-40 flex flex-col items-center gap-4 text-afri-text">

@@ -729,6 +729,25 @@ body,
   background-color: rgba(0, 0, 0, 0.6) !important;
 }
 
+/* Strictly prevent light-mode global overrides from painting white or ivory gradients inside immersive-dark */
+.light .immersive-dark [class*="from-black"],
+.light .immersive-dark [class*="via-black"],
+.light .immersive-dark [class*="to-black"],
+.light .immersive-dark [class*="from-zinc"],
+.light .immersive-dark [class*="via-zinc"],
+.light .immersive-dark [class*="to-zinc"] {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Neutralize any backdrop-filter overlay collision inside immersive-dark */
+.light .immersive-dark div.absolute.inset-0[class*="bg-black"],
+.light .immersive-dark div.absolute.inset-0[class*="from-black"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 .light .immersive-dark .bg-black {
   background-color: #000000 !important;
 }
