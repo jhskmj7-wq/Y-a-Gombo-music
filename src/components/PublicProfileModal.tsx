@@ -582,7 +582,7 @@ export function PublicProfileModal({
                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
                       <div className="px-2.5 py-1 rounded-lg bg-afri-bg-ter border border-afri-border text-[10px] font-mono font-black text-afri-gold uppercase tracking-wider flex items-center gap-1.5">
                         <Music className="w-3 h-3" />
-                        <span>Réf du Gombo : {gomboId}</span>
+                        <span>Gombo ID : {gomboId}</span>
                       </div>
 
                       <div className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
