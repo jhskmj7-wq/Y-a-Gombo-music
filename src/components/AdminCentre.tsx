@@ -9256,6 +9256,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         onShowAuth={(intent) => {
           requireAuthThen(() => {}, intent);
         }}
+        onPlayReel={(reelId) => {
+          setPublicProfileTargetUserId(null);
+          setReelsVideoId(reelId);
+          setActiveMenu("user_reels");
+        }}
       />
 
       {/* CONFIRMATION DE DÉCONNEXION POPUP */}

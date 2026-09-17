@@ -29,6 +29,7 @@ interface PublicProfileModalProps {
   onOpenDirectMessage?: (targetUserId: string, targetName: string) => void;
   onNavigateToGombo?: (gomboId: string) => void;
   onShowAuth?: (intent?: PendingAuthIntent) => void;
+  onPlayReel?: (reelId: string) => void;
 }
 
 export function PublicProfileModal({
@@ -38,7 +39,8 @@ export function PublicProfileModal({
   currentUser,
   onOpenDirectMessage,
   onNavigateToGombo,
-  onShowAuth
+  onShowAuth,
+  onPlayReel
 }: PublicProfileModalProps) {
   const auth = useAuth();
   const activeUser = currentUser || auth?.currentUser;
@@ -1283,12 +1285,14 @@ export function PublicProfileModal({
                         </p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                         {portfolioShowcaseItems.map((item, idx) => (
                           <div
                             key={item.id || idx}
                             onClick={() => {
-                              if (item.url) {
+                              if (onPlayReel && item.id) {
+                                onPlayReel(item.id);
+                              } else if (item.url) {
                                 setSelectedMediaViewer({
                                   type: item.type === "photo" ? "photo" : "video",
                                   url: item.url,
@@ -1296,7 +1300,7 @@ export function PublicProfileModal({
                                 });
                               }
                             }}
-                            className={`relative rounded-xl overflow-hidden bg-black flex flex-col group cursor-pointer transition-all shadow-md ${
+                            className={`relative rounded-xl overflow-hidden bg-zinc-950 flex flex-col group cursor-pointer transition-all shadow-md aspect-[9/16] ${
                               isElite
                                 ? "border border-amber-400/80 hover:border-amber-300 shadow-amber-500/10"
                                 : isPro
@@ -1304,7 +1308,7 @@ export function PublicProfileModal({
                                 : "border border-afri-border/60 hover:border-afri-gold/50"
                             }`}
                           >
-                            <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full bg-zinc-900 overflow-hidden flex items-center justify-center">
+                            <div className="relative w-full h-full bg-zinc-900 overflow-hidden flex items-center justify-center">
                               {item.url ? (
                                 item.type === "photo" ? (
                                   <img src={item.url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -1348,8 +1352,8 @@ export function PublicProfileModal({
                               <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none space-y-0.5">
                                 <p className="text-[10px] sm:text-xs font-bold text-white truncate leading-tight">{item.title}</p>
                                 <div className="flex items-center gap-1.5 text-[8.5px] sm:text-[10px] font-mono text-white/80">
-                                  <span className="flex items-center gap-0.5"><Heart className="w-2 h-2 text-red-400" /> {item.likesCount || 0}</span>
-                                  <span className="flex items-center gap-0.5"><MessageSquare className="w-2 h-2 text-amber-400" /> {item.commentsCount || 0}</span>
+                                  <span className="flex items-center gap-0.5"><Heart className="w-2.5 h-2.5 text-red-400" /> {item.likesCount || 0}</span>
+                                  <span className="flex items-center gap-0.5"><MessageSquare className="w-2.5 h-2.5 text-amber-400" /> {item.commentsCount || 0}</span>
                                 </div>
                               </div>
                             </div>

@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { gomboDB } from "../firebase";
 import { useAppSettings } from "../context/AppSettingsContext";
+import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../AuthContext";
 import { openPublicProfile } from "../lib/publicProfile";
 import { getFilterCss } from "./reels/videoFilters";
@@ -179,6 +180,8 @@ function formatRelativeTime(dateInput: any): string {
 }
 
 export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, currentUser, initialReelId }: ReelsPlayerProps) {
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const { network } = useAppSettings();
   const { requireAuth, profile, currentUser: authUser } = useAuth();
   const effectiveUser = currentUser || authUser;
@@ -207,13 +210,8 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const [videoErrors, setVideoErrors] = useState<Record<string, boolean>>({});
   const [doubleTapHeart, setDoubleTapHeart] = useState<{ reelId: string; x: number; y: number } | null>(null);
   const [playPauseNotice, setPlayPauseNotice] = useState<{ type: "play" | "pause"; reelId: string } | null>(null);
-  const [isSpeedBoosted, setIsSpeedBoosted] = useState<boolean>(false);
   const lastTapRef = useRef<{ time: number; reelId: string }>({ time: 0, reelId: "" });
   const singleTapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const touchStartPosRef = useRef<{ x: number; y: number; time: number } | null>(null);
-  const isLongPressRef = useRef<boolean>(false);
-  const lastTouchTimeRef = useRef<number>(0);
   
   // Deterministic gesture lock & touch coords
   const isTransitioningRef = useRef<boolean>(false);
@@ -860,113 +858,6 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     }
   };
 
-  // Long-press 2x speed acceleration control (Left / Right halves)
-  const handleVideoTouchStart = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>, reelId: string) => {
-    if (e.type.startsWith("touch")) {
-      lastTouchTimeRef.current = Date.now();
-    } else if (e.type.startsWith("mouse") && Date.now() - lastTouchTimeRef.current < 500) {
-      return;
-    }
-
-    let clientX = 0;
-    let clientY = 0;
-    if ("touches" in e && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else if ("clientX" in e) {
-      clientX = (e as React.MouseEvent).clientX;
-      clientY = (e as React.MouseEvent).clientY;
-    }
-
-    touchStartPosRef.current = { x: clientX, y: clientY, time: Date.now() };
-    isLongPressRef.current = false;
-
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-    }
-
-    longPressTimerRef.current = setTimeout(() => {
-      isLongPressRef.current = true;
-      if (singleTapTimeoutRef.current) {
-        clearTimeout(singleTapTimeoutRef.current);
-        singleTapTimeoutRef.current = null;
-      }
-      if (activeVideoRef.current) {
-        activeVideoRef.current.playbackRate = 2.0;
-        setIsSpeedBoosted(true);
-      }
-    }, 260);
-  };
-
-  const handleVideoTouchMove = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
-    if (e.type.startsWith("mouse") && Date.now() - lastTouchTimeRef.current < 500) {
-      return;
-    }
-    if (!touchStartPosRef.current) return;
-
-    let clientX = 0;
-    let clientY = 0;
-    if ("touches" in e && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else if ("clientX" in e) {
-      clientX = (e as React.MouseEvent).clientX;
-      clientY = (e as React.MouseEvent).clientY;
-    }
-
-    const dx = Math.abs(clientX - touchStartPosRef.current.x);
-    const dy = Math.abs(clientY - touchStartPosRef.current.y);
-
-    if (dx > 12 || dy > 12) {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-      if (isLongPressRef.current) {
-        isLongPressRef.current = false;
-        if (activeVideoRef.current) {
-          activeVideoRef.current.playbackRate = 1.0;
-        }
-        setIsSpeedBoosted(false);
-      }
-    }
-  };
-
-  const handleVideoTouchEnd = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>, reelId: string) => {
-    if (e.type.startsWith("mouse") && Date.now() - lastTouchTimeRef.current < 500) {
-      return;
-    }
-
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-
-    if (isLongPressRef.current) {
-      isLongPressRef.current = false;
-      if (activeVideoRef.current) {
-        activeVideoRef.current.playbackRate = 1.0;
-      }
-      setIsSpeedBoosted(false);
-      touchStartPosRef.current = null;
-      return;
-    }
-
-    touchStartPosRef.current = null;
-    handleVideoTouchOrClick(e, reelId);
-  };
-
-  // Ensure playback rate resets to 1x when switching reels
-  useEffect(() => {
-    setIsSpeedBoosted(false);
-    if (isLongPressRef.current) {
-      isLongPressRef.current = false;
-    }
-    if (activeVideoRef.current) {
-      activeVideoRef.current.playbackRate = 1.0;
-    }
-  }, [currentIndex]);
-
   // Bookmark action
   const handleBookmark = (reelId: string) => {
     requireAuth(async () => {
@@ -1358,14 +1249,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   {shouldMountMedia ? (
                     <div 
                       className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden"
-                      onTouchStart={(e) => handleVideoTouchStart(e, reel.id)}
-                      onTouchMove={(e) => handleVideoTouchMove(e)}
-                      onTouchEnd={(e) => handleVideoTouchEnd(e, reel.id)}
-                      onTouchCancel={(e) => handleVideoTouchEnd(e, reel.id)}
-                      onMouseDown={(e) => handleVideoTouchStart(e, reel.id)}
-                      onMouseMove={(e) => handleVideoTouchMove(e)}
-                      onMouseUp={(e) => handleVideoTouchEnd(e, reel.id)}
-                      onMouseLeave={(e) => handleVideoTouchEnd(e, reel.id)}
+                      onClick={(e) => handleVideoTouchOrClick(e, reel.id)}
                     >
                       {getYoutubeId(reel.mediaUrl) ? (
                         <iframe
@@ -1479,17 +1363,6 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                             ) : (
                               <Play className="w-10 h-10 fill-white text-white ml-1" />
                             )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* 2x Speed Boost Overlay Badge */}
-                      {isSpeedBoosted && isActive && (
-                        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-pulse">
-                          <div className="px-4 py-2 rounded-full bg-black/80 border border-amber-400 text-amber-300 backdrop-blur-md shadow-2xl flex items-center gap-2 text-xs font-black tracking-wider uppercase ring-2 ring-amber-400/40">
-                            <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
-                            <span>Vitesse 2x</span>
-                            <span className="text-[10px] font-mono bg-amber-400 text-black px-1.5 py-0.5 rounded font-black">×2</span>
                           </div>
                         </div>
                       )}
@@ -1779,31 +1652,35 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   setShowCommentsFor(null);
                 }
               }}
-              className="relative w-full max-w-xl mx-auto bg-[#0D0D0D] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-[30px] sm:rounded-t-[36px] shadow-[0_-16px_48px_rgba(0,0,0,0.95)] flex flex-col z-10 max-h-[85vh] text-left"
+              className={`relative w-full max-w-xl mx-auto ${
+                isLight 
+                  ? "bg-white text-zinc-900 border-t-2 border-[#D4AF37] border-x border-zinc-200 shadow-2xl" 
+                  : "bg-[#0D0D0D] text-white border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 shadow-[0_-16px_48px_rgba(0,0,0,0.95)]"
+              } rounded-t-[30px] sm:rounded-t-[36px] flex flex-col z-10 max-h-[85vh] text-left`}
               style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)" }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Drag Handle Indicator */}
               <div className="pt-3 pb-1 flex justify-center items-center shrink-0 cursor-grab active:cursor-grabbing w-full touch-none select-none">
-                <div className="w-12 h-1.5 bg-zinc-600/80 hover:bg-zinc-500 rounded-full transition-colors" />
+                <div className={`w-12 h-1.5 ${isLight ? "bg-zinc-300 hover:bg-zinc-400" : "bg-zinc-600/80 hover:bg-zinc-500"} rounded-full transition-colors`} />
               </div>
 
               {/* Bottom Sheet Header */}
-              <div className="px-5 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0">
+              <div className={`px-5 py-3 border-b ${isLight ? "border-zinc-100" : "border-zinc-800"} flex items-center justify-between shrink-0`}>
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] shrink-0 shadow-sm">
                     <MessageCircle className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-xs sm:text-sm font-black uppercase text-white tracking-wider truncate">
+                      <h3 className={`text-xs sm:text-sm font-black uppercase ${isLight ? "text-zinc-900" : "text-white"} tracking-wider truncate`}>
                         Arbre à Palabres
                       </h3>
                       <span className="text-[10px] font-mono font-black bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/40 px-2 py-0.5 rounded-full shrink-0">
                         {commentsList.length}
                       </span>
                     </div>
-                    <p className="text-[10px] text-zinc-400 truncate">
+                    <p className={`text-[10px] ${isLight ? "text-zinc-500" : "text-zinc-400"} truncate`}>
                       {showCommentsFor.authorArtisticName || showCommentsFor.authorName}
                     </p>
                   </div>
@@ -1814,7 +1691,11 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                     <button
                       type="button"
                       onClick={() => setCommentsSortOrder(prev => prev === "asc" ? "desc" : "asc")}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-zinc-800/80 border border-zinc-700/80 text-[10px] font-mono font-bold text-zinc-300 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition cursor-pointer"
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-full ${
+                        isLight 
+                          ? "bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-amber-600 hover:border-amber-600/40" 
+                          : "bg-zinc-800/80 border-zinc-700/80 text-zinc-300 hover:text-[#D4AF37] hover:border-[#D4AF37]/40"
+                      } text-[10px] font-mono font-bold transition cursor-pointer`}
                       title="Changer l'ordre de tri"
                     >
                       <ArrowUpDown className="w-3 h-3 text-[#D4AF37]" />
@@ -1824,7 +1705,11 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   <button 
                     type="button"
                     onClick={() => setShowCommentsFor(null)}
-                    className="p-1.5 rounded-full bg-zinc-800/90 text-zinc-400 hover:text-white hover:bg-zinc-700 transition cursor-pointer border border-zinc-700/50"
+                    className={`p-1.5 rounded-full ${
+                      isLight 
+                        ? "bg-zinc-100 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 border-zinc-200/60" 
+                        : "bg-zinc-800/90 text-zinc-400 hover:text-white hover:bg-zinc-700 border-zinc-700/50"
+                    } transition cursor-pointer border`}
                     title="Fermer"
                   >
                     <X className="w-4 h-4" />
@@ -1838,17 +1723,17 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                 style={{ touchAction: "pan-y" }}
               >
                 {isLoadingComments && commentsList.length === 0 ? (
-                  <div className="py-12 flex flex-col items-center justify-center gap-2.5 text-zinc-400">
+                  <div className={`py-12 flex flex-col items-center justify-center gap-2.5 ${isLight ? "text-zinc-600" : "text-zinc-400"}`}>
                     <Loader2 className="w-7 h-7 animate-spin text-[#D4AF37]" />
                     <p className="text-xs font-mono font-medium">Chargement des palabres...</p>
                   </div>
                 ) : commentsList.length === 0 ? (
-                  <div className="py-12 text-center text-zinc-400 space-y-2">
-                    <div className="w-12 h-12 rounded-full bg-zinc-800/60 border border-zinc-700/50 flex items-center justify-center mx-auto text-zinc-500">
+                  <div className={`py-12 text-center ${isLight ? "text-zinc-500" : "text-zinc-400"} space-y-2`}>
+                    <div className={`w-12 h-12 rounded-full ${isLight ? "bg-zinc-100 border-zinc-200" : "bg-zinc-800/60 border-zinc-700/50"} flex items-center justify-center mx-auto text-zinc-500`}>
                       <MessageCircle className="w-6 h-6" />
                     </div>
-                    <p className="text-xs font-bold text-zinc-200">Aucun palabre pour l'instant</p>
-                    <p className="text-[11px] text-zinc-400">Soyez le premier à commenter ce Réel !</p>
+                    <p className={`text-xs font-bold ${isLight ? "text-zinc-800" : "text-zinc-200"}`}>Aucun palabre pour l'instant</p>
+                    <p className="text-[11px]">Soyez le premier à commenter ce Réel !</p>
                   </div>
                 ) : (
                   [...commentsList]
@@ -1860,7 +1745,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                     .map(c => (
                       <div 
                         key={c.id} 
-                        className="flex gap-3 items-start bg-zinc-900/80 p-3 rounded-2xl border border-zinc-800 hover:border-[#D4AF37]/30 transition group"
+                        className={`flex gap-3 items-start ${isLight ? "bg-zinc-50 border-zinc-100" : "bg-zinc-900/80 border-zinc-800"} p-3 rounded-2xl border hover:border-[#D4AF37]/30 transition group`}
                       >
                         <button
                           type="button"
@@ -1896,7 +1781,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                             </button>
                             <span className="text-[9px] font-mono text-zinc-500 shrink-0">{c.time}</span>
                           </div>
-                          <p className="text-xs text-zinc-200 leading-relaxed break-words font-normal">{c.text}</p>
+                          <p className={`text-xs ${isLight ? "text-zinc-800" : "text-zinc-200"} leading-relaxed break-words font-normal`}>{c.text}</p>
                         </div>
                       </div>
                     ))
@@ -1904,14 +1789,18 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
               </div>
 
               {/* Bottom Comment Composer */}
-              <div className="p-3.5 border-t border-zinc-800 bg-[#0A0A0A] shrink-0">
+              <div className={`p-3.5 border-t ${isLight ? "border-zinc-100 bg-zinc-50/50" : "border-zinc-800 bg-[#0A0A0A]"} shrink-0`}>
                 <form onSubmit={handleAddComment} className="flex items-center gap-2">
                   <input 
                     type="text" 
                     value={commentInput}
                     onChange={(e) => setCommentInput(e.target.value)}
                     placeholder="Partager votre palabre..."
-                    className="flex-1 bg-zinc-900/90 border border-zinc-700/80 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40 transition"
+                    className={`flex-1 ${
+                      isLight 
+                        ? "bg-white border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-[#D4AF37] focus:ring-[#D4AF37]/30" 
+                        : "bg-zinc-900/90 border-zinc-700/80 text-white placeholder-zinc-500 focus:border-[#D4AF37] focus:ring-[#D4AF37]/40"
+                    } border rounded-2xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 transition`}
                   />
                   <button 
                     type="submit"
@@ -1961,26 +1850,30 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   setShowMoreFor(null);
                 }
               }}
-              className="relative w-full max-w-xl mx-auto bg-[#0D0D0D] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-[30px] sm:rounded-t-[36px] shadow-[0_-16px_48px_rgba(0,0,0,0.95)] flex flex-col z-10 max-h-[85vh] text-left"
+              className={`relative w-full max-w-xl mx-auto ${
+                isLight 
+                  ? "bg-white text-zinc-900 border-t-2 border-[#D4AF37] border-x border-zinc-200 shadow-2xl" 
+                  : "bg-[#0D0D0D] text-white border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 shadow-[0_-16px_48px_rgba(0,0,0,0.95)]"
+              } rounded-t-[30px] sm:rounded-t-[36px] flex flex-col z-10 max-h-[85vh] text-left`}
               style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)" }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Drag Handle Indicator */}
               <div className="pt-3 pb-1 flex justify-center items-center shrink-0 cursor-grab active:cursor-grabbing w-full touch-none select-none">
-                <div className="w-12 h-1.5 bg-zinc-600/80 hover:bg-zinc-500 rounded-full transition-colors" />
+                <div className={`w-12 h-1.5 ${isLight ? "bg-zinc-300 hover:bg-zinc-400" : "bg-zinc-600/80 hover:bg-zinc-500"} rounded-full transition-colors`} />
               </div>
 
               {/* Header */}
-              <div className="px-5 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0">
+              <div className={`px-5 py-3 border-b ${isLight ? "border-zinc-100" : "border-zinc-800"} flex items-center justify-between shrink-0`}>
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] shrink-0 shadow-sm">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-xs sm:text-sm font-black uppercase text-white tracking-wider truncate">
+                    <h3 className={`text-xs sm:text-sm font-black uppercase ${isLight ? "text-zinc-900" : "text-white"} tracking-wider truncate`}>
                       Options du Réel
                     </h3>
-                    <p className="text-[10px] text-zinc-400 truncate">
+                    <p className={`text-[10px] ${isLight ? "text-zinc-500" : "text-zinc-400"} truncate`}>
                       Par <span className="text-[#D4AF37] font-semibold">{showMoreFor.authorArtisticName || showMoreFor.authorName}</span>
                     </p>
                   </div>
@@ -1989,7 +1882,11 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                 <button 
                   type="button"
                   onClick={() => setShowMoreFor(null)} 
-                  className="p-1.5 rounded-full bg-zinc-800/90 text-zinc-400 hover:text-white hover:bg-zinc-700 transition cursor-pointer border border-zinc-700/50"
+                  className={`p-1.5 rounded-full ${
+                    isLight 
+                      ? "bg-zinc-100 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 border-zinc-200" 
+                      : "bg-zinc-800/90 text-zinc-400 hover:text-white hover:bg-zinc-700 border-zinc-700/50"
+                  } transition cursor-pointer border`}
                   title="Fermer"
                 >
                   <X className="w-4 h-4" />
@@ -2002,16 +1899,16 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                 <button 
                   type="button"
                   onClick={() => handleCopyReelLink(showMoreFor)}
-                  className="w-full flex items-center gap-3.5 p-3.5 bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800 hover:border-[#D4AF37]/40 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group"
+                  className={`w-full flex items-center gap-3.5 p-3.5 ${isLight ? "bg-zinc-50 hover:bg-zinc-100 border-zinc-200" : "bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800"} border hover:border-[#D4AF37]/40 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group`}
                 >
                   <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shrink-0 group-hover:scale-105 transition-transform">
                     <Copy className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-white group-hover:text-[#D4AF37] transition-colors">
+                    <div className={`text-xs font-bold ${isLight ? "text-zinc-800 group-hover:text-zinc-950" : "text-white group-hover:text-[#D4AF37]"} transition-colors`}>
                       Copier le lien direct
                     </div>
-                    <div className="text-[10px] text-zinc-400">
+                    <div className={`text-[10px] ${isLight ? "text-zinc-500" : "text-zinc-400"}`}>
                       Partager le lien de cette création sur vos réseaux
                     </div>
                   </div>
@@ -2024,16 +1921,16 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                     setShowMoreFor(null);
                     handleShare(showMoreFor);
                   }}
-                  className="w-full flex items-center gap-3.5 p-3.5 bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800 hover:border-sky-500/40 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group"
+                  className={`w-full flex items-center gap-3.5 p-3.5 ${isLight ? "bg-zinc-50 hover:bg-zinc-100 border-zinc-200" : "bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800"} border hover:border-sky-500/40 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group`}
                 >
                   <div className="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0 group-hover:scale-105 transition-transform">
                     <Share2 className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-white group-hover:text-sky-400 transition-colors">
+                    <div className={`text-xs font-bold ${isLight ? "text-zinc-800 group-hover:text-sky-600" : "text-white group-hover:text-sky-400"} transition-colors`}>
                       Partager & Diffuser
                     </div>
-                    <div className="text-[10px] text-zinc-400">
+                    <div className={`text-[10px] ${isLight ? "text-zinc-500" : "text-zinc-400"}`}>
                       Envoyer sur WhatsApp, messages ou réseaux
                     </div>
                   </div>
@@ -2043,16 +1940,16 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                 <button 
                   type="button"
                   onClick={() => handleHideReel(showMoreFor.id)}
-                  className="w-full flex items-center gap-3.5 p-3.5 bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800 hover:border-zinc-700 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group"
+                  className={`w-full flex items-center gap-3.5 p-3.5 ${isLight ? "bg-zinc-50 hover:bg-zinc-100 border-zinc-200" : "bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800"} border hover:border-zinc-500 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-zinc-400 shrink-0 group-hover:scale-105 transition-transform">
+                  <div className={`w-10 h-10 rounded-xl ${isLight ? "bg-zinc-200/80 border-zinc-300" : "bg-zinc-800 border-zinc-700/80"} flex items-center justify-center text-zinc-400 shrink-0 group-hover:scale-105 transition-transform`}>
                     <EyeOff className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors">
+                    <div className={`text-xs font-bold ${isLight ? "text-zinc-800 group-hover:text-zinc-950" : "text-zinc-200 group-hover:text-white"} transition-colors`}>
                       Masquer cette publication
                     </div>
-                    <div className="text-[10px] text-zinc-400">
+                    <div className={`text-[10px] ${isLight ? "text-zinc-500" : "text-zinc-400"}`}>
                       Ne plus afficher ce Réel dans votre fil
                     </div>
                   </div>
@@ -2063,16 +1960,16 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   <button 
                     type="button"
                     onClick={() => handleBlockArtist(showMoreFor.userId, showMoreFor.authorArtisticName || showMoreFor.authorName)}
-                    className="w-full flex items-center gap-3.5 p-3.5 bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800 hover:border-amber-500/40 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group"
+                    className={`w-full flex items-center gap-3.5 p-3.5 ${isLight ? "bg-zinc-50 hover:bg-zinc-100 border-zinc-200" : "bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800"} border hover:border-amber-500/40 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group`}
                   >
                     <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 group-hover:scale-105 transition-transform">
                       <UserX className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold text-amber-400 transition-colors">
+                      <div className="text-xs font-bold text-amber-500 transition-colors">
                         Bloquer cet artiste
                       </div>
-                      <div className="text-[10px] text-zinc-400">
+                      <div className={`text-[10px] ${isLight ? "text-zinc-500" : "text-zinc-400"}`}>
                         Masquer toutes les créations de {showMoreFor.authorArtisticName || showMoreFor.authorName || "cet artiste"}
                       </div>
                     </div>
@@ -2083,16 +1980,16 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                 <button 
                   type="button"
                   onClick={() => handleReportReel(showMoreFor)}
-                  className="w-full flex items-center gap-3.5 p-3.5 bg-red-500/10 hover:bg-red-500/15 border border-red-500/25 hover:border-red-500/40 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group"
+                  className={`w-full flex items-center gap-3.5 p-3.5 ${isLight ? "bg-red-50/60 hover:bg-red-100/60 border-red-100" : "bg-red-500/10 hover:bg-red-500/15 border-red-500/25"} border hover:border-red-500/40 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group`}
                 >
                   <div className="w-10 h-10 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400 shrink-0 group-hover:scale-105 transition-transform">
                     <Flag className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-red-400 transition-colors">
+                    <div className="text-xs font-bold text-red-500 transition-colors">
                       Signaler cette publication
                     </div>
-                    <div className="text-[10px] text-red-400/80">
+                    <div className={`text-[10px] ${isLight ? "text-red-600/80" : "text-red-400/80"}`}>
                       Alerter l'équipe de modération pour contenu inapproprié
                     </div>
                   </div>
