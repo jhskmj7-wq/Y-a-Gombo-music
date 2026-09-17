@@ -401,17 +401,9 @@ function GomboIdUserDashboardInner({
   return (
     <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 py-3 sm:py-5 space-y-4 sm:space-y-6">
       
-      {/* 1. TOP NAVIGATION HEADER (Unique, clean back button) */}
+      {/* 1. TOP NAVIGATION HEADER */}
       <div className="flex items-center justify-between gap-3 border-b border-[#D4AF37]/20 pb-3 sm:pb-4">
         <div className="flex items-center gap-3">
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="text-xs font-mono font-bold uppercase tracking-wider text-afri-text-sec hover:text-afri-text inline-flex items-center gap-1.5 px-3 py-2 bg-afri-bg-sec hover:bg-afri-bg-ter rounded-xl border border-afri-border transition cursor-pointer active:scale-98"
-            >
-              &larr; RETOUR
-            </button>
-          )}
           <div>
             <h1 className="text-base sm:text-lg font-display font-black text-afri-text uppercase tracking-tight">
               GOMBO ID & CERTIFICAT

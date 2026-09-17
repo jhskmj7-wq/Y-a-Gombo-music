@@ -438,6 +438,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   const isHeritageSubPanelActiveRef = useRef(false);
   const [isHeritageSubPanelActive, setIsHeritageSubPanelActive] = useState(false);
+  const openedFromSidebarRef = useRef(false);
+  const isSidebarOpenRef = useRef(false);
 
   useEffect(() => {
     isHeritageSubPanelActiveRef.current = isHeritageSubPanelActive;
@@ -473,6 +475,25 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     // If a heritage sub-panel (e.g. modifier le profil) is active, close the sub-panel first!
     if (isHeritageSubPanelActiveRef.current) {
       window.dispatchEvent(new CustomEvent("gombo_close_subpanel"));
+      return;
+    }
+
+    // If sidebar is currently open, pressing back simply closes it
+    if (isSidebarOpenRef.current) {
+      setIsSidebarOpen(false);
+      return;
+    }
+
+    // If page was opened from the lateral menu, return to lateral menu (open it) and reset flag
+    if (openedFromSidebarRef.current) {
+      openedFromSidebarRef.current = false;
+      setMenuHistory(prev => {
+        if (prev.length > 1) {
+          return prev.slice(0, -1);
+        }
+        return ["user_terrain"];
+      });
+      setIsSidebarOpen(true);
       return;
     }
 
@@ -645,6 +666,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [activeFilterDropdown, setActiveFilterDropdown] = useState<"category" | "location" | "type" | "date" | null>(null);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  useEffect(() => {
+    isSidebarOpenRef.current = isSidebarOpen;
+  }, [isSidebarOpen]);
   const [isEventsModalOpen, setIsEventsModalOpen] = useState<boolean>(false);
   const [isAcademyModalOpen, setIsAcademyModalOpen] = useState<boolean>(false);
   const [comingSoonFeatureKey, setComingSoonFeatureKey] = useState<string | null>(null);
@@ -2726,6 +2750,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             <div 
                               onClick={() => {
                                 setIsSidebarOpen(false);
+                                openedFromSidebarRef.current = true;
                                 setPerspective("user");
                                 setActiveMenu("user_heritage");
                               }}
@@ -2782,6 +2807,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             <button 
                               onClick={() => {
                                 setIsSidebarOpen(false);
+                                openedFromSidebarRef.current = true;
                                 setPerspective("user");
                                 setActiveMenu("user_wallet");
                               }}
@@ -2837,6 +2863,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             type="button"
                             onClick={() => {
                               setIsSidebarOpen(false);
+                              openedFromSidebarRef.current = true;
                               setTimeout(() => {
                                 if (isInactive) {
                                   try { audioSynth.playTamTam(false); } catch (_) {}
@@ -3452,7 +3479,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     ? "flex flex-col overflow-hidden"
                     : "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
                 } ${
-                  ["user_messages", "user_settings", "user_notifications", "user_reels", "user_wallet"].includes(activeMenu)
+                  ["user_messages", "user_settings", "user_notifications", "user_reels", "user_wallet"].includes(activeMenu) || (activeMenu === "user_heritage" && isHeritageSubPanelActive)
                     ? "p-0 m-0"
                     : activeMenu === "user_terrain" || activeMenu === "user_vibes" || activeMenu === "user_heritage" || activeMenu === "super_admin" || activeMenu === "dashboard"
                     ? "px-4 xs:px-5 sm:px-8 max-w-5xl mx-auto w-full pt-0 pb-16 sm:pb-20 space-y-6"
@@ -3782,22 +3809,24 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           </button>
 
                           {/* 7. Revenus */}
-                          <button
-                            onClick={() => {
-                              setActiveMenu("user_wallet");
-                              addToTerminal("[ACTIONS RAPIDES] Module Wallet Souverain (Bientôt disponible).");
-                              try { audioSynth.playTamTam(false); } catch (_) {}
-                            }}
-                            className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
-                          >
-                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500 transition">
-                              <span className="text-[8px] xs:text-[10px] sm:text-xs">💰</span>
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Revenus</div>
-                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-afri-text-sec uppercase tracking-widest block leading-none mt-0.5">Bientôt disponible</span>
-                            </div>
-                          </button>
+                          {checkIsModuleVisible("wallet", systemFeatureFlags, isSuperFounderUser) && (
+                            <button
+                              onClick={() => {
+                                setActiveMenu("user_wallet");
+                                addToTerminal("[ACTIONS RAPIDES] Module Wallet Souverain.");
+                                try { audioSynth.playTamTam(false); } catch (_) {}
+                              }}
+                              className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            >
+                              <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500 transition">
+                                <span className="text-[8px] xs:text-[10px] sm:text-xs">💰</span>
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Revenus</div>
+                                <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-afri-text-sec uppercase tracking-widest block leading-none mt-0.5">Finances</span>
+                              </div>
+                            </button>
+                          )}
 
                           {/* 8. Paramètres */}
                           <button
@@ -3818,44 +3847,48 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           </button>
 
                           {/* 9. Contrats Gombo */}
-                          <button
-                            onClick={() => {
-                              requireAuthThen(() => {
-                                setActiveMenu("user_contracts");
-                                addToTerminal("[ACTIONS RAPIDES] Gestionnaire de Contrats Gombo ouvert.");
-                                try { audioSynth.playValidationSuccess(); } catch (err) {}
-                              });
-                            }}
-                            className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
-                          >
-                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500 transition">
-                              <span className="text-[8px] xs:text-[10px] sm:text-xs">✍️</span>
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Contrats</div>
-                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-afri-text-sec uppercase tracking-widest block leading-none mt-0.5">Signature</span>
-                            </div>
-                          </button>
+                          {checkIsModuleVisible("escrow", systemFeatureFlags, isSuperFounderUser) && (
+                            <button
+                              onClick={() => {
+                                requireAuthThen(() => {
+                                  setActiveMenu("user_contracts");
+                                  addToTerminal("[ACTIONS RAPIDES] Gestionnaire de Contrats Gombo ouvert.");
+                                  try { audioSynth.playValidationSuccess(); } catch (err) {}
+                                });
+                              }}
+                              className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            >
+                              <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500 transition">
+                                <span className="text-[8px] xs:text-[10px] sm:text-xs">✍️</span>
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Contrats</div>
+                                <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-afri-text-sec uppercase tracking-widest block leading-none mt-0.5">Signature</span>
+                              </div>
+                            </button>
+                          )}
 
                           {/* 10. Portefeuille AFRIGOMBO WALLET */}
-                          <button
-                            onClick={() => {
-                              requireAuthThen(() => {
-                                setActiveMenu("user_wallet");
-                                addToTerminal("[ACTIONS RAPIDES] Portefeuille AFRIGOMBO WALLET ouvert.");
-                                try { audioSynth.playKoraSuccess(); } catch (err) {}
-                              });
-                            }}
-                            className="bg-afri-bg border border-afri-border hover:border-afri-gold rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
-                          >
-                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-afri-gold/10 flex items-center justify-center border border-afri-gold/20 group-hover:border-afri-gold transition">
-                              <span className="text-[8px] xs:text-[10px] sm:text-xs">💳</span>
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Wallet Séquestre</div>
-                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-afri-gold uppercase tracking-widest block leading-none mt-0.5">Bêta-Sécurisé</span>
-                            </div>
-                          </button>
+                          {checkIsModuleVisible("wallet", systemFeatureFlags, isSuperFounderUser) && (
+                            <button
+                              onClick={() => {
+                                requireAuthThen(() => {
+                                  setActiveMenu("user_wallet");
+                                  addToTerminal("[ACTIONS RAPIDES] Portefeuille AFRIGOMBO WALLET ouvert.");
+                                  try { audioSynth.playKoraSuccess(); } catch (err) {}
+                                });
+                              }}
+                              className="bg-afri-bg border border-afri-border hover:border-afri-gold rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            >
+                              <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-afri-gold/10 flex items-center justify-center border border-afri-gold/20 group-hover:border-afri-gold transition">
+                                <span className="text-[8px] xs:text-[10px] sm:text-xs">💳</span>
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Wallet Séquestre</div>
+                                <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-afri-gold uppercase tracking-widest block leading-none mt-0.5">Bêta-Sécurisé</span>
+                              </div>
+                            </button>
+                          )}
                         </div>
                       </div>
                     {!!activeQuickActionModal && (

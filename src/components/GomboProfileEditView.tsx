@@ -190,9 +190,9 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] space-y-4 pb-24"
+      className="w-full bg-afri-bg text-afri-text space-y-4 pb-8 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
     >
-      <div className="pt-2 pb-16 space-y-4 w-full">
+      <div className="pt-2 pb-8 space-y-4 w-full">
         
         {/* STATUS BAR */}
         <AnimatePresence>
@@ -707,8 +707,8 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               <p className="text-[10px] text-afri-text-sec leading-relaxed">Téléchargez une pièce d'identité pour certifier votre héritage musical.</p>
               {verifyingIdentity ? (
                 <div className="space-y-2">
-                  <div className="h-1.5 w-full bg-white/5 rounded-full ">
-                    <div className=" bg-afri-bg-sec" style={{ width: `${kycProgress}%` }} />
+                  <div className="h-1.5 w-full bg-afri-border/30 rounded-full overflow-hidden">
+                    <div className="bg-[#D4AF37] h-full transition-all duration-300 rounded-full" style={{ width: `${kycProgress}%` }} />
                   </div>
                   <p className="text-[9px] font-black text-center text-[#D4AF37] animate-pulse uppercase tracking-widest">ENVOI EN COURS...</p>
                 </div>

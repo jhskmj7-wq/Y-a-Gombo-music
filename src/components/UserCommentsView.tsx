@@ -59,12 +59,20 @@ export default function UserCommentsView({
   const [usersMap, setUsersMap] = useState<Record<string, { name: string; avatar: string; isVerified?: boolean; badge?: string }>>({});
   const [loading, setLoading] = useState(true);
 
-  const [activeTab, setActiveTab] = useState<"received" | "sent" | "all">("received");
+  const [activeTab, setActiveTab] = useState<"received" | "sent" | "all">("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [replyInput, setReplyInput] = useState<{ [commentId: string]: string }>({});
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [submittingReplyId, setSubmittingReplyId] = useState<string | null>(null);
+
+  // New Palabre creation state
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
+  const [newPalabreText, setNewPalabreText] = useState("");
+  const [newPalabreTopic, setNewPalabreTopic] = useState("Discussion Générale");
+  const [newPalabreType, setNewPalabreType] = useState<"gombo" | "vibe" | "post" | "social">("post");
+  const [isSubmittingNewPalabre, setIsSubmittingNewPalabre] = useState(false);
+  const [palabreSuccessNotice, setPalabreSuccessNotice] = useState<string | null>(null);
 
   // 1. Fetch real registered users from Firestore for dynamic profile & avatar lookup
   useEffect(() => {
@@ -396,6 +404,43 @@ export default function UserCommentsView({
     }
   };
 
+  // Handle Publishing a New Authentic Palabre
+  const handlePublishNewPalabre = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPalabreText.trim()) return;
+
+    setIsSubmittingNewPalabre(true);
+    try {
+      const realAuthorId = currentUid || "founder";
+      const realAuthorName = currentName || "Membre Authentique";
+      const realAuthorAvatar = currentAvatar || "";
+
+      await addDoc(collection(db, "post_comments"), {
+        authorId: realAuthorId,
+        authorName: realAuthorName,
+        authorAvatar: realAuthorAvatar,
+        text: newPalabreText.trim(),
+        targetTitle: newPalabreTopic || "Discussion Générale",
+        targetType: newPalabreType,
+        createdAt: new Date().toISOString(),
+        timestamp: Date.now(),
+        likes: 0,
+        likedBy: [],
+        replies: []
+      });
+
+      setNewPalabreText("");
+      setIsComposerOpen(false);
+      setPalabreSuccessNotice("Votre palabre a été publié avec succès avec votre profil réel !");
+      setTimeout(() => setPalabreSuccessNotice(null), 4000);
+    } catch (err) {
+      console.error("Error publishing new palabre:", err);
+      alert("Erreur lors de la publication du palabre. Veuillez réessayer.");
+    } finally {
+      setIsSubmittingNewPalabre(false);
+    }
+  };
+
   const filteredComments = comments.filter((c) => {
     if (activeTab === "received" && c.direction !== "received") return false;
     if (activeTab === "sent" && c.direction !== "sent") return false;
@@ -533,6 +578,125 @@ export default function UserCommentsView({
         </div>
       </div>
 
+      {/* SUCCESS NOTICE */}
+      {palabreSuccessNotice && (
+        <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 rounded-2xl text-emerald-400 text-xs font-mono text-center flex items-center justify-center gap-2 animate-fadeIn">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span>{palabreSuccessNotice}</span>
+        </div>
+      )}
+
+      {/* COMPOSER / NOUVEAU PALABRE */}
+      <div className="p-4 sm:p-5 bg-afri-bg border border-[#D4AF37]/35 rounded-3xl shadow-lg space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-afri-bg-sec border border-[#D4AF37]/50 overflow-hidden flex items-center justify-center text-[#D4AF37] font-black text-xs">
+              {currentAvatar ? (
+                <img 
+                  src={currentAvatar} 
+                  alt={currentName} 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = "none";
+                  }}
+                />
+              ) : (
+                currentName.charAt(0).toUpperCase()
+              )}
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black uppercase text-afri-text">{currentName}</span>
+                {currentUserProfile?.isVerified && (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#D4AF37]" />
+                )}
+                <span className="px-1.5 py-0.2 bg-[#D4AF37]/15 text-[#D4AF37] text-[8px] font-mono font-bold uppercase rounded">
+                  {currentUserProfile?.role === "founder" ? "FONDATEUR" : "COMPTE RÉEL"}
+                </span>
+              </div>
+              <p className="text-[9.5px] text-afri-text-muted font-mono">Publiez une discussion publique authentique</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsComposerOpen(!isComposerOpen)}
+            className="px-3 py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black text-xs font-black uppercase tracking-wider rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>{isComposerOpen ? "Fermer" : "Écrire un Palabre"}</span>
+            <MessageSquare className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {isComposerOpen && (
+          <form onSubmit={handlePublishNewPalabre} className="space-y-3 pt-3 border-t border-afri-border/60 animate-fadeIn">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div>
+                <label className="text-[10px] font-mono uppercase text-afri-text-sec block mb-1">Thème / Sujet</label>
+                <input
+                  type="text"
+                  value={newPalabreTopic}
+                  onChange={(e) => setNewPalabreTopic(e.target.value)}
+                  placeholder="Ex: Opportunité de Tournage, Collaboration Beatmaker..."
+                  className="w-full px-3 py-2 bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-mono uppercase text-afri-text-sec block mb-1">Catégorie</label>
+                <select
+                  value={newPalabreType}
+                  onChange={(e) => setNewPalabreType(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl text-xs text-afri-text focus:outline-none"
+                >
+                  <option value="post">Discussion Générale (Post)</option>
+                  <option value="gombo">Opportunité & Gombo</option>
+                  <option value="vibe">Musique & Vibe</option>
+                  <option value="social">Entraide & Communauté</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-mono uppercase text-afri-text-sec block mb-1">Votre Message Authentique</label>
+              <textarea
+                value={newPalabreText}
+                onChange={(e) => setNewPalabreText(e.target.value)}
+                placeholder="Exprimez-vous publiquement auprès de la communauté..."
+                rows={3}
+                className="w-full px-3 py-2 bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none resize-none"
+                required
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsComposerOpen(false)}
+                className="px-3 py-1.5 bg-afri-bg-sec hover:bg-afri-border text-afri-text-sec text-xs font-bold uppercase rounded-xl transition cursor-pointer"
+              >
+                Annuler
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSubmittingNewPalabre || !newPalabreText.trim()}
+                className="px-4 py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black text-xs font-black uppercase tracking-wider rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isSubmittingNewPalabre ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+                <span>Publier le Palabre</span>
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
       {/* REAL COMMENTS LIST */}
       <div className="space-y-4">
         {loading && comments.length === 0 ? (
@@ -668,18 +832,42 @@ export default function UserCommentsView({
               {/* EXISTING REPLIES */}
               {comment.replies.length > 0 && (
                 <div className="pl-4 sm:pl-6 border-l-2 border-[#D4AF37]/30 space-y-2 mt-2 pt-2">
-                  {comment.replies.map((rep) => (
-                    <div key={rep.id} className="p-3 bg-afri-bg-sec/90 rounded-xl border border-afri-border/80 text-xs space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-[#D4AF37] uppercase text-[10px] flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" />
-                          {rep.authorName}
-                        </span>
-                        <span className="text-[9px] font-mono text-afri-text-muted">{rep.createdAt}</span>
+                  {comment.replies.map((rep) => {
+                    const replierInfo = rep.authorId && usersMap[rep.authorId] ? usersMap[rep.authorId] : null;
+                    const repAvatar = replierInfo?.avatar || rep.authorAvatar || "";
+                    const repName = replierInfo?.name || rep.authorName || "Membre";
+                    const isRepVerified = replierInfo?.isVerified || false;
+
+                    return (
+                      <div key={rep.id} className="p-3 bg-afri-bg-sec/90 rounded-xl border border-afri-border/80 text-xs space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 rounded-full bg-afri-bg border border-[#D4AF37]/40 overflow-hidden flex items-center justify-center text-[#D4AF37] font-bold text-[9px] shrink-0">
+                              {repAvatar ? (
+                                <img 
+                                  src={repAvatar} 
+                                  alt={repName} 
+                                  className="w-full h-full object-cover" 
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = "none";
+                                  }}
+                                />
+                              ) : (
+                                repName.charAt(0).toUpperCase()
+                              )}
+                            </div>
+                            <span className="font-bold text-[#D4AF37] uppercase text-[10px] flex items-center gap-1">
+                              <span>{repName}</span>
+                              {isRepVerified && <CheckCircle2 className="w-3 h-3 text-[#D4AF37]" />}
+                            </span>
+                          </div>
+                          <span className="text-[9px] font-mono text-afri-text-muted">{rep.createdAt}</span>
+                        </div>
+                        <p className="text-afri-text leading-snug pl-7">{rep.text}</p>
                       </div>
-                      <p className="text-afri-text leading-snug">{rep.text}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
