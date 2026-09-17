@@ -789,58 +789,60 @@ export default function MessagesView({
       <div className="w-full h-full flex flex-col bg-afri-bg text-afri-text select-none overflow-hidden relative">
         
         {/* TOP MESSAGING HEADER BAR WITH RETOUR BUTTON */}
-        <div className="bg-afri-bg-sec border-b border-afri-border px-3.5 py-2.5 flex items-center justify-between shrink-0 z-30 shadow-sm">
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => {
-                if (activeConvo) {
-                  setActiveConvo(null);
-                } else if (onBack) {
-                  onBack();
-                }
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-afri-bg text-afri-text-sec hover:text-white border border-afri-border hover:border-[#D4AF37]/50 text-xs font-black uppercase tracking-wider transition cursor-pointer active:scale-95 shadow-sm"
-              title="Retourner à la page précédente"
-            >
-              <ArrowLeft className="w-4 h-4 text-[#D4AF37]" />
-              <span>Retour</span>
-            </button>
+        <div className="bg-afri-bg-sec border-b border-afri-border shrink-0 z-30 shadow-sm">
+          <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => {
+                  if (activeConvo) {
+                    setActiveConvo(null);
+                  } else if (onBack) {
+                    onBack();
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-afri-bg text-afri-text-sec hover:text-white border border-afri-border hover:border-[#D4AF37]/50 text-xs font-black uppercase tracking-wider transition cursor-pointer active:scale-95 shadow-sm"
+                title="Retourner à la page précédente"
+              >
+                <ArrowLeft className="w-4 h-4 text-[#D4AF37]" />
+                <span>Retour</span>
+              </button>
 
-            <div className="h-4 w-px bg-afri-border mx-0.5 hidden sm:block" />
+              <div className="h-4 w-px bg-afri-border mx-0.5 hidden sm:block" />
+
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
+                <h2 className="text-xs font-black uppercase tracking-wider text-afri-text">
+                  {activeTab === "discussions" && (activeConvo ? "Discussion Directe" : "Messagerie Instantanée")}
+                  {activeTab === "appels" && "Centre d'Appels WebRTC"}
+                  {activeTab === "activite" && "Activités & Directs"}
+                  {activeTab === "parametres" && "Paramètres Messagerie"}
+                  {activeTab === "afrigombo" && "Espace AFRIGOMBO"}
+                </h2>
+
+                {/* Interrupteur Bulle Flottante (Arbre à Palabres) */}
+                <button
+                  type="button"
+                  onClick={toggleFloatingBubble}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 transition cursor-pointer active:scale-95 ml-2 shrink-0 select-none"
+                  title={showFloatingBubble ? "Désactiver la bulle flottante Arbre à Palabres" : "Activer la bulle flottante Arbre à Palabres"}
+                >
+                  <span className="text-[10px] font-bold text-afri-text-sec flex items-center gap-1">
+                    🌳 Bulle
+                  </span>
+                  <div className={`w-7 h-3.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out ${showFloatingBubble ? 'bg-[#D4AF37]' : 'bg-zinc-700'}`}>
+                    <div className={`w-2.5 h-2.5 rounded-full bg-black transition-transform duration-200 ease-in-out ${showFloatingBubble ? 'translate-x-3.5' : 'translate-x-0'}`} />
+                  </div>
+                </button>
+              </div>
+            </div>
 
             <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
-              <h2 className="text-xs font-black uppercase tracking-wider text-afri-text">
-                {activeTab === "discussions" && (activeConvo ? "Discussion Directe" : "Messagerie Instantanée")}
-                {activeTab === "appels" && "Centre d'Appels WebRTC"}
-                {activeTab === "activite" && "Activités & Directs"}
-                {activeTab === "parametres" && "Paramètres Messagerie"}
-                {activeTab === "afrigombo" && "Espace AFRIGOMBO"}
-              </h2>
-
-              {/* Interrupteur Bulle Flottante (Arbre à Palabres) */}
-              <button
-                type="button"
-                onClick={toggleFloatingBubble}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 transition cursor-pointer active:scale-95 ml-2 shrink-0 select-none"
-                title={showFloatingBubble ? "Désactiver la bulle flottante Arbre à Palabres" : "Activer la bulle flottante Arbre à Palabres"}
-              >
-                <span className="text-[10px] font-bold text-afri-text-sec flex items-center gap-1">
-                  🌳 Bulle
+              {totalUnreadCount > 0 && (
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black font-mono bg-[#D4AF37] text-black shadow-sm">
+                  {totalUnreadCount} non lus
                 </span>
-                <div className={`w-7 h-3.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out ${showFloatingBubble ? 'bg-[#D4AF37]' : 'bg-zinc-700'}`}>
-                  <div className={`w-2.5 h-2.5 rounded-full bg-black transition-transform duration-200 ease-in-out ${showFloatingBubble ? 'translate-x-3.5' : 'translate-x-0'}`} />
-                </div>
-              </button>
+              )}
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {totalUnreadCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black font-mono bg-[#D4AF37] text-black shadow-sm">
-                {totalUnreadCount} non lus
-              </span>
-            )}
           </div>
         </div>
 
@@ -871,8 +873,9 @@ export default function MessagesView({
                 {activeConvo ? (
                   <>
                     {/* Active Chat Header */}
-                    <div className="p-3 bg-afri-bg-sec border-b border-afri-border flex items-center justify-between gap-2 shrink-0 z-10">
-                      <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="bg-afri-bg-sec border-b border-afri-border shrink-0 z-10">
+                      <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 py-2.5 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
                         <button
                           onClick={() => setActiveConvo(null)}
                           className="p-1.5 rounded-xl bg-afri-bg-ter text-afri-text-sec hover:text-afri-text cursor-pointer"
@@ -980,43 +983,47 @@ export default function MessagesView({
                         </button>
                       </div>
                     </div>
+                  </div>
 
                     {/* Inline message search input */}
                     {showMsgSearch && (
-                      <div className="px-3 py-2 bg-afri-bg-sec border-b border-afri-border flex items-center justify-between gap-2 shrink-0">
-                        <div className="relative flex-1">
-                          <Search className="w-3.5 h-3.5 text-afri-text-muted absolute left-3 top-2.5" />
-                          <input
-                            type="text"
-                            placeholder="Rechercher dans cette conversation..."
-                            value={msgSearchQuery}
-                            onChange={(e) => setMsgSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-8 py-1.5 bg-afri-bg border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37]"
-                            autoFocus
-                          />
-                          {msgSearchQuery && (
-                            <button
-                              onClick={() => setMsgSearchQuery("")}
-                              className="absolute right-2.5 top-2.5 text-afri-text-muted hover:text-afri-text"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          )}
+                      <div className="bg-afri-bg-sec border-b border-afri-border shrink-0">
+                        <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 py-2 flex items-center justify-between gap-2">
+                          <div className="relative flex-1">
+                            <Search className="w-3.5 h-3.5 text-afri-text-muted absolute left-3 top-2.5" />
+                            <input
+                              type="text"
+                              placeholder="Rechercher dans cette conversation..."
+                              value={msgSearchQuery}
+                              onChange={(e) => setMsgSearchQuery(e.target.value)}
+                              className="w-full pl-9 pr-8 py-1.5 bg-afri-bg border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37]"
+                              autoFocus
+                            />
+                            {msgSearchQuery && (
+                              <button
+                                onClick={() => setMsgSearchQuery("")}
+                                className="absolute right-2.5 top-2.5 text-afri-text-muted hover:text-afri-text"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => {
+                              setShowMsgSearch(false);
+                              setMsgSearchQuery("");
+                            }}
+                            className="text-[11px] font-bold text-afri-text-sec hover:text-afri-text uppercase px-2 py-1 shrink-0"
+                          >
+                            Fermer
+                          </button>
                         </div>
-                        <button
-                          onClick={() => {
-                            setShowMsgSearch(false);
-                            setMsgSearchQuery("");
-                          }}
-                          className="text-[11px] font-bold text-afri-text-sec hover:text-afri-text uppercase px-2 py-1 shrink-0"
-                        >
-                          Fermer
-                        </button>
                       </div>
                     )}
 
                     {/* Messages Stream */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    <div className="flex-1 overflow-y-auto w-full">
+                      <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 py-3 sm:py-5 space-y-3 sm:space-y-4">
                       {securityError && (
                         <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center gap-2 text-xs text-rose-300">
                           <AlertCircle className="w-4 h-4 shrink-0" />
@@ -1132,11 +1139,13 @@ export default function MessagesView({
                           </div>
                         );
                       })}
-                      <div ref={messagesEndRef} />
+                        <div ref={messagesEndRef} />
+                      </div>
                     </div>
 
                     {/* Bottom Chat Input Bar */}
-                    <div className="p-2.5 bg-afri-bg-sec border-t border-afri-border relative">
+                    <div className="bg-afri-bg-sec border-t border-afri-border relative shrink-0">
+                      <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 py-2.5 xs:py-3">
                       {showEmojiPicker && (
                         <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-2 pt-1 scrollbar-none border-b border-afri-border/30">
                           {quickEmojis.map((emoji) => (
@@ -1274,10 +1283,11 @@ export default function MessagesView({
                           )}
                         </form>
                       )}
+                      </div>
                     </div>
                   </>
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+                  <div className="flex-1 flex flex-col items-center justify-center p-6 xs:p-8 sm:p-12 text-center space-y-4">
                     <div className="w-16 h-16 rounded-full bg-afri-bg-sec border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37]">
                       <MessageSquare className="w-8 h-8" />
                     </div>
@@ -1297,7 +1307,7 @@ export default function MessagesView({
 
           {/* TAB 2: APPELS */}
           {activeTab === "appels" && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 w-full h-full space-y-4 no-scrollbar pb-24">
+            <div className="flex-1 overflow-y-auto w-full h-full no-scrollbar">
               <CallsTab
                 callLogs={callLogs}
                 onStartAudioCall={(pUid) => handleStartDirectCall(pUid, "audio")}
@@ -1308,21 +1318,21 @@ export default function MessagesView({
 
           {/* TAB 3: ACTIVITÉ */}
           {activeTab === "activite" && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 w-full h-full space-y-4 no-scrollbar pb-24">
+            <div className="flex-1 overflow-y-auto w-full h-full no-scrollbar">
               <ActivityTab currentProfile={currentProfile} />
             </div>
           )}
 
           {/* TAB 4: PARAMÈTRES */}
           {activeTab === "parametres" && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 w-full h-full space-y-4 no-scrollbar pb-24">
+            <div className="flex-1 overflow-y-auto w-full h-full no-scrollbar">
               <SettingsTab currentUser={currentUser} />
             </div>
           )}
 
           {/* TAB 5: CENTRE OFFICIEL AFRIGOMBO */}
           {activeTab === "afrigombo" && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 w-full h-full space-y-4 no-scrollbar pb-24">
+            <div className="flex-1 overflow-y-auto w-full h-full no-scrollbar">
               <AfrigomboTab
                 currentUser={currentUser}
                 supportConvo={supportConvo}

@@ -64,9 +64,9 @@ export default function AfrigomboTab({
   };
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 py-3 sm:py-5 space-y-4 sm:space-y-6 pb-24">
       {/* Official Hero Banner */}
-      <div className="p-5 bg-gradient-to-br from-afri-bg-sec via-afri-bg to-afri-bg-ter border-2 border-[#D4AF37]/40 rounded-3xl shadow-xl relative overflow-hidden">
+      <div className="p-4 xs:p-5 sm:p-6 bg-gradient-to-br from-afri-bg-sec via-afri-bg to-afri-bg-ter border-2 border-[#D4AF37]/40 rounded-2xl xs:rounded-3xl shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-15 pointer-events-none">
           <ShieldCheck className="w-32 h-32 text-[#D4AF37]" />
         </div>
@@ -142,7 +142,7 @@ export default function AfrigomboTab({
 
       {/* 1. SUPPORT OFFICIEL DIRECT CARD */}
       {(afrigomboCategory === "all" || afrigomboCategory === "support") && (
-        <div className="p-4 bg-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl space-y-3 shadow-md">
+        <div className="p-4 xs:p-5 sm:p-6 bg-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl xs:rounded-3xl space-y-3 shadow-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37] shrink-0">
@@ -185,7 +185,7 @@ export default function AfrigomboTab({
 
       {/* 2. ASSISTANCE IA INTERACTIVE */}
       {(afrigomboCategory === "all" || afrigomboCategory === "ia") && (
-        <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-3">
+        <div className="p-4 xs:p-5 sm:p-6 bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider flex items-center gap-2">
               <Bot className="w-4 h-4" />

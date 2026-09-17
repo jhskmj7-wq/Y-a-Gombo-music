@@ -164,9 +164,9 @@ export default function ActivityTab({ currentProfile }: ActivityTabProps) {
   };
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 py-3 sm:py-5 space-y-4 sm:space-y-6 pb-24">
       {/* Activity Statistics & Trust Score Dashboard */}
-      <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-3">
+      <div className="p-4 xs:p-5 sm:p-6 bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-afri-text uppercase tracking-wider flex items-center gap-2">
             <Activity className="w-4 h-4 text-[#D4AF37]" />
@@ -187,14 +187,14 @@ export default function ActivityTab({ currentProfile }: ActivityTabProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl flex flex-col justify-between">
+        <div className="p-4 xs:p-5 sm:p-6 bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl flex flex-col justify-between">
           <span className="text-[10px] text-afri-text-muted font-bold uppercase">Indice de Confiance</span>
           <span className="text-xl font-black text-emerald-500 mt-2">{currentProfile?.trustScore || 100}%</span>
           <span className="text-[9px] text-afri-text-sec mt-1 flex items-center gap-1">
             <ShieldCheck className="w-3 h-3 text-emerald-400" /> Excellence certifiée
           </span>
         </div>
-        <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl flex flex-col justify-between">
+        <div className="p-4 xs:p-5 sm:p-6 bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl flex flex-col justify-between">
           <span className="text-[10px] text-afri-text-muted font-bold uppercase">Statut Membre</span>
           <span className="text-xl font-black text-[#D4AF37] mt-2">
             {currentProfile?.isPremium || currentProfile?.premium ? "Élite 👑" : "Standard"}
@@ -205,7 +205,7 @@ export default function ActivityTab({ currentProfile }: ActivityTabProps) {
 
       {/* Grouped Notifications feed */}
       {activities.length === 0 ? (
-        <div className="p-12 bg-afri-bg-sec border border-afri-border rounded-2xl text-center space-y-3">
+        <div className="p-6 xs:p-8 sm:p-10 bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl text-center space-y-3">
           <RefreshCw className="w-8 h-8 text-afri-text-muted mx-auto opacity-50" />
           <div>
             <p className="text-xs font-bold text-afri-text">Aucun événement récent</p>
@@ -226,7 +226,7 @@ export default function ActivityTab({ currentProfile }: ActivityTabProps) {
                 {list.map((act) => (
                   <div
                     key={act.id}
-                    className="p-3 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/40 rounded-xl flex items-start gap-3 transition group relative"
+                    className="p-3.5 xs:p-4 sm:p-5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/40 rounded-2xl xs:rounded-3xl flex items-start gap-3.5 transition group relative"
                   >
                     {/* Activity Icon */}
                     <span className={`p-2 rounded-xl border shrink-0 flex items-center justify-center ${act.color}`}>
@@ -270,7 +270,7 @@ export default function ActivityTab({ currentProfile }: ActivityTabProps) {
       )}
 
       {/* Footer telemetry */}
-      <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-3">
+      <div className="p-4 xs:p-5 sm:p-6 bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl space-y-3">
         <h4 className="text-[11px] font-bold text-afri-text uppercase tracking-wider">📜 Télémétrie du Profil</h4>
         <div className="divide-y divide-afri-border/40">
           <div className="py-2.5 flex justify-between text-xs text-afri-text-sec">

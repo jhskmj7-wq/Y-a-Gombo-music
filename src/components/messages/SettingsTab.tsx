@@ -59,9 +59,9 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
   };
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 py-3 sm:py-5 space-y-4 sm:space-y-6 pb-24">
       {/* Settings Welcome Banner */}
-      <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl">
+      <div className="p-4 xs:p-5 sm:p-6 bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl">
         <h3 className="text-xs font-bold text-afri-text uppercase tracking-wider flex items-center gap-2">
           <Settings className="w-4 h-4 text-[#D4AF37]" />
           Réglages de la Messagerie AFRIGOMBO
@@ -72,10 +72,10 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
       </div>
 
       {/* SECTION 1: PROFIL & SESSIONS ACTIVES */}
-      <div className="bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden">
+      <div className="bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl overflow-hidden">
         <button 
           onClick={() => toggleSection("profile")}
-          className="w-full p-4 flex items-center justify-between text-left hover:bg-afri-bg-ter transition cursor-pointer"
+          className="w-full p-4 xs:p-5 sm:p-6 flex items-center justify-between text-left hover:bg-afri-bg-ter transition cursor-pointer"
         >
           <span className="text-xs font-bold text-afri-text uppercase tracking-wide flex items-center gap-2.5">
             <User className="w-4 h-4 text-[#D4AF37]" />
@@ -85,7 +85,7 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
         </button>
 
         {activeSection === "profile" && (
-          <div className="p-4 bg-afri-bg/40 border-t border-afri-border space-y-3.5 text-xs animate-fadeIn">
+          <div className="p-4 xs:p-5 sm:p-6 bg-afri-bg/40 border-t border-afri-border space-y-3.5 text-xs animate-fadeIn">
             <div>
               <span className="block text-[10px] text-afri-text-muted font-bold uppercase mb-1">Votre Badge Membre</span>
               <p className="text-afri-text font-semibold flex items-center gap-1.5">
@@ -116,10 +116,10 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
       </div>
 
       {/* SECTION 2: CONFIDENTIALITÉ & LISTE NOIRE */}
-      <div className="bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden">
+      <div className="bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl overflow-hidden">
         <button 
           onClick={() => toggleSection("privacy")}
-          className="w-full p-4 flex items-center justify-between text-left hover:bg-afri-bg-ter transition cursor-pointer"
+          className="w-full p-4 xs:p-5 sm:p-6 flex items-center justify-between text-left hover:bg-afri-bg-ter transition cursor-pointer"
         >
           <span className="text-xs font-bold text-afri-text uppercase tracking-wide flex items-center gap-2.5">
             <Lock className="w-4 h-4 text-[#D4AF37]" />
@@ -129,7 +129,7 @@ export default function SettingsTab({ currentUser }: SettingsTabProps) {
         </button>
 
         {activeSection === "privacy" && (
-          <div className="p-4 bg-afri-bg/40 border-t border-afri-border space-y-4 text-xs animate-fadeIn">
+          <div className="p-4 xs:p-5 sm:p-6 bg-afri-bg/40 border-t border-afri-border space-y-4 text-xs animate-fadeIn">
             <div className="space-y-2">
               <span className="block text-[10px] text-afri-text-muted font-bold uppercase">Qui peut voir votre statut "En ligne" ?</span>
               <div className="grid grid-cols-3 gap-2">

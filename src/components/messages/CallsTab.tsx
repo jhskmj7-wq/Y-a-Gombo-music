@@ -90,9 +90,9 @@ export default function CallsTab({
   });
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 py-3 sm:py-5 space-y-4 sm:space-y-6 pb-24">
       {/* Encryption Notice Header */}
-      <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
+      <div className="p-4 xs:p-5 sm:p-6 bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl space-y-2">
         <h3 className="text-xs font-bold text-afri-text uppercase tracking-wider flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
           Appels Audio & Vidéo Souverains
@@ -125,7 +125,7 @@ export default function CallsTab({
 
       {/* Quick Direct Call Input Drawer */}
       {showQuickCall && (
-        <div className="p-4 bg-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl space-y-3 animate-fadeIn">
+        <div className="p-4 xs:p-5 sm:p-6 bg-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl xs:rounded-3xl space-y-3 animate-fadeIn">
           <div className="flex justify-between items-center">
             <h4 className="text-[11px] font-bold text-afri-text uppercase tracking-wide">Lancer un Appel Instantané</h4>
             <button onClick={() => setShowQuickCall(false)} className="text-afri-text-muted hover:text-afri-text">
@@ -198,7 +198,7 @@ export default function CallsTab({
         </span>
 
         {filteredLogs.length === 0 ? (
-          <div className="p-8 bg-afri-bg-sec border border-afri-border rounded-2xl text-center space-y-3">
+          <div className="p-6 xs:p-8 sm:p-10 bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl text-center space-y-3">
             <PhoneOff className="w-8 h-8 text-afri-text-muted mx-auto opacity-50" />
             <div>
               <p className="text-xs font-bold text-afri-text">Aucun appel trouvé</p>
@@ -216,7 +216,7 @@ export default function CallsTab({
             return (
               <div
                 key={log.id}
-                className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl flex items-center justify-between hover:border-afri-border/80 transition"
+                className="p-3.5 xs:p-4 sm:p-5 bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl flex items-center justify-between hover:border-afri-border/80 transition"
               >
                 <div className="flex items-center gap-3">
                   {/* Partner Avatar */}

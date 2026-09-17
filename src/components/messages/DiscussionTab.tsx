@@ -222,7 +222,7 @@ export default function DiscussionTab({
   });
 
   return (
-    <div className="space-y-3 pb-24 relative afri-container pt-4">
+    <div className="w-full max-w-4xl mx-auto px-1.5 xs:px-2.5 sm:px-6 py-3 sm:py-5 space-y-4 sm:space-y-6 pb-24 relative">
       {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-afri-text-muted" />
@@ -267,7 +267,7 @@ export default function DiscussionTab({
       {activeCategory !== "archived" && activeCategory !== "artistes" && activeCategory !== "prestataires" && activeCategory !== "recruteurs" && (
         <div
           onClick={onOpenSupport}
-          className="p-4 bg-gradient-to-r from-afri-bg-sec to-afri-bg-ter border border-[#D4AF37]/40 rounded-2xl flex items-center justify-between cursor-pointer hover:border-[#D4AF37] transition shadow-md group"
+          className="p-4 xs:p-5 sm:p-6 bg-gradient-to-r from-afri-bg-sec to-afri-bg-ter border border-[#D4AF37]/40 rounded-2xl xs:rounded-3xl flex items-center justify-between cursor-pointer hover:border-[#D4AF37] transition shadow-md group"
         >
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -298,7 +298,7 @@ export default function DiscussionTab({
       )}
 
       {/* Conversations List */}
-      <div className="space-y-2">
+      <div className="space-y-2.5 sm:space-y-3">
         <div className="flex items-center justify-between px-1 pt-1">
           <span className="text-[10px] font-bold text-afri-text-muted uppercase tracking-wider">
             {activeCategory === "archived" ? "Discussions Archivées" : "Discussions Récentes"} ({filteredConvos.length})
@@ -317,7 +317,7 @@ export default function DiscussionTab({
             Chargement de la messagerie...
           </div>
         ) : filteredConvos.length === 0 ? (
-          <div className="p-8 bg-afri-bg-sec border border-afri-border rounded-2xl text-center space-y-3">
+          <div className="p-6 xs:p-8 sm:p-10 bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl text-center space-y-3">
             <MessageSquare className="w-8 h-8 text-afri-text-muted mx-auto opacity-50" />
             <div>
               <p className="text-xs font-bold text-afri-text">Aucune discussion trouvée</p>
@@ -358,7 +358,7 @@ export default function DiscussionTab({
                     handleOpenConvo(convo);
                   }
                 }}
-                className={`p-3.5 bg-afri-bg-sec border rounded-2xl flex items-center justify-between cursor-pointer hover:border-[#D4AF37]/60 transition shadow-sm group relative ${
+                className={`p-3.5 xs:p-4 sm:p-5 bg-afri-bg-sec border rounded-2xl xs:rounded-3xl flex items-center justify-between cursor-pointer hover:border-[#D4AF37]/60 transition shadow-sm group relative ${
                   isPinned ? "border-[#D4AF37]/40 bg-gradient-to-r from-afri-bg-sec to-afri-bg-sec/80" : "border-afri-border"
                 }`}
               >
