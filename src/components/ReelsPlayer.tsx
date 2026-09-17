@@ -152,7 +152,8 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const effectiveUser = currentUser || authUser;
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
+  // Default sound state: unmuted by default (muted = false), will fallback to muted if browser blocks autoplay
+  const [isMuted, setIsMuted] = useState(false);
   const sessionTimestamp = useRef(Date.now()).current;
   const [seenReels, setSeenReels] = useState<Set<string>>(() => {
     try {
@@ -171,9 +172,12 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const [videoErrors, setVideoErrors] = useState<Record<string, boolean>>({});
   const [doubleTapHeart, setDoubleTapHeart] = useState<{ reelId: string; x: number; y: number } | null>(null);
   const lastTapRef = useRef<{ time: number; reelId: string }>({ time: 0, reelId: "" });
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isScrollingLockedRef = useRef<boolean>(false);
+  
+  // Deterministic gesture lock & touch coords
+  const isTransitioningRef = useRef<boolean>(false);
   const touchStartYRef = useRef<number>(0);
+  const touchStartXRef = useRef<number>(0);
+  const isSwipingRef = useRef<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const activeVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -420,73 +424,96 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       const idx = localReels.findIndex(r => r.id === initialReelId);
       if (idx !== -1) {
         setCurrentIndex(idx);
-        if (containerRef.current) {
-          containerRef.current.scrollTop = idx * containerRef.current.clientHeight;
-        }
       }
     }
   }, [initialReelId, localReels]);
 
-  // Handle Scroll to update current index with debounce and single-gesture stabilization
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const container = e.currentTarget;
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-    scrollTimeoutRef.current = setTimeout(() => {
-      const height = container.clientHeight;
-      if (height > 0) {
-        const index = Math.round(container.scrollTop / height);
-        if (index >= 0 && index < localReels.length && index !== currentIndex) {
-          setCurrentIndex(index);
-          const viewedReel = localReels[index];
-          if (viewedReel && viewedReel.id) {
-            setSeenReels(prev => {
-              if (prev.has(viewedReel.id)) return prev;
-              const next = new Set(prev);
-              next.add(viewedReel.id);
-              try {
-                sessionStorage.setItem("afrigombo_seen_reels", JSON.stringify(Array.from(next)));
-              } catch (_) {}
-              return next;
-            });
-          }
-        }
+  // Deterministic Navigation Functions: STRICTLY 1 GESTE = 1 REEL
+  const goToNextReel = () => {
+    if (isTransitioningRef.current) return;
+    if (currentIndex < localReels.length - 1) {
+      isTransitioningRef.current = true;
+      const nextIdx = currentIndex + 1;
+      setCurrentIndex(nextIdx);
+      const viewedReel = localReels[nextIdx];
+      if (viewedReel && viewedReel.id) {
+        setSeenReels(prev => {
+          if (prev.has(viewedReel.id)) return prev;
+          const next = new Set(prev);
+          next.add(viewedReel.id);
+          try {
+            sessionStorage.setItem("afrigombo_seen_reels", JSON.stringify(Array.from(next)));
+          } catch (_) {}
+          return next;
+        });
       }
-    }, 80);
+      setTimeout(() => {
+        isTransitioningRef.current = false;
+      }, 380); // Transition lock matches CSS animation
+    }
   };
 
-  // Touch gesture listener to guarantee 1 Reel per swipe on mobile/Android
+  const goToPrevReel = () => {
+    if (isTransitioningRef.current) return;
+    if (currentIndex > 0) {
+      isTransitioningRef.current = true;
+      const prevIdx = currentIndex - 1;
+      setCurrentIndex(prevIdx);
+      setTimeout(() => {
+        isTransitioningRef.current = false;
+      }, 380);
+    }
+  };
+
+  // Touch gesture listener: Exactly 1 gesture = 1 change of Reel (Android first)
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (isTransitioningRef.current) return;
     if (e.touches.length > 0) {
       touchStartYRef.current = e.touches[0].clientY;
-      isScrollingLockedRef.current = false;
+      touchStartXRef.current = e.touches[0].clientX;
+      isSwipingRef.current = true;
     }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    // No continuous index change during touchmove
+    if (!isSwipingRef.current || isTransitioningRef.current) return;
   };
 
   const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (e.changedTouches.length > 0 && !isScrollingLockedRef.current && containerRef.current) {
+    if (!isSwipingRef.current || isTransitioningRef.current) {
+      isSwipingRef.current = false;
+      return;
+    }
+    isSwipingRef.current = false;
+
+    if (e.changedTouches.length > 0) {
       const touchEndY = e.changedTouches[0].clientY;
+      const touchEndX = e.changedTouches[0].clientX;
       const deltaY = touchStartYRef.current - touchEndY;
-      const height = containerRef.current.clientHeight;
+      const deltaX = Math.abs(touchStartXRef.current - touchEndX);
 
-      // Minimum swipe distance threshold (55px)
-      if (Math.abs(deltaY) > 55 && height > 0) {
-        isScrollingLockedRef.current = true;
-        let targetIndex = currentIndex;
-        if (deltaY > 0 && currentIndex < localReels.length - 1) {
-          targetIndex = currentIndex + 1;
-        } else if (deltaY < 0 && currentIndex > 0) {
-          targetIndex = currentIndex - 1;
+      // Minimum swipe distance threshold (45px) and vertical angle check
+      if (Math.abs(deltaY) > 45 && Math.abs(deltaY) > deltaX) {
+        if (deltaY > 0) {
+          // Swipe up -> Next Reel (+1 strictly)
+          goToNextReel();
+        } else {
+          // Swipe down -> Prev Reel (-1 strictly)
+          goToPrevReel();
         }
+      }
+    }
+  };
 
-        if (targetIndex !== currentIndex) {
-          setCurrentIndex(targetIndex);
-          containerRef.current.scrollTo({
-            top: targetIndex * height,
-            behavior: "smooth"
-          });
-        }
+  // Desktop wheel navigation (strictly 1 tick = 1 Reel)
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (isTransitioningRef.current) return;
+    if (Math.abs(e.deltaY) > 30) {
+      if (e.deltaY > 0) {
+        goToNextReel();
+      } else {
+        goToPrevReel();
       }
     }
   };
@@ -505,22 +532,30 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       }
     });
 
-    if (activeVideoRef.current) {
+    if (activeVideoRef.current && currentReel) {
       const activeEl = activeVideoRef.current;
       activeEl.currentTime = 0;
 
-      // Determine initial mute state: use explicit user choice if any, otherwise default to muted (true) for autoplay compatibility
-      const targetMuted = userClickedMute.current !== null ? userClickedMute.current : true;
+      // Determine initial mute state: use explicit user choice if any, otherwise default to unmuted (false)
+      const targetMuted = userClickedMute.current !== null ? userClickedMute.current : false;
       
       setIsMuted(targetMuted);
       syncVideoAudio(activeEl, targetMuted);
 
+      // Trigger video.load() if not yet started
+      try {
+        if (activeEl.src !== currentReel.mediaUrl) {
+          activeEl.src = currentReel.mediaUrl;
+          activeEl.load();
+        }
+      } catch (_) {}
+
       const playPromise = activeEl.play();
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
-          console.warn("[ReelsPlayer] Autoplay prevented by browser, falling back to muted autoplay:", err);
-          if (activeEl && !activeEl.muted) {
-            // Fall back to muted autoplay
+          console.warn("[ReelsPlayer] Autoplay with sound prevented by browser policy, falling back to muted autoplay:", err);
+          if (activeEl && !activeEl.muted && userClickedMute.current === null) {
+            // Browser blocked unmuted autoplay: fall back to muted autoplay only until user interacts
             activeEl.muted = true;
             setIsMuted(true);
             activeEl.play().catch(() => {});
@@ -957,14 +992,15 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         </div>
       </div>
 
-      {/* SNAP-Y VERTICAL FULLSCREEN STREAM */}
+      {/* DETERMINISTIC VERTICAL STREAM WITH TRANSLATE-Y */}
       <div 
         ref={containerRef}
-        className="w-full h-full overflow-y-auto snap-y snap-mandatory scrollbar-none overscroll-contain [-webkit-overflow-scrolling:touch] bg-black"
-        style={{ touchAction: "pan-y" }}
-        onScroll={handleScroll}
+        className="w-full h-full overflow-hidden bg-black select-none touch-none"
+        style={{ touchAction: "none" }}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onWheel={handleWheel}
       >
         {localReels.length === 0 ? (
           <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-black text-white">
@@ -1005,173 +1041,178 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
             </div>
           </div>
         ) : (
-          localReels.map((reel, index) => {
-            const isActive = index === currentIndex;
-            const isNext = index === currentIndex + 1;
-            const isFollowing = reel.userId ? followedUsers.includes(reel.userId) : false;
-            const isExpanded = Boolean(expandedDescriptions[reel.id]);
+          <div 
+            className="w-full h-full transition-transform duration-[380ms] ease-out flex flex-col"
+            style={{
+              transform: `translateY(-${currentIndex * 100}%)`,
+              willChange: "transform"
+            }}
+          >
+            {localReels.map((reel, index) => {
+              const isActive = index === currentIndex;
+              // Mount at minimum [currentIndex - 1, currentIndex, currentIndex + 1] to avoid black screens and preload next
+              const shouldMountMedia = Math.abs(index - currentIndex) <= 1;
+              const isFollowing = reel.userId ? followedUsers.includes(reel.userId) : false;
+              const isExpanded = Boolean(expandedDescriptions[reel.id]);
 
-            return (
-              <div 
-                key={reel.id} 
-                className="relative w-full h-[100dvh] snap-start bg-black flex justify-center items-center overflow-hidden shrink-0"
-              >
-                {/* VIDEO PLAYER LAYER */}
-                {isActive || isNext ? (
-                  <div 
-                    className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden"
-                    onClick={(e) => handleVideoTouchOrClick(e, reel.id)}
-                  >
-                    {getYoutubeId(reel.mediaUrl) ? (
-                      <iframe
-                        ref={(el) => {
-                          if (el) {
-                            allCreatedIframes.current.add(el);
-                          }
-                        }}
-                        src={`https://www.youtube.com/embed/${getYoutubeId(reel.mediaUrl)}?autoplay=${isActive ? 1 : 0}&mute=${isMuted ? 1 : 0}&loop=1&playlist=${getYoutubeId(reel.mediaUrl)}&playsinline=1&controls=0&rel=0&modestbranding=1`}
-                        title={reel.title || "Vidéo Réel"}
-                        className="w-full h-full object-cover pointer-events-auto bg-black"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <video
-                        ref={(el) => {
-                          if (el) {
-                            videoElementsRef.current.set(reel.id, el);
-                            allCreatedVideos.current.add(el);
-                            if (isActive) {
-                              activeVideoRef.current = el;
+              return (
+                <div 
+                  key={reel.id} 
+                  className="relative w-full h-[100dvh] bg-black flex justify-center items-center overflow-hidden shrink-0"
+                >
+                  {/* VIDEO PLAYER LAYER */}
+                  {shouldMountMedia ? (
+                    <div 
+                      className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden"
+                      onClick={(e) => handleVideoTouchOrClick(e, reel.id)}
+                    >
+                      {getYoutubeId(reel.mediaUrl) ? (
+                        <iframe
+                          ref={(el) => {
+                            if (el) {
+                              allCreatedIframes.current.add(el);
                             }
-                          } else {
-                            videoElementsRef.current.delete(reel.id);
-                            if (isActive && activeVideoRef.current === el) {
-                              activeVideoRef.current = null;
-                            }
-                          }
-                        }}
-                        src={reel.mediaUrl}
-                        autoPlay={isActive}
-                        preload={isActive ? "auto" : "metadata"}
-                        style={{ filter: getFilterCss(reel.appliedFilter) }}
-                        className="w-full h-full object-cover cursor-pointer bg-black"
-                        loop
-                        muted={isMuted}
-                        playsInline
-                        // @ts-ignore
-                        webkit-playsinline="true"
-                        x-webkit-airplay="allow"
-                        onCanPlay={() => {
-                          setVideoErrors(prev => {
-                            if (!prev[reel.id]) return prev;
-                            const next = { ...prev };
-                            delete next[reel.id];
-                            return next;
-                          });
-                        }}
-                        onError={(e) => {
-                          console.warn(`[ReelsPlayer] Erreur chargement vidéo (id: ${reel.id}):`, e);
-                          setVideoErrors(prev => ({ ...prev, [reel.id]: true }));
-                        }}
-                        onLoadedData={() => {
-                          setVideoErrors(prev => {
-                            if (!prev[reel.id]) return prev;
-                            const next = { ...prev };
-                            delete next[reel.id];
-                            return next;
-                          });
-                        }}
-                      />
-                    )}
-
-                    {/* Double-tap animated heart overlay */}
-                    {doubleTapHeart && doubleTapHeart.reelId === reel.id && (
-                      <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-50 animate-ping">
-                        <Heart className="w-24 h-24 text-red-500 fill-red-500 drop-shadow-[0_0_25px_rgba(239,68,68,0.8)]" />
-                      </div>
-                    )}
-
-                    {/* Video Error Overlay with Retry & Next */}
-                    {videoErrors[reel.id] && (
-                      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/85 backdrop-blur-md text-white p-6 text-center">
-                        <div className="w-14 h-14 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mb-3">
-                          <AlertTriangle className="w-7 h-7 text-amber-400" />
-                        </div>
-                        <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-1">
-                          Lecture indisponible
-                        </h4>
-                        <p className="text-xs text-zinc-400 max-w-xs mb-4 leading-relaxed">
-                          Cette vidéo ne peut pas être lue actuellement ou le format nécessite un traitement.
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setVideoErrors(prev => {
-                                const next = { ...prev };
-                                delete next[reel.id];
-                                return next;
-                              });
-                              if (activeVideoRef.current) {
-                                activeVideoRef.current.load();
-                                activeVideoRef.current.play().catch((playErr) => console.warn("[ReelsPlayer] Retry error:", playErr));
+                          }}
+                          src={`https://www.youtube.com/embed/${getYoutubeId(reel.mediaUrl)}?autoplay=${isActive ? 1 : 0}&mute=${isMuted ? 1 : 0}&loop=1&playlist=${getYoutubeId(reel.mediaUrl)}&playsinline=1&controls=0&rel=0&modestbranding=1`}
+                          title={reel.title || "Vidéo Réel"}
+                          className="w-full h-full object-cover pointer-events-auto bg-black"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <video
+                          ref={(el) => {
+                            if (el) {
+                              videoElementsRef.current.set(reel.id, el);
+                              allCreatedVideos.current.add(el);
+                              if (isActive) {
+                                activeVideoRef.current = el;
                               }
-                            }}
-                            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-full border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
-                          >
-                            <RefreshCw className="w-3.5 h-3.5" />
-                            <span>Réessayer</span>
-                          </button>
-                          {localReels.length > 1 && (
+                            } else {
+                              videoElementsRef.current.delete(reel.id);
+                              if (isActive && activeVideoRef.current === el) {
+                                activeVideoRef.current = null;
+                              }
+                            }
+                          }}
+                          src={reel.mediaUrl}
+                          crossOrigin="anonymous"
+                          autoPlay={isActive}
+                          preload={isActive ? "auto" : "metadata"}
+                          style={{ filter: getFilterCss(reel.appliedFilter) }}
+                          className="w-full h-full object-cover cursor-pointer bg-black"
+                          loop
+                          muted={isMuted}
+                          playsInline
+                          // @ts-ignore
+                          webkit-playsinline="true"
+                          x-webkit-airplay="allow"
+                          onCanPlay={() => {
+                            setVideoErrors(prev => {
+                              if (!prev[reel.id]) return prev;
+                              const next = { ...prev };
+                              delete next[reel.id];
+                              return next;
+                            });
+                          }}
+                          onError={(e) => {
+                            console.warn(`[ReelsPlayer] Erreur chargement vidéo (id: ${reel.id}):`, e);
+                            setVideoErrors(prev => ({ ...prev, [reel.id]: true }));
+                          }}
+                          onLoadedData={() => {
+                            setVideoErrors(prev => {
+                              if (!prev[reel.id]) return prev;
+                              const next = { ...prev };
+                              delete next[reel.id];
+                              return next;
+                            });
+                          }}
+                        />
+                      )}
+
+                      {/* Double-tap animated heart overlay */}
+                      {doubleTapHeart && doubleTapHeart.reelId === reel.id && (
+                        <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-50 animate-ping">
+                          <Heart className="w-24 h-24 text-red-500 fill-red-500 drop-shadow-[0_0_25px_rgba(239,68,68,0.8)]" />
+                        </div>
+                      )}
+
+                      {/* Video Error Overlay with Retry & Next */}
+                      {videoErrors[reel.id] && (
+                        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/85 backdrop-blur-md text-white p-6 text-center">
+                          <div className="w-14 h-14 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mb-3">
+                            <AlertTriangle className="w-7 h-7 text-amber-400" />
+                          </div>
+                          <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-1">
+                            Lecture indisponible
+                          </h4>
+                          <p className="text-xs text-zinc-400 max-w-xs mb-4 leading-relaxed">
+                            Cette vidéo ne peut pas être lue actuellement ou le format nécessite un traitement.
+                          </p>
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const nextIdx = (currentIndex + 1) % localReels.length;
-                                setCurrentIndex(nextIdx);
-                                if (containerRef.current) {
-                                  containerRef.current.scrollTop = nextIdx * containerRef.current.clientHeight;
+                                setVideoErrors(prev => {
+                                  const next = { ...prev };
+                                  delete next[reel.id];
+                                  return next;
+                                });
+                                if (activeVideoRef.current) {
+                                  activeVideoRef.current.load();
+                                  activeVideoRef.current.play().catch((playErr) => console.warn("[ReelsPlayer] Retry error:", playErr));
                                 }
                               }}
-                              className="px-4 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black text-xs font-bold rounded-full transition cursor-pointer"
+                              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-full border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
                             >
-                              Suivant
+                              <RefreshCw className="w-3.5 h-3.5" />
+                              <span>Réessayer</span>
                             </button>
+                            {localReels.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  goToNextReel();
+                                }}
+                                className="px-4 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black text-xs font-bold rounded-full transition cursor-pointer"
+                              >
+                                Suivant
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Dynamic bandwidth and video quality indicator badge */}
+                      {isActive && (
+                        <div className="absolute top-4 left-4 z-40 bg-black/60 border border-zinc-700/40 backdrop-blur-md text-[8.5px] font-mono font-bold text-white px-2 py-1 rounded-md flex items-center gap-1.5 shadow-md select-none">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <span>{network?.videoQuality || "720p HD"}</span>
+                          {network?.autoCompression && (
+                            <>
+                              <span className="text-zinc-500">|</span>
+                              <span className="text-amber-400 font-extrabold text-[8px] uppercase">⚡ COMPRESSÉ AUTO</span>
+                            </>
+                          )}
+                          {network?.slowConnectionMode && (
+                            <>
+                              <span className="text-zinc-500">|</span>
+                              <span className="text-red-400 font-extrabold text-[8px] uppercase">📶 MODE LENT 2G/3G</span>
+                            </>
                           )}
                         </div>
-                      </div>
-                    )}
-
-                    {/* Dynamic bandwidth and video quality indicator badge */}
-                    {isActive && (
-                      <div className="absolute top-4 left-4 z-40 bg-black/60 border border-zinc-700/40 backdrop-blur-md text-[8.5px] font-mono font-bold text-white px-2 py-1 rounded-md flex items-center gap-1.5 shadow-md select-none">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span>{network?.videoQuality || "720p HD"}</span>
-                        {network?.autoCompression && (
-                          <>
-                            <span className="text-zinc-500">|</span>
-                            <span className="text-amber-400 font-extrabold text-[8px] uppercase">⚡ COMPRESSÉ AUTO</span>
-                          </>
-                        )}
-                        {network?.slowConnectionMode && (
-                          <>
-                            <span className="text-zinc-500">|</span>
-                            <span className="text-red-400 font-extrabold text-[8px] uppercase">📶 MODE LENT 2G/3G</span>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="w-full h-full bg-afri-bg-sec flex items-center justify-center relative">
-                    <img src={reel.authorAvatar} alt="" className="w-full h-full object-cover opacity-30 blur-lg" />
-                    <div className="absolute inset-0 bg-afri-bg/60 flex items-center justify-center">
-                      <Music className="w-12 h-12 text-[#D4AF37]/40 animate-pulse" />
+                      )}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="w-full h-full bg-afri-bg-sec flex items-center justify-center relative">
+                      <img src={reel.authorAvatar} alt="" className="w-full h-full object-cover opacity-30 blur-lg" />
+                      <div className="absolute inset-0 bg-afri-bg/60 flex items-center justify-center">
+                        <Music className="w-12 h-12 text-[#D4AF37]/40 animate-pulse" />
+                      </div>
+                    </div>
+                  )}
 
               {/* GRADIENT OVERLAYS FOR CONTRAST */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/40 pointer-events-none" />
@@ -1335,7 +1376,8 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
               </div>
             </div>
           );
-        })
+        })}
+        </div>
       )}
       </div>
 

@@ -670,6 +670,17 @@ body,
   color: #ffffff !important;
 }
 
+/* Ensure video element inside immersive-dark is completely unaffected by light mode and renders natively */
+.immersive-dark video,
+.light .immersive-dark video {
+  background-color: #000000 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
 .immersive-dark *,
 .light .immersive-dark *,
 .light .immersive-dark p,
