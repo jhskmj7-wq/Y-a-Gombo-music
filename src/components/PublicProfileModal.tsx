@@ -19,6 +19,7 @@ import { PremiumEngine } from "../lib/premiumEngine";
 import { SecurityService } from "../lib/SecurityService";
 import { AdminSubscriptionTestBar } from "./admin/AdminSubscriptionTestBar";
 import { isGomboExpired } from "../lib/gomboDateUtils";
+import { publicationService } from "../lib/publicationService";
 
 interface PublicProfileModalProps {
   isOpen: boolean;
@@ -59,6 +60,8 @@ export function PublicProfileModal({
   const [userContracts, setUserContracts] = useState<GomboSafeContract[]>([]);
   const [publishedGombos, setPublishedGombos] = useState<Gombo[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [showFeaturedPicker, setShowFeaturedPicker] = useState<boolean>(false);
   
   // Interaction states
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
@@ -283,6 +286,54 @@ export function PublicProfileModal({
   const isElite = profilePlan === "elite";
   const isPro = profilePlan === "pro";
   const isFree = !isPro && !isElite;
+
+  const isOwner = !!activeUser && (activeUser.uid === targetUserId || activeUser.id === targetUserId || activeUser.uid === profile?.id || activeUser.id === profile?.id);
+
+  const handleTogglePostFeatured = async (postId: string, currentFeatured: boolean) => {
+    if (!isOwner) return;
+    if (isFree) {
+      setActionNotice("Abonnement Gratuit : vos 3 vidéos récents sont automatiques. Passez en PRO (7) ou ELITE (15) pour choisir.");
+      setTimeout(() => setActionNotice(null), 3500);
+      return;
+    }
+    if (!currentFeatured) {
+      const currentCount = userPosts.filter(p => (p as any).featuredInPortfolio === true).length;
+      const maxLimit = isElite ? 15 : 7;
+      if (currentCount >= maxLimit) {
+        setActionNotice(`Limite de vidéos à la une atteinte (${currentCount}/${maxLimit}). Retirez-en une d'abord.`);
+        setTimeout(() => setActionNotice(null), 3500);
+        return;
+      }
+    }
+    const success = await publicationService.togglePortfolioFeatured(postId, !currentFeatured);
+    if (success) {
+      setUserPosts(prev => prev.map(p => p.id === postId ? { ...p, featuredInPortfolio: !currentFeatured } : p));
+      setActionNotice(!currentFeatured ? "★ Vidéo ajoutée à vos Réalisations à la une !" : "Vidéo retirée de la une.");
+      setTimeout(() => setActionNotice(null), 3000);
+    }
+  };
+
+  const handleToggleReviewFeatured = async (reviewId: string, currentFeatured: boolean) => {
+    if (!isOwner) return;
+    if (isFree) {
+      setActionNotice("Abonnement Gratuit : vos avis s'affichent par date. Passez en PRO (3) ou ELITE (7) pour épingler vos meilleurs avis.");
+      setTimeout(() => setActionNotice(null), 3500);
+      return;
+    }
+    if (!currentFeatured) {
+      const currentCount = reviews.filter(r => r.featuredInPortfolio === true).length;
+      const maxLimit = isElite ? 7 : 3;
+      if (currentCount >= maxLimit) {
+        setActionNotice(`Limite d'avis à la une atteinte (${currentCount}/${maxLimit}). Retirez un avis d'abord.`);
+        setTimeout(() => setActionNotice(null), 3500);
+        return;
+      }
+    }
+    await gomboDB.toggleReviewFeatured(reviewId, !currentFeatured);
+    setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, featuredInPortfolio: !currentFeatured } : r));
+    setActionNotice(!currentFeatured ? "★ Avis certifié mis en avant en tête de profil !" : "Avis retiré de la une.");
+    setTimeout(() => setActionNotice(null), 3000);
+  };
 
   const displayName = profile?.artisticName || profile?.artistName || profile?.displayName || `${profile?.firstName || "Artiste"} ${profile?.lastName || ""}`.trim();
   const gomboId = getEffectiveGomboId(profile);
@@ -853,6 +904,30 @@ export function PublicProfileModal({
                   )}
                 </div>
 
+                {/* Floating Notification / Action Toast */}
+                <AnimatePresence>
+                  {actionNotice && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="p-3 bg-amber-500/20 border-2 border-amber-400 text-amber-200 rounded-2xl text-xs font-bold flex items-center justify-between gap-2 shadow-xl ring-1 ring-amber-400/30"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 shrink-0 text-amber-400" />
+                        <span>{actionNotice}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActionNotice(null)}
+                        className="p-1 text-xs font-black hover:text-white rounded-lg bg-black/30"
+                      >
+                        ✕
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 {/* TAB 1: GOMBOS / PRESTATIONS */}
                 {activeTab === "gombos" && (
                   <div className="space-y-4">
@@ -1123,6 +1198,81 @@ export function PublicProfileModal({
                       </div>
                     )}
 
+                    {/* Owner Video Selection Panel */}
+                    {isOwner && (
+                      <div className="p-3 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowFeaturedPicker(!showFeaturedPicker)}
+                          className="w-full py-2.5 px-4 bg-afri-bg-ter hover:bg-afri-bg border border-afri-border rounded-xl text-xs font-bold text-afri-gold flex items-center justify-between cursor-pointer min-h-[44px]"
+                        >
+                          <span className="flex items-center gap-2">
+                            <Star className="w-4 h-4 fill-current text-afri-gold" />
+                            <span>{showFeaturedPicker ? "Masquer la sélection de vidéos" : "★ Choisir / Mettre en avant mes vidéos"}</span>
+                          </span>
+                          <ChevronRight className={`w-4 h-4 transition-transform ${showFeaturedPicker ? 'rotate-90' : ''}`} />
+                        </button>
+
+                        {showFeaturedPicker && (
+                          <div className="pt-2 space-y-2 border-t border-afri-border/50">
+                            {isFree ? (
+                              <p className="text-xs text-amber-300/90 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                                En formule <strong>Gratuit</strong>, vos 3 vidéos les plus récentes sont sélectionnées automatiquement. Passez en <strong>PRO (7)</strong> ou <strong>ELITE (15)</strong> pour choisir manuellement vos coups de cœur.
+                              </p>
+                            ) : (
+                              <>
+                                <p className="text-[11px] text-afri-text-sec">
+                                  Sélectionnez parmi vos publications pour constituer votre vitrine Réalisations ({userPosts.filter(p => (p as any).featuredInPortfolio === true).length} / {isElite ? 15 : 7}) :
+                                </p>
+                                {userPosts.length === 0 ? (
+                                  <p className="text-xs text-afri-text-sec italic py-2">Vous n&apos;avez encore publié aucune vidéo ou publication.</p>
+                                ) : (
+                                  <div className="max-h-60 overflow-y-auto space-y-2 pr-1 no-scrollbar">
+                                    {userPosts.map((p) => {
+                                      const isFeat = !!(p as any).featuredInPortfolio;
+                                      return (
+                                        <div key={p.id} className="p-2.5 bg-afri-bg border border-afri-border rounded-xl flex items-center justify-between gap-2">
+                                          <div className="min-w-0 flex items-center gap-2">
+                                            <div className="w-9 h-9 rounded-lg bg-zinc-800 shrink-0 overflow-hidden flex items-center justify-center">
+                                              {p.mediaUrl ? (
+                                                p.mediaUrl.includes('.mp4') || p.mediaUrl.includes('video') ? (
+                                                  <video src={p.mediaUrl} className="w-full h-full object-cover" />
+                                                ) : (
+                                                  <img src={p.mediaUrl} alt="Post" className="w-full h-full object-cover" />
+                                                )
+                                              ) : (
+                                                <Film className="w-4 h-4 text-afri-gold" />
+                                              )}
+                                            </div>
+                                            <span className="text-xs font-bold text-afri-text truncate">
+                                              {p.caption || (p as any).content || "Publication vidéo"}
+                                            </span>
+                                          </div>
+
+                                          <button
+                                            type="button"
+                                            onClick={() => handleTogglePostFeatured(p.id!, isFeat)}
+                                            className={`px-3 py-2 rounded-lg text-xs font-bold shrink-0 transition-all cursor-pointer min-h-[44px] flex items-center gap-1.5 ${
+                                              isFeat
+                                                ? "bg-amber-400 text-black border border-amber-300 shadow-sm"
+                                                : "bg-afri-bg-ter text-afri-gold border border-afri-border hover:border-afri-gold"
+                                            }`}
+                                          >
+                                            <Star className={`w-3.5 h-3.5 ${isFeat ? 'fill-current' : ''}`} />
+                                            <span>{isFeat ? "★ En une" : "★ Mettre en avant"}</span>
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Showcase Grid */}
                     {portfolioShowcaseItems.length === 0 ? (
                       <div className="py-12 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl p-6 space-y-2">
@@ -1179,6 +1329,21 @@ export function PublicProfileModal({
                                 <Star className="w-2.5 h-2.5 fill-current text-amber-400" />
                                 <span>À la une</span>
                               </div>
+
+                              {/* Owner Unfeature Button */}
+                              {isOwner && !isFree && item.id && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTogglePostFeatured(item.id, true);
+                                  }}
+                                  className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-red-600/90 hover:bg-red-700 text-white text-[10px] font-bold shadow-md flex items-center gap-1 z-20 transition cursor-pointer min-h-[36px]"
+                                >
+                                  <X className="w-3 h-3" />
+                                  <span>Retirer</span>
+                                </button>
+                              )}
 
                               <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black via-black/70 to-transparent pointer-events-none space-y-0.5">
                                 <p className="text-xs font-bold text-white line-clamp-1">{item.title}</p>
@@ -1407,35 +1572,61 @@ export function PublicProfileModal({
                         </p>
                       </div>
                     ) : (
-                      reelsMedia.map((m, idx) => (
-                        <div
-                          key={m.id || idx}
-                          onClick={() => setSelectedMediaViewer({ type: "video", url: m.url, title: m.title || "Réel Scène" })}
-                          className="relative aspect-[9/16] rounded-xl bg-afri-bg overflow-hidden border border-afri-border group shadow-sm cursor-pointer hover:border-afri-gold/50 transition-all"
-                        >
-                          {m.url ? (
-                            <video
-                              src={m.url}
-                              className="w-full h-full object-cover pointer-events-none"
-                              preload="metadata"
-                              muted
-                            />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-afri-bg-sec">
-                              <Film className="w-5 h-5 text-afri-gold mb-1" />
-                              <span className="text-[9px] font-bold text-afri-text line-clamp-2">{m.title}</span>
+                      reelsMedia.map((m, idx) => {
+                        const matchingPost = userPosts.find(p => p.id === m.id);
+                        const isFeatured = matchingPost ? !!(matchingPost as any).featuredInPortfolio : false;
+                        return (
+                          <div
+                            key={m.id || idx}
+                            onClick={() => setSelectedMediaViewer({ type: "video", url: m.url, title: m.title || "Réel Scène" })}
+                            className="relative aspect-[9/16] rounded-xl bg-afri-bg overflow-hidden border border-afri-border group shadow-sm cursor-pointer hover:border-afri-gold/50 transition-all"
+                          >
+                            {m.url ? (
+                              <video
+                                src={m.url}
+                                className="w-full h-full object-cover pointer-events-none"
+                                preload="metadata"
+                                muted
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-afri-bg-sec">
+                                <Film className="w-5 h-5 text-afri-gold mb-1" />
+                                <span className="text-[9px] font-bold text-afri-text line-clamp-2">{m.title}</span>
+                              </div>
+                            )}
+
+                            {/* Play Overlay */}
+                            <div className="absolute inset-0 bg-black/25 group-hover:bg-black/0 transition-colors flex items-center justify-center">
+                              <div className="w-8 h-8 rounded-full bg-black/70 backdrop-blur-sm text-afri-gold flex items-center justify-center shadow-md group-hover:scale-110 transition-transform border border-afri-gold/30">
+                                <Play className="w-4 h-4 fill-current ml-0.5" />
+                              </div>
                             </div>
-                          )}
-                          <div className="absolute inset-0 bg-black/25 group-hover:bg-black/0 transition-colors flex items-center justify-center">
-                            <div className="w-8 h-8 rounded-full bg-black/70 backdrop-blur-sm text-afri-gold flex items-center justify-center shadow-md group-hover:scale-110 transition-transform border border-afri-gold/30">
-                              <Play className="w-4 h-4 fill-current ml-0.5" />
+
+                            {/* Owner Feature Toggle Button */}
+                            {isOwner && m.id && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTogglePostFeatured(m.id, isFeatured);
+                                }}
+                                className={`absolute top-2 right-2 px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-lg flex items-center gap-1 z-20 cursor-pointer min-h-[36px] transition-all ${
+                                  isFeatured
+                                    ? 'bg-amber-400 text-black border border-amber-300 ring-2 ring-amber-400/50'
+                                    : 'bg-black/80 text-afri-gold border border-afri-gold/40 hover:bg-black'
+                                }`}
+                              >
+                                <Star className={`w-3 h-3 ${isFeatured ? 'fill-current text-black' : 'text-afri-gold'}`} />
+                                <span>{isFeatured ? '★ En une' : '★ Mettre en une'}</span>
+                              </button>
+                            )}
+
+                            <div className="absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black via-black/70 to-transparent pointer-events-none">
+                              <p className="text-[9px] font-bold text-white truncate">{m.title || "Réel Scène"}</p>
                             </div>
                           </div>
-                          <div className="absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black via-black/70 to-transparent pointer-events-none">
-                            <p className="text-[9px] font-bold text-afri-text truncate">{m.title || "Réel Scène"}</p>
-                          </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 )}
@@ -1443,6 +1634,36 @@ export function PublicProfileModal({
                 {/* TAB 4: AVIS & NOTES */}
                 {activeTab === "reviews" && (
                   <div className="space-y-3">
+                    {/* Tier Review Banner */}
+                    {isElite ? (
+                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border-2 border-amber-400 text-amber-200 text-xs font-mono flex items-center justify-between shadow-lg">
+                        <span className="flex items-center gap-1.5 font-bold">
+                          <span>👑 Mode ELITE Prestige : Avis Coup de Cœur</span>
+                        </span>
+                        <span className="font-black bg-black/40 px-2.5 py-1 rounded-xl border border-amber-400/40 text-amber-300">
+                          {reviews.filter(r => r.featuredInPortfolio === true).length} / 7 à la une
+                        </span>
+                      </div>
+                    ) : isPro ? (
+                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-900/30 via-afri-bg-sec to-indigo-900/30 border border-blue-400/60 text-blue-200 text-xs font-mono flex items-center justify-between shadow-md">
+                        <span className="flex items-center gap-1.5 font-bold">
+                          <span>⭐ Mode PRO Certifié : Avis Mis en Avant</span>
+                        </span>
+                        <span className="font-black bg-black/40 px-2.5 py-1 rounded-xl border border-blue-400/40 text-blue-300">
+                          {reviews.filter(r => r.featuredInPortfolio === true).length} / 3 à la une
+                        </span>
+                      </div>
+                    ) : (
+                      isOwner && (
+                        <div className="p-3.5 rounded-2xl bg-afri-bg-sec border border-afri-border text-xs text-afri-text-sec flex items-center justify-between flex-wrap gap-2">
+                          <span>Abonnement Gratuit : vos avis sont triés par date.</span>
+                          <span className="text-[10px] font-bold text-afri-gold bg-black/30 px-2 py-1 rounded-lg border border-afri-border">
+                            Passez en PRO pour épingler vos meilleurs avis
+                          </span>
+                        </div>
+                      )
+                    )}
+
                     {reviews.length === 0 ? (
                       <div className="py-12 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl p-6 space-y-2">
                         <Star className="w-10 h-10 text-amber-400/50 mx-auto mb-2" />
@@ -1452,27 +1673,82 @@ export function PublicProfileModal({
                         </p>
                       </div>
                     ) : (
-                      reviews.map((rev, idx) => (
-                        <div key={rev.id || idx} className="p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-afri-text">{rev.reviewerName || "Organisateur Certifié"}</span>
-                            <div className="flex items-center gap-1">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`w-3 h-3 ${i < (rev.rating || 5) ? "text-amber-400 fill-current" : "text-zinc-600"}`}
-                                />
-                              ))}
+                      [...reviews]
+                        .sort((a, b) => {
+                          const aFeat = a.featuredInPortfolio === true ? 1 : 0;
+                          const bFeat = b.featuredInPortfolio === true ? 1 : 0;
+                          if (aFeat !== bFeat) return bFeat - aFeat;
+                          const aTime = a.timestamp || a.createdAt || "";
+                          const bTime = b.timestamp || b.createdAt || "";
+                          return bTime.localeCompare(aTime);
+                        })
+                        .map((rev, idx) => {
+                          const isFeatured = rev.featuredInPortfolio === true;
+                          return (
+                            <div
+                              key={rev.id || idx}
+                              className={`p-4 rounded-2xl space-y-2.5 transition-all shadow-sm ${
+                                isFeatured
+                                  ? isElite
+                                    ? "bg-gradient-to-br from-amber-950/30 via-afri-bg-sec to-yellow-950/20 border-2 border-amber-400/80 ring-1 ring-amber-400/30"
+                                    : "bg-gradient-to-br from-blue-950/20 via-afri-bg-sec to-afri-bg border-2 border-blue-400/60"
+                                  : "bg-afri-bg border border-afri-border"
+                              }`}
+                            >
+                              {/* Featured Badge */}
+                              {isFeatured && (
+                                <div className="flex items-center justify-between pb-1 border-b border-afri-border/40">
+                                  <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm ${
+                                    isElite
+                                      ? "bg-amber-400 text-black"
+                                      : "bg-blue-500 text-white"
+                                  }`}>
+                                    {isElite ? "👑 Avis Prestige Épinglé (ELITE)" : "⭐ Avis Coup de Cœur (PRO)"}
+                                  </span>
+                                </div>
+                              )}
+
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-bold text-afri-text">{rev.reviewerName || "Organisateur Certifié"}</span>
+                                <div className="flex items-center gap-1">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={`w-3 h-3 ${i < (rev.rating || 5) ? "text-amber-400 fill-current" : "text-zinc-600"}`}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+
+                              {rev.comment && (
+                                <p className="text-xs text-afri-text-sec italic leading-relaxed">&quot;{rev.comment}&quot;</p>
+                              )}
+
+                              <div className="flex items-center justify-between text-[10px] font-mono text-afri-text-sec border-t border-afri-border/40 pt-1 flex-wrap gap-2">
+                                <span>{rev.timestamp ? new Date(rev.timestamp).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "Gombo Sécurisé"}</span>
+                                {rev.gomboTitle && <span className="text-afri-gold font-bold">{rev.gomboTitle}</span>}
+                              </div>
+
+                              {/* Owner Feature Toggle Button */}
+                              {isOwner && rev.id && (
+                                <div className="pt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleReviewFeatured(rev.id, isFeatured)}
+                                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px] ${
+                                      isFeatured
+                                        ? "bg-amber-500/20 text-amber-300 border border-amber-400/50 hover:bg-amber-500/30"
+                                        : "bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-gold border border-afri-border hover:border-afri-gold"
+                                    }`}
+                                  >
+                                    <Star className={`w-3.5 h-3.5 ${isFeatured ? "fill-current text-amber-400" : "text-afri-gold"}`} />
+                                    <span>{isFeatured ? "★ Retirer des avis à la une" : "★ Mettre cet avis en avant"}</span>
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                          {rev.comment && (
-                            <p className="text-xs text-afri-text-sec italic">&quot;{rev.comment}&quot;</p>
-                          )}
-                          <div className="text-[9px] font-mono text-afri-text-sec border-t border-afri-border/40 pt-1">
-                            {rev.timestamp ? new Date(rev.timestamp).toLocaleDateString("fr-FR") : "Gombo Sécurisé"}
-                          </div>
-                        </div>
-                      ))
+                          );
+                        })
                     )}
                   </div>
                 )}

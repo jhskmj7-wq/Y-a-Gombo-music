@@ -328,6 +328,7 @@ export interface GomboReview {
   comment?: string;
   timestamp?: string;
   type?: "client_to_musician" | "musician_to_client";
+  featuredInPortfolio?: boolean;
   [key: string]: any;
 }
 

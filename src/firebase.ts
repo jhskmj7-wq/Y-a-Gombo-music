@@ -632,6 +632,16 @@ export const gomboDB = {
     return () => {};
   },
 
+  async toggleReviewFeatured(reviewId: string, featured: boolean) {
+    if (db && reviewId) {
+      const reviewRef = doc(db, "contract_reviews", reviewId);
+      await updateDoc(reviewRef, {
+        featuredInPortfolio: featured,
+        updatedAt: new Date().toISOString()
+      });
+    }
+  },
+
   async deleteUserProfile(uid: string) {
     if (db) {
       await deleteDoc(doc(db, "users", uid));
