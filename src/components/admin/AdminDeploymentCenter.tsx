@@ -501,6 +501,19 @@ export default function AdminDeploymentCenter({
         };
       }
 
+      // Ensure wallet and its aliases (user_wallet, afripay) are completely synced together
+      if (flagId === "wallet" || flagId === "user_wallet" || flagId === "afripay") {
+        ["wallet", "user_wallet", "afripay"].forEach((wId) => {
+          updates[wId] = {
+            status: targetVisibility,
+            enabled: targetVisibility === "ACTIVE",
+            isPremium: targetPremium,
+            updatedAt: serverTimestamp(),
+            updatedBy: founderEmail || "Super Fondateur"
+          };
+        });
+      }
+
       await setDoc(sysConfigRef, updates, { merge: true });
 
       const updatedFlags = featureFlags.map((f) => {

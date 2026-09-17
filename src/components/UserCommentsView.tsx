@@ -1,28 +1,39 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  MessageSquare, Send, ArrowLeft, Heart, Sparkles, 
-  Trash2, User, CornerDownRight, CheckCircle2, ShieldCheck,
-  Filter, Search, Clock, ThumbsUp, MessageCircle
+  MessageSquare, Send, Heart, Trash2, Clock, 
+  Search, Filter, CheckCircle2, ShieldCheck, CornerDownRight, 
+  MessageCircle, RefreshCw, AlertCircle, ExternalLink
 } from "lucide-react";
+import { db } from "../lib/firebase";
+import { 
+  collection, query, onSnapshot, doc, getDocs, addDoc, 
+  updateDoc, deleteDoc, orderBy, serverTimestamp, setDoc 
+} from "firebase/firestore";
 import { UserProfile } from "../types";
-import { safeStringify } from "../lib/jsonUtils";
 
-interface CommentItem {
+export interface RealCommentItem {
   id: string;
+  docId: string;
   authorId: string;
   authorName: string;
   authorAvatar?: string;
   authorBadge?: string;
+  isVerified?: boolean;
+  targetId?: string;
   targetTitle: string;
-  targetType: "gombo" | "vibe" | "profile" | "academie";
+  targetType: "gombo" | "vibe" | "profile" | "academie" | "post" | "social";
   text: string;
   createdAt: string;
+  timestamp?: number;
   likes: number;
+  likedBy?: string[];
   isLiked?: boolean;
   replies: {
     id: string;
+    authorId?: string;
     authorName: string;
+    authorAvatar?: string;
     text: string;
     createdAt: string;
   }[];
@@ -40,155 +51,357 @@ export default function UserCommentsView({
   onBack,
   onNavigateTo
 }: UserCommentsViewProps) {
-  const userId = currentUserProfile?.uid || "guest";
-  const storageKey = `afrigombo_user_comments_${userId}`;
+  const currentUid = currentUserProfile?.uid || "";
+  const currentName = currentUserProfile?.artisticName || currentUserProfile?.displayName || "Artiste";
+  const currentAvatar = currentUserProfile?.photoURL || currentUserProfile?.avatarUrl || "";
 
-  // Initial mock comments + persistent local storage
-  const [comments, setComments] = useState<CommentItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
+  const [comments, setComments] = useState<RealCommentItem[]>([]);
+  const [usersMap, setUsersMap] = useState<Record<string, { name: string; avatar: string; isVerified?: boolean; badge?: string }>>({});
+  const [loading, setLoading] = useState(true);
 
-    return [
-      {
-        id: "c1",
-        authorId: "u_alpha",
-        authorName: "Alpha Blondy Prod",
-        authorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
-        authorBadge: "PROD CERTIFIÉ",
-        targetTitle: "Annonce : Bassiste Recherché pour Concert Marcory",
-        targetType: "gombo",
-        text: "Bonjour ! Est-ce que tu es disponible ce vendredi soir pour une balance à 18h avant le show ?",
-        createdAt: "Il y a 15 min",
-        likes: 3,
-        isLiked: false,
-        replies: [
-          {
-            id: "r1",
-            authorName: currentUserProfile?.artisticName || "Vous",
-            text: "Oui chef ! Je serai là dès 17h30 avec tout mon matériel.",
-            createdAt: "Il y a 5 min"
-          }
-        ],
-        direction: "received"
-      },
-      {
-        id: "c2",
-        authorId: "u_serge",
-        authorName: "Serge Beynaud Off",
-        authorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-        authorBadge: "VIP ELITE",
-        targetTitle: "Extrait Beat Coupé-Décalé 2026",
-        targetType: "vibe",
-        text: "Lourd le groove piano ! J'aimerais poser des voix dessus la semaine prochaine.",
-        createdAt: "Il y a 2h",
-        likes: 12,
-        isLiked: true,
-        replies: [],
-        direction: "received"
-      },
-      {
-        id: "c3",
-        authorId: "u_me",
-        authorName: currentUserProfile?.artisticName || "Vous",
-        authorAvatar: currentUserProfile?.photoURL || "",
-        authorBadge: "MEMBRE CERTIFIÉ",
-        targetTitle: "Publication : Studio enregistrement Yopougon",
-        targetType: "profile",
-        text: "Magnifique acoustique ! Quel est votre tarif pour un mixage complet 8 pistes ?",
-        createdAt: "Hier à 14:20",
-        likes: 2,
-        isLiked: false,
-        replies: [
-          {
-            id: "r2",
-            authorName: "Studio Yop Kings",
-            text: "Merci ! C'est 25.000 FCFA par titre avec mastering offert.",
-            createdAt: "Hier à 16:00"
-          }
-        ],
-        direction: "sent"
-      },
-      {
-        id: "c4",
-        authorId: "u_fatou",
-        authorName: "Fatou K. Vocaliste",
-        authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-        authorBadge: "GOMBO ID",
-        targetTitle: "Cours : Harmonie & Solfège Africain",
-        targetType: "academie",
-        text: "Merci pour cette leçon sur les rythmes polyrythmiques, très clair !",
-        createdAt: "22/07/2026",
-        likes: 5,
-        isLiked: false,
-        replies: [],
-        direction: "received"
-      }
-    ];
-  });
-
-  const [activeTab, setActiveTab] = useState<"received" | "sent">("received");
+  const [activeTab, setActiveTab] = useState<"received" | "sent" | "all">("received");
   const [filterType, setFilterType] = useState<string>("all");
   const [replyInput, setReplyInput] = useState<{ [commentId: string]: string }>({});
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [submittingReplyId, setSubmittingReplyId] = useState<string | null>(null);
 
-  // Save to localStorage whenever comments change
+  // 1. Fetch real registered users from Firestore for dynamic profile & avatar lookup
   useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, safeStringify(comments));
-    } catch (e) {}
-  }, [comments, storageKey]);
+    const unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
+      const map: Record<string, { name: string; avatar: string; isVerified?: boolean; badge?: string }> = {};
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const uid = docSnap.id;
+        const name = data.artisticName || data.displayName || data.name || "Membre";
+        const avatar = data.photoURL || data.avatarUrl || data.avatar || "";
+        const isVerified = data.isVerified || data.isCertified || false;
+        const badge = data.role === "founder" ? "FONDATEUR" : data.isVerified ? "VÉRIFIÉ" : data.accountType === "vip" ? "VIP" : "";
+        map[uid] = { name, avatar, isVerified, badge };
+        if (data.email) {
+          map[data.email.toLowerCase()] = { name, avatar, isVerified, badge };
+        }
+      });
+      setUsersMap(map);
+    }, (err) => {
+      console.warn("Error fetching users map in UserCommentsView:", err);
+    });
 
-  const handleToggleLike = (id: string) => {
-    setComments(prev => prev.map(c => {
-      if (c.id === id) {
-        const nextLiked = !c.isLiked;
-        return {
-          ...c,
-          isLiked: nextLiked,
-          likes: nextLiked ? c.likes + 1 : c.likes - 1
-        };
-      }
-      return c;
-    }));
-  };
+    return () => unsubUsers();
+  }, []);
 
-  const handleSendReply = (commentId: string) => {
-    const text = (replyInput[commentId] || "").trim();
-    if (!text) return;
+  // 2. Fetch real comments from Firestore collections in real-time
+  useEffect(() => {
+    setLoading(true);
 
-    const newReply = {
-      id: `rep_${Date.now()}`,
-      authorName: currentUserProfile?.artisticName || "Vous",
-      text,
-      createdAt: "À l'instant"
+    const aggregatedComments = new Map<string, RealCommentItem>();
+
+    const updateState = () => {
+      const list = Array.from(aggregatedComments.values());
+      // Sort newest first
+      list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      setComments(list);
+      setLoading(false);
     };
 
-    setComments(prev => prev.map(c => {
-      if (c.id === commentId) {
-        return {
-          ...c,
-          replies: [...c.replies, newReply]
-        };
+    // A. Listen to post_comments collection
+    const unsubPostComments = onSnapshot(collection(db, "post_comments"), (snapshot) => {
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const cid = docSnap.id;
+        const authorId = data.authorId || data.userId || data.userUid || "";
+        const authorInfo = usersMap[authorId] as { name?: string; avatar?: string; isVerified?: boolean; badge?: string } | undefined;
+
+        const createdAtRaw = data.createdAt;
+        let ts = 0;
+        let formattedTime = "Récemment";
+        if (createdAtRaw) {
+          const dateObj = typeof createdAtRaw === "string" ? new Date(createdAtRaw) : createdAtRaw?.toDate ? createdAtRaw.toDate() : new Date(createdAtRaw);
+          if (!isNaN(dateObj.getTime())) {
+            ts = dateObj.getTime();
+            formattedTime = dateObj.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+          }
+        }
+
+        const likedBy = Array.isArray(data.likedBy) ? data.likedBy : [];
+        const isLiked = currentUid ? likedBy.includes(currentUid) : false;
+        const isSent = Boolean(currentUid && authorId === currentUid);
+        const direction: "received" | "sent" = isSent ? "sent" : "received";
+
+        aggregatedComments.set(`post_comment_${cid}`, {
+          id: `post_comment_${cid}`,
+          docId: cid,
+          authorId,
+          authorName: data.authorName || data.userName || authorInfo?.name || "Artiste",
+          authorAvatar: data.authorAvatar || data.userAvatar || authorInfo?.avatar || "",
+          authorBadge: authorInfo?.badge || data.badge || "",
+          isVerified: authorInfo?.isVerified || data.isVerified,
+          targetId: data.postId || data.targetId || "",
+          targetTitle: data.targetTitle || data.postTitle || "Publication / Vibe",
+          targetType: (data.targetType as any) || "vibe",
+          text: data.text || data.content || data.comment || "",
+          createdAt: formattedTime,
+          timestamp: ts || Date.now(),
+          likes: typeof data.likes === "number" ? data.likes : likedBy.length,
+          likedBy,
+          isLiked,
+          replies: Array.isArray(data.replies) ? data.replies : [],
+          direction
+        });
+      });
+      updateState();
+    }, (err) => {
+      console.warn("Notice reading post_comments in UserCommentsView:", err);
+      setLoading(false);
+    });
+
+    // B. Listen to general comments collection
+    const unsubComments = onSnapshot(collection(db, "comments"), (snapshot) => {
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const cid = docSnap.id;
+        const authorId = data.authorId || data.userId || data.userUid || "";
+        const authorInfo = usersMap[authorId] as { name?: string; avatar?: string; isVerified?: boolean; badge?: string } | undefined;
+
+        const createdAtRaw = data.createdAt;
+        let ts = 0;
+        let formattedTime = "Récemment";
+        if (createdAtRaw) {
+          const dateObj = typeof createdAtRaw === "string" ? new Date(createdAtRaw) : createdAtRaw?.toDate ? createdAtRaw.toDate() : new Date(createdAtRaw);
+          if (!isNaN(dateObj.getTime())) {
+            ts = dateObj.getTime();
+            formattedTime = dateObj.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+          }
+        }
+
+        const likedBy = Array.isArray(data.likedBy) ? data.likedBy : [];
+        const isLiked = currentUid ? likedBy.includes(currentUid) : false;
+        const isSent = Boolean(currentUid && authorId === currentUid);
+        const direction: "received" | "sent" = isSent ? "sent" : "received";
+
+        aggregatedComments.set(`comment_${cid}`, {
+          id: `comment_${cid}`,
+          docId: cid,
+          authorId,
+          authorName: data.authorName || data.userName || authorInfo?.name || "Artiste",
+          authorAvatar: data.authorAvatar || data.userAvatar || authorInfo?.avatar || "",
+          authorBadge: authorInfo?.badge || data.badge || "",
+          isVerified: authorInfo?.isVerified || data.isVerified,
+          targetId: data.postId || data.targetId || "",
+          targetTitle: data.targetTitle || data.postTitle || "Opportunité / Gombo",
+          targetType: (data.targetType as any) || "gombo",
+          text: data.text || data.content || data.comment || "",
+          createdAt: formattedTime,
+          timestamp: ts || Date.now(),
+          likes: typeof data.likes === "number" ? data.likes : likedBy.length,
+          likedBy,
+          isLiked,
+          replies: Array.isArray(data.replies) ? data.replies : [],
+          direction
+        });
+      });
+      updateState();
+    }, (err) => {
+      console.warn("Notice reading comments in UserCommentsView:", err);
+      setLoading(false);
+    });
+
+    // C. Listen to posts collection to extract embedded comments
+    const unsubPosts = onSnapshot(collection(db, "posts"), (snapshot) => {
+      snapshot.forEach((docSnap) => {
+        const postData = docSnap.data();
+        const postId = docSnap.id;
+        const postTitle = postData.title || postData.name || "Annonce Gombo";
+        const postOwnerId = postData.userId || postData.authorId || "";
+
+        if (Array.isArray(postData.comments)) {
+          postData.comments.forEach((c: any, index: number) => {
+            const commentId = c.id || `post_${postId}_c_${index}`;
+            const authorId = c.authorId || c.userId || "";
+            const authorInfo = usersMap[authorId] as { name?: string; avatar?: string; isVerified?: boolean; badge?: string } | undefined;
+
+            let ts = Date.now();
+            let formattedTime = "Récemment";
+            if (c.createdAt) {
+              const dateObj = typeof c.createdAt === "string" ? new Date(c.createdAt) : c.createdAt?.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
+              if (!isNaN(dateObj.getTime())) {
+                ts = dateObj.getTime();
+                formattedTime = dateObj.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+              }
+            }
+
+            const likedBy = Array.isArray(c.likedBy) ? c.likedBy : [];
+            const isLiked = currentUid ? likedBy.includes(currentUid) : false;
+            const isSent = Boolean(currentUid && authorId === currentUid);
+            const isMyPost = Boolean(currentUid && postOwnerId === currentUid);
+            const direction: "received" | "sent" = isSent ? "sent" : (isMyPost ? "received" : "received");
+
+            aggregatedComments.set(commentId, {
+              id: commentId,
+              docId: postId,
+              authorId,
+              authorName: c.authorName || c.userName || authorInfo?.name || "Membre AFRIGOMBO",
+              authorAvatar: c.authorAvatar || c.userAvatar || authorInfo?.avatar || "",
+              authorBadge: authorInfo?.badge || c.badge || "",
+              isVerified: authorInfo?.isVerified || c.isVerified,
+              targetId: postId,
+              targetTitle: postTitle,
+              targetType: "gombo",
+              text: c.text || c.content || c.comment || "",
+              createdAt: formattedTime,
+              timestamp: ts,
+              likes: typeof c.likes === "number" ? c.likes : likedBy.length,
+              likedBy,
+              isLiked,
+              replies: Array.isArray(c.replies) ? c.replies : [],
+              direction
+            });
+          });
+        }
+      });
+      updateState();
+    }, (err) => {
+      console.warn("Notice reading posts comments in UserCommentsView:", err);
+    });
+
+    return () => {
+      unsubPostComments();
+      unsubComments();
+      unsubPosts();
+    };
+  }, [currentUid, usersMap]);
+
+  // Handle Like in Firestore
+  const handleToggleLike = async (comment: RealCommentItem) => {
+    if (!currentUid) {
+      if (onNavigateTo) onNavigateTo("login");
+      return;
+    }
+
+    const currentLikedBy = comment.likedBy || [];
+    const isCurrentlyLiked = currentLikedBy.includes(currentUid);
+    const newLikedBy = isCurrentlyLiked
+      ? currentLikedBy.filter((uid) => uid !== currentUid)
+      : [...currentLikedBy, currentUid];
+
+    // Optimistic UI update
+    setComments((prev) =>
+      prev.map((c) =>
+        c.id === comment.id
+          ? {
+              ...c,
+              isLiked: !isCurrentlyLiked,
+              likes: newLikedBy.length,
+              likedBy: newLikedBy
+            }
+          : c
+      )
+    );
+
+    try {
+      if (comment.id.startsWith("post_comment_")) {
+        await updateDoc(doc(db, "post_comments", comment.docId), {
+          likes: newLikedBy.length,
+          likedBy: newLikedBy
+        });
+      } else if (comment.id.startsWith("comment_")) {
+        await updateDoc(doc(db, "comments", comment.docId), {
+          likes: newLikedBy.length,
+          likedBy: newLikedBy
+        });
       }
-      return c;
-    }));
-
-    setReplyInput(prev => ({ ...prev, [commentId]: "" }));
-    setActiveReplyId(null);
-  };
-
-  const handleDeleteComment = (commentId: string) => {
-    if (window.confirm("Voulez-vous vraiment supprimer ce palabre ?")) {
-      setComments(prev => prev.filter(c => c.id !== commentId));
+    } catch (err) {
+      console.warn("Error updating comment like in Firestore:", err);
     }
   };
 
-  const filteredComments = comments.filter(c => {
-    if (c.direction !== activeTab) return false;
+  // Handle Reply submission in Firestore
+  const handleSendReply = async (comment: RealCommentItem) => {
+    const text = (replyInput[comment.id] || "").trim();
+    if (!text || submittingReplyId) return;
+
+    setSubmittingReplyId(comment.id);
+
+    const newReply = {
+      id: `rep_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      authorId: currentUid,
+      authorName: currentName,
+      authorAvatar: currentAvatar,
+      text,
+      createdAt: new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    };
+
+    // Optimistic UI update
+    setComments((prev) =>
+      prev.map((c) =>
+        c.id === comment.id
+          ? {
+              ...c,
+              replies: [...c.replies, newReply]
+            }
+          : c
+      )
+    );
+
+    setReplyInput((prev) => ({ ...prev, [comment.id]: "" }));
+    setActiveReplyId(null);
+
+    try {
+      const updatedReplies = [...comment.replies, newReply];
+      if (comment.id.startsWith("post_comment_")) {
+        await updateDoc(doc(db, "post_comments", comment.docId), {
+          replies: updatedReplies
+        });
+      } else if (comment.id.startsWith("comment_")) {
+        await updateDoc(doc(db, "comments", comment.docId), {
+          replies: updatedReplies
+        });
+      } else {
+        // Create an entry in post_comments linked to this target
+        await addDoc(collection(db, "post_comments"), {
+          postId: comment.targetId || comment.docId,
+          targetTitle: comment.targetTitle,
+          authorId: currentUid,
+          authorName: currentName,
+          authorAvatar: currentAvatar,
+          text: `En réponse à ${comment.authorName} : ${text}`,
+          createdAt: new Date().toISOString(),
+          likes: 0,
+          likedBy: [],
+          replies: []
+        });
+      }
+    } catch (err) {
+      console.warn("Error saving reply to Firestore:", err);
+    } finally {
+      setSubmittingReplyId(null);
+    }
+  };
+
+  // Handle Delete (Only author or admin)
+  const handleDeleteComment = async (comment: RealCommentItem) => {
+    if (!window.confirm("Voulez-vous vraiment supprimer ce palabre ?")) return;
+
+    // Optimistic remove
+    setComments((prev) => prev.filter((c) => c.id !== comment.id));
+
+    try {
+      if (comment.id.startsWith("post_comment_")) {
+        await deleteDoc(doc(db, "post_comments", comment.docId));
+      } else if (comment.id.startsWith("comment_")) {
+        await deleteDoc(doc(db, "comments", comment.docId));
+      }
+    } catch (err) {
+      console.warn("Error deleting comment from Firestore:", err);
+    }
+  };
+
+  const filteredComments = comments.filter((c) => {
+    if (activeTab === "received" && c.direction !== "received") return false;
+    if (activeTab === "sent" && c.direction !== "sent") return false;
+
     if (filterType !== "all" && c.targetType !== filterType) return false;
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
@@ -200,22 +413,27 @@ export default function UserCommentsView({
     return true;
   });
 
-  const receivedCount = comments.filter(c => c.direction === "received").length;
-  const sentCount = comments.filter(c => c.direction === "sent").length;
+  const receivedCount = comments.filter((c) => c.direction === "received").length;
+  const sentCount = comments.filter((c) => c.direction === "sent").length;
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden space-y-4 text-afri-text pb-20">
-      {/* HEADER / NAVIGATION BAR (ANDROID FRIENDLY) */}
+    <div className="max-w-5xl mx-auto w-full px-1.5 xs:px-2.5 sm:px-6 overflow-x-hidden space-y-4 text-afri-text pb-20">
+      {/* HEADER / NAVIGATION BAR */}
       <div className="flex items-center justify-between gap-3 bg-afri-bg/90 border border-afri-border/80 p-2.5 sm:p-3.5 rounded-2xl backdrop-blur-md shadow-lg sticky top-2 z-20">
         <div className="flex items-center gap-2 truncate">
           <MessageSquare className="w-5 h-5 text-[#D4AF37] shrink-0" />
           <h1 className="text-xs sm:text-sm font-black uppercase tracking-wider text-afri-text truncate">
-            Palabres & Interactions
+            Palabres & Échanges Réels
           </h1>
         </div>
 
-        <div className="px-2.5 py-1 bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] font-mono font-black text-[10px] rounded-full shrink-0">
-          {comments.length} Total
+        <div className="flex items-center gap-2">
+          {loading && (
+            <RefreshCw className="w-3.5 h-3.5 text-[#D4AF37] animate-spin" />
+          )}
+          <div className="px-2.5 py-1 bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] font-mono font-black text-[10px] rounded-full shrink-0">
+            {comments.length} Réels
+          </div>
         </div>
       </div>
 
@@ -225,11 +443,12 @@ export default function UserCommentsView({
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <p className="text-[#D4AF37] font-bold text-[9.5px] uppercase font-mono tracking-widest mb-1">
-              💬 Centre d'Échange Public
+            <p className="text-[#D4AF37] font-bold text-[9.5px] uppercase font-mono tracking-widest mb-1 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Discussion Communautaire Authentique</span>
             </p>
             <p className="text-xs text-afri-text-sec">
-              Gérez les palabres reçues sur vos annonces/vibes et répondez en direct à vos fans et collaborateurs.
+              Consultez les palabres et négociations réelles rédigées par les membres de la plateforme.
             </p>
           </div>
 
@@ -260,6 +479,19 @@ export default function UserCommentsView({
                 {sentCount}
               </span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("all")}
+              className={`px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === "all" ? "bg-[#D4AF37] text-black shadow-md" : "text-afri-text-sec hover:text-afri-text"
+              }`}
+            >
+              <span>Tous</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${activeTab === "all" ? "bg-afri-bg text-[#D4AF37]" : "bg-afri-bg text-afri-text-sec"}`}>
+                {comments.length}
+              </span>
+            </button>
           </div>
         </div>
 
@@ -271,7 +503,7 @@ export default function UserCommentsView({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher un palabre ou nom..."
+              placeholder="Rechercher un palabre ou un auteur réel..."
               className="w-full pl-9 pr-3 py-1.5 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none focus:border-[#D4AF37]"
             />
           </div>
@@ -282,8 +514,7 @@ export default function UserCommentsView({
               { id: "all", label: "Tous" },
               { id: "gombo", label: "Gombos" },
               { id: "vibe", label: "Vibes" },
-              { id: "profile", label: "Profil" },
-              { id: "academie", label: "Académie" }
+              { id: "post", label: "Posts" }
             ].map((f) => (
               <button
                 key={f.id}
@@ -302,9 +533,14 @@ export default function UserCommentsView({
         </div>
       </div>
 
-      {/* COMMENTS LIST */}
+      {/* REAL COMMENTS LIST */}
       <div className="space-y-4">
-        {filteredComments.length === 0 ? (
+        {loading && comments.length === 0 ? (
+          <div className="p-12 text-center bg-afri-bg border border-afri-border rounded-3xl space-y-3 font-mono">
+            <RefreshCw className="w-8 h-8 text-[#D4AF37] animate-spin mx-auto" />
+            <p className="text-xs text-afri-text-sec">Chargement des palabres réels en cours...</p>
+          </div>
+        ) : filteredComments.length === 0 ? (
           <div className="p-10 text-center bg-afri-bg border border-afri-border rounded-3xl space-y-3">
             <MessageCircle className="w-12 h-12 text-[#D4AF37]/40 mx-auto" />
             <h3 className="text-afri-text font-mono text-xs font-bold uppercase tracking-widest">
@@ -312,8 +548,10 @@ export default function UserCommentsView({
             </h3>
             <p className="text-afri-text-sec text-xs max-w-sm mx-auto">
               {activeTab === "received"
-                ? "Vous n'avez pas encore de palabre reçu pour cette catégorie."
-                : "Vous n'avez pas encore laissé de palabres récents."}
+                ? "Vous n'avez pas encore de palabre reçu sur vos annonces."
+                : activeTab === "sent"
+                ? "Vous n'avez pas encore publié de palabre sur la plateforme."
+                : "Aucun échange public ne correspond à vos filtres."}
             </p>
           </div>
         ) : (
@@ -327,11 +565,20 @@ export default function UserCommentsView({
               {/* TOP HEADER */}
               <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 rounded-full bg-afri-bg-sec border border-[#D4AF37]/50 overflow-hidden shrink-0 flex items-center justify-center text-[#D4AF37] font-bold text-sm">
+                  <div className="w-10 h-10 rounded-full bg-afri-bg-sec border border-[#D4AF37]/50 overflow-hidden shrink-0 flex items-center justify-center text-[#D4AF37] font-bold text-sm shadow-inner">
                     {comment.authorAvatar ? (
-                      <img src={comment.authorAvatar} alt="" className="w-full h-full object-cover" />
+                      <img 
+                        src={comment.authorAvatar} 
+                        alt={comment.authorName} 
+                        className="w-full h-full object-cover" 
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          // Hide broken image and fallback to initials
+                          (e.target as HTMLElement).style.display = "none";
+                        }}
+                      />
                     ) : (
-                      comment.authorName.charAt(0)
+                      comment.authorName.charAt(0).toUpperCase()
                     )}
                   </div>
 
@@ -340,6 +587,9 @@ export default function UserCommentsView({
                       <h4 className="text-xs sm:text-sm font-bold text-afri-text truncate max-w-[140px] xs:max-w-[180px] sm:max-w-none block">
                         {comment.authorName}
                       </h4>
+                      {comment.isVerified && (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                      )}
                       {comment.authorBadge && (
                         <span className="px-1.5 py-0.2 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 text-[8px] font-mono font-bold uppercase rounded">
                           {comment.authorBadge}
@@ -357,14 +607,16 @@ export default function UserCommentsView({
                   <span className="px-2 py-0.5 bg-afri-bg-sec border border-afri-border text-[9px] font-mono font-bold text-afri-text-sec uppercase rounded-lg truncate max-w-[160px]">
                     {comment.targetTitle}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteComment(comment.id)}
-                    className="p-1.5 text-zinc-600 hover:text-red-400 transition cursor-pointer rounded-lg hover:bg-red-500/10"
-                    title="Supprimer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  {(comment.authorId === currentUid || currentUserProfile?.role === "founder" || currentUserProfile?.email === "jhs.kmj7@gmail.com") && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteComment(comment)}
+                      className="p-1.5 text-zinc-600 hover:text-red-400 transition cursor-pointer rounded-lg hover:bg-red-500/10"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -378,7 +630,7 @@ export default function UserCommentsView({
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => handleToggleLike(comment.id)}
+                    onClick={() => handleToggleLike(comment)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
                       comment.isLiked
                         ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
@@ -391,7 +643,7 @@ export default function UserCommentsView({
 
                   <button
                     type="button"
-                    onClick={() => setActiveReplyId(prev => prev === comment.id ? null : comment.id)}
+                    onClick={() => setActiveReplyId((prev) => (prev === comment.id ? null : comment.id))}
                     className="px-3 py-1 rounded-lg bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer"
                   >
                     <MessageSquare className="w-3.5 h-3.5 text-[#D4AF37]" />
@@ -399,11 +651,11 @@ export default function UserCommentsView({
                   </button>
                 </div>
 
-                {comment.direction === "received" && (
+                {comment.authorId && comment.authorId !== currentUid && (
                   <button
                     type="button"
                     onClick={() => {
-                      if (onNavigateTo) onNavigateTo("user_messages");
+                      if (onNavigateTo) onNavigateTo("user_messages", comment.authorId);
                     }}
                     className="text-[10px] font-mono font-bold uppercase text-[#D4AF37] hover:underline flex items-center gap-1 cursor-pointer"
                   >
@@ -444,19 +696,24 @@ export default function UserCommentsView({
                       <input
                         type="text"
                         value={replyInput[comment.id] || ""}
-                        onChange={(e) => setReplyInput(prev => ({ ...prev, [comment.id]: e.target.value }))}
+                        onChange={(e) => setReplyInput((prev) => ({ ...prev, [comment.id]: e.target.value }))}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") handleSendReply(comment.id);
+                          if (e.key === "Enter") handleSendReply(comment);
                         }}
-                        placeholder="Écrivez votre réponse publique..."
+                        placeholder="Écrivez votre réponse publique authentique..."
                         className="flex-1 bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-xl px-3 py-2 text-xs text-afri-text placeholder:text-afri-text-muted focus:outline-none"
                       />
                       <button
                         type="button"
-                        onClick={() => handleSendReply(comment.id)}
-                        className="px-4 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-md cursor-pointer flex items-center gap-1 shrink-0"
+                        disabled={submittingReplyId === comment.id}
+                        onClick={() => handleSendReply(comment)}
+                        className="px-4 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-md cursor-pointer flex items-center gap-1 shrink-0 disabled:opacity-50"
                       >
-                        <Send className="w-3.5 h-3.5" />
+                        {submittingReplyId === comment.id ? (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Send className="w-3.5 h-3.5" />
+                        )}
                         <span className="hidden sm:inline">Envoyer</span>
                       </button>
                     </div>

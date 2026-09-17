@@ -2188,34 +2188,26 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       };
     });
 
-    setPalabreMsg("");
-
-    // Simulate elite prompt response after 1.5 seconds
-    setTimeout(() => {
-      const answers = [
-        `D'accord l'artiste! Nous apprécions grandement ta démarche de palabrer. Le Gombo ID GMB certifié nous inspire confiance. On se cale au téléphone ?`,
-        `Salut ! Ton talent mérite considération. Nous étudions ton profil et nous ajusterons le cachet au besoin. Restons connectés.`,
-        `Parfaitement compris. Notre budget est garanti par le système d'Afrigombo. Ta dévotion artistique fait plaisir à voir.`
-      ];
-      const randomAnswer = answers[Math.floor(Math.random() * answers.length)];
-
-      const promoterMessageObj = {
-        sender: "organisateur" as const,
-        text: randomAnswer,
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      };
-
-      setPalabreChatHistory(prev => {
-        const currentHistory = prev[id] || [];
-        return {
-          ...prev,
-          [id]: [...currentHistory, promoterMessageObj]
-        };
+    // Save as real interaction in Firestore
+    try {
+      saveToFirestore("post_comments", `palabre_${id}_${Date.now()}`, {
+        postId: id,
+        targetId: id,
+        targetTitle: targetGombo.title || "Opportunité Gombo",
+        targetType: "gombo",
+        authorId: activeArtistId || profile?.uid || "guest",
+        authorName: profile?.artisticName || profile?.displayName || "Artiste",
+        authorAvatar: profile?.photoURL || profile?.avatarUrl || "",
+        text: palabreMsg,
+        createdAt: new Date().toISOString(),
+        likes: 0,
+        likedBy: [],
+        replies: []
       });
+    } catch (e) {}
 
-      interactionBus.emit("MESSAGE_RECEIVED");
-      addToTerminal(`[🗣️ PALABRER] Nouvel échange reçu de ${targetGombo.organizerName}.`);
-    }, 1500);
+    setPalabreMsg("");
+    addToTerminal(`[🗣️ PALABRER] Message envoyé pour le Gombo : ${targetGombo.title}.`);
   };
 
   const logAdminAction = async (actionType: string, targetId: string, targetName: string, detail: string) => {
