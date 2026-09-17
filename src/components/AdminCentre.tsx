@@ -3454,13 +3454,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     ? "flex flex-col overflow-hidden"
                     : "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
                 } ${
-                  activeMenu === "super_admin" || activeMenu === "user_builders" || activeMenu === "dashboard" || activeMenu === "user_terrain" || activeMenu === "user_vibes" || activeMenu === "user_mes_gombos" || activeMenu === "user_heritage"
-                    ? "px-4 xs:px-5 sm:px-8 max-w-5xl mx-auto w-full pt-0 pb-16 sm:pb-20 space-y-6"
-                    : ["user_gombo_id", "user_grand_marche", "user_academie", "user_gombo_plus", "user_publish", "user_subscription_management"].includes(activeMenu)
-                    ? "px-1.5 xs:px-2.5 sm:px-6 max-w-5xl mx-auto w-full pt-0 pb-16 sm:pb-20 space-y-4"
-                    : ["user_messages", "user_settings", "user_notifications", "user_reels", "user_wallet"].includes(activeMenu)
+                  ["user_messages", "user_settings", "user_notifications", "user_reels", "user_wallet"].includes(activeMenu)
                     ? "p-0 m-0"
-                    : "afri-container afri-section"
+                    : activeMenu === "user_terrain" || activeMenu === "user_vibes" || activeMenu === "user_heritage" || activeMenu === "super_admin" || activeMenu === "dashboard"
+                    ? "px-4 xs:px-5 sm:px-8 max-w-5xl mx-auto w-full pt-0 pb-16 sm:pb-20 space-y-6"
+                    : "px-1.5 xs:px-2.5 sm:px-6 max-w-5xl mx-auto w-full pt-0 pb-16 sm:pb-20 space-y-4"
                 }`}
                 style={{ overscrollBehaviorY: "contain" }}
               >
@@ -4963,20 +4961,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 const followedArtistsList = users.filter(u => followedArtists.includes(u.id));
 
                 return (
-                  <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
-                    <div className="border-b border-afri-border pb-4 flex justify-between items-center">
+                  <div className="w-full space-y-4 animate-fadeIn text-left">
+                    <div className="border-b border-afri-border pb-3 flex justify-between items-center">
                       <div>
                         <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-gold">
                           ⭐ Mes Favoris & Artistes Suivis
                         </h3>
                         <p className="text-xs text-afri-text-sec mt-1">Vos bails favoris et les talents de la Côte d'Ivoire que vous suivez.</p>
                       </div>
-                      <button 
-                        onClick={() => goBackMenu()} 
-                        className="text-xs text-afri-text-sec hover:text-afri-text font-mono"
-                      >
-                        ✕ Fermer
-                      </button>
                     </div>
 
                     <div className="space-y-6">
@@ -5118,7 +5110,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 });
 
                 return (
-                  <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-2.5 sm:px-4 text-afri-text pb-6">
+                  <div className="w-full max-w-full overflow-x-hidden space-y-4 text-afri-text pb-6">
                     {/* Header */}
                     <div className="p-4 sm:p-5 bg-afri-bg border border-[#D4AF37]/30 rounded-3xl space-y-3 shadow-lg">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -5130,9 +5122,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             Journal chronologique de vos connexions, mouvements financiers et candidatures.
                           </p>
                         </div>
-                        <button onClick={() => goBackMenu()} className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text text-xs font-mono font-bold uppercase rounded-xl transition cursor-pointer self-start sm:self-auto">
-                          ✕ Fermer
-                        </button>
                       </div>
 
                       {/* Filter buttons */}
@@ -5281,7 +5270,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 ];
 
                 return (
-                  <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-2.5 sm:px-4 text-afri-text pb-6">
+                  <div className="w-full max-w-full overflow-x-hidden space-y-4 text-afri-text pb-6">
                     {/* Header */}
                     <div className="p-4 sm:p-5 bg-afri-bg border border-[#D4AF37]/30 rounded-3xl space-y-3 shadow-lg">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -5293,9 +5282,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             Accédez à vos documents juridiques, maquettes audio, badges et attestations officielles.
                           </p>
                         </div>
-                        <button onClick={() => goBackMenu()} className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text text-xs font-mono font-bold uppercase rounded-xl transition cursor-pointer self-start sm:self-auto">
-                          ✕ Fermer
-                        </button>
                       </div>
                     </div>
 
@@ -5388,15 +5374,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 };
 
                 return (
-                  <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
-                    <div className="border-b border-afri-border pb-4 flex justify-between items-center">
+                  <div className="w-full space-y-4 animate-fadeIn text-left">
+                    <div className="border-b border-afri-border pb-3 flex justify-between items-center">
                       <div>
                         <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-gold">
                           💾 Sauvegardes Souveraines Locales
                         </h3>
                         <p className="text-xs text-afri-text-sec mt-1">Exportez ou restaurez votre configuration locale d'artiste à tout moment.</p>
                       </div>
-                      <button onClick={() => goBackMenu()} className="text-xs text-afri-text-sec hover:text-afri-text font-mono">✕ Fermer</button>
                     </div>
 
                     <div className="space-y-6">
@@ -5443,7 +5428,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {/* 7. CONTRATS AFRIGOMBO (USER) */}
               {activeMenu === "user_contracts" && (
-                <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
+                <div className="w-full space-y-4 animate-fadeIn text-left">
                   <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
                     <GomboContractsDashboard currentUser={profile || (currentUser as any)} />
                   </Suspense>
@@ -5464,7 +5449,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {/* 7d. ÉVÉNEMENTS (USER) */}
               {activeMenu === "user_events" && (
-                <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
+                <div className="w-full space-y-4 animate-fadeIn text-left">
                   <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
                     <EventsView 
                       onBack={() => goBackMenu()} 
@@ -5499,7 +5484,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {(activeMenu === "user_command_center" || activeMenu === "user_mon_activite") && (
-                <div className="afri-container space-y-6 animate-fadeIn text-left py-2 xs:py-4">
+                <div className="w-full space-y-4 animate-fadeIn text-left">
                   <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
                     <CreatorActivityDashboard
                       currentUserProfile={profile}
@@ -5513,7 +5498,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {activeMenu === "user_help_center" && (
-                <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
+                <div className="w-full space-y-4 animate-fadeIn text-left">
                   <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
                     <AfrigomboHelpCenter 
                       onClose={() => goBackMenu()} 
@@ -5527,7 +5512,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {/* 7c. BÂTISSEURS (USER) */}
               {activeMenu === "user_builders" && (
-                <div className="w-full max-w-5xl mx-auto px-1 sm:px-4 animate-fadeIn py-4 xs:py-6">
+                <div className="w-full animate-fadeIn">
                   <AfrigomboBuilders
                     currentUser={profile || (currentUser as any)}
                     onBack={() => goBackMenu()}
@@ -5728,7 +5713,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 };
 
                 return (
-                  <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-2.5 sm:px-4 text-afri-text pb-6">
+                  <div className="w-full max-w-full overflow-x-hidden space-y-4 text-afri-text pb-6">
                     {/* Header */}
                     <div className="p-4 sm:p-5 bg-afri-bg border border-[#D4AF37]/30 rounded-3xl space-y-3 shadow-lg">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

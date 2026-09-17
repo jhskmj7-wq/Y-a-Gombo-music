@@ -239,17 +239,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
   const optionIsCustom = selectedOption?.isCustom;
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 text-afri-text pb-24">
-      {/* Back Button */}
-      {onBack && (
-        <button
-          onClick={onBack}
-          className="mb-4 flex items-center gap-2 text-xs font-mono text-afri-text-sec hover:text-afri-text transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" /> Retour
-        </button>
-      )}
-
+    <div className="w-full mx-auto space-y-4 text-afri-text pb-20">
       {/* HEADER: TITLE & SUBTITLE */}
       <div className="text-center space-y-1 mb-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-black uppercase tracking-wider whitespace-nowrap">

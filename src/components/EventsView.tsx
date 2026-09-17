@@ -356,16 +356,10 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
   };
 
   return (
-    <div className="flex flex-col space-y-6 w-full max-w-5xl mx-auto px-4 text-left animate-fadeIn">
+    <div className="flex flex-col space-y-4 w-full text-left animate-fadeIn">
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-afri-border pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-afri-border pb-4">
         <div className="flex items-center gap-3">
-          <button 
-            onClick={onBack}
-            className="w-10 h-10 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-afri-text hover:border-[#D4AF37] cursor-pointer transition-all shrink-0"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-afri-text uppercase tracking-tight flex items-center gap-2">
               <span className="text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]">📅</span>

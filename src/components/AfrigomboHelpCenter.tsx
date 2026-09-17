@@ -194,19 +194,13 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
   };
 
   return (
-    <div className="flex flex-col text-left animate-fadeIn w-full">
-      <div className="max-w-xl mx-auto w-full flex-1 flex flex-col space-y-6 pt-4">
-        <div className="flex justify-between items-center border-b border-afri-border pb-4">
+    <div className="flex flex-col text-left animate-fadeIn w-full space-y-4">
+      <div className="w-full flex-1 flex flex-col space-y-4">
+        <div className="flex justify-between items-center border-b border-afri-border pb-3">
           <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-3">
             <span className="text-[#D4AF37]">🛟</span>
             Centre d'Aide AFRIGOMBO
           </h2>
-          <button 
-            onClick={onClose}
-            className="px-4 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37] rounded-xl text-xs font-bold text-afri-text-sec hover:text-afri-text cursor-pointer transition-all"
-          >
-            Fermer ✕
-          </button>
         </div>
 
         <div className="flex-1 space-y-6 pb-20">

@@ -204,19 +204,9 @@ export default function UserCommentsView({
   const sentCount = comments.filter(c => c.direction === "sent").length;
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-3 sm:px-4 text-afri-text pb-28">
+    <div className="w-full max-w-full overflow-x-hidden space-y-4 text-afri-text pb-20">
       {/* HEADER / NAVIGATION BAR (ANDROID FRIENDLY) */}
       <div className="flex items-center justify-between gap-3 bg-afri-bg/90 border border-afri-border/80 p-2.5 sm:p-3.5 rounded-2xl backdrop-blur-md shadow-lg sticky top-2 z-20">
-        <button
-          type="button"
-          onClick={onBack}
-          className="p-2 sm:px-3.5 sm:py-2 rounded-xl bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text hover:text-[#D4AF37] transition-all cursor-pointer flex items-center gap-2 active:scale-95 shrink-0"
-          title="Retour"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-xs font-bold uppercase font-mono hidden xs:inline">Retour</span>
-        </button>
-
         <div className="flex items-center gap-2 truncate">
           <MessageSquare className="w-5 h-5 text-[#D4AF37] shrink-0" />
           <h1 className="text-xs sm:text-sm font-black uppercase tracking-wider text-afri-text truncate">
