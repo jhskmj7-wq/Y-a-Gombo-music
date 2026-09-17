@@ -21,6 +21,7 @@ import { r2StorageService } from "../../lib/storage/r2Storage";
 import { collection, addDoc, doc, updateDoc, arrayUnion, setDoc } from "firebase/firestore";
 import { db, auth } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
+import { PremiumEngine } from "../../lib/premiumEngine";
 import { getFilterCss, REEL_VIDEO_FILTERS } from "./videoFilters";
 
 interface ReelPublishScreenProps {
@@ -172,6 +173,25 @@ export default function ReelPublishScreen({
     if (videoFile.size > MAX_SIZE_BYTES) {
       setErrorMsg(
         `La vidéo dépasse la taille maximale autorisée de 75 Mo (taille actuelle : ${fileSizeMb} Mo).`
+      );
+      return;
+    }
+
+    // 2b. Contrôle du quota de publication quotidien (FREE: 2/j, PRO: 4/j, ELITE: 7/j)
+    const dailyLimit = PremiumEngine.getDailyPublicationLimit(currentUserProfile);
+    const todayKey = new Date().toISOString().split("T")[0];
+    const todaysPubCount = (() => {
+      try {
+        const stored = localStorage.getItem(`gombo_pub_count_${resolvedUid}_${todayKey}`);
+        return stored ? parseInt(stored, 10) : 0;
+      } catch {
+        return 0;
+      }
+    })();
+
+    if (todaysPubCount >= dailyLimit) {
+      setErrorMsg(
+        `Quota quotidien de publication atteint (${todaysPubCount}/${dailyLimit} publication${dailyLimit > 1 ? "s" : ""}/jour). Passez à un forfait supérieur (PRO ou ELITE) pour publier plus.`
       );
       return;
     }
@@ -340,6 +360,10 @@ export default function ReelPublishScreen({
       }
 
       setUploadProgress(100);
+      try {
+        const newCount = todaysPubCount + 1;
+        localStorage.setItem(`gombo_pub_count_${resolvedUid}_${todayKey}`, String(newCount));
+      } catch (_) {}
       stopPublishPreviewVideo();
       onPublished();
     } catch (err: any) {

@@ -53,6 +53,7 @@ export interface PublicationItem {
   appliedFilter?: string;
   status: PublicationStatus;
   visible?: boolean;
+  featuredInPortfolio?: boolean;
   createdAt?: string;
   updatedAt?: string;
   likesCount?: number;
@@ -181,6 +182,38 @@ export class PublicationService {
     }
 
     return updated;
+  }
+
+  /**
+   * Toggle the featuredInPortfolio state for a publication (PRO / ELITE feature)
+   */
+  async togglePortfolioFeatured(postId: string, featured: boolean): Promise<boolean> {
+    if (!db || !postId) return false;
+    const updatedAt = new Date().toISOString();
+    try {
+      const postRef = doc(db, "posts", postId);
+      const postSnap = await getDoc(postRef);
+      if (postSnap.exists()) {
+        await updateDoc(postRef, {
+          featuredInPortfolio: featured,
+          updatedAt,
+        });
+        return true;
+      } else {
+        const q = query(collection(db, "posts"), where("id", "==", postId));
+        const snap = await getDocs(q);
+        for (const dDoc of snap.docs) {
+          await updateDoc(doc(db, "posts", dDoc.id), {
+            featuredInPortfolio: featured,
+            updatedAt,
+          });
+        }
+        return true;
+      }
+    } catch (err) {
+      console.error("[PublicationService] Erreur togglePortfolioFeatured:", err);
+      return false;
+    }
   }
 
   /**

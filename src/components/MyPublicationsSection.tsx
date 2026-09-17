@@ -17,9 +17,11 @@ import {
   Heart,
   MessageSquare,
   Loader2,
-  Plus
+  Plus,
+  Star
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
+import { PremiumEngine } from "../lib/premiumEngine";
 import { reelsDraftsService, ReelDraft } from "../lib/reelsDraftsService";
 import { publicationService, PublicationItem } from "../lib/publicationService";
 import { db } from "../lib/firebase";
@@ -34,8 +36,11 @@ interface MyPublicationsSectionProps {
 }
 
 export default function MyPublicationsSection({ onOpenCreate, onClose }: MyPublicationsSectionProps) {
-  const { currentUser } = useAuth();
+  const { currentUser, profile } = useAuth();
   const userId = currentUser?.uid;
+
+  const userPlan = PremiumEngine.getSubscriptionPlan(profile);
+  const portfolioLimit = PremiumEngine.getPortfolioMediaLimit(profile); // 3 (FREE), 7 (PRO), 15 (ELITE)
 
   const [activeTab, setActiveTab] = useState<TabType>("published");
   const [publications, setPublications] = useState<PublicationItem[]>([]);
@@ -91,6 +96,7 @@ export default function MyPublicationsSection({ onOpenCreate, onClose }: MyPubli
             appliedFilter: data.appliedFilter,
             status: data.status || (data.visible === false ? "hidden" : "published"),
             visible: data.visible !== false,
+            featuredInPortfolio: data.featuredInPortfolio === true,
             createdAt: data.createdAt || data.timestamp,
             updatedAt: data.updatedAt,
             likesCount: data.likesCount || (Array.isArray(data.likedBy) ? data.likedBy.length : 0),
@@ -138,6 +144,27 @@ export default function MyPublicationsSection({ onOpenCreate, onClose }: MyPubli
       showToast(labels[newStatus]);
     } else {
       showToast("Échec de la modification de statut.");
+    }
+  };
+
+  const handleTogglePortfolioFeatured = async (item: PublicationItem) => {
+    if (userPlan === "free") {
+      showToast("Abonnement GRATUIT : Les 3 contenus les plus récents apparaissent automatiquement dans votre Portfolio. Passez PRO ou ELITE pour choisir manuellement vos publications !");
+      return;
+    }
+    const currentlyFeatured = !!item.featuredInPortfolio;
+    const currentFeaturedCount = publishedList.filter(p => p.featuredInPortfolio).length;
+
+    if (!currentlyFeatured && currentFeaturedCount >= portfolioLimit) {
+      showToast(`Limite Portfolio atteinte (${currentFeaturedCount}/${portfolioLimit}). Retirez une publication mise en avant pour en ajouter une autre.`);
+      return;
+    }
+
+    const success = await publicationService.togglePortfolioFeatured(item.id, !currentlyFeatured);
+    if (success) {
+      showToast(!currentlyFeatured ? "★ Publication mise en avant dans votre Portfolio !" : "Publication retirée du Portfolio (elle reste disponible dans vos Réels).");
+    } else {
+      showToast("Échec de la mise à jour du Portfolio.");
     }
   };
 
@@ -261,18 +288,57 @@ export default function MyPublicationsSection({ onOpenCreate, onClose }: MyPubli
             publishedList.length === 0 ? (
               <EmptyState title="Aucune publication en ligne" description="Vos Réels publiés apparaîtront ici." onAction={onOpenCreate} />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {publishedList.map((item) => (
-                  <PublicationCard
-                    key={item.id}
-                    item={item}
-                    actions={[
-                      { label: "Masquer", icon: EyeOff, onClick: () => handleUpdateStatus(item.id, "hidden") },
-                      { label: "Archiver", icon: Archive, onClick: () => handleUpdateStatus(item.id, "archived") },
-                      { label: "Supprimer", icon: Trash2, danger: true, onClick: () => setItemToDelete({ id: item.id, type: "pub", title: item.caption || "Publication", storagePath: item.storagePath, mediaUrl: item.mediaUrl, videoUrl: item.videoUrl }) },
-                    ]}
-                  />
-                ))}
+              <div className="space-y-3">
+                {/* Portfolio Status Banner */}
+                <div className={`p-3 rounded-2xl border flex items-center justify-between text-xs gap-3 ${
+                  userPlan === "elite"
+                    ? "bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-amber-500/10 border-amber-500/40 text-amber-300"
+                    : userPlan === "pro"
+                    ? "bg-blue-500/10 border-blue-500/30 text-blue-300"
+                    : "bg-afri-bg-sec border-afri-border text-afri-text-sec"
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <Star className={`w-4 h-4 shrink-0 ${
+                      userPlan === "elite" ? "text-amber-400 fill-amber-400" : userPlan === "pro" ? "text-blue-400 fill-blue-400" : "text-afri-gold"
+                    }`} />
+                    <div className="min-w-0">
+                      <p className="font-bold text-afri-text text-xs">
+                        {userPlan === "free"
+                          ? "Portfolio Gratuit : 3 contenus automatiques"
+                          : userPlan === "pro"
+                          ? "Portfolio Membre PRO"
+                          : "Portfolio Membre ELITE 👑"}
+                      </p>
+                      <p className="text-[11px] opacity-80 leading-tight">
+                        {userPlan === "free"
+                          ? "Vos 3 publications les plus récentes s'affichent automatiquement dans votre vitrine. Passez PRO (7) ou ELITE (15) pour les choisir manuellement."
+                          : "Sélectionnez les contenus à mettre en avant dans votre vitrine publique."}
+                      </p>
+                    </div>
+                  </div>
+
+                  {userPlan !== "free" && (
+                    <div className="shrink-0 font-mono font-black text-xs px-2.5 py-1 rounded-xl bg-black/40 border border-current">
+                      Portfolio : {publishedList.filter(p => p.featuredInPortfolio).length} / {portfolioLimit}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {publishedList.map((item) => (
+                    <PublicationCard
+                      key={item.id}
+                      item={item}
+                      userPlan={userPlan}
+                      onToggleFeatured={() => handleTogglePortfolioFeatured(item)}
+                      actions={[
+                        { label: "Masquer", icon: EyeOff, onClick: () => handleUpdateStatus(item.id, "hidden") },
+                        { label: "Archiver", icon: Archive, onClick: () => handleUpdateStatus(item.id, "archived") },
+                        { label: "Supprimer", icon: Trash2, danger: true, onClick: () => setItemToDelete({ id: item.id, type: "pub", title: item.caption || "Publication", storagePath: item.storagePath, mediaUrl: item.mediaUrl, videoUrl: item.videoUrl }) },
+                      ]}
+                    />
+                  ))}
+                </div>
               </div>
             )
           )}
@@ -387,13 +453,23 @@ export default function MyPublicationsSection({ onOpenCreate, onClose }: MyPubli
 // Subcomponents: Publication Card & Draft Card
 function PublicationCard({
   item,
+  userPlan,
+  onToggleFeatured,
   actions,
 }: {
   item: PublicationItem;
+  userPlan?: string;
+  onToggleFeatured?: () => void;
   actions: { label: string; icon: React.FC<{ className?: string }>; danger?: boolean; onClick: () => void }[];
 }) {
+  const isFeatured = !!item.featuredInPortfolio;
+
   return (
-    <div className="bg-afri-bg-sec border border-afri-border/50 rounded-2xl p-3 flex flex-col justify-between space-y-3 hover:border-[#D4AF37]/50 transition-all shadow-md group">
+    <div className={`bg-afri-bg-sec border rounded-2xl p-3 flex flex-col justify-between space-y-3 transition-all shadow-md group ${
+      isFeatured
+        ? "border-amber-400/80 shadow-amber-500/10"
+        : "border-afri-border/50 hover:border-[#D4AF37]/50"
+    }`}>
       <div className="space-y-2">
         <div className="relative aspect-[9/16] max-h-48 w-full bg-black rounded-xl overflow-hidden flex items-center justify-center">
           {item.mediaUrl ? (
@@ -401,6 +477,15 @@ function PublicationCard({
           ) : (
             <Film className="w-8 h-8 text-zinc-600" />
           )}
+
+          {/* Featured Badge */}
+          {isFeatured && (
+            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-amber-400 text-black font-black text-[9px] uppercase tracking-wider flex items-center gap-1 shadow-md">
+              <Star className="w-2.5 h-2.5 fill-current" />
+              <span>★ Portfolio</span>
+            </div>
+          )}
+
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-2">
             <span className="text-[10px] font-mono text-white/80 line-clamp-1">
               {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "Récemment"}
@@ -418,6 +503,21 @@ function PublicationCard({
           </div>
         </div>
       </div>
+
+      {/* Portfolio Feature Action Button */}
+      {onToggleFeatured && (
+        <button
+          onClick={onToggleFeatured}
+          className={`w-full py-1.5 px-2.5 rounded-xl text-[11px] font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border ${
+            isFeatured
+              ? "bg-amber-400/15 border-amber-400/50 text-amber-300 hover:bg-amber-400/25"
+              : "bg-afri-bg-ter border-afri-border/60 text-afri-text-sec hover:text-amber-300 hover:border-amber-400/40"
+          }`}
+        >
+          <Star className={`w-3.5 h-3.5 ${isFeatured ? "fill-amber-400 text-amber-400" : ""}`} />
+          <span>{isFeatured ? "★ Retirer du Portfolio" : "★ Mettre en avant dans Portfolio"}</span>
+        </button>
+      )}
 
       <div className="flex items-center gap-1.5 pt-2 border-t border-afri-border/40">
         {actions.map((act, idx) => {

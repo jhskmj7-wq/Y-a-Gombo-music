@@ -309,28 +309,28 @@ export const PremiumEngine = {
   },
 
   /**
-   * Real Daily Publication Limits:
-   * - FREE: 1 publication / jour
-   * - PRO: 5 publications / jour
-   * - ELITE: Illimité (50 / jour)
+   * Daily Publication Limits:
+   * - FREE: 2 publications / jour
+   * - PRO: 4 publications / jour
+   * - ELITE: 7 publications / jour
    */
   getDailyPublicationLimit(userData: any): number {
     const plan = this.getSubscriptionPlan(userData);
-    if (plan === "elite") return 50;
-    if (plan === "pro") return 5;
-    return 1;
+    if (plan === "elite") return 7;
+    if (plan === "pro") return 4;
+    return 2;
   },
 
   /**
-   * Real Portfolio Media Limits:
-   * - FREE: 3 médias (photos, vidéos, démos audio)
-   * - PRO: 10 médias
-   * - ELITE: Illimité (100 médias)
+   * Portfolio Media Featured Limits:
+   * - FREE: 3 contenus (automatiques)
+   * - PRO: 7 contenus (sélection manuelle)
+   * - ELITE: 15 contenus (sélection manuelle)
    */
   getPortfolioMediaLimit(userData: any): number {
     const plan = this.getSubscriptionPlan(userData);
-    if (plan === "elite") return 100;
-    if (plan === "pro") return 10;
+    if (plan === "elite") return 15;
+    if (plan === "pro") return 7;
     return 3;
   }
 };
