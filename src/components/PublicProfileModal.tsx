@@ -42,7 +42,7 @@ export function PublicProfileModal({
   const activeUser = currentUser || auth?.currentUser;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<"portfolio" | "about" | "gombos" | "reels" | "reviews" | "collaborations" | "gallery">("portfolio");
+  const [activeTab, setActiveTab] = useState<"gombos" | "realisations" | "about" | "reviews" | "collaborations" | "gallery" | "reels">("gombos");
   const [, setSimTick] = useState(0);
 
   // Re-evaluate on simulated tier changes
@@ -582,7 +582,7 @@ export function PublicProfileModal({
                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
                       <div className="px-2.5 py-1 rounded-lg bg-afri-bg-ter border border-afri-border text-[10px] font-mono font-black text-afri-gold uppercase tracking-wider flex items-center gap-1.5">
                         <Music className="w-3 h-3" />
-                        <span>{gomboId}</span>
+                        <span>Réf du Gombo : {gomboId}</span>
                       </div>
 
                       <div className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -743,9 +743,21 @@ export function PublicProfileModal({
                 {/* Scrollable Horizontal Tab Bar */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 no-scrollbar border-b border-afri-border/60">
                   <button
-                    onClick={() => setActiveTab("portfolio")}
+                    onClick={() => setActiveTab("gombos")}
                     className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
-                      activeTab === "portfolio"
+                      activeTab === "gombos"
+                        ? "bg-afri-gold text-black shadow-md ring-2 ring-afri-gold/40"
+                        : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border/50"
+                    }`}
+                  >
+                    <Briefcase className="w-3.5 h-3.5" />
+                    <span>Gombos ({allGombos.length})</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab("realisations")}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+                      activeTab === "realisations"
                         ? isElite
                           ? "bg-gradient-to-r from-amber-400 via-afri-gold to-yellow-500 text-black shadow-lg ring-2 ring-amber-400"
                           : isPro
@@ -755,14 +767,14 @@ export function PublicProfileModal({
                     }`}
                   >
                     <Award className="w-3.5 h-3.5" />
-                    <span>Portfolio ({portfolioShowcaseItems.length}/{portfolioMaxLimit})</span>
+                    <span>Réalisations ({portfolioShowcaseItems.length})</span>
                   </button>
 
                   <button
                     onClick={() => setActiveTab("about")}
                     className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                       activeTab === "about"
-                        ? "bg-afri-gold text-black shadow-md"
+                        ? "bg-afri-gold text-black shadow-md ring-2 ring-afri-gold/40"
                         : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border/50"
                     }`}
                   >
@@ -771,34 +783,10 @@ export function PublicProfileModal({
                   </button>
 
                   <button
-                    onClick={() => setActiveTab("gombos")}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
-                      activeTab === "gombos"
-                        ? "bg-afri-gold text-black shadow-md"
-                        : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border/50"
-                    }`}
-                  >
-                    <Briefcase className="w-3.5 h-3.5" />
-                    <span>Gombos ({allGombos.length})</span>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTab("reels")}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
-                      activeTab === "reels"
-                        ? "bg-afri-gold text-black shadow-md"
-                        : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border/50"
-                    }`}
-                  >
-                    <Film className="w-3.5 h-3.5" />
-                    <span>Tous les Réels ({reelsMedia.length})</span>
-                  </button>
-
-                  <button
                     onClick={() => setActiveTab("reviews")}
                     className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                       activeTab === "reviews"
-                        ? "bg-afri-gold text-black shadow-md"
+                        ? "bg-afri-gold text-black shadow-md ring-2 ring-afri-gold/40"
                         : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border/50"
                     }`}
                   >
@@ -810,7 +798,7 @@ export function PublicProfileModal({
                     onClick={() => setActiveTab("collaborations")}
                     className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                       activeTab === "collaborations"
-                        ? "bg-afri-gold text-black shadow-md"
+                        ? "bg-afri-gold text-black shadow-md ring-2 ring-afri-gold/40"
                         : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border/50"
                     }`}
                   >
@@ -822,237 +810,26 @@ export function PublicProfileModal({
                     onClick={() => setActiveTab("gallery")}
                     className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                       activeTab === "gallery"
-                        ? "bg-afri-gold text-black shadow-md"
+                        ? "bg-afri-gold text-black shadow-md ring-2 ring-afri-gold/40"
                         : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border/50"
                     }`}
                   >
                     <ImageIcon className="w-3.5 h-3.5" />
                     <span>Galerie ({photoMedia.length})</span>
                   </button>
+
+                  {activeTab === "reels" && (
+                    <button
+                      onClick={() => setActiveTab("reels")}
+                      className="px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all cursor-pointer flex items-center gap-1.5 bg-afri-gold text-black shadow-md ring-2 ring-afri-gold/40"
+                    >
+                      <Film className="w-3.5 h-3.5" />
+                      <span>Tous les Réels ({reelsMedia.length})</span>
+                    </button>
+                  )}
                 </div>
 
-                {/* TAB 0: PORTFOLIO SHOWCASE (VITRINE) */}
-                {activeTab === "portfolio" && (
-                  <div className="space-y-4">
-                    {/* Header Showcase Banner by Tier */}
-                    {isElite ? (
-                      <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/25 to-amber-500/20 border-2 border-amber-400 text-amber-200 shadow-xl space-y-2 relative overflow-hidden">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <span className="px-3 py-1 rounded-full bg-amber-400 text-black font-black text-[10px] uppercase tracking-wider flex items-center gap-1 shadow-md">
-                            👑 Membre ELITE Prestige
-                          </span>
-                          <span className="font-mono font-black text-xs text-amber-300 bg-black/40 px-2.5 py-1 rounded-xl border border-amber-400/40">
-                            {portfolioShowcaseItems.length} / 15 contenus à la une
-                          </span>
-                        </div>
-                        <h3 className="font-serif font-black text-base text-white">Vitrine Portfolio Haute Prestance</h3>
-                        <p className="text-xs text-amber-200/90 leading-relaxed">
-                          Sélection sur mesure des 15 meilleures réalisations et vidéos de l&apos;artiste.
-                        </p>
-                      </div>
-                    ) : isPro ? (
-                      <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-900/40 via-afri-bg-sec to-indigo-900/40 border border-blue-400/60 text-blue-200 shadow-lg space-y-2 relative overflow-hidden">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <span className="px-3 py-1 rounded-full bg-blue-500 text-white font-black text-[10px] uppercase tracking-wider flex items-center gap-1 shadow-md">
-                            ⭐ Membre PRO Certifié
-                          </span>
-                          <span className="font-mono font-black text-xs text-blue-300 bg-black/40 px-2.5 py-1 rounded-xl border border-blue-400/40">
-                            {portfolioShowcaseItems.length} / 7 contenus mis en avant
-                          </span>
-                        </div>
-                        <h3 className="font-black text-base text-white">Sélection Réalisations Pro</h3>
-                        <p className="text-xs text-blue-200/90 leading-relaxed">
-                          Sélection manuelle des 7 prestations phares choisies par l&apos;artiste.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="p-4 rounded-2xl bg-afri-bg-sec border border-afri-border text-afri-text-sec space-y-2">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <span className="px-2.5 py-0.5 rounded-full bg-afri-bg-ter text-afri-text font-bold text-[10px] uppercase tracking-wider">
-                            Abonnement Gratuit
-                          </span>
-                          <span className="font-mono font-bold text-xs text-afri-gold bg-black/30 px-2 py-0.5 rounded-lg border border-afri-border">
-                            {portfolioShowcaseItems.length} / 3 contenus automatiques
-                          </span>
-                        </div>
-                        <h3 className="font-bold text-sm text-afri-text">Portfolio Aperçu Automatique</h3>
-                        <p className="text-xs text-afri-text-sec leading-relaxed">
-                          Affiche automatiquement les 3 publications les plus récentes. Passez en PRO (7) ou ELITE (15) pour choisir vous-même vos coups de cœur.
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Showcase Grid */}
-                    {portfolioShowcaseItems.length === 0 ? (
-                      <div className="py-12 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl p-6 space-y-2">
-                        <Award className="w-10 h-10 text-afri-gold/50 mx-auto mb-2" />
-                        <h4 className="text-sm font-bold text-afri-text">Aucun contenu mis en avant</h4>
-                        <p className="text-[11px] text-afri-text-sec max-w-sm mx-auto">
-                          L&apos;artiste n&apos;a pas encore sélectionné de publications pour son Portfolio.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3">
-                        {portfolioShowcaseItems.map((item, idx) => (
-                          <div
-                            key={item.id || idx}
-                            onClick={() => {
-                              if (item.url) {
-                                setSelectedMediaViewer({
-                                  type: item.type === "photo" ? "photo" : "video",
-                                  url: item.url,
-                                  title: item.title || "Prestation Portfolio"
-                                });
-                              }
-                            }}
-                            className={`relative rounded-2xl overflow-hidden bg-black flex flex-col justify-between group cursor-pointer transition-all shadow-md ${
-                              isElite
-                                ? "border-2 border-amber-400/80 shadow-amber-500/10 hover:border-amber-300 hover:shadow-xl"
-                                : isPro
-                                ? "border border-blue-400/60 hover:border-blue-300"
-                                : "border border-afri-border/60 hover:border-afri-gold/50"
-                            }`}
-                          >
-                            <div className="relative aspect-[9/16] max-h-56 w-full bg-zinc-900 overflow-hidden flex items-center justify-center">
-                              {item.url ? (
-                                item.type === "photo" ? (
-                                  <img src={item.url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                                ) : (
-                                  <video src={item.url} className="w-full h-full object-cover pointer-events-none" muted />
-                                )
-                              ) : (
-                                <Film className="w-8 h-8 text-zinc-600" />
-                              )}
-
-                              {/* Play Overlay if video */}
-                              {item.type !== "photo" && item.url && (
-                                <div className="absolute inset-0 bg-black/25 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                                  <div className="w-9 h-9 rounded-full bg-black/70 backdrop-blur-sm text-afri-gold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border border-afri-gold/40">
-                                    <Play className="w-4 h-4 fill-current ml-0.5" />
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Badge */}
-                              <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md flex items-center gap-1 backdrop-blur-sm bg-black/70 text-amber-300 border border-amber-400/40">
-                                <Star className="w-2.5 h-2.5 fill-current text-amber-400" />
-                                <span>A la une</span>
-                              </div>
-
-                              <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black via-black/70 to-transparent pointer-events-none space-y-0.5">
-                                <p className="text-xs font-bold text-white line-clamp-1">{item.title}</p>
-                                <div className="flex items-center gap-2 text-[10px] font-mono text-white/80">
-                                  <span className="flex items-center gap-0.5"><Heart className="w-2.5 h-2.5 text-red-400" /> {item.likesCount || 0}</span>
-                                  <span className="flex items-center gap-0.5"><MessageSquare className="w-2.5 h-2.5 text-amber-400" /> {item.commentsCount || 0}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Button to view all Reels without restriction */}
-                    <div className="pt-4 border-t border-afri-border/50 text-center space-y-2">
-                      <button
-                        onClick={() => setActiveTab("reels")}
-                        className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-amber-500 via-afri-gold to-yellow-500 text-black font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-95 transition cursor-pointer flex items-center justify-center gap-2 mx-auto"
-                      >
-                        <Film className="w-4 h-4 fill-current" />
-                        <span>Voir l&apos;intégralité des Réels ({reelsMedia.length})</span>
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                      <p className="text-[10px] text-afri-text-sec font-mono">
-                        Accédez à la collection complète des vidéos et performances publiées par l&apos;artiste.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB 1: À PROPOS */}
-                {activeTab === "about" && (
-                  <div className="space-y-4">
-                    {/* Bio */}
-                    {profile.bio ? (
-                      <div className="p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-2">
-                        <h4 className="text-xs font-mono font-bold uppercase text-afri-gold tracking-wider flex items-center gap-1.5">
-                          <FileText className="w-3.5 h-3.5" /> Présentation & Biographie
-                        </h4>
-                        <p className="text-xs text-afri-text leading-relaxed italic font-sans whitespace-pre-line">
-                          &quot;{profile.bio}&quot;
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="p-4 bg-afri-bg/50 border border-afri-border rounded-2xl text-xs text-afri-text-sec text-center italic">
-                        Aucune biographie rédigée pour le moment.
-                      </div>
-                    )}
-
-                    {/* Spécialités & Instruments details */}
-                    <div className="p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-3">
-                      <h4 className="text-xs font-mono font-bold uppercase text-afri-gold tracking-wider flex items-center gap-1.5">
-                        <Music className="w-3.5 h-3.5" /> Profil Artistique & Compétences
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <span className="text-[10px] font-mono text-afri-text-sec uppercase block mb-1">Rôle Principal :</span>
-                          <span className="font-bold text-afri-text">{roleTitle}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-mono text-afri-text-sec uppercase block mb-1">Localisation :</span>
-                          <span className="font-bold text-afri-text">{communeCity}</span>
-                        </div>
-                        {profile.instruments && profile.instruments.length > 0 && (
-                          <div className="col-span-full">
-                            <span className="text-[10px] font-mono text-afri-text-sec uppercase block mb-1">Instruments Maîtrisés :</span>
-                            <div className="flex flex-wrap gap-1.5">
-                              {profile.instruments.map((inst, i) => (
-                                <span key={i} className="px-2.5 py-1 rounded-lg bg-afri-bg-ter border border-afri-border text-[10px] font-bold text-afri-text">
-                                  🎸 {inst}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {profile.genres && profile.genres.length > 0 && (
-                          <div className="col-span-full">
-                            <span className="text-[10px] font-mono text-afri-text-sec uppercase block mb-1">Genres & Styles Médias :</span>
-                            <div className="flex flex-wrap gap-1.5">
-                              {profile.genres.map((genre, i) => (
-                                <span key={i} className="px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/30 text-[10px] font-bold text-purple-300">
-                                  🎶 {genre}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Mobilité & Disponibilité */}
-                    <div className="p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-2 text-xs">
-                      <h4 className="text-xs font-mono font-bold uppercase text-afri-gold tracking-wider flex items-center gap-1.5">
-                        <Globe className="w-3.5 h-3.5" /> Disponibilité & Mobilité
-                      </h4>
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-afri-text-sec">Statut actuel :</span>
-                        <span className={`px-2.5 py-0.5 rounded-md font-mono text-[10px] font-bold uppercase ${
-                          profile.availability?.status === "available" || profile.isAvailableNow
-                            ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                            : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
-                        }`}>
-                          {profile.availability?.status === "available" || profile.isAvailableNow ? "Disponible pour prestations" : "Sur engagement"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between border-t border-afri-border/40 pt-2">
-                        <span className="text-afri-text-sec">Zone de mobilité :</span>
-                        <span className="font-bold text-afri-text">{profile.commune || profile.city || "Abidjan"} & Intérieur</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB 2: GOMBOS RÉALISÉS */}
+                {/* TAB 1: GOMBOS RÉALISÉS */}
                 {activeTab === "gombos" && (
                   <div className="space-y-3">
                     {allGombos.length === 0 ? (
@@ -1136,6 +913,281 @@ export function PublicProfileModal({
                         </div>
                       ))
                     )}
+                  </div>
+                )}
+
+                {/* TAB 2: RÉALISATIONS (SHOWCASE) */}
+                {activeTab === "realisations" && (
+                  <div className="space-y-4">
+                    {/* Header Showcase Banner by Tier */}
+                    {isElite ? (
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/25 to-amber-500/20 border-2 border-amber-400 text-amber-200 shadow-xl space-y-2 relative overflow-hidden">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <span className="px-3 py-1 rounded-full bg-amber-400 text-black font-black text-[10px] uppercase tracking-wider flex items-center gap-1 shadow-md">
+                            👑 Membre ELITE Prestige
+                          </span>
+                          <span className="font-mono font-black text-xs text-amber-300 bg-black/40 px-2.5 py-1 rounded-xl border border-amber-400/40">
+                            {portfolioShowcaseItems.length} / 15 contenus à la une
+                          </span>
+                        </div>
+                        <h3 className="font-serif font-black text-base text-white">Réalisations Haute Prestance</h3>
+                        <p className="text-xs text-amber-200/90 leading-relaxed">
+                          Sélection sur mesure des 15 meilleures réalisations et prestations de l&apos;artiste.
+                        </p>
+                      </div>
+                    ) : isPro ? (
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-900/40 via-afri-bg-sec to-indigo-900/40 border border-blue-400/60 text-blue-200 shadow-lg space-y-2 relative overflow-hidden">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <span className="px-3 py-1 rounded-full bg-blue-500 text-white font-black text-[10px] uppercase tracking-wider flex items-center gap-1 shadow-md">
+                            ⭐ Membre PRO Certifié
+                          </span>
+                          <span className="font-mono font-black text-xs text-blue-300 bg-black/40 px-2.5 py-1 rounded-xl border border-blue-400/40">
+                            {portfolioShowcaseItems.length} / 7 contenus mis en avant
+                          </span>
+                        </div>
+                        <h3 className="font-black text-base text-white">Sélection Réalisations Pro</h3>
+                        <p className="text-xs text-blue-200/90 leading-relaxed">
+                          Sélection manuelle des 7 prestations phares choisies par l&apos;artiste.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-2xl bg-afri-bg-sec border border-afri-border text-afri-text-sec space-y-2">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <span className="px-2.5 py-0.5 rounded-full bg-afri-bg-ter text-afri-text font-bold text-[10px] uppercase tracking-wider">
+                            Abonnement Gratuit
+                          </span>
+                          <span className="font-mono font-bold text-xs text-afri-gold bg-black/30 px-2 py-0.5 rounded-lg border border-afri-border">
+                            {portfolioShowcaseItems.length} / 3 contenus automatiques
+                          </span>
+                        </div>
+                        <h3 className="font-bold text-sm text-afri-text">Réalisations Aperçu Automatique</h3>
+                        <p className="text-xs text-afri-text-sec leading-relaxed">
+                          Affiche automatiquement les 3 publications les plus récentes. Passez en PRO (7) ou ELITE (15) pour choisir vous-même vos coups de cœur.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Showcase Grid */}
+                    {portfolioShowcaseItems.length === 0 ? (
+                      <div className="py-12 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl p-6 space-y-2">
+                        <Award className="w-10 h-10 text-afri-gold/50 mx-auto mb-2" />
+                        <h4 className="text-sm font-bold text-afri-text">Aucun contenu mis en avant</h4>
+                        <p className="text-[11px] text-afri-text-sec max-w-sm mx-auto">
+                          L&apos;artiste n&apos;a pas encore sélectionné de publications pour ses Réalisations.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3">
+                        {portfolioShowcaseItems.map((item, idx) => (
+                          <div
+                            key={item.id || idx}
+                            onClick={() => {
+                              if (item.url) {
+                                setSelectedMediaViewer({
+                                  type: item.type === "photo" ? "photo" : "video",
+                                  url: item.url,
+                                  title: item.title || "Prestation Artistique"
+                                });
+                              }
+                            }}
+                            className={`relative rounded-2xl overflow-hidden bg-black flex flex-col justify-between group cursor-pointer transition-all shadow-md ${
+                              isElite
+                                ? "border-2 border-amber-400/80 shadow-amber-500/10 hover:border-amber-300 hover:shadow-xl"
+                                : isPro
+                                ? "border border-blue-400/60 hover:border-blue-300"
+                                : "border border-afri-border/60 hover:border-afri-gold/50"
+                            }`}
+                          >
+                            <div className="relative aspect-[9/16] max-h-56 w-full bg-zinc-900 overflow-hidden flex items-center justify-center">
+                              {item.url ? (
+                                item.type === "photo" ? (
+                                  <img src={item.url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                ) : (
+                                  <video src={item.url} className="w-full h-full object-cover pointer-events-none" muted />
+                                )
+                              ) : (
+                                <Film className="w-8 h-8 text-zinc-600" />
+                              )}
+
+                              {/* Play Overlay if video */}
+                              {item.type !== "photo" && item.url && (
+                                <div className="absolute inset-0 bg-black/25 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                  <div className="w-9 h-9 rounded-full bg-black/70 backdrop-blur-sm text-afri-gold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border border-afri-gold/40">
+                                    <Play className="w-4 h-4 fill-current ml-0.5" />
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Badge */}
+                              <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md flex items-center gap-1 backdrop-blur-sm bg-black/70 text-amber-300 border border-amber-400/40">
+                                <Star className="w-2.5 h-2.5 fill-current text-amber-400" />
+                                <span>À la une</span>
+                              </div>
+
+                              <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black via-black/70 to-transparent pointer-events-none space-y-0.5">
+                                <p className="text-xs font-bold text-white line-clamp-1">{item.title}</p>
+                                <div className="flex items-center gap-2 text-[10px] font-mono text-white/80">
+                                  <span className="flex items-center gap-0.5"><Heart className="w-2.5 h-2.5 text-red-400" /> {item.likesCount || 0}</span>
+                                  <span className="flex items-center gap-0.5"><MessageSquare className="w-2.5 h-2.5 text-amber-400" /> {item.commentsCount || 0}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Button to view all Reels without restriction */}
+                    <div className="pt-4 border-t border-afri-border/50 text-center space-y-2">
+                      <button
+                        onClick={() => setActiveTab("reels")}
+                        className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-amber-500 via-afri-gold to-yellow-500 text-black font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-95 transition cursor-pointer flex items-center justify-center gap-2 mx-auto"
+                      >
+                        <Film className="w-4 h-4 fill-current" />
+                        <span>Voir l&apos;intégralité des Réels ({reelsMedia.length})</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                      <p className="text-[10px] text-afri-text-sec font-mono">
+                        Accédez à la collection complète des vidéos et performances publiées par l&apos;artiste.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: À PROPOS (FICHE ARTISTIQUE PREMIUM) */}
+                {activeTab === "about" && (
+                  <div className={`p-5 rounded-2xl space-y-5 transition-all ${
+                    isElite
+                      ? "bg-gradient-to-br from-amber-950/20 via-afri-bg-sec to-yellow-950/10 border-2 border-amber-400/80 shadow-xl ring-1 ring-amber-400/30"
+                      : isPro
+                      ? "bg-gradient-to-br from-blue-950/15 via-afri-bg-sec to-afri-bg border-2 border-blue-400/60 shadow-lg"
+                      : "bg-afri-bg-sec border border-afri-border/80 shadow-md"
+                  }`}>
+                    {/* Header Badge in Fiche Artistique */}
+                    <div className="flex items-center justify-between pb-3 border-b border-afri-border/50">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-xl bg-afri-gold/20 text-afri-gold border border-afri-gold/40">
+                          <UserCheck className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="font-serif font-black text-sm text-afri-text uppercase tracking-wider">
+                            Fiche Artistique Officielle
+                          </h3>
+                          <span className="text-[10px] font-mono text-afri-text-sec block">
+                            Profil vérifié • {roleTitle}
+                          </span>
+                        </div>
+                      </div>
+                      {isElite && (
+                        <span className="px-2.5 py-1 rounded-full bg-amber-400 text-black font-black text-[9px] uppercase tracking-wider shadow-sm">
+                          👑 Artistique Elite
+                        </span>
+                      )}
+                      {isPro && !isElite && (
+                        <span className="px-2.5 py-1 rounded-full bg-blue-500 text-white font-black text-[9px] uppercase tracking-wider shadow-sm">
+                          ⭐ Certifié Pro
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Bio / Présentation */}
+                    {profile.bio ? (
+                      <div className="space-y-2">
+                        <h4 className="text-[11px] font-mono font-black uppercase text-afri-gold tracking-wider flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-afri-gold" />
+                          <span>Présentation & Démarche Artistique</span>
+                        </h4>
+                        <div className="p-4 bg-afri-bg/90 border border-afri-border/70 rounded-xl relative">
+                          <span className="text-3xl font-serif text-afri-gold/30 absolute top-1 left-2 pointer-events-none">&ldquo;</span>
+                          <p className="text-xs text-afri-text leading-relaxed font-serif italic pl-4 whitespace-pre-line relative z-10">
+                            {profile.bio}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-afri-bg/40 border border-afri-border/50 rounded-xl text-xs text-afri-text-sec text-center italic">
+                        Aucune biographie rédigée pour le moment.
+                      </div>
+                    )}
+
+                    {/* Profil Artistique & Compétences */}
+                    <div className="space-y-3 pt-2">
+                      <h4 className="text-[11px] font-mono font-black uppercase text-afri-gold tracking-wider flex items-center gap-1.5">
+                        <Music className="w-3.5 h-3.5 text-afri-gold" />
+                        <span>Compétences & Spécialisations</span>
+                      </h4>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div className="p-3 bg-afri-bg/80 border border-afri-border/60 rounded-xl space-y-1">
+                          <span className="text-[10px] font-mono text-afri-text-sec uppercase block">Rôle Principal</span>
+                          <span className="font-bold text-afri-text flex items-center gap-1.5">
+                            <Star className="w-3.5 h-3.5 text-afri-gold fill-current" />
+                            {roleTitle}
+                          </span>
+                        </div>
+
+                        <div className="p-3 bg-afri-bg/80 border border-afri-border/60 rounded-xl space-y-1">
+                          <span className="text-[10px] font-mono text-afri-text-sec uppercase block">Localisation Pro</span>
+                          <span className="font-bold text-afri-text flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-afri-gold" />
+                            {communeCity}
+                          </span>
+                        </div>
+
+                        {profile.instruments && profile.instruments.length > 0 && (
+                          <div className="col-span-full p-3 bg-afri-bg/80 border border-afri-border/60 rounded-xl space-y-2">
+                            <span className="text-[10px] font-mono text-afri-text-sec uppercase block">Instruments Maîtrisés</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {profile.instruments.map((inst, i) => (
+                                <span key={i} className="px-2.5 py-1 rounded-lg bg-afri-bg-ter border border-afri-border text-[11px] font-bold text-afri-text shadow-sm flex items-center gap-1">
+                                  🎸 {inst}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {profile.genres && profile.genres.length > 0 && (
+                          <div className="col-span-full p-3 bg-afri-bg/80 border border-afri-border/60 rounded-xl space-y-2">
+                            <span className="text-[10px] font-mono text-afri-text-sec uppercase block">Genres & Styles Médias</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {profile.genres.map((genre, i) => (
+                                <span key={i} className="px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/30 text-[11px] font-bold text-purple-300 dark:text-purple-300 light:text-purple-700 shadow-sm flex items-center gap-1">
+                                  🎶 {genre}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Mobilité & Disponibilité */}
+                    <div className="space-y-2 pt-2 border-t border-afri-border/40">
+                      <h4 className="text-[11px] font-mono font-black uppercase text-afri-gold tracking-wider flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-afri-gold" />
+                        <span>Disponibilité & Mobilité</span>
+                      </h4>
+
+                      <div className="p-3 bg-afri-bg/80 border border-afri-border/60 rounded-xl space-y-2 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-afri-text-sec font-mono text-[11px]">Statut Actuel :</span>
+                          <span className={`px-2.5 py-1 rounded-lg font-mono text-[10px] font-bold uppercase flex items-center gap-1.5 ${
+                            profile.availability?.status === "available" || profile.isAvailableNow
+                              ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                              : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                          }`}>
+                            <span className={`w-2 h-2 rounded-full ${profile.availability?.status === "available" || profile.isAvailableNow ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+                            {profile.availability?.status === "available" || profile.isAvailableNow ? "Disponible pour prestations" : "Sur engagement"}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1 border-t border-afri-border/30">
+                          <span className="text-afri-text-sec font-mono text-[11px]">Zone de Mobilité :</span>
+                          <span className="font-bold text-afri-text">{profile.commune || profile.city || "Abidjan"} & Intérieur</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
