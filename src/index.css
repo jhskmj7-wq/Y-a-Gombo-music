@@ -681,51 +681,51 @@ body,
   max-height: 100% !important;
 }
 
-.immersive-dark *,
-.light .immersive-dark *,
-.light .immersive-dark p,
-.light .immersive-dark span,
-.light .immersive-dark div,
-.light .immersive-dark h1,
-.light .immersive-dark h2,
-.light .immersive-dark h3,
-.light .immersive-dark h4,
-.light .immersive-dark h5,
-.light .immersive-dark h6,
-.light .immersive-dark label,
-.light .immersive-dark a,
-.light .immersive-dark li,
-.light .immersive-dark button {
+.immersive-dark *:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark *:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark p:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark span:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark div:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark h1:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark h2:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark h3:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark h4:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark h5:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark h6:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark label:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark a:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark li:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark button:not(.reels-popup-panel *):not(.reels-popup-panel) {
   color: #ffffff !important;
 }
 
 /* Secondary & grey text in immersive dark */
-.light .immersive-dark .text-white\/60,
-.light .immersive-dark .text-white\/70,
-.light .immersive-dark .text-zinc-400,
-.light .immersive-dark .text-gray-400,
-.light .immersive-dark .text-afri-text-sec {
+.light .immersive-dark .text-white\/60:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .text-white\/70:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .text-zinc-400:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .text-gray-400:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .text-afri-text-sec:not(.reels-popup-panel *):not(.reels-popup-panel) {
   color: rgba(255, 255, 255, 0.6) !important;
 }
 
 /* Yellow/Gold accents in immersive dark */
-.light .immersive-dark .text-afri-gold,
-.light .immersive-dark .text-\[\#D4AF37\] {
+.light .immersive-dark .text-afri-gold:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .text-\[\#D4AF37\]:not(.reels-popup-panel *):not(.reels-popup-panel) {
   color: #D4AF37 !important;
 }
 
 /* Retain dark background styles on overlays/containers in immersive dark */
-.light .immersive-dark .bg-black,
-.light .immersive-dark .bg-black\/60,
-.light .immersive-dark .bg-black\/50,
-.light .immersive-dark .bg-black\/40,
-.light .immersive-dark .bg-black\/85,
-.light .immersive-dark .bg-black\/90,
-.light .immersive-dark .bg-zinc-950,
-.light .immersive-dark .bg-zinc-900,
-.light .immersive-dark .bg-zinc-800,
-.light .immersive-dark [class*="bg-black"],
-.light .immersive-dark [class*="bg-zinc"] {
+.light .immersive-dark .bg-black:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .bg-black\/60:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .bg-black\/50:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .bg-black\/40:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .bg-black\/85:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .bg-black\/90:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .bg-zinc-950:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .bg-zinc-900:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark .bg-zinc-800:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark [class*="bg-black"]:not(.reels-popup-panel *):not(.reels-popup-panel),
+.light .immersive-dark [class*="bg-zinc"]:not(.reels-popup-panel *):not(.reels-popup-panel) {
   background-color: rgba(0, 0, 0, 0.6) !important;
 }
 
