@@ -2803,25 +2803,27 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               </div>
                             </div>
 
-                            {/* Wallet Card - Only rendered when logged in */}
-                            <button 
-                              onClick={() => {
-                                setIsSidebarOpen(false);
-                                openedFromSidebarRef.current = true;
-                                setPerspective("user");
-                                setActiveMenu("user_wallet");
-                              }}
-                              className="bg-afri-bg-sec border border-afri-border hover:bg-afri-gold/5 transition-colors rounded-xl p-4 shadow-md flex items-center justify-between cursor-pointer"
-                            >
-                              <div className="flex items-center gap-4">
-                                <CreditCard className="w-8 h-8 text-afri-gold" strokeWidth={1.5} />
-                                <div className="flex flex-col text-left">
-                                  <span className="text-[11px] font-sans text-afri-text font-medium leading-none mb-1">Wallet Souverain</span>
-                                  <span className="text-lg font-black text-afri-gold leading-none">{formatWalletBalance(profile?.wallet?.soldeDisponible ?? profile?.walletBalance ?? profile?.balance ?? 0)}</span>
+                            {/* Wallet Card - Only rendered when logged in and module is visible */}
+                            {checkIsModuleVisible("wallet", systemFeatureFlags, isSuperFounderUser) && (
+                              <button 
+                                onClick={() => {
+                                  setIsSidebarOpen(false);
+                                  openedFromSidebarRef.current = true;
+                                  setPerspective("user");
+                                  setActiveMenu("user_wallet");
+                                }}
+                                className="bg-afri-bg-sec border border-afri-border hover:bg-afri-gold/5 transition-colors rounded-xl p-4 shadow-md flex items-center justify-between cursor-pointer"
+                              >
+                                <div className="flex items-center gap-4">
+                                  <CreditCard className="w-8 h-8 text-afri-gold" strokeWidth={1.5} />
+                                  <div className="flex flex-col text-left">
+                                    <span className="text-[11px] font-sans text-afri-text font-medium leading-none mb-1">Wallet Souverain</span>
+                                    <span className="text-lg font-black text-afri-gold leading-none">{formatWalletBalance(profile?.wallet?.soldeDisponible ?? profile?.walletBalance ?? profile?.balance ?? 0)}</span>
+                                  </div>
                                 </div>
-                              </div>
-                              <ChevronRight className="w-5 h-5 text-afri-gold" strokeWidth={2} />
-                            </button>
+                                <ChevronRight className="w-5 h-5 text-afri-gold" strokeWidth={2} />
+                              </button>
+                            )}
                           </div>
                         );
                       })()
