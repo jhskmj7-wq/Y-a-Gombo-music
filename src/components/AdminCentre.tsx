@@ -398,24 +398,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     });
   }, [activeMenu]);
 
-  // Native Chrome Android Back Swipe Integration using popstate listeners
-  useEffect(() => {
-    const handlePopState = (e: PopStateEvent) => {
-      setMenuHistory(prev => {
-        if (prev.length > 1) {
-          // Navigation sounds strictly silenced for ELITE
-          return prev.slice(0, -1);
-        }
-        return prev;
-      });
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, []);
-
   const defaultBackParents: Record<string, string> = {
     user_gombo_plus: "user_heritage",
     user_subscription_management: "user_heritage",
@@ -454,7 +436,23 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     user_gombo_ads: "user_terrain"
   };
 
+  const isHeritageSubPanelActiveRef = useRef(false);
+  const [isHeritageSubPanelActive, setIsHeritageSubPanelActive] = useState(false);
+
+  useEffect(() => {
+    isHeritageSubPanelActiveRef.current = isHeritageSubPanelActive;
+  }, [isHeritageSubPanelActive]);
+
   const setActiveMenu = (menu: string) => {
+    // Intercept user_edit_profile to open user_heritage -> modifier profil cleanly
+    if (menu === "user_edit_profile") {
+      setActiveMenu("user_heritage");
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("gombo_open_edit_profile"));
+      }, 50);
+      return;
+    }
+
     // Security check: if the menu corresponds to a HIDDEN module and user is not super founder, block navigation!
     const flag = getFlagForMenu(menu);
     if (flag && !checkIsModuleVisible(flag, systemFeatureFlags, isSuperFounderUser)) {
@@ -472,6 +470,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   };
 
   const goBackMenu = useCallback(() => {
+    // If a heritage sub-panel (e.g. modifier le profil) is active, close the sub-panel first!
+    if (isHeritageSubPanelActiveRef.current) {
+      window.dispatchEvent(new CustomEvent("gombo_close_subpanel"));
+      return;
+    }
+
     // Silence navigation sounds
     setMenuHistory(prev => {
       if (prev.length > 1) {
@@ -490,7 +494,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [goBackMenu]);
 
   const [logoUrl, setLogoUrl] = useState<string | null>(() => localStorage.getItem("custom_app_logo"));
   useEffect(() => {
@@ -542,7 +546,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [openConvoWithUserId, setOpenConvoWithUserId] = useState<string | null>(null);
   const [openConvoWithGomboId, setOpenConvoWithGomboId] = useState<string | null>(null);
   const [publicProfileTargetUserId, setPublicProfileTargetUserId] = useState<string | null>(null);
-  const [isHeritageSubPanelActive, setIsHeritageSubPanelActive] = useState(false);
 
   useEffect(() => {
     if (activeMenu !== "user_heritage") {
@@ -3308,8 +3311,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       if (!currentUser) {
                         setShowHeritageLoginRequired(true);
                       } else {
-                        setActiveMenu("user_edit_profile");
+                        setActiveMenu("user_heritage");
                         setViewingGomboIdDetail(false); 
+                        setTimeout(() => {
+                          window.dispatchEvent(new CustomEvent("gombo_open_edit_profile"));
+                        }, 50);
                       }
                    }}
                    className="w-8 h-8 rounded-full border-2 border-afri-gold overflow-hidden bg-afri-bg-sec cursor-pointer hover:scale-105 transition-transform"
@@ -6663,29 +6669,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   </div>
                 )}
               </div>
-
-              {activeMenu === "user_edit_profile" && (
-                <div className="w-full animate-fadeIn">
-                  {profile ? (
-                    <HeritagePage 
-                      onNavigateView={(view) => {
-                        setActiveMenu("user_heritage"); // Always return to heritage after edit
-                      }}
-                      initialPanelView="edit"
-                    />
-                  ) : (
-                    <div className="p-12 text-center space-y-4">
-                      <p className="text-afri-text-sec font-mono">Profil non chargé...</p>
-                      <button 
-                        onClick={() => setActiveMenu("user_heritage")}
-                        className="px-6 py-2 bg-afri-gold text-black font-black uppercase rounded-xl"
-                      >
-                        Retour
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* ----------------------------------------------------
                                 VIEW: DASHBOARD & SCAN (CENTRE DE COMMANDE)

@@ -1089,8 +1089,11 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                <div 
                  onClick={() => { 
                    requireAuthThen(() => {
-                     setActiveMenu("user_edit_profile");
+                     setActiveMenu("user_heritage");
                      setViewingGomboIdDetail && setViewingGomboIdDetail(false); 
+                     setTimeout(() => {
+                       window.dispatchEvent(new CustomEvent("gombo_open_edit_profile"));
+                     }, 50);
                    });
                  }}
                  className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-afri-gold overflow-hidden bg-afri-bg-sec cursor-pointer hover:scale-105 transition-transform shadow-[0_0_12px_rgba(212,175,55,0.2)] relative shrink-0"

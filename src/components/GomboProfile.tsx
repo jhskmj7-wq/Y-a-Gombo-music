@@ -114,15 +114,20 @@ export default function GomboProfile({
     const handleOpenEditProfile = () => {
       setPanelView("edit");
     };
+    const handleCloseSubPanel = () => {
+      setPanelView("main");
+    };
 
     window.addEventListener("gombo_open_avatar_editor", handleOpenEditor);
     window.addEventListener("gombo_open_avatar_store", handleOpenStore);
     window.addEventListener("gombo_open_edit_profile", handleOpenEditProfile);
+    window.addEventListener("gombo_close_subpanel", handleCloseSubPanel);
 
     return () => {
       window.removeEventListener("gombo_open_avatar_editor", handleOpenEditor);
       window.removeEventListener("gombo_open_avatar_store", handleOpenStore);
       window.removeEventListener("gombo_open_edit_profile", handleOpenEditProfile);
+      window.removeEventListener("gombo_close_subpanel", handleCloseSubPanel);
     };
   }, []);
 
@@ -1232,11 +1237,7 @@ export default function GomboProfile({
     if (panelView === "main") {
       onNavigateView("back");
     } else {
-      if (initialPanelView === "edit") {
-        navigate(-1);
-      } else {
-        setPanelView("main");
-      }
+      setPanelView("main");
     }
   };
 
