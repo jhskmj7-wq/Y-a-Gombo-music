@@ -18,6 +18,7 @@ import { PendingAuthIntent } from "../lib/authIntent";
 import { PremiumEngine } from "../lib/premiumEngine";
 import { SecurityService } from "../lib/SecurityService";
 import { AdminSubscriptionTestBar } from "./admin/AdminSubscriptionTestBar";
+import { isGomboExpired } from "../lib/gomboDateUtils";
 
 interface PublicProfileModalProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ export function PublicProfileModal({
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<"gombos" | "realisations" | "about" | "reviews" | "collaborations" | "gallery" | "reels">("gombos");
+  const [gomboSubTab, setGomboSubTab] = useState<"active" | "history">("active");
   const [, setSimTick] = useState(0);
 
   // Re-evaluate on simulated tier changes
@@ -315,8 +317,11 @@ export function PublicProfileModal({
       category: c.instrument || c.role || "Cachet Garanti",
       description: (c as any).description || `Prestation artistique réalisée et sécurisée via Contrat Gombo.`,
       location: (c as any).location || (c as any).commune || profile?.commune || "Abidjan",
-      date: c.createdAt || (c as any).date,
+      date: (c as any).eventDate || c.createdAt || (c as any).date,
+      eventDate: (c as any).eventDate || (c as any).date || c.createdAt,
+      expiryDate: (c as any).expiryDate || (c as any).deadlineDate,
       status: (c.status as string) === "completed" || (c.status as string) === "termine" || (c.status as string) === "paid" ? "Réalisé & Rémunéré" : c.status || "Validé",
+      rawStatus: c.status,
       budget: c.amount || c.cachetAmount || (c as any).budget,
       imageUrl: (c as any).imageUrl || (c as any).mediaUrl || (photoMedia[0]?.url),
       videoUrl: (c as any).videoUrl,
@@ -328,14 +333,33 @@ export function PublicProfileModal({
       category: g.category || g.musicGenre || "Gombo Scène",
       description: g.description,
       location: g.location || g.commune || "Abidjan",
-      date: g.createdAt || g.eventDate,
+      date: g.eventDate || g.createdAt,
+      eventDate: g.eventDate || g.date || g.expiryDate || g.createdAt,
+      expiryDate: g.expiryDate || g.deadlineDate,
       status: g.status === "closed" ? "Terminé" : g.status === "active" ? "En cours" : g.status || "Actif",
+      rawStatus: g.status,
       budget: g.budget,
       imageUrl: (g as any).imageUrl || (g as any).mediaUrl,
       videoUrl: (g as any).videoUrl,
       type: "published"
     }))
   ];
+
+  // Active Gombos vs History Gombos classification
+  const activeGombos = allGombos.filter(item => {
+    const rawSt = (item.rawStatus || "").toLowerCase().trim();
+    if (["completed", "paid", "closed", "termine", "cancelled", "annule", "archived", "expired"].includes(rawSt)) {
+      return false;
+    }
+    return !isGomboExpired({
+      date: item.eventDate || item.date,
+      eventDate: item.eventDate,
+      expiryDate: item.expiryDate,
+      status: item.rawStatus
+    });
+  });
+
+  const historyGombos = allGombos.filter(item => !activeGombos.includes(item));
 
   // Portfolio Showcase Items calculation (FREE = 3 auto, PRO = 7 manual, ELITE = 15 manual)
   const portfolioMaxLimit = isElite ? 15 : isPro ? 7 : 3;
@@ -829,89 +853,221 @@ export function PublicProfileModal({
                   )}
                 </div>
 
-                {/* TAB 1: GOMBOS RÉALISÉS */}
+                {/* TAB 1: GOMBOS / PRESTATIONS */}
                 {activeTab === "gombos" && (
-                  <div className="space-y-3">
-                    {allGombos.length === 0 ? (
-                      <div className="py-12 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl p-6 space-y-2">
-                        <Briefcase className="w-10 h-10 text-afri-gold/50 mx-auto mb-2" />
-                        <h4 className="text-sm font-bold text-afri-text">Aucun Gombo enregistré dans ce portfolio</h4>
-                        <p className="text-[11px] text-afri-text-sec max-w-sm mx-auto">
-                          Les prestations scéniques, contrats et gombos réalisés par l&apos;artiste apparaîtront ici.
-                        </p>
-                      </div>
-                    ) : (
-                      allGombos.map((g, idx) => (
-                        <div
-                          key={g.id || idx}
-                          className="p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-3 hover:border-afri-gold/50 transition-all shadow-sm"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 space-y-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="px-2 py-0.5 rounded-md bg-afri-gold/15 border border-afri-gold/40 text-[9px] font-mono font-black text-afri-gold uppercase">
-                                  {g.category || "GOMBO ARTISTIQUE"}
-                                </span>
-                                <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-[9px] font-mono font-bold text-emerald-400 uppercase flex items-center gap-1">
-                                  <ShieldCheck className="w-3 h-3" />
-                                  {g.status}
-                                </span>
-                              </div>
-                              <h4 className="text-sm font-black text-afri-text">{g.title}</h4>
-                            </div>
+                  <div className="space-y-4">
+                    {/* Sub-pills for Actifs vs Historique */}
+                    <div className="flex items-center gap-2 p-1.5 bg-afri-bg-sec rounded-2xl border border-afri-border/80">
+                      <button
+                        type="button"
+                        onClick={() => setGomboSubTab("active")}
+                        className={`flex-1 py-2 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                          gomboSubTab === "active"
+                            ? "bg-gradient-to-r from-amber-500 via-afri-gold to-yellow-500 text-black shadow-md"
+                            : "text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-ter"
+                        }`}
+                      >
+                        <Sparkles className="w-3.5 h-3.5 fill-current" />
+                        <span>Gombos Actifs ({activeGombos.length})</span>
+                      </button>
 
-                            {g.budget !== undefined && g.budget > 0 && (
-                              <div className="shrink-0 text-right">
-                                <span className="text-sm font-black text-afri-gold font-mono block">
-                                  {Number(g.budget).toLocaleString("fr-FR")} F
-                                </span>
-                                <span className="text-[9px] font-mono text-afri-text-sec uppercase block">
-                                  Cachet Réalisé
-                                </span>
-                              </div>
-                            )}
-                          </div>
+                      <button
+                        type="button"
+                        onClick={() => setGomboSubTab("history")}
+                        className={`flex-1 py-2 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                          gomboSubTab === "history"
+                            ? "bg-gradient-to-r from-amber-500 via-afri-gold to-yellow-500 text-black shadow-md"
+                            : "text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-ter"
+                        }`}
+                      >
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>Historique ({historyGombos.length})</span>
+                      </button>
+                    </div>
 
-                          {g.description && (
-                            <p className="text-xs text-afri-text-sec font-sans leading-relaxed">
-                              {g.description}
-                            </p>
-                          )}
-
-                          <div className="flex items-center gap-3 text-[11px] font-mono text-afri-text-sec pt-1 border-t border-afri-border/40 flex-wrap">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-afri-gold" />
-                              {g.location}
-                            </span>
-                            {g.date && (
-                              <span className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3 text-afri-text-sec" />
-                                {new Date(g.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
-                              </span>
-                            )}
-                          </div>
-
-                          {g.imageUrl && (
-                            <div className="pt-2">
-                              <div
-                                onClick={() => setSelectedMediaViewer({ type: "photo", url: g.imageUrl!, title: g.title })}
-                                className="relative rounded-xl overflow-hidden border border-afri-border/80 bg-black/40 group cursor-pointer max-h-56 hover:border-afri-gold transition-all"
-                              >
-                                <img
-                                  src={g.imageUrl}
-                                  alt={g.title}
-                                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                                />
-                                <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                  <span className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-sm text-[10px] font-bold text-afri-gold uppercase flex items-center gap-1 border border-afri-gold/40">
-                                    <ExternalLink className="w-3 h-3" /> Agrandir
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
+                    {/* Content depending on sub-tab */}
+                    {gomboSubTab === "active" ? (
+                      activeGombos.length === 0 ? (
+                        <div className="py-10 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl p-6 space-y-3">
+                          <Briefcase className="w-10 h-10 text-afri-gold/50 mx-auto" />
+                          <h4 className="text-sm font-bold text-afri-text">Aucun Gombo actif pour le moment</h4>
+                          <p className="text-[11px] text-afri-text-sec max-w-sm mx-auto leading-relaxed">
+                            L&apos;artiste n&apos;a pas de candidatures ou d&apos;opportunités ouvertes actuellement. Vous pouvez consulter les prestations déjà réalisées dans l&apos;historique.
+                          </p>
+                          {historyGombos.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setGomboSubTab("history")}
+                              className="px-4 py-2 bg-afri-bg-ter border border-afri-border rounded-xl text-xs font-bold text-afri-gold hover:border-afri-gold transition-all"
+                            >
+                              Consulter l&apos;historique ({historyGombos.length})
+                            </button>
                           )}
                         </div>
-                      ))
+                      ) : (
+                        <div className="space-y-3">
+                          {activeGombos.map((g, idx) => (
+                            <div
+                              key={g.id || idx}
+                              onClick={() => onNavigateToGombo && onNavigateToGombo(g.id)}
+                              className={`p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-3 hover:border-afri-gold/70 transition-all shadow-sm ${onNavigateToGombo ? 'cursor-pointer' : ''}`}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0 space-y-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="px-2 py-0.5 rounded-md bg-afri-gold/15 border border-afri-gold/40 text-[9px] font-mono font-black text-afri-gold uppercase">
+                                      {g.category || "GOMBO ARTISTIQUE"}
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/40 text-[9px] font-mono font-bold text-emerald-400 uppercase flex items-center gap-1">
+                                      <ShieldCheck className="w-3 h-3" />
+                                      Opportunité Ouverte
+                                    </span>
+                                  </div>
+                                  <h4 className="text-sm font-black text-afri-text">{g.title}</h4>
+                                </div>
+
+                                {g.budget !== undefined && g.budget > 0 && (
+                                  <div className="shrink-0 text-right">
+                                    <span className="text-sm font-black text-afri-gold font-mono block">
+                                      {Number(g.budget).toLocaleString("fr-FR")} F
+                                    </span>
+                                    <span className="text-[9px] font-mono text-afri-text-sec uppercase block">
+                                      Cachet Proposé
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {g.description && (
+                                <p className="text-xs text-afri-text-sec font-sans leading-relaxed line-clamp-2">
+                                  {g.description}
+                                </p>
+                              )}
+
+                              <div className="flex items-center gap-3 text-[11px] font-mono text-afri-text-sec pt-1 border-t border-afri-border/40 flex-wrap">
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-afri-gold" />
+                                  {g.location}
+                                </span>
+                                {g.date && (
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="w-3 h-3 text-afri-text-sec" />
+                                    {new Date(g.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    ) : (
+                      historyGombos.length === 0 ? (
+                        <div className="py-10 text-center text-xs text-afri-text-sec bg-afri-bg/50 border border-afri-border rounded-2xl p-6 space-y-2">
+                          <Clock className="w-10 h-10 text-afri-gold/50 mx-auto" />
+                          <h4 className="text-sm font-bold text-afri-text">Aucune prestation dans l&apos;historique</h4>
+                          <p className="text-[11px] text-afri-text-sec max-w-sm mx-auto">
+                            Les prestations scéniques terminées et rémunérées de l&apos;artiste s&apos;afficheront ici.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {historyGombos.map((g, idx) => {
+                            const isPaidOrCompleted = g.type === "contract" || g.status === "Réalisé & Rémunéré" || g.rawStatus === "completed" || g.rawStatus === "paid";
+                            const isClosed = g.rawStatus === "closed" || g.status === "Terminé";
+                            const isCancelled = g.rawStatus === "cancelled" || g.rawStatus === "annule";
+
+                            return (
+                              <div
+                                key={g.id || idx}
+                                className="p-4 bg-afri-bg/80 border border-afri-border/80 rounded-2xl space-y-3 hover:border-afri-gold/40 transition-all shadow-sm"
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0 space-y-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="px-2 py-0.5 rounded-md bg-afri-gold/15 border border-afri-gold/40 text-[9px] font-mono font-black text-afri-gold uppercase">
+                                        {g.category || "GOMBO ARTISTIQUE"}
+                                      </span>
+
+                                      {isPaidOrCompleted ? (
+                                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/40 text-[9px] font-mono font-bold text-emerald-400 uppercase flex items-center gap-1">
+                                          <CheckCircle2 className="w-3 h-3" />
+                                          Réalisé & Rémunéré
+                                        </span>
+                                      ) : isClosed ? (
+                                        <span className="px-2 py-0.5 rounded-md bg-blue-500/15 border border-blue-500/40 text-[9px] font-mono font-bold text-blue-400 uppercase flex items-center gap-1">
+                                          <Check className="w-3 h-3" />
+                                          Prestation Terminée
+                                        </span>
+                                      ) : isCancelled ? (
+                                        <span className="px-2 py-0.5 rounded-md bg-red-500/15 border border-red-500/40 text-[9px] font-mono font-bold text-red-400 uppercase flex items-center gap-1">
+                                          <AlertTriangle className="w-3 h-3" />
+                                          Annulé / Clôturé
+                                        </span>
+                                      ) : (
+                                        <span className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/40 text-[9px] font-mono font-bold text-amber-400 uppercase flex items-center gap-1">
+                                          <Clock className="w-3 h-3" />
+                                          Événement Passé
+                                        </span>
+                                      )}
+                                    </div>
+                                    <h4 className="text-sm font-black text-afri-text">{g.title}</h4>
+                                  </div>
+
+                                  {g.budget !== undefined && g.budget > 0 && (
+                                    <div className="shrink-0 text-right">
+                                      <span className="text-sm font-black text-afri-gold font-mono block">
+                                        {Number(g.budget).toLocaleString("fr-FR")} F
+                                      </span>
+                                      <span className="text-[9px] font-mono text-afri-text-sec uppercase block">
+                                        Cachet Honoré
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {g.description && (
+                                  <p className="text-xs text-afri-text-sec font-sans leading-relaxed line-clamp-2">
+                                    {g.description}
+                                  </p>
+                                )}
+
+                                <div className="flex items-center gap-3 text-[11px] font-mono text-afri-text-sec pt-1 border-t border-afri-border/40 flex-wrap">
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-3 h-3 text-afri-gold" />
+                                    {g.location}
+                                  </span>
+                                  {g.date && (
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="w-3 h-3 text-afri-text-sec" />
+                                      {new Date(g.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {g.imageUrl && (
+                                  <div className="pt-1">
+                                    <div
+                                      onClick={() => setSelectedMediaViewer({ type: "photo", url: g.imageUrl!, title: g.title })}
+                                      className="relative rounded-xl overflow-hidden border border-afri-border/80 bg-black/40 group cursor-pointer max-h-48 hover:border-afri-gold transition-all"
+                                    >
+                                      <img
+                                        src={g.imageUrl}
+                                        alt={g.title}
+                                        className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+                                      />
+                                      <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                        <span className="px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-sm text-[10px] font-bold text-afri-gold uppercase flex items-center gap-1 border border-afri-gold/40">
+                                          <ExternalLink className="w-3 h-3" /> Agrandir
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )
                     )}
                   </div>
                 )}
@@ -1066,7 +1222,13 @@ export function PublicProfileModal({
                     {/* Header Badge in Fiche Artistique */}
                     <div className="flex items-center justify-between pb-3 border-b border-afri-border/50">
                       <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-xl bg-afri-gold/20 text-afri-gold border border-afri-gold/40">
+                        <div className={`p-2 rounded-xl border ${
+                          isElite
+                            ? "bg-amber-400/20 text-amber-400 border-amber-400/50"
+                            : isPro
+                            ? "bg-blue-500/20 text-blue-400 border-blue-500/50"
+                            : "bg-afri-gold/20 text-afri-gold border-afri-gold/40"
+                        }`}>
                           <UserCheck className="w-4 h-4" />
                         </div>
                         <div>
@@ -1079,13 +1241,18 @@ export function PublicProfileModal({
                         </div>
                       </div>
                       {isElite && (
-                        <span className="px-2.5 py-1 rounded-full bg-amber-400 text-black font-black text-[9px] uppercase tracking-wider shadow-sm">
+                        <span className="px-2.5 py-1 rounded-full bg-amber-400 text-black font-black text-[9px] uppercase tracking-wider shadow-sm flex items-center gap-1">
                           👑 Artistique Elite
                         </span>
                       )}
                       {isPro && !isElite && (
-                        <span className="px-2.5 py-1 rounded-full bg-blue-500 text-white font-black text-[9px] uppercase tracking-wider shadow-sm">
+                        <span className="px-2.5 py-1 rounded-full bg-blue-500 text-white font-black text-[9px] uppercase tracking-wider shadow-sm flex items-center gap-1">
                           ⭐ Certifié Pro
+                        </span>
+                      )}
+                      {isFree && (
+                        <span className="px-2.5 py-1 rounded-full bg-afri-bg-ter text-afri-text-sec font-bold text-[9px] uppercase tracking-wider border border-afri-border">
+                          Membre Afrigombo
                         </span>
                       )}
                     </div>
@@ -1134,6 +1301,16 @@ export function PublicProfileModal({
                           </span>
                         </div>
 
+                        {(profile.experienceYears || (profile as any).experience) && (
+                          <div className="p-3 bg-afri-bg/80 border border-afri-border/60 rounded-xl space-y-1">
+                            <span className="text-[10px] font-mono text-afri-text-sec uppercase block">Expérience Scénique</span>
+                            <span className="font-bold text-afri-text flex items-center gap-1.5">
+                              <Flame className="w-3.5 h-3.5 text-amber-400 fill-current" />
+                              {profile.experienceYears ? `${profile.experienceYears} ans de carrière / scène` : (profile as any).experience}
+                            </span>
+                          </div>
+                        )}
+
                         {profile.instruments && profile.instruments.length > 0 && (
                           <div className="col-span-full p-3 bg-afri-bg/80 border border-afri-border/60 rounded-xl space-y-2">
                             <span className="text-[10px] font-mono text-afri-text-sec uppercase block">Instruments Maîtrisés</span>
@@ -1152,10 +1329,28 @@ export function PublicProfileModal({
                             <span className="text-[10px] font-mono text-afri-text-sec uppercase block">Genres & Styles Médias</span>
                             <div className="flex flex-wrap gap-1.5">
                               {profile.genres.map((genre, i) => (
-                                <span key={i} className="px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/30 text-[11px] font-bold text-purple-300 dark:text-purple-300 light:text-purple-700 shadow-sm flex items-center gap-1">
+                                <span key={i} className="px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/30 text-[11px] font-bold text-purple-300 shadow-sm flex items-center gap-1">
                                   🎶 {genre}
                                 </span>
                               ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {((profile.languages && profile.languages.length > 0) || (profile as any).languageCustom) && (
+                          <div className="col-span-full p-3 bg-afri-bg/80 border border-afri-border/60 rounded-xl space-y-2">
+                            <span className="text-[10px] font-mono text-afri-text-sec uppercase block">Langues & Dialectes de Scène</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {profile.languages?.map((lang, i) => (
+                                <span key={i} className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400 shadow-sm flex items-center gap-1">
+                                  🗣️ {lang}
+                                </span>
+                              ))}
+                              {(profile as any).languageCustom && (
+                                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400 shadow-sm flex items-center gap-1">
+                                  🗣️ {(profile as any).languageCustom}
+                                </span>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1186,6 +1381,15 @@ export function PublicProfileModal({
                           <span className="text-afri-text-sec font-mono text-[11px]">Zone de Mobilité :</span>
                           <span className="font-bold text-afri-text">{profile.commune || profile.city || "Abidjan"} & Intérieur</span>
                         </div>
+
+                        {(profile as any).createdAt && (
+                          <div className="flex items-center justify-between pt-1 border-t border-afri-border/30">
+                            <span className="text-afri-text-sec font-mono text-[11px]">Membre AFRIGOMBO :</span>
+                            <span className="font-mono text-xs font-bold text-afri-gold">
+                              Depuis {new Date((profile as any).createdAt).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
