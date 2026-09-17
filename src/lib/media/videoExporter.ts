@@ -203,10 +203,16 @@ export async function exportVideoFile(
 
         let isCancelled = false;
         let animFrameId: number | null = null;
+        let rvfcCallbackId: number | null = null;
 
         // Cleanup helper
         const cleanup = () => {
           if (animFrameId) cancelAnimationFrame(animFrameId);
+          if (rvfcCallbackId !== null && "cancelVideoFrameCallback" in videoEl) {
+            try {
+              (videoEl as any).cancelVideoFrameCallback(rvfcCallbackId);
+            } catch (_) {}
+          }
           URL.revokeObjectURL(objectUrl);
           if (audioCtx) {
             try { audioCtx.close(); } catch (_) {}
@@ -407,7 +413,12 @@ export async function exportVideoFile(
             }
           }
 
-          animFrameId = requestAnimationFrame(renderFrame);
+          // Schedule next frame using requestVideoFrameCallback or requestAnimationFrame fallback
+          if ("requestVideoFrameCallback" in videoEl) {
+            rvfcCallbackId = (videoEl as any).requestVideoFrameCallback(renderFrame);
+          } else {
+            animFrameId = requestAnimationFrame(renderFrame);
+          }
         };
 
         // Prepare video playback
@@ -417,20 +428,38 @@ export async function exportVideoFile(
         videoEl.onseeked = () => {
           videoEl.onseeked = null; // Unsubscribe immediately to prevent any potential double triggering
           if (onProgress) onProgress(10, "Démarrage du ré-encodage vidéo haute fidélité...");
-          try {
-            mediaRecorder.start(200); // 200ms slice chunks
-            videoEl.play().then(() => {
-              renderFrame();
-            }).catch((playErr) => {
+          
+          let hasStartedRecording = false;
+
+          const startRecordingAndPlayback = () => {
+            if (hasStartedRecording) return;
+            hasStartedRecording = true;
+            videoEl.onplaying = null;
+
+            try {
+              mediaRecorder.start(200); // 200ms slice chunks
+              
+              // Start the frame rendering loop
+              if ("requestVideoFrameCallback" in videoEl) {
+                rvfcCallbackId = (videoEl as any).requestVideoFrameCallback(renderFrame);
+              } else {
+                animFrameId = requestAnimationFrame(renderFrame);
+              }
+            } catch (recErr: any) {
               isCancelled = true;
               cleanup();
-              reject(new Error(`Erreur lors du démarrage de la lecture vidéo : ${playErr.message}`));
-            });
-          } catch (recErr: any) {
+              reject(new Error(`Impossible de démarrer l'enregistrateur média : ${recErr.message}`));
+            }
+          };
+
+          // Attach to 'playing' event to ensure recorder starts synchronously when decoding actually begins
+          videoEl.onplaying = startRecordingAndPlayback;
+
+          videoEl.play().catch((playErr) => {
             isCancelled = true;
             cleanup();
-            reject(new Error(`Impossible de démarrer l'enregistrateur média : ${recErr.message}`));
-          }
+            reject(new Error(`Erreur lors du démarrage de la lecture vidéo : ${playErr.message}`));
+          });
         };
       } catch (err: any) {
         URL.revokeObjectURL(objectUrl);

@@ -23,7 +23,8 @@ import {
   Loader2,
   Bookmark,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Trash2
 } from "lucide-react";
 
 import { VideoFilter, REEL_VIDEO_FILTERS, getFilterCss } from "./videoFilters";
@@ -104,6 +105,60 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [savingDraft, setSavingDraft] = useState<boolean>(false);
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(initialDraft?.id || null);
+
+  // Drafts Modal State for Initial Screen
+  const [showDraftsModal, setShowDraftsModal] = useState<boolean>(false);
+  const [userDraftsList, setUserDraftsList] = useState<ReelDraft[]>([]);
+  const [loadingDrafts, setLoadingDrafts] = useState<boolean>(false);
+
+  const handleOpenDraftsModal = async () => {
+    const userId = auth.currentUser?.uid || "user_guest";
+    setLoadingDrafts(true);
+    try {
+      const list = await reelsDraftsService.getUserDrafts(userId);
+      setUserDraftsList(list);
+    } catch (e) {
+      console.warn("[ReelCreator] Error loading drafts:", e);
+    } finally {
+      setLoadingDrafts(false);
+      setShowDraftsModal(true);
+    }
+  };
+
+  const handleResumeDraftItem = (draft: ReelDraft) => {
+    if (draft.editorState) {
+      setEditorState(draft.editorState);
+    }
+    if (draft.videoBlob) {
+      const file = draft.videoBlob instanceof File 
+        ? draft.videoBlob 
+        : new File([draft.videoBlob], "brouillon_reel.mp4", { type: draft.videoBlob.type || "video/mp4" });
+      const url = URL.createObjectURL(file);
+      setSelectedFile(file);
+      setRecordedUrl(url);
+    } else if (draft.videoSourceUrl) {
+      setRecordedUrl(draft.videoSourceUrl);
+      const dummyFile = new File([""], "brouillon_remote.mp4", { type: "video/mp4" });
+      setSelectedFile(dummyFile);
+    }
+    if (draft.id) {
+      setCurrentDraftId(draft.id);
+    }
+    setShowDraftsModal(false);
+    setToastMsg("Brouillon repris avec succès !");
+  };
+
+  const handleDeleteDraftItem = async (draftId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const userId = auth.currentUser?.uid || "user_guest";
+    try {
+      await reelsDraftsService.deleteDraft(draftId, userId);
+      setUserDraftsList(prev => prev.filter(d => d.id !== draftId));
+      setToastMsg("Brouillon supprimé.");
+    } catch (err) {
+      console.warn("[ReelCreator] Error deleting draft:", err);
+    }
+  };
 
   // Player States
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -413,17 +468,17 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
   else if (editorState.aspectRatio === "4:5") aspectContainerClass = "aspect-[4/5] max-h-[55vh]";
   else if (editorState.aspectRatio === "16:9") aspectContainerClass = "aspect-[16/9] max-w-full";
 
-  // Categories Toolbar list
+  // Categories Toolbar list (Advanced tabs frozen/hidden in UI without deleting code)
   const categories: { id: TabCategory; label: string; icon: React.FC<{ className?: string }> }[] = [
-    { id: "filtres", label: "Filtres", icon: Sparkles },
-    { id: "ajuster", label: "Ajuster", icon: Sliders },
+    // { id: "filtres", label: "Filtres", icon: Sparkles },
+    // { id: "ajuster", label: "Ajuster", icon: Sliders },
     { id: "couper", label: "Couper", icon: Scissors },
-    { id: "vitesse", label: "Vitesse", icon: Gauge },
-    { id: "transformer", label: "Format", icon: FlipHorizontal },
+    // { id: "vitesse", label: "Vitesse", icon: Gauge },
+    // { id: "transformer", label: "Format", icon: FlipHorizontal },
     { id: "audio", label: "Audio", icon: Volume2 },
     { id: "texte", label: "Texte", icon: Type },
     { id: "stickers", label: "Stickers", icon: Smile },
-    { id: "effets", label: "Effets", icon: Sparkles },
+    // { id: "effets", label: "Effets", icon: Sparkles },
     { id: "couverture", label: "Couverture", icon: CoverIcon },
   ];
 
@@ -790,13 +845,23 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
         </p>
       </div>
 
-      <button
-        onClick={() => fileInputRef.current?.click()}
-        className="bg-[#D4AF37] hover:bg-amber-400 text-black font-black px-6 py-3 rounded-full text-xs uppercase tracking-wider shadow-xl active:scale-95 transition-all cursor-pointer flex items-center gap-2"
-      >
-        <Upload className="w-4 h-4 stroke-[2.5]" />
-        <span>Importer une vidéo</span>
-      </button>
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="bg-[#D4AF37] hover:bg-amber-400 text-black font-black px-6 py-3 rounded-full text-xs uppercase tracking-wider shadow-xl active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+        >
+          <Upload className="w-4 h-4 stroke-[2.5]" />
+          <span>Importer une vidéo</span>
+        </button>
+
+        <button
+          onClick={handleOpenDraftsModal}
+          className="bg-zinc-800 hover:bg-zinc-700 text-[#D4AF37] border border-[#D4AF37]/30 font-bold px-6 py-3 rounded-full text-xs uppercase tracking-wider shadow-md active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+        >
+          <Bookmark className="w-4 h-4" />
+          <span>Mes Brouillons</span>
+        </button>
+      </div>
 
       <input
         ref={fileInputRef}
@@ -805,6 +870,84 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
         className="hidden"
         onChange={handleGalleryFile}
       />
+
+      {/* DRAFTS MODAL */}
+      {showDraftsModal && (
+        <div className="fixed inset-0 z-[10005] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="max-w-lg w-full bg-zinc-950 border border-[#D4AF37]/40 rounded-3xl p-6 space-y-5 shadow-2xl text-white">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Bookmark className="w-5 h-5 text-[#D4AF37]" />
+                <h3 className="font-black text-base">Mes Brouillons de Réels</h3>
+              </div>
+              <button
+                onClick={() => setShowDraftsModal(false)}
+                className="p-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="max-h-80 overflow-y-auto space-y-3 pr-1">
+              {loadingDrafts ? (
+                <div className="py-12 text-center text-zinc-400 text-xs font-mono">Chargement de vos brouillons...</div>
+              ) : userDraftsList.length === 0 ? (
+                <div className="py-12 text-center text-zinc-500 text-xs">Aucun brouillon enregistré pour le moment.</div>
+              ) : (
+                userDraftsList.map((draft) => {
+                  const previewVidUrl = draft.videoBlob 
+                    ? (draft.videoBlob instanceof Blob ? URL.createObjectURL(draft.videoBlob) : null)
+                    : draft.videoSourceUrl;
+                  return (
+                    <div
+                      key={draft.id}
+                      onClick={() => handleResumeDraftItem(draft)}
+                      className="bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-[#D4AF37]/50 rounded-2xl p-3.5 flex items-center justify-between gap-3 cursor-pointer transition group"
+                    >
+                      <div className="w-14 h-14 rounded-xl bg-black overflow-hidden relative shrink-0 border border-zinc-800 flex items-center justify-center">
+                        {previewVidUrl ? (
+                          <video src={previewVidUrl} className="w-full h-full object-cover pointer-events-none" muted />
+                        ) : (
+                          <Film className="w-6 h-6 text-zinc-600" />
+                        )}
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition" />
+                      </div>
+
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <h4 className="font-bold text-xs text-white truncate">
+                          {draft.title || draft.caption || "Brouillon sans titre"}
+                        </h4>
+                        <p className="text-[10px] text-zinc-400 font-mono">
+                          Modifié le : {new Date(draft.updatedAt || Date.now()).toLocaleDateString()}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={(e) => handleDeleteDraftItem(draft.id, e)}
+                          className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition"
+                          title="Supprimer le brouillon"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => setShowDraftsModal(false)}
+                className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold rounded-2xl text-xs transition cursor-pointer"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>,
     document.body
   );

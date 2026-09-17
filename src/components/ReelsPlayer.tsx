@@ -323,6 +323,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     if (activeVideoRef.current) {
       activeVideoRef.current = null;
     }
+    lastPlayedReelIdRef.current = null;
   };
 
   const handleClose = () => {
@@ -1358,7 +1359,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                               iframeElementsRef.current.set(reel.id, el);
                             } else {
                               const existingIframe = iframeElementsRef.current.get(reel.id);
-                              if (existingIframe) {
+                              if (existingIframe && !document.contains(existingIframe)) {
                                 try {
                                   existingIframe.src = "about:blank";
                                 } catch (_) {}
@@ -1384,7 +1385,7 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                               }
                             } else {
                               const existingVideo = videoElementsRef.current.get(reel.id);
-                              if (existingVideo) {
+                              if (existingVideo && !document.contains(existingVideo)) {
                                 try {
                                   existingVideo.pause();
                                   existingVideo.muted = true;
