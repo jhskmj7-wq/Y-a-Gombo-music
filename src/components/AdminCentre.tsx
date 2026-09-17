@@ -3525,6 +3525,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   currentUser={currentUser}
                   onClose={() => setActiveMenu("user_terrain")}
                   onOpenCreate={() => setIsPlusMenuOpen(true)}
+                  initialReelId={reelsVideoId || undefined}
                 />
               )}
               {false && (() => {

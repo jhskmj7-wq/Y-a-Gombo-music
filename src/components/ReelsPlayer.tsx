@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   ChevronLeft, Heart, MessageCircle, Share2, Bookmark, MoreVertical, 
-  Plus, Music, MapPin, Volume2, VolumeX, Sparkles, Flag, X, Check,
+  Plus, Music, MapPin, Volume2, VolumeX, Sparkles, Flag, X, Check, Pause, Play,
   Send, UserCheck, UserPlus, ChevronDown, ChevronUp, AlertTriangle, Film, RefreshCw,
   EyeOff, UserX, Copy, Link, Clock, ArrowUpDown, Loader2
 } from "lucide-react";
@@ -206,7 +206,9 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
   const [videoErrors, setVideoErrors] = useState<Record<string, boolean>>({});
   const [doubleTapHeart, setDoubleTapHeart] = useState<{ reelId: string; x: number; y: number } | null>(null);
+  const [playPauseNotice, setPlayPauseNotice] = useState<{ type: "play" | "pause"; reelId: string } | null>(null);
   const lastTapRef = useRef<{ time: number; reelId: string }>({ time: 0, reelId: "" });
+  const singleTapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Deterministic gesture lock & touch coords
   const isTransitioningRef = useRef<boolean>(false);
@@ -438,30 +440,32 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       });
     });
 
-    // 4. Apply dynamic ranking algorithm (Engagement + Recency + Affinity + Discovery - Seen Penalty)
-    return rankReels(list, { 
+    // 4. Apply dynamic ranking algorithm (Engagement + Recency + Affinity + Discovery)
+    const ranked = rankReels(list, { 
       currentUserId: effectiveUser?.uid, 
       followedUsers, 
       seenReelIds: seenReels, 
       sessionTimestamp 
     });
-  }, [posts, users, profile, effectiveUser, followedUsers, seenReels]);
+
+    // If initialReelId is specified, bring the exact selected reel to index 0 so it opens and plays immediately
+    if (initialReelId) {
+      const idx = ranked.findIndex(r => r.id === initialReelId || (r as any).mediaUrl === initialReelId);
+      if (idx > 0) {
+        const target = ranked[idx];
+        const rest = ranked.filter((_, i) => i !== idx);
+        return [target, ...rest];
+      }
+    }
+    return ranked;
+  }, [posts, users, profile, effectiveUser, followedUsers, initialReelId]);
 
   const [localReels, setLocalReels] = useState<ReelItem[]>(reelsList);
 
   useEffect(() => {
     setLocalReels(reelsList);
+    setCurrentIndex(0);
   }, [reelsList]);
-
-  // Jump to initial reel if provided
-  useEffect(() => {
-    if (initialReelId) {
-      const idx = localReels.findIndex(r => r.id === initialReelId);
-      if (idx !== -1) {
-        setCurrentIndex(idx);
-      }
-    }
-  }, [initialReelId, localReels]);
 
   // Deterministic Navigation Functions: STRICTLY 1 GESTE = 1 REEL
   const goToNextReel = () => {
@@ -803,13 +807,19 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     });
   };
 
-  // Double-tap handler on video area to like and trigger floating heart animation
+  // Tap / Double-tap handler on video area:
+  // Single TAP: Toggle play/pause
+  // Double TAP: Like reel + floating heart
   const handleVideoTouchOrClick = (e: React.MouseEvent | React.TouchEvent, reelId: string) => {
-    // If it is a simulated synthetic click right after a touch, ignore it
     const now = Date.now();
     const lastTap = lastTapRef.current;
-    if (lastTap.reelId === reelId && now - lastTap.time < 350) {
+    
+    if (lastTap.reelId === reelId && now - lastTap.time < 300) {
       // Double tap detected!
+      if (singleTapTimeoutRef.current) {
+        clearTimeout(singleTapTimeoutRef.current);
+        singleTapTimeoutRef.current = null;
+      }
       lastTapRef.current = { time: 0, reelId: "" };
       let clientX = 0;
       let clientY = 0;
@@ -825,6 +835,23 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       handleLike(reelId, true);
     } else {
       lastTapRef.current = { time: now, reelId };
+      if (singleTapTimeoutRef.current) {
+        clearTimeout(singleTapTimeoutRef.current);
+      }
+      singleTapTimeoutRef.current = setTimeout(() => {
+        singleTapTimeoutRef.current = null;
+        // Single tap action: toggle play / pause on active video
+        if (activeVideoRef.current) {
+          if (activeVideoRef.current.paused) {
+            activeVideoRef.current.play().catch(() => {});
+            setPlayPauseNotice({ type: "play", reelId });
+          } else {
+            activeVideoRef.current.pause();
+            setPlayPauseNotice({ type: "pause", reelId });
+          }
+          setTimeout(() => setPlayPauseNotice(null), 700);
+        }
+      }, 280);
     }
   };
 
@@ -1321,6 +1348,19 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                       {doubleTapHeart && doubleTapHeart.reelId === reel.id && (
                         <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-50 animate-ping">
                           <Heart className="w-24 h-24 text-red-500 fill-red-500 drop-shadow-[0_0_25px_rgba(239,68,68,0.8)]" />
+                        </div>
+                      )}
+
+                      {/* Single-tap animated Play/Pause overlay */}
+                      {playPauseNotice && playPauseNotice.reelId === reel.id && (
+                        <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-50 animate-fade-in">
+                          <div className="p-4 rounded-full bg-black/75 border border-white/20 backdrop-blur-md text-white shadow-2xl scale-110">
+                            {playPauseNotice.type === "pause" ? (
+                              <Pause className="w-10 h-10 fill-white text-white" />
+                            ) : (
+                              <Play className="w-10 h-10 fill-white text-white ml-1" />
+                            )}
+                          </div>
                         </div>
                       )}
 

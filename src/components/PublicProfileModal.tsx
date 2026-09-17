@@ -1283,7 +1283,7 @@ export function PublicProfileModal({
                         </p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3">
                         {portfolioShowcaseItems.map((item, idx) => (
                           <div
                             key={item.id || idx}
@@ -1296,15 +1296,15 @@ export function PublicProfileModal({
                                 });
                               }
                             }}
-                            className={`relative rounded-2xl overflow-hidden bg-black flex flex-col justify-between group cursor-pointer transition-all shadow-md ${
+                            className={`relative rounded-xl overflow-hidden bg-black flex flex-col group cursor-pointer transition-all shadow-md ${
                               isElite
-                                ? "border-2 border-amber-400/80 shadow-amber-500/10 hover:border-amber-300 hover:shadow-xl"
+                                ? "border border-amber-400/80 hover:border-amber-300 shadow-amber-500/10"
                                 : isPro
                                 ? "border border-blue-400/60 hover:border-blue-300"
                                 : "border border-afri-border/60 hover:border-afri-gold/50"
                             }`}
                           >
-                            <div className="relative aspect-[9/16] max-h-56 w-full bg-zinc-900 overflow-hidden flex items-center justify-center">
+                            <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full bg-zinc-900 overflow-hidden flex items-center justify-center">
                               {item.url ? (
                                 item.type === "photo" ? (
                                   <img src={item.url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -1312,22 +1312,22 @@ export function PublicProfileModal({
                                   <video src={item.url} className="w-full h-full object-cover pointer-events-none" muted />
                                 )
                               ) : (
-                                <Film className="w-8 h-8 text-zinc-600" />
+                                <Film className="w-6 h-6 text-zinc-600" />
                               )}
 
                               {/* Play Overlay if video */}
                               {item.type !== "photo" && item.url && (
                                 <div className="absolute inset-0 bg-black/25 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                                  <div className="w-9 h-9 rounded-full bg-black/70 backdrop-blur-sm text-afri-gold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border border-afri-gold/40">
-                                    <Play className="w-4 h-4 fill-current ml-0.5" />
+                                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/75 backdrop-blur-sm text-afri-gold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border border-afri-gold/40">
+                                    <Play className="w-3 h-3 sm:w-4 sm:h-4 fill-current ml-0.5" />
                                   </div>
                                 </div>
                               )}
 
                               {/* Badge */}
-                              <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md flex items-center gap-1 backdrop-blur-sm bg-black/70 text-amber-300 border border-amber-400/40">
-                                <Star className="w-2.5 h-2.5 fill-current text-amber-400" />
-                                <span>À la une</span>
+                              <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-md flex items-center gap-0.5 backdrop-blur-sm bg-black/70 text-amber-300 border border-amber-400/40">
+                                <Star className="w-2 h-2 fill-current text-amber-400" />
+                                <span className="hidden xs:inline">À la une</span>
                               </div>
 
                               {/* Owner Unfeature Button */}
@@ -1338,18 +1338,18 @@ export function PublicProfileModal({
                                     e.stopPropagation();
                                     handleTogglePostFeatured(item.id, true);
                                   }}
-                                  className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-red-600/90 hover:bg-red-700 text-white text-[10px] font-bold shadow-md flex items-center gap-1 z-20 transition cursor-pointer min-h-[36px]"
+                                  className="absolute top-1 right-1 p-1 rounded-md bg-red-600/90 hover:bg-red-700 text-white text-[9px] font-bold shadow-md flex items-center justify-center z-20 transition cursor-pointer min-h-[28px] min-w-[28px]"
+                                  title="Retirer des Réalisations"
                                 >
                                   <X className="w-3 h-3" />
-                                  <span>Retirer</span>
                                 </button>
                               )}
 
-                              <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black via-black/70 to-transparent pointer-events-none space-y-0.5">
-                                <p className="text-xs font-bold text-white line-clamp-1">{item.title}</p>
-                                <div className="flex items-center gap-2 text-[10px] font-mono text-white/80">
-                                  <span className="flex items-center gap-0.5"><Heart className="w-2.5 h-2.5 text-red-400" /> {item.likesCount || 0}</span>
-                                  <span className="flex items-center gap-0.5"><MessageSquare className="w-2.5 h-2.5 text-amber-400" /> {item.commentsCount || 0}</span>
+                              <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none space-y-0.5">
+                                <p className="text-[10px] sm:text-xs font-bold text-white truncate leading-tight">{item.title}</p>
+                                <div className="flex items-center gap-1.5 text-[8.5px] sm:text-[10px] font-mono text-white/80">
+                                  <span className="flex items-center gap-0.5"><Heart className="w-2 h-2 text-red-400" /> {item.likesCount || 0}</span>
+                                  <span className="flex items-center gap-0.5"><MessageSquare className="w-2 h-2 text-amber-400" /> {item.commentsCount || 0}</span>
                                 </div>
                               </div>
                             </div>

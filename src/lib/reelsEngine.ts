@@ -49,14 +49,15 @@ export function scoreReel(reel: ReelItem, context: ReelRankingContext, now: numb
     score += 25;
   }
 
-  // 4. USER INTERACTION
+  // 4. USER INTERACTION (PRIORITY RE-APPEARANCE FOR LIKED REELS)
   if (reel.isLiked) {
-    score += 15;
+    score += 35;
   }
 
   // 5. SEEN CONTENT PENALTY
   if (context.seenReelIds && context.seenReelIds.has(reel.id)) {
-    score -= 100;
+    // Milder seen penalty for liked reels so they naturally re-appear in rotation
+    score -= reel.isLiked ? 25 : 100;
   }
 
   // 6. CONTROLLED DISCOVERY JITTER
