@@ -3477,7 +3477,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
                 className={`flex-1 min-h-0 h-full w-full ${
-                  ["user_settings", "user_notifications", "user_messages", "user_reels", "user_wallet", "super_admin"].includes(activeMenu)
+                  ["user_settings", "user_notifications", "user_messages", "user_reels", "user_wallet", "super_admin"].includes(activeMenu) || (activeMenu === "user_heritage" && isHeritageSubPanelActive)
                     ? "flex flex-col overflow-hidden"
                     : "overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
                 } ${
@@ -9338,6 +9338,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           if (setShowAuthPopup) setShowAuthPopup(false);
         }}
       />
+
+      {/* FLOATING MESSAGING BUBBLE (Arbre à Palabres) */}
+      {activeMenu !== "user_messages" && (
+        <Suspense fallback={null}>
+          <ArbreAPalabresBubble
+            unreadCount={totalUnreadMessages}
+            onOpen={() => {
+              setActiveMenu("user_messages");
+            }}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

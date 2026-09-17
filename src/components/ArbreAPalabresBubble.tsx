@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
+import { MessageCircle, MessageSquare } from "lucide-react";
 import { safeStringify } from "../lib/jsonUtils";
+import { audioSynth } from "../lib/audio";
 
 interface ArbreAPalabresBubbleProps {
   unreadCount?: number;
@@ -72,9 +74,9 @@ export const ArbreAPalabresBubble: React.FC<ArbreAPalabresBubbleProps> = ({ unre
       }
     } catch (_) {}
 
-    // Default position: bottom-right (right: 16, bottom: 85)
-    const defaultX = window.innerWidth - 68;
-    const defaultY = window.innerHeight - 145;
+    // Default position: bottom-right (right: 16, bottom: 95)
+    const defaultX = window.innerWidth - 72;
+    const defaultY = window.innerHeight - 150;
     setPosition({ x: Math.max(12, defaultX), y: Math.max(12, defaultY) });
   }, []);
 
@@ -88,13 +90,13 @@ export const ArbreAPalabresBubble: React.FC<ArbreAPalabresBubbleProps> = ({ unre
     dragRef.current.initialPosY = position.y;
     dragRef.current.hasDragged = false;
 
-    // Start long-press timer (350ms)
+    // Start long-press timer (300ms)
     dragRef.current.longPressTimer = setTimeout(() => {
       setIsLongPressing(true);
       if (navigator.vibrate) {
-        navigator.vibrate(50);
+        navigator.vibrate(30);
       }
-    }, 350);
+    }, 300);
   };
 
   const handleMove = (clientX: number, clientY: number) => {
@@ -106,8 +108,8 @@ export const ArbreAPalabresBubble: React.FC<ArbreAPalabresBubbleProps> = ({ unre
       dragRef.current.hasDragged = true;
       setIsDragging(true);
 
-      const maxX = window.innerWidth - 60;
-      const maxY = window.innerHeight - 60;
+      const maxX = window.innerWidth - 64;
+      const maxY = window.innerHeight - 64;
       const newX = Math.min(Math.max(8, dragRef.current.initialPosX + dx), maxX);
       const newY = Math.min(Math.max(8, dragRef.current.initialPosY + dy), maxY);
 
@@ -127,7 +129,8 @@ export const ArbreAPalabresBubble: React.FC<ArbreAPalabresBubbleProps> = ({ unre
         localStorage.setItem(STORAGE_KEY, safeStringify(position));
       } catch (_) {}
     } else {
-      // Simple tap / click -> Open Arbre à Palabres
+      // Simple tap / click -> Open Messaging
+      try { audioSynth.playTamTam(false); } catch (_) {}
       onOpen();
     }
 
@@ -137,12 +140,13 @@ export const ArbreAPalabresBubble: React.FC<ArbreAPalabresBubbleProps> = ({ unre
 
   return (
     <div
+      id="floating-messaging-bubble"
       style={{
         position: "fixed",
         left: `${position.x}px`,
         top: `${position.y}px`,
         touchAction: "none",
-        zIndex: 99
+        zIndex: 85
       }}
       className="select-none cursor-pointer group"
       onTouchStart={(e) => {
@@ -176,22 +180,21 @@ export const ArbreAPalabresBubble: React.FC<ArbreAPalabresBubbleProps> = ({ unre
           scale: isLongPressing ? 1.15 : isDragging ? 1.08 : 1
         }}
         transition={{ duration: 0.15 }}
-        className={`relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-afri-bg border-2 border-[#D4AF37] flex items-center justify-center shadow-[0_4px_20px_rgba(212,175,55,0.4)] ${
-          isLongPressing ? "ring-4 ring-[#D4AF37]/50" : ""
+        className={`relative w-14 h-14 rounded-full bg-afri-bg-sec border-2 border-[#D4AF37] flex items-center justify-center shadow-[0_6px_24px_rgba(212,175,55,0.45)] backdrop-blur-md ${
+          isLongPressing ? "ring-4 ring-[#D4AF37]/60" : ""
         }`}
       >
         {/* Ambient Golden Glow */}
-        <div className="absolute inset-0 rounded-full bg-[#D4AF37]/10 animate-pulse pointer-events-none" />
+        <div className="absolute inset-0 rounded-full bg-[#D4AF37]/15 animate-pulse pointer-events-none" />
 
         {/* Icon */}
-        <div className="flex items-center justify-center gap-0.5 text-base sm:text-lg leading-none select-none">
-          <span>🌳</span>
-          <span className="-ml-1 text-xs sm:text-sm">💬</span>
+        <div className="flex items-center justify-center gap-0.5 text-base leading-none select-none text-[#D4AF37]">
+          <MessageCircle className="w-6 h-6 fill-[#D4AF37]/20 text-[#D4AF37]" />
         </div>
 
         {/* Badge Notification */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-600 text-afri-text font-black text-[9px] w-5 h-5 rounded-full flex items-center justify-center animate-pulse border border-afri-border shadow-md z-10">
+          <span className="absolute -top-1 -right-1 bg-red-600 text-white font-black text-[10px] min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center animate-pulse border-2 border-afri-bg shadow-md z-10">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
@@ -201,4 +204,6 @@ export const ArbreAPalabresBubble: React.FC<ArbreAPalabresBubbleProps> = ({ unre
 };
 
 export const FloatingChatBubble = ArbreAPalabresBubble;
+export default ArbreAPalabresBubble;
+
 

@@ -214,9 +214,9 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full bg-afri-bg text-afri-text space-y-4 pb-12 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
+      className="w-full max-w-3xl mx-auto px-3 sm:px-6 py-2 space-y-4 pb-28 text-left"
     >
-      <div className="pt-2 pb-8 space-y-4 w-full">
+      <div className="pt-1 pb-4 space-y-4 w-full">
         
         {/* STATUS BAR */}
         <AnimatePresence>
@@ -485,33 +485,33 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               <div className="grid grid-cols-1 xs:grid-cols-2 gap-3.5 sm:gap-4">
                 <div className="space-y-1.5">
                   <label className="afri-text-tiny text-afri-text-sec">Prénom</label>
-                  <input id="input-first-name" value={firstName} onChange={e => setFirstName(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
+                  <input id="input-first-name" value={firstName} onChange={e => setFirstName(e.target.value)} className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="afri-text-tiny text-afri-text-sec">Nom</label>
-                  <input id="input-last-name" value={lastName} onChange={e => setLastName(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
+                  <input id="input-last-name" value={lastName} onChange={e => setLastName(e.target.value)} className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <label className="afri-text-tiny text-afri-text-sec">Nom de Scène</label>
-                <input id="input-artist-name" value={artistName} onChange={e => setArtistName(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-black text-[#D4AF37] outline-none focus:border-[#D4AF37]/40" placeholder="Votre blaze..." />
+                <input id="input-artist-name" value={artistName} onChange={e => setArtistName(e.target.value)} className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-black text-[#D4AF37] outline-none focus:border-[#D4AF37]/40" placeholder="Votre blaze..." />
               </div>
 
               <div className="grid grid-cols-1 xs:grid-cols-2 gap-3.5 sm:gap-4">
                 <div className="space-y-1.5">
                   <label className="afri-text-tiny text-afri-text-sec">Téléphone</label>
-                  <input id="input-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
+                  <input id="input-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="afri-text-tiny text-afri-text-sec">WhatsApp</label>
-                  <input id="input-whatsapp" type="tel" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
+                  <input id="input-whatsapp" type="tel" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <label className="afri-text-tiny text-afri-text-sec">Ma Biographie</label>
-                <textarea id="input-bio" value={bio} onChange={e => setBio(e.target.value)} rows={3} className="afri-card-inset w-full p-3.5 text-sm font-medium text-afri-text outline-none focus:border-[#D4AF37]/40 resize-none" placeholder="Présentez-vous au showbiz..." />
+                <textarea id="input-bio" value={bio} onChange={e => setBio(e.target.value)} rows={3} className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-medium text-afri-text outline-none focus:border-[#D4AF37]/40 resize-none" placeholder="Présentez-vous au showbiz..." />
               </div>
             </div>
           </div>
@@ -558,7 +558,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   <div className="grid grid-cols-1 xs:grid-cols-2 gap-3.5 sm:gap-4">
                     <div className="space-y-1.5">
                       <label className="afri-text-tiny text-afri-text-sec">Ville</label>
-                      <input id="input-ville" value={ville} onChange={e => setVille(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" placeholder="Abidjan..." />
+                      <input id="input-ville" value={ville} onChange={e => setVille(e.target.value)} className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" placeholder="Abidjan..." />
                     </div>
 
                     <div className="space-y-1.5">
@@ -593,7 +593,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                           id="select-commune"
                           value={commune} 
                           onChange={e => setCommune(e.target.value)} 
-                          className="afri-card-inset w-full p-3.5 text-sm font-black text-afri-text appearance-none bg-transparent outline-none pr-10 cursor-pointer focus:border-[#D4AF37]/40"
+                          className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-black text-afri-text appearance-none bg-transparent outline-none pr-10 cursor-pointer focus:border-[#D4AF37]/40"
                         >
                           <option value="" className="bg-afri-bg-sec text-afri-text">Choisir une commune</option>
                           {communeNames.map(c => (
@@ -609,7 +609,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 
                   <div className="space-y-1.5">
                     <label className="afri-text-tiny text-afri-text-sec">Quartier / Repère</label>
-                    <input id="input-quartier" value={quartier} onChange={e => setQuartier(e.target.value)} className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" placeholder="Ex: Angré 8e Tranche, Niangon..." />
+                    <input id="input-quartier" value={quartier} onChange={e => setQuartier(e.target.value)} className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" placeholder="Ex: Angré 8e Tranche, Niangon..." />
                   </div>
                 </motion.div>
               )}
@@ -675,7 +675,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                       value={specialtiesSearch}
                       onChange={e => setSpecialtiesSearch(e.target.value)}
                       placeholder="Rechercher une spécialité..."
-                      className="afri-card-inset w-full pl-10 pr-9 py-2.5 text-xs font-medium text-afri-text outline-none focus:border-[#D4AF37]/40 rounded-xl"
+                      className="afri-card-inset w-full pl-10 pr-9 py-2.5 text-base sm:text-xs font-medium text-afri-text outline-none focus:border-[#D4AF37]/40 rounded-xl"
                     />
                     {specialtiesSearch && (
                       <button
@@ -689,7 +689,14 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   </div>
 
                   {/* Independent Scrollable List of all 35 specialties */}
-                  <div className="max-h-64 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pr-1 space-y-2">
+                  <div 
+                    className="max-h-60 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pr-1.5 space-y-2 scroll-smooth"
+                    style={{
+                      WebkitOverflowScrolling: "touch",
+                      touchAction: "pan-y",
+                      overscrollBehaviorY: "contain"
+                    }}
+                  >
                     <div className="flex flex-wrap gap-2">
                       {filteredSpecialties.map(spec => {
                         const active = specialties.includes(spec);
@@ -724,7 +731,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                         id="input-specialty-custom"
                         value={specialtyCustom} 
                         onChange={e => setSpecialtyCustom(e.target.value)} 
-                        className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40 rounded-xl" 
+                        className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40 rounded-xl" 
                         placeholder="Saisissez votre spécialité custom..." 
                       />
                     </div>
@@ -793,7 +800,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                       value={instrumentsSearch}
                       onChange={e => setInstrumentsSearch(e.target.value)}
                       placeholder="Rechercher un instrument..."
-                      className="afri-card-inset w-full pl-10 pr-9 py-2.5 text-xs font-medium text-afri-text outline-none focus:border-[#D4AF37]/40 rounded-xl"
+                      className="afri-card-inset w-full pl-10 pr-9 py-2.5 text-base sm:text-xs font-medium text-afri-text outline-none focus:border-[#D4AF37]/40 rounded-xl"
                     />
                     {instrumentsSearch && (
                       <button
@@ -807,7 +814,14 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   </div>
 
                   {/* Independent Scrollable List of all 24 instruments */}
-                  <div className="max-h-64 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pr-1 space-y-2">
+                  <div 
+                    className="max-h-60 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pr-1.5 space-y-2 scroll-smooth"
+                    style={{
+                      WebkitOverflowScrolling: "touch",
+                      touchAction: "pan-y",
+                      overscrollBehaviorY: "contain"
+                    }}
+                  >
                     <div className="flex flex-wrap gap-2">
                       {filteredInstruments.map(inst => {
                         const active = instruments.includes(inst);
@@ -842,7 +856,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                         id="input-instrument-custom"
                         value={instrumentCustom} 
                         onChange={e => setInstrumentCustom(e.target.value)} 
-                        className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40 rounded-xl" 
+                        className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40 rounded-xl" 
                         placeholder="Saisissez votre instrument custom..." 
                       />
                     </div>
@@ -911,7 +925,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                       value={genresSearch}
                       onChange={e => setGenresSearch(e.target.value)}
                       placeholder="Rechercher un style musical..."
-                      className="afri-card-inset w-full pl-10 pr-9 py-2.5 text-xs font-medium text-afri-text outline-none focus:border-amber-500/40 rounded-xl"
+                      className="afri-card-inset w-full pl-10 pr-9 py-2.5 text-base sm:text-xs font-medium text-afri-text outline-none focus:border-amber-500/40 rounded-xl"
                     />
                     {genresSearch && (
                       <button
@@ -925,7 +939,14 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   </div>
 
                   {/* Independent Scrollable List of all 46 genres */}
-                  <div className="max-h-64 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pr-1 space-y-2">
+                  <div 
+                    className="max-h-60 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pr-1.5 space-y-2 scroll-smooth"
+                    style={{
+                      WebkitOverflowScrolling: "touch",
+                      touchAction: "pan-y",
+                      overscrollBehaviorY: "contain"
+                    }}
+                  >
                     <div className="flex flex-wrap gap-2">
                       {filteredGenres.map(gen => {
                         const active = musicGenres.includes(gen);
@@ -960,7 +981,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                         id="input-genre-custom"
                         value={musicGenreCustom} 
                         onChange={e => setMusicGenreCustom(e.target.value)} 
-                        className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-amber-500/40 rounded-xl" 
+                        className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-bold text-afri-text outline-none focus:border-amber-500/40 rounded-xl" 
                         placeholder="Saisissez votre style custom..." 
                       />
                     </div>
@@ -1052,7 +1073,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                           id="input-language-custom"
                           value={languageCustom} 
                           onChange={e => setLanguageCustom(e.target.value)} 
-                          className="afri-card-inset w-full p-3.5 text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40 rounded-xl" 
+                          className="afri-card-inset w-full p-3.5 text-base sm:text-sm font-bold text-afri-text outline-none focus:border-[#D4AF37]/40 rounded-xl" 
                           placeholder="Saisissez votre langue custom..." 
                         />
                       </div>

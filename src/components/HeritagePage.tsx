@@ -30,7 +30,7 @@ export default function HeritagePage({ onNavigateView, darkMode, setDarkMode, in
 
   return (
     <ErrorBoundary moduleName="Mon Héritage">
-      <div className="w-full bg-afri-bg text-afri-text min-h-[70vh]">
+      <div className="w-full h-full bg-afri-bg text-afri-text flex flex-col min-h-0">
         {activeProfile ? (
           <GomboProfile
             currentUserProfile={activeProfile}

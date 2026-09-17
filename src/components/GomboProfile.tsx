@@ -1258,10 +1258,10 @@ export default function GomboProfile({
   );
 
   return (
-    <div ref={profileContainerRef} className="w-full h-full">
+    <div ref={profileContainerRef} className="w-full h-full flex flex-col min-h-0">
       <AndroidPageLayout 
         header={customHeader}
-        scrollable={false}
+        scrollable={panelView !== "main"}
       >
         {panelView === "main" && (
         <GomboProfileMainView
