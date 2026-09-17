@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   ChevronLeft, Heart, MessageCircle, Share2, Bookmark, MoreVertical, 
   Plus, Music, MapPin, Volume2, VolumeX, Sparkles, Flag, X, Check,
-  Send, UserCheck, UserPlus, ChevronDown, ChevronUp, AlertTriangle, Film, RefreshCw
+  Send, UserCheck, UserPlus, ChevronDown, ChevronUp, AlertTriangle, Film, RefreshCw,
+  EyeOff, UserX, Copy, Link, Clock, ArrowUpDown, Loader2
 } from "lucide-react";
 import { Post } from "../types";
 import { db } from "../lib/firebase";
 import { 
   doc, updateDoc, arrayUnion, arrayRemove, increment, 
-  collection, addDoc, setDoc, deleteDoc, onSnapshot, query, limit, orderBy 
+  collection, addDoc, setDoc, deleteDoc, onSnapshot, query, limit, orderBy, getDoc
 } from "firebase/firestore";
 import { gomboDB } from "../firebase";
 import { useAppSettings } from "../context/AppSettingsContext";
@@ -36,6 +37,17 @@ export interface ReelItem {
   isBookmarked?: boolean;
   userId?: string;
   source?: "portfolio" | "post" | "social";
+}
+
+interface CommentItem {
+  id: string;
+  postId?: string;
+  userId?: string;
+  author: string;
+  avatar: string;
+  text: string;
+  createdAt?: string;
+  time: string;
 }
 
 interface ReelsPlayerProps {
@@ -146,6 +158,25 @@ function isVideoItem(item: any, resolvedUrl: string): boolean {
   return true;
 }
 
+function formatRelativeTime(dateInput: any): string {
+  if (!dateInput) return "Récemment";
+  try {
+    const d = typeof dateInput === "string" || typeof dateInput === "number" 
+      ? new Date(dateInput) 
+      : (dateInput && typeof dateInput.toDate === "function" ? dateInput.toDate() : new Date(dateInput));
+    if (isNaN(d.getTime())) return "Récemment";
+    const now = new Date();
+    const diffSec = Math.floor((now.getTime() - d.getTime()) / 1000);
+    if (diffSec < 30) return "À l'instant";
+    if (diffSec < 3600) return `Il y a ${Math.max(1, Math.floor(diffSec / 60))} min`;
+    if (diffSec < 86400) return `Il y a ${Math.floor(diffSec / 3600)} h`;
+    if (diffSec < 604800) return `Il y a ${Math.floor(diffSec / 86400)} j`;
+    return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  } catch (_) {
+    return "Récemment";
+  }
+}
+
 export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, currentUser, initialReelId }: ReelsPlayerProps) {
   const { network } = useAppSettings();
   const { requireAuth, profile, currentUser: authUser } = useAuth();
@@ -166,7 +197,10 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const [showCommentsFor, setShowCommentsFor] = useState<ReelItem | null>(null);
   const [showMoreFor, setShowMoreFor] = useState<ReelItem | null>(null);
   const [commentInput, setCommentInput] = useState("");
-  const [commentsList, setCommentsList] = useState<{ id: string; author: string; avatar: string; text: string; time: string }[]>([]);
+  const [commentsList, setCommentsList] = useState<CommentItem[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState<boolean>(false);
+  const [commentsSortOrder, setCommentsSortOrder] = useState<"asc" | "desc">("asc");
+  const authorProfilesCache = useRef<Record<string, { author: string; avatar: string }>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
   const [videoErrors, setVideoErrors] = useState<Record<string, boolean>>({});
@@ -604,48 +638,104 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   useEffect(() => {
     if (!showCommentsFor) {
       setCommentsList([]);
+      setIsLoadingComments(false);
       return;
     }
     const reelId = showCommentsFor.id;
+    setIsLoadingComments(true);
 
-    // Load initial comments from the post object itself if present
-    const existingPostComments = Array.isArray(showCommentsFor.comments) ? showCommentsFor.comments.map((c: any, idx: number) => ({
+    // Initial comments from the reel object if present
+    const existingPostComments: CommentItem[] = Array.isArray(showCommentsFor.comments) ? showCommentsFor.comments.map((c: any, idx: number) => ({
       id: c.id || `c_init_${idx}`,
+      postId: reelId,
+      userId: c.userId || c.authorId,
       author: c.author || c.authorName || c.userName || "Mélomane",
       avatar: c.avatar || c.userAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
       text: c.text || c.content || "",
-      time: c.createdAt ? new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Récemment"
+      createdAt: c.createdAt || new Date().toISOString(),
+      time: formatRelativeTime(c.createdAt)
     })) : [];
+
     setCommentsList(existingPostComments);
 
-    if (!db) return;
+    if (!db) {
+      setIsLoadingComments(false);
+      return;
+    }
+
+    // Function to enrich comments with the latest profile name and avatar from Firestore users
+    const enrichCommentsWithProfiles = async (rawComments: CommentItem[]) => {
+      const enriched = await Promise.all(
+        rawComments.map(async (comment) => {
+          if (!comment.userId) return comment;
+          if (authorProfilesCache.current[comment.userId]) {
+            const cached = authorProfilesCache.current[comment.userId];
+            return {
+              ...comment,
+              author: cached.author || comment.author,
+              avatar: cached.avatar || comment.avatar
+            };
+          }
+          try {
+            const userSnap = await getDoc(doc(db, "users", comment.userId));
+            if (userSnap.exists()) {
+              const uData = userSnap.data();
+              const authorName = uData.artisticName || uData.displayName || uData.name || (uData.firstName ? `${uData.firstName} ${uData.lastName || ''}`.trim() : comment.author);
+              const avatarUrl = uData.photoURL || uData.photoUrl || uData.avatar || comment.avatar;
+              authorProfilesCache.current[comment.userId] = {
+                author: authorName,
+                avatar: avatarUrl
+              };
+              return {
+                ...comment,
+                author: authorName,
+                avatar: avatarUrl
+              };
+            }
+          } catch (_) {}
+          return comment;
+        })
+      );
+      return enriched;
+    };
 
     // Listen to subcollection /posts/{reelId}/comments
     try {
       const commentsColRef = collection(db, "posts", reelId, "comments");
-      const unsub = onSnapshot(commentsColRef, (snapshot) => {
+      const unsub = onSnapshot(commentsColRef, async (snapshot) => {
+        setIsLoadingComments(false);
         if (!snapshot.empty) {
-          const list = snapshot.docs.map(docSnap => {
+          const list: CommentItem[] = snapshot.docs.map(docSnap => {
             const data = docSnap.data();
             return {
               id: docSnap.id,
+              postId: reelId,
+              userId: data.userId || data.authorId,
               author: data.author || data.authorName || data.userName || "Mélomane",
               avatar: data.avatar || data.userAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
               text: data.text || data.content || "",
-              time: data.createdAt ? new Date(data.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Récemment"
+              createdAt: data.createdAt || new Date().toISOString(),
+              time: formatRelativeTime(data.createdAt)
             };
           });
-          setCommentsList(list);
+
+          const enrichedList = await enrichCommentsWithProfiles(list);
+          setCommentsList(enrichedList);
+
+          // Sync localReels comment counter
+          setLocalReels(prev => prev.map(r => r.id === reelId ? { ...r, commentsCount: snapshot.docs.length } : r));
         } else if (existingPostComments.length === 0) {
           setCommentsList([]);
         }
       }, (err) => {
         console.warn("Could not listen to real-time comments subcollection:", err);
+        setIsLoadingComments(false);
       });
 
       return () => unsub();
     } catch (err) {
       console.warn("Exception setting up comments listener:", err);
+      setIsLoadingComments(false);
     }
   }, [showCommentsFor]);
 
@@ -927,6 +1017,70 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     });
   };
 
+  // Masquer cette publication
+  const handleHideReel = (reelId: string) => {
+    setLocalReels(prev => {
+      const filtered = prev.filter(r => r.id !== reelId);
+      if (filtered.length > 0 && currentIndex >= filtered.length) {
+        setCurrentIndex(filtered.length - 1);
+      }
+      return filtered;
+    });
+    setShowMoreFor(null);
+    showToast("Publication masquée de votre fil.");
+  };
+
+  // Bloquer cet artiste / utilisateur
+  const handleBlockArtist = (targetUserId?: string, targetName?: string) => {
+    if (!targetUserId) {
+      showToast("Impossible d'identifier cet utilisateur.");
+      setShowMoreFor(null);
+      return;
+    }
+    requireAuth(async () => {
+      // Remove all reels from this user immediately
+      setLocalReels(prev => {
+        const filtered = prev.filter(r => r.userId !== targetUserId);
+        if (filtered.length > 0 && currentIndex >= filtered.length) {
+          setCurrentIndex(filtered.length - 1);
+        }
+        return filtered;
+      });
+
+      // Persist block in Firestore
+      if (db && currentUser?.uid) {
+        try {
+          await addDoc(collection(db, "blocks"), {
+            blockerId: currentUser.uid,
+            blockedUserId: targetUserId,
+            blockedUserName: targetName || "Artiste",
+            createdAt: new Date().toISOString()
+          });
+          await updateDoc(doc(db, "users", currentUser.uid), {
+            blockedUsers: arrayUnion(targetUserId)
+          }).catch(() => {});
+        } catch (err) {
+          console.warn("Could not save block in Firestore:", err);
+        }
+      }
+      setShowMoreFor(null);
+      showToast(`Artiste bloqué. Ses publications n'apparaîtront plus.`);
+    });
+  };
+
+  // Copier le lien du Réel
+  const handleCopyReelLink = (reel: ReelItem) => {
+    const url = window.location.origin + window.location.pathname + `?reelId=${reel.id}`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url)
+        .then(() => showToast("🔗 Lien du Réel copié dans le presse-papier !"))
+        .catch(() => showToast("🔗 Lien copié !"));
+    } else {
+      showToast("🔗 Lien copié !");
+    }
+    setShowMoreFor(null);
+  };
+
   return (
     <div className="immersive-dark fixed inset-0 z-[100] bg-black text-white font-sans overflow-hidden flex flex-col h-[100dvh] w-screen">
       {/* Toast Notification */}
@@ -1096,7 +1250,6 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                             }
                           }}
                           src={reel.mediaUrl}
-                          crossOrigin="anonymous"
                           autoPlay={isActive}
                           preload={isActive ? "auto" : "metadata"}
                           style={{ filter: getFilterCss(reel.appliedFilter) }}
@@ -1107,6 +1260,14 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                           // @ts-ignore
                           webkit-playsinline="true"
                           x-webkit-airplay="allow"
+                          onLoadedMetadata={() => {
+                            setVideoErrors(prev => {
+                              if (!prev[reel.id]) return prev;
+                              const next = { ...prev };
+                              delete next[reel.id];
+                              return next;
+                            });
+                          }}
                           onCanPlay={() => {
                             setVideoErrors(prev => {
                               if (!prev[reel.id]) return prev;
@@ -1115,9 +1276,21 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                               return next;
                             });
                           }}
-                          onError={(e) => {
-                            console.warn(`[ReelsPlayer] Erreur chargement vidéo (id: ${reel.id}):`, e);
-                            setVideoErrors(prev => ({ ...prev, [reel.id]: true }));
+                          onPlaying={() => {
+                            setVideoErrors(prev => {
+                              if (!prev[reel.id]) return prev;
+                              const next = { ...prev };
+                              delete next[reel.id];
+                              return next;
+                            });
+                          }}
+                          onTimeUpdate={() => {
+                            setVideoErrors(prev => {
+                              if (!prev[reel.id]) return prev;
+                              const next = { ...prev };
+                              delete next[reel.id];
+                              return next;
+                            });
                           }}
                           onLoadedData={() => {
                             setVideoErrors(prev => {
@@ -1126,6 +1299,19 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                               delete next[reel.id];
                               return next;
                             });
+                          }}
+                          onError={(e) => {
+                            const videoEl = e.currentTarget;
+                            // Ignore abort errors (error code 1 = MEDIA_ERR_ABORTED) caused by scroll/unmount
+                            if (videoEl.error && videoEl.error.code === 1) {
+                              return;
+                            }
+                            // If video is actually already playing or has loaded frames, do not trigger error
+                            if (videoEl.readyState >= 2 || (!videoEl.paused && videoEl.currentTime > 0)) {
+                              return;
+                            }
+                            console.warn(`[ReelsPlayer] Erreur média vidéo (id: ${reel.id}):`, e);
+                            setVideoErrors(prev => ({ ...prev, [reel.id]: true }));
                           }}
                         />
                       )}
@@ -1391,8 +1577,16 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
 
       {/* PALABRES / COMMENTS DRAWER MODAL */}
       {showCommentsFor && (
-        <div className="fixed inset-0 z-[120] bg-afri-bg/80 backdrop-blur-md flex flex-col justify-end animate-fadeIn">
-          <div className="bg-afri-bg border-t border-[#D4AF37]/40 rounded-t-3xl max-h-[75vh] flex flex-col w-full max-w-lg mx-auto p-4 space-y-4">
+        <div 
+          className="fixed inset-0 z-[120] bg-black/75 backdrop-blur-md flex flex-col justify-end animate-fadeIn select-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowCommentsFor(null);
+            }
+          }}
+        >
+          <div className="bg-afri-bg border-t border-[#D4AF37]/40 rounded-t-3xl max-h-[80vh] flex flex-col w-full max-w-lg mx-auto p-4 space-y-3 shadow-2xl">
+            {/* Header */}
             <div className="flex items-center justify-between border-b border-afri-border pb-3">
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-5 h-5 text-[#D4AF37]" />
@@ -1400,51 +1594,109 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   Arbre à Palabres ({commentsList.length})
                 </h3>
               </div>
-              <button 
-                onClick={() => setShowCommentsFor(null)}
-                className="p-1 rounded-full bg-afri-bg-ter text-afri-text-sec hover:text-afri-text"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                {commentsList.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setCommentsSortOrder(prev => prev === "asc" ? "desc" : "asc")}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-afri-bg-sec border border-afri-border text-[10px] font-mono font-bold text-afri-text-sec hover:text-[#D4AF37] transition cursor-pointer"
+                    title="Changer l'ordre de tri"
+                  >
+                    <ArrowUpDown className="w-3 h-3" />
+                    <span>{commentsSortOrder === "asc" ? "Plus anciens" : "Plus récents"}</span>
+                  </button>
+                )}
+                <button 
+                  onClick={() => setShowCommentsFor(null)}
+                  className="p-1 rounded-full bg-afri-bg-ter text-afri-text-sec hover:text-afri-text cursor-pointer transition"
+                  title="Fermer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            {/* Comments List */}
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[45vh] overscroll-contain [-webkit-overflow-scrolling:touch]" style={{ touchAction: "pan-y" }}>
-              {commentsList.length === 0 ? (
-                <div className="py-8 text-center text-zinc-400 space-y-1">
-                  <MessageCircle className="w-8 h-8 text-zinc-600 mx-auto mb-2 opacity-50" />
-                  <p className="text-xs font-bold text-zinc-300">Aucun palabre pour l'instant</p>
-                  <p className="text-[10px] text-zinc-500">Soyez le premier à commenter ce Réel !</p>
+            {/* Comments List with independent scroll */}
+            <div 
+              className="flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-[160px] max-h-[50vh] overscroll-contain [-webkit-overflow-scrolling:touch]" 
+              style={{ touchAction: "pan-y" }}
+            >
+              {isLoadingComments && commentsList.length === 0 ? (
+                <div className="py-10 flex flex-col items-center justify-center gap-2 text-zinc-400">
+                  <Loader2 className="w-6 h-6 animate-spin text-[#D4AF37]" />
+                  <p className="text-xs font-mono">Chargement des palabres...</p>
+                </div>
+              ) : commentsList.length === 0 ? (
+                <div className="py-10 text-center text-zinc-400 space-y-2">
+                  <MessageCircle className="w-9 h-9 text-zinc-600 mx-auto opacity-60" />
+                  <p className="text-xs font-bold text-zinc-200">Aucun palabre pour l'instant</p>
+                  <p className="text-[11px] text-zinc-400">Soyez le premier à commenter ce Réel !</p>
                 </div>
               ) : (
-                commentsList.map(c => (
-                  <div key={c.id} className="flex gap-3 items-start bg-zinc-900/60 p-2.5 rounded-2xl border border-afri-border">
-                    <img src={c.avatar} alt="" className="w-8 h-8 rounded-full object-cover border border-[#D4AF37]/30 shrink-0" />
-                    <div className="flex-1 text-left space-y-0.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-[#D4AF37] uppercase">{c.author}</span>
-                        <span className="text-[9px] font-mono text-afri-text-muted">{c.time}</span>
+                [...commentsList]
+                  .sort((a, b) => {
+                    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                    return commentsSortOrder === "desc" ? timeB - timeA : timeA - timeB;
+                  })
+                  .map(c => (
+                    <div key={c.id} className="flex gap-3 items-start bg-zinc-900/60 p-3 rounded-2xl border border-afri-border/60 hover:border-[#D4AF37]/30 transition">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (c.userId) {
+                            openPublicProfile(c.userId);
+                          }
+                        }}
+                        className="shrink-0 group cursor-pointer"
+                        title={c.userId ? "Voir le profil" : undefined}
+                      >
+                        <img 
+                          src={c.avatar} 
+                          alt="" 
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100";
+                          }}
+                          className="w-8 h-8 rounded-full object-cover border border-[#D4AF37]/30 group-hover:border-[#D4AF37] transition" 
+                        />
+                      </button>
+                      <div className="flex-1 text-left space-y-0.5 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (c.userId) {
+                                openPublicProfile(c.userId);
+                              }
+                            }}
+                            className="text-[11px] font-black text-[#D4AF37] uppercase tracking-wide truncate hover:underline text-left cursor-pointer"
+                          >
+                            {c.author}
+                          </button>
+                          <span className="text-[9px] font-mono text-zinc-400 shrink-0">{c.time}</span>
+                        </div>
+                        <p className="text-xs text-afri-text leading-relaxed break-words">{c.text}</p>
                       </div>
-                      <p className="text-xs text-afri-text">{c.text}</p>
                     </div>
-                  </div>
-                ))
+                  ))
               )}
             </div>
 
             {/* Comment Form */}
-            <form onSubmit={handleAddComment} className="flex gap-2 pt-2 border-t border-afri-border">
+            <form onSubmit={handleAddComment} className="flex gap-2 pt-2 border-t border-afri-border/80">
               <input 
                 type="text" 
                 value={commentInput}
                 onChange={(e) => setCommentInput(e.target.value)}
                 placeholder="Partager votre palabre..."
-                className="flex-1 bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text placeholder-zinc-500 focus:outline-none focus:border-[#D4AF37]"
+                className="flex-1 bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2.5 text-xs text-afri-text placeholder-zinc-500 focus:outline-none focus:border-[#D4AF37] transition"
               />
               <button 
                 type="submit"
-                className="bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-amber-400 active:scale-95 transition flex items-center gap-1"
+                disabled={!commentInput.trim()}
+                className="bg-[#D4AF37] text-black font-black px-4 py-2.5 rounded-xl text-xs hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex items-center gap-1.5 cursor-pointer shrink-0"
               >
+                <span>Envoyer</span>
                 <Send className="w-3.5 h-3.5" />
               </button>
             </form>
@@ -1452,23 +1704,73 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
         </div>
       )}
 
-      {/* MORE OPTIONS MODAL (Report only, 'Soutenir' removed) */}
+      {/* MORE OPTIONS MODAL (Plus d'options) */}
       {showMoreFor && (
-        <div className="fixed inset-0 z-[120] bg-afri-bg/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-afri-bg border border-[#D4AF37]/40 rounded-3xl w-full max-w-sm p-5 space-y-4 text-left">
-            <div className="flex justify-between items-center border-b border-afri-border pb-2">
-              <h3 className="text-xs font-black uppercase text-[#D4AF37] tracking-wider">Option du Réel</h3>
-              <button onClick={() => setShowMoreFor(null)} className="p-1 text-afri-text-sec hover:text-afri-text cursor-pointer">
-                <X className="w-5 h-5" />
+        <div 
+          className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowMoreFor(null);
+            }
+          }}
+        >
+          <div className="bg-afri-bg border border-[#D4AF37]/40 rounded-3xl w-full max-w-sm p-5 space-y-4 text-left shadow-2xl">
+            <div className="flex justify-between items-center border-b border-afri-border pb-3">
+              <div>
+                <h3 className="text-xs font-black uppercase text-[#D4AF37] tracking-wider">Options du Réel</h3>
+                <p className="text-[10px] text-zinc-400 truncate max-w-[220px]">
+                  {showMoreFor.authorArtisticName || showMoreFor.authorName}
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowMoreFor(null)} 
+                className="p-1.5 rounded-full bg-afri-bg-ter text-afri-text-sec hover:text-afri-text cursor-pointer transition"
+                title="Fermer"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-2">
+              {/* Copier le lien */}
               <button 
-                onClick={() => handleReportReel(showMoreFor)}
-                className="w-full flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 font-bold text-xs hover:bg-red-500/20 active:scale-98 transition cursor-pointer"
+                type="button"
+                onClick={() => handleCopyReelLink(showMoreFor)}
+                className="w-full flex items-center gap-3 p-3 bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 rounded-2xl text-zinc-200 font-bold text-xs transition cursor-pointer"
               >
-                <Flag className="w-4 h-4" />
+                <Copy className="w-4 h-4 text-[#D4AF37]" />
+                <span>Copier le lien du Réel</span>
+              </button>
+
+              {/* Masquer cette publication */}
+              <button 
+                type="button"
+                onClick={() => handleHideReel(showMoreFor.id)}
+                className="w-full flex items-center gap-3 p-3 bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 rounded-2xl text-zinc-200 font-bold text-xs transition cursor-pointer"
+              >
+                <EyeOff className="w-4 h-4 text-zinc-400" />
+                <span>Masquer cette publication</span>
+              </button>
+
+              {/* Bloquer cet artiste */}
+              {showMoreFor.userId && showMoreFor.userId !== currentUser?.uid && (
+                <button 
+                  type="button"
+                  onClick={() => handleBlockArtist(showMoreFor.userId, showMoreFor.authorArtisticName || showMoreFor.authorName)}
+                  className="w-full flex items-center gap-3 p-3 bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 rounded-2xl text-amber-400 font-bold text-xs transition cursor-pointer"
+                >
+                  <UserX className="w-4 h-4 text-amber-400" />
+                  <span>Bloquer {showMoreFor.authorArtisticName || showMoreFor.authorName || "cet artiste"}</span>
+                </button>
+              )}
+
+              {/* Signaler cette publication */}
+              <button 
+                type="button"
+                onClick={() => handleReportReel(showMoreFor)}
+                className="w-full flex items-center gap-3 p-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-2xl text-red-400 font-bold text-xs transition cursor-pointer"
+              >
+                <Flag className="w-4 h-4 text-red-400" />
                 <span>Signaler cette publication</span>
               </button>
             </div>
