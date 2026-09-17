@@ -75,26 +75,40 @@ export const DEFAULT_MANUAL_PAYMENT_OPERATORS: Record<ManualPaymentOperatorKey, 
 };
 
 /**
- * Valide le format d'un numéro de téléphone ivoirien (10 chiffres locaux ou 12 avec l'indicatif 225)
+ * Valide le format d'un numéro de téléphone ivoirien
+ * (10 chiffres locaux ex: 0503222712, ou avec indicatif +225 / 00225 ex: +225 05 03 22 27 12)
  */
 export function isValidIvorianPhoneNumber(phone: string): boolean {
-  if (!phone) return false;
-  const digits = phone.replace(/\D/g, "");
-  return digits.length === 10 || (digits.length === 12 && digits.startsWith("225"));
+  if (!phone || typeof phone !== "string") return false;
+  let digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("00225")) {
+    digits = digits.slice(5);
+  } else if (digits.startsWith("225")) {
+    digits = digits.slice(3);
+  }
+  // Si le numéro a été saisi sans le zéro initial (9 chiffres), on le normalise à 10 chiffres
+  if (digits.length === 9) {
+    digits = "0" + digits;
+  }
+  return digits.length === 10;
 }
 
 /**
- * Formate un numéro de téléphone ivoirien au format international +225 XX XX XX XX XX
+ * Formate un numéro de téléphone ivoirien au format international officiel +225 XX XX XX XX XX
  */
 export function formatIvorianPhoneNumber(phone: string): string {
-  if (!phone) return "";
-  const digits = phone.replace(/\D/g, "");
-  let localDigits = digits;
-  if (digits.length === 12 && digits.startsWith("225")) {
-    localDigits = digits.slice(2);
+  if (!phone || typeof phone !== "string") return "";
+  let digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("00225")) {
+    digits = digits.slice(5);
+  } else if (digits.startsWith("225")) {
+    digits = digits.slice(3);
   }
-  if (localDigits.length === 10) {
-    return `+225 ${localDigits.slice(0, 2)} ${localDigits.slice(2, 4)} ${localDigits.slice(4, 6)} ${localDigits.slice(6, 8)} ${localDigits.slice(8, 10)}`;
+  if (digits.length === 9) {
+    digits = "0" + digits;
+  }
+  if (digits.length === 10) {
+    return `+225 ${digits.slice(0, 2)} ${digits.slice(2, 4)} ${digits.slice(4, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
   }
   return phone.trim();
 }

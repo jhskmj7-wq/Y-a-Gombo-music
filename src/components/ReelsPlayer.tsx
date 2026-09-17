@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   ChevronLeft, Heart, MessageCircle, Share2, Bookmark, MoreVertical, 
   Plus, Music, MapPin, Volume2, VolumeX, Sparkles, Flag, X, Check,
@@ -1575,208 +1576,362 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       )}
       </div>
 
-      {/* PALABRES / COMMENTS DRAWER MODAL */}
-      {showCommentsFor && (
-        <div 
-          className="fixed inset-0 z-[120] bg-black/75 backdrop-blur-md flex flex-col justify-end animate-fadeIn select-none"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowCommentsFor(null);
-            }
-          }}
-        >
-          <div className="bg-afri-bg border-t border-[#D4AF37]/40 rounded-t-3xl max-h-[80vh] flex flex-col w-full max-w-lg mx-auto p-4 space-y-3 shadow-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-afri-border pb-3">
-              <div className="flex items-center gap-2">
-                <MessageCircle className="w-5 h-5 text-[#D4AF37]" />
-                <h3 className="text-sm font-black text-afri-text uppercase tracking-wider">
-                  Arbre à Palabres ({commentsList.length})
-                </h3>
-              </div>
-              <div className="flex items-center gap-2">
-                {commentsList.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setCommentsSortOrder(prev => prev === "asc" ? "desc" : "asc")}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-afri-bg-sec border border-afri-border text-[10px] font-mono font-bold text-afri-text-sec hover:text-[#D4AF37] transition cursor-pointer"
-                    title="Changer l'ordre de tri"
-                  >
-                    <ArrowUpDown className="w-3 h-3" />
-                    <span>{commentsSortOrder === "asc" ? "Plus anciens" : "Plus récents"}</span>
-                  </button>
-                )}
-                <button 
-                  onClick={() => setShowCommentsFor(null)}
-                  className="p-1 rounded-full bg-afri-bg-ter text-afri-text-sec hover:text-afri-text cursor-pointer transition"
-                  title="Fermer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
+      {/* ========================================================================= */}
+      {/* 💬 PALABRES / COMMENTS ULTRA-PREMIUM BOTTOM SHEET */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {showCommentsFor && (
+          <div 
+            className="fixed inset-0 z-[120] flex flex-col justify-end select-none overflow-hidden"
+            style={{ width: "100vw", height: "100dvh" }}
+          >
+            {/* Backdrop Overlay with fade animation */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setShowCommentsFor(null)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer z-0"
+            />
 
-            {/* Comments List with independent scroll */}
-            <div 
-              className="flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-[160px] max-h-[50vh] overscroll-contain [-webkit-overflow-scrolling:touch]" 
-              style={{ touchAction: "pan-y" }}
+            {/* Bottom Sheet Container */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: "0%" }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.15}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 100 || info.velocity.y > 300) {
+                  setShowCommentsFor(null);
+                }
+              }}
+              className="relative w-full max-w-xl mx-auto bg-[#0D0D0D] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-[30px] sm:rounded-t-[36px] shadow-[0_-16px_48px_rgba(0,0,0,0.95)] flex flex-col z-10 max-h-[85vh] text-left"
+              style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)" }}
+              onClick={(e) => e.stopPropagation()}
             >
-              {isLoadingComments && commentsList.length === 0 ? (
-                <div className="py-10 flex flex-col items-center justify-center gap-2 text-zinc-400">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#D4AF37]" />
-                  <p className="text-xs font-mono">Chargement des palabres...</p>
-                </div>
-              ) : commentsList.length === 0 ? (
-                <div className="py-10 text-center text-zinc-400 space-y-2">
-                  <MessageCircle className="w-9 h-9 text-zinc-600 mx-auto opacity-60" />
-                  <p className="text-xs font-bold text-zinc-200">Aucun palabre pour l'instant</p>
-                  <p className="text-[11px] text-zinc-400">Soyez le premier à commenter ce Réel !</p>
-                </div>
-              ) : (
-                [...commentsList]
-                  .sort((a, b) => {
-                    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-                    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-                    return commentsSortOrder === "desc" ? timeB - timeA : timeA - timeB;
-                  })
-                  .map(c => (
-                    <div key={c.id} className="flex gap-3 items-start bg-zinc-900/60 p-3 rounded-2xl border border-afri-border/60 hover:border-[#D4AF37]/30 transition">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (c.userId) {
-                            openPublicProfile(c.userId);
-                          }
-                        }}
-                        className="shrink-0 group cursor-pointer"
-                        title={c.userId ? "Voir le profil" : undefined}
-                      >
-                        <img 
-                          src={c.avatar} 
-                          alt="" 
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100";
-                          }}
-                          className="w-8 h-8 rounded-full object-cover border border-[#D4AF37]/30 group-hover:border-[#D4AF37] transition" 
-                        />
-                      </button>
-                      <div className="flex-1 text-left space-y-0.5 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (c.userId) {
-                                openPublicProfile(c.userId);
-                              }
-                            }}
-                            className="text-[11px] font-black text-[#D4AF37] uppercase tracking-wide truncate hover:underline text-left cursor-pointer"
-                          >
-                            {c.author}
-                          </button>
-                          <span className="text-[9px] font-mono text-zinc-400 shrink-0">{c.time}</span>
-                        </div>
-                        <p className="text-xs text-afri-text leading-relaxed break-words">{c.text}</p>
-                      </div>
-                    </div>
-                  ))
-              )}
-            </div>
-
-            {/* Comment Form */}
-            <form onSubmit={handleAddComment} className="flex gap-2 pt-2 border-t border-afri-border/80">
-              <input 
-                type="text" 
-                value={commentInput}
-                onChange={(e) => setCommentInput(e.target.value)}
-                placeholder="Partager votre palabre..."
-                className="flex-1 bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2.5 text-xs text-afri-text placeholder-zinc-500 focus:outline-none focus:border-[#D4AF37] transition"
-              />
-              <button 
-                type="submit"
-                disabled={!commentInput.trim()}
-                className="bg-[#D4AF37] text-black font-black px-4 py-2.5 rounded-xl text-xs hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex items-center gap-1.5 cursor-pointer shrink-0"
-              >
-                <span>Envoyer</span>
-                <Send className="w-3.5 h-3.5" />
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MORE OPTIONS MODAL (Plus d'options) */}
-      {showMoreFor && (
-        <div 
-          className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowMoreFor(null);
-            }
-          }}
-        >
-          <div className="bg-afri-bg border border-[#D4AF37]/40 rounded-3xl w-full max-w-sm p-5 space-y-4 text-left shadow-2xl">
-            <div className="flex justify-between items-center border-b border-afri-border pb-3">
-              <div>
-                <h3 className="text-xs font-black uppercase text-[#D4AF37] tracking-wider">Options du Réel</h3>
-                <p className="text-[10px] text-zinc-400 truncate max-w-[220px]">
-                  {showMoreFor.authorArtisticName || showMoreFor.authorName}
-                </p>
+              {/* Drag Handle Indicator */}
+              <div className="pt-3 pb-1 flex justify-center items-center shrink-0 cursor-grab active:cursor-grabbing w-full touch-none select-none">
+                <div className="w-12 h-1.5 bg-zinc-600/80 hover:bg-zinc-500 rounded-full transition-colors" />
               </div>
-              <button 
-                onClick={() => setShowMoreFor(null)} 
-                className="p-1.5 rounded-full bg-afri-bg-ter text-afri-text-sec hover:text-afri-text cursor-pointer transition"
-                title="Fermer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
 
-            <div className="space-y-2">
-              {/* Copier le lien */}
-              <button 
-                type="button"
-                onClick={() => handleCopyReelLink(showMoreFor)}
-                className="w-full flex items-center gap-3 p-3 bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 rounded-2xl text-zinc-200 font-bold text-xs transition cursor-pointer"
-              >
-                <Copy className="w-4 h-4 text-[#D4AF37]" />
-                <span>Copier le lien du Réel</span>
-              </button>
+              {/* Bottom Sheet Header */}
+              <div className="px-5 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] shrink-0 shadow-sm">
+                    <MessageCircle className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xs sm:text-sm font-black uppercase text-white tracking-wider truncate">
+                        Arbre à Palabres
+                      </h3>
+                      <span className="text-[10px] font-mono font-black bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/40 px-2 py-0.5 rounded-full shrink-0">
+                        {commentsList.length}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-zinc-400 truncate">
+                      {showCommentsFor.authorArtisticName || showCommentsFor.authorName}
+                    </p>
+                  </div>
+                </div>
 
-              {/* Masquer cette publication */}
-              <button 
-                type="button"
-                onClick={() => handleHideReel(showMoreFor.id)}
-                className="w-full flex items-center gap-3 p-3 bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 rounded-2xl text-zinc-200 font-bold text-xs transition cursor-pointer"
-              >
-                <EyeOff className="w-4 h-4 text-zinc-400" />
-                <span>Masquer cette publication</span>
-              </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {commentsList.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setCommentsSortOrder(prev => prev === "asc" ? "desc" : "asc")}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-zinc-800/80 border border-zinc-700/80 text-[10px] font-mono font-bold text-zinc-300 hover:text-[#D4AF37] hover:border-[#D4AF37]/40 transition cursor-pointer"
+                      title="Changer l'ordre de tri"
+                    >
+                      <ArrowUpDown className="w-3 h-3 text-[#D4AF37]" />
+                      <span>{commentsSortOrder === "asc" ? "Anciens" : "Récents"}</span>
+                    </button>
+                  )}
+                  <button 
+                    type="button"
+                    onClick={() => setShowCommentsFor(null)}
+                    className="p-1.5 rounded-full bg-zinc-800/90 text-zinc-400 hover:text-white hover:bg-zinc-700 transition cursor-pointer border border-zinc-700/50"
+                    title="Fermer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
 
-              {/* Bloquer cet artiste */}
-              {showMoreFor.userId && showMoreFor.userId !== currentUser?.uid && (
+              {/* Scrollable Comments List */}
+              <div 
+                className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5 min-h-[180px] max-h-[52vh] overscroll-contain [-webkit-overflow-scrolling:touch]" 
+                style={{ touchAction: "pan-y" }}
+              >
+                {isLoadingComments && commentsList.length === 0 ? (
+                  <div className="py-12 flex flex-col items-center justify-center gap-2.5 text-zinc-400">
+                    <Loader2 className="w-7 h-7 animate-spin text-[#D4AF37]" />
+                    <p className="text-xs font-mono font-medium">Chargement des palabres...</p>
+                  </div>
+                ) : commentsList.length === 0 ? (
+                  <div className="py-12 text-center text-zinc-400 space-y-2">
+                    <div className="w-12 h-12 rounded-full bg-zinc-800/60 border border-zinc-700/50 flex items-center justify-center mx-auto text-zinc-500">
+                      <MessageCircle className="w-6 h-6" />
+                    </div>
+                    <p className="text-xs font-bold text-zinc-200">Aucun palabre pour l'instant</p>
+                    <p className="text-[11px] text-zinc-400">Soyez le premier à commenter ce Réel !</p>
+                  </div>
+                ) : (
+                  [...commentsList]
+                    .sort((a, b) => {
+                      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                      return commentsSortOrder === "desc" ? timeB - timeA : timeA - timeB;
+                    })
+                    .map(c => (
+                      <div 
+                        key={c.id} 
+                        className="flex gap-3 items-start bg-zinc-900/80 p-3 rounded-2xl border border-zinc-800 hover:border-[#D4AF37]/30 transition group"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (c.userId) {
+                              openPublicProfile(c.userId);
+                            }
+                          }}
+                          className="shrink-0 group/av cursor-pointer relative"
+                          title={c.userId ? "Voir le profil" : undefined}
+                        >
+                          <img 
+                            src={c.avatar} 
+                            alt="" 
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100";
+                            }}
+                            className="w-8 h-8 rounded-full object-cover border border-[#D4AF37]/30 group-hover/av:border-[#D4AF37] transition shadow" 
+                          />
+                        </button>
+                        <div className="flex-1 text-left space-y-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (c.userId) {
+                                  openPublicProfile(c.userId);
+                                }
+                              }}
+                              className="text-[11px] font-black text-[#D4AF37] uppercase tracking-wide truncate hover:underline text-left cursor-pointer"
+                            >
+                              {c.author}
+                            </button>
+                            <span className="text-[9px] font-mono text-zinc-500 shrink-0">{c.time}</span>
+                          </div>
+                          <p className="text-xs text-zinc-200 leading-relaxed break-words font-normal">{c.text}</p>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
+
+              {/* Bottom Comment Composer */}
+              <div className="p-3.5 border-t border-zinc-800 bg-[#0A0A0A] shrink-0">
+                <form onSubmit={handleAddComment} className="flex items-center gap-2">
+                  <input 
+                    type="text" 
+                    value={commentInput}
+                    onChange={(e) => setCommentInput(e.target.value)}
+                    placeholder="Partager votre palabre..."
+                    className="flex-1 bg-zinc-900/90 border border-zinc-700/80 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40 transition"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={!commentInput.trim()}
+                    className="bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black font-black px-4 py-2.5 rounded-2xl text-xs hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-md"
+                  >
+                    <span>Envoyer</span>
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================================= */}
+      {/* ⋮ PLUS / MORE OPTIONS ULTRA-PREMIUM BOTTOM SHEET */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {showMoreFor && (
+          <div 
+            className="fixed inset-0 z-[120] flex flex-col justify-end select-none overflow-hidden"
+            style={{ width: "100vw", height: "100dvh" }}
+          >
+            {/* Backdrop Overlay with fade animation */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setShowMoreFor(null)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer z-0"
+            />
+
+            {/* Bottom Sheet Container */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: "0%" }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.15}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 100 || info.velocity.y > 300) {
+                  setShowMoreFor(null);
+                }
+              }}
+              className="relative w-full max-w-xl mx-auto bg-[#0D0D0D] border-t-2 border-[#D4AF37] border-x border-[#D4AF37]/30 rounded-t-[30px] sm:rounded-t-[36px] shadow-[0_-16px_48px_rgba(0,0,0,0.95)] flex flex-col z-10 max-h-[85vh] text-left"
+              style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Drag Handle Indicator */}
+              <div className="pt-3 pb-1 flex justify-center items-center shrink-0 cursor-grab active:cursor-grabbing w-full touch-none select-none">
+                <div className="w-12 h-1.5 bg-zinc-600/80 hover:bg-zinc-500 rounded-full transition-colors" />
+              </div>
+
+              {/* Header */}
+              <div className="px-5 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] shrink-0 shadow-sm">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-xs sm:text-sm font-black uppercase text-white tracking-wider truncate">
+                      Options du Réel
+                    </h3>
+                    <p className="text-[10px] text-zinc-400 truncate">
+                      Par <span className="text-[#D4AF37] font-semibold">{showMoreFor.authorArtisticName || showMoreFor.authorName}</span>
+                    </p>
+                  </div>
+                </div>
+
                 <button 
                   type="button"
-                  onClick={() => handleBlockArtist(showMoreFor.userId, showMoreFor.authorArtisticName || showMoreFor.authorName)}
-                  className="w-full flex items-center gap-3 p-3 bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 rounded-2xl text-amber-400 font-bold text-xs transition cursor-pointer"
+                  onClick={() => setShowMoreFor(null)} 
+                  className="p-1.5 rounded-full bg-zinc-800/90 text-zinc-400 hover:text-white hover:bg-zinc-700 transition cursor-pointer border border-zinc-700/50"
+                  title="Fermer"
                 >
-                  <UserX className="w-4 h-4 text-amber-400" />
-                  <span>Bloquer {showMoreFor.authorArtisticName || showMoreFor.authorName || "cet artiste"}</span>
+                  <X className="w-4 h-4" />
                 </button>
-              )}
+              </div>
 
-              {/* Signaler cette publication */}
-              <button 
-                type="button"
-                onClick={() => handleReportReel(showMoreFor)}
-                className="w-full flex items-center gap-3 p-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-2xl text-red-400 font-bold text-xs transition cursor-pointer"
-              >
-                <Flag className="w-4 h-4 text-red-400" />
-                <span>Signaler cette publication</span>
-              </button>
-            </div>
+              {/* Action Buttons List */}
+              <div className="p-4 space-y-2.5 overflow-y-auto max-h-[60vh]">
+                {/* 1. Copier le lien */}
+                <button 
+                  type="button"
+                  onClick={() => handleCopyReelLink(showMoreFor)}
+                  className="w-full flex items-center gap-3.5 p-3.5 bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800 hover:border-[#D4AF37]/40 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shrink-0 group-hover:scale-105 transition-transform">
+                    <Copy className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-white group-hover:text-[#D4AF37] transition-colors">
+                      Copier le lien direct
+                    </div>
+                    <div className="text-[10px] text-zinc-400">
+                      Partager le lien de cette création sur vos réseaux
+                    </div>
+                  </div>
+                </button>
+
+                {/* 2. Partager / Diffuser */}
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setShowMoreFor(null);
+                    handleShare(showMoreFor);
+                  }}
+                  className="w-full flex items-center gap-3.5 p-3.5 bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800 hover:border-sky-500/40 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0 group-hover:scale-105 transition-transform">
+                    <Share2 className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-white group-hover:text-sky-400 transition-colors">
+                      Partager & Diffuser
+                    </div>
+                    <div className="text-[10px] text-zinc-400">
+                      Envoyer sur WhatsApp, messages ou réseaux
+                    </div>
+                  </div>
+                </button>
+
+                {/* 3. Masquer cette publication */}
+                <button 
+                  type="button"
+                  onClick={() => handleHideReel(showMoreFor.id)}
+                  className="w-full flex items-center gap-3.5 p-3.5 bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800 hover:border-zinc-700 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-zinc-400 shrink-0 group-hover:scale-105 transition-transform">
+                    <EyeOff className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors">
+                      Masquer cette publication
+                    </div>
+                    <div className="text-[10px] text-zinc-400">
+                      Ne plus afficher ce Réel dans votre fil
+                    </div>
+                  </div>
+                </button>
+
+                {/* 4. Bloquer cet artiste */}
+                {showMoreFor.userId && showMoreFor.userId !== currentUser?.uid && (
+                  <button 
+                    type="button"
+                    onClick={() => handleBlockArtist(showMoreFor.userId, showMoreFor.authorArtisticName || showMoreFor.authorName)}
+                    className="w-full flex items-center gap-3.5 p-3.5 bg-zinc-900/80 hover:bg-zinc-800/90 border border-zinc-800 hover:border-amber-500/40 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 group-hover:scale-105 transition-transform">
+                      <UserX className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-amber-400 transition-colors">
+                        Bloquer cet artiste
+                      </div>
+                      <div className="text-[10px] text-zinc-400">
+                        Masquer toutes les créations de {showMoreFor.authorArtisticName || showMoreFor.authorName || "cet artiste"}
+                      </div>
+                    </div>
+                  </button>
+                )}
+
+                {/* 5. Signaler cette publication */}
+                <button 
+                  type="button"
+                  onClick={() => handleReportReel(showMoreFor)}
+                  className="w-full flex items-center gap-3.5 p-3.5 bg-red-500/10 hover:bg-red-500/15 border border-red-500/25 hover:border-red-500/40 rounded-2xl text-left transition active:scale-[0.99] cursor-pointer group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400 shrink-0 group-hover:scale-105 transition-transform">
+                    <Flag className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-red-400 transition-colors">
+                      Signaler cette publication
+                    </div>
+                    <div className="text-[10px] text-red-400/80">
+                      Alerter l'équipe de modération pour contenu inapproprié
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

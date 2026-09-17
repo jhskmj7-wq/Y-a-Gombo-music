@@ -415,10 +415,23 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
 
   const handleToggleOperator = async (op: ManualPaymentOperatorConfig) => {
     const nextEnabled = !op.enabled;
-    if (nextEnabled && (!op.phoneNumber || !isValidIvorianPhoneNumber(op.phoneNumber))) {
-      showFeedback("error", `Impossible d'activer ${op.displayName} sans un numéro ivoirien valide.`);
+    const phoneToValidate = op.phoneNumber || "";
+    
+    if (nextEnabled && (!phoneToValidate || !isValidIvorianPhoneNumber(phoneToValidate))) {
+      showFeedback("error", `Veuillez d'abord renseigner un numéro ivoirien valide pour ${op.displayName} en cliquant sur "Modifier".`);
       return;
     }
+
+    // Optimistic UI state update
+    setPaymentOperators((prev) => ({
+      ...prev,
+      [op.id]: {
+        ...op,
+        enabled: nextEnabled,
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser?.displayName || currentUser?.email || "Fondateur"
+      }
+    }));
 
     try {
       const res = await updateManualPaymentOperator(
@@ -427,12 +440,22 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
         currentUser || { email: "jhs.kmj7@gmail.com", displayName: "Fondateur" }
       );
       if (res.success) {
-        showFeedback("success", `${op.displayName} est maintenant ${nextEnabled ? "DISPONIBLE" : "INDISPONIBLE"}.`);
+        showFeedback("success", `${op.displayName} est maintenant ${nextEnabled ? "ACTIVÉ (ON)" : "DÉSACTIVÉ (OFF)"}.`);
         try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
       } else {
+        // Revert on error
+        setPaymentOperators((prev) => ({
+          ...prev,
+          [op.id]: op
+        }));
         showFeedback("error", res.message);
       }
     } catch (e: any) {
+      // Revert on error
+      setPaymentOperators((prev) => ({
+        ...prev,
+        [op.id]: op
+      }));
       showFeedback("error", e.message || "Erreur lors de la mise à jour");
     }
   };
@@ -450,12 +473,26 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
 
     const trimmed = editPhoneInput.trim();
     if (!isValidIvorianPhoneNumber(trimmed)) {
-      setEditPhoneError("Format invalide. Numéro ivoirien requis (10 chiffres, ex: 07 00 00 00 00 ou +225...)");
+      setEditPhoneError("Numéro ivoirien invalide. Exemple : 0503222712 ou +225 05 03 22 27 12");
       return;
     }
 
     setIsSavingPaymentMethod(true);
     setEditPhoneError("");
+
+    const formattedPhone = formatIvorianPhoneNumber(trimmed);
+
+    // Optimistic UI state update
+    setPaymentOperators((prev) => ({
+      ...prev,
+      [editingOperator.id]: {
+        ...editingOperator,
+        phoneNumber: formattedPhone,
+        enabled: editEnabledInput,
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser?.displayName || currentUser?.email || "Fondateur"
+      }
+    }));
 
     try {
       const res = await updateManualPaymentOperator(
@@ -468,7 +505,7 @@ export const AdminSubscriptionManagement: React.FC<AdminSubscriptionManagementPr
       );
 
       if (res.success) {
-        showFeedback("success", `Numéro officiel ${editingOperator.displayName} mis à jour : ${formatIvorianPhoneNumber(trimmed)}`);
+        showFeedback("success", `Méthode ${editingOperator.displayName} enregistrée : ${formattedPhone} (${editEnabledInput ? "ON" : "OFF"})`);
         try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
         setEditingOperator(null);
       } else {
