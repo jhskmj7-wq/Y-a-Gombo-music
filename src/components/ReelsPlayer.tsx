@@ -207,8 +207,13 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
   const [videoErrors, setVideoErrors] = useState<Record<string, boolean>>({});
   const [doubleTapHeart, setDoubleTapHeart] = useState<{ reelId: string; x: number; y: number } | null>(null);
   const [playPauseNotice, setPlayPauseNotice] = useState<{ type: "play" | "pause"; reelId: string } | null>(null);
+  const [isSpeedBoosted, setIsSpeedBoosted] = useState<boolean>(false);
   const lastTapRef = useRef<{ time: number; reelId: string }>({ time: 0, reelId: "" });
   const singleTapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const isLongPressRef = useRef<boolean>(false);
+  const lastTouchTimeRef = useRef<number>(0);
   
   // Deterministic gesture lock & touch coords
   const isTransitioningRef = useRef<boolean>(false);
@@ -855,6 +860,113 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
     }
   };
 
+  // Long-press 2x speed acceleration control (Left / Right halves)
+  const handleVideoTouchStart = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>, reelId: string) => {
+    if (e.type.startsWith("touch")) {
+      lastTouchTimeRef.current = Date.now();
+    } else if (e.type.startsWith("mouse") && Date.now() - lastTouchTimeRef.current < 500) {
+      return;
+    }
+
+    let clientX = 0;
+    let clientY = 0;
+    if ("touches" in e && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if ("clientX" in e) {
+      clientX = (e as React.MouseEvent).clientX;
+      clientY = (e as React.MouseEvent).clientY;
+    }
+
+    touchStartPosRef.current = { x: clientX, y: clientY, time: Date.now() };
+    isLongPressRef.current = false;
+
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+    }
+
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      if (singleTapTimeoutRef.current) {
+        clearTimeout(singleTapTimeoutRef.current);
+        singleTapTimeoutRef.current = null;
+      }
+      if (activeVideoRef.current) {
+        activeVideoRef.current.playbackRate = 2.0;
+        setIsSpeedBoosted(true);
+      }
+    }, 260);
+  };
+
+  const handleVideoTouchMove = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
+    if (e.type.startsWith("mouse") && Date.now() - lastTouchTimeRef.current < 500) {
+      return;
+    }
+    if (!touchStartPosRef.current) return;
+
+    let clientX = 0;
+    let clientY = 0;
+    if ("touches" in e && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if ("clientX" in e) {
+      clientX = (e as React.MouseEvent).clientX;
+      clientY = (e as React.MouseEvent).clientY;
+    }
+
+    const dx = Math.abs(clientX - touchStartPosRef.current.x);
+    const dy = Math.abs(clientY - touchStartPosRef.current.y);
+
+    if (dx > 12 || dy > 12) {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+      if (isLongPressRef.current) {
+        isLongPressRef.current = false;
+        if (activeVideoRef.current) {
+          activeVideoRef.current.playbackRate = 1.0;
+        }
+        setIsSpeedBoosted(false);
+      }
+    }
+  };
+
+  const handleVideoTouchEnd = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>, reelId: string) => {
+    if (e.type.startsWith("mouse") && Date.now() - lastTouchTimeRef.current < 500) {
+      return;
+    }
+
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+
+    if (isLongPressRef.current) {
+      isLongPressRef.current = false;
+      if (activeVideoRef.current) {
+        activeVideoRef.current.playbackRate = 1.0;
+      }
+      setIsSpeedBoosted(false);
+      touchStartPosRef.current = null;
+      return;
+    }
+
+    touchStartPosRef.current = null;
+    handleVideoTouchOrClick(e, reelId);
+  };
+
+  // Ensure playback rate resets to 1x when switching reels
+  useEffect(() => {
+    setIsSpeedBoosted(false);
+    if (isLongPressRef.current) {
+      isLongPressRef.current = false;
+    }
+    if (activeVideoRef.current) {
+      activeVideoRef.current.playbackRate = 1.0;
+    }
+  }, [currentIndex]);
+
   // Bookmark action
   const handleBookmark = (reelId: string) => {
     requireAuth(async () => {
@@ -1246,7 +1358,14 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                   {shouldMountMedia ? (
                     <div 
                       className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden"
-                      onClick={(e) => handleVideoTouchOrClick(e, reel.id)}
+                      onTouchStart={(e) => handleVideoTouchStart(e, reel.id)}
+                      onTouchMove={(e) => handleVideoTouchMove(e)}
+                      onTouchEnd={(e) => handleVideoTouchEnd(e, reel.id)}
+                      onTouchCancel={(e) => handleVideoTouchEnd(e, reel.id)}
+                      onMouseDown={(e) => handleVideoTouchStart(e, reel.id)}
+                      onMouseMove={(e) => handleVideoTouchMove(e)}
+                      onMouseUp={(e) => handleVideoTouchEnd(e, reel.id)}
+                      onMouseLeave={(e) => handleVideoTouchEnd(e, reel.id)}
                     >
                       {getYoutubeId(reel.mediaUrl) ? (
                         <iframe
@@ -1360,6 +1479,17 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
                             ) : (
                               <Play className="w-10 h-10 fill-white text-white ml-1" />
                             )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 2x Speed Boost Overlay Badge */}
+                      {isSpeedBoosted && isActive && (
+                        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-pulse">
+                          <div className="px-4 py-2 rounded-full bg-black/80 border border-amber-400 text-amber-300 backdrop-blur-md shadow-2xl flex items-center gap-2 text-xs font-black tracking-wider uppercase ring-2 ring-amber-400/40">
+                            <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
+                            <span>Vitesse 2x</span>
+                            <span className="text-[10px] font-mono bg-amber-400 text-black px-1.5 py-0.5 rounded font-black">×2</span>
                           </div>
                         </div>
                       )}
