@@ -253,40 +253,39 @@ function calculateAdaptiveCompressionProfile(
   // 30 FPS fixed offers the optimal bit-efficiency per frame for mobile streaming
   const fps = 30;
 
-  // 3. Audio Bitrate strategy
-  // 128 kbps for high musical fidelity, 112 kbps for very long clips
-  const audioBitrate = safeDuration > 180 ? 112_000 : 128_000;
+  // 3. Audio Bitrate strategy (High fidelity 192 kbps, 160 kbps for long clips)
+  const audioBitrate = safeDuration > 180 ? 160_000 : 192_000;
 
-  // 4. Adaptive Video Bitrate Calculation
+  // 4. Adaptive Video Bitrate Calculation (TikTok / Reel High Quality standard: 8-10 Mbps for 1080p)
   const totalPixels = targetWidth * targetHeight;
   const is1080p = totalPixels > 1280 * 720;
   const is720p = totalPixels > 854 * 480 && !is1080p;
 
-  // Base nominal bitrate per resolution tier
+  // Base nominal bitrate per resolution tier (Priorité Qualité Visuelle)
   let baseBitrate: number;
   if (is1080p) {
-    baseBitrate = 3_400_000; // 3.4 Mbps default for 1080p
+    baseBitrate = 8_500_000; // 8.5 Mbps default for 1080p
   } else if (is720p) {
-    baseBitrate = 2_300_000; // 2.3 Mbps default for 720p
+    baseBitrate = 5_500_000; // 5.5 Mbps default for 720p
   } else {
-    baseBitrate = 1_400_000; // 1.4 Mbps default for 480p/540p
+    baseBitrate = 3_500_000; // 3.5 Mbps default for 480p/540p
   }
 
   // Visual Modifiers (Multipliers)
   let complexityMultiplier = 1.0;
 
-  // Motion modifier: fast dance / rapid motion needs more bits (+10% to +25%)
+  // Motion modifier: fast dance / rapid motion needs more bits (+10% to +20%)
   if (metrics.motionScore > 0.6) {
     complexityMultiplier += 0.15;
   } else if (metrics.motionScore < 0.25) {
-    complexityMultiplier -= 0.12; // Static talking head can save 12%
+    complexityMultiplier -= 0.08; // Slight saving for static shots while keeping sharp definition
   }
 
   // Texture & Detail modifier: dense crowd, textured clothing, foliage, text (+10% to +20%)
   if (metrics.complexityScore > 0.6) {
     complexityMultiplier += 0.12;
   } else if (metrics.complexityScore < 0.3) {
-    complexityMultiplier -= 0.10;
+    complexityMultiplier -= 0.06;
   }
 
   // Dark Scene / Concert Protection: avoid banding and macroblocking (+15%)
@@ -294,7 +293,7 @@ function calculateAdaptiveCompressionProfile(
     complexityMultiplier += 0.15;
   }
 
-  // Closeups / Faces Protection: preserve skin textures (+10%)
+  // Closeups / Faces Protection: preserve skin textures (+8%)
   if (metrics.skinToneRatio > 0.35) {
     complexityMultiplier += 0.08;
   }
@@ -302,33 +301,31 @@ function calculateAdaptiveCompressionProfile(
   // Apply visual modifier
   let videoBitrate = Math.round(baseBitrate * complexityMultiplier);
 
-  // 5. Duration-Aware Scaling (Crucial for long videos like 4m40s)
+  // 5. Duration-Aware Scaling
   if (safeDuration > 180) {
-    // For 3 to 5+ minute videos:
-    // Scale bitrate down to ~1.4 - 1.8 Mbps so a 4m40s video lands gracefully around 48-58 MB
-    // while maintaining sharp H.264/VP9 visual stability
-    const longDurationFactor = is1080p ? 0.48 : 0.60;
+    // For 3 to 5+ minute videos: maintain ~5.0 - 6.5 Mbps for crisp full HD
+    const longDurationFactor = is1080p ? 0.65 : 0.75;
     videoBitrate = Math.round(videoBitrate * longDurationFactor);
   } else if (safeDuration > 90) {
-    // 90s to 180s videos
-    videoBitrate = Math.round(videoBitrate * 0.78);
+    // 90s to 180s videos: maintain ~6.8 - 8.0 Mbps
+    videoBitrate = Math.round(videoBitrate * 0.85);
   }
 
-  // 6. Strict Bounds Clamping (Min / Max safety rails)
+  // 6. Strict Bounds Clamping (Priorité Qualité TikTok: 8 à 10.5 Mbps sur 1080p standard)
   if (is1080p) {
     if (safeDuration > 180) {
-      videoBitrate = Math.max(1_400_000, Math.min(2_200_000, videoBitrate)); // 4m+ video clamped at 1.4 - 2.2 Mbps
+      videoBitrate = Math.max(4_500_000, Math.min(6_500_000, videoBitrate)); // 3m+ video clamped at 4.5 - 6.5 Mbps
     } else {
-      videoBitrate = Math.max(2_400_000, Math.min(4_400_000, videoBitrate)); // Standard 1080p clamped at 2.4 - 4.4 Mbps
+      videoBitrate = Math.max(6_000_000, Math.min(10_500_000, videoBitrate)); // Standard 1080p clamped at 6.0 - 10.5 Mbps
     }
   } else if (is720p) {
     if (safeDuration > 180) {
-      videoBitrate = Math.max(1_100_000, Math.min(1_700_000, videoBitrate));
+      videoBitrate = Math.max(3_500_000, Math.min(5_000_000, videoBitrate));
     } else {
-      videoBitrate = Math.max(1_700_000, Math.min(2_900_000, videoBitrate));
+      videoBitrate = Math.max(4_200_000, Math.min(6_800_000, videoBitrate));
     }
   } else {
-    videoBitrate = Math.max(900_000, Math.min(1_800_000, videoBitrate));
+    videoBitrate = Math.max(2_500_000, Math.min(4_500_000, videoBitrate));
   }
 
   // 7. Guard against recompressing already heavily compressed source files

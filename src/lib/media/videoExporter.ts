@@ -15,16 +15,19 @@ export interface VideoExporterOptions {
 
 /**
  * Detect best supported MediaRecorder MIME type for video export.
+ * Priority: H.264 MP4 -> H.264 WebM -> VP9 WebM -> standard MP4 -> VP8 WebM.
  */
 function getExportMimeType(): string {
   if (typeof MediaRecorder === "undefined") return "";
 
   const candidateTypes = [
+    "video/mp4;codecs=avc1,mp4a.40.2",
+    "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+    "video/mp4",
+    "video/webm;codecs=h264,opus",
     "video/webm;codecs=vp9,opus",
     "video/webm;codecs=vp8,opus",
     "video/webm",
-    "video/mp4;codecs=avc1,mp4a.40.2",
-    "video/mp4",
   ];
 
   for (const type of candidateTypes) {
@@ -123,6 +126,10 @@ export async function exportVideoFile(
           return reject(new Error("Impossible d'initialiser le contexte de rendu graphique 2D."));
         }
 
+        // Enable high quality image smoothing for crisp rendering and text sharpness
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
         // Prepare CSS filter string
         const baseFilterObj = REEL_VIDEO_FILTERS.find((f) => f.id === editorState.filterId);
         const baseFilterCss = baseFilterObj ? baseFilterObj.filterCss : "none";
@@ -161,18 +168,24 @@ export async function exportVideoFile(
         }
 
         // Setup Canvas Stream + Combined Stream
-        const canvasStream = canvas.captureStream(30); // 30 FPS
+        const canvasStream = canvas.captureStream(30); // 30 FPS standard
         const streamTracks: MediaStreamTrack[] = [...canvasStream.getVideoTracks()];
         if (audioStreamTrack) {
           streamTracks.push(audioStreamTrack);
         }
         const combinedStream = new MediaStream(streamTracks);
 
+        // Calculate target bitrate based on resolution (8.5 - 9.5 Mbps for 1080p, 5.5 Mbps for 720p)
+        const totalPixels = finalCanvasWidth * finalCanvasHeight;
+        const targetVideoBitrate = totalPixels > 1280 * 720 ? 9_000_000 : 5_500_000;
+        const targetAudioBitrate = 192_000; // 192 kbps high fidelity audio
+
         // Setup MediaRecorder
-        let recorderOptions: MediaRecorderOptions = { mimeType };
-        try {
-          recorderOptions.videoBitsPerSecond = 8_000_000; // 8 Mbps high quality export pass
-        } catch (_) {}
+        let recorderOptions: MediaRecorderOptions = {
+          mimeType,
+          videoBitsPerSecond: targetVideoBitrate,
+          audioBitsPerSecond: targetAudioBitrate,
+        };
 
         let mediaRecorder: MediaRecorder;
         try {

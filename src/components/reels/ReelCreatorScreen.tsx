@@ -292,20 +292,28 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
 
     try {
       const isEdited = hasEditorModifications(editorState);
-      const isOriginalMp4 = (selectedFile.type || "").toLowerCase().includes("mp4") || selectedFile.name.toLowerCase().endsWith(".mp4");
-      const isOriginalReasonableSize = selectedFile.size <= 70 * 1024 * 1024; // <= 70 Mo
+      const isOriginalCompatible =
+        (selectedFile.type || "").toLowerCase().includes("mp4") ||
+        (selectedFile.type || "").toLowerCase().includes("webm") ||
+        selectedFile.name.toLowerCase().endsWith(".mp4") ||
+        selectedFile.name.toLowerCase().endsWith(".webm");
+      const isOriginalReasonableSize = selectedFile.size <= 75 * 1024 * 1024; // <= 75 Mo
 
-      // Si le fichier source est déjà un MP4 compatible et qu'aucune retouche n'a été effectuée,
-      // on préserve à 100% le conteneur MP4 / codec d'origine du smartphone sans ré-encodage WebM
-      if (!isEdited && isOriginalMp4 && isOriginalReasonableSize) {
+      // 1. Si le fichier source est déjà compatible et qu'aucune retouche n'a été effectuée,
+      // on préserve à 100% le fichier d'origine (MP4 ou WebM) sans aucun ré-encodage destructeur
+      if (!isEdited && isOriginalCompatible && isOriginalReasonableSize) {
         setIsProcessing(false);
         onVideoReady(selectedFile, editorState.filterId);
         return;
       }
 
-      // 1. Exportation & Gravure réelle des effets / calques / filtres si modifications
-      let editedFile = selectedFile;
+      // 2. Exportation & Gravure réelle des effets / calques / filtres si modifications
+      // La vidéo est exportée directement à haute fidélité (8.5 - 9.5 Mbps) et SANS double compression
       if (isEdited) {
+        setProcessingPhase("export");
+        setProcessingPercent(0);
+        setProcessingLog("Rendu haute fidélité des modifications visuelles...");
+
         const exportResult = await exportVideoFile(selectedFile, editorState, {
           onProgress: (percent, phase) => {
             setProcessingPhase("export");
@@ -313,34 +321,33 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
             if (phase) setProcessingLog(phase);
           },
         });
-        editedFile = exportResult.file;
+
+        setIsProcessing(false);
+        onVideoReady(exportResult.file, editorState.filterId);
+        return;
       }
 
-      // 2. Compression adaptative si le fichier est volumineux (> 18 Mo)
-      let finalFile = editedFile;
-      if (editedFile.size > 18 * 1024 * 1024) {
-        setProcessingPhase("compress");
-        setProcessingPercent(0);
-        setProcessingLog("Analyse et compression vidéo adaptative...");
+      // 3. Cas particulier : vidéo brute non modifiée mais dépassant 75 Mo ou format lourd non standard
+      // Compression haute qualité unique (8 à 10 Mbps)
+      setProcessingPhase("compress");
+      setProcessingPercent(0);
+      setProcessingLog("Optimisation de la qualité vidéo haute fidélité...");
 
-        try {
-          const compressionResult = await compressVideoFile(editedFile, {
-            onProgress: (percent, phase) => {
-              setProcessingPhase("compress");
-              setProcessingPercent(percent);
-              if (phase) setProcessingLog(phase);
-            },
-          });
-          finalFile = compressionResult.file;
-        } catch (compressErr: any) {
-          console.warn("[REEL PROCESSOR] Compression adaptative contournée, conservation du fichier exporté pur:", compressErr);
-          // Direct fallback to edited file if compressed is larger or unsupported
-          finalFile = editedFile;
-        }
+      try {
+        const compressionResult = await compressVideoFile(selectedFile, {
+          onProgress: (percent, phase) => {
+            setProcessingPhase("compress");
+            setProcessingPercent(percent);
+            if (phase) setProcessingLog(phase);
+          },
+        });
+        setIsProcessing(false);
+        onVideoReady(compressionResult.file, editorState.filterId);
+      } catch (compressErr: any) {
+        console.warn("[REEL PROCESSOR] Compression adaptative contournée, conservation du fichier source:", compressErr);
+        setIsProcessing(false);
+        onVideoReady(selectedFile, editorState.filterId);
       }
-
-      setIsProcessing(false);
-      onVideoReady(finalFile, editorState.filterId);
     } catch (err: any) {
       console.error("[REEL PROCESSOR ERROR]", err);
       setIsProcessing(false);
