@@ -467,12 +467,17 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       });
     });
 
-    // 4. Apply dynamic ranking algorithm (Engagement + Recency + Affinity + Discovery)
+    // 4. Apply dynamic ranking algorithm (TikTok & Facebook Reels model)
+    const userCommune = profile?.commune || (profile as any)?.location || undefined;
+    const userInterests = (profile as any)?.interests || (profile as any)?.specialties || [];
+
     const ranked = rankReels(list, { 
       currentUserId: effectiveUser?.uid, 
       followedUsers, 
       seenReelIds: seenReels, 
-      sessionTimestamp 
+      sessionTimestamp,
+      userCommune,
+      userInterests
     });
 
     // If initialReelId is specified, bring the exact selected reel to index 0 so it opens and plays immediately

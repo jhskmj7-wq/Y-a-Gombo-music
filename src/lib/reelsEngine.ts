@@ -5,77 +5,106 @@ export interface ReelRankingContext {
   followedUsers?: string[];
   seenReelIds?: Set<string>;
   sessionTimestamp?: number;
+  userCommune?: string;
+  userInterests?: string[];
 }
 
 /**
- * Dynamic Ranking Algorithm for AFRIGOMBO Reels
+ * Advanced Ranking Algorithm for AFRIGOMBO Reels (TikTok & Facebook Reels Model)
  * 
- * Scores reels based on real engagement, recency, user affinity,
- * content discovery, and author diversity.
- * 
- * Score Formula:
- *   score = Engagement (Likes*3 + Comments*5 + Views*0.5)
- *         + Recency Boost (exponential decay based on post age)
- *         + Author Affinity (+25 if user follows creator)
- *         + User Interaction (+15 if user already liked)
- *         - Seen Penalty (-100 if recently viewed in session)
- *         + Controlled Discovery Jitter (0-5 pseudo-random offset based on session)
+ * Scores reels based on:
+ * 1. High-weight viral engagement (Likes, Comments, Shares/Renforts, Loops)
+ * 2. TikTok Cold-Start discovery boost for fresh creator content (< 24h-48h)
+ * 3. Facebook Reels local geographic affinity (Commune proximity)
+ * 4. Thematic & musical interest matching (Zouglou, Coupé-Décalé, Afro-Jazz, Rap, etc.)
+ * 5. Creator affinity (followed artists & interactions)
+ * 6. Author diversity re-ordering (prevents author fatigue)
  */
-export function scoreReel(reel: ReelItem, context: ReelRankingContext, now: number): number {
+export function scoreReel(reel: any, context: ReelRankingContext, now: number): number {
   let score = 0;
 
-  // 1. REAL ENGAGEMENT METRICS
-  const likes = Math.max(0, reel.likesCount || 0);
-  const comments = Math.max(0, reel.commentsCount || 0);
-  const views = Math.max(0, (reel as any).viewsCount || (reel as any).views || 0);
+  // 1. REAL ENGAGEMENT MULTIPLIERS (TikTok / Facebook weighted virality)
+  const likes = Math.max(0, reel.likesCount || (Array.isArray(reel.likes) ? reel.likes.length : 0) || (Array.isArray(reel.likedBy) ? reel.likedBy.length : 0) || 0);
+  const comments = Math.max(0, reel.commentsCount || (Array.isArray(reel.comments) ? reel.comments.length : 0) || 0);
+  const views = Math.max(0, (reel as any).viewsCount || (reel as any).views || (reel as any).viewCount || 0);
+  const shares = Math.max(0, (reel as any).sharesCount || (reel as any).shares || (reel as any).renfortsCount || 0);
 
-  const engagementScore = (likes * 3) + (comments * 5) + (views * 0.5);
+  // Social algorithm weighting: comments & viral shares are highest signal
+  const engagementScore = (likes * 4) + (comments * 8) + (shares * 12) + (views * 1);
   score += engagementScore;
 
-  // 2. RECENCY BOOST
+  // 2. RECENCY & TIKTOK COLD-START DISCOVERY
   const createdAt = (reel as any).createdAt || (reel as any).timestamp || (reel as any).date;
   if (createdAt) {
     const timeMs = typeof createdAt === "number" ? createdAt : (new Date(createdAt).getTime() || now);
-    const ageHours = Math.max(0.1, (now - timeMs) / (1000 * 60 * 60));
-    // Fresher content gets up to 50 bonus points decaying over 12h periods
-    const recencyBoost = Math.max(0, 50 / (1 + ageHours / 12));
+    const ageHours = Math.max(0.05, (now - timeMs) / (1000 * 60 * 60));
+    
+    // Smooth decay over time
+    const recencyBoost = Math.max(0, 60 / (1 + ageHours / 18));
     score += recencyBoost;
+
+    // TikTok Cold-Start Exploratory Pool:
+    // Boost fresh videos (<24h) by +35 pts, and (<48h) by +20 pts so new artists get organic discovery
+    if (ageHours <= 24) {
+      score += 35;
+    } else if (ageHours <= 48) {
+      score += 20;
+    }
   } else {
-    score += 10;
+    // Default baseline for evergreen portfolio showcases
+    score += 15;
   }
 
-  // 3. AUTHOR AFFINITY
-  if (reel.userId && context.followedUsers?.includes(reel.userId)) {
-    score += 25;
+  // 3. LOCAL AFFINITY (Facebook Reels geographic relevance)
+  const reelCommune = reel.commune || (reel as any).location;
+  if (context.userCommune && reelCommune) {
+    const normUserCommune = String(context.userCommune).toLowerCase().trim();
+    const normReelCommune = String(reelCommune).toLowerCase().trim();
+    if (normUserCommune && (normReelCommune.includes(normUserCommune) || normUserCommune.includes(normReelCommune))) {
+      score += 30; // Strong local boost
+    }
   }
 
-  // 4. USER INTERACTION (PRIORITY RE-APPEARANCE FOR LIKED REELS)
+  // 4. THEMATIC & INTEREST AFFINITY
+  if (context.userInterests && context.userInterests.length > 0) {
+    const contentText = `${reel.title || ""} ${reel.content || ""} ${(reel.hashtags || []).join(" ")} ${reel.category || ""}`.toLowerCase();
+    const matchesInterest = context.userInterests.some(interest => 
+      interest && contentText.includes(String(interest).toLowerCase().trim())
+    );
+    if (matchesInterest) {
+      score += 25;
+    }
+  }
+
+  // 5. CREATOR & USER AFFINITY
+  const creatorId = reel.userId || (reel as any).authorId;
+  if (creatorId && context.followedUsers?.includes(creatorId)) {
+    score += 40; // Followed artist strong boost
+  }
+
   if (reel.isLiked) {
-    score += 35;
+    score += 25; // Re-surfacing favorite content
   }
 
-  // 5. SEEN CONTENT PENALTY
+  // 6. SEEN CONTENT PENALTY
   if (context.seenReelIds && context.seenReelIds.has(reel.id)) {
-    // Milder seen penalty for liked reels so they naturally re-appear in rotation
-    score -= reel.isLiked ? 25 : 100;
+    score -= reel.isLiked ? 30 : 120;
   }
 
-  // 6. CONTROLLED DISCOVERY JITTER
-  // Deterministic pseudo-random jitter derived from reel ID + session time
-  // Guarantees each opening/session produces a dynamic feed without breaking engagement hierarchy
+  // 7. CONTROLLED DISCOVERY JITTER (Deterministic pseudo-random variation)
   const hashStr = `${reel.id}_${now.toString().slice(-4)}`;
   let hashNum = 0;
   for (let i = 0; i < hashStr.length; i++) {
     hashNum = (hashNum << 5) - hashNum + hashStr.charCodeAt(i);
     hashNum |= 0;
   }
-  const discoveryJitter = (Math.abs(hashNum) % 100) / 20; // 0 to 5 points
+  const discoveryJitter = (Math.abs(hashNum) % 100) / 15;
   score += discoveryJitter;
 
   return score;
 }
 
-export function rankReels(reels: ReelItem[], context: ReelRankingContext): ReelItem[] {
+export function rankReels<T extends { id?: string; userId?: string; authorName?: string }>(reels: T[], context: ReelRankingContext): T[] {
   if (!reels || reels.length === 0) return [];
 
   const now = context.sessionTimestamp || Date.now();
@@ -90,7 +119,7 @@ export function rankReels(reels: ReelItem[], context: ReelRankingContext): ReelI
   scored.sort((a, b) => b.score - a.score);
 
   // Apply Author Diversity Re-ordering (limit consecutive reels by the same creator)
-  const result: ReelItem[] = [];
+  const result: T[] = [];
   const pool = [...scored];
   const lastAuthors: string[] = [];
 
@@ -104,7 +133,7 @@ export function rankReels(reels: ReelItem[], context: ReelRankingContext): ReelI
 
       if (prev1 === prev2) {
         for (let i = 0; i < pool.length; i++) {
-          const candidateAuthor = pool[i].reel.userId || pool[i].reel.authorName;
+          const candidateAuthor = (pool[i].reel as any).userId || (pool[i].reel as any).authorName;
           if (candidateAuthor !== prev1) {
             chosenIdx = i;
             break;
@@ -115,9 +144,10 @@ export function rankReels(reels: ReelItem[], context: ReelRankingContext): ReelI
 
     const [picked] = pool.splice(chosenIdx, 1);
     result.push(picked.reel);
-    const authorKey = picked.reel.userId || picked.reel.authorName;
+    const authorKey = (picked.reel as any).userId || (picked.reel as any).authorName || "";
     lastAuthors.push(authorKey);
   }
 
   return result;
 }
+

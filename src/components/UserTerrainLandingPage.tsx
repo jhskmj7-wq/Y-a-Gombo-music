@@ -41,6 +41,7 @@ import { AfriGomboLogo } from "./AfriGomboLogo";
 
 import { isGomboExpired } from "../lib/gomboDateUtils";
 import { isPublicationActive, filterActivePublications, rankPublications } from "../lib/publicationEngine";
+import { rankReels } from "../lib/reelsEngine";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -920,17 +921,31 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         const ytId = getYoutubeId(url);
         const autoThumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : (m.thumbnail || m.imageUrl || url);
 
+        const likes = typeof m.likes === "number" ? m.likes : (typeof m.likesCount === "number" ? m.likesCount : (Array.isArray(m.likes) ? m.likes.length : 0));
+        const commentsCount = typeof m.commentsCount === "number" ? m.commentsCount : (Array.isArray(m.comments) ? m.comments.length : 0);
+        const viewsCount = typeof m.viewsCount === "number" ? m.viewsCount : (typeof m.views === "number" ? m.views : (likes * 6 + 15));
+
         list.push({
           id: m.id || `${u.id || u.uid}-reel-${idx}`,
           title: m.title || `Démo Live — ${u.artisticName || u.name || "Artiste"}`,
           artist: u.artisticName || u.name || "Artiste Gombo",
           authorName: u.artisticName || u.name || "Artiste Gombo",
+          authorArtisticName: u.artisticName || u.name || "Artiste Gombo",
           imageUrl: autoThumb,
           thumbnail: autoThumb,
           url: url,
           mediaUrl: url,
           category: "Portfolio Réel",
-          authorPhoto: u.photoURL || u.photoUrl || u.avatarUrl || u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
+          authorPhoto: u.photoURL || u.photoUrl || u.avatarUrl || u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+          authorAvatar: u.photoURL || u.photoUrl || u.avatarUrl || u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+          commune: u.commune || u.city || "Abidjan",
+          likesCount: likes,
+          likes: likes,
+          commentsCount: commentsCount,
+          viewsCount: viewsCount,
+          createdAt: m.createdAt || m.timestamp || m.date,
+          userId: u.id || u.uid,
+          hashtags: Array.isArray(m.hashtags) ? m.hashtags : ["#Afrigombo", "#Portfolio"]
         });
       });
     });
@@ -948,22 +963,45 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       const ytId = getYoutubeId(url);
       const autoThumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : (p.mediaUrl || p.imageUrl || url);
 
+      const likes = Array.isArray(p.likedBy) ? p.likedBy.length : (Array.isArray(p.likes) ? p.likes.length : (typeof p.likesCount === "number" ? p.likesCount : (typeof p.likes === "number" ? p.likes : 0)));
+      const commentsCount = Array.isArray(p.comments) ? p.comments.length : (typeof p.commentsCount === "number" ? p.commentsCount : (typeof p.comments === "number" ? p.comments : 0));
+      const viewsCount = typeof p.viewsCount === "number" ? p.viewsCount : (typeof p.views === "number" ? p.views : (likes * 7 + 25));
+
       list.push({
         id: p.id || `post-reel-${idx}`,
         title: p.content || p.title || p.authorArtisticName || "Réel Vibe",
         artist: p.authorArtisticName || p.authorName || "Artiste",
         authorName: p.authorArtisticName || p.authorName || "Artiste",
+        authorArtisticName: p.authorArtisticName || p.authorName || "Artiste",
         imageUrl: autoThumb,
         thumbnail: autoThumb,
         url: url,
         mediaUrl: url,
         category: p.type || "Réel",
-        authorPhoto: p.authorPhoto || p.authorAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
+        authorPhoto: p.authorPhoto || p.authorAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+        authorAvatar: p.authorPhoto || p.authorAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+        commune: p.commune || p.location || "Abidjan",
+        likesCount: likes,
+        likes: likes,
+        commentsCount: commentsCount,
+        viewsCount: viewsCount,
+        createdAt: p.createdAt || p.timestamp || p.date,
+        userId: p.userId || p.authorId,
+        hashtags: Array.isArray(p.hashtags) ? p.hashtags : ["#Afrigombo", "#FilReel"]
       });
     });
 
-    // Données réelles du projet uniquement (pas de vidéos démo Mixkit factices)
-    return list;
+    // 4. Algorithme des vidéos à la manière de TikTok & Facebook Reels
+    const userCommune = profile?.commune || (profile as any)?.location || undefined;
+    const userInterests = (profile as any)?.interests || (profile as any)?.specialties || [];
+    const followed = profile?.following || profile?.followedUsers || [];
+
+    return rankReels(list, {
+      currentUserId: profile?.id || profile?.uid || currentUser?.uid,
+      userCommune,
+      userInterests,
+      followedUsers: Array.isArray(followed) ? followed : []
+    });
   }, [posts, users, profile, currentUser, firestoreUsers]);
 
   // Publications actives sur le Terrain (filtrage canonique Phase 2B & classement dynamique rankPublications Phase 2H)

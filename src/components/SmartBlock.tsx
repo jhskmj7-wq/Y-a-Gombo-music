@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { 
   Zap, Music, Award, Trophy, Video, Mic2, Headphones, GraduationCap, 
   ShoppingBag, Calendar, Users, Globe, Briefcase, MapPin, Sparkles, 
-  Heart, TrendingUp, ChevronRight
+  Heart, TrendingUp, ChevronRight, Play
 } from "lucide-react";
 import { Gombo, User, Post } from "../types";
 
@@ -116,6 +116,85 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
           const directVideoSrc = isPlayableVideoFile(item.url || item.mediaUrl) ? (item.url || item.mediaUrl) : null;
           const isDirectPlayableVideo = Boolean(directVideoSrc);
 
+          // Affichage spécifique 9:16 style TikTok / Facebook Reels pour le compartiment Réels
+          if (type === "POPULAR_REELS") {
+            return (
+              <motion.div
+                key={item.id || `reel-${idx}`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => onAction?.(item)}
+                className="group relative flex-none w-36 xs:w-40 sm:w-48 aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-950 border border-afri-border/70 hover:border-[#D4AF37] transition-all duration-300 shadow-md hover:shadow-[0_8px_25px_rgba(212,175,55,0.22)] cursor-pointer snap-start select-none flex flex-col justify-between"
+              >
+                {/* 1. Média de fond en 9:16 pleine surface */}
+                <div className="absolute inset-0 w-full h-full bg-zinc-900 overflow-hidden">
+                  {isDirectPlayableVideo && directVideoSrc ? (
+                    <video 
+                      src={directVideoSrc} 
+                      muted 
+                      playsInline 
+                      preload="metadata"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
+                    />
+                  ) : (
+                    <img 
+                      src={mediaSrc || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      alt={item.title || "Réel"}
+                      loading="lazy"
+                    />
+                  )}
+                  {/* Dégradé TikTok/Facebook : sombre en bas pour le texte, discret au centre, doux en haut */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/25 to-black/60 pointer-events-none" />
+                </div>
+
+                {/* 2. Top Header : Auteur & Badge Réel */}
+                <div className="relative z-10 p-2 sm:p-2.5 flex items-center justify-between w-full pointer-events-none">
+                  <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md py-0.5 px-2 rounded-full border border-white/10 max-w-[82%]">
+                    <img 
+                      src={item.authorPhoto || item.authorAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100"} 
+                      alt="" 
+                      className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full object-cover border border-[#D4AF37]" 
+                    />
+                    <span className="text-[8px] sm:text-[9px] font-bold text-white truncate">
+                      {item.artist || item.authorArtisticName || item.authorName || "Artiste"}
+                    </span>
+                  </div>
+                  <div className="w-5 h-5 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-md">
+                    <Video className="w-2.5 h-2.5 fill-current" />
+                  </div>
+                </div>
+
+                {/* 3. Bouton Play central translucide avec dorure */}
+                <div className="relative z-10 flex items-center justify-center my-auto pointer-events-none">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/65 backdrop-blur-md border border-[#D4AF37]/60 text-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-115 group-hover:bg-[#D4AF37] group-hover:text-black transition-all duration-300">
+                    <Play className="w-4 h-4 fill-current ml-0.5" />
+                  </div>
+                </div>
+
+                {/* 4. Bas de carte : Titre & Métriques d'engagement (TikTok style) */}
+                <div className="relative z-10 p-2.5 sm:p-3 flex flex-col justify-end space-y-1 pointer-events-none">
+                  <h4 className="text-[11px] sm:text-xs font-bold text-white line-clamp-2 leading-snug drop-shadow-md">
+                    {item.title || item.content || item.name || "Vibration Réel"}
+                  </h4>
+                  <div className="flex items-center justify-between pt-1 border-t border-white/15 text-[8px] sm:text-[9px] font-mono text-zinc-300">
+                    <span className="text-[#D4AF37] font-bold flex items-center gap-1">
+                      <Heart className="w-2.5 h-2.5 fill-current" /> {item.likesCount || item.likes || 0}
+                    </span>
+                    {item.commune ? (
+                      <span className="truncate max-w-[65px] flex items-center gap-0.5 text-white/80">
+                        <MapPin className="w-2 h-2 text-[#D4AF37]" /> {item.commune}
+                      </span>
+                    ) : (
+                      <span className="text-white/70">▶ {item.viewsCount || item.views || 120}</span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          }
+
+          // Format standard pour les autres blocs (opportunités, cours, événements, etc.)
           return (
             <motion.div
               key={item.id || `${type}-${idx}`}
@@ -146,13 +225,6 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
                 {item.isPremium && (
                   <div className="absolute top-2 right-2 bg-afri-bg-sec/80 border border-[#D4AF37]/50 px-2 py-0.5 rounded-full">
                     <span className="text-[8px] font-black text-[#D4AF37] uppercase">Premium</span>
-                  </div>
-                )}
-                {type === "POPULAR_REELS" && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm border border-[#D4AF37] flex items-center justify-center shadow-lg">
-                      <Video className="w-4 h-4 text-[#D4AF37] ml-0.5" />
-                    </div>
                   </div>
                 )}
               </div>
