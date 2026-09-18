@@ -27,6 +27,7 @@ import { getFilterCss, REEL_VIDEO_FILTERS } from "./videoFilters";
 interface ReelPublishScreenProps {
   videoFile: File;
   filterId: string;
+  coverUrl?: string | null;
   scheduledAt?: string | null;
   onClose: () => void;
   onPublished: () => void;
@@ -46,6 +47,7 @@ const POPULAR_HASHTAGS = [
 export default function ReelPublishScreen({
   videoFile,
   filterId,
+  coverUrl = null,
   scheduledAt = null,
   onClose,
   onPublished,
@@ -287,7 +289,11 @@ export default function ReelPublishScreen({
         content: caption.trim(),
         mediaUrl: videoMediaRef,
         videoUrl: videoMediaRef,
-        imageUrl: videoMediaRef,
+        imageUrl: coverUrl || videoMediaRef,
+        thumbnailUrl: coverUrl || null,
+        thumbnail: coverUrl || null,
+        coverUrl: coverUrl || null,
+        poster: coverUrl || null,
         storagePath: uploadResult.storagePath,
         type: "video",
         status: isScheduled ? "scheduled" : "published",
@@ -316,6 +322,10 @@ export default function ReelPublishScreen({
         id: `reel_${Date.now()}`,
         type: "video",
         url: uploadResult.url,
+        thumbnail: coverUrl || null,
+        thumbnailUrl: coverUrl || null,
+        coverUrl: coverUrl || null,
+        poster: coverUrl || null,
         title: caption.trim() || "Réel - Extrait vidéo",
         description: caption.trim(),
         appliedFilter: filterId,

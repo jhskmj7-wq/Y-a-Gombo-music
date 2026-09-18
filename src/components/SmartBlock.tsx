@@ -6,6 +6,7 @@ import {
   Heart, TrendingUp, ChevronRight, Play
 } from "lucide-react";
 import { Gombo, User, Post } from "../types";
+import { VideoThumbnail } from "./reels/VideoThumbnail";
 
 export type BlockType = 
   | "URGENT_OPPORTUNITIES"
@@ -32,6 +33,7 @@ interface SmartBlockProps {
   title: string;
   icon?: React.ReactNode;
   data: any[];
+  totalReelsCount?: number;
   onAction?: (item: any) => void;
   onSeeMore?: () => void;
 }
@@ -80,10 +82,14 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
   title, 
   icon, 
   data, 
+  totalReelsCount,
   onAction, 
   onSeeMore
 }) => {
   if (!data || data.length === 0) return null;
+
+  // Pour le compartiment Réels de l'accueil : afficher seulement 4 ou 5 vidéos
+  const itemsToRender = type === "POPULAR_REELS" ? data.slice(0, 5) : data;
 
   return (
     <motion.div
@@ -111,7 +117,7 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
       </div>
 
       <div className="flex overflow-x-auto pb-4 gap-3 no-scrollbar scroll-smooth snap-x touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch]">
-        {data.map((item, idx) => {
+        {itemsToRender.map((item, idx) => {
           const mediaSrc = item.imageUrl || item.thumbnail || item.url || item.mediaUrl;
           const directVideoSrc = isPlayableVideoFile(item.url || item.mediaUrl) ? (item.url || item.mediaUrl) : null;
           const isDirectPlayableVideo = Boolean(directVideoSrc);
@@ -126,26 +132,20 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
                 onClick={() => onAction?.(item)}
                 className="group relative flex-none w-36 xs:w-40 sm:w-48 aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-950 border border-afri-border/70 hover:border-[#D4AF37] transition-all duration-300 shadow-md hover:shadow-[0_8px_25px_rgba(212,175,55,0.22)] cursor-pointer snap-start select-none flex flex-col justify-between"
               >
-                {/* 1. Média de fond en 9:16 pleine surface */}
-                <div className="absolute inset-0 w-full h-full bg-zinc-900 overflow-hidden">
-                  {isDirectPlayableVideo && directVideoSrc ? (
-                    <video 
-                      src={directVideoSrc} 
-                      muted 
-                      playsInline 
-                      preload="metadata"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
-                    />
-                  ) : (
-                    <img 
-                      src={mediaSrc || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                      alt={item.title || "Réel"}
-                      loading="lazy"
-                    />
-                  )}
-                  {/* Dégradé TikTok/Facebook : sombre en bas pour le texte, discret au centre, doux en haut */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/25 to-black/60 pointer-events-none" />
+                {/* 1. Média de fond en 9:16 pleine surface avec VideoThumbnail pour garantir zéro blanc */}
+                <div className="absolute inset-0 w-full h-full bg-zinc-950 overflow-hidden">
+                  <VideoThumbnail
+                    videoUrl={item.url || item.mediaUrl || item.videoUrl}
+                    thumbnailUrl={item.thumbnail || item.thumbnailUrl}
+                    coverUrl={item.coverUrl}
+                    poster={item.poster}
+                    imageUrl={item.imageUrl}
+                    title={item.title || item.content || item.name}
+                    artist={item.artist || item.authorArtisticName || item.authorName}
+                    authorAvatar={item.authorPhoto || item.authorAvatar}
+                    alt={item.title || "Réel"}
+                    className="w-full h-full"
+                  />
                 </div>
 
                 {/* 2. Top Header : Auteur & Badge Réel */}
@@ -261,6 +261,49 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
             </motion.div>
           );
         })}
+
+        {/* 6e emplacement : Tout voir — ouvre le fil complet des Réels */}
+        {type === "POPULAR_REELS" && data.length > 0 && (
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => onSeeMore?.()}
+            className="group relative flex-none w-36 xs:w-40 sm:w-48 aspect-[9/16] rounded-2xl overflow-hidden bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border-2 border-dashed border-[#D4AF37]/50 hover:border-[#D4AF37] transition-all duration-300 shadow-md hover:shadow-[0_8px_25px_rgba(212,175,55,0.3)] cursor-pointer snap-start select-none flex flex-col justify-between p-3.5 sm:p-4 text-center items-center"
+          >
+            {/* Décoration douce d'arrière-plan */}
+            <div className="absolute inset-0 bg-radial from-[#D4AF37]/15 via-transparent to-transparent pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity" />
+
+            {/* Badge haut */}
+            <div className="relative z-10 w-full flex justify-center">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] text-[8px] sm:text-[9px] font-bold tracking-wide uppercase">
+                <Sparkles className="w-2.5 h-2.5" /> Fil Réel
+              </span>
+            </div>
+
+            {/* Centre : Bouton d'action et compte */}
+            <div className="relative z-10 flex flex-col items-center justify-center my-auto space-y-2">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-[#D4AF37] to-amber-300 text-black flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.4)] group-hover:scale-110 transition-transform duration-300">
+                <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-current ml-0.5" />
+              </div>
+              <span className="text-[10px] sm:text-[11px] font-mono font-bold text-amber-200/95">
+                {totalReelsCount && totalReelsCount > itemsToRender.length
+                  ? `+${totalReelsCount - itemsToRender.length} autres vidéos`
+                  : "Fil complet"}
+              </span>
+            </div>
+
+            {/* Bas : Bouton Tout voir */}
+            <div className="relative z-10 w-full pt-2 border-t border-[#D4AF37]/20 flex flex-col items-center">
+              <div className="flex items-center gap-1 text-white font-black text-xs sm:text-sm group-hover:text-[#D4AF37] transition-colors">
+                <span>Tout voir</span>
+                <ChevronRight className="w-4 h-4 text-[#D4AF37] group-hover:translate-x-1 transition-transform" />
+              </div>
+              <p className="text-[8px] sm:text-[9px] text-zinc-400 mt-0.5 line-clamp-1">
+                Explorer tous les Réels
+              </p>
+            </div>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );

@@ -59,6 +59,7 @@ interface ReelsPlayerProps {
   onOpenCreate?: () => void;
   currentUser?: any;
   initialReelId?: string;
+  initialReelUrl?: string;
 }
 
 export const R2_PUBLIC_BASE_URL = "https://pub-9b8a37b996274704aee625c82e6430f3.r2.dev";
@@ -179,7 +180,7 @@ function formatRelativeTime(dateInput: any): string {
   }
 }
 
-export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, currentUser, initialReelId }: ReelsPlayerProps) {
+export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, currentUser, initialReelId, initialReelUrl }: ReelsPlayerProps) {
   const { theme } = useTheme();
   const isLight = theme === "light";
   const { network } = useAppSettings();
@@ -480,17 +481,43 @@ export function ReelsPlayer({ posts = [], users = [], onClose, onOpenCreate, cur
       userInterests
     });
 
-    // If initialReelId is specified, bring the exact selected reel to index 0 so it opens and plays immediately
-    if (initialReelId) {
-      const idx = ranked.findIndex(r => r.id === initialReelId || (r as any).mediaUrl === initialReelId);
+    // If initialReelId or initialReelUrl is specified, bring the exact selected reel to index 0 so it opens and plays immediately
+    if (initialReelId || initialReelUrl) {
+      const targetId = (initialReelId || "").trim();
+      const targetUrl = (initialReelUrl || "").trim().toLowerCase();
+
+      // 1. Chercher dans la liste classée
+      let idx = ranked.findIndex(r => {
+        if (targetId && r.id === targetId) return true;
+        const rMedia = (r.mediaUrl || (r as any).url || (r as any).videoUrl || "").trim().toLowerCase();
+        if (targetId && (rMedia === targetId.toLowerCase() || r.id?.toLowerCase() === targetId.toLowerCase())) return true;
+        if (targetUrl && (rMedia === targetUrl || rMedia.includes(targetUrl) || targetUrl.includes(rMedia))) return true;
+        return false;
+      });
+
       if (idx > 0) {
         const target = ranked[idx];
         const rest = ranked.filter((_, i) => i !== idx);
         return [target, ...rest];
+      } else if (idx === 0) {
+        return ranked;
+      }
+
+      // 2. Si pas trouvé dans ranked, chercher dans la liste brute consolidated
+      const fallbackItem = list.find(r => {
+        if (targetId && r.id === targetId) return true;
+        const rMedia = (r.mediaUrl || (r as any).url || (r as any).videoUrl || "").trim().toLowerCase();
+        if (targetId && (rMedia === targetId.toLowerCase() || r.id?.toLowerCase() === targetId.toLowerCase())) return true;
+        if (targetUrl && (rMedia === targetUrl || rMedia.includes(targetUrl) || targetUrl.includes(rMedia))) return true;
+        return false;
+      });
+
+      if (fallbackItem) {
+        return [fallbackItem, ...ranked.filter(r => r.id !== fallbackItem.id)];
       }
     }
     return ranked;
-  }, [posts, users, profile, effectiveUser, followedUsers, initialReelId]);
+  }, [posts, users, profile, effectiveUser, followedUsers, initialReelId, initialReelUrl]);
 
   const [localReels, setLocalReels] = useState<ReelItem[]>(reelsList);
 

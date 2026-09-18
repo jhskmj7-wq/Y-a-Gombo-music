@@ -57,7 +57,7 @@ export type { VideoFilter };
 export { REEL_VIDEO_FILTERS, getFilterCss };
 
 interface ReelCreatorScreenProps {
-  onVideoReady: (file: File, filterId: string) => void;
+  onVideoReady: (file: File, filterId: string, coverUrl?: string) => void;
   onClose: () => void;
   initialDraft?: ReelDraft | null;
 }
@@ -167,8 +167,112 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
   const [centerIconState, setCenterIconState] = useState<"play" | "pause" | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
 
-  // Dragging overlays in canvas
+  // Dragging overlays in canvas & selection
+  const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const videoStageRef = useRef<HTMLDivElement | null>(null);
+  const dragInfoRef = useRef<{
+    id: string;
+    type: "text" | "sticker";
+    startX: number;
+    startY: number;
+    initX: number;
+    initY: number;
+    rectWidth: number;
+    rectHeight: number;
+    hasMoved: boolean;
+  } | null>(null);
+
+  const handleOverlayPointerDown = (
+    e: React.PointerEvent<HTMLDivElement>,
+    id: string,
+    type: "text" | "sticker",
+    initX: number,
+    initY: number
+  ) => {
+    e.stopPropagation();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (_) {}
+
+    const stage = videoStageRef.current;
+    if (!stage) return;
+    const rect = stage.getBoundingClientRect();
+
+    dragInfoRef.current = {
+      id,
+      type,
+      startX: e.clientX,
+      startY: e.clientY,
+      initX,
+      initY,
+      rectWidth: rect.width,
+      rectHeight: rect.height,
+      hasMoved: false,
+    };
+
+    setSelectedOverlayId(id);
+    setActiveDragId(id);
+  };
+
+  const handleOverlayPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragInfoRef.current || dragInfoRef.current.id !== activeDragId) return;
+
+    e.preventDefault();
+    const info = dragInfoRef.current;
+    const dx = e.clientX - info.startX;
+    const dy = e.clientY - info.startY;
+
+    if (Math.hypot(dx, dy) > 3) {
+      info.hasMoved = true;
+    }
+
+    if (info.rectWidth > 0 && info.rectHeight > 0) {
+      const deltaXPct = (dx / info.rectWidth) * 100;
+      const deltaYPct = (dy / info.rectHeight) * 100;
+
+      const newXPct = Math.max(5, Math.min(95, Math.round((info.initX + deltaXPct) * 10) / 10));
+      const newYPct = Math.max(5, Math.min(95, Math.round((info.initY + deltaYPct) * 10) / 10));
+
+      setEditorState((prev) => {
+        if (info.type === "text") {
+          return {
+            ...prev,
+            texts: prev.texts.map((t) => (t.id === info.id ? { ...t, x: newXPct, y: newYPct } : t)),
+          };
+        } else {
+          return {
+            ...prev,
+            stickers: prev.stickers.map((s) => (s.id === info.id ? { ...s, x: newXPct, y: newYPct } : s)),
+          };
+        }
+      });
+    }
+  };
+
+  const handleOverlayPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragInfoRef.current) {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch (_) {}
+      dragInfoRef.current = null;
+    }
+    setActiveDragId(null);
+  };
+
+  const isTextVisible = (t: VideoTextOverlay) => {
+    if (selectedOverlayId === t.id && activeTab === "texte") return true;
+    const start = typeof t.startTime === "number" ? t.startTime : 0;
+    const end = typeof t.endTime === "number" && t.endTime > 0 ? t.endTime : (duration || 9999);
+    return currentTime >= start - 0.05 && currentTime <= end + 0.05;
+  };
+
+  const isStickerVisible = (s: VideoStickerOverlay) => {
+    if (selectedOverlayId === s.id && activeTab === "stickers") return true;
+    const start = typeof s.startTime === "number" ? s.startTime : 0;
+    const end = typeof s.endTime === "number" && s.endTime > 0 ? s.endTime : (duration || 9999);
+    return currentTime >= start - 0.05 && currentTime <= end + 0.05;
+  };
 
   const recordedUrlRef = useRef<string | null>(null);
   recordedUrlRef.current = recordedUrl;
@@ -335,8 +439,28 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
     setDuration(0);
   };
 
+  const captureCoverThumbnail = (): string | null => {
+    try {
+      const vid = previewRef.current;
+      if (vid && vid.videoWidth > 0 && vid.videoHeight > 0) {
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.min(vid.videoWidth, 720);
+        canvas.height = Math.round((canvas.width * vid.videoHeight) / vid.videoWidth);
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+          return canvas.toDataURL("image/jpeg", 0.85);
+        }
+      }
+    } catch (_) {}
+    return null;
+  };
+
   const handleNext = async () => {
     if (!selectedFile || isProcessing) return;
+
+    // Capture de la miniature sélectionnée / courante avant arrêt de la vidéo
+    const coverDataUrl = captureCoverThumbnail();
 
     stopPreviewVideo();
     setIsProcessing(true);
@@ -358,7 +482,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
       // on préserve à 100% le fichier d'origine (MP4 ou WebM) sans aucun ré-encodage destructeur
       if (!isEdited && isOriginalCompatible && isOriginalReasonableSize) {
         setIsProcessing(false);
-        onVideoReady(selectedFile, editorState.filterId);
+        onVideoReady(selectedFile, editorState.filterId, coverDataUrl || undefined);
         return;
       }
 
@@ -378,7 +502,7 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
         });
 
         setIsProcessing(false);
-        onVideoReady(exportResult.file, editorState.filterId);
+        onVideoReady(exportResult.file, editorState.filterId, coverDataUrl || undefined);
         return;
       }
 
@@ -397,11 +521,11 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
           },
         });
         setIsProcessing(false);
-        onVideoReady(compressionResult.file, editorState.filterId);
+        onVideoReady(compressionResult.file, editorState.filterId, coverDataUrl || undefined);
       } catch (compressErr: any) {
         console.warn("[REEL PROCESSOR] Compression adaptative contournée, conservation du fichier source:", compressErr);
         setIsProcessing(false);
-        onVideoReady(selectedFile, editorState.filterId);
+        onVideoReady(selectedFile, editorState.filterId, coverDataUrl || undefined);
       }
     } catch (err: any) {
       console.error("[REEL PROCESSOR ERROR]", err);
@@ -534,8 +658,13 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
         {/* Central Stage: Video Preview Box */}
         <div className="flex-1 flex items-center justify-center relative bg-black p-2 overflow-hidden">
           <div
+            ref={videoStageRef}
             className={`relative rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center bg-black cursor-pointer ${aspectContainerClass}`}
-            onClick={togglePlayPause}
+            onClick={() => {
+              if (dragInfoRef.current?.hasMoved) return;
+              setSelectedOverlayId(null);
+              togglePlayPause();
+            }}
           >
             <video
               ref={previewRef}
@@ -583,41 +712,94 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
               </div>
             )}
 
-            {/* Text Overlays Render */}
-            {editorState.texts.map((t) => (
-              <div
-                key={t.id}
-                className="absolute z-20 px-2 py-1 rounded-md text-center font-bold tracking-wide backdrop-blur-sm pointer-events-none select-none"
-                style={{
-                  left: `${t.x}%`,
-                  top: `${t.y}%`,
-                  transform: "translate(-50%, -50%)",
-                  color: t.color,
-                  backgroundColor: t.bgColor,
-                  fontSize: `${t.fontSize}px`,
-                  fontWeight: t.isBold ? "bold" : "normal",
-                  fontStyle: t.isItalic ? "italic" : "normal",
-                }}
-              >
-                {t.text}
-              </div>
-            ))}
+            {/* Text Overlays Render - Draggable with touch & mouse, contrast shadow, timeline-aware */}
+            {editorState.texts.filter(isTextVisible).map((t) => {
+              const isSelected = selectedOverlayId === t.id;
+              return (
+                <div
+                  key={t.id}
+                  id={`reel-text-${t.id}`}
+                  onPointerDown={(e) => handleOverlayPointerDown(e, t.id, "text", t.x, t.y)}
+                  onPointerMove={handleOverlayPointerMove}
+                  onPointerUp={handleOverlayPointerUp}
+                  onPointerCancel={handleOverlayPointerUp}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedOverlayId(t.id);
+                  }}
+                  className={`absolute z-30 px-3 py-1.5 rounded-xl text-center select-none cursor-grab active:cursor-grabbing transition-all ${
+                    isSelected
+                      ? "ring-2 ring-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.7)] scale-[1.02]"
+                      : "hover:ring-1 hover:ring-[#D4AF37]/50"
+                  }`}
+                  style={{
+                    left: `${t.x}%`,
+                    top: `${t.y}%`,
+                    transform: "translate(-50%, -50%)",
+                    color: t.color || "#FFFFFF",
+                    backgroundColor: t.bgColor || "rgba(0, 0, 0, 0.65)",
+                    backdropFilter: "blur(4px)",
+                    WebkitBackdropFilter: "blur(4px)",
+                    fontSize: `${t.fontSize || 22}px`,
+                    fontWeight: t.isBold ? "bold" : "normal",
+                    fontStyle: t.isItalic ? "italic" : "normal",
+                    textShadow: "0 2px 4px rgba(0,0,0,0.95), 0 0 2px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,0.9)",
+                    touchAction: "none",
+                    WebkitUserSelect: "none",
+                    userSelect: "none",
+                  }}
+                >
+                  {t.text}
+                  {isSelected && (
+                    <div className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-[#D4AF37] text-black text-[9px] font-black flex items-center justify-center shadow-md">
+                      ✦
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
-            {/* Sticker Overlays Render */}
-            {editorState.stickers.map((s) => (
-              <div
-                key={s.id}
-                className="absolute z-20 pointer-events-none select-none"
-                style={{
-                  left: `${s.x}%`,
-                  top: `${s.y}%`,
-                  transform: `translate(-50%, -50%) rotate(${s.rotation}deg)`,
-                  fontSize: `${s.size}px`,
-                }}
-              >
-                {s.emoji}
-              </div>
-            ))}
+            {/* Sticker Overlays Render - Draggable with touch & mouse, timeline-aware */}
+            {editorState.stickers.filter(isStickerVisible).map((s) => {
+              const isSelected = selectedOverlayId === s.id;
+              return (
+                <div
+                  key={s.id}
+                  id={`reel-sticker-${s.id}`}
+                  onPointerDown={(e) => handleOverlayPointerDown(e, s.id, "sticker", s.x, s.y)}
+                  onPointerMove={handleOverlayPointerMove}
+                  onPointerUp={handleOverlayPointerUp}
+                  onPointerCancel={handleOverlayPointerUp}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedOverlayId(s.id);
+                  }}
+                  className={`absolute z-30 select-none cursor-grab active:cursor-grabbing p-1 rounded-2xl transition-all ${
+                    isSelected
+                      ? "ring-2 ring-[#D4AF37] bg-black/40 backdrop-blur-xs shadow-[0_0_15px_rgba(212,175,55,0.7)] scale-105"
+                      : "hover:ring-1 hover:ring-[#D4AF37]/50"
+                  }`}
+                  style={{
+                    left: `${s.x}%`,
+                    top: `${s.y}%`,
+                    transform: `translate(-50%, -50%) rotate(${s.rotation || 0}deg)`,
+                    fontSize: `${s.size || 40}px`,
+                    lineHeight: 1,
+                    touchAction: "none",
+                    WebkitUserSelect: "none",
+                    userSelect: "none",
+                    filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.7))",
+                  }}
+                >
+                  {s.emoji}
+                  {isSelected && (
+                    <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-[#D4AF37] text-black text-[8px] font-black flex items-center justify-center shadow-md">
+                      ✦
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             {/* Bottom Scrubber & Time */}
             <div
@@ -653,8 +835,28 @@ export default function ReelCreatorScreen({ onVideoReady, onClose, initialDraft 
           {activeTab === "vitesse" && <SpeedPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
           {activeTab === "transformer" && <TransformPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
           {activeTab === "audio" && <AudioPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
-          {activeTab === "texte" && <TextPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
-          {activeTab === "stickers" && <StickersPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
+          {activeTab === "texte" && (
+            <TextPanel
+              state={editorState}
+              onChange={setEditorState}
+              duration={duration}
+              currentTime={currentTime}
+              onSeek={handleSeekDirect}
+              selectedOverlayId={selectedOverlayId}
+              onSelectOverlay={setSelectedOverlayId}
+            />
+          )}
+          {activeTab === "stickers" && (
+            <StickersPanel
+              state={editorState}
+              onChange={setEditorState}
+              duration={duration}
+              currentTime={currentTime}
+              onSeek={handleSeekDirect}
+              selectedOverlayId={selectedOverlayId}
+              onSelectOverlay={setSelectedOverlayId}
+            />
+          )}
           {activeTab === "effets" && <EffectsPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
           {activeTab === "couverture" && <CoverPanel state={editorState} onChange={setEditorState} duration={duration} currentTime={currentTime} onSeek={handleSeekDirect} />}
         </div>

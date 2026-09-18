@@ -8,6 +8,8 @@ export interface VideoTextOverlay {
   isItalic: boolean;
   x: number; // percentage 0-100
   y: number; // percentage 0-100
+  startTime?: number; // start time in seconds
+  endTime?: number; // end time in seconds
 }
 
 export interface VideoStickerOverlay {
@@ -17,6 +19,8 @@ export interface VideoStickerOverlay {
   rotation: number; // degrees
   x: number; // percentage 0-100
   y: number; // percentage 0-100
+  startTime?: number; // start time in seconds
+  endTime?: number; // end time in seconds
 }
 
 export interface VideoEditorState {

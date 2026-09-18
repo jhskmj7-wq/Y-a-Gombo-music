@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Video, Film, Bookmark, Plus, Sparkles } from "lucide-react";
 import MyPublicationsSection from "./MyPublicationsSection";
 import ReelCreatorScreen from "./reels/ReelCreatorScreen";
+import { VideoThumbnail } from "./reels/VideoThumbnail";
 
 interface UserReelsViewProps {
   users: any[];
@@ -38,6 +39,7 @@ export function UserReelsView({ users, setReelsVideoId, setReelsVideoUrl }: User
           return c;
         })(),
         artisticName: u.artisticName || u.name || "Artiste Gombo",
+        thumbnail: media.thumbnail || media.thumbnailUrl || media.coverUrl || media.poster || media.imageUrl,
         category: media.type === "video" ? "raw" : "youtube",
         avatar: u.photoURL || u.photoUrl || u.avatarUrl || u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
         description: media.description || "Démonstration authentique et accréditée téléchargée directement par l'artiste."
@@ -132,10 +134,18 @@ export function UserReelsView({ users, setReelsVideoId, setReelsVideoUrl }: User
                     setReelsVideoId(reel.id);
                     setReelsVideoUrl(reel.url);
                   }}
-                  className="group relative aspect-[9/16] bg-black rounded-2xl overflow-hidden cursor-pointer border border-afri-border/50 hover:border-[#D4AF37] transition shadow-lg"
+                  className="group relative aspect-[9/16] bg-zinc-950 rounded-2xl overflow-hidden cursor-pointer border border-afri-border/50 hover:border-[#D4AF37] transition shadow-lg"
                 >
-                  <video src={reel.url} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" muted />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3">
+                  <VideoThumbnail 
+                    videoUrl={reel.url} 
+                    thumbnailUrl={reel.thumbnail} 
+                    title={reel.title} 
+                    artist={reel.artisticName} 
+                    authorAvatar={reel.avatar}
+                    showPlayButton={true}
+                    className="w-full h-full"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent flex flex-col justify-end p-3 pointer-events-none z-10">
                     <p className="font-bold text-xs text-white line-clamp-1">{reel.title}</p>
                     <p className="text-[10px] text-amber-300 font-mono">{reel.artisticName}</p>
                   </div>

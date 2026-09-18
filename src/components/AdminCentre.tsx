@@ -3465,6 +3465,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               setShowHeritageLoginRequired={setShowHeritageLoginRequired}
               setViewingGomboIdDetail={setViewingGomboIdDetail}
               contracts={contracts}
+              reelsVideoId={reelsVideoId}
+              setReelsVideoId={setReelsVideoId}
+              reelsVideoUrl={reelsVideoUrl}
+              setReelsVideoUrl={setReelsVideoUrl}
             />
           </div>
 
@@ -3523,9 +3527,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   posts={posts}
                   users={users}
                   currentUser={currentUser}
-                  onClose={() => setActiveMenu("user_terrain")}
+                  onClose={() => {
+                    setActiveMenu("user_terrain");
+                    setReelsVideoId(null);
+                    setReelsVideoUrl(null);
+                  }}
                   onOpenCreate={() => setIsPlusMenuOpen(true)}
                   initialReelId={reelsVideoId || undefined}
+                  initialReelUrl={reelsVideoUrl || undefined}
                 />
               )}
               {false && (() => {
@@ -4923,6 +4932,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       <ReelPublishScreen
                         videoFile={reelToPublish.file}
                         filterId={reelToPublish.filterId}
+                        coverUrl={(reelToPublish as any).coverUrl}
                         onClose={() => setReelToPublish(null)}
                         onPublished={() => {
                           setReelToPublish(null);
@@ -4932,7 +4942,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     ) : (
                       <ReelCreatorScreen
                         onClose={() => goBackMenu()}
-                        onVideoReady={(file, filterId) => setReelToPublish({ file, filterId })}
+                        onVideoReady={(file, filterId, coverUrl) => setReelToPublish({ file, filterId, coverUrl } as any)}
                       />
                     )
                   ) : (

@@ -9,6 +9,8 @@ interface PanelProps {
   duration: number;
   currentTime: number;
   onSeek: (seconds: number) => void;
+  selectedOverlayId?: string | null;
+  onSelectOverlay?: (id: string | null) => void;
 }
 
 // 1. FILTERS PANEL
@@ -420,15 +422,32 @@ export function AudioPanel({ state, onChange }: PanelProps) {
 }
 
 // 7. TEXT PANEL
-export function TextPanel({ state, onChange }: PanelProps) {
+export function TextPanel({ state, onChange, duration, currentTime, onSeek, selectedOverlayId, onSelectOverlay }: PanelProps) {
   const [inputText, setInputText] = React.useState("");
   const [textColor, setTextColor] = React.useState("#FFFFFF");
-  const [bgColor, setBgColor] = React.useState("#00000080");
+  const [bgColor, setBgColor] = React.useState("rgba(0, 0, 0, 0.65)");
+
+  const COLOR_PRESETS = [
+    { label: "Blanc", value: "#FFFFFF" },
+    { label: "Or Afrigombo", value: "#D4AF37" },
+    { label: "Jaune", value: "#FCD34D" },
+    { label: "Rouge", value: "#EF4444" },
+    { label: "Vert", value: "#10B981" },
+    { label: "Cyan", value: "#38BDF8" },
+    { label: "Noir", value: "#18181B" },
+  ];
+
+  const BG_PRESETS = [
+    { label: "Fond discret", value: "rgba(0, 0, 0, 0.65)" },
+    { label: "Sans fond", value: "transparent" },
+    { label: "Fond doré", value: "rgba(212, 175, 55, 0.3)" },
+  ];
 
   const addText = () => {
     if (!inputText.trim()) return;
+    const newId = "txt_" + Date.now();
     const newOverlay: VideoTextOverlay = {
-      id: "txt_" + Date.now(),
+      id: newId,
       text: inputText.trim(),
       color: textColor,
       bgColor: bgColor,
@@ -437,18 +456,31 @@ export function TextPanel({ state, onChange }: PanelProps) {
       isItalic: false,
       x: 50,
       y: 50,
+      startTime: 0,
+      endTime: duration > 0 ? duration : 30,
     };
     onChange((prev) => ({
       ...prev,
       texts: [...prev.texts, newOverlay],
     }));
     setInputText("");
+    onSelectOverlay?.(newId);
   };
 
   const removeText = (id: string) => {
     onChange((prev) => ({
       ...prev,
       texts: prev.texts.filter((t) => t.id !== id),
+    }));
+    if (selectedOverlayId === id) {
+      onSelectOverlay?.(null);
+    }
+  };
+
+  const updateText = (id: string, partial: Partial<VideoTextOverlay>) => {
+    onChange((prev) => ({
+      ...prev,
+      texts: prev.texts.map((t) => (t.id === id ? { ...t, ...partial } : t)),
     }));
   };
 
@@ -458,9 +490,10 @@ export function TextPanel({ state, onChange }: PanelProps) {
         <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-wider">
           Superposition de texte
         </span>
-        <span className="text-[10px] text-afri-text-sec">Glissez le texte sur l'aperçu</span>
+        <span className="text-[10px] text-afri-text-sec">Déplacez librement avec le doigt sur la vidéo</span>
       </div>
 
+      {/* Input row */}
       <div className="flex items-center gap-2">
         <input
           type="text"
@@ -477,35 +510,205 @@ export function TextPanel({ state, onChange }: PanelProps) {
           value={textColor}
           onChange={(e) => setTextColor(e.target.value)}
           className="w-8 h-8 rounded-lg border border-afri-border bg-transparent cursor-pointer p-0.5"
-          title="Couleur du texte"
+          title="Couleur personnalisée"
         />
         <button
           onClick={addText}
           disabled={!inputText.trim()}
-          className="bg-[#D4AF37] hover:bg-amber-400 disabled:opacity-40 text-black font-bold px-3 py-2 rounded-xl text-xs uppercase cursor-pointer shrink-0"
+          className="bg-[#D4AF37] hover:bg-amber-400 disabled:opacity-40 text-black font-bold px-3 py-2 rounded-xl text-xs uppercase cursor-pointer shrink-0 active:scale-95 transition-all"
         >
           Ajouter
         </button>
       </div>
 
-      {state.texts.length > 0 && (
-        <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
-          {state.texts.map((t) => (
-            <div
-              key={t.id}
-              className="flex items-center justify-between bg-afri-bg-ter px-3 py-1.5 rounded-lg border border-afri-border/40 text-xs text-afri-text"
-            >
-              <span className="truncate max-w-[200px]" style={{ color: t.color }}>
-                {t.text}
-              </span>
-              <button
-                onClick={() => removeText(t.id)}
-                className="text-red-500 hover:text-red-400 text-[10px] font-bold px-1 py-0.5 cursor-pointer"
-              >
-                Supprimer
-              </button>
-            </div>
+      {/* Quick color & background presets */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-afri-border/30">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+          <span className="text-[10px] text-afri-text-sec shrink-0 mr-1">Couleur :</span>
+          {COLOR_PRESETS.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              onClick={() => setTextColor(c.value)}
+              title={c.label}
+              className={`w-5 h-5 rounded-full border transition-all cursor-pointer ${
+                textColor.toLowerCase() === c.value.toLowerCase()
+                  ? "ring-2 ring-[#D4AF37] scale-110 border-white"
+                  : "border-white/30 hover:scale-105"
+              }`}
+              style={{ backgroundColor: c.value }}
+            />
           ))}
+        </div>
+
+        <div className="flex items-center gap-1">
+          {BG_PRESETS.map((b) => (
+            <button
+              key={b.value}
+              type="button"
+              onClick={() => setBgColor(b.value)}
+              className={`text-[10px] px-2 py-1 rounded-lg border transition-all cursor-pointer ${
+                bgColor === b.value
+                  ? "bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37] font-bold"
+                  : "bg-afri-bg-ter border-afri-border/40 text-afri-text-sec hover:text-afri-text"
+              }`}
+            >
+              {b.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Texts List with Timeline and Style Management */}
+      {state.texts.length > 0 && (
+        <div className="space-y-2 pt-1">
+          <div className="text-[11px] font-mono text-afri-text-sec flex items-center justify-between">
+            <span>Textes ajoutés ({state.texts.length}) :</span>
+            <span className="text-[10px] text-afri-text-muted">Touchez pour sélectionner & régler</span>
+          </div>
+
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-1 scrollbar-none">
+            {state.texts.map((t) => {
+              const isSelected = selectedOverlayId === t.id;
+              const startVal = typeof t.startTime === "number" ? t.startTime : 0;
+              const endVal = typeof t.endTime === "number" && t.endTime > 0 ? t.endTime : (duration || 10);
+
+              return (
+                <div
+                  key={t.id}
+                  className={`p-2.5 rounded-xl border transition-all ${
+                    isSelected
+                      ? "bg-afri-bg border-[#D4AF37] ring-1 ring-[#D4AF37]/50 shadow-md"
+                      : "bg-afri-bg-ter border-afri-border/40 hover:border-afri-border"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelectOverlay?.(t.id);
+                        if (typeof t.startTime === "number") onSeek(t.startTime);
+                      }}
+                      className="flex-1 text-left flex items-center gap-2 truncate cursor-pointer"
+                    >
+                      <span
+                        className="w-3 h-3 rounded-full shrink-0 border border-white/40 shadow-xs"
+                        style={{ backgroundColor: t.color || "#FFFFFF" }}
+                      />
+                      <span className="font-bold text-xs truncate max-w-[150px]" style={{ color: t.color || "#FFFFFF" }}>
+                        {t.text}
+                      </span>
+                      <span className="text-[10px] font-mono text-zinc-400 shrink-0">
+                        [{startVal.toFixed(1)}s - {endVal.toFixed(1)}s]
+                      </span>
+                    </button>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* Font size adjustments */}
+                      <button
+                        type="button"
+                        onClick={() => updateText(t.id, { fontSize: Math.max(14, (t.fontSize || 22) - 2) })}
+                        className="w-6 h-6 rounded bg-afri-bg border border-afri-border/40 text-xs font-bold text-afri-text hover:text-[#D4AF37] cursor-pointer flex items-center justify-center"
+                        title="Réduire taille"
+                      >
+                        -
+                      </button>
+                      <span className="text-[10px] font-mono w-5 text-center">{t.fontSize || 22}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateText(t.id, { fontSize: Math.min(44, (t.fontSize || 22) + 2) })}
+                        className="w-6 h-6 rounded bg-afri-bg border border-afri-border/40 text-xs font-bold text-afri-text hover:text-[#D4AF37] cursor-pointer flex items-center justify-center"
+                        title="Agrandir taille"
+                      >
+                        +
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => removeText(t.id)}
+                        className="text-red-500 hover:text-red-400 text-xs font-bold px-2 py-0.5 cursor-pointer ml-1"
+                        title="Supprimer ce texte"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Timeline controls for selected text */}
+                  {isSelected && (
+                    <div className="mt-2.5 pt-2 border-t border-afri-border/30 space-y-2 text-[11px]">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-afri-text-sec">
+                        <span>Timeline d'apparition</span>
+                        <span className="text-[#D4AF37]">Durée : {Math.max(0, endVal - startVal).toFixed(1)}s</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        {/* Début */}
+                        <div className="bg-afri-bg-ter/80 p-1.5 rounded-lg border border-afri-border/30 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-400 text-[10px]">Début: {startVal.toFixed(1)}s</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newStart = Math.min(currentTime, endVal - 0.2);
+                                updateText(t.id, { startTime: Math.max(0, Number(newStart.toFixed(1))) });
+                              }}
+                              className="text-[9px] bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30 px-1.5 py-0.5 rounded font-mono font-bold cursor-pointer"
+                            >
+                              ⏱️ À {currentTime.toFixed(1)}s
+                            </button>
+                          </div>
+                          <input
+                            type="range"
+                            min={0}
+                            max={Math.max(0, endVal - 0.2)}
+                            step={0.1}
+                            value={startVal}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              updateText(t.id, { startTime: val });
+                              onSeek(val);
+                            }}
+                            className="w-full h-1 bg-zinc-700 rounded appearance-none cursor-pointer accent-[#D4AF37]"
+                          />
+                        </div>
+
+                        {/* Fin */}
+                        <div className="bg-afri-bg-ter/80 p-1.5 rounded-lg border border-afri-border/30 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-400 text-[10px]">Fin: {endVal.toFixed(1)}s</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newEnd = Math.max(currentTime, startVal + 0.2);
+                                updateText(t.id, { endTime: Number(newEnd.toFixed(1)) });
+                              }}
+                              className="text-[9px] bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30 px-1.5 py-0.5 rounded font-mono font-bold cursor-pointer"
+                            >
+                              ⏱️ À {currentTime.toFixed(1)}s
+                            </button>
+                          </div>
+                          <input
+                            type="range"
+                            min={Math.min(duration || 10, startVal + 0.2)}
+                            max={duration || 10}
+                            step={0.1}
+                            value={endVal}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              updateText(t.id, { endTime: val });
+                              onSeek(val);
+                            }}
+                            className="w-full h-1 bg-zinc-700 rounded appearance-none cursor-pointer accent-[#D4AF37]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -513,28 +716,42 @@ export function TextPanel({ state, onChange }: PanelProps) {
 }
 
 // 8. STICKERS PANEL
-export function StickersPanel({ state, onChange }: PanelProps) {
+export function StickersPanel({ state, onChange, duration, currentTime, onSeek, selectedOverlayId, onSelectOverlay }: PanelProps) {
   const emojis = ["🔥", "❤️", "👑", "🚀", "🎵", "💃", "🕺", "🦁", "⭐", "🎉", "💯", "👏", "🏆", "🌟", "✨", "🌍"];
 
   const addEmoji = (emoji: string) => {
+    const newId = "stk_" + Date.now();
     const newSticker: VideoStickerOverlay = {
-      id: "stk_" + Date.now(),
+      id: newId,
       emoji: emoji,
       size: 40,
       rotation: 0,
       x: 50,
       y: 50,
+      startTime: 0,
+      endTime: duration > 0 ? duration : 30,
     };
     onChange((prev) => ({
       ...prev,
       stickers: [...prev.stickers, newSticker],
     }));
+    onSelectOverlay?.(newId);
   };
 
   const removeSticker = (id: string) => {
     onChange((prev) => ({
       ...prev,
       stickers: prev.stickers.filter((s) => s.id !== id),
+    }));
+    if (selectedOverlayId === id) {
+      onSelectOverlay?.(null);
+    }
+  };
+
+  const updateSticker = (id: string, partial: Partial<VideoStickerOverlay>) => {
+    onChange((prev) => ({
+      ...prev,
+      stickers: prev.stickers.map((s) => (s.id === id ? { ...s, ...partial } : s)),
     }));
   };
 
@@ -544,9 +761,10 @@ export function StickersPanel({ state, onChange }: PanelProps) {
         <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-wider">
           Stickers & Emojis
         </span>
-        <span className="text-[10px] text-afri-text-sec">Touchez un emoji pour l'ajouter</span>
+        <span className="text-[10px] text-afri-text-sec">Déplacez librement avec le doigt sur la vidéo</span>
       </div>
 
+      {/* Emoji picker rail */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         {emojis.map((e) => (
           <button
@@ -559,22 +777,158 @@ export function StickersPanel({ state, onChange }: PanelProps) {
         ))}
       </div>
 
+      {/* Added stickers list with timeline */}
       {state.stickers.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pt-1">
-          {state.stickers.map((s) => (
-            <div
-              key={s.id}
-              className="flex items-center gap-1.5 bg-afri-bg-ter px-2.5 py-1 rounded-lg border border-afri-border/40 text-xs text-afri-text"
-            >
-              <span>{s.emoji}</span>
-              <button
-                onClick={() => removeSticker(s.id)}
-                className="text-red-500 hover:text-red-400 font-bold text-[10px] cursor-pointer ml-1"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+        <div className="space-y-2 pt-1">
+          <div className="text-[11px] font-mono text-afri-text-sec flex items-center justify-between">
+            <span>Stickers ajoutés ({state.stickers.length}) :</span>
+            <span className="text-[10px] text-afri-text-muted">Touchez pour régler l'apparition</span>
+          </div>
+
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-1 scrollbar-none">
+            {state.stickers.map((s) => {
+              const isSelected = selectedOverlayId === s.id;
+              const startVal = typeof s.startTime === "number" ? s.startTime : 0;
+              const endVal = typeof s.endTime === "number" && s.endTime > 0 ? s.endTime : (duration || 10);
+
+              return (
+                <div
+                  key={s.id}
+                  className={`p-2.5 rounded-xl border transition-all ${
+                    isSelected
+                      ? "bg-afri-bg border-[#D4AF37] ring-1 ring-[#D4AF37]/50 shadow-md"
+                      : "bg-afri-bg-ter border-afri-border/40 hover:border-afri-border"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelectOverlay?.(s.id);
+                        if (typeof s.startTime === "number") onSeek(s.startTime);
+                      }}
+                      className="flex-1 text-left flex items-center gap-2 cursor-pointer"
+                    >
+                      <span className="text-xl leading-none">{s.emoji}</span>
+                      <span className="text-[10px] font-mono text-zinc-400">
+                        [{startVal.toFixed(1)}s - {endVal.toFixed(1)}s]
+                      </span>
+                    </button>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* Size +/- */}
+                      <button
+                        type="button"
+                        onClick={() => updateSticker(s.id, { size: Math.max(20, (s.size || 40) - 6) })}
+                        className="w-6 h-6 rounded bg-afri-bg border border-afri-border/40 text-xs font-bold text-afri-text hover:text-[#D4AF37] cursor-pointer flex items-center justify-center"
+                        title="Réduire taille"
+                      >
+                        -
+                      </button>
+                      <span className="text-[10px] font-mono w-5 text-center">{s.size || 40}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateSticker(s.id, { size: Math.min(80, (s.size || 40) + 6) })}
+                        className="w-6 h-6 rounded bg-afri-bg border border-afri-border/40 text-xs font-bold text-afri-text hover:text-[#D4AF37] cursor-pointer flex items-center justify-center"
+                        title="Agrandir taille"
+                      >
+                        +
+                      </button>
+
+                      {/* Rotate */}
+                      <button
+                        type="button"
+                        onClick={() => updateSticker(s.id, { rotation: ((s.rotation || 0) + 45) % 360 })}
+                        className="w-6 h-6 rounded bg-afri-bg border border-afri-border/40 text-[10px] text-zinc-400 hover:text-[#D4AF37] cursor-pointer flex items-center justify-center"
+                        title="Faire pivoter"
+                      >
+                        ⟳
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => removeSticker(s.id)}
+                        className="text-red-500 hover:text-red-400 text-xs font-bold px-2 py-0.5 cursor-pointer ml-1"
+                        title="Supprimer ce sticker"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Timeline controls */}
+                  {isSelected && (
+                    <div className="mt-2.5 pt-2 border-t border-afri-border/30 space-y-2 text-[11px]">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-afri-text-sec">
+                        <span>Timeline d'apparition</span>
+                        <span className="text-[#D4AF37]">Durée : {Math.max(0, endVal - startVal).toFixed(1)}s</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-afri-bg-ter/80 p-1.5 rounded-lg border border-afri-border/30 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-400 text-[10px]">Début: {startVal.toFixed(1)}s</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newStart = Math.min(currentTime, endVal - 0.2);
+                                updateSticker(s.id, { startTime: Math.max(0, Number(newStart.toFixed(1))) });
+                              }}
+                              className="text-[9px] bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30 px-1.5 py-0.5 rounded font-mono font-bold cursor-pointer"
+                            >
+                              ⏱️ À {currentTime.toFixed(1)}s
+                            </button>
+                          </div>
+                          <input
+                            type="range"
+                            min={0}
+                            max={Math.max(0, endVal - 0.2)}
+                            step={0.1}
+                            value={startVal}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              updateSticker(s.id, { startTime: val });
+                              onSeek(val);
+                            }}
+                            className="w-full h-1 bg-zinc-700 rounded appearance-none cursor-pointer accent-[#D4AF37]"
+                          />
+                        </div>
+
+                        <div className="bg-afri-bg-ter/80 p-1.5 rounded-lg border border-afri-border/30 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-400 text-[10px]">Fin: {endVal.toFixed(1)}s</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newEnd = Math.max(currentTime, startVal + 0.2);
+                                updateSticker(s.id, { endTime: Number(newEnd.toFixed(1)) });
+                              }}
+                              className="text-[9px] bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30 px-1.5 py-0.5 rounded font-mono font-bold cursor-pointer"
+                            >
+                              ⏱️ À {currentTime.toFixed(1)}s
+                            </button>
+                          </div>
+                          <input
+                            type="range"
+                            min={Math.min(duration || 10, startVal + 0.2)}
+                            max={duration || 10}
+                            step={0.1}
+                            value={endVal}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              updateSticker(s.id, { endTime: val });
+                              onSeek(val);
+                            }}
+                            className="w-full h-1 bg-zinc-700 rounded appearance-none cursor-pointer accent-[#D4AF37]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -42,6 +42,7 @@ import { AfriGomboLogo } from "./AfriGomboLogo";
 import { isGomboExpired } from "../lib/gomboDateUtils";
 import { isPublicationActive, filterActivePublications, rankPublications } from "../lib/publicationEngine";
 import { rankReels } from "../lib/reelsEngine";
+import { isValidImageUrl } from "../lib/videoThumbnailEngine";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -919,22 +920,35 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         seenUrls.add(url);
 
         const ytId = getYoutubeId(url);
-        const autoThumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : (m.thumbnail || m.imageUrl || url);
+        const resolvedImageThumb = ytId 
+          ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` 
+          : (
+              (m.thumbnail && isValidImageUrl(m.thumbnail) ? m.thumbnail : null) ||
+              (m.thumbnailUrl && isValidImageUrl(m.thumbnailUrl) ? m.thumbnailUrl : null) ||
+              (m.coverUrl && isValidImageUrl(m.coverUrl) ? m.coverUrl : null) ||
+              (m.poster && isValidImageUrl(m.poster) ? m.poster : null) ||
+              (m.imageUrl && isValidImageUrl(m.imageUrl) ? m.imageUrl : null) ||
+              null
+            );
 
         const likes = typeof m.likes === "number" ? m.likes : (typeof m.likesCount === "number" ? m.likesCount : (Array.isArray(m.likes) ? m.likes.length : 0));
         const commentsCount = typeof m.commentsCount === "number" ? m.commentsCount : (Array.isArray(m.comments) ? m.comments.length : 0);
         const viewsCount = typeof m.viewsCount === "number" ? m.viewsCount : (typeof m.views === "number" ? m.views : (likes * 6 + 15));
 
         list.push({
-          id: m.id || `${u.id || u.uid}-reel-${idx}`,
+          id: m.id || `portfolio_${u.id || u.uid}_${idx}`,
           title: m.title || `Démo Live — ${u.artisticName || u.name || "Artiste"}`,
           artist: u.artisticName || u.name || "Artiste Gombo",
           authorName: u.artisticName || u.name || "Artiste Gombo",
           authorArtisticName: u.artisticName || u.name || "Artiste Gombo",
-          imageUrl: autoThumb,
-          thumbnail: autoThumb,
+          imageUrl: resolvedImageThumb || undefined,
+          thumbnail: resolvedImageThumb || undefined,
+          thumbnailUrl: resolvedImageThumb || m.thumbnailUrl || m.thumbnail || m.coverUrl || undefined,
+          coverUrl: m.coverUrl || resolvedImageThumb || undefined,
+          poster: m.poster || resolvedImageThumb || undefined,
           url: url,
           mediaUrl: url,
+          videoUrl: url,
           category: "Portfolio Réel",
           authorPhoto: u.photoURL || u.photoUrl || u.avatarUrl || u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
           authorAvatar: u.photoURL || u.photoUrl || u.avatarUrl || u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
@@ -961,22 +975,35 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       seenUrls.add(url);
 
       const ytId = getYoutubeId(url);
-      const autoThumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : (p.mediaUrl || p.imageUrl || url);
+      const resolvedPostImageThumb = ytId 
+        ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` 
+        : (
+            (p.thumbnail && isValidImageUrl(p.thumbnail) ? p.thumbnail : null) ||
+            (p.thumbnailUrl && isValidImageUrl(p.thumbnailUrl) ? p.thumbnailUrl : null) ||
+            (p.coverUrl && isValidImageUrl(p.coverUrl) ? p.coverUrl : null) ||
+            (p.poster && isValidImageUrl(p.poster) ? p.poster : null) ||
+            (p.imageUrl && isValidImageUrl(p.imageUrl) ? p.imageUrl : null) ||
+            null
+          );
 
       const likes = Array.isArray(p.likedBy) ? p.likedBy.length : (Array.isArray(p.likes) ? p.likes.length : (typeof p.likesCount === "number" ? p.likesCount : (typeof p.likes === "number" ? p.likes : 0)));
       const commentsCount = Array.isArray(p.comments) ? p.comments.length : (typeof p.commentsCount === "number" ? p.commentsCount : (typeof p.comments === "number" ? p.comments : 0));
       const viewsCount = typeof p.viewsCount === "number" ? p.viewsCount : (typeof p.views === "number" ? p.views : (likes * 7 + 25));
 
       list.push({
-        id: p.id || `post-reel-${idx}`,
+        id: p.id || `post_${idx}`,
         title: p.content || p.title || p.authorArtisticName || "Réel Vibe",
         artist: p.authorArtisticName || p.authorName || "Artiste",
         authorName: p.authorArtisticName || p.authorName || "Artiste",
         authorArtisticName: p.authorArtisticName || p.authorName || "Artiste",
-        imageUrl: autoThumb,
-        thumbnail: autoThumb,
+        imageUrl: resolvedPostImageThumb || undefined,
+        thumbnail: resolvedPostImageThumb || undefined,
+        thumbnailUrl: resolvedPostImageThumb || p.thumbnailUrl || p.thumbnail || p.coverUrl || undefined,
+        coverUrl: p.coverUrl || resolvedPostImageThumb || undefined,
+        poster: p.poster || resolvedPostImageThumb || undefined,
         url: url,
         mediaUrl: url,
+        videoUrl: url,
         category: p.type || "Réel",
         authorPhoto: p.authorPhoto || p.authorAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
         authorAvatar: p.authorPhoto || p.authorAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
@@ -1003,6 +1030,53 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       followedUsers: Array.isArray(followed) ? followed : []
     });
   }, [posts, users, profile, currentUser, firestoreUsers]);
+
+  // Graine de session persistante par onglet, incrémentée à chaque ouverture pour renouveler l'aperçu sans biaiser la qualité
+  const homeReelsSessionSeed = React.useRef<number>((() => {
+    try {
+      const stored = sessionStorage.getItem("afrigombo_home_reels_seed");
+      const current = stored !== null ? parseInt(stored, 10) : -1;
+      const next = (current + 1) % 1000;
+      sessionStorage.setItem("afrigombo_home_reels_seed", String(next));
+      return next;
+    } catch (_) {
+      return Math.floor(Date.now() / 60000) % 1000;
+    }
+  })()).current;
+
+  // Aperçu horizontal sur l'accueil : 4 ou 5 vidéos avec variation cyclique fiable à chaque session
+  const homeReelsPreview = React.useMemo(() => {
+    if (!reelsData || reelsData.length === 0) return [];
+
+    // Si 5 vidéos ou moins : rotation d'offset déterministe pour varier la première vidéo affichée
+    if (reelsData.length <= 5) {
+      const offset = homeReelsSessionSeed % reelsData.length;
+      return [...reelsData.slice(offset), ...reelsData.slice(0, offset)];
+    }
+
+    // Si plus de 5 vidéos :
+    // - On conserve la qualité et les règles de priorité en sélectionnant les vidéos de tête (topPool)
+    //   avec rotation de la tête d'affiche selon la session
+    // - On intègre 1 ou 2 vidéos du vivier de découverte (discoveryPool) qui tournent aussi
+    const topPoolSize = Math.min(6, Math.max(3, Math.ceil(reelsData.length * 0.5)));
+    const topPool = reelsData.slice(0, topPoolSize);
+    const discoveryPool = reelsData.slice(topPoolSize);
+
+    // Rotation au sein du top pool (la vidéo #1 change à chaque session sans perdre le haut du classement)
+    const topOffset = homeReelsSessionSeed % topPool.length;
+    const rotatedTop = [...topPool.slice(topOffset), ...topPool.slice(0, topOffset)];
+
+    // Rotation au sein du pool de découverte
+    let selectedDiscovery: any[] = [];
+    if (discoveryPool.length > 0) {
+      const discOffset = homeReelsSessionSeed % discoveryPool.length;
+      const rotatedDisc = [...discoveryPool.slice(discOffset), ...discoveryPool.slice(0, discOffset)];
+      selectedDiscovery = rotatedDisc.slice(0, 2);
+    }
+
+    const selectedTop = rotatedTop.slice(0, 5 - selectedDiscovery.length);
+    return [...selectedTop, ...selectedDiscovery].slice(0, 5);
+  }, [reelsData, homeReelsSessionSeed]);
 
   // Publications actives sur le Terrain (filtrage canonique Phase 2B & classement dynamique rankPublications Phase 2H)
   const activePosts = React.useMemo(() => {
@@ -1952,21 +2026,28 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             <SmartBlock 
               type="POPULAR_REELS"
               title="📹 Réels d'artistes — Fil Réel"
-              data={isModuleComingSoon("reels") ? [] : reelsData}
+              data={isModuleComingSoon("reels") ? [] : homeReelsPreview}
+              totalReelsCount={reelsData.length}
               onAction={(item) => {
                 if (isModuleComingSoon("reels")) {
                   setLocalComingSoonKey("Studio Vidéo Réels 📹");
                 } else {
-                  if (item?.id && setReelsVideoId) {
-                    setReelsVideoId(item.id);
+                  const targetId = item?.id || null;
+                  const targetUrl = item?.url || item?.mediaUrl || item?.videoUrl || null;
+                  if (targetId && setReelsVideoId) {
+                    setReelsVideoId(targetId);
                   }
-                  if ((item?.url || item?.mediaUrl) && setReelsVideoUrl) {
-                    setReelsVideoUrl(item.url || item.mediaUrl);
+                  if (targetUrl && setReelsVideoUrl) {
+                    setReelsVideoUrl(targetUrl);
                   }
                   setActiveMenu("user_reels");
                 }
               }}
-              onSeeMore={() => setActiveMenu("user_reels")}
+              onSeeMore={() => {
+                if (setReelsVideoId) setReelsVideoId(null);
+                if (setReelsVideoUrl) setReelsVideoUrl(null);
+                setActiveMenu("user_reels");
+              }}
             />
             {!isModuleComingSoon("reels") && reelsData.length === 0 && (
               <div className="p-4 text-center border border-dashed border-afri-border bg-afri-bg-sec/20 rounded-2xl my-2 cursor-pointer hover:border-[#D4AF37]/40 transition-colors" onClick={() => setActiveMenu("user_reels")}>
