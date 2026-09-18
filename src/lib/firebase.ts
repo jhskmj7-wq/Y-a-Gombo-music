@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore, setLogLevel } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getMessaging, isSupported } from "firebase/messaging";
 
@@ -21,7 +21,21 @@ export const app = getApps().length
 
 export const auth = getAuth(app);
 
-export const db = getFirestore(app);
+// Suppress normal transient connection warnings in environments with intermittent connectivity
+try {
+  setLogLevel("error");
+} catch (_) {}
+
+export const db = (() => {
+  try {
+    return initializeFirestore(app, {
+      experimentalAutoDetectLongPolling: true,
+      ignoreUndefinedProperties: true,
+    });
+  } catch (_) {
+    return getFirestore(app);
+  }
+})();
 
 export const storage = getStorage(app);
 
