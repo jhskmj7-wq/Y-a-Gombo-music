@@ -583,12 +583,13 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
         </div>
 
         {/* Category Tabs - Horizontal Scrollable with Android Touch Isolation */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none snap-x snap-mandatory touch-pan-x [-webkit-overflow-scrolling:touch]">
+        <div 
+          className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none snap-x snap-mandatory [-webkit-overflow-scrolling:touch]"
+          style={{ touchAction: "pan-x pan-y" }}
+        >
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onTouchStart={(e) => e.stopPropagation()}
-              onTouchMove={(e) => e.stopPropagation()}
               onClick={() => {
                 setActiveTab(tab.id);
               }}
@@ -625,7 +626,8 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
             onMouseLeave={handleUserInteractionEnd}
             onMouseDown={handleUserInteractionStart}
             onMouseUp={handleUserInteractionEnd}
-            className="flex gap-3.5 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none touch-pan-x [-webkit-overflow-scrolling:touch]"
+            className="flex gap-3.5 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none [-webkit-overflow-scrolling:touch]"
+            style={{ touchAction: "pan-x pan-y" }}
           >
             {rankedItems.map((item, index) => {
               const rank = index + 1;
@@ -653,14 +655,15 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                     }
                   }}
                   className="w-[85vw] sm:w-[330px] shrink-0 snap-start bg-[#12100C] border border-[#D4AF37]/35 hover:border-[#D4AF37] rounded-xl p-2.5 flex gap-3 shadow-md transition-all cursor-pointer group relative overflow-hidden"
+                  style={{ touchAction: "pan-x pan-y" }}
                 >
                   {/* Left Side: Thumbnail with Rank Badge */}
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-zinc-900 border border-afri-border/40 shrink-0">
+                  <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-zinc-900 border border-afri-border/40 shrink-0 pointer-events-none" style={{ touchAction: "pan-x pan-y" }}>
                     <img 
                       src={item.imageUrl} 
                       alt={item.title} 
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 pointer-events-none"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
                     

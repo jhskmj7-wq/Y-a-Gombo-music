@@ -828,8 +828,8 @@ export default function SocialPostCard({
              ? `/api/r2/media/${encodeURIComponent(trimmed)}`
              : trimmed;
            return (
-             <div className="px-4 sm:px-5 pb-4">
-               <div className="relative w-full rounded-2xl overflow-hidden bg-black/95 border border-afri-border/80 shadow-md flex items-center justify-center">
+             <div className="px-4 sm:px-5 pb-4" style={{ touchAction: "pan-y" }}>
+               <div className="relative w-full rounded-2xl overflow-hidden bg-black/95 border border-afri-border/80 shadow-md flex items-center justify-center" style={{ touchAction: "pan-y" }}>
                  <video 
                    src={finalVideoUrl} 
                    controls 
@@ -838,6 +838,7 @@ export default function SocialPostCard({
                    // @ts-ignore
                    webkit-playsinline="true"
                    className="w-full aspect-video sm:aspect-auto max-h-[480px] object-contain mx-auto"
+                   style={{ touchAction: "pan-y" }}
                  />
                </div>
              </div>
@@ -850,12 +851,13 @@ export default function SocialPostCard({
            const clean = trimmed.toLowerCase().split("?")[0];
            if (!clean.endsWith(".mp3") && !clean.endsWith(".wav") && !clean.endsWith(".ogg") && !clean.endsWith(".m4a")) {
              return (
-               <div className="px-4 sm:px-5 pb-4">
+               <div className="px-4 sm:px-5 pb-4" style={{ touchAction: "pan-y" }}>
                  <img 
                    referrerPolicy="no-referrer"
                    src={trimmed} 
                    alt={post.title || "Illustration"} 
-                   className="w-full h-48 sm:h-64 object-cover rounded-2xl border border-gray-150 dark:border-[#2B2B2B] shadow-xs"
+                   className="w-full h-48 sm:h-64 object-cover rounded-2xl border border-gray-150 dark:border-[#2B2B2B] shadow-xs pointer-events-none"
+                   style={{ touchAction: "pan-y" }}
                  />
                </div>
              );

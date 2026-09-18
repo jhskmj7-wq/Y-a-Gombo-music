@@ -227,10 +227,11 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
         onTouchStart={() => setIsPaused(true)}
         onTouchEnd={() => setIsPaused(false)}
         className="flex gap-3.5 overflow-x-auto pb-2 snap-x snap-mandatory afri-no-scrollbar scroll-smooth"
+        style={{ touchAction: "pan-x pan-y" }}
       >
         {/* Render Gombo Ads Native Sponsored Cards First */}
         {activeAds.map((ad) => (
-          <div key={`ad-${ad.id}`} className="w-[280px] sm:w-[300px] shrink-0 snap-start">
+          <div key={`ad-${ad.id}`} className="w-[280px] sm:w-[300px] shrink-0 snap-start" style={{ touchAction: "pan-x pan-y" }}>
             <GomboAdCard ad={ad} layout="compact" />
           </div>
         ))}
@@ -245,18 +246,19 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
               transition={{ duration: 0.2 }}
               onClick={() => handleItemClick(item)}
               className="w-[260px] sm:w-[285px] shrink-0 snap-start bg-gradient-to-b from-afri-bg-sec via-afri-bg-sec to-afri-bg border border-afri-border hover:border-[#D4AF37]/60 rounded-3xl p-3.5 flex flex-col justify-between transition-all duration-300 shadow-xl cursor-pointer relative overflow-hidden group"
+              style={{ touchAction: "pan-x pan-y" }}
             >
               {/* Subtle Gold Ambient Gradient */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-2xl group-hover:bg-[#D4AF37]/15 transition-colors pointer-events-none" />
 
               <div className="space-y-3 relative z-10">
                 {/* Image Container with Badge */}
-                <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-afri-bg/40 border border-afri-border/80">
+                <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-afri-bg/40 border border-afri-border/80 pointer-events-none" style={{ touchAction: "pan-x pan-y" }}>
                   <img
                     src={item.imageUrl}
                     alt={item.title}
                     loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
                   />
                   
                   {/* Badge Header: Produit vs Formation */}

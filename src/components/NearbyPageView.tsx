@@ -60,7 +60,10 @@ export const NearbyPageView: React.FC<NearbyPageViewProps> = ({
       </div>
 
       {/* CONTROLS */}
-      <div className="flex-none flex items-center gap-2 overflow-x-auto scrollbar-none px-1 overscroll-contain [-webkit-overflow-scrolling:touch] touch-pan-x">
+      <div 
+        className="flex-none flex items-center gap-2 overflow-x-auto scrollbar-none px-1 overscroll-contain [-webkit-overflow-scrolling:touch]"
+        style={{ touchAction: "pan-x pan-y" }}
+      >
         {[5, 10, 25].map(r => (
           <button
             key={r}

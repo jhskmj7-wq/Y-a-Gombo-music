@@ -123,11 +123,12 @@ export const NearbyArtistsSection: React.FC<NearbyArtistsSectionProps> = ({ arti
         <Music className="w-4 h-4 text-emerald-500" />
         🎼 Artistes disponibles autour
       </h3>
-      <div className="flex gap-3 overflow-x-auto pb-2 px-1 afri-no-scrollbar">
+      <div className="flex gap-3 overflow-x-auto pb-2 px-1 afri-no-scrollbar" style={{ touchAction: "pan-x pan-y" }}>
         {artists.slice(0, 10).map((artist: any) => (
           <div 
             key={artist.uid}
             className="min-w-[180px] max-w-[180px] afri-card p-3 space-y-3 shrink-0 relative text-left"
+            style={{ touchAction: "pan-x pan-y" }}
           >
             {artist.availability?.status === "available" && (
               <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">

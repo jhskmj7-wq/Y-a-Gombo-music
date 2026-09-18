@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { 
   Zap, Music, Award, Trophy, Video, Mic2, Headphones, GraduationCap, 
@@ -91,6 +91,65 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
   // Pour le compartiment Réels de l'accueil : afficher seulement 4 ou 5 vidéos
   const itemsToRender = type === "POPULAR_REELS" ? data.slice(0, 5) : data;
 
+  const cardElementsRef = useRef<Map<string, HTMLElement>>(new Map());
+  const [activeReelId, setActiveReelId] = useState<string | null>(null);
+
+  // IntersectionObserver pour déterminer la seule carte Reel active visible dans le carrousel
+  useEffect(() => {
+    if (type !== "POPULAR_REELS") return;
+
+    const intersectionRatios = new Map<string, number>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const reelId = entry.target.getAttribute("data-reel-id");
+          if (reelId) {
+            if (entry.isIntersecting) {
+              intersectionRatios.set(reelId, entry.intersectionRatio);
+            } else {
+              intersectionRatios.delete(reelId);
+            }
+          }
+        });
+
+        // Identifier la carte ayant la plus grande surface visible (minimum 50% visible)
+        let maxRatio = 0.5;
+        let mostVisibleId: string | null = null;
+
+        intersectionRatios.forEach((ratio, id) => {
+          if (ratio > maxRatio) {
+            maxRatio = ratio;
+            mostVisibleId = id;
+          }
+        });
+
+        setActiveReelId(mostVisibleId);
+      },
+      {
+        root: null, // Surveille dans le viewport réel (gestion scroll vertical + carrousel horizontal)
+        threshold: [0, 0.25, 0.5, 0.75, 1.0],
+      }
+    );
+
+    cardElementsRef.current.forEach((el) => {
+      if (el) observer.observe(el);
+    });
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setActiveReelId(null);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      intersectionRatios.clear();
+    };
+  }, [type, itemsToRender]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -116,7 +175,10 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
         )}
       </div>
 
-      <div className="flex overflow-x-auto pb-4 gap-3 no-scrollbar scroll-smooth snap-x touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+      <div 
+        className="flex overflow-x-auto pb-4 gap-3 no-scrollbar scroll-smooth snap-x overscroll-x-contain [-webkit-overflow-scrolling:touch]"
+        style={{ touchAction: "pan-x pan-y" }}
+      >
         {itemsToRender.map((item, idx) => {
           const mediaSrc = item.imageUrl || item.thumbnail || item.url || item.mediaUrl;
           const directVideoSrc = isPlayableVideoFile(item.url || item.mediaUrl) ? (item.url || item.mediaUrl) : null;
@@ -124,19 +186,30 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
 
           // Affichage spécifique 9:16 style TikTok / Facebook Reels pour le compartiment Réels
           if (type === "POPULAR_REELS") {
+            const reelId = String(item.id || `reel-${idx}`);
+            const isPlayingPreview = activeReelId === reelId;
+
             return (
               <motion.div
-                key={item.id || `reel-${idx}`}
+                key={reelId}
+                ref={(el) => {
+                  if (el) {
+                    cardElementsRef.current.set(reelId, el);
+                  } else {
+                    cardElementsRef.current.delete(reelId);
+                  }
+                }}
+                data-reel-id={reelId}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onAction?.(item)}
                 className="immersive-dark group relative flex-none w-36 xs:w-40 sm:w-48 aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-950 border border-afri-border/70 hover:border-[#D4AF37] transition-all duration-300 shadow-md hover:shadow-[0_8px_25px_rgba(212,175,55,0.22)] cursor-pointer snap-start select-none flex flex-col justify-between"
-                style={{ backgroundColor: "#09090b" }}
+                style={{ backgroundColor: "#09090b", touchAction: "pan-x pan-y" }}
               >
                 {/* 1. Média de fond en 9:16 pleine surface avec VideoThumbnail pour garantir zéro blanc */}
                 <div 
-                  className="absolute inset-0 w-full h-full bg-zinc-950 overflow-hidden"
-                  style={{ backgroundColor: "#09090b" }}
+                  className="absolute inset-0 w-full h-full bg-zinc-950 overflow-hidden pointer-events-none"
+                  style={{ backgroundColor: "#09090b", touchAction: "pan-x pan-y" }}
                 >
                   <VideoThumbnail
                     videoUrl={item.url || item.mediaUrl || item.videoUrl}
@@ -149,6 +222,7 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
                     authorAvatar={item.authorPhoto || item.authorAvatar}
                     alt={item.title || "Réel"}
                     className="w-full h-full"
+                    isActivePreview={isPlayingPreview}
                   />
                 </div>
 
@@ -170,8 +244,10 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
                   </div>
                 </div>
 
-                {/* 3. Bouton Play central translucide avec dorure */}
-                <div className="relative z-10 flex items-center justify-center my-auto pointer-events-none">
+                {/* 3. Bouton Play central translucide avec dorure (s'estompe délicatement si la preview joue) */}
+                <div className={`relative z-10 flex items-center justify-center my-auto pointer-events-none transition-opacity duration-300 ${
+                  isPlayingPreview ? "opacity-30 group-hover:opacity-100" : "opacity-100"
+                }`}>
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/65 backdrop-blur-md border border-[#D4AF37]/60 text-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-115 group-hover:bg-[#D4AF37] group-hover:text-black transition-all duration-300">
                     <Play className="w-4 h-4 fill-current ml-0.5" />
                   </div>
@@ -207,9 +283,10 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
               whileTap={{ scale: 0.98 }}
               onClick={() => onAction?.(item)}
               className="flex-none w-64 bg-afri-bg-sec border border-afri-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer snap-start"
+              style={{ touchAction: "pan-x pan-y" }}
             >
               {/* Card Content based on type */}
-              <div className="relative aspect-video bg-zinc-900 overflow-hidden flex items-center justify-center">
+              <div className="relative aspect-video bg-zinc-900 overflow-hidden flex items-center justify-center pointer-events-none" style={{ touchAction: "pan-x pan-y" }}>
                 {isDirectPlayableVideo && directVideoSrc ? (
                   <video 
                     src={directVideoSrc} 
@@ -221,7 +298,7 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
                 ) : (
                   <img 
                     src={mediaSrc || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"} 
-                    className="w-full h-full object-cover opacity-80" 
+                    className="w-full h-full object-cover opacity-80 pointer-events-none" 
                     alt={item.title || "Média"}
                     loading="lazy"
                   />
