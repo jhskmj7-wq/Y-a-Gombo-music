@@ -5566,7 +5566,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {activeMenu === "user_heritage" && (
-                <div className="w-full animate-fadeIn">
+                <div className="w-full h-full min-h-0 flex flex-col animate-fadeIn">
                   <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse bg-black min-h-[200px] flex flex-col justify-center items-center border border-afri-border rounded-2xl"><div className="w-8 h-8 border-2 border-afri-gold border-t-transparent rounded-full animate-spin mb-4"></div><span className="text-xs uppercase tracking-widest font-bold">Chargement d'Or...</span></div>}>
                     <HeritagePage 
                       onNavigateView={(view, tab) => {

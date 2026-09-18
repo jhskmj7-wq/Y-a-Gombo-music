@@ -215,8 +215,9 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="w-full max-w-3xl mx-auto px-3 sm:px-6 py-2 space-y-4 pb-28 text-left"
+      style={{ touchAction: "pan-y" }}
     >
-      <div className="pt-1 pb-4 space-y-4 w-full">
+      <div className="pt-1 pb-4 space-y-4 w-full" style={{ touchAction: "pan-y" }}>
         
         {/* STATUS BAR */}
         <AnimatePresence>
@@ -240,7 +241,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           )}
         </AnimatePresence>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4" style={{ touchAction: "pan-y" }}>
           
           {/* 1. MÉDIAS (AVATAR & COVER) ANDROID FIRST */}
           <div className="afri-card w-full p-4 rounded-[18px] space-y-4">

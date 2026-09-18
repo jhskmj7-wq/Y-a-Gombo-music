@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { gomboDB } from "../firebase";
 import { db } from "../lib/firebase";
-import { collection, query, where, onSnapshot, doc, getDocs, updateDoc, orderBy, deleteField } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc, getDocs, updateDoc, orderBy, deleteField } from "firebase/firestore";
 import { Conversation, Message, UserProfile } from "../types";
 import { SupportService } from "../services/SupportService";
 import { WebRTCCallService, CallSession } from "../lib/webrtcCallEngine";
@@ -312,7 +312,31 @@ export default function MessagesView({
     let isMounted = true;
     (async () => {
       try {
-        const convo = await gomboDB.getOrCreateConversation(currentUser.uid, openConvoWithUserId);
+        let targetProfile: any = null;
+        try {
+          const userDocSnap = await getDoc(doc(db, "users", openConvoWithUserId));
+          if (userDocSnap.exists()) {
+            targetProfile = userDocSnap.data();
+          }
+        } catch (e) {
+          console.warn("Could not load user doc for direct message:", e);
+        }
+
+        const myDetails = {
+          uid: currentUser.uid,
+          name: currentProfile?.firstName ? `${currentProfile.firstName} ${currentProfile.lastName || ""}`.trim() : (currentProfile?.displayName || currentProfile?.artistName || "Moi"),
+          avatarUrl: currentProfile?.avatarUrl || currentProfile?.photoURL || "",
+          role: currentProfile?.role || "client"
+        };
+
+        const targetDetails = {
+          uid: openConvoWithUserId,
+          name: targetProfile?.artisticName || targetProfile?.artistName || (targetProfile?.firstName ? `${targetProfile.firstName} ${targetProfile.lastName || ""}`.trim() : targetProfile?.displayName) || "Partenaire Gombo",
+          avatarUrl: targetProfile?.avatarUrl || targetProfile?.photoURL || "",
+          role: targetProfile?.role || "artiste"
+        };
+
+        const convo = await gomboDB.getOrCreateConversation(currentUser.uid, openConvoWithUserId, myDetails, targetDetails);
         if (isMounted && convo) {
           setActiveTab("discussions");
           setActiveConvo(convo);
