@@ -9,18 +9,6 @@
 // Cache en mémoire pour éviter d'extraire plusieurs fois la même vidéo
 const inMemoryThumbCache = new Map<string, string>();
 
-// Images de secours scéniques & artistiques africaines haute définition
-const CURATED_AFRICAN_MUSIC_COVERS = [
-  "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80", // Concert live lumières or
-  "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80", // Guitare acoustique et micro
-  "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80", // DJ platines & ambiance club
-  "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&auto=format&fit=crop&q=80", // Studio d'enregistrement & casque
-  "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=800&auto=format&fit=crop&q=80", // Scène festival africain
-  "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&auto=format&fit=crop&q=80", // Foule en transe concert
-  "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80", // Ambiance afrobeat club
-  "https://images.unsplash.com/photo-1520523839898-50712825e617?w=800&auto=format&fit=crop&q=80", // Saxophone live jazz
-];
-
 /**
  * Détecte si une URL pointe directement vers un fichier vidéo ou un flux
  */
@@ -101,17 +89,10 @@ export function getYoutubeThumbnail(rawUrl?: string | null): string | null {
 }
 
 /**
- * Retourne une couverture de secours déterministe et esthétique
+ * Retourne une chaîne vide - les images simulées ou fictives sont proscrites
  */
-export function getDeterministicFallbackCover(seed?: string | null): string {
-  if (!seed) return CURATED_AFRICAN_MUSIC_COVERS[0];
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash << 5) - hash + seed.charCodeAt(i);
-    hash |= 0;
-  }
-  const index = Math.abs(hash) % CURATED_AFRICAN_MUSIC_COVERS.length;
-  return CURATED_AFRICAN_MUSIC_COVERS[index];
+export function getDeterministicFallbackCover(_seed?: string | null): string {
+  return "";
 }
 
 /**
