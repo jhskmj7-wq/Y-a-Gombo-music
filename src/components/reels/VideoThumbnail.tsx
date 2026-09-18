@@ -92,13 +92,17 @@ export const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
   const finalImageSrc = activeImage || extractedFrame || fallbackCover;
 
   return (
-    <div className={`relative w-full h-full bg-zinc-950 overflow-hidden select-none ${className}`}>
+    <div 
+      className={`relative w-full h-full bg-zinc-950 overflow-hidden select-none ${className}`}
+      style={{ backgroundColor: "#09090b" }}
+    >
       {/* 1. Image principale (Miniature réelle, YouTube, ou Frame Canvas) */}
       {!hasImageError && finalImageSrc ? (
         <img
           src={finalImageSrc}
           alt={alt || title || "Réel"}
           loading="lazy"
+          referrerPolicy="no-referrer"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           onError={() => {
             // Si l'image explicite échoue, on bascule vers le poster artistique de secours
@@ -127,11 +131,17 @@ export const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
           alt={alt || "Réel d'artiste"}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
+          referrerPolicy="no-referrer"
         />
       )}
 
-      {/* 4. Dégradé TikTok/Facebook : sombre en bas pour les textes et contrasté */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/25 to-black/50 pointer-events-none" />
+      {/* 4. Dégradé TikTok/Facebook : sombre en bas pour les textes et contrasté (inline rgba pour immunité totale aux overrides CSS globaux) */}
+      <div 
+        className="absolute inset-0 pointer-events-none" 
+        style={{
+          background: "linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.5) 100%)"
+        }}
+      />
 
       {/* 5. Bouton Play central si demandé */}
       {showPlayButton && (

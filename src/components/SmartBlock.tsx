@@ -130,10 +130,14 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onAction?.(item)}
-                className="group relative flex-none w-36 xs:w-40 sm:w-48 aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-950 border border-afri-border/70 hover:border-[#D4AF37] transition-all duration-300 shadow-md hover:shadow-[0_8px_25px_rgba(212,175,55,0.22)] cursor-pointer snap-start select-none flex flex-col justify-between"
+                className="immersive-dark group relative flex-none w-36 xs:w-40 sm:w-48 aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-950 border border-afri-border/70 hover:border-[#D4AF37] transition-all duration-300 shadow-md hover:shadow-[0_8px_25px_rgba(212,175,55,0.22)] cursor-pointer snap-start select-none flex flex-col justify-between"
+                style={{ backgroundColor: "#09090b" }}
               >
                 {/* 1. Média de fond en 9:16 pleine surface avec VideoThumbnail pour garantir zéro blanc */}
-                <div className="absolute inset-0 w-full h-full bg-zinc-950 overflow-hidden">
+                <div 
+                  className="absolute inset-0 w-full h-full bg-zinc-950 overflow-hidden"
+                  style={{ backgroundColor: "#09090b" }}
+                >
                   <VideoThumbnail
                     videoUrl={item.url || item.mediaUrl || item.videoUrl}
                     thumbnailUrl={item.thumbnail || item.thumbnailUrl}
@@ -154,6 +158,7 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
                     <img 
                       src={item.authorPhoto || item.authorAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100"} 
                       alt="" 
+                      referrerPolicy="no-referrer"
                       className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full object-cover border border-[#D4AF37]" 
                     />
                     <span className="text-[8px] sm:text-[9px] font-bold text-white truncate">
@@ -268,7 +273,8 @@ export const SmartBlock: React.FC<SmartBlockProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => onSeeMore?.()}
-            className="group relative flex-none w-36 xs:w-40 sm:w-48 aspect-[9/16] rounded-2xl overflow-hidden bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border-2 border-dashed border-[#D4AF37]/50 hover:border-[#D4AF37] transition-all duration-300 shadow-md hover:shadow-[0_8px_25px_rgba(212,175,55,0.3)] cursor-pointer snap-start select-none flex flex-col justify-between p-3.5 sm:p-4 text-center items-center"
+            className="immersive-dark group relative flex-none w-36 xs:w-40 sm:w-48 aspect-[9/16] rounded-2xl overflow-hidden border-2 border-dashed border-[#D4AF37]/50 hover:border-[#D4AF37] transition-all duration-300 shadow-md hover:shadow-[0_8px_25px_rgba(212,175,55,0.3)] cursor-pointer snap-start select-none flex flex-col justify-between p-3.5 sm:p-4 text-center items-center"
+            style={{ background: "linear-gradient(to bottom, #18181b, #09090b, #000000)" }}
           >
             {/* Décoration douce d'arrière-plan */}
             <div className="absolute inset-0 bg-radial from-[#D4AF37]/15 via-transparent to-transparent pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity" />
